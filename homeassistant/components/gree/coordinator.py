@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -24,6 +25,7 @@ from .const import (
     DISPATCH_DEVICE_DISCOVERED,
     DOMAIN,
     MAX_ERRORS,
+    MAX_EXPECTED_RESPONSE_TIME_INTERVAL,
     UPDATE_INTERVAL,
 )
 
@@ -48,7 +50,6 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             always_update=False,
         )
         self.device = device
-        self.device.add_handler(Response.DATA, self.device_state_updated)
         self.device.add_handler(Response.RESULT, self.device_state_updated)
 
         self._error_count: int = 0
@@ -88,7 +89,9 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # raise update failed if time for more than MAX_ERRORS has passed since last update
             now = utcnow()
             elapsed_success = now - self._last_response_time
-            if self.update_interval and elapsed_success >= self.update_interval:
+            if self.update_interval and elapsed_success >= timedelta(
+                seconds=MAX_EXPECTED_RESPONSE_TIME_INTERVAL
+            ):
                 if not self._last_error_time or (
                     (now - self.update_interval) >= self._last_error_time
                 ):
@@ -96,16 +99,19 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     self._error_count += 1
 
                 _LOGGER.warning(
-                    "Device %s is unresponsive for %s seconds",
+                    "Device %s took an unusually long time to respond, %s seconds",
                     self.name,
                     elapsed_success,
                 )
+            else:
+                self._error_count = 0
             if self.last_update_success and self._error_count >= MAX_ERRORS:
                 raise UpdateFailed(
                     f"Device {self.name} is unresponsive for too long and now unavailable"
                 )
 
-        return self.device.raw_properties
+        self._last_response_time = utcnow()
+        return copy.deepcopy(self.device.raw_properties)
 
     async def push_state_update(self):
         """Send state updates to the physical device."""

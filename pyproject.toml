@@ -46,7 +46,7 @@ dependencies    = [
     "fnv-hash-fast==1.2.6",
     # hass-nabucasa is imported by helpers which don't depend on the cloud
     # integration
-    "hass-nabucasa==0.92.0",
+    "hass-nabucasa==0.94.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.28.1",
@@ -60,7 +60,7 @@ dependencies    = [
     "Pillow==11.1.0",
     "propcache==0.3.0",
     "pyOpenSSL==25.0.0",
-    "orjson==3.10.12",
+    "orjson==3.10.15",
     "packaging>=23.1",
     "psutil-home-assistant==0.0.1",
     "python-slugify==8.0.4",

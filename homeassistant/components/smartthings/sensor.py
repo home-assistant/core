@@ -962,7 +962,14 @@ async def async_setup_entry(
     """Add sensors for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsSensor(entry_data.client, device, description, capability, attribute)
+        SmartThingsSensor(
+            entry_data.client,
+            device,
+            description,
+            entry_data.rooms,
+            capability,
+            attribute,
+        )
         for device in entry_data.devices.values()
         for capability, attributes in CAPABILITY_TO_SENSORS.items()
         if capability in device.status[MAIN]
@@ -992,11 +999,12 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         client: SmartThings,
         device: FullDevice,
         entity_description: SmartThingsSensorEntityDescription,
+        rooms: dict[str, str],
         capability: Capability,
         attribute: Attribute,
     ) -> None:
         """Init the class."""
-        super().__init__(client, device, {capability})
+        super().__init__(client, device, rooms, {capability})
         self._attr_unique_id = f"{device.device.device_id}{entity_description.unique_id_separator}{entity_description.key}"
         self._attribute = attribute
         self.capability = capability
