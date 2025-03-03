@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature, CoverState
@@ -37,15 +36,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Read configuration and create Modbus cover."""
-    if discovery_info is None:
+    if discovery_info is None or not (covers := discovery_info[CONF_COVERS]):
         return
-
-    covers = []
-    for cover in discovery_info[CONF_COVERS]:
-        hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
-        covers.append(ModbusCover(hass, hub, cover))
-
-    async_add_entities(covers)
+    hub = get_hub(hass, discovery_info[CONF_NAME])
+    async_add_entities(ModbusCover(hass, hub, config) for config in covers)
 
 
 class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
@@ -117,7 +111,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             self._slave, self._write_address, self._state_open, self._write_type
         )
         self._attr_available = result is not None
-        await self.async_update()
+        await self._async_update_write_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
@@ -125,9 +119,9 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             self._slave, self._write_address, self._state_closed, self._write_type
         )
         self._attr_available = result is not None
-        await self.async_update()
+        await self._async_update_write_state()
 
-    async def async_update(self, now: datetime | None = None) -> None:
+    async def _async_update(self) -> None:
         """Update the state of the cover."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
@@ -136,11 +130,9 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         )
         if result is None:
             self._attr_available = False
-            self.async_write_ha_state()
             return
         self._attr_available = True
         if self._input_type == CALL_TYPE_COIL:
             self._set_attr_state(bool(result.bits[0] & 1))
         else:
             self._set_attr_state(int(result.registers[0]))
-        self.async_write_ha_state()

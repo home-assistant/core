@@ -27,12 +27,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from . import NAMConfigEntry, NAMDataUpdateCoordinator
 from .const import (
     ATTR_BME280_HUMIDITY,
     ATTR_BME280_PRESSURE,
@@ -69,6 +68,7 @@ from .const import (
     DOMAIN,
     MIGRATION_SENSORS,
 )
+from .coordinator import NAMConfigEntry, NAMDataUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
@@ -356,7 +356,9 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: NAMConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NAMConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a Nettigo Air Monitor entities from a config_entry."""
     coordinator = entry.runtime_data

@@ -11,12 +11,12 @@ import zigpy.config
 from zigpy.config import CONF_DEVICE_PATH
 import zigpy.types
 
-from homeassistant.components.usb import UsbServiceInfo
 from homeassistant.components.zha import radio_manager
 from homeassistant.components.zha.const import DOMAIN
 from homeassistant.components.zha.radio_manager import ProbeResult, ZhaRadioManager
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from tests.common import MockConfigEntry
 

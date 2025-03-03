@@ -252,9 +252,9 @@ class PullPointManager:
 
     async def async_start(self) -> bool:
         """Start pullpoint subscription."""
-        assert (
-            self.state == PullPointManagerState.STOPPED
-        ), "PullPoint manager already started"
+        assert self.state == PullPointManagerState.STOPPED, (
+            "PullPoint manager already started"
+        )
         LOGGER.debug("%s: Starting PullPoint manager", self._name)
         if not await self._async_start_pullpoint():
             self.state = PullPointManagerState.FAILED
@@ -501,9 +501,9 @@ class WebHookManager:
     async def async_start(self) -> bool:
         """Start polling events."""
         LOGGER.debug("%s: Starting webhook manager", self._name)
-        assert (
-            self.state == WebHookManagerState.STOPPED
-        ), "Webhook manager already started"
+        assert self.state == WebHookManagerState.STOPPED, (
+            "Webhook manager already started"
+        )
         assert self._webhook_url is None, "Webhook already registered"
         self._async_register_webhook()
         if not await self._async_start_webhook():

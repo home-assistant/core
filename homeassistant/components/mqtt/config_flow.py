@@ -5,14 +5,21 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
+from enum import IntEnum
 import logging
 import queue
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
-from cryptography.x509 import load_pem_x509_certificate
+from cryptography.hazmat.primitives.serialization import (
+    Encoding,
+    NoEncryption,
+    PrivateFormat,
+    load_der_private_key,
+    load_pem_private_key,
+)
+from cryptography.x509 import load_der_x509_certificate, load_pem_x509_certificate
 import voluptuous as vol
 
 from homeassistant.components.file_upload import process_uploaded_file
@@ -76,6 +83,8 @@ from .const import (
     CONF_WILL_MESSAGE,
     CONF_WS_HEADERS,
     CONF_WS_PATH,
+    CONFIG_ENTRY_MINOR_VERSION,
+    CONFIG_ENTRY_VERSION,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
@@ -102,6 +111,8 @@ _LOGGER = logging.getLogger(__name__)
 
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 5
+
+CONF_CLIENT_KEY_PASSWORD = "client_key_password"
 
 MQTT_TIMEOUT = 5
 
@@ -163,12 +174,14 @@ BROKER_VERIFICATION_SELECTOR = SelectSelector(
 
 # mime configuration from https://pki-tutorial.readthedocs.io/en/latest/mime.html
 CA_CERT_UPLOAD_SELECTOR = FileSelector(
-    FileSelectorConfig(accept=".crt,application/x-x509-ca-cert")
+    FileSelectorConfig(accept=".pem,.crt,.cer,.der,application/x-x509-ca-cert")
 )
 CERT_UPLOAD_SELECTOR = FileSelector(
-    FileSelectorConfig(accept=".crt,application/x-x509-user-cert")
+    FileSelectorConfig(accept=".pem,.crt,.cer,.der,application/x-x509-user-cert")
 )
-KEY_UPLOAD_SELECTOR = FileSelector(FileSelectorConfig(accept=".key,application/pkcs8"))
+KEY_UPLOAD_SELECTOR = FileSelector(
+    FileSelectorConfig(accept=".pem,.key,.der,.pk8,application/pkcs8")
+)
 
 REAUTH_SCHEMA = vol.Schema(
     {
@@ -205,7 +218,9 @@ def update_password_from_user_input(
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 1
+    # Can be bumped to version 2.1 with HA Core 2026.1.0
+    VERSION = CONFIG_ENTRY_VERSION  # 1
+    MINOR_VERSION = CONFIG_ENTRY_MINOR_VERSION  # 2
 
     _hassio_discovery: dict[str, Any] | None = None
     _addon_manager: AddonManager
@@ -470,7 +485,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         fields: OrderedDict[Any, Any] = OrderedDict()
         validated_user_input: dict[str, Any] = {}
-        broker_config: dict[str, Any] = {}
         if is_reconfigure := (self.source == SOURCE_RECONFIGURE):
             reconfigure_entry = self._get_reconfigure_entry()
         if await async_get_broker_settings(
@@ -482,29 +496,24 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             errors,
         ):
             if is_reconfigure:
-                broker_config.update(
-                    update_password_from_user_input(
-                        reconfigure_entry.data.get(CONF_PASSWORD), validated_user_input
-                    ),
+                validated_user_input = update_password_from_user_input(
+                    reconfigure_entry.data.get(CONF_PASSWORD), validated_user_input
                 )
-            else:
-                broker_config = validated_user_input
 
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                broker_config,
+                validated_user_input,
             )
 
             if can_connect:
                 if is_reconfigure:
                     return self.async_update_reload_and_abort(
                         reconfigure_entry,
-                        data_updates=broker_config,
+                        data=validated_user_input,
                     )
-                validated_user_input[CONF_DISCOVERY] = DEFAULT_DISCOVERY
                 return self.async_create_entry(
-                    title=broker_config[CONF_BROKER],
-                    data=broker_config,
+                    title=validated_user_input[CONF_BROKER],
+                    data=validated_user_input,
                 )
 
             errors["base"] = "cannot_connect"
@@ -569,58 +578,17 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 class MQTTOptionsFlowHandler(OptionsFlow):
     """Handle MQTT options."""
 
-    def __init__(self) -> None:
-        """Initialize MQTT options flow."""
-        self.broker_config: dict[str, Any] = {}
-
     async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
         """Manage the MQTT options."""
-        return await self.async_step_broker()
-
-    async def async_step_broker(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the MQTT broker configuration."""
-        errors: dict[str, str] = {}
-        fields: OrderedDict[Any, Any] = OrderedDict()
-        validated_user_input: dict[str, Any] = {}
-        if await async_get_broker_settings(
-            self,
-            fields,
-            self.config_entry.data,
-            user_input,
-            validated_user_input,
-            errors,
-        ):
-            self.broker_config.update(
-                update_password_from_user_input(
-                    self.config_entry.data.get(CONF_PASSWORD), validated_user_input
-                ),
-            )
-            can_connect = await self.hass.async_add_executor_job(
-                try_connection,
-                self.broker_config,
-            )
-
-            if can_connect:
-                return await self.async_step_options()
-
-            errors["base"] = "cannot_connect"
-
-        return self.async_show_form(
-            step_id="broker",
-            data_schema=vol.Schema(fields),
-            errors=errors,
-            last_step=False,
-        )
+        return await self.async_step_options()
 
     async def async_step_options(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the MQTT options."""
         errors = {}
-        current_config = self.config_entry.data
-        options_config: dict[str, Any] = {}
+
+        options_config: dict[str, Any] = dict(self.config_entry.options)
         bad_input: bool = False
 
         def _birth_will(birt_or_will: str) -> dict[str, Any]:
@@ -679,26 +647,18 @@ class MQTTOptionsFlowHandler(OptionsFlow):
                 options_config[CONF_WILL_MESSAGE] = {}
 
             if not bad_input:
-                updated_config = {}
-                updated_config.update(self.broker_config)
-                updated_config.update(options_config)
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data=updated_config,
-                    title=str(self.broker_config[CONF_BROKER]),
-                )
-                return self.async_create_entry(title="", data={})
+                return self.async_create_entry(data=options_config)
 
         birth = {
             **DEFAULT_BIRTH,
-            **current_config.get(CONF_BIRTH_MESSAGE, {}),
+            **options_config.get(CONF_BIRTH_MESSAGE, {}),
         }
         will = {
             **DEFAULT_WILL,
-            **current_config.get(CONF_WILL_MESSAGE, {}),
+            **options_config.get(CONF_WILL_MESSAGE, {}),
         }
-        discovery = current_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
-        discovery_prefix = current_config.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX)
+        discovery = options_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
+        discovery_prefix = options_config.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX)
 
         # build form
         fields: OrderedDict[vol.Marker, Any] = OrderedDict()
@@ -711,8 +671,8 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         fields[
             vol.Optional(
                 "birth_enable",
-                default=CONF_BIRTH_MESSAGE not in current_config
-                or current_config[CONF_BIRTH_MESSAGE] != {},
+                default=CONF_BIRTH_MESSAGE not in options_config
+                or options_config[CONF_BIRTH_MESSAGE] != {},
             )
         ] = BOOLEAN_SELECTOR
         fields[
@@ -734,8 +694,8 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         fields[
             vol.Optional(
                 "will_enable",
-                default=CONF_WILL_MESSAGE not in current_config
-                or current_config[CONF_WILL_MESSAGE] != {},
+                default=CONF_WILL_MESSAGE not in options_config
+                or options_config[CONF_WILL_MESSAGE] != {},
             )
         ] = BOOLEAN_SELECTOR
         fields[
@@ -761,17 +721,88 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         )
 
 
-async def _get_uploaded_file(hass: HomeAssistant, id: str) -> str:
-    """Get file content from uploaded file."""
+@callback
+def async_is_pem_data(data: bytes) -> bool:
+    """Return True if data is in PEM format."""
+    return (
+        b"-----BEGIN CERTIFICATE-----" in data
+        or b"-----BEGIN PRIVATE KEY-----" in data
+        or b"-----BEGIN RSA PRIVATE KEY-----" in data
+        or b"-----BEGIN ENCRYPTED PRIVATE KEY-----" in data
+    )
 
-    def _proces_uploaded_file() -> str:
+
+class PEMType(IntEnum):
+    """Type of PEM data."""
+
+    CERTIFICATE = 1
+    PRIVATE_KEY = 2
+
+
+@callback
+def async_convert_to_pem(
+    data: bytes, pem_type: PEMType, password: str | None = None
+) -> str | None:
+    """Convert data to PEM format."""
+    try:
+        if async_is_pem_data(data):
+            if not password:
+                # Assume unencrypted PEM encoded private key
+                return data.decode(DEFAULT_ENCODING)
+            # Return decrypted PEM encoded private key
+            return (
+                load_pem_private_key(data, password=password.encode(DEFAULT_ENCODING))
+                .private_bytes(
+                    encoding=Encoding.PEM,
+                    format=PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=NoEncryption(),
+                )
+                .decode(DEFAULT_ENCODING)
+            )
+        # Convert from DER encoding to PEM
+        if pem_type == PEMType.CERTIFICATE:
+            return (
+                load_der_x509_certificate(data)
+                .public_bytes(
+                    encoding=Encoding.PEM,
+                )
+                .decode(DEFAULT_ENCODING)
+            )
+        # Assume DER encoded private key
+        pem_key_data: bytes = load_der_private_key(
+            data, password.encode(DEFAULT_ENCODING) if password else None
+        ).private_bytes(
+            encoding=Encoding.PEM,
+            format=PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=NoEncryption(),
+        )
+        return pem_key_data.decode("utf-8")
+    except (TypeError, ValueError, SSLError):
+        _LOGGER.exception("Error converting %s file data to PEM format", pem_type.name)
+        return None
+
+
+async def _get_uploaded_file(hass: HomeAssistant, id: str) -> bytes:
+    """Get file content from uploaded certificate or key file."""
+
+    def _proces_uploaded_file() -> bytes:
         with process_uploaded_file(hass, id) as file_path:
-            return file_path.read_text(encoding=DEFAULT_ENCODING)
+            return file_path.read_bytes()
 
     return await hass.async_add_executor_job(_proces_uploaded_file)
 
 
-async def async_get_broker_settings(
+def _validate_pki_file(
+    file_id: str | None, pem_data: str | None, errors: dict[str, str], error: str
+) -> bool:
+    """Return False if uploaded file could not be converted to PEM format."""
+    if file_id and not pem_data:
+        errors["base"] = error
+        return False
+    return True
+
+
+async def async_get_broker_settings(  # noqa: C901
     flow: ConfigFlow | OptionsFlow,
     fields: OrderedDict[Any, Any],
     entry_config: MappingProxyType[str, Any] | None,
@@ -819,35 +850,66 @@ async def async_get_broker_settings(
         validated_user_input.update(user_input)
         client_certificate_id: str | None = user_input.get(CONF_CLIENT_CERT)
         client_key_id: str | None = user_input.get(CONF_CLIENT_KEY)
-        if (
-            client_certificate_id
-            and not client_key_id
-            or not client_certificate_id
-            and client_key_id
+        # We do not store the private key password in the entry data
+        client_key_password: str | None = validated_user_input.pop(
+            CONF_CLIENT_KEY_PASSWORD, None
+        )
+        if (client_certificate_id and not client_key_id) or (
+            not client_certificate_id and client_key_id
         ):
             errors["base"] = "invalid_inclusion"
             return False
         certificate_id: str | None = user_input.get(CONF_CERTIFICATE)
         if certificate_id:
-            certificate = await _get_uploaded_file(hass, certificate_id)
+            certificate_data_raw = await _get_uploaded_file(hass, certificate_id)
+            certificate = async_convert_to_pem(
+                certificate_data_raw, PEMType.CERTIFICATE
+            )
+        if not _validate_pki_file(
+            certificate_id, certificate, errors, "bad_certificate"
+        ):
+            return False
 
         # Return to form for file upload CA cert or client cert and key
         if (
-            not client_certificate
-            and user_input.get(SET_CLIENT_CERT)
-            and not client_certificate_id
-            or not certificate
-            and user_input.get(SET_CA_CERT, "off") == "custom"
-            and not certificate_id
-            or user_input.get(CONF_TRANSPORT) == TRANSPORT_WEBSOCKETS
-            and CONF_WS_PATH not in user_input
+            (
+                not client_certificate
+                and user_input.get(SET_CLIENT_CERT)
+                and not client_certificate_id
+            )
+            or (
+                not certificate
+                and user_input.get(SET_CA_CERT, "off") == "custom"
+                and not certificate_id
+            )
+            or (
+                user_input.get(CONF_TRANSPORT) == TRANSPORT_WEBSOCKETS
+                and CONF_WS_PATH not in user_input
+            )
         ):
             return False
 
         if client_certificate_id:
-            client_certificate = await _get_uploaded_file(hass, client_certificate_id)
+            client_certificate_data = await _get_uploaded_file(
+                hass, client_certificate_id
+            )
+            client_certificate = async_convert_to_pem(
+                client_certificate_data, PEMType.CERTIFICATE
+            )
+        if not _validate_pki_file(
+            client_certificate_id, client_certificate, errors, "bad_client_cert"
+        ):
+            return False
+
         if client_key_id:
-            client_key = await _get_uploaded_file(hass, client_key_id)
+            client_key_data = await _get_uploaded_file(hass, client_key_id)
+            client_key = async_convert_to_pem(
+                client_key_data, PEMType.PRIVATE_KEY, password=client_key_password
+            )
+        if not _validate_pki_file(
+            client_key_id, client_key, errors, "client_key_error"
+        ):
+            return False
 
         certificate_data: dict[str, Any] = {}
         if certificate:
@@ -1004,6 +1066,14 @@ async def async_get_broker_settings(
                 description={"suggested_value": user_input_basic.get(CONF_CLIENT_KEY)},
             )
         ] = KEY_UPLOAD_SELECTOR
+        fields[
+            vol.Optional(
+                CONF_CLIENT_KEY_PASSWORD,
+                description={
+                    "suggested_value": user_input_basic.get(CONF_CLIENT_KEY_PASSWORD)
+                },
+            )
+        ] = PASSWORD_SELECTOR
     verification_mode = current_config.get(SET_CA_CERT) or (
         "off"
         if current_ca_certificate is None
@@ -1071,14 +1141,14 @@ def try_connection(
     result: queue.Queue[bool] = queue.Queue(maxsize=1)
 
     def on_connect(
-        client_: mqtt.Client,
-        userdata: None,
-        flags: dict[str, Any],
-        result_code: int,
-        properties: mqtt.Properties | None = None,
+        _mqttc: mqtt.Client,
+        _userdata: None,
+        _connect_flags: mqtt.ConnectFlags,
+        reason_code: mqtt.ReasonCode,
+        _properties: mqtt.Properties | None = None,
     ) -> None:
         """Handle connection result."""
-        result.put(result_code == mqtt.CONNACK_ACCEPTED)
+        result.put(not reason_code.is_failure)
 
     client.on_connect = on_connect
 
@@ -1108,7 +1178,7 @@ def check_certicate_chain() -> str | None:
             with open(private_key, "rb") as client_key_file:
                 load_pem_private_key(client_key_file.read(), password=None)
         except (TypeError, ValueError):
-            return "bad_client_key"
+            return "client_key_error"
     # Check the certificate chain
     context = SSLContext(PROTOCOL_TLS_CLIENT)
     if client_certificate and private_key:

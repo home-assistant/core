@@ -8,10 +8,9 @@ from homeassistant.components.valve import (
     ValveState,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WatergateConfigEntry
-from .coordinator import WatergateDataCoordinator
+from .coordinator import WatergateConfigEntry, WatergateDataCoordinator
 from .entity import WatergateEntity
 
 ENTITY_NAME = "valve"
@@ -21,7 +20,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: WatergateConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all entries for Watergate Platform."""
 
@@ -43,7 +42,9 @@ class SonicValve(WatergateEntity, ValveEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, ENTITY_NAME)
-        self._valve_state = coordinator.data.valve_state if coordinator.data else None
+        self._valve_state = (
+            coordinator.data.state.valve_state if coordinator.data.state else None
+        )
 
     @property
     def is_closed(self) -> bool:
@@ -65,7 +66,9 @@ class SonicValve(WatergateEntity, ValveEntity):
         """Handle data update."""
         self._attr_available = self.coordinator.data is not None
         self._valve_state = (
-            self.coordinator.data.valve_state if self.coordinator.data else None
+            self.coordinator.data.state.valve_state
+            if self.coordinator.data.state
+            else None
         )
         self.async_write_ha_state()
 
@@ -80,3 +83,8 @@ class SonicValve(WatergateEntity, ValveEntity):
         await self._api_client.async_set_valve_state(ValveState.CLOSED)
         self._valve_state = ValveState.CLOSING
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.coordinator.data.state is not None

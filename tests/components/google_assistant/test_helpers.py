@@ -316,7 +316,7 @@ async def test_sync_notifications(agents) -> None:
         config, "async_sync_notification", return_value=HTTPStatus.NO_CONTENT
     ) as mock:
         await config.async_sync_notification_all("1234", {})
-        assert not agents or bool(mock.mock_calls) and agents
+        assert not agents or (bool(mock.mock_calls) and agents)
 
 
 @pytest.mark.parametrize(

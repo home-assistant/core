@@ -17,6 +17,8 @@ from homeassistant.components.light import (
     ATTR_FLASH,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
     FLASH_LONG,
@@ -406,7 +408,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         if self._fixed_color_mode:
             return self._fixed_color_mode
 
-        # The light supports both hs/xy and white with adjustabe color_temperature
+        # The light supports both hs/xy and white with adjustable color_temperature
         mode = self._color_mode
         if mode in ("xy", "hs"):
             return ColorMode.HS
@@ -447,13 +449,13 @@ class HueLight(CoordinatorEntity, LightEntity):
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
         if self.is_group:
-            return super().max_color_temp_kelvin
+            return DEFAULT_MAX_KELVIN
 
         min_mireds = self.light.controlcapabilities.get("ct", {}).get("min")
 
         # We filter out '0' too, which can be incorrectly reported by 3rd party buls
         if not min_mireds:
-            return super().max_color_temp_kelvin
+            return DEFAULT_MAX_KELVIN
 
         return color_util.color_temperature_mired_to_kelvin(min_mireds)
 
@@ -461,14 +463,14 @@ class HueLight(CoordinatorEntity, LightEntity):
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
         if self.is_group:
-            return super().min_color_temp_kelvin
+            return DEFAULT_MIN_KELVIN
         if self.is_livarno:
-            return 500
+            return 2000  # 500 mireds
 
         max_mireds = self.light.controlcapabilities.get("ct", {}).get("max")
 
         if not max_mireds:
-            return super().min_color_temp_kelvin
+            return DEFAULT_MIN_KELVIN
 
         return color_util.color_temperature_mired_to_kelvin(max_mireds)
 

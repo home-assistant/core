@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
+
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 # The sensor platform is pre-imported here to ensure
@@ -22,6 +25,8 @@ from .const import (  # noqa: F401  # noqa: F401
 from .entity import Sun, SunConfigEntry
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -42,7 +47,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: SunConfigEntry) -> bool:
     """Set up from a config entry."""
-    entry.runtime_data = sun = Sun(hass)
+    sun = Sun(hass)
+    component = EntityComponent[Sun](_LOGGER, DOMAIN, hass)
+    await component.async_add_entities([sun])
+    entry.runtime_data = sun
     entry.async_on_unload(sun.remove_listeners)
     await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
     return True
@@ -53,6 +61,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: SunConfigEntry) -> bool
     if unload_ok := await hass.config_entries.async_unload_platforms(
         entry, [Platform.SENSOR]
     ):
-        sun = entry.runtime_data
-        hass.states.async_remove(sun.entity_id)
+        await entry.runtime_data.async_remove()
     return unload_ok

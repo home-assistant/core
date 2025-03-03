@@ -14,11 +14,13 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfPower,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
@@ -82,13 +84,25 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
+    "current": SensorEntityDescription(
+        key="current",
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+    ),
+    "voltage": SensorEntityDescription(
+        key="voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+    ),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SwitchbotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switchbot sensor based on a config entry."""
     coordinator = entry.runtime_data

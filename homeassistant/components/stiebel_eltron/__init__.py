@@ -3,13 +3,13 @@
 from datetime import timedelta
 import logging
 
+from pymodbus.client import ModbusTcpClient
 from pystiebeleltron import pystiebeleltron
 import voluptuous as vol
 
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
@@ -55,13 +55,13 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class StiebelEltronData:
     """Get the latest data and update the states."""
 
-    def __init__(self, name, modbus_client):
+    def __init__(self, name: str, modbus_client: ModbusTcpClient) -> None:
         """Init the STIEBEL ELTRON data object."""
 
         self.api = pystiebeleltron.StiebelEltronAPI(modbus_client, 1)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Update unit data."""
         if not self.api.update():
             _LOGGER.warning("Modbus read failed")

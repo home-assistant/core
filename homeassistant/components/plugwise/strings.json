@@ -1,12 +1,23 @@
 {
   "config": {
     "step": {
+      "reconfigure": {
+        "description": "Update configuration for {title}.",
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::plugwise::config::step::user::data_description::host%]",
+          "port": "[%key:component::plugwise::config::step::user::data_description::port%]"
+        }
+      },
       "user": {
         "title": "Connect to the Smile",
         "description": "Please enter",
         "data": {
-          "password": "Smile ID",
           "host": "[%key:common::config_flow::data::ip%]",
+          "password": "Smile ID",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "Smile Username"
         },
@@ -28,7 +39,9 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "anna_with_adam": "Both Anna and Adam detected. Add your Adam instead of your Anna"
+      "anna_with_adam": "Both Anna and Adam detected. Add your Adam instead of your Anna",
+      "not_the_same_smile": "The configured Smile ID does not match the Smile ID on the requested IP address.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
