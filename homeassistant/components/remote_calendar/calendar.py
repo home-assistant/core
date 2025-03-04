@@ -73,12 +73,16 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
 
     return CalendarEvent(
         summary=event.summary,
-        start=dt_util.as_local(event.start)
-        if isinstance(event.start, datetime)
-        else event.start,
-        end=dt_util.as_local(event.end)
-        if isinstance(event.end, datetime)
-        else event.end,
+        start=(
+            dt_util.as_local(event.start)
+            if isinstance(event.start, datetime)
+            else event.start
+        ),
+        end=(
+            dt_util.as_local(event.end)
+            if isinstance(event.end, datetime)
+            else event.end
+        ),
         description=event.description,
         uid=event.uid,
         rrule=event.rrule.as_rrule_str() if event.rrule else None,
