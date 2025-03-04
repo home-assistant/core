@@ -28,15 +28,22 @@ def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
 
 
+async def setup_sensor(
+    hass: HomeAssistant, mock_homee: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Setups the integration for sensor tests."""
+    mock_homee.nodes = [build_mock_node("sensors.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
+    await setup_integration(hass, mock_config_entry)
+
+
 async def test_up_down_values(
     hass: HomeAssistant,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test values for up/down sensor."""
-    mock_homee.nodes = [build_mock_node("sensors.json")]
-    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
-    await setup_integration(hass, mock_config_entry)
+    await setup_sensor(hass, mock_homee, mock_config_entry)
 
     assert hass.states.get("sensor.test_multisensor_state").state == OPEN_CLOSE_MAP[0]
 
@@ -63,9 +70,7 @@ async def test_window_position(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test values for window handle position."""
-    mock_homee.nodes = [build_mock_node("sensors.json")]
-    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
-    await setup_integration(hass, mock_config_entry)
+    await setup_sensor(hass, mock_homee, mock_config_entry)
 
     assert (
         hass.states.get("sensor.test_multisensor_window_position").state
@@ -96,9 +101,7 @@ async def test_brightness_sensor(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test brightness sensor's lx & klx units and naming of multi-instance sensors."""
-    mock_homee.nodes = [build_mock_node("sensors.json")]
-    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
-    await setup_integration(hass, mock_config_entry)
+    await setup_sensor(hass, mock_homee, mock_config_entry)
 
     sensor_state = hass.states.get("sensor.test_multisensor_illuminance_1")
     assert sensor_state.state == "175.0"
@@ -120,8 +123,6 @@ async def test_sensor_deprecation_issue(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor deprecation issue."""
-    mock_homee.nodes = [build_mock_node("sensors.json")]
-    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     entity_uid = f"{HOMEE_ID}-1-9"
     entity_id = "test_multisensor_valve_position"
     entity_registry.async_get_or_create(
@@ -135,12 +136,45 @@ async def test_sensor_deprecation_issue(
     with patch(
         "homeassistant.components.homee.sensor.entity_used_in", return_value=True
     ):
-        await setup_integration(hass, mock_config_entry)
+        await setup_sensor(hass, mock_homee, mock_config_entry)
 
     assert entity_registry.async_get(f"sensor.{entity_id}") is not None
     assert issue_registry.async_get_issue(
         domain=DOMAIN,
         issue_id=f"deprecated_entity_{entity_uid}",
+    )
+
+
+async def test_sensor_deprecation_delete_disabled(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor deprecation issue."""
+    entity_uid = f"{HOMEE_ID}-1-9"
+    entity_id = "test_multisensor_valve_position"
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        entity_uid,
+        suggested_object_id=entity_id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    with patch(
+        "homeassistant.components.homee.sensor.entity_used_in", return_value=True
+    ):
+        await setup_sensor(hass, mock_homee, mock_config_entry)
+
+    assert entity_registry.async_get(f"sensor.{entity_id}") is None
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=f"deprecated_entity_{entity_uid}",
+        )
+        is None
     )
 
 
