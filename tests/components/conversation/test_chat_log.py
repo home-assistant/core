@@ -503,20 +503,17 @@ async def test_tool_call_exception(
                 ]
             },
         ],
-        # With thinking and metadata
+        # With thinking
         [
             {"role": "assistant"},
             {"thinking": "Test"},
-            {"metadata": {"test": "test"}},
         ],
-        # With 2 thinking, 2 metadata, content, and tool call
+        # With 2 thinking, content, and tool call
         [
             {"role": "assistant"},
             {"thinking": "Test"},
-            {"metadata": {"test": "test"}},
             {"role": "assistant"},
             {"thinking": "Test 2"},
-            {"metadata": {"test": "test 2"}},
             {"content": "Test"},
             {
                 "tool_calls": [
