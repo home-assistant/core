@@ -53,6 +53,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from .browse_media import (
+    BrowseData,
     build_item_response,
     generate_playlist,
     library_payload,
@@ -281,7 +282,7 @@ class SqueezeBoxMediaPlayerEntity(
         self._previous_media_position = 0
         self._attr_unique_id = format_mac(player.player_id)
         _manufacturer = None
-        if player.model == "SqueezeLite" or "SqueezePlay" in player.model:
+        if player.model.startswith("SqueezeLite") or "SqueezePlay" in player.model:
             _manufacturer = "Ralph Irving"
         elif (
             "Squeezebox" in player.model
@@ -298,6 +299,7 @@ class SqueezeBoxMediaPlayerEntity(
             model=player.model,
             manufacturer=_manufacturer,
         )
+        self._browse_data = BrowseData()
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -588,9 +590,7 @@ class SqueezeBoxMediaPlayerEntity(
                     "search_type": MediaType.PLAYLIST,
                 }
                 playlist = await generate_playlist(
-                    self._player,
-                    payload,
-                    self.browse_limit,
+                    self._player, payload, self.browse_limit, self._browse_data
                 )
             except BrowseError:
                 # a list of urls
@@ -603,9 +603,7 @@ class SqueezeBoxMediaPlayerEntity(
                 "search_type": media_type,
             }
             playlist = await generate_playlist(
-                self._player,
-                payload,
-                self.browse_limit,
+                self._player, payload, self.browse_limit, self._browse_data
             )
 
             _LOGGER.debug("Generated playlist: %s", playlist)
@@ -850,7 +848,7 @@ class SqueezeBoxMediaPlayerEntity(
         )
 
         if media_content_type in [None, "library"]:
-            return await library_payload(self.hass, self._player)
+            return await library_payload(self.hass, self._player, self._browse_data)
 
         if media_content_id and media_source.is_media_source_id(media_content_id):
             return await media_source.async_browse_media(
@@ -867,6 +865,7 @@ class SqueezeBoxMediaPlayerEntity(
             self._player,
             payload,
             self.browse_limit,
+            self._browse_data,
         )
 
     async def async_get_browse_image(

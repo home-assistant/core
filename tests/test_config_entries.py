@@ -4796,6 +4796,136 @@ async def test_entry_reload_calls_on_unload_listeners(
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
+@pytest.mark.parametrize(
+    ("source_state", "target_state", "transition_method_name", "call_count"),
+    [
+        (
+            config_entries.ConfigEntryState.NOT_LOADED,
+            config_entries.ConfigEntryState.LOADED,
+            "async_setup",
+            2,
+        ),
+        (
+            config_entries.ConfigEntryState.LOADED,
+            config_entries.ConfigEntryState.NOT_LOADED,
+            "async_unload",
+            2,
+        ),
+        (
+            config_entries.ConfigEntryState.LOADED,
+            config_entries.ConfigEntryState.LOADED,
+            "async_reload",
+            4,
+        ),
+    ],
+)
+async def test_entry_state_change_calls_listener(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source_state: config_entries.ConfigEntryState,
+    target_state: config_entries.ConfigEntryState,
+    transition_method_name: str,
+    call_count: int,
+) -> None:
+    """Test listeners get called on entry state changes."""
+    entry = MockConfigEntry(domain="comp", state=source_state)
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
+
+    mock_state_change_callback = Mock()
+    entry.async_on_state_change(mock_state_change_callback)
+
+    transition_method = getattr(manager, transition_method_name)
+    await transition_method(entry.entry_id)
+
+    assert len(mock_state_change_callback.mock_calls) == call_count
+    assert entry.state is target_state
+
+
+async def test_entry_state_change_listener_removed(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test state_change listener can be removed."""
+    entry = MockConfigEntry(
+        domain="comp", state=config_entries.ConfigEntryState.NOT_LOADED
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
+
+    mock_state_change_callback = Mock()
+    remove = entry.async_on_state_change(mock_state_change_callback)
+
+    await manager.async_setup(entry.entry_id)
+
+    assert len(mock_state_change_callback.mock_calls) == 2
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+    remove()
+
+    await manager.async_unload(entry.entry_id)
+
+    # the listener should no longer be called
+    assert len(mock_state_change_callback.mock_calls) == 2
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+
+async def test_entry_state_change_error_does_not_block_transition(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test we transition states normally even if the callback throws in on_state_change."""
+    entry = MockConfigEntry(
+        title="test", domain="comp", state=config_entries.ConfigEntryState.NOT_LOADED
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
+
+    mock_state_change_callback = Mock(side_effect=Exception())
+
+    entry.async_on_state_change(mock_state_change_callback)
+
+    await manager.async_setup(entry.entry_id)
+
+    assert len(mock_state_change_callback.mock_calls) == 2
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert "Error calling on_state_change callback for test (comp)" in caplog.text
+
+
 async def test_setup_raise_entry_error(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -8769,3 +8899,63 @@ async def test_add_description_placeholder_automatically_not_overwrites(
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], None)
     assert result["type"] == FlowResultType.FORM
     assert result["description_placeholders"] == {"name": "Custom title"}
+
+
+@pytest.mark.parametrize(
+    ("domain", "expected_log"),
+    [
+        ("some_integration", True),
+        ("mobile_app", False),
+    ],
+)
+async def test_create_entry_existing_unique_id(
+    hass: HomeAssistant,
+    domain: str,
+    expected_log: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test to highlight unexpected behavior on create_entry."""
+    entry = MockConfigEntry(
+        title="From config flow",
+        domain=domain,
+        entry_id="01J915Q6T9F6G5V0QJX6HBC94T",
+        data={"host": "any", "port": 123},
+        unique_id="mock-unique-id",
+    )
+    entry.add_to_hass(hass)
+
+    assert len(hass.config_entries.async_entries(domain)) == 1
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(hass, MockModule(domain, async_setup_entry=mock_setup_entry))
+    mock_platform(hass, f"{domain}.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            await self.async_set_unique_id("mock-unique-id")
+            return self.async_create_entry(title="mock-title", data={})
+
+    with (
+        mock_config_flow(domain, TestFlow),
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            domain, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    assert len(hass.config_entries.async_entries(domain)) == 1
+
+    log_text = (
+        f"Detected that integration '{domain}' creates a config entry "
+        "when another entry with the same unique ID exists. Please "
+        "create a bug report at https:"
+    )
+    assert (log_text in caplog.text) == expected_log

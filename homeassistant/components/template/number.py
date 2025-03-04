@@ -157,9 +157,7 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         super().__init__(hass, config=config, unique_id=unique_id)
         assert self._attr_name is not None
         self._value_template = config[CONF_STATE]
-        self._command_set_value = Script(
-            hass, config[CONF_SET_VALUE], self._attr_name, DOMAIN
-        )
+        self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], self._attr_name, DOMAIN)
 
         self._step_template = config[CONF_STEP]
         self._min_value_template = config[CONF_MIN]
@@ -210,9 +208,9 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         if self._optimistic:
             self._attr_native_value = value
             self.async_write_ha_state()
-        if self._command_set_value:
+        if (set_value := self._action_scripts.get(CONF_SET_VALUE)) is not None:
             await self.async_run_script(
-                self._command_set_value,
+                set_value,
                 run_variables={ATTR_VALUE: value},
                 context=self._context,
             )
