@@ -18,7 +18,7 @@ from homeassistant.components.velbus.const import (
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-import homeassistant.helpers.issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
 
 from . import init_integration
 

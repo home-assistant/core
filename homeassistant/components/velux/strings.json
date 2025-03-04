@@ -2,14 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup Velux",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "discovery_confirm": {
-        "title": "Setup Velux",
         "description": "Please enter the password for {name} ({host})",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"

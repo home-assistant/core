@@ -24,7 +24,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -115,7 +118,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
     _options = dict(config_entry.options)
@@ -140,8 +143,8 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         assert self._attr_name is not None
         self._value_template = config[CONF_STATE]
         if (selection_option := config.get(CONF_SELECT_OPTION)) is not None:
-            self._command_select_option = Script(
-                hass, selection_option, self._attr_name, DOMAIN
+            self.add_script(
+                CONF_SELECT_OPTION, selection_option, self._attr_name, DOMAIN
             )
         self._options_template = config[ATTR_OPTIONS]
         self._attr_assumed_state = self._optimistic = config.get(CONF_OPTIMISTIC, False)
@@ -174,9 +177,9 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         if self._optimistic:
             self._attr_current_option = option
             self.async_write_ha_state()
-        if self._command_select_option:
+        if (select_option := self._action_scripts.get(CONF_SELECT_OPTION)) is not None:
             await self.async_run_script(
-                self._command_select_option,
+                select_option,
                 run_variables={ATTR_OPTION: option},
                 context=self._context,
             )

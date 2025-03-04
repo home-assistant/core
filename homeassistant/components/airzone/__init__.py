@@ -15,7 +15,6 @@ from aioairzone.const import (
 )
 from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -25,7 +24,7 @@ from homeassistant.helpers import (
 )
 
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import AirzoneUpdateCoordinator
+from .coordinator import AirzoneConfigEntry, AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -37,8 +36,6 @@ PLATFORMS: list[Platform] = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
-
-type AirzoneConfigEntry = ConfigEntry[AirzoneUpdateCoordinator]
 
 
 async def _async_migrate_unique_ids(
@@ -86,11 +83,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
     options = ConnectionOptions(
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
-        entry.data.get(CONF_ID, DEFAULT_SYSTEM_ID),
+        entry.data[CONF_ID],
     )
 
     airzone = AirzoneLocalApi(aiohttp_client.async_get_clientsession(hass), options)
-    coordinator = AirzoneUpdateCoordinator(hass, airzone)
+    coordinator = AirzoneUpdateCoordinator(hass, entry, airzone)
     await coordinator.async_config_entry_first_refresh()
     await _async_migrate_unique_ids(hass, entry, coordinator)
 
@@ -120,3 +117,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
+    """Migrate an old entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        # Add missing CONF_ID
+        system_id = entry.data.get(CONF_ID, DEFAULT_SYSTEM_ID)
+        new_data = entry.data.copy()
+        new_data[CONF_ID] = system_id
+        hass.config_entries.async_update_entry(
+            entry,
+            data=new_data,
+            minor_version=2,
+        )
+
+    _LOGGER.info(
+        "Migration to configuration version %s.%s successful",
+        entry.version,
+        entry.minor_version,
+    )
+
+    return True

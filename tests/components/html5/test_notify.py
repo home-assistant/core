@@ -8,7 +8,7 @@ from unittest.mock import mock_open, patch
 from aiohttp.hdrs import AUTHORIZATION
 from aiohttp.test_utils import TestClient
 
-import homeassistant.components.html5.notify as html5
+from homeassistant.components.html5 import notify as html5
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component

@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import yaml
+from homeassistant.util import yaml as yaml_util
 from homeassistant.util.yaml import loader as yaml_loader
 
 from tests.common import get_test_config_dir, patch_yaml_files
@@ -63,7 +63,7 @@ def default_config(filepaths: dict[str, Path]) -> YamlFile:
 def default_secrets(filepaths: dict[str, Path]) -> YamlFile:
     """Return the default secrets file for testing."""
     return YamlFile(
-        path=filepaths["config"] / yaml.SECRET_YAML,
+        path=filepaths["config"] / yaml_util.SECRET_YAML,
         contents=(
             "http_pw: pwhttp\n"
             "comp1_un: un1\n"
@@ -112,7 +112,8 @@ def test_secret_overrides_parent(
         path=filepaths["sub_folder"] / "sub.yaml", contents=default_config.contents
     )
     sub_secrets = YamlFile(
-        path=filepaths["sub_folder"] / yaml.SECRET_YAML, contents="http_pw: override"
+        path=filepaths["sub_folder"] / yaml_util.SECRET_YAML,
+        contents="http_pw: override",
     )
 
     loaded_file = load_config_file(
@@ -133,7 +134,7 @@ def test_secrets_from_unrelated_fails(
         contents="http:\n  api_password: !secret test",
     )
     unrelated_secrets = YamlFile(
-        path=filepaths["unrelated"] / yaml.SECRET_YAML, contents="test: failure"
+        path=filepaths["unrelated"] / yaml_util.SECRET_YAML, contents="test: failure"
     )
     with pytest.raises(HomeAssistantError, match="Secret test not defined"):
         load_config_file(
@@ -162,7 +163,8 @@ def test_bad_logger_value(
         path=filepaths["config"] / YAML_CONFIG_FILE, contents="api_password: !secret pw"
     )
     secrets_file = YamlFile(
-        path=filepaths["config"] / yaml.SECRET_YAML, contents="logger: info\npw: abc"
+        path=filepaths["config"] / yaml_util.SECRET_YAML,
+        contents="logger: info\npw: abc",
     )
     with caplog.at_level(logging.ERROR):
         load_config_file(config_file.path, [config_file, secrets_file])
@@ -178,7 +180,7 @@ def test_secrets_are_not_dict(
 ) -> None:
     """Did secrets handle non-dict file."""
     non_dict_secrets = YamlFile(
-        path=filepaths["config"] / yaml.SECRET_YAML,
+        path=filepaths["config"] / yaml_util.SECRET_YAML,
         contents="- http_pw: pwhttp\n  comp1_un: un1\n  comp1_pw: pw1\n",
     )
     with pytest.raises(HomeAssistantError, match="Secrets is not a dictionary"):

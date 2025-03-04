@@ -25,9 +25,11 @@ from homeassistant.components.bluetooth.const import (
     UNAVAILABLE_TRACK_SECONDS,
 )
 from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
 
 from . import (
@@ -523,7 +525,19 @@ async def test_scanner_stops_responding(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_remote_scanner_bluetooth_config_entry(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("manufacturer", "source"),
+    [
+        ("test", "test"),
+        ("Raspberry Pi Trading Ltd (test)", "28:CD:C1:11:23:45"),
+    ],
+)
+async def test_remote_scanner_bluetooth_config_entry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    manufacturer: str,
+    source: str,
+) -> None:
     """Test the remote scanner gets a bluetooth config entry."""
     manager: HomeAssistantBluetoothManager = _get_manager()
 
@@ -543,8 +557,9 @@ async def test_remote_scanner_bluetooth_config_entry(hass: HomeAssistant) -> Non
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner("esp32", "esp32", connector, True)
+    scanner = FakeScanner(source, source, connector, True)
     unsetup = scanner.async_setup()
+    assert scanner.source == source
     entry = MockConfigEntry(domain="test")
     entry.add_to_hass(hass)
     cancel = manager.async_register_hass_scanner(
@@ -561,9 +576,18 @@ async def test_remote_scanner_bluetooth_config_entry(hass: HomeAssistant) -> Non
     cancel()
     unsetup()
 
-    assert hass.config_entries.async_entry_for_domain_unique_id(
+    adapter_entry = hass.config_entries.async_entry_for_domain_unique_id(
         "bluetooth", scanner.source
     )
+    assert adapter_entry is not None
+    assert adapter_entry.state is ConfigEntryState.LOADED
+
+    dev = device_registry.async_get_device(
+        connections={(dr.CONNECTION_BLUETOOTH, scanner.source)}
+    )
+    assert dev is not None
+    assert dev.config_entries == {adapter_entry.entry_id}
+    assert dev.manufacturer == manufacturer
 
     manager.async_remove_scanner(scanner.source)
     await hass.async_block_till_done()
