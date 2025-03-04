@@ -8960,6 +8960,7 @@ async def test_create_entry_existing_unique_id(
     )
     assert (log_text in caplog.text) == expected_log
 
+
 async def test_virtual_domain_saved_in_entry(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
