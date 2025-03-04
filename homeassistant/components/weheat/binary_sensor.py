@@ -67,17 +67,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors for weheat heat pump."""
-    entities: list[WeheatHeatPumpBinarySensor] = []
-    for weheatdata in entry.runtime_data:
-        entities.extend(
-            WeheatHeatPumpBinarySensor(
-                weheatdata.heat_pump_info,
-                weheatdata.data_coordinator,
-                entity_description,
-            )
-            for entity_description in BINARY_SENSORS
-            if entity_description.value_fn(weheatdata.data_coordinator.data) is not None
+    entities = [
+        WeheatHeatPumpBinarySensor(
+            weheatdata.heat_pump_info,
+            weheatdata.data_coordinator,
+            entity_description,
         )
+        for entity_description in BINARY_SENSORS
+        if entity_description.value_fn(weheatdata.data_coordinator.data) is not None
+        for weheatdata in entry.runtime_data
+    ]
 
     async_add_entities(entities)
 
