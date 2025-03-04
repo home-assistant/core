@@ -6,7 +6,7 @@ from syrupy import SnapshotAssertion
 from homeassistant.components.openweathermap.const import (
     DEFAULT_LANGUAGE,
     DOMAIN,
-    OWM_MODE_V25,
+    OWM_MODE_FREE_CURRENT,
     OWM_MODE_V30,
 )
 from homeassistant.components.openweathermap.weather import SERVICE_GET_MINUTE_FORECAST
@@ -52,9 +52,9 @@ def mock_config_entry(mode: str) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_config_entry_v25() -> MockConfigEntry:
-    """Create a mock OpenWeatherMap v2.5 config entry."""
-    return mock_config_entry(OWM_MODE_V25)
+def mock_config_entry_free_current() -> MockConfigEntry:
+    """Create a mock OpenWeatherMap FREE_CURRENT config entry."""
+    return mock_config_entry(OWM_MODE_FREE_CURRENT)
 
 
 @pytest.fixture
@@ -97,15 +97,15 @@ async def test_get_minute_forecast(
 
 
 @patch(
-    "pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather",
+    "pyopenweathermap.client.free_client.OWMFreeClient.get_weather",
     AsyncMock(return_value=static_weather_report),
 )
 async def test_mode_fail(
     hass: HomeAssistant,
-    mock_config_entry_v25: MockConfigEntry,
+    mock_config_entry_free_current: MockConfigEntry,
 ) -> None:
     """Test that Minute forecasting fails when mode is not v3.0."""
-    await setup_mock_config_entry(hass, mock_config_entry_v25)
+    await setup_mock_config_entry(hass, mock_config_entry_free_current)
 
     # Expect a ServiceValidationError when mode is not OWM_MODE_V30
     with pytest.raises(
