@@ -1001,7 +1001,7 @@ jobs:
           path: coverage.xml
           overwrite: true
       - name: Upload test results artifact
-        if: needs.info.outputs.skip_coverage != 'true'
+        if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
         uses: actions/upload-artifact@v4.6.0
         with:
           name: test-results-full-${{ matrix.python-version }}-${{ matrix.group }}
@@ -1135,7 +1135,7 @@ jobs:
           path: coverage.xml
           overwrite: true
       - name: Upload test results artifact
-        if: needs.info.outputs.skip_coverage != 'true'
+        if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
         uses: actions/upload-artifact@v4.6.0
         with:
           name: test-results-mariadb-${{ matrix.python-version }}-${{
@@ -1271,7 +1271,7 @@ jobs:
           path: coverage.xml
           overwrite: true
       - name: Upload test results artifact
-        if: needs.info.outputs.skip_coverage != 'true'
+        if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
         uses: actions/upload-artifact@v4.6.0
         with:
           name: test-results-postgres-${{ matrix.python-version }}-${{
@@ -1417,7 +1417,7 @@ jobs:
           path: coverage.xml
           overwrite: true
       - name: Upload test results artifact
-        if: needs.info.outputs.skip_coverage != 'true'
+        if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
         uses: actions/upload-artifact@v4.6.0
         with:
           name: test-results-partial-${{ matrix.python-version }}-${{ matrix.group }}
