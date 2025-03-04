@@ -47,8 +47,6 @@ _LOGGER = logging.getLogger(__name__)
 
 type HomeConnectConfigEntry = ConfigEntry[HomeConnectCoordinator]
 
-EVENT_STREAM_RECONNECT_DELAY = 30
-
 
 @dataclass(frozen=True, kw_only=True)
 class HomeConnectApplianceData:
@@ -157,9 +155,11 @@ class HomeConnectCoordinator(
 
     async def _event_listener(self) -> None:
         """Match event with listener for event type."""
+        retry_time = 10
         while True:
             try:
                 async for event_message in self.client.stream_all_events():
+                    retry_time = 10
                     event_message_ha_id = event_message.ha_id
                     match event_message.type:
                         case EventType.STATUS:
@@ -256,20 +256,18 @@ class HomeConnectCoordinator(
             except (EventStreamInterruptedError, HomeConnectRequestError) as error:
                 _LOGGER.debug(
                     "Non-breaking error (%s) while listening for events,"
-                    " continuing in 30 seconds",
+                    " continuing in %s seconds",
                     type(error).__name__,
+                    retry_time,
                 )
-                await asyncio.sleep(EVENT_STREAM_RECONNECT_DELAY)
+                await asyncio.sleep(retry_time)
+                retry_time = min(retry_time * 2, 3600)
             except HomeConnectApiError as error:
                 _LOGGER.error("Error while listening for events: %s", error)
                 self.hass.config_entries.async_schedule_reload(
                     self.config_entry.entry_id
                 )
                 break
-            # if there was a non-breaking error, we continue listening
-            # but we need to refresh the data to get the possible changes
-            # that happened while the event stream was interrupted
-            await self.async_refresh()
 
     @callback
     def _call_event_listener(self, event_message: EventMessage) -> None:
