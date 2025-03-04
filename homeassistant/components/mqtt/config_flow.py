@@ -1117,7 +1117,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         ]
         if len(self._subentry_data["components"]) > 1:
             menu_options.append("delete_entity")
-        menu_options.append(CONF_DEVICE)
+        menu_options.append("device")
         if self._dirty:
             menu_options.append("finish_reconfigure")
         return self.async_show_menu(
