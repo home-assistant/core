@@ -62,7 +62,7 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         Then we process only a subset to make then nice for HA
         """
         async with timeout(STATUS_API_TIMEOUT):
-            data = await self.lms.async_prepared_status()
+            data: dict | None = await self.lms.async_prepared_status()
 
         if not data:
             raise UpdateFailed("No data from status poll")
