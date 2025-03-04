@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 type BoschAlarmConfigEntry = ConfigEntry[BoschAlarmCoordinator]
 
 
-class BoschAlarmCoordinator(DataUpdateCoordinator[Panel]):
+class BoschAlarmCoordinator(DataUpdateCoordinator[None]):
     """Bosch alarm coordinator."""
 
     config_entry: BoschAlarmConfigEntry
