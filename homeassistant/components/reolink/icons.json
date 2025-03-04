@@ -54,6 +54,24 @@
         "state": {
           "on": "mdi:sleep"
         }
+      },
+      "crossline_person": {
+        "default": "mdi:fence",
+        "state": {
+          "on": "mdi:fence-electric"
+        }
+      },
+      "crossline_vehicle": {
+        "default": "mdi:fence",
+        "state": {
+          "on": "mdi:fence-electric"
+        }
+      },
+      "crossline_dog_cat": {
+        "default": "mdi:fence",
+        "state": {
+          "on": "mdi:fence-electric"
+        }
       }
     },
     "button": {

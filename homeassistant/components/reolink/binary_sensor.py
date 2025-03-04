@@ -25,7 +25,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
+from .entity import (
+    ReolinkChannelCoordinatorEntity,
+    ReolinkChannelEntityDescription,
+    ReolinkEntityDescription,
+)
 from .util import ReolinkConfigEntry, ReolinkData
 
 PARALLEL_UPDATES = 0
@@ -39,6 +43,18 @@ class ReolinkBinarySensorEntityDescription(
     """A class that describes binary sensor entities."""
 
     value: Callable[[Host, int], bool]
+
+
+@dataclass(frozen=True, kw_only=True)
+class ReolinkSmartBinarySensorEntityDescription(
+    BinarySensorEntityDescription,
+    ReolinkEntityDescription,
+):
+    """A class that describes smart binary sensor entities."""
+
+    ai_type: str = ""
+    value: Callable[[Host, int, int], bool]
+    supported: Callable[[Host, int, int], bool] = lambda api, ch, loc: True
 
 
 BINARY_PUSH_SENSORS = (
@@ -121,6 +137,48 @@ BINARY_SENSORS = (
     ),
 )
 
+BINARY_SMART_SENSORS = (
+    ReolinkSmartBinarySensorEntityDescription(
+        key="crossline",
+        ai_type="people",
+        cmd_id=33,
+        translation_key="crossline_person",
+        value=lambda api, ch, loc: (
+            api.baichuan.smart_ai_state(ch, "crossline", loc, "people")
+        ),
+        supported=lambda api, ch, loc: (
+            api.supported(ch, "ai_crossline")
+            and "people" in api.baichuan.smart_ai_type_list(ch, "crossline", loc)
+        ),
+    ),
+    ReolinkSmartBinarySensorEntityDescription(
+        key="crossline",
+        ai_type="vehicle",
+        cmd_id=33,
+        translation_key="crossline_vehicle",
+        value=lambda api, ch, loc: (
+            api.baichuan.smart_ai_state(ch, "crossline", loc, "vehicle")
+        ),
+        supported=lambda api, ch, loc: (
+            api.supported(ch, "ai_crossline")
+            and "vehicle" in api.baichuan.smart_ai_type_list(ch, "crossline", loc)
+        ),
+    ),
+    ReolinkSmartBinarySensorEntityDescription(
+        key="crossline",
+        ai_type="dog_cat",
+        cmd_id=33,
+        translation_key="crossline_dog_cat",
+        value=lambda api, ch, loc: (
+            api.baichuan.smart_ai_state(ch, "crossline", loc, "dog_cat")
+        ),
+        supported=lambda api, ch, loc: (
+            api.supported(ch, "ai_crossline")
+            and "dog_cat" in api.baichuan.smart_ai_type_list(ch, "crossline", loc)
+        ),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -129,18 +187,29 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Reolink IP Camera."""
     reolink_data: ReolinkData = config_entry.runtime_data
+    api = reolink_data.host.api
 
-    entities: list[ReolinkBinarySensorEntity] = []
-    for channel in reolink_data.host.api.channels:
+    entities: list[ReolinkBinarySensorEntity | ReolinkSmartBinarySensorEntity] = []
+    for channel in api.channels:
         entities.extend(
             ReolinkPushBinarySensorEntity(reolink_data, channel, entity_description)
             for entity_description in BINARY_PUSH_SENSORS
-            if entity_description.supported(reolink_data.host.api, channel)
+            if entity_description.supported(api, channel)
         )
         entities.extend(
             ReolinkBinarySensorEntity(reolink_data, channel, entity_description)
             for entity_description in BINARY_SENSORS
-            if entity_description.supported(reolink_data.host.api, channel)
+            if entity_description.supported(api, channel)
+        )
+        entities.extend(
+            ReolinkSmartBinarySensorEntity(
+                reolink_data, channel, location, entity_description
+            )
+            for entity_description in BINARY_SMART_SENSORS
+            for location in api.baichuan.smart_location_list(
+                channel, entity_description.key
+            )
+            if entity_description.supported(api, channel, location)
         )
 
     async_add_entities(entities)
@@ -198,3 +267,39 @@ class ReolinkPushBinarySensorEntity(ReolinkBinarySensorEntity):
     async def _async_handle_event(self, event: str) -> None:
         """Handle incoming event for motion detection."""
         self.async_write_ha_state()
+
+
+class ReolinkSmartBinarySensorEntity(
+    ReolinkChannelCoordinatorEntity, BinarySensorEntity
+):
+    """Binary-sensor class for Reolink IP camera smart AI sensors."""
+
+    entity_description: ReolinkSmartBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        channel: int,
+        location: int,
+        entity_description: ReolinkSmartBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize Reolink binary sensor."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data, channel)
+        self._attr_unique_id = (
+            f"{self._attr_unique_id}_{location}_{self.entity_description.ai_type}"
+        )
+
+        self._location = location
+        self._attr_translation_placeholders = {
+            "zone_name": self._host.api.baichuan.smart_ai_name(
+                channel, self.entity_description.key, location
+            )
+        }
+
+    @property
+    def is_on(self) -> bool:
+        """State of the sensor."""
+        return self.entity_description.value(
+            self._host.api, self._channel, self._location
+        )
