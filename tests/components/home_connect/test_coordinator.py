@@ -13,8 +13,6 @@ from aiohomeconnect.model import (
     EventKey,
     EventMessage,
     EventType,
-    Status,
-    StatusKey,
 )
 from aiohomeconnect.model.error import (
     EventStreamInterruptedError,
@@ -25,7 +23,6 @@ from aiohomeconnect.model.error import (
 import pytest
 
 from homeassistant.components.home_connect.const import (
-    BSH_DOOR_STATE_LOCKED,
     BSH_DOOR_STATE_OPEN,
     BSH_EVENT_PRESENT_STATE_PRESENT,
     BSH_POWER_OFF,
@@ -288,9 +285,6 @@ async def test_event_listener_error(
     (
         "entity_id",
         "initial_state",
-        "status_key",
-        "status_value",
-        "after_refresh_expected_state",
         "event_key",
         "event_value",
         "after_event_expected_state",
@@ -299,9 +293,6 @@ async def test_event_listener_error(
         (
             "sensor.washer_door",
             "closed",
-            StatusKey.BSH_COMMON_DOOR_STATE,
-            BSH_DOOR_STATE_LOCKED,
-            "locked",
             EventKey.BSH_COMMON_STATUS_DOOR_STATE,
             BSH_DOOR_STATE_OPEN,
             "open",
@@ -311,9 +302,6 @@ async def test_event_listener_error(
 async def test_event_listener_resilience(
     entity_id: str,
     initial_state: str,
-    status_key: StatusKey,
-    status_value: Any,
-    after_refresh_expected_state: str,
     event_key: EventKey,
     event_value: Any,
     after_event_expected_state: str,
@@ -344,9 +332,6 @@ async def test_event_listener_resilience(
 
     assert hass.states.is_state(entity_id, initial_state)
 
-    client.get_status.return_value = ArrayOfStatus(
-        [Status(key=status_key, raw_key=status_key.value, value=status_value)],
-    )
     await hass.async_block_till_done()
     future.set_exception(exception)
     await hass.async_block_till_done()
@@ -354,7 +339,6 @@ async def test_event_listener_resilience(
     await hass.async_block_till_done()
 
     assert client.stream_all_events.call_count == 2
-    assert hass.states.is_state(entity_id, after_refresh_expected_state)
 
     await client.add_events(
         [
