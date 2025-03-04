@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
+from asyncio import sleep as asyncio_sleep
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -29,6 +29,7 @@ from aiohomeconnect.model.error import (
     HomeConnectApiError,
     HomeConnectError,
     HomeConnectRequestError,
+    TooManyRequestsError,
     UnauthorizedError,
 )
 from aiohomeconnect.model.program import EnumerateProgram, ProgramDefinitionOption
@@ -36,11 +37,11 @@ from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import APPLIANCES_WITH_PROGRAMS, DOMAIN
+from .const import API_DEFAULT_RETRY_AFTER, APPLIANCES_WITH_PROGRAMS, DOMAIN
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
@@ -155,7 +156,7 @@ class HomeConnectCoordinator(
             f"home_connect-events_listener_task-{self.config_entry.entry_id}",
         )
 
-    async def _event_listener(self) -> None:
+    async def _event_listener(self) -> None:  # noqa: C901
         """Match event with listener for event type."""
         while True:
             try:
@@ -259,7 +260,7 @@ class HomeConnectCoordinator(
                     " continuing in 30 seconds",
                     type(error).__name__,
                 )
-                await asyncio.sleep(EVENT_STREAM_RECONNECT_DELAY)
+                await asyncio_sleep(EVENT_STREAM_RECONNECT_DELAY)
             except HomeConnectApiError as error:
                 _LOGGER.error("Error while listening for events: %s", error)
                 self.hass.config_entries.async_schedule_reload(
@@ -269,7 +270,25 @@ class HomeConnectCoordinator(
             # if there was a non-breaking error, we continue listening
             # but we need to refresh the data to get the possible changes
             # that happened while the event stream was interrupted
+            old_appliances = self.data.keys()
+            await self._async_setup()
             await self.async_refresh()
+
+            for ha_id in old_appliances - self.data.keys():
+                device = self.device_registry.async_get_device(
+                    identifiers={(DOMAIN, ha_id)}
+                )
+                if device:
+                    self.device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
+            # Trigger to delete the possible depaired device entities
+            # from known_entities variable at common.py
+            for listener, context in self._special_listeners.values():
+                assert isinstance(context, tuple)
+                if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED in context:
+                    listener()
 
     @callback
     def _call_event_listener(self, event_message: EventMessage) -> None:
@@ -288,6 +307,39 @@ class HomeConnectCoordinator(
 
     async def _async_update_data(self) -> dict[str, HomeConnectApplianceData]:
         """Fetch data from Home Connect."""
+        for appliance_data in self.data.values():
+            appliance = appliance_data.info
+            ha_id = appliance.ha_id
+            while True:
+                try:
+                    self.data[ha_id] = await self._get_appliance_data(
+                        appliance, self.data.get(ha_id)
+                    )
+                except TooManyRequestsError as err:
+                    _LOGGER.debug(
+                        "Rate limit exceeded on initial fetch: %s",
+                        err,
+                    )
+                    await asyncio_sleep(err.retry_after or API_DEFAULT_RETRY_AFTER)
+                else:
+                    break
+
+        for listener, context in self._special_listeners.values():
+            assert isinstance(context, tuple)
+            if EventKey.BSH_COMMON_APPLIANCE_PAIRED in context:
+                listener()
+
+        return self.data
+
+    async def async_setup(self) -> None:
+        """Set up the devices."""
+        try:
+            await self._async_setup()
+        except UpdateFailed as err:
+            raise ConfigEntryNotReady from err
+
+    async def _async_setup(self) -> None:
+        """Set up the devices."""
         try:
             appliances = await self.client.get_home_appliances()
         except UnauthorizedError as error:
@@ -303,12 +355,29 @@ class HomeConnectCoordinator(
                 translation_placeholders=get_dict_from_home_connect_error(error),
             ) from error
 
-        return {
-            appliance.ha_id: await self._get_appliance_data(
-                appliance, self.data.get(appliance.ha_id) if self.data else None
+        if not self.data:
+            self.data = {}
+
+        for appliance in appliances.homeappliances:
+            self.device_registry.async_get_or_create(
+                config_entry_id=self.config_entry.entry_id,
+                identifiers={(DOMAIN, appliance.ha_id)},
+                manufacturer=appliance.brand,
+                name=appliance.name,
+                model=appliance.vib,
             )
-            for appliance in appliances.homeappliances
-        }
+            if appliance.ha_id not in self.data:
+                self.data[appliance.ha_id] = HomeConnectApplianceData(
+                    commands=set(),
+                    events={},
+                    info=appliance,
+                    options={},
+                    programs=[],
+                    settings={},
+                    status={},
+                )
+            else:
+                self.data[appliance.ha_id].info.connected = appliance.connected
 
     async def _get_appliance_data(
         self,
@@ -330,6 +399,8 @@ class HomeConnectCoordinator(
                     await self.client.get_settings(appliance.ha_id)
                 ).settings
             }
+        except TooManyRequestsError:
+            raise
         except HomeConnectError as error:
             _LOGGER.debug(
                 "Error fetching settings for %s: %s",
@@ -344,6 +415,8 @@ class HomeConnectCoordinator(
                 status.key: status
                 for status in (await self.client.get_status(appliance.ha_id)).status
             }
+        except TooManyRequestsError:
+            raise
         except HomeConnectError as error:
             _LOGGER.debug(
                 "Error fetching status for %s: %s",
@@ -360,6 +433,8 @@ class HomeConnectCoordinator(
         if appliance.type in APPLIANCES_WITH_PROGRAMS:
             try:
                 all_programs = await self.client.get_all_programs(appliance.ha_id)
+            except TooManyRequestsError:
+                raise
             except HomeConnectError as error:
                 _LOGGER.debug(
                     "Error fetching programs for %s: %s",
@@ -418,6 +493,8 @@ class HomeConnectCoordinator(
                     await self.client.get_available_commands(appliance.ha_id)
                 ).commands
             }
+        except TooManyRequestsError:
+            raise
         except HomeConnectError:
             commands = set()
 
@@ -452,6 +529,8 @@ class HomeConnectCoordinator(
                 ).options
                 or []
             }
+        except TooManyRequestsError:
+            raise
         except HomeConnectError as error:
             _LOGGER.debug(
                 "Error fetching options for %s: %s",
