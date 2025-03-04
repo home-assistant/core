@@ -6,7 +6,6 @@ from asyncio import timeout
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-import re
 from typing import TYPE_CHECKING, Any
 
 from pysqueezebox import Player, Server
@@ -14,7 +13,6 @@ from pysqueezebox import Player, Server
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from . import SqueezeboxConfigEntry
@@ -24,14 +22,6 @@ from .const import (
     SENSOR_UPDATE_INTERVAL,
     SIGNAL_PLAYER_REDISCOVERED,
     STATUS_API_TIMEOUT,
-    STATUS_QUERY_VERSION,
-    STATUS_SENSOR_LASTSCAN,
-    STATUS_SENSOR_NEEDSRESTART,
-    STATUS_SENSOR_RESCAN,
-    STATUS_UPDATE_NEWPLUGINS,
-    STATUS_UPDATE_NEWVERSION,
-    UPDATE_PLUGINS_RELEASE_SUMMARY,
-    UPDATE_RELEASE_SUMMARY,
 )
 
 _LOGGER = logging.getLogger(__name__)
