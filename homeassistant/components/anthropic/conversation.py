@@ -261,7 +261,7 @@ async def _transform_stream(
                 }
             elif current_block["type"] == "thinking":
                 thinking_block = cast(ThinkingBlockParam, current_block)
-                LOGGER.debug("Thinking:\n%s", thinking_block["thinking"])
+                LOGGER.debug("Thinking: %s", thinking_block["thinking"])
 
             if current_message is None:
                 raise ValueError("Unexpected stop event without a current message")
