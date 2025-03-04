@@ -82,8 +82,8 @@ def mock_ics_content(request: pytest.FixtureRequest) -> str:
         BEGIN:VCALENDAR
         BEGIN:VEVENT
         SUMMARY:Bastille Day Party
-        DTSTART:19970714
-        DTEND:19970715
+        DTSTART:19970714T170000Z
+        DTEND:19970715T040000Z
         END:VEVENT
         END:VCALENDAR
         """
