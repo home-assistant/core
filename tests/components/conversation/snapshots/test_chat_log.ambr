@@ -8,7 +8,6 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': 'Test',
-      'metadata': None,
       'role': 'assistant',
       'thinking': None,
       'tool_calls': None,
@@ -20,7 +19,6 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': 'Test',
-      'metadata': None,
       'role': 'assistant',
       'thinking': None,
       'tool_calls': None,
@@ -28,7 +26,6 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': 'Test 2',
-      'metadata': None,
       'role': 'assistant',
       'thinking': None,
       'tool_calls': None,
@@ -40,7 +37,6 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': None,
-      'metadata': None,
       'role': 'assistant',
       'thinking': None,
       'tool_calls': list([
@@ -67,7 +63,6 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': 'Test',
-      'metadata': None,
       'role': 'assistant',
       'thinking': None,
       'tool_calls': list([
@@ -94,7 +89,6 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': 'Test',
-      'metadata': None,
       'role': 'assistant',
       'thinking': None,
       'tool_calls': list([
@@ -117,7 +111,6 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': 'Test 2',
-      'metadata': None,
       'role': 'assistant',
       'thinking': None,
       'tool_calls': None,
@@ -129,7 +122,6 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': None,
-      'metadata': None,
       'role': 'assistant',
       'thinking': None,
       'tool_calls': list([
@@ -170,9 +162,6 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': None,
-      'metadata': dict({
-        'test': 'test',
-      }),
       'role': 'assistant',
       'thinking': 'Test',
       'tool_calls': None,
@@ -184,9 +173,6 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': None,
-      'metadata': dict({
-        'test': 'test',
-      }),
       'role': 'assistant',
       'thinking': 'Test',
       'tool_calls': None,
@@ -194,9 +180,6 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': 'Test',
-      'metadata': dict({
-        'test': 'test 2',
-      }),
       'role': 'assistant',
       'thinking': 'Test 2',
       'tool_calls': list([

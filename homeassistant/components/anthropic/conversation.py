@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator, Callable, Iterable
 import json
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import anthropic
 from anthropic import AsyncStream
@@ -15,6 +15,7 @@ from anthropic.types import (
     RawContentBlockStartEvent,
     RawContentBlockStopEvent,
     RawMessageStartEvent,
+    RawMessageStopEvent,
     RedactedThinkingBlock,
     RedactedThinkingBlockParam,
     SignatureDelta,
@@ -87,8 +88,7 @@ def _convert_content(
     chat_content: Iterable[conversation.Content],
 ) -> list[MessageParam]:
     """Transform HA chat_log content into Anthropic API format."""
-    messages = []
-    last_message_id: str | None = None
+    messages: list[MessageParam] = []
 
     for content in chat_content:
         if isinstance(content, conversation.ToolResultContent):
@@ -104,7 +104,6 @@ def _convert_content(
                     ],
                 )
             )
-            last_message_id = None
         elif isinstance(content, conversation.UserContent):
             messages.append(
                 MessageParam(
@@ -112,24 +111,9 @@ def _convert_content(
                     content=content.content,
                 )
             )
-            last_message_id = None
         elif isinstance(content, conversation.AssistantContent):
-            # Combine assistant message content if message_id is the same or unknown
-            if (
-                last_message_id is not None
-                and content.metadata is not None
-                and content.metadata.get("message_id") == last_message_id
-            ) or (
-                last_message_id is None
-                and (
-                    content.metadata is None
-                    or content.metadata.get("message_id") is None
-                )
-                and messages
-                and messages[-1]["role"] == "assistant"
-            ):
-                LOGGER.debug("Combining assistant messages with id %s", last_message_id)
-            else:
+            # Combine consequent assistant messages
+            if not messages or messages[-1]["role"] != "assistant":
                 messages.append(
                     MessageParam(
                         role="assistant",
@@ -137,35 +121,6 @@ def _convert_content(
                     )
                 )
 
-            if content.metadata:
-                last_message_id = content.metadata.get("message_id")
-            else:
-                last_message_id = None
-
-            if content.thinking:  # Thinking blocks must go before text blocks
-                if content.metadata and content.metadata.get("redacted_thinking"):
-                    # Assistant content is always a list, so we can safely append
-                    messages[-1]["content"].append(  # type: ignore[union-attr]
-                        RedactedThinkingBlockParam(
-                            type="redacted_thinking",
-                            data=content.metadata["redacted_thinking"],
-                        )
-                    )
-                elif not content.metadata or not content.metadata.get("signature"):
-                    LOGGER.warning("Adding thinking block without signature as text")
-                    messages[-1]["content"].append(  # type: ignore[union-attr]
-                        TextBlockParam(
-                            type="text", text="(Thinking) " + content.thinking
-                        )
-                    )
-                else:
-                    messages[-1]["content"].append(  # type: ignore[union-attr]
-                        ThinkingBlockParam(
-                            type="thinking",
-                            thinking=content.thinking,
-                            signature=content.metadata["signature"],
-                        )
-                    )
             if content.content:
                 messages[-1]["content"].append(  # type: ignore[union-attr]
                     TextBlockParam(type="text", text=content.content)
@@ -191,6 +146,7 @@ def _convert_content(
 
 async def _transform_stream(
     result: AsyncStream[MessageStreamEvent],
+    messages: list[MessageParam],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform the response stream into HA format.
 
@@ -224,8 +180,15 @@ async def _transform_stream(
     if result is None:
         raise TypeError("Expected a stream of messages")
 
-    current_tool_call: dict | None = None
-    current_message: dict | None = None
+    current_message: MessageParam | None = None
+    current_block: (
+        TextBlockParam
+        | ToolUseBlockParam
+        | ThinkingBlockParam
+        | RedactedThinkingBlockParam
+        | None
+    ) = None
+    current_tool_args: str
     has_text = False
     has_thinking = False
 
@@ -233,86 +196,95 @@ async def _transform_stream(
         LOGGER.debug("Received response: %s", response)
 
         if isinstance(response, RawMessageStartEvent):
-            current_message = {"role": response.message.role, "id": response.message.id}
-            yield {
-                "role": current_message["role"],
-                "metadata": {"message_id": current_message["id"]},
-            }
+            if response.message.role != "assistant":
+                raise ValueError("Unexpected message role")
+            yield {"role": "assistant"}
             has_text = False
             has_thinking = False
-        if isinstance(response, RawContentBlockStartEvent):
-            if current_message is None:
-                raise ValueError("Unexpected block without a message")
+            current_message = MessageParam(role=response.message.role, content=[])
+        elif isinstance(response, RawContentBlockStartEvent):
             if isinstance(response.content_block, ToolUseBlock):
-                current_tool_call = {
-                    "id": response.content_block.id,
-                    "name": response.content_block.name,
-                    "input": "",
-                }
+                current_block = ToolUseBlockParam(
+                    type="tool_use",
+                    id=response.content_block.id,
+                    name=response.content_block.name,
+                    input="",
+                )
+                current_tool_args = ""
             elif isinstance(response.content_block, TextBlock):
+                current_block = TextBlockParam(
+                    type="text", text=response.content_block.text
+                )
                 if has_text:  # already have one text block, starting a new message
-                    yield {
-                        "role": current_message["role"],
-                        "metadata": {"message_id": current_message["id"]},
-                    }
+                    yield {"role": "assistant"}
                     has_thinking = False
                 else:  # adding text to the current message
                     has_text = True
                 if response.content_block.text:
                     yield {"content": response.content_block.text}
             elif isinstance(response.content_block, ThinkingBlock):
+                current_block = ThinkingBlockParam(
+                    type="thinking",
+                    thinking=response.content_block.thinking,
+                    signature=response.content_block.signature,
+                )
                 if has_thinking:
-                    yield {
-                        "role": current_message["role"],
-                        "metadata": {"message_id": current_message["id"]},
-                    }
+                    yield {"role": "assistant"}
                     has_text = False
                 else:
                     has_thinking = True
                 if response.content_block.thinking:
                     yield {"thinking": response.content_block.thinking}
-                if response.content_block.signature:
-                    yield {"metadata": {"signature": response.content_block.signature}}
             elif isinstance(response.content_block, RedactedThinkingBlock):
-                current_response: conversation.AssistantContentDeltaDict = {}
-                metadata: dict[str, Any] = {
-                    "redacted_thinking": response.content_block.data
-                }
-                if has_thinking:
-                    current_response["role"] = current_message["role"]
-                    metadata["message_id"] = current_message["id"]
-                    has_text = False
-                has_thinking = True
-                current_response["metadata"] = metadata
-                current_response["thinking"] = (
-                    "*Some of Claude’s internal reasoning has been automatically "
-                    "encrypted for safety reasons. This doesn’t affect the quality of "
-                    "responses.*"
+                current_block = RedactedThinkingBlockParam(
+                    type="redacted_thinking", data=response.content_block.data
                 )
-                yield current_response
+                LOGGER.debug(
+                    "Some of Claude’s internal reasoning has been automatically "
+                    "encrypted for safety reasons. This doesn’t affect the quality of "
+                    "responses"
+                )
         elif isinstance(response, RawContentBlockDeltaEvent):
+            if current_block is None:
+                raise ValueError("Unexpected delta without a block")
             if isinstance(response.delta, InputJSONDelta):
-                if current_tool_call is None:
-                    raise ValueError("Unexpected delta without a tool call")
-                current_tool_call["input"] += response.delta.partial_json
+                current_tool_args += response.delta.partial_json
             elif isinstance(response.delta, TextDelta):
+                text_block = cast(TextBlockParam, current_block)
+                text_block["text"] += response.delta.text
                 yield {"content": response.delta.text}
             elif isinstance(response.delta, ThinkingDelta):
+                thinking_block = cast(ThinkingBlockParam, current_block)
+                thinking_block["thinking"] += response.delta.thinking
                 yield {"thinking": response.delta.thinking}
             elif isinstance(response.delta, SignatureDelta):
-                yield {"metadata": {"signature": response.delta.signature}}
+                thinking_block = cast(ThinkingBlockParam, current_block)
+                thinking_block["signature"] += response.delta.signature
         elif isinstance(response, RawContentBlockStopEvent):
-            if current_tool_call:
+            if (
+                isinstance(current_block, dict)
+                and current_block.get("type") == "tool_use"
+            ):
+                tool_block = cast(ToolUseBlockParam, current_block)
+                tool_args = json.loads(current_tool_args)
+                tool_block["input"] = tool_args
                 yield {
                     "tool_calls": [
                         llm.ToolInput(
-                            id=current_tool_call["id"],
-                            tool_name=current_tool_call["name"],
-                            tool_args=json.loads(current_tool_call["input"]),
+                            id=tool_block["id"],
+                            tool_name=tool_block["name"],
+                            tool_args=tool_args,
                         )
                     ]
                 }
-            current_tool_call = None
+            if current_message is None:
+                raise ValueError("Unexpected stop event without a current message")
+            current_message["content"].append(current_block)  # type: ignore[union-attr]
+            current_block = None
+        elif isinstance(response, RawMessageStopEvent):
+            if current_message is not None:
+                messages.append(current_message)
+                current_message = None
 
 
 class AnthropicConversationEntity(
@@ -427,8 +399,9 @@ class AnthropicConversationEntity(
                     [
                         content
                         async for content in chat_log.async_add_delta_content_stream(
-                            user_input.agent_id, _transform_stream(stream)
+                            user_input.agent_id, _transform_stream(stream, messages)
                         )
+                        if not isinstance(content, conversation.AssistantContent)
                     ]
                 )
             )

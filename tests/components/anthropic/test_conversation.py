@@ -651,7 +651,6 @@ async def test_extended_thinking(
         "home."
     )
     assert chat_log.content[2].content == "Hello, how can I help you today?"
-    assert chat_log.content[2].metadata["signature"]
 
 
 async def test_redacted_thinking(
@@ -686,16 +685,8 @@ async def test_redacted_thinking(
     chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
         result.conversation_id
     )
-    assert len(chat_log.content) == 5
-    assert chat_log.content[2].metadata["redacted_thinking"]
-    assert (
-        chat_log.content[2].thinking
-        == "*Some of Claude’s internal reasoning has been automatically encrypted for "
-        "safety reasons. This doesn’t affect the quality of responses.*"
-    )
-    assert chat_log.content[3].metadata["redacted_thinking"]
-    assert chat_log.content[4].metadata["redacted_thinking"]
-    assert chat_log.content[4].content == "How can I help you today?"
+    assert len(chat_log.content) == 3
+    assert chat_log.content[2].content == "How can I help you today?"
 
 
 @patch("homeassistant.components.anthropic.conversation.llm.AssistAPI._async_get_tools")

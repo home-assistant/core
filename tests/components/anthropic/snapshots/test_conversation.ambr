@@ -18,32 +18,13 @@
     dict({
       'agent_id': 'conversation.claude',
       'content': None,
-      'metadata': dict({
-        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
-        'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
-      }),
       'role': 'assistant',
       'thinking': 'The user asked me to call a test function.Is it a test? What would the function do? Would it violate any privacy or security policies?',
       'tool_calls': None,
     }),
     dict({
       'agent_id': 'conversation.claude',
-      'content': None,
-      'metadata': dict({
-        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
-        'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
-      }),
-      'role': 'assistant',
-      'thinking': '*Some of Claude’s internal reasoning has been automatically encrypted for safety reasons. This doesn’t affect the quality of responses.*',
-      'tool_calls': None,
-    }),
-    dict({
-      'agent_id': 'conversation.claude',
       'content': 'Certainly, calling it now!',
-      'metadata': dict({
-        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
-        'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
-      }),
       'role': 'assistant',
       'thinking': "Okay, let's give it a shot. Will I pass the test?",
       'tool_calls': list([
@@ -66,9 +47,6 @@
     dict({
       'agent_id': 'conversation.claude',
       'content': 'I have successfully called the function',
-      'metadata': dict({
-        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
-      }),
       'role': 'assistant',
       'thinking': None,
       'tool_calls': None,

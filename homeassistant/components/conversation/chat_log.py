@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field, replace
 import logging
-from typing import Any, Literal, TypedDict
+from typing import Literal, TypedDict
 
 import voluptuous as vol
 
@@ -149,7 +149,6 @@ class AssistantContent:
     thinking: str | None = None
     content: str | None = None
     tool_calls: list[llm.ToolInput] | None = None
-    metadata: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -173,7 +172,6 @@ class AssistantContentDeltaDict(TypedDict, total=False):
     thinking: str | None
     content: str | None
     tool_calls: list[llm.ToolInput] | None
-    metadata: dict[str, Any] | None
 
 
 @dataclass
@@ -278,7 +276,6 @@ class ChatLog:
         current_thinking = ""
         current_tool_calls: list[llm.ToolInput] = []
         tool_call_tasks: dict[str, asyncio.Task] = {}
-        current_metadata: dict[str, Any] = {}
 
         async for delta in stream:
             LOGGER.debug("Received delta: %s", delta)
@@ -300,8 +297,6 @@ class ChatLog:
                             self.llm_api.async_call_tool(tool_call),
                             name=f"llm_tool_{tool_call.id}",
                         )
-                if delta_metadata := delta.get("metadata"):
-                    current_metadata.update(delta_metadata)
                 if self.delta_listener:
                     self.delta_listener(self, delta)  # type: ignore[arg-type]
                 continue
@@ -318,7 +313,6 @@ class ChatLog:
                     content=current_content or None,
                     tool_calls=current_tool_calls or None,
                     thinking=current_thinking or None,
-                    metadata=current_metadata or None,
                 )
                 yield content
                 async for tool_result in self.async_add_assistant_content(
@@ -331,7 +325,6 @@ class ChatLog:
             current_content = delta.get("content") or ""
             current_tool_calls = delta.get("tool_calls") or []
             current_thinking = delta.get("thinking") or ""
-            current_metadata = delta.get("metadata") or {}
 
             if self.delta_listener:
                 self.delta_listener(self, delta)  # type: ignore[arg-type]
@@ -342,7 +335,6 @@ class ChatLog:
                 content=current_content or None,
                 tool_calls=current_tool_calls or None,
                 thinking=current_thinking or None,
-                metadata=current_metadata or None,
             )
             yield content
             async for tool_result in self.async_add_assistant_content(
