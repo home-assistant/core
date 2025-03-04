@@ -1,9 +1,9 @@
 """Provides a select platform for Home Connect."""
 
 from collections.abc import Callable, Coroutine
-import contextlib
 from dataclasses import dataclass
 from datetime import datetime
+import logging
 from typing import Any, cast
 
 from aiohomeconnect.client import Client as HomeConnectClient
@@ -52,6 +52,8 @@ from .coordinator import (
 )
 from .entity import HomeConnectEntity, HomeConnectOptionEntity
 from .utils import bsh_key_to_translation_key, get_dict_from_home_connect_error
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -463,7 +465,7 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
         await super().async_added_to_hass()
         await self.async_fetch_options()
 
-    async def async_fetch_options(self, _: datetime | None = None) -> None:
+    async def async_fetch_options(self, datetime_: datetime | None = None) -> None:
         """Fetch options from the API."""
         setting = self.appliance.settings.get(cast(SettingKey, self.bsh_key))
         if (
@@ -471,18 +473,21 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
             or not setting.constraints
             or not setting.constraints.allowed_values
         ):
-            with contextlib.suppress(HomeConnectError):
-                try:
-                    setting = await self.coordinator.client.get_setting(
-                        self.appliance.info.ha_id,
-                        setting_key=cast(SettingKey, self.bsh_key),
-                    )
-                except TooManyRequestsError as err:
-                    async_call_later(
-                        self.hass,
-                        err.retry_after or API_DEFAULT_RETRY_AFTER,
-                        self.async_fetch_options,
-                    )
+            try:
+                setting = await self.coordinator.client.get_setting(
+                    self.appliance.info.ha_id,
+                    setting_key=cast(SettingKey, self.bsh_key),
+                )
+            except TooManyRequestsError as err:
+                async_call_later(
+                    self.hass,
+                    err.retry_after or API_DEFAULT_RETRY_AFTER,
+                    self.async_fetch_options,
+                )
+            except HomeConnectError as err:
+                _LOGGER.error(
+                    "Error when fetching constraints for %s: %s", self.entity_id, err
+                )
 
         if setting and setting.constraints and setting.constraints.allowed_values:
             self._attr_options = [
@@ -490,9 +495,9 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
                 for option in setting.constraints.allowed_values
                 if option in self.entity_description.values_translation_key
             ]
-            self.__dict__.pop("options", None)
 
-            self.async_write_ha_state()
+            if datetime_ is not None:
+                self.async_write_ha_state()
 
 
 class HomeConnectSelectOptionEntity(HomeConnectOptionEntity, SelectEntity):
@@ -542,4 +547,3 @@ class HomeConnectSelectOptionEntity(HomeConnectOptionEntity, SelectEntity):
                 for option in self._original_option_keys
                 if option is not None
             ]
-            self.__dict__.pop("options", None)

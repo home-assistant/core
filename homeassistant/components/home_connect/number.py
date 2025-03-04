@@ -192,7 +192,7 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
                 },
             ) from err
 
-    async def async_fetch_constraints(self, _: datetime | None = None) -> None:
+    async def async_fetch_constraints(self, datetime_: datetime | None = None) -> None:
         """Fetch the max and min values and step for the number entity."""
         setting_key = cast(SettingKey, self.bsh_key)
         data = self.appliance.settings.get(setting_key)
@@ -208,12 +208,15 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
                     self.async_fetch_constraints,
                 )
             except HomeConnectError as err:
-                _LOGGER.error("An error occurred: %s", err)
+                _LOGGER.error(
+                    "Error when fetching constraints for %s: %s", self.entity_id, err
+                )
             else:
                 if data.unit:
                     self._attr_native_unit_of_measurement = data.unit
-                    self.__dict__.pop("native_unit_of_measurement", None)
                 self.set_constraints(data)
+                if datetime_ is not None:
+                    self.async_write_ha_state()
 
     def set_constraints(self, setting: GetSetting) -> None:
         """Set constraints for the number entity."""
@@ -225,16 +228,12 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
             return
         if constraints.max:
             self._attr_native_max_value = constraints.max
-            self.__dict__.pop("native_max_value", None)
         if constraints.min:
             self._attr_native_min_value = constraints.min
-            self.__dict__.pop("native_min_value", None)
         if constraints.step_size:
             self._attr_native_step = constraints.step_size
         else:
             self._attr_native_step = 0.1 if setting.type == "Double" else 1
-        self.__dict__.pop("native_step", None)
-        self.async_write_ha_state()
 
     def update_native_value(self) -> None:
         """Update status when an event for the entity is received."""
@@ -276,7 +275,6 @@ class HomeConnectOptionNumberEntity(HomeConnectOptionEntity, NumberEntity):
                     or candidate_unit != self._attr_native_unit_of_measurement
                 ):
                     self._attr_native_unit_of_measurement = candidate_unit
-                    self.__dict__.pop("unit_of_measurement", None)
             option_constraints = option_definition.constraints
             if option_constraints:
                 if (

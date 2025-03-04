@@ -1,6 +1,5 @@
 """Tests for home_connect sensor entities."""
 
-import asyncio
 from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -34,7 +33,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_call_later
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEST_HC_APP = "Dishwasher"
 
@@ -763,10 +762,11 @@ async def test_sensor_unit_fetching_after_rate_limit_error(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     with patch(
         "homeassistant.components.home_connect.sensor.async_call_later",
-        side_effect=lambda hass, delay, action: async_call_later(hass, 0.01, action),
+        side_effect=lambda hass, delay, action: async_call_later(hass, 0, action),
     ) as _async_call_later:
         assert await integration_setup(client)
-        await asyncio.sleep(0.1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert config_entry.state == ConfigEntryState.LOADED
 
     _async_call_later.assert_called_once()

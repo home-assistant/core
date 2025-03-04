@@ -339,7 +339,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
             else:
                 await self.fetch_unit()
 
-    async def fetch_unit(self, _: datetime | None = None) -> None:
+    async def fetch_unit(self, datetime_: datetime | None = None) -> None:
         """Fetch the unit of measurement."""
         try:
             data = await self.coordinator.client.get_status_value(
@@ -352,13 +352,16 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
                 self.fetch_unit,
             )
         except HomeConnectError as err:
-            _LOGGER.error("An error occurred: %s", err)
+            _LOGGER.error(
+                "Error when fetching constraints for %s: %s", self.entity_id, err
+            )
         else:
             if data.unit:
                 self._attr_native_unit_of_measurement = UNIT_MAP.get(
                     data.unit, data.unit
                 )
-                self.async_write_ha_state()
+                if datetime_ is not None:
+                    self.async_write_ha_state()
 
 
 class HomeConnectProgramSensor(HomeConnectSensor):
