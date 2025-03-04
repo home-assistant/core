@@ -30,19 +30,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'enOcean Repeater Mode',
+    'original_name': 'EnOcean repeater mode',
     'platform': 'homee',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'repeater_mode',
-    'unique_id': '00055511EECC-1-2',
+    'unique_id': '00055511EECC-1-1',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_select_snapshot[select.test_select_enocean_repeater_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Select enOcean Repeater Mode',
+      'friendly_name': 'Test Select EnOcean repeater mode',
       'options': list([
         'off',
         'level1',
@@ -55,119 +55,5 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'level1',
-  })
-# ---
-# name: test_select_snapshot[select.test_select_motor_rotation-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'normal',
-        'reverse',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.test_select_motor_rotation',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Motor rotation',
-    'platform': 'homee',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'motor_rotation',
-    'unique_id': '00055511EECC-1-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_select_snapshot[select.test_select_motor_rotation-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Select Motor rotation',
-      'options': list([
-        'normal',
-        'reverse',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.test_select_motor_rotation',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'reverse',
-  })
-# ---
-# name: test_select_snapshot[select.test_select_type_of_controlling_switch-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        '0',
-        '1',
-        '2',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.test_select_type_of_controlling_switch',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Type of controlling switch',
-    'platform': 'homee',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'switch_type',
-    'unique_id': '00055511EECC-1-3',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_select_snapshot[select.test_select_type_of_controlling_switch-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Select Type of controlling switch',
-      'options': list([
-        '0',
-        '1',
-        '2',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.test_select_type_of_controlling_switch',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1',
   })
 # ---

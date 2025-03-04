@@ -50,17 +50,15 @@ async def test_select_services(
     expected: int,
 ) -> None:
     """Test the select services."""
-    mock_homee.nodes = [build_mock_node("selects.json")]
-    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
-    await setup_integration(hass, mock_config_entry)
+    await setup_select(hass, mock_homee, mock_config_entry)
 
     if service == SERVICE_SELECT_OPTION:
         OPTIONS = {
-            ATTR_ENTITY_ID: "select.test_select_type_of_controlling_switch",
-            "option": "2",
+            ATTR_ENTITY_ID: "select.test_select_enocean_repeater_mode",
+            "option": "level2",
         }
     else:
-        OPTIONS = {ATTR_ENTITY_ID: "select.test_select_type_of_controlling_switch"}
+        OPTIONS = {ATTR_ENTITY_ID: "select.test_select_enocean_repeater_mode"}
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -69,7 +67,7 @@ async def test_select_services(
         blocking=True,
     )
 
-    mock_homee.set_value.assert_called_once_with(1, 3, expected)
+    mock_homee.set_value.assert_called_once_with(1, 1, expected)
 
 
 async def test_select_service_error(
@@ -78,16 +76,14 @@ async def test_select_service_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the select service called with invalid option."""
-    mock_homee.nodes = [build_mock_node("selects.json")]
-    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
-    await setup_integration(hass, mock_config_entry)
+    await setup_select(hass, mock_homee, mock_config_entry)
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.test_select_type_of_controlling_switch",
+                ATTR_ENTITY_ID: "select.test_select_enocean_repeater_mode",
                 "option": "invalid",
             },
             blocking=True,
@@ -102,9 +98,7 @@ async def test_select_snapshot(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the multisensor snapshot."""
-    mock_homee.nodes = [build_mock_node("selects.json")]
-    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     with patch("homeassistant.components.homee.PLATFORMS", [Platform.SELECT]):
-        await setup_integration(hass, mock_config_entry)
+        await setup_select(hass, mock_homee, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
