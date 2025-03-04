@@ -73,7 +73,7 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
         "qos": 0,
         "command_topic": "test-topic",
         "command_template": "{{ value_json.value }}",
-        "entity_picture": "https://example.com",
+        "entity_picture": "https://example.com/notify_milkman_alert",
         "retain": False,
     },
 }
@@ -83,6 +83,7 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT2 = {
         "name": "The second notifier",
         "qos": 0,
         "command_topic": "test-topic2",
+        "entity_picture": "https://example.com/notify_the_second_notifier",
     },
 }
 MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
@@ -91,7 +92,7 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
         "qos": 0,
         "command_topic": "test-topic",
         "command_template": "{{ value_json.value }}",
-        "entity_picture": "https://example.com",
+        "entity_picture": "https://example.com/notify_none",
         "retain": False,
     },
 }
@@ -102,6 +103,7 @@ MOCK_SUBENTRY_SENSOR_COMPONENT = {
         "name": "Test sensor",
         "qos": 1,
         "state_topic": "test-topic3",
+        "entity_picture": "https://example.com/sensor_bla789",
     },
 }
 
@@ -112,6 +114,7 @@ MOCK_SUBENTRY_LIGHT_COMPONENT = {
         "qos": 1,
         "command_topic": "test-topic4",
         "schema": "basic",
+        "entity_picture": "https://example.com/light_bla0ab",
     },
 }
 
@@ -125,7 +128,7 @@ MOCK_SUBENTRY_LIGHT_BAD_SCHEMA = {
     },
 }
 
-MOCK_SUBENTRY_DATA = {
+MOCK_NOTIFY_SUBENTRY_DATA_MULTI = {
     "device": {
         "name": "Milk notifier",
         "sw_version": "1.0",
@@ -137,7 +140,7 @@ MOCK_SUBENTRY_DATA = {
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1 | MOCK_SUBENTRY_NOTIFY_COMPONENT2,
 }
 
-MOCK_SUBENTRY_DATA_NOTIFY = {
+MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
     "device": {
         "name": "Milk notifier",
         "sw_version": "1.0",
