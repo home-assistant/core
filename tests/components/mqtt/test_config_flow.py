@@ -33,8 +33,8 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .test_common import (
     MOCK_SUBENTRY_DATA,
-    MOCK_SUBENTRY_DATA_SINGLE_NO_ENTITY_NAME,
-    MOCK_SUBENTRY_DATA_SINGLE_WITH_ENTITY_NAME,
+    MOCK_SUBENTRY_DATA_NOTIFY,
+    MOCK_SUBENTRY_DATA_NOTIFY_NO_NAME,
 )
 
 from tests.common import MockConfigEntry, MockMqttReasonCode
@@ -2610,25 +2610,58 @@ async def test_migrate_of_incompatible_config_entry(
 
 
 @pytest.mark.parametrize(
-    ("config_subentries_data", "mock_user_input", "entity"),
+    (
+        "config_subentries_data",
+        "mock_entity_user_input",
+        "mock_mqtt_user_input",
+        "mock_failed_mqtt_user_input",
+        "mock_failed_mqtt_user_input_errors",
+        "entity_name",
+    ),
     [
         (
-            MOCK_SUBENTRY_DATA_SINGLE_WITH_ENTITY_NAME,
+            MOCK_SUBENTRY_DATA_NOTIFY,
             {"name": "Milkman alert"},
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value_json.value }}",
+                "qos": 0,
+                "retain": False,
+            },
+            {"command_topic": "test-topic#invalid"},
+            {"command_topic": "invalid_publish_topic"},
             "Milk notifier Milkman alert",
         ),
-        (MOCK_SUBENTRY_DATA_SINGLE_NO_ENTITY_NAME, {}, "Milk notifier"),
+        (
+            MOCK_SUBENTRY_DATA_NOTIFY_NO_NAME,
+            {},
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value_json.value }}",
+                "qos": 0,
+                "retain": False,
+            },
+            {"command_topic": "test-topic#invalid"},
+            {"command_topic": "invalid_publish_topic"},
+            "Milk notifier",
+        ),
     ],
-    ids=["with_entity_name", "no_entity_name"],
+    ids=["notify_with_entity_name", "notify_no_entity_name"],
 )
 async def test_subentry_configflow(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     config_subentries_data: dict[str, Any],
-    mock_user_input: dict[str, Any],
-    entity: str,
+    mock_entity_user_input: dict[str, Any],
+    mock_mqtt_user_input: dict[str, Any],
+    mock_failed_mqtt_user_input: dict[str, Any],
+    mock_failed_mqtt_user_input_errors: dict[str, Any],
+    entity_name: str,
 ) -> None:
     """Test the subentry ConfigFlow."""
+    device_name = config_subentries_data["device"]["name"]
+    component = next(iter(config_subentries_data["components"].values()))
+
     await mqtt_mock_entry()
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
 
@@ -2643,7 +2676,7 @@ async def test_subentry_configflow(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={
-            "name": "Milk notifier",
+            "name": device_name,
             "configuration_url": "http:/badurl.example.com",
         },
     )
@@ -2654,10 +2687,10 @@ async def test_subentry_configflow(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={
-            "name": "Milk notifier",
+            "name": device_name,
             "sw_version": "1.0",
             "hw_version": "2.1 rev a",
-            "model": "Bottle XL",
+            "model": "Model XL",
             "model_id": "mn002",
             "configuration_url": "https://example.com",
         },
@@ -2670,10 +2703,10 @@ async def test_subentry_configflow(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={
-            "platform": "notify",
+            "platform": component["platform"],
             "entity_picture": "https://example.com",
         }
-        | mock_user_input,
+        | mock_entity_user_input,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "entity_platform_config"
@@ -2681,32 +2714,26 @@ async def test_subentry_configflow(
     assert result["description_placeholders"] == {
         "mqtt_device": "Milk notifier",
         "platform": "notify",
-        "entity": entity,
+        "entity": entity_name,
     }
 
     # Process entity platform config flow
 
-    # Use an invalid topic an test validation
+    # Test an invalid mqtt user input case
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={"command_topic": "test-topic#invalid"},
+        user_input=mock_failed_mqtt_user_input,
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["command_topic"] == "invalid_publish_topic"
+    assert result["errors"] == mock_failed_mqtt_user_input_errors
 
     # Try again with a valid configuration
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        user_input={
-            "command_topic": "test-topic",
-            "command_template": "{{ value_json.value }}",
-            "qos": 0,
-            "retain": False,
-        },
+        result["flow_id"], user_input=mock_mqtt_user_input
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Milk notifier"
+    assert result["title"] == device_name
 
     subentry_id = next(iter(config_entry.subentries.keys()))
     assert config_entry.subentries == {
@@ -2714,7 +2741,7 @@ async def test_subentry_configflow(
             data=config_subentries_data,
             subentry_id=subentry_id,
             subentry_type="device",
-            title=config_subentries_data["device"]["name"],
+            title=device_name,
             unique_id=None,
         )
     }
@@ -2975,7 +3002,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
     [
         (
             ConfigSubentryData(
-                data=MOCK_SUBENTRY_DATA_SINGLE_WITH_ENTITY_NAME,
+                data=MOCK_SUBENTRY_DATA_NOTIFY,
                 subentry_type="device",
                 title="Mock subentry",
             ),
@@ -3080,7 +3107,7 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     [
         (
             ConfigSubentryData(
-                data=MOCK_SUBENTRY_DATA_SINGLE_WITH_ENTITY_NAME,
+                data=MOCK_SUBENTRY_DATA_NOTIFY,
                 subentry_type="device",
                 title="Mock subentry",
             ),
@@ -3237,7 +3264,7 @@ async def test_subentry_reconfigure_update_device_properties(
     assert device["name"] == "Milk notifier"
     assert device["sw_version"] == "1.0"
     assert device["hw_version"] == "2.1 rev a"
-    assert device["model"] == "Bottle XL"
+    assert device["model"] == "Model XL"
     assert device["model_id"] == "mn002"
 
     # assert menu options, we have the option to delete one entity
