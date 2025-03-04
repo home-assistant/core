@@ -1,6 +1,7 @@
 """Test for Home Connect coordinator."""
 
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -38,8 +39,9 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -306,9 +308,6 @@ async def test_event_listener_error(
         ),
     ],
 )
-@patch(
-    "homeassistant.components.home_connect.coordinator.EVENT_STREAM_RECONNECT_DELAY", 0
-)
 async def test_event_listener_resilience(
     entity_id: str,
     initial_state: str,
@@ -351,6 +350,7 @@ async def test_event_listener_resilience(
     await hass.async_block_till_done()
     future.set_exception(exception)
     await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
     assert client.stream_all_events.call_count == 2
