@@ -22,7 +22,15 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    BooleanSelector,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.storage import Store
 
 from .const import (
@@ -39,12 +47,6 @@ from .const import (
     SZ_TOKEN_DATA,
 )
 from .storage import EvoTokenDataT, TokenManager
-
-STEP_LOCATION_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_LOCATION_IDX, default=DEFAULT_LOCATION_IDX): vol.Coerce(int),
-    }
-)
 
 DEFAULT_OPTIONS: Final = {
     CONF_HIGH_PRECISION: DEFAULT_HIGH_PRECISION,
@@ -180,7 +182,14 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_PASSWORD): str,
+                vol.Required(
+                    CONF_PASSWORD,
+                ): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD,
+                        autocomplete="current-password",
+                    )
+                ),
             }
         )
 
@@ -223,9 +232,20 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema(
             {
                 vol.Required(
-                    CONF_USERNAME, default=self._config.get(CONF_USERNAME)
-                ): str,
-                vol.Required(CONF_PASSWORD): str,
+                    CONF_USERNAME,
+                    default=self._config.get(CONF_USERNAME),
+                ): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.EMAIL,
+                        autocomplete="email",
+                    )
+                ),
+                vol.Required(CONF_PASSWORD): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD,
+                        autocomplete="current-password",
+                    )
+                ),
             }
         )
 
@@ -272,6 +292,8 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            user_input[CONF_LOCATION_IDX] = int(user_input[CONF_LOCATION_IDX])
+
             try:
                 self._client = await self._test_location_idx(
                     self._token_manager, user_input[CONF_LOCATION_IDX]
@@ -286,8 +308,26 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._config[CONF_LOCATION_IDX] = user_input[CONF_LOCATION_IDX]
                 return await self._update_or_create_entry()
 
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_LOCATION_IDX,
+                    default=DEFAULT_LOCATION_IDX,
+                ): vol.All(
+                    vol.Coerce(int),
+                    NumberSelector(
+                        NumberSelectorConfig(
+                            min=0,
+                            step=1,
+                            mode=NumberSelectorMode.BOX,
+                        )
+                    ),
+                ),
+            }
+        )
+
         return self.async_show_form(
-            step_id="location", data_schema=STEP_LOCATION_SCHEMA, errors=errors
+            step_id="location", data_schema=data_schema, errors=errors
         )
 
     async def _test_location_idx(
@@ -308,10 +348,10 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
             client.locations[location_idx]
 
         except IndexError as err:
-            msg = f"""
-                Config error: 'location_idx' = {location_idx},
-                but the valid range is 0-{len(client.locations) - 1}.
-            """
+            msg = (
+                f"Config error: 'location_idx' = {location_idx}, "
+                f"but the valid range is 0-{len(client.locations) - 1}"
+            )
             _LOGGER.warning(msg)
             raise ConfigEntryNotReady("bad_location") from err
 
@@ -395,10 +435,23 @@ class EvoOptionsFlowHandler(OptionsFlow):
 
         data_schema = vol.Schema(
             {
-                vol.Optional(CONF_HIGH_PRECISION, default=default_high_precision): bool,
                 vol.Optional(
-                    CONF_SCAN_INTERVAL, default=default_scan_interval
-                ): vol.All(cv.positive_int, vol.Range(min=minimum_scan_interval)),
+                    CONF_HIGH_PRECISION,
+                    default=default_high_precision,
+                ): BooleanSelector(),
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=default_scan_interval,
+                ): vol.All(
+                    NumberSelector(
+                        NumberSelectorConfig(
+                            max=900,
+                            min=minimum_scan_interval,
+                            step=15,
+                            mode=NumberSelectorMode.SLIDER,
+                        ),
+                    ),
+                ),
             }
         )
 
