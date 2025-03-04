@@ -81,48 +81,117 @@ async def test_coordinator_update_failing_get_appliances(
 
 @pytest.mark.usefixtures("setup_credentials")
 @pytest.mark.parametrize("platforms", [("binary_sensor",)])
-async def test_coordinator_update_fail_after_setup(
+@pytest.mark.parametrize("appliance_ha_id", ["Washer"], indirect=True)
+async def test_coordinator_failure_refresh_and_stream(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    appliance_ha_id: str,
 ) -> None:
-    """Test that the coordinator makes entities go unavailable on failure after setup."""
-    entity_id = "binary_sensor.washer_remote_control"
+    """Test entity available state via coordinator refresh and event stream."""
+    entity_id_1 = "binary_sensor.washer_remote_control"
+    entity_id_2 = "binary_sensor.washer_remote_start"
     await async_setup_component(hass, "homeassistant", {})
     await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
-    state = hass.states.get(entity_id)
+    state = hass.states.get(entity_id_1)
+    assert state
+    assert state.state != "unavailable"
+    state = hass.states.get(entity_id_2)
     assert state
     assert state.state != "unavailable"
 
     client.get_home_appliances.side_effect = HomeConnectError()
 
+    # Force a coordinator refresh.
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "homeassistant", "update_entity", {"entity_id": entity_id_1}, blocking=True
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(entity_id_1)
+    assert state
+    assert state.state == "unavailable"
+    state = hass.states.get(entity_id_2)
     assert state
     assert state.state == "unavailable"
 
-    # Test that the entity becomes available again after a successful update
+    # Test that the entity becomes available again after a successful update.
 
     client.get_home_appliances.side_effect = None
     client.get_home_appliances.return_value = copy.deepcopy(MOCK_APPLIANCES)
 
+    # Move time forward to pass the debounce time.
     freezer.tick(timedelta(hours=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    # Force a coordinator refresh.
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+        "homeassistant", "update_entity", {"entity_id": entity_id_1}, blocking=True
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(entity_id_1)
+    assert state
+    assert state.state != "unavailable"
+    state = hass.states.get(entity_id_2)
+    assert state
+    assert state.state != "unavailable"
+
+    # Test that the event stream makes the entity go available too.
+
+    # First make the entity unavailable.
+    client.get_home_appliances.side_effect = HomeConnectError()
+
+    # Move time forward to pass the debounce time
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Force a coordinator refresh
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id_1}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id_1)
+    assert state
+    assert state.state == "unavailable"
+    state = hass.states.get(entity_id_2)
+    assert state
+    assert state.state == "unavailable"
+
+    # Now make the entity available again.
+    client.get_home_appliances.side_effect = None
+    client.get_home_appliances.return_value = copy.deepcopy(MOCK_APPLIANCES)
+
+    # One event should make all entities for this appliance available again.
+    event_message = EventMessage(
+        appliance_ha_id,
+        EventType.STATUS,
+        ArrayOfEvents(
+            [
+                Event(
+                    key=EventKey.BSH_COMMON_STATUS_REMOTE_CONTROL_ACTIVE,
+                    raw_key=EventKey.BSH_COMMON_STATUS_REMOTE_CONTROL_ACTIVE.value,
+                    timestamp=0,
+                    level="",
+                    handling="",
+                    value=False,
+                )
+            ],
+        ),
+    )
+    await client.add_events([event_message])
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id_1)
+    assert state
+    assert state.state != "unavailable"
+    state = hass.states.get(entity_id_2)
     assert state
     assert state.state != "unavailable"
 
