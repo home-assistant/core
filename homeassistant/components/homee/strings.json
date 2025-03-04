@@ -119,7 +119,7 @@
         }
       },
       "repeater_mode": {
-        "name": "enOcean Repeater Mode",
+        "name": "EnOcean repeater mode",
         "state": {
           "off": "[%key:common::state::off%]",
           "level1": "Level 1",
