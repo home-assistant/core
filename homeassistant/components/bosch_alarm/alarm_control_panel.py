@@ -52,6 +52,7 @@ class AreaAlarmControlPanel(
         self._attr_name = self._area.name
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_area_{area_id}"
         self._attr_should_poll = False
+        self._attr_code_arm_required = False
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name=f"Bosch {coordinator.panel.model}",

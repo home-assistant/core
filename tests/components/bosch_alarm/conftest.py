@@ -4,6 +4,8 @@ from collections.abc import Generator
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, patch
 
+from bosch_alarm_mode2.const import AREA_ARMING_STATUS, AREA_STATUS
+from bosch_alarm_mode2.panel import Area, Panel
 import pytest
 
 from homeassistant.components.bosch_alarm.const import (
@@ -18,6 +20,7 @@ class MockBoschAlarmConfig:
     """Define a class used by bosch_alarm fixtures."""
 
     model: str
+    serial: str
     config: dict
     side_effect: Exception
 
@@ -50,27 +53,45 @@ def data_b5512_fixture() -> dict:
     return {CONF_PASSWORD: "1234567890"}
 
 
+@pytest.fixture(name="data_areas", scope="package")
+def data_areas() -> list[Area]:
+    """Define a mocked area config."""
+    return {1: Area("Area1", AREA_STATUS.DISARMED)}
+
+
 @pytest.fixture(name="bosch_alarm_test_data")
 def bosch_alarm_test_data_fixture(
     request: pytest.FixtureRequest,
     data_solution_3000: dict,
     data_amax_3000: dict,
     data_b5512: dict,
+    data_areas: list[Area],
 ) -> Generator[MockBoschAlarmConfig]:
     """Define a fixture to set up Bosch Alarm."""
     if request.param == "Solution 3000":
-        config = MockBoschAlarmConfig(request.param, data_solution_3000, None)
+        config = MockBoschAlarmConfig(request.param, None, data_solution_3000, None)
     if request.param == "AMAX 3000":
-        config = MockBoschAlarmConfig(request.param, data_amax_3000, None)
+        config = MockBoschAlarmConfig(request.param, None, data_amax_3000, None)
     if request.param == "B5512 (US1B)":
-        config = MockBoschAlarmConfig(request.param, data_b5512, None)
+        config = MockBoschAlarmConfig(request.param, 1234567890, data_b5512, None)
 
-    async def connect(self, load_selector):
+    async def area_arm(self: Panel, area_id: int, arm_type: int) -> None:
+        if arm_type == AREA_ARMING_STATUS.DISARM:
+            self.areas[area_id].status = AREA_STATUS.DISARMED
+        if arm_type == self._all_arming_id:
+            self.areas[area_id].status = AREA_STATUS.ALL_ARMED[0]
+        if arm_type == self._partial_arming_id:
+            self.areas[area_id].status = AREA_STATUS.PART_ARMED[0]
+
+    async def connect(self: Panel, load_selector: int = 0):
         if config.side_effect:
             raise config.side_effect
         self.model = request.param
+        self.serial_number = config.serial
+        self.areas = data_areas
 
     with (
         patch("bosch_alarm_mode2.panel.Panel.connect", connect),
+        patch("bosch_alarm_mode2.panel.Panel._area_arm", area_arm),
     ):
         yield config
