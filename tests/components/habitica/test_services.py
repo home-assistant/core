@@ -42,6 +42,7 @@ from homeassistant.components.habitica.const import (
     SERVICE_ACCEPT_QUEST,
     SERVICE_CANCEL_QUEST,
     SERVICE_CAST_SKILL,
+    SERVICE_CREATE_HABIT,
     SERVICE_CREATE_REWARD,
     SERVICE_GET_TASKS,
     SERVICE_LEAVE_QUEST,
@@ -986,6 +987,10 @@ async def test_update_task_exceptions(
         ),
     ],
 )
+@pytest.mark.parametrize(
+    "service",
+    [SERVICE_CREATE_REWARD, SERVICE_CREATE_HABIT],
+)
 @pytest.mark.usefixtures("habitica")
 async def test_create_task_exceptions(
     hass: HomeAssistant,
@@ -994,6 +999,7 @@ async def test_create_task_exceptions(
     exception: Exception,
     expected_exception: Exception,
     exception_msg: str,
+    service: str,
 ) -> None:
     """Test Habitica task create action exceptions."""
 
@@ -1001,7 +1007,7 @@ async def test_create_task_exceptions(
     with pytest.raises(expected_exception, match=exception_msg):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CREATE_REWARD,
+            service,
             service_data={
                 ATTR_CONFIG_ENTRY: config_entry.entry_id,
                 ATTR_NAME: "TITLE",
@@ -1228,6 +1234,88 @@ async def test_update_habit(
         blocking=True,
     )
     habitica.update_task.assert_awaited_with(UUID(task_id), call_args)
+
+
+@pytest.mark.parametrize(
+    ("service_data", "call_args"),
+    [
+        (
+            {
+                ATTR_NAME: "TITLE",
+            },
+            Task(type=TaskType.HABIT, text="TITLE"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_NOTES: "NOTES",
+            },
+            Task(type=TaskType.HABIT, text="TITLE", notes="NOTES"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_UP_DOWN: [""],
+            },
+            Task(type=TaskType.HABIT, text="TITLE", up=False, down=False),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_UP_DOWN: ["up"],
+            },
+            Task(type=TaskType.HABIT, text="TITLE", up=True, down=False),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_UP_DOWN: ["down"],
+            },
+            Task(type=TaskType.HABIT, text="TITLE", up=False, down=True),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_PRIORITY: "trivial",
+            },
+            Task(type=TaskType.HABIT, text="TITLE", priority=TaskPriority.TRIVIAL),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_FREQUENCY: "daily",
+            },
+            Task(type=TaskType.HABIT, text="TITLE", frequency=Frequency.DAILY),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_ALIAS: "ALIAS",
+            },
+            Task(type=TaskType.HABIT, text="TITLE", alias="ALIAS"),
+        ),
+    ],
+)
+async def test_create_habit(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    service_data: dict[str, Any],
+    call_args: Task,
+) -> None:
+    """Test Habitica create_habit action."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CREATE_HABIT,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            **service_data,
+        },
+        return_response=True,
+        blocking=True,
+    )
+    habitica.create_task.assert_awaited_with(call_args)
 
 
 async def test_tags(
