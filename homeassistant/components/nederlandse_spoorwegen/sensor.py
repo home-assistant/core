@@ -201,24 +201,14 @@ class NSDepartureSensor(SensorEntity):
     async def async_update(self) -> None:
         """Get the trip information."""
 
-        # If looking for a specific trip time, update around that trip time only.
-        if self._time and (
-            (datetime.now() + timedelta(minutes=30)).time() < self._time
-            or (datetime.now() - timedelta(minutes=30)).time() > self._time
-        ):
-            self._state = None
-            self._trips = None
-            self._first_trip = None
-            return
-
         # Set the search parameter to search from a specific trip time
         # or to just search for next trip.
         if self._time:
-            trip_time = (
-                datetime.today()
-                .replace(hour=self._time.hour, minute=self._time.minute)
-                .strftime("%d-%m-%Y %H:%M")
+            time = datetime.strptime(self._time, "%H:%M:%S")
+            time = dt_util.find_next_time_expression_time(
+                dt_util.now(), [time.second], [time.minute], [time.hour]
             )
+            trip_time = time.strftime("%d-%m-%Y %H:%M")
         else:
             trip_time = dt_util.now().strftime("%d-%m-%Y %H:%M")
 
@@ -229,7 +219,7 @@ class NSDepartureSensor(SensorEntity):
                 self._nsapi.get_trips,
                 trip_time,
                 self._departure,
-                None,
+                self._via,
                 self._heading,
                 True,
                 0,
