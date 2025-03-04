@@ -43,7 +43,7 @@ VEHICLE_SELECT_DESCRIPTION: Final[OhmeSelectDescription] = OhmeSelectDescription
     key="vehicle",
     translation_key="vehicle",
     select_fn=lambda client, selection: client.async_set_vehicle(selection),
-    options_fn=lambda client: client.vehicles or None,
+    options_fn=lambda client: client.vehicles,
     current_option_fn=lambda client: client.current_vehicle or None,
 )
 
