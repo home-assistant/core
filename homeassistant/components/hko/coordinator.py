@@ -145,7 +145,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Return the condition corresponding to the weather info."""
         info = info.lower()
         if WEATHER_INFO_RAIN in info:
-            return ATTR_CONDITION_HAIL
+            return ATTR_CONDITION_RAINY
         if WEATHER_INFO_SNOW in info and WEATHER_INFO_RAIN in info:
             return ATTR_CONDITION_SNOWY_RAINY
         if WEATHER_INFO_SNOW in info:
