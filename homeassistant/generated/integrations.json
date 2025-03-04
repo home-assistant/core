@@ -4153,9 +4153,8 @@
       "iot_class": "cloud_polling"
     },
     "nederlandse_spoorwegen": {
-      "name": "Nederlandse Spoorwegen (NS)",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "ness_alarm": {
@@ -7680,6 +7679,7 @@
     "moehlenhoff_alpha2",
     "mold_indicator",
     "moon",
+    "nederlandse_spoorwegen",
     "nextbus",
     "nmap_tracker",
     "plant",
