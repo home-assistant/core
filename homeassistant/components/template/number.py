@@ -31,7 +31,6 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
@@ -237,7 +236,7 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
         super().__init__(hass, coordinator, config)
 
         name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
-        self.add_script(hass, CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)
+        self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)
 
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
@@ -272,7 +271,7 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
         if self._config[CONF_OPTIMISTIC]:
             self._attr_native_value = value
             self.async_write_ha_state()
-        if (set_value := self._action_scripts.get(CONF_SET_VALUE)) is not None:
+        if set_value := self._action_scripts.get(CONF_SET_VALUE):
             await self.async_run_script(
                 set_value,
                 run_variables={ATTR_VALUE: value},

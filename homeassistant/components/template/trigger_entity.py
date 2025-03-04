@@ -27,7 +27,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         """Initialize the entity."""
         CoordinatorEntity.__init__(self, coordinator)
         TriggerBaseEntity.__init__(self, hass, config)
-        AbstractTemplateEntity.__init__(self)
+        AbstractTemplateEntity.__init__(self, hass)
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
