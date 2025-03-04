@@ -1452,7 +1452,9 @@ jobs:
 
   upload-test-results:
     name: Upload test results to Codecov
-    if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
+    # codecov/test-results-action currently doesn't support tokenless uploads
+    # therefore we can't run it on forks
+    if: github.repository_owner == 'home-assistant' && needs.info.outputs.skip_coverage != 'true' && !cancelled()
     runs-on: ubuntu-24.04
     needs:
       - info
