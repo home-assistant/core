@@ -315,6 +315,27 @@ def get_model_name(info: dict[str, Any]) -> str:
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
 
+def get_shelly_model_name(
+    model: str,
+    sleep_period: int,
+    device: BlockDevice | RpcDevice,
+) -> str | None:
+    """Get Shelly model name.
+
+    Assume that XMOD devices are not sleepy devices.
+    """
+    if (
+        sleep_period == 0
+        and isinstance(device, RpcDevice)
+        and (model_name := device.xmod_info.get("n"))
+    ):
+        # Use the model name from XMOD data
+        return cast(str, model_name)
+
+    # Use the model name from aioshelly
+    return cast(str, MODEL_NAMES.get(model))
+
+
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     """Get name based on device and channel name."""
     key = key.replace("emdata", "em")
@@ -606,3 +627,14 @@ async def get_rpc_script_event_types(device: RpcDevice, id: int) -> list[str]:
     code_response = await device.script_getcode(id)
     matches = SHELLY_EMIT_EVENT_PATTERN.finditer(code_response["data"])
     return sorted([*{str(event_type.group(1)) for event_type in matches}])
+
+
+def is_rpc_exclude_from_relay(
+    settings: dict[str, Any], status: dict[str, Any], channel: str
+) -> bool:
+    """Return true if rpc channel should be excludeed from switch platform."""
+    ch = int(channel.split(":")[1])
+    if is_rpc_thermostat_internal_actuator(status):
+        return True
+
+    return is_rpc_channel_type_light(settings, ch)

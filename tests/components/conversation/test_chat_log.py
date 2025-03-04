@@ -86,7 +86,9 @@ async def test_default_content(
     with (
         chat_session.async_get_chat_session(hass) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log2,
     ):
+        assert chat_log is chat_log2
         assert len(chat_log.content) == 2
         assert chat_log.content[0].role == "system"
         assert chat_log.content[0].content == ""

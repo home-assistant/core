@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator
-from .entity import LetPotEntity, exception_handler
+from .entity import LetPotEntity, LetPotEntityDescription, exception_handler
 
 # Each change pushes a 'full' device status with the change. The library will cache
 # pending changes to avoid overwriting, but try to avoid a lot of parallelism.
@@ -21,14 +21,33 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class LetPotSwitchEntityDescription(SwitchEntityDescription):
+class LetPotSwitchEntityDescription(LetPotEntityDescription, SwitchEntityDescription):
     """Describes a LetPot switch entity."""
 
     value_fn: Callable[[LetPotDeviceStatus], bool | None]
     set_value_fn: Callable[[LetPotDeviceClient, bool], Coroutine[Any, Any, None]]
 
 
-BASE_SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
+SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
+    LetPotSwitchEntityDescription(
+        key="alarm_sound",
+        translation_key="alarm_sound",
+        value_fn=lambda status: status.system_sound,
+        set_value_fn=lambda device_client, value: device_client.set_sound(value),
+        entity_category=EntityCategory.CONFIG,
+        supported_fn=lambda coordinator: coordinator.data.system_sound is not None,
+    ),
+    LetPotSwitchEntityDescription(
+        key="auto_mode",
+        translation_key="auto_mode",
+        value_fn=lambda status: status.water_mode == 1,
+        set_value_fn=lambda device_client, value: device_client.set_water_mode(value),
+        entity_category=EntityCategory.CONFIG,
+        supported_fn=(
+            lambda coordinator: DeviceFeature.PUMP_AUTO
+            in coordinator.device_client.device_features
+        ),
+    ),
     LetPotSwitchEntityDescription(
         key="power",
         translation_key="power",
@@ -44,20 +63,6 @@ BASE_SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
     ),
 )
-ALARM_SWITCH: LetPotSwitchEntityDescription = LetPotSwitchEntityDescription(
-    key="alarm_sound",
-    translation_key="alarm_sound",
-    value_fn=lambda status: status.system_sound,
-    set_value_fn=lambda device_client, value: device_client.set_sound(value),
-    entity_category=EntityCategory.CONFIG,
-)
-AUTO_MODE_SWITCH: LetPotSwitchEntityDescription = LetPotSwitchEntityDescription(
-    key="auto_mode",
-    translation_key="auto_mode",
-    value_fn=lambda status: status.water_mode == 1,
-    set_value_fn=lambda device_client, value: device_client.set_water_mode(value),
-    entity_category=EntityCategory.CONFIG,
-)
 
 
 async def async_setup_entry(
@@ -69,19 +74,10 @@ async def async_setup_entry(
     coordinators = entry.runtime_data
     entities: list[SwitchEntity] = [
         LetPotSwitchEntity(coordinator, description)
-        for description in BASE_SWITCHES
+        for description in SWITCHES
         for coordinator in coordinators
+        if description.supported_fn(coordinator)
     ]
-    entities.extend(
-        LetPotSwitchEntity(coordinator, ALARM_SWITCH)
-        for coordinator in coordinators
-        if coordinator.data.system_sound is not None
-    )
-    entities.extend(
-        LetPotSwitchEntity(coordinator, AUTO_MODE_SWITCH)
-        for coordinator in coordinators
-        if DeviceFeature.PUMP_AUTO in coordinator.device_client.device_features
-    )
     async_add_entities(entities)
 
 

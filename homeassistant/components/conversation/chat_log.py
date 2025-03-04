@@ -49,7 +49,11 @@ def async_get_chat_log(
             raise RuntimeError(
                 "Cannot attach chat log delta listener unless initial caller"
             )
-        if user_input is not None:
+        if user_input is not None and (
+            (content := chat_log.content[-1]).role != "user"
+            # MyPy doesn't understand that content is a UserContent here
+            or content.content != user_input.text  # type: ignore[union-attr]
+        ):
             chat_log.async_add_user_content(UserContent(content=user_input.text))
 
         yield chat_log

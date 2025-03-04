@@ -11,7 +11,9 @@ from homeassistant.components.onkyo.config_flow import OnkyoConfigFlow
 from homeassistant.components.onkyo.const import (
     DOMAIN,
     OPTION_INPUT_SOURCES,
+    OPTION_LISTENING_MODES,
     OPTION_MAX_VOLUME,
+    OPTION_MAX_VOLUME_DEFAULT,
     OPTION_VOLUME_RESOLUTION,
 )
 from homeassistant.config_entries import SOURCE_USER
@@ -226,7 +228,11 @@ async def test_ssdp_discovery_success(
 
     select_result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"volume_resolution": 200, "input_sources": ["TV"]},
+        user_input={
+            "volume_resolution": 200,
+            "input_sources": ["TV"],
+            "listening_modes": ["THX"],
+        },
     )
 
     assert select_result["type"] is FlowResultType.CREATE_ENTRY
@@ -349,34 +355,6 @@ async def test_ssdp_discovery_no_host(
     assert result["reason"] == "unknown"
 
 
-async def test_configure_empty_source_list(
-    hass: HomeAssistant, default_mock_discovery
-) -> None:
-    """Test receiver configuration with no sources set."""
-
-    init_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-
-    form_result = await hass.config_entries.flow.async_configure(
-        init_result["flow_id"],
-        {"next_step_id": "manual"},
-    )
-
-    select_result = await hass.config_entries.flow.async_configure(
-        form_result["flow_id"],
-        user_input={CONF_HOST: "sample-host-name"},
-    )
-
-    configure_result = await hass.config_entries.flow.async_configure(
-        select_result["flow_id"],
-        user_input={"volume_resolution": 200, "input_sources": []},
-    )
-
-    assert configure_result["errors"] == {"input_sources": "empty_input_source_list"}
-
-
 async def test_configure_no_resolution(
     hass: HomeAssistant, default_mock_discovery
 ) -> None:
@@ -404,33 +382,61 @@ async def test_configure_no_resolution(
         )
 
 
-async def test_configure_resolution_set(
-    hass: HomeAssistant, default_mock_discovery
-) -> None:
-    """Test receiver configure with specified resolution."""
+async def test_configure(hass: HomeAssistant, default_mock_discovery) -> None:
+    """Test receiver configure."""
 
-    init_result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
 
-    form_result = await hass.config_entries.flow.async_configure(
-        init_result["flow_id"],
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         {"next_step_id": "manual"},
     )
 
-    select_result = await hass.config_entries.flow.async_configure(
-        form_result["flow_id"],
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         user_input={CONF_HOST: "sample-host-name"},
     )
 
-    configure_result = await hass.config_entries.flow.async_configure(
-        select_result["flow_id"],
-        user_input={"volume_resolution": 200, "input_sources": ["TV"]},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            OPTION_VOLUME_RESOLUTION: 200,
+            OPTION_INPUT_SOURCES: [],
+            OPTION_LISTENING_MODES: ["THX"],
+        },
     )
+    assert result["step_id"] == "configure_receiver"
+    assert result["errors"] == {OPTION_INPUT_SOURCES: "empty_input_source_list"}
 
-    assert configure_result["type"] is FlowResultType.CREATE_ENTRY
-    assert configure_result["options"]["volume_resolution"] == 200
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            OPTION_VOLUME_RESOLUTION: 200,
+            OPTION_INPUT_SOURCES: ["TV"],
+            OPTION_LISTENING_MODES: [],
+        },
+    )
+    assert result["step_id"] == "configure_receiver"
+    assert result["errors"] == {OPTION_LISTENING_MODES: "empty_listening_mode_list"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            OPTION_VOLUME_RESOLUTION: 200,
+            OPTION_INPUT_SOURCES: ["TV"],
+            OPTION_LISTENING_MODES: ["THX"],
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == {
+        OPTION_VOLUME_RESOLUTION: 200,
+        OPTION_MAX_VOLUME: OPTION_MAX_VOLUME_DEFAULT,
+        OPTION_INPUT_SOURCES: {"12": "TV"},
+        OPTION_LISTENING_MODES: {"04": "THX"},
+    }
 
 
 async def test_configure_invalid_resolution_set(
@@ -601,21 +607,26 @@ async def test_import_success(
     await hass.async_block_till_done()
 
     assert import_result["type"] is FlowResultType.CREATE_ENTRY
-    assert import_result["data"]["host"] == "host 1"
-    assert import_result["options"]["volume_resolution"] == 80
-    assert import_result["options"]["max_volume"] == 100
-    assert import_result["options"]["input_sources"] == {
-        "00": "Auxiliary",
-        "01": "Video",
+    assert import_result["data"] == {"host": "host 1"}
+    assert import_result["options"] == {
+        "volume_resolution": 80,
+        "max_volume": 100,
+        "input_sources": {
+            "00": "Auxiliary",
+            "01": "Video",
+        },
+        "listening_modes": {},
     }
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
+    "ignore_missing_translations",
     [
-        [  # The schema is dynamically created from input sources
+        [  # The schema is dynamically created from input sources and listening modes
             "component.onkyo.options.step.names.sections.input_sources.data.TV",
             "component.onkyo.options.step.names.sections.input_sources.data_description.TV",
+            "component.onkyo.options.step.names.sections.listening_modes.data.STEREO",
+            "component.onkyo.options.step.names.sections.listening_modes.data_description.STEREO",
         ]
     ],
 )
@@ -635,6 +646,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
         user_input={
             OPTION_MAX_VOLUME: 42,
             OPTION_INPUT_SOURCES: [],
+            OPTION_LISTENING_MODES: ["STEREO"],
         },
     )
 
@@ -647,6 +659,20 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
         user_input={
             OPTION_MAX_VOLUME: 42,
             OPTION_INPUT_SOURCES: ["TV"],
+            OPTION_LISTENING_MODES: [],
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {OPTION_LISTENING_MODES: "empty_listening_mode_list"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            OPTION_MAX_VOLUME: 42,
+            OPTION_INPUT_SOURCES: ["TV"],
+            OPTION_LISTENING_MODES: ["STEREO"],
         },
     )
 
@@ -657,6 +683,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
         result["flow_id"],
         user_input={
             OPTION_INPUT_SOURCES: {"TV": "television"},
+            OPTION_LISTENING_MODES: {"STEREO": "Duophonia"},
         },
     )
 
@@ -665,4 +692,5 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
         OPTION_VOLUME_RESOLUTION: old_volume_resolution,
         OPTION_MAX_VOLUME: 42.0,
         OPTION_INPUT_SOURCES: {"12": "television"},
+        OPTION_LISTENING_MODES: {"00": "Duophonia"},
     }
