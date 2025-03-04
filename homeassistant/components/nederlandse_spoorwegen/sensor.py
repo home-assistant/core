@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 import ns_api
 import requests
@@ -104,17 +105,17 @@ class NSDepartureSensor(SensorEntity):
         self._attr_name = "test"
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the next departure time."""
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if not self._trips or self._first_trip is None:
             return None
