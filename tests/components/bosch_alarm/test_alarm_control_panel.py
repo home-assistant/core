@@ -1,19 +1,22 @@
 """Tests for Bosch Alarm component."""
 
 import asyncio
+from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
     AlarmControlPanelState,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockBoschAlarmConfig
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -69,3 +72,31 @@ async def test_update_alarm_device(
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
     assert await hass.config_entries.async_unload(bosch_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    "bosch_alarm_test_data",
+    [
+        "Solution 3000",
+        "AMAX 3000",
+        "B5512 (US1B)",
+    ],
+    indirect=True,
+)
+async def test_alarm_control_panel(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    bosch_config_entry: MockConfigEntry,
+) -> None:
+    """Test the alarm_control_panel state."""
+    with patch(
+        "homeassistant.components.bosch_alarm.PLATFORMS", [Platform.ALARM_CONTROL_PANEL]
+    ):
+        bosch_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(bosch_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, bosch_config_entry.entry_id
+    )
