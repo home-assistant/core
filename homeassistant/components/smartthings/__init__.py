@@ -112,9 +112,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
                 device_registry.async_get_or_create(
                     config_entry_id=entry.entry_id,
                     identifiers={(DOMAIN, dev.device.device_id)},
-                    connections={
-                        (dr.CONNECTION_NETWORK_MAC, dev.device.hub.mac_address)
-                    },
+                    connections=(
+                        {(dr.CONNECTION_NETWORK_MAC, dev.device.hub.mac_address)}
+                        if dev.device.hub.mac_address
+                        else set()
+                    ),
                     name=dev.device.label,
                     sw_version=dev.device.hub.firmware_version,
                     model=dev.device.hub.hardware_type,
