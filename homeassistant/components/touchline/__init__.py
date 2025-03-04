@@ -25,8 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Initialize PyTouchline instance and store runtime data
     try:
         py_touchline = PyTouchline(url=host)
-        number_of_devices = await hass.async_add_executor_job(
-            py_touchline.get_number_of_devices
+        number_of_devices = int(
+            await hass.async_add_executor_job(py_touchline.get_number_of_devices)
         )
 
         if number_of_devices == 0:
@@ -40,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Store API instance and device count in hass.data for reuse in platforms
         hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
             "api": py_touchline,
+            "host": host,
             "device_count": number_of_devices,
         }
 

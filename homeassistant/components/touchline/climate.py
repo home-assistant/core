@@ -174,7 +174,6 @@ async def async_setup_entry(
         _LOGGER.error("Touchline runtime data missing for entry %s", config.entry_id)
         return
 
-    py_touchline = touchline_data["api"]
     number_of_devices = touchline_data["device_count"]
 
     _LOGGER.debug(
@@ -183,7 +182,7 @@ async def async_setup_entry(
 
     # Create entities for each device
     devices = [
-        Touchline(PyTouchline(id=device_id, url=py_touchline.url))
+        Touchline(PyTouchline(id=device_id, url=touchline_data["host"]))
         for device_id in range(number_of_devices)
     ]
 
@@ -220,7 +219,7 @@ class Touchline(ClimateEntity):
         self._attr_name = self.unit.get_name()
         self._device_id = self.unit.get_device_id()
         self._controller_id = self.unit.get_controller_id()
-        self._attr_unique_id = self._controller_id + self._device_id
+        self._attr_unique_id = f"{self._controller_id}_{self._device_id}"
         self._attr_current_temperature = self.unit.get_current_temperature()
         self._attr_target_temperature = self.unit.get_target_temperature()
         self._attr_preset_mode = TOUCHLINE_HA_PRESETS.get(

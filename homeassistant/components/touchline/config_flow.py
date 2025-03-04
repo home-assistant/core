@@ -98,7 +98,7 @@ class TouchlineConfigFlow(ConfigFlow, domain=DOMAIN):
 
             # Ensure `result["data"]` is not `None` as that contains the controller ID of the Roth Touchline system, before setting the unique ID.
             if result["data"]:
-                await self.async_set_unique_id(result["data"])
+                await self.async_set_unique_id(str(result["data"]))
                 self._abort_if_unique_id_configured()
             else:
                 errors["base"] = "cannot_connect"
