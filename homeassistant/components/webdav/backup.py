@@ -144,8 +144,6 @@ class WebDavBackupAgent(BackupAgent):
         :return: An async iterator that yields bytes.
         """
         backup = await self._find_backup_by_id(backup_id)
-        if backup is None:
-            raise BackupNotFound("Backup not found")
 
         return await self._client.download_iter(
             f"{self._backup_path}/{suggested_filename(backup)}",
@@ -215,8 +213,6 @@ class WebDavBackupAgent(BackupAgent):
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
         backup = await self._find_backup_by_id(backup_id)
-        if backup is None:
-            return
 
         (filename_tar, filename_meta) = suggested_filenames(backup)
         backup_path = f"{self._backup_path}/{filename_tar}"
@@ -243,7 +239,7 @@ class WebDavBackupAgent(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup | None:
+    ) -> AgentBackup:
         """Return a backup."""
         return await self._find_backup_by_id(backup_id)
 
@@ -269,13 +265,13 @@ class WebDavBackupAgent(BackupAgent):
             if (backup_id := _backup_id_from_properties(properties))
         }
 
-    async def _find_backup_by_id(self, backup_id: str) -> AgentBackup | None:
+    async def _find_backup_by_id(self, backup_id: str) -> AgentBackup:
         """Find a backup by its backup ID on remote."""
         metadata_files = await self._list_metadata_files()
         if metadata_file := metadata_files.get(backup_id):
             return await self._download_metadata(metadata_file)
 
-        return None
+        raise BackupNotFound(f"Backup {backup_id} not found")
 
     async def _download_metadata(self, path: str) -> AgentBackup:
         """Download metadata file."""
