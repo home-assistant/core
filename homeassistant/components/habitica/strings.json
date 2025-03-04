@@ -11,7 +11,7 @@
     "config_entry_description": "Select the Habitica account to update a task.",
     "task_description": "The name (or task ID) of the task you want to update.",
     "rename_name": "Rename",
-    "rename_description": "The new title for the Habitica task.",
+    "rename_description": "The title for the Habitica task.",
     "notes_name": "Notes",
     "notes_description": "The notes for the Habitica task.",
     "tag_name": "Add tags",
@@ -27,11 +27,11 @@
     "name_description": "The title for the Habitica task.",
     "cost_name": "Cost",
     "difficulty_name": "Difficulty",
-    "difficulty_description": "Sets the task difficulty.",
+    "difficulty_description": "The difficulty of the task.",
     "frequency_name": "Counter reset",
-    "frequency_description": "Defines when the habit's counter resets: daily at the start of a new day, weekly after Sunday night, or monthly at the beginning of a new month.",
+    "frequency_description": "The frequency at which the habit's counter resets: daily at the start of a new day, weekly after Sunday night, or monthly at the beginning of a new month.",
     "up_down_name": "Rewards or losses",
-    "up_down_description": "Specify if the habit is good and rewarding (positive), bad and penalizing (negative), or both."
+    "up_down_description": "Whether the habit is good and rewarding (positive), bad and penalizing (negative), or both."
   },
   "config": {
     "abort": {
