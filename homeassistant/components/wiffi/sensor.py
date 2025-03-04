@@ -86,7 +86,7 @@ class NumberEntity(WiffiEntity, SensorEntity):
         self.reset_expiration_date()
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if value is valid."""
         return self._attr_native_value is not None
 
@@ -116,7 +116,7 @@ class StringEntity(WiffiEntity, SensorEntity):
         self.reset_expiration_date()
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if value is valid."""
         return self._attr_native_value is not None
 

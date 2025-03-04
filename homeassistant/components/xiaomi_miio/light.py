@@ -271,7 +271,7 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
         self._state_attrs = {}
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true when state is known."""
         return self._available
 
@@ -1027,7 +1027,7 @@ class XiaomiGatewayLight(LightEntity):
         return self._name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true when state is known."""
         return self._available
 
