@@ -29,7 +29,7 @@
     'previous_unique_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': '01JNHD338WJFFVX809QVAEQQPK_area_1',
+    'unique_id': 'AMAX 3000_area_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -80,7 +80,7 @@
     'previous_unique_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': '01JNHD339ZXAQACGC72S1DZBGQ_area_1',
+    'unique_id': 'B5512 (US1B)_area_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -131,7 +131,7 @@
     'previous_unique_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': '01JNHD337B38G7XGFVXTQ63FTY_area_1',
+    'unique_id': 'Solution 3000_area_1',
     'unit_of_measurement': None,
   })
 # ---

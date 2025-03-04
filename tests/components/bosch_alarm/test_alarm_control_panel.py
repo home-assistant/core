@@ -1,6 +1,7 @@
 """Tests for Bosch Alarm component."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 from unittest.mock import patch
 
 import pytest
@@ -17,6 +18,15 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import MockBoschAlarmConfig
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+async def platforms() -> AsyncGenerator[None]:
+    """Return the platforms to be loaded for this test."""
+    with patch(
+        "homeassistant.components.bosch_alarm.PLATFORMS", [Platform.ALARM_CONTROL_PANEL]
+    ):
+        yield
 
 
 @pytest.mark.parametrize(
@@ -90,12 +100,9 @@ async def test_alarm_control_panel(
     bosch_config_entry: MockConfigEntry,
 ) -> None:
     """Test the alarm_control_panel state."""
-    with patch(
-        "homeassistant.components.bosch_alarm.PLATFORMS", [Platform.ALARM_CONTROL_PANEL]
-    ):
-        bosch_config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(bosch_config_entry.entry_id)
-        await hass.async_block_till_done()
+    bosch_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(bosch_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await snapshot_platform(
         hass, entity_registry, snapshot, bosch_config_entry.entry_id

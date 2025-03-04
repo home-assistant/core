@@ -114,6 +114,7 @@ def bosch_config_entry_fixture(bosch_alarm_test_data: MockBoschAlarmConfig):
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id="unique_id",
+        entry_id=bosch_alarm_test_data.model,
         data={
             CONF_HOST: "0.0.0.0",
             CONF_PORT: 7700,
