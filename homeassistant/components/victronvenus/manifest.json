@@ -3,17 +3,14 @@
   "name": "Victron Venus OS integration",
   "codeowners": ["@johanslab"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/victronvenus",
-  "homekit": {},
   "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["gmqtt==0.6.16", "victronvenusclient==0.1.2"],
+  "requirements": ["victronvenusclient==0.1.3"],
   "ssdp": [
     {
       "manufacturer": "Victron Energy",
       "X_MqttOnLan": "1"
     }
-  ],
-  "zeroconf": []
+  ]
 }

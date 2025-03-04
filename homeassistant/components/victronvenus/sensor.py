@@ -5,7 +5,6 @@ This module is light-weight and only registers the sensors with Home Assistant. 
 
 from victronvenusclient import (
     Device as VictronVenusDevice,
-    Hub as VictronVenusHub,
     Metric as VictronVenusMetric,
 )
 from victronvenusclient.constants import (
@@ -21,8 +20,36 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from ._victron_integration import VictronVenusConfigEntry
+from . import VictronVenusConfigEntry
 from .const import DOMAIN
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: VictronVenusConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Victron Venus sensors from a config entry."""
+
+    hub = config_entry.runtime_data
+
+    devices: VictronVenusDevice = hub.devices
+    sensors = []
+
+    for device in devices:
+        info = _map_device_info(device)
+        metrics = device.metrics
+        for metric in metrics:
+            sensor = VictronSensor(device, metric, info)
+            sensors.append(sensor)
+
+    async_add_entities(sensors)
+
+    # Mark the sensors as registered with Home Assistant, so that updates can be propagated.
+    # The Victron Client will asynchronously update the metrics, and will update the sensor values
+    # before they are registered with Home Assistant.
+    for sensor in sensors:
+        sensor.mark_registered_with_homeassistant()
 
 
 class VictronSensor(SensorEntity):
@@ -115,23 +142,3 @@ def _map_device_info(device: VictronVenusDevice) -> DeviceInfo:
     info["serial_number"] = device.serial_number
 
     return info
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: VictronVenusConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up Victron Venus sensors from a config entry."""
-
-    hub: VictronVenusHub = config_entry.runtime_data
-
-    devices: VictronVenusDevice = hub.devices
-
-    for device in devices:
-        info = _map_device_info(device)
-        metrics = device.metrics
-        for metric in metrics:
-            sensor = VictronSensor(device, metric, info)
-            async_add_entities([sensor])
-            sensor.mark_registered_with_homeassistant()
