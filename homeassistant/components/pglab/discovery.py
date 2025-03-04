@@ -28,7 +28,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 
 from .const import DISCOVERY_TOPIC, DOMAIN, LOGGER
-from .device_sensor import PGLabDeviceSensor
+from .coordinator import PGLabSensorsCoordinator
 
 if TYPE_CHECKING:
     from . import PGLABConfigEntry
@@ -69,7 +69,7 @@ def get_device_id_from_discovery_topic(topic: str) -> str | None:
 class DiscoverDeviceInfo:
     """Keeps information of the PGLab discovered device."""
 
-    def __init__(self, pglab_device: PyPGLabDevice) -> None:
+    def __init__(self, hass: HomeAssistant, pglab_device: PyPGLabDevice) -> None:
         """Initialize the device discovery info."""
 
         # Hash string represents the devices actual configuration,
@@ -77,7 +77,7 @@ class DiscoverDeviceInfo:
         # When the hash string changes the devices entities must be rebuilt.
         self._hash = pglab_device.hash
         self._entities: list[tuple[str, str]] = []
-        self._sensors = PGLabDeviceSensor(pglab_device)
+        self._coordinator = PGLabSensorsCoordinator(hass, pglab_device)
 
     def add_entity(self, entity: Entity) -> None:
         """Add an entity."""
@@ -98,17 +98,19 @@ class DiscoverDeviceInfo:
         return self._entities
 
     @property
-    def sensors(self) -> PGLabDeviceSensor:
-        """Return the PGLab device sensor."""
-        return self._sensors
+    def cordinator(self) -> PGLabSensorsCoordinator:
+        """Return the coordinator."""
+        return self._coordinator
 
 
-async def createDiscoverDeviceInfo(pglab_device: PyPGLabDevice) -> DiscoverDeviceInfo:
+async def createDiscoverDeviceInfo(
+    hass: HomeAssistant, pglab_device: PyPGLabDevice
+) -> DiscoverDeviceInfo:
     """Create a new DiscoverDeviceInfo instance."""
-    discovery_info = DiscoverDeviceInfo(pglab_device)
+    discovery_info = DiscoverDeviceInfo(hass, pglab_device)
 
     # Subscribe to sensor state changes.
-    await discovery_info.sensors.subscribe_topics()
+    await discovery_info.cordinator.subscribe_topics()
     return discovery_info
 
 
@@ -241,7 +243,7 @@ class PGLabDiscovery:
                 self.__clean_discovered_device(hass, pglab_device.id)
 
             # Add a new device.
-            discovery_info = await createDiscoverDeviceInfo(pglab_device)
+            discovery_info = await createDiscoverDeviceInfo(hass, pglab_device)
             self._discovered[pglab_device.id] = discovery_info
 
             # Create all new relay entities.
@@ -256,7 +258,7 @@ class PGLabDiscovery:
                 hass,
                 CREATE_NEW_ENTITY[Platform.SENSOR],
                 pglab_device,
-                discovery_info.sensors,
+                discovery_info.cordinator,
             )
 
         topics = {
