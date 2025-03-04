@@ -92,25 +92,43 @@ def _convert_content(
 
     for content in chat_content:
         if isinstance(content, conversation.ToolResultContent):
-            messages.append(
-                MessageParam(
-                    role="user",
-                    content=[
-                        ToolResultBlockParam(
-                            type="tool_result",
-                            tool_use_id=content.tool_call_id,
-                            content=json.dumps(content.tool_result),
-                        )
-                    ],
-                )
+            tool_result_block = ToolResultBlockParam(
+                type="tool_result",
+                tool_use_id=content.tool_call_id,
+                content=json.dumps(content.tool_result),
             )
+            if not messages or messages[-1]["role"] != "user":
+                messages.append(
+                    MessageParam(
+                        role="user",
+                        content=[tool_result_block],
+                    )
+                )
+            elif isinstance(messages[-1]["content"], str):
+                messages[-1]["content"] = [
+                    TextBlockParam(type="text", text=messages[-1]["content"]),
+                    tool_result_block,
+                ]
+            else:
+                messages[-1]["content"].append(tool_result_block)  # type: ignore[attr-defined]
         elif isinstance(content, conversation.UserContent):
-            messages.append(
-                MessageParam(
-                    role="user",
-                    content=content.content,
+            # Combine consequent user messages
+            if not messages or messages[-1]["role"] != "user":
+                messages.append(
+                    MessageParam(
+                        role="user",
+                        content=content.content,
+                    )
                 )
-            )
+            elif isinstance(messages[-1]["content"], str):
+                messages[-1]["content"] = [
+                    TextBlockParam(type="text", text=messages[-1]["content"]),
+                    TextBlockParam(type="text", text=content.content),
+                ]
+            else:
+                messages[-1]["content"].append(  # type: ignore[attr-defined]
+                    TextBlockParam(type="text", text=content.content)
+                )
         elif isinstance(content, conversation.AssistantContent):
             # Combine consequent assistant messages
             if not messages or messages[-1]["role"] != "assistant":
