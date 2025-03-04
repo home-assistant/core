@@ -21,7 +21,7 @@ certifi>=2021.5.30
 ciso8601==2.3.2
 cronsim==2.6
 fnv-hash-fast==1.2.6
-hass-nabucasa==0.92.0
+hass-nabucasa==0.94.0
 httpx==0.28.1
 home-assistant-bluetooth==1.13.1
 ifaddr==0.2.0
@@ -32,7 +32,7 @@ cryptography==44.0.1
 Pillow==11.1.0
 propcache==0.3.0
 pyOpenSSL==25.0.0
-orjson==3.10.12
+orjson==3.10.15
 packaging>=23.1
 psutil-home-assistant==0.0.1
 python-slugify==8.0.4
