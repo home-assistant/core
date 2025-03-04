@@ -94,9 +94,9 @@ class NSDepartureSensor(SensorEntity):
         self._nsapi = nsapi
         self._name = "test NS"
         self._departure = entry.data[CONF_STATION_FROM]
-        self._via = None
+        self._via = entry.data[CONF_VIA]
         self._heading = entry.data[CONF_STATION_TO]
-        self._time = None
+        self._time = entry.data[CONF_TIME]
         self._state = None
         self._trips = None
         self._first_trip = None
