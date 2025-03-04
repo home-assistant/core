@@ -1,10 +1,17 @@
 """Constants for the PurpleAir integration."""
 
 import logging
+from typing import Final
 
-DOMAIN = "purpleair"
+DOMAIN: Final = "purpleair"
 
-LOGGER = logging.getLogger(__package__)
+LOGGER: Final = logging.getLogger(__package__)
 
-CONF_READ_KEY = "read_key"
-CONF_SENSOR_INDICES = "sensor_indices"
+SCHEMA_VERSION: Final = 2
+
+CONF_SENSOR_INDICES: Final = "sensor_indices"  # Deprecated in v2 schema
+CONF_SENSOR_LIST: Final = "sensor_list"
+CONF_SENSOR_INDEX: Final = "sensor_index"
+CONF_SENSOR_READ_KEY: Final = "sensor_read_key"
+# TODO: Where is CONF_TITLE used (except in diagnostics.py)? # pylint: disable=fixme
+CONF_TITLE: Final = "title"

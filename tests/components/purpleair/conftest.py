@@ -8,7 +8,7 @@ from aiopurpleair.endpoints.sensors import NearbySensorResult
 from aiopurpleair.models.sensors import GetSensorsResponse
 import pytest
 
-from homeassistant.components.purpleair import DOMAIN
+from homeassistant.components.purpleair.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture

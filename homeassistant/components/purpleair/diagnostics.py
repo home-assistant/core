@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -14,15 +13,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import PurpleAirDataUpdateCoordinator
-
-CONF_TITLE = "title"
+from .const import CONF_TITLE
+from .coordinator import PurpleAirConfigEntry
 
 TO_REDACT = {
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    # TODO: Why is API key used in title? # pylint: disable=fixme
+    # TODO: What about unique id is sensitive? # pylint: disable=fixme
     # Config entry title and unique ID contain the API key (whole or part):
     CONF_TITLE,
     CONF_UNIQUE_ID,
@@ -30,14 +29,13 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: PurpleAirConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: PurpleAirDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     return async_redact_data(
         {
             "entry": entry.as_dict(),
-            "data": coordinator.data.model_dump(),
+            "data": entry.runtime_data.data.model_dump(),
         },
         TO_REDACT,
     )

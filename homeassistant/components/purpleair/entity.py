@@ -7,13 +7,14 @@ from typing import Any
 
 from aiopurpleair.models.sensors import SensorModel
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import PurpleAirDataUpdateCoordinator
+from .coordinator import PurpleAirConfigEntry, PurpleAirDataUpdateCoordinator
+
+MANUFACTURER = "PurpleAir, Inc."
 
 
 class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
@@ -23,12 +24,11 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
 
     def __init__(
         self,
-        coordinator: PurpleAirDataUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: PurpleAirConfigEntry,
         sensor_index: int,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator)
+        super().__init__(entry.runtime_data)
 
         self._sensor_index = sensor_index
 
@@ -36,7 +36,7 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
             configuration_url=self.coordinator.async_get_map_url(sensor_index),
             hw_version=self.sensor_data.hardware,
             identifiers={(DOMAIN, str(sensor_index))},
-            manufacturer="PurpleAir, Inc.",
+            manufacturer=MANUFACTURER,
             model=self.sensor_data.model,
             name=self.sensor_data.name,
             sw_version=self.sensor_data.firmware_version,
@@ -46,16 +46,15 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return entity specific state attributes."""
-        attrs = {}
+        attrs: dict[str, Any] = {}
+        if self.sensor_data.latitude is None or self.sensor_data.longitude is None:
+            return attrs
 
-        # Displaying the geography on the map relies upon putting the latitude/longitude
-        # in the entity attributes with "latitude" and "longitude" as the keys.
-        # Conversely, we can hide the location on the map by using other keys, like
-        # "lati" and "long":
         if self._entry.options.get(CONF_SHOW_ON_MAP):
             attrs[ATTR_LATITUDE] = self.sensor_data.latitude
             attrs[ATTR_LONGITUDE] = self.sensor_data.longitude
         else:
+            # TODO: Do we really need to save the coordinates if mapping is False? # pylint: disable=fixme
             attrs["lati"] = self.sensor_data.latitude
             attrs["long"] = self.sensor_data.longitude
         return attrs

@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Any, cast
+from typing import Any, Final
 
-from aiopurpleair import API
-from aiopurpleair.endpoints.sensors import NearbySensorResult
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 import voluptuous as vol
 
@@ -25,14 +22,8 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
 )
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
-from homeassistant.helpers import (
-    aiohttp_client,
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -40,39 +31,49 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_SENSOR_INDICES, DOMAIN, LOGGER
-
-CONF_DISTANCE = "distance"
-CONF_NEARBY_SENSOR_OPTIONS = "nearby_sensor_options"
-CONF_SENSOR_DEVICE_ID = "sensor_device_id"
-CONF_SENSOR_INDEX = "sensor_index"
-
-DEFAULT_DISTANCE = 5
-
-API_KEY_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-    }
+from .const import CONF_SENSOR_INDEX, DOMAIN, LOGGER, SCHEMA_VERSION
+from .coordinator import (
+    PurpleAirDataUpdateCoordinator,
+    SensorInfo,
+    async_add_sensor_to_sensor_list,
+    async_get_api,
+    async_get_sensor_device_info_list,
+    async_get_sensor_index_list,
+    async_get_sensor_nearby_sensors_list,
+    async_remove_sensor_from_sensor_list,
 )
+
+CONF_DISTANCE: Final = "distance"
+CONF_NEARBY_SENSOR_OPTIONS: Final = "nearby_sensor_options"
+CONF_SENSOR_DEVICE_ID: Final = "sensor_device_id"
+CONF_COORDINATES_GROUP: Final = "coords"
+
+DEFAULT_DISTANCE: Final = 5
+LIMIT_RESULTS: Final = 10
+TITLE: Final = "PurpleAir"
 
 
 @callback
-def async_get_api(hass: HomeAssistant, api_key: str) -> API:
-    """Get an aiopurpleair API object."""
-    session = aiohttp_client.async_get_clientsession(hass)
-    return API(api_key, session=session)
+def async_get_api_key_schema(api_key: str | None = None) -> vol.Schema:
+    """Return a schema for entering an API key."""
+    return vol.Schema(
+        {
+            vol.Required(CONF_API_KEY, default=api_key): cv.string,
+        }
+    )
 
 
 @callback
 def async_get_coordinates_schema(hass: HomeAssistant) -> vol.Schema:
-    """Define a schema for searching for sensors near a coordinate pair."""
+    """Return a schema for searching for sensors near a coordinate pair."""
+    # TODO: Convert to map selector # pylint: disable=fixme
     return vol.Schema(
         {
             vol.Inclusive(
-                CONF_LATITUDE, "coords", default=hass.config.latitude
+                CONF_LATITUDE, CONF_COORDINATES_GROUP, default=hass.config.latitude
             ): cv.latitude,
             vol.Inclusive(
-                CONF_LONGITUDE, "coords", default=hass.config.longitude
+                CONF_LONGITUDE, CONF_COORDINATES_GROUP, default=hass.config.longitude
             ): cv.longitude,
             vol.Optional(CONF_DISTANCE, default=DEFAULT_DISTANCE): cv.positive_int,
         }
@@ -80,51 +81,23 @@ def async_get_coordinates_schema(hass: HomeAssistant) -> vol.Schema:
 
 
 @callback
-def async_get_nearby_sensors_options(
-    nearby_sensor_results: list[NearbySensorResult],
-) -> list[SelectOptionDict]:
-    """Return a set of nearby sensors as SelectOptionDict objects."""
-    return [
+def async_get_sensor_select_schema(sensor_list: list[SensorInfo]) -> vol.Schema:
+    """Return a schema for selecting a sensor from a list."""
+    selection_list = [
         SelectOptionDict(
-            value=str(result.sensor.sensor_index), label=cast(str, result.sensor.name)
+            value=str(sensor.index),
+            label=f"{sensor.index} : {sensor.name}",
         )
-        for result in nearby_sensor_results
+        for sensor in sensor_list
     ]
 
-
-@callback
-def async_get_nearby_sensors_schema(options: list[SelectOptionDict]) -> vol.Schema:
-    """Define a schema for selecting a sensor from a list."""
     return vol.Schema(
         {
             vol.Required(CONF_SENSOR_INDEX): SelectSelector(
-                SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
-            )
-        }
-    )
-
-
-@callback
-def async_get_remove_sensor_options(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> list[SelectOptionDict]:
-    """Return a set of already-configured sensors as SelectOptionDict objects."""
-    device_registry = dr.async_get(hass)
-    return [
-        SelectOptionDict(value=device_entry.id, label=cast(str, device_entry.name))
-        for device_entry in device_registry.devices.get_devices_for_config_entry_id(
-            config_entry.entry_id
-        )
-    ]
-
-
-@callback
-def async_get_remove_sensor_schema(sensors: list[SelectOptionDict]) -> vol.Schema:
-    """Define a schema removing a sensor."""
-    return vol.Schema(
-        {
-            vol.Required(CONF_SENSOR_DEVICE_ID): SelectSelector(
-                SelectSelectorConfig(options=sensors, mode=SelectSelectorMode.DROPDOWN)
+                # TODO: Allow multiple selections # pylint: disable=fixme
+                SelectSelectorConfig(
+                    options=selection_list, mode=SelectSelectorMode.LIST, multiple=False
+                )
             )
         }
     )
@@ -176,7 +149,7 @@ async def async_validate_coordinates(
 
     try:
         nearby_sensor_results = await api.sensors.async_get_nearby_sensors(
-            ["name"], latitude, longitude, distance, limit_results=5
+            ["name"], latitude, longitude, distance, limit_results=LIMIT_RESULTS
         )
     except PurpleAirError as err:
         LOGGER.error("PurpleAir error while getting nearby sensors: %s", err)
@@ -197,7 +170,7 @@ async def async_validate_coordinates(
 class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for PurpleAir."""
 
-    VERSION = 1
+    VERSION = SCHEMA_VERSION
 
     def __init__(self) -> None:
         """Initialize."""
@@ -207,9 +180,9 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> PurpleAirOptionsFlowHandler:
+    ) -> PurpleAirOptionsFlow:
         """Define the config flow to handle options."""
-        return PurpleAirOptionsFlowHandler()
+        return PurpleAirOptionsFlow()
 
     async def async_step_by_coordinates(
         self, user_input: dict[str, Any] | None = None
@@ -235,9 +208,7 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors=validation.errors,
             )
 
-        self._flow_data[CONF_NEARBY_SENSOR_OPTIONS] = async_get_nearby_sensors_options(
-            validation.data
-        )
+        self._flow_data[CONF_NEARBY_SENSOR_OPTIONS] = validation.data
 
         return await self.async_step_choose_sensor()
 
@@ -249,16 +220,25 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
             options = self._flow_data.pop(CONF_NEARBY_SENSOR_OPTIONS)
             return self.async_show_form(
                 step_id="choose_sensor",
-                data_schema=async_get_nearby_sensors_schema(options),
+                data_schema=async_get_sensor_select_schema(
+                    async_get_sensor_nearby_sensors_list(options)
+                ),
             )
 
-        return self.async_create_entry(
-            title=self._flow_data[CONF_API_KEY][:5],
-            data=self._flow_data,
-            # Note that we store the sensor indices in options so that later on, we can
-            # add/remove additional sensors via an options flow:
-            options={CONF_SENSOR_INDICES: [int(user_input[CONF_SENSOR_INDEX])]},
+        data_config: dict[str, Any] = {
+            CONF_API_KEY: self._flow_data[CONF_API_KEY],
+        }
+        options_config: dict[str, Any] = {
+            CONF_SHOW_ON_MAP: False,
+        }
+        async_add_sensor_to_sensor_list(
+            options_config,
+            int(user_input[CONF_SENSOR_INDEX]),
+            None,
         )
+
+        # TODO: Use static title or dynamic title based on e.g. API key? # pylint: disable=fixme
+        return self.async_create_entry(title=TITLE, data=data_config, options=options)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -272,7 +252,8 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the re-auth step."""
         if user_input is None:
             return self.async_show_form(
-                step_id="reauth_confirm", data_schema=API_KEY_SCHEMA
+                step_id="reauth_confirm",
+                data_schema=async_get_api_key_schema(self._flow_data.get(CONF_API_KEY)),
             )
 
         api_key = user_input[CONF_API_KEY]
@@ -281,12 +262,12 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
         if validation.errors:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=API_KEY_SCHEMA,
+                data_schema=async_get_api_key_schema(api_key),
                 errors=validation.errors,
             )
 
         return self.async_update_reload_and_abort(
-            self._get_reauth_entry(), data={CONF_API_KEY: api_key}
+            self._get_reauth_entry(), data_updates={CONF_API_KEY: api_key}
         )
 
     async def async_step_user(
@@ -294,25 +275,38 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=API_KEY_SCHEMA)
+            return self.async_show_form(
+                step_id="user",
+                data_schema=async_get_api_key_schema(self._flow_data.get(CONF_API_KEY)),
+            )
 
         api_key = user_input[CONF_API_KEY]
-
-        self._async_abort_entries_match({CONF_API_KEY: api_key})
 
         validation = await async_validate_api_key(self.hass, api_key)
         if validation.errors:
             return self.async_show_form(
                 step_id="user",
-                data_schema=API_KEY_SCHEMA,
+                data_schema=async_get_api_key_schema(api_key),
                 errors=validation.errors,
             )
 
-        self._flow_data = {CONF_API_KEY: api_key}
+        await self.async_set_unique_id(api_key)
+        self._abort_if_unique_id_configured()
+
+        self._flow_data[CONF_API_KEY] = api_key
         return await self.async_step_by_coordinates()
 
+    async def async_step_reconfigure(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        self._flow_data[CONF_API_KEY] = self._get_reconfigure_entry().data.get(
+            CONF_API_KEY
+        )
+        return await self.async_step_user()
 
-class PurpleAirOptionsFlowHandler(OptionsFlow):
+
+class PurpleAirOptionsFlow(OptionsFlow):
     """Handle a PurpleAir options flow."""
 
     def __init__(self) -> None:
@@ -360,9 +354,7 @@ class PurpleAirOptionsFlowHandler(OptionsFlow):
                 errors=validation.errors,
             )
 
-        self._flow_data[CONF_NEARBY_SENSOR_OPTIONS] = async_get_nearby_sensors_options(
-            validation.data
-        )
+        self._flow_data[CONF_NEARBY_SENSOR_OPTIONS] = validation.data
 
         return await self.async_step_choose_sensor()
 
@@ -374,16 +366,20 @@ class PurpleAirOptionsFlowHandler(OptionsFlow):
             options = self._flow_data.pop(CONF_NEARBY_SENSOR_OPTIONS)
             return self.async_show_form(
                 step_id="choose_sensor",
-                data_schema=async_get_nearby_sensors_schema(options),
+                data_schema=async_get_sensor_select_schema(
+                    async_get_sensor_nearby_sensors_list(options)
+                ),
             )
 
         sensor_index = int(user_input[CONF_SENSOR_INDEX])
-
-        if sensor_index in self.config_entry.options[CONF_SENSOR_INDICES]:
+        index_list = async_get_sensor_index_list(dict(self.config_entry.options))
+        assert index_list is not None
+        if sensor_index in index_list:
             return self.async_abort(reason="already_configured")
 
-        options = deepcopy({**self.config_entry.options})
-        options[CONF_SENSOR_INDICES].append(sensor_index)
+        options = deepcopy(dict(self.config_entry.options))
+        async_add_sensor_to_sensor_list(options, sensor_index, None)
+
         return self.async_create_entry(data=options)
 
     async def async_step_init(
@@ -402,58 +398,20 @@ class PurpleAirOptionsFlowHandler(OptionsFlow):
         if user_input is None:
             return self.async_show_form(
                 step_id="remove_sensor",
-                data_schema=async_get_remove_sensor_schema(
-                    async_get_remove_sensor_options(self.hass, self.config_entry)
+                data_schema=async_get_sensor_select_schema(
+                    async_get_sensor_device_info_list(
+                        self.hass, self.config_entry.entry_id
+                    )
                 ),
             )
 
-        device_registry = dr.async_get(self.hass)
-        entity_registry = er.async_get(self.hass)
+        sensor_index = int(user_input[CONF_SENSOR_INDEX])
 
-        device_id = user_input[CONF_SENSOR_DEVICE_ID]
-        device_entry = cast(dr.DeviceEntry, device_registry.async_get(device_id))
+        options = deepcopy(dict(self.config_entry.options))
+        async_remove_sensor_from_sensor_list(options, sensor_index)
 
-        # Determine the entity entries that belong to this device.
-        entity_entries = er.async_entries_for_device(
-            entity_registry, device_id, include_disabled_entities=True
-        )
-
-        device_entities_removed_event = asyncio.Event()
-
-        @callback
-        def async_device_entity_state_changed(
-            _: Event[EventStateChangedData],
-        ) -> None:
-            """Listen and respond when all device entities are removed."""
-            if all(
-                self.hass.states.get(entity_entry.entity_id) is None
-                for entity_entry in entity_entries
-            ):
-                device_entities_removed_event.set()
-
-        # Track state changes for this device's entities and when they're removed,
-        # finish the flow:
-        cancel_state_track = async_track_state_change_event(
-            self.hass,
-            [entity_entry.entity_id for entity_entry in entity_entries],
-            async_device_entity_state_changed,
-        )
-        device_registry.async_update_device(
-            device_id, remove_config_entry_id=self.config_entry.entry_id
-        )
-        await device_entities_removed_event.wait()
-
-        # Once we're done, we can cancel the state change tracker callback:
-        cancel_state_track()
-
-        # Build new config entry options:
-        removed_sensor_index = next(
-            sensor_index
-            for sensor_index in self.config_entry.options[CONF_SENSOR_INDICES]
-            if (DOMAIN, str(sensor_index)) in device_entry.identifiers
-        )
-        options = deepcopy({**self.config_entry.options})
-        options[CONF_SENSOR_INDICES].remove(removed_sensor_index)
+        coordinator: PurpleAirDataUpdateCoordinator = self.config_entry.runtime_data
+        coordinator.async_delete_orphans_from_device_registry()
 
         return self.async_create_entry(data=options)
 
@@ -466,5 +424,7 @@ class PurpleAirOptionsFlowHandler(OptionsFlow):
                 step_id="settings", data_schema=self.settings_schema
             )
 
-        options = deepcopy({**self.config_entry.options})
-        return self.async_create_entry(data=options | user_input)
+        options = deepcopy(dict(self.config_entry.options))
+        options[CONF_SHOW_ON_MAP] = user_input.get(CONF_SHOW_ON_MAP, False)
+
+        return self.async_create_entry(data=options)

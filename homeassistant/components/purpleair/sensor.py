@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
@@ -27,8 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SENSOR_INDICES
-from .coordinator import PurpleAirConfigEntry, PurpleAirDataUpdateCoordinator
+from .coordinator import PurpleAirConfigEntry, async_get_sensor_index_list
 from .entity import PurpleAirEntity
 
 CONCENTRATION_PARTICLES_PER_100_MILLILITERS = f"particles/100{UnitOfVolume.MILLILITERS}"
@@ -153,7 +151,6 @@ SENSOR_DESCRIPTIONS = [
         value_fn=lambda sensor: sensor.uptime,
     ),
     PurpleAirSensorEntityDescription(
-        # This sensor is an air quality index for VOCs. More info at https://github.com/home-assistant/core/pull/84896
         key="voc",
         translation_key="voc_aqi",
         device_class=SensorDeviceClass.AQI,
@@ -169,10 +166,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PurpleAir sensors based on a config entry."""
-    coordinator = entry.runtime_data
+    index_list: list[int] = async_get_sensor_index_list(dict(entry.options)) or []
+
     async_add_entities(
-        PurpleAirSensorEntity(coordinator, entry, sensor_index, description)
-        for sensor_index in entry.options[CONF_SENSOR_INDICES]
+        PurpleAirSensorEntity(entry, sensor_index, description)
+        for sensor_index in index_list
         for description in SENSOR_DESCRIPTIONS
     )
 
@@ -184,13 +182,12 @@ class PurpleAirSensorEntity(PurpleAirEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: PurpleAirDataUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: PurpleAirConfigEntry,
         sensor_index: int,
         description: PurpleAirSensorEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, entry, sensor_index)
+        super().__init__(entry, sensor_index)
 
         self._attr_unique_id = f"{self._sensor_index}-{description.key}"
         self.entity_description = description
