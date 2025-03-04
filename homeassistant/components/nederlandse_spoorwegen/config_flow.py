@@ -7,10 +7,16 @@ from ns_api import RequestParametersError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.helpers.selector import selector
 from homeassistant.const import CONF_API_KEY
+from homeassistant.helpers.selector import TimeSelector
 
-from .const import CONF_STATION_FROM, CONF_STATION_TO, CONF_STATION_VIA, DOMAIN
+from .const import (
+    CONF_STATION_FROM,
+    CONF_STATION_TO,
+    CONF_STATION_VIA,
+    CONF_TIME,
+    DOMAIN,
+)
 
 
 class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -57,7 +63,10 @@ class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the step to add stations."""
         if user_input is not None:
             await self.async_set_unique_id(
-                user_input[CONF_STATION_FROM] + user_input[CONF_STATION_TO]
+                user_input[CONF_STATION_FROM]
+                + (user_input.get(CONF_STATION_VIA, ""))
+                + user_input[CONF_STATION_TO]
+                + (user_input.get(CONF_TIME, ""))
             )
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
@@ -67,6 +76,7 @@ class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_STATION_FROM: user_input[CONF_STATION_FROM],
                     CONF_STATION_VIA: user_input.get(CONF_STATION_VIA, None),
                     CONF_STATION_TO: user_input[CONF_STATION_TO],
+                    CONF_TIME: user_input.get(CONF_TIME, None),
                 },
             )
 
@@ -77,6 +87,7 @@ class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_STATION_FROM): vol.In(self._stations),
                     vol.Optional(CONF_STATION_VIA): vol.In(self._stations),
                     vol.Required(CONF_STATION_TO): vol.In(self._stations),
+                    vol.Optional(CONF_TIME): TimeSelector(),
                 }
             ),
         )
