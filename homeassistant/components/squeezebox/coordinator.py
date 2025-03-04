@@ -56,7 +56,6 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.lms = lms
         self.can_server_restart = False
-        self.newversion_regex_leavefirstsentance = re.compile("\\.[^)]*$")
 
     async def _async_setup(self) -> None:
         """Query LMS capabilities."""
@@ -73,61 +72,12 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         Then we process only a subset to make then nice for HA
         """
         async with timeout(STATUS_API_TIMEOUT):
-            data = await self.lms.async_status()
+            data = await self.lms.async_prepared_status()
 
         if not data:
             raise UpdateFailed("No data from status poll")
         _LOGGER.debug("Raw serverstatus %s=%s", self.lms.name, data)
 
-        return self._prepare_status_data(data)
-
-    def _prepare_status_data(self, data: dict) -> dict:
-        """Sensors that need the data changing for HA presentation."""
-
-        # Binary sensors
-        # rescan bool are we rescanning alter poll not present if false
-        data[STATUS_SENSOR_RESCAN] = STATUS_SENSOR_RESCAN in data
-        # needsrestart bool pending lms plugin updates not present if false
-        data[STATUS_SENSOR_NEEDSRESTART] = STATUS_SENSOR_NEEDSRESTART in data
-
-        # Sensors that need special handling
-        # 'lastscan': '1718431678', epoc -> ISO 8601 not always present
-        data[STATUS_SENSOR_LASTSCAN] = (
-            dt_util.utc_from_timestamp(int(data[STATUS_SENSOR_LASTSCAN]))
-            if STATUS_SENSOR_LASTSCAN in data
-            else None
-        )
-
-        # Updates
-        # newversion str not always present
-        # Sample text:-
-        # 'A new version of Logitech Media Server is available (8.5.2 - 0). <a href="updateinfo.html?installerFile=/var/lib/squeezeboxserver/cache/updates/logitechmediaserver_8.5.2_amd64.deb" target="update">Click here for further information</a>.'
-        # '<ul><li>Version %s - %s is available for installation.</li><li>Log in to your computer running Logitech Media Server (%s).</li><li>Execute <code>%s</code> and follow the instructions.</li></ul>'
-        data[UPDATE_RELEASE_SUMMARY] = (
-            self.newversion_regex_leavefirstsentance.sub(
-                ".", data[STATUS_UPDATE_NEWVERSION]
-            )
-            if STATUS_UPDATE_NEWVERSION in data
-            else None
-        )
-        data[STATUS_UPDATE_NEWVERSION] = (
-            "New Version"
-            if STATUS_UPDATE_NEWVERSION in data
-            else data[STATUS_QUERY_VERSION]
-        )
-
-        # newplugins str not always present
-        # newplugins': 'Plugins have been updated - Restart Required (BBC Sounds)
-        data[UPDATE_PLUGINS_RELEASE_SUMMARY] = (
-            data[STATUS_UPDATE_NEWPLUGINS] + ". "
-            if STATUS_UPDATE_NEWPLUGINS in data
-            else None
-        )
-        data[STATUS_UPDATE_NEWPLUGINS] = (
-            "Updates" if STATUS_UPDATE_NEWPLUGINS in data else "Current"
-        )
-
-        _LOGGER.debug("Processed serverstatus %s=%s", self.lms.name, data)
         return data
 
 
