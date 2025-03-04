@@ -13,6 +13,7 @@ from aiogithubapi import (
     GitHubResponseModel,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -98,13 +99,18 @@ query ($owner: String!, $repository: String!) {
 }
 """
 
+type GithubConfigEntry = ConfigEntry[dict[str, GitHubDataUpdateCoordinator]]
+
 
 class GitHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Data update coordinator for the GitHub integration."""
 
+    config_entry: GithubConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: GithubConfigEntry,
         client: GitHubAPI,
         repository: str,
     ) -> None:
@@ -118,6 +124,7 @@ class GitHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=repository,
             update_interval=FALLBACK_UPDATE_INTERVAL,
         )

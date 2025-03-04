@@ -2,10 +2,10 @@
 
 ATTR_PASSWORD = "password"
 ATTR_USERNAME = "username"
-COMMAND_RETRY_ATTEMPTS = 2
-COMMAND_RETRY_DELAY = 1
 DOMAIN = "heos"
+ENTRY_TITLE = "HEOS System"
+SERVICE_GROUP_VOLUME_SET = "group_volume_set"
+SERVICE_GROUP_VOLUME_DOWN = "group_volume_down"
+SERVICE_GROUP_VOLUME_UP = "group_volume_up"
 SERVICE_SIGN_IN = "sign_in"
 SERVICE_SIGN_OUT = "sign_out"
-SIGNAL_HEOS_PLAYER_ADDED = "heos_player_added"
-SIGNAL_HEOS_UPDATED = "heos_updated"

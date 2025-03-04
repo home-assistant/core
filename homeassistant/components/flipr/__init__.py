@@ -1,7 +1,6 @@
 """The Flipr integration."""
 
 from collections import Counter
-from dataclasses import dataclass
 import logging
 
 from flipr_api import FliprAPIRestClient
@@ -13,22 +12,16 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
-from .coordinator import FliprDataUpdateCoordinator, FliprHubDataUpdateCoordinator
+from .coordinator import (
+    FliprConfigEntry,
+    FliprData,
+    FliprDataUpdateCoordinator,
+    FliprHubDataUpdateCoordinator,
+)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class FliprData:
-    """The Flipr data class."""
-
-    flipr_coordinators: list[FliprDataUpdateCoordinator]
-    hub_coordinators: list[FliprHubDataUpdateCoordinator]
-
-
-type FliprConfigEntry = ConfigEntry[FliprData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FliprConfigEntry) -> bool:
@@ -50,13 +43,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: FliprConfigEntry) -> boo
 
     flipr_coordinators = []
     for flipr_id in ids["flipr"]:
-        flipr_coordinator = FliprDataUpdateCoordinator(hass, client, flipr_id)
+        flipr_coordinator = FliprDataUpdateCoordinator(hass, entry, client, flipr_id)
         await flipr_coordinator.async_config_entry_first_refresh()
         flipr_coordinators.append(flipr_coordinator)
 
     hub_coordinators = []
     for hub_id in ids["hub"]:
-        hub_coordinator = FliprHubDataUpdateCoordinator(hass, client, hub_id)
+        hub_coordinator = FliprHubDataUpdateCoordinator(hass, entry, client, hub_id)
         await hub_coordinator.async_config_entry_first_refresh()
         hub_coordinators.append(hub_coordinator)
 

@@ -63,6 +63,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "async_internal_announce",
         [AssistSatelliteEntityFeature.ANNOUNCE],
     )
+    component.async_register_entity_service(
+        "start_conversation",
+        vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Optional("start_message"): str,
+                    vol.Optional("start_media_id"): str,
+                    vol.Optional("extra_system_prompt"): str,
+                }
+            ),
+            cv.has_at_least_one_key("start_message", "start_media_id"),
+        ),
+        "async_internal_start_conversation",
+        [AssistSatelliteEntityFeature.START_CONVERSATION],
+    )
     hass.data[CONNECTION_TEST_DATA] = {}
     async_register_websocket_api(hass)
     hass.http.register_view(ConnectionTestView())

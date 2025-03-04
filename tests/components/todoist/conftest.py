@@ -70,6 +70,7 @@ def make_api_task(
         section_id=None,
         url="https://todoist.com",
         sync_id=None,
+        duration=None,
     )
 
 
@@ -94,6 +95,7 @@ def mock_api(tasks: list[Task]) -> AsyncMock:
             url="",
             is_inbox_project=False,
             is_team_inbox=False,
+            can_assign_tasks=False,
             order=1,
             parent_id=None,
             view_style="list",

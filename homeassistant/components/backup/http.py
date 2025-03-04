@@ -21,6 +21,7 @@ from . import util
 from .agent import BackupAgent
 from .const import DATA_MANAGER
 from .manager import BackupManager
+from .models import BackupNotFound
 
 
 @callback
@@ -58,10 +59,13 @@ class DownloadBackupView(HomeAssistantView):
         if agent_id not in manager.backup_agents:
             return Response(status=HTTPStatus.BAD_REQUEST)
         agent = manager.backup_agents[agent_id]
-        backup = await agent.async_get_backup(backup_id)
+        try:
+            backup = await agent.async_get_backup(backup_id)
+        except BackupNotFound:
+            return Response(status=HTTPStatus.NOT_FOUND)
 
-        # We don't need to check if the path exists, aiohttp.FileResponse will handle
-        # that
+        # Check for None to be backwards compatible with the old BackupAgent API,
+        # this can be removed in HA Core 2025.10
         if backup is None:
             return Response(status=HTTPStatus.NOT_FOUND)
 
@@ -69,13 +73,16 @@ class DownloadBackupView(HomeAssistantView):
             CONTENT_DISPOSITION: f"attachment; filename={slugify(backup.name)}.tar"
         }
 
-        if not password:
-            return await self._send_backup_no_password(
-                request, headers, backup_id, agent_id, agent, manager
+        try:
+            if not password or not backup.protected:
+                return await self._send_backup_no_password(
+                    request, headers, backup_id, agent_id, agent, manager
+                )
+            return await self._send_backup_with_password(
+                hass, request, headers, backup_id, agent_id, password, agent, manager
             )
-        return await self._send_backup_with_password(
-            hass, request, headers, backup_id, agent_id, password, agent, manager
-        )
+        except BackupNotFound:
+            return Response(status=HTTPStatus.NOT_FOUND)
 
     async def _send_backup_no_password(
         self,
@@ -88,6 +95,8 @@ class DownloadBackupView(HomeAssistantView):
     ) -> StreamResponse | FileResponse | Response:
         if agent_id in manager.local_backup_agents:
             local_agent = manager.local_backup_agents[agent_id]
+            # We don't need to check if the path exists, aiohttp.FileResponse will
+            # handle that
             path = local_agent.get_backup_path(backup_id)
             return FileResponse(path=path.as_posix(), headers=headers)
 
@@ -123,13 +132,13 @@ class DownloadBackupView(HomeAssistantView):
 
         worker_done_event = asyncio.Event()
 
-        def on_done() -> None:
+        def on_done(error: Exception | None) -> None:
             """Call by the worker thread when it's done."""
             hass.loop.call_soon_threadsafe(worker_done_event.set)
 
         stream = util.AsyncIteratorWriter(hass)
         worker = threading.Thread(
-            target=util.decrypt_backup, args=[reader, stream, password, on_done]
+            target=util.decrypt_backup, args=[reader, stream, password, on_done, 0, []]
         )
         try:
             worker.start()
@@ -144,13 +153,17 @@ class DownloadBackupView(HomeAssistantView):
 
 
 class UploadBackupView(HomeAssistantView):
-    """Generate backup view."""
+    """Upload backup view."""
 
     url = "/api/backup/upload"
     name = "api:backup:upload"
 
     @require_admin
     async def post(self, request: Request) -> Response:
+        """Upload a backup file."""
+        return await self._post(request)
+
+    async def _post(self, request: Request) -> Response:
         """Upload a backup file."""
         try:
             agent_ids = request.query.getall("agent_id")
@@ -161,7 +174,9 @@ class UploadBackupView(HomeAssistantView):
         contents = cast(BodyPartReader, await reader.next())
 
         try:
-            await manager.async_receive_backup(contents=contents, agent_ids=agent_ids)
+            backup_id = await manager.async_receive_backup(
+                contents=contents, agent_ids=agent_ids
+            )
         except OSError as err:
             return Response(
                 body=f"Can't write backup file: {err}",
@@ -175,4 +190,4 @@ class UploadBackupView(HomeAssistantView):
         except asyncio.CancelledError:
             return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-        return Response(status=HTTPStatus.CREATED)
+        return self.json({"backup_id": backup_id}, status_code=HTTPStatus.CREATED)

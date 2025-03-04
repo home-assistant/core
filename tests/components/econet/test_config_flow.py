@@ -5,7 +5,7 @@ from unittest.mock import patch
 from pyeconet.api import EcoNetApiInterface
 from pyeconet.errors import InvalidCredentialsError, PyeconetError
 
-from homeassistant.components.econet import DOMAIN
+from homeassistant.components.econet.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant

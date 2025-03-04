@@ -13,7 +13,7 @@ from homeassistant.components.media_player import (
     MediaClass,
     MediaPlayerEntityFeature,
 )
-import homeassistant.components.universal.media_player as universal
+from homeassistant.components.universal import media_player as universal
 from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_OFF,

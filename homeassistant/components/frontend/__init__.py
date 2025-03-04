@@ -26,8 +26,7 @@ from homeassistant.const import (
     EVENT_THEMES_UPDATED,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import service
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.helpers.storage import Store

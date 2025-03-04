@@ -48,6 +48,7 @@ ATTR_API_WEATHER_CODE = "weather_code"
 ATTR_API_CLOUD_COVERAGE = "cloud_coverage"
 ATTR_API_FORECAST = "forecast"
 ATTR_API_CURRENT = "current"
+ATTR_API_MINUTE_FORECAST = "minute_forecast"
 ATTR_API_HOURLY_FORECAST = "hourly_forecast"
 ATTR_API_DAILY_FORECAST = "daily_forecast"
 UPDATE_LISTENER = "update_listener"
@@ -61,10 +62,8 @@ FORECAST_MODE_ONECALL_DAILY = "onecall_daily"
 OWM_MODE_FREE_CURRENT = "current"
 OWM_MODE_FREE_FORECAST = "forecast"
 OWM_MODE_V30 = "v3.0"
-OWM_MODE_V25 = "v2.5"
 OWM_MODES = [
     OWM_MODE_V30,
-    OWM_MODE_V25,
     OWM_MODE_FREE_CURRENT,
     OWM_MODE_FREE_FORECAST,
 ]

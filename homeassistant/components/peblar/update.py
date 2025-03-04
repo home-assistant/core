@@ -11,7 +11,7 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import (
     PeblarConfigEntry,
@@ -37,14 +37,14 @@ DESCRIPTIONS: tuple[PeblarUpdateEntityDescription, ...] = (
         key="firmware",
         device_class=UpdateDeviceClass.FIRMWARE,
         installed_fn=lambda x: x.current.firmware,
-        has_fn=lambda x: x.current.firmware is not None,
+        has_fn=lambda x: x.available.firmware is not None,
         available_fn=lambda x: x.available.firmware,
     ),
     PeblarUpdateEntityDescription(
         key="customization",
         translation_key="customization",
         available_fn=lambda x: x.available.customization,
-        has_fn=lambda x: x.current.customization is not None,
+        has_fn=lambda x: x.available.customization is not None,
         installed_fn=lambda x: x.current.customization,
     ),
 )
@@ -53,7 +53,7 @@ DESCRIPTIONS: tuple[PeblarUpdateEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PeblarConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Peblar update based on a config entry."""
     async_add_entities(
