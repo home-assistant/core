@@ -127,9 +127,7 @@ async def test_entity(
             CONF_LLM_HASS_API: "assist",
         },
     )
-    with patch(
-        "anthropic.resources.messages.AsyncMessages.create", new_callable=AsyncMock
-    ):
+    with patch("anthropic.resources.models.AsyncModels.retrieve"):
         await hass.config_entries.async_reload(mock_config_entry.entry_id)
 
     state = hass.states.get("conversation.claude")
@@ -173,8 +171,11 @@ async def test_template_error(
             "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
         },
     )
-    with patch(
-        "anthropic.resources.messages.AsyncMessages.create", new_callable=AsyncMock
+    with (
+        patch("anthropic.resources.models.AsyncModels.retrieve"),
+        patch(
+            "anthropic.resources.messages.AsyncMessages.create", new_callable=AsyncMock
+        ),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -205,6 +206,7 @@ async def test_template_variables(
         },
     )
     with (
+        patch("anthropic.resources.models.AsyncModels.retrieve"),
         patch(
             "anthropic.resources.messages.AsyncMessages.create", new_callable=AsyncMock
         ) as mock_create,
@@ -230,8 +232,8 @@ async def test_template_variables(
         result.response.speech["plain"]["speech"]
         == "Okay, let me take care of that for you."
     )
-    assert "The user name is Test User." in mock_create.mock_calls[1][2]["system"]
-    assert "The user id is 12345." in mock_create.mock_calls[1][2]["system"]
+    assert "The user name is Test User." in mock_create.call_args.kwargs["system"]
+    assert "The user id is 12345." in mock_create.call_args.kwargs["system"]
 
 
 async def test_conversation_agent(
@@ -497,9 +499,7 @@ async def test_unknown_hass_api(
     assert result == snapshot
 
 
-@patch("anthropic.resources.messages.AsyncMessages.create", new_callable=AsyncMock)
 async def test_conversation_id(
-    mock_create,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,

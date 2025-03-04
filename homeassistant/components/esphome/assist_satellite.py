@@ -284,7 +284,10 @@ class EsphomeAssistSatellite(
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END:
             assert event.data is not None
             data_to_send = {
-                "conversation_id": event.data["intent_output"]["conversation_id"] or "",
+                "conversation_id": event.data["intent_output"]["conversation_id"],
+                "continue_conversation": str(
+                    int(event.data["intent_output"]["continue_conversation"])
+                ),
             }
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
             assert event.data is not None

@@ -19,7 +19,6 @@ from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     SERVICE_GET_EVENTS,
 )
-from homeassistant.components.climate import INTENT_GET_TEMPERATURE
 from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
@@ -285,7 +284,7 @@ class AssistAPI(API):
     """API exposing Assist API to LLMs."""
 
     IGNORE_INTENTS = {
-        INTENT_GET_TEMPERATURE,
+        intent.INTENT_GET_TEMPERATURE,
         INTENT_GET_WEATHER,
         INTENT_OPEN_COVER,  # deprecated
         INTENT_CLOSE_COVER,  # deprecated
@@ -530,9 +529,11 @@ def _get_exposed_entities(
             info["areas"] = ", ".join(area_names)
 
         if attributes := {
-            attr_name: str(attr_value)
-            if isinstance(attr_value, (Enum, Decimal, int))
-            else attr_value
+            attr_name: (
+                str(attr_value)
+                if isinstance(attr_value, (Enum, Decimal, int))
+                else attr_value
+            )
             for attr_name, attr_value in state.attributes.items()
             if attr_name in interesting_attributes
         }:
