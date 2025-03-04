@@ -176,6 +176,10 @@ ENTITY_TRIGGERS = {
         {CONF_TYPE: CONF_TAMPERED},
         {CONF_TYPE: CONF_NOT_TAMPERED},
     ],
+    BinarySensorDeviceClass.VALVE: [
+        {CONF_TYPE: CONF_OPENED},
+        {CONF_TYPE: CONF_NOT_OPENED},
+    ],
     BinarySensorDeviceClass.VIBRATION: [
         {CONF_TYPE: CONF_VIBRATION},
         {CONF_TYPE: CONF_NO_VIBRATION},

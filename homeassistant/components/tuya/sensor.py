@@ -677,6 +677,9 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Thermostat
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
+    "wk": BATTERY_SENSORS,
     # Thermostatic Radiator Valve
     # Not documented
     "wkf": BATTERY_SENSORS,

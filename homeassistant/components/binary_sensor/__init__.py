@@ -111,6 +111,9 @@ class BinarySensorDeviceClass(StrEnum):
     # On means update available, Off means up-to-date
     UPDATE = "update"
 
+    # On means open, Off means closed
+    VALVE = "valve"
+
     # On means vibration detected, Off means no vibration
     VIBRATION = "vibration"
 

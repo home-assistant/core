@@ -581,6 +581,11 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.SOUND,
+            translation_key="sound",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     # Thermostatic Radiator Valve
     # Not documented
@@ -606,15 +611,6 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     # SIREN: Siren (switch) with Temperature and humidity sensor
     # https://developer.tuya.com/en/docs/iot/f?id=Kavck4sr3o5ek
     "wsdcg": (
-        SwitchEntityDescription(
-            key=DPCode.SWITCH,
-            translation_key="switch",
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
-    ),
-    # SIREN: Siren (switch) with Temperature and Humidity Sensor with External Probe
-    # New undocumented category qxj, see https://github.com/home-assistant/core/issues/136472
-    "qxj": (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",

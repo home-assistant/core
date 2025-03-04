@@ -286,6 +286,7 @@ class DPCode(StrEnum):
     SMOKE_SENSOR_STATE = "smoke_sensor_state"
     SMOKE_SENSOR_STATUS = "smoke_sensor_status"
     SMOKE_SENSOR_VALUE = "smoke_sensor_value"
+    SOUND = "sound"  # Key press sound
     SOS = "sos"  # Emergency State
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
@@ -362,6 +363,7 @@ class DPCode(StrEnum):
     VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"
     VA_TEMPERATURE = "va_temperature"
+    VALVE_STATE = "valve_state"  #  Valve status IE: boiler valve
     VOC_STATE = "voc_state"
     VOC_VALUE = "voc_value"
     VOICE_SWITCH = "voice_switch"

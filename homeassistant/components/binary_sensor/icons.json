@@ -162,6 +162,12 @@
         "on": "mdi:package-up"
       }
     },
+    "valve": {
+      "default": "mdi:thermometer",
+      "state": {
+        "on": "mdi:fire"
+      }
+    },
     "vibration": {
       "default": "mdi:crop-portrait",
       "state": {

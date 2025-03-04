@@ -241,6 +241,10 @@ ENTITY_CONDITIONS = {
         {CONF_TYPE: CONF_IS_UPDATE},
         {CONF_TYPE: CONF_IS_NO_UPDATE},
     ],
+    BinarySensorDeviceClass.VALVE: [
+        {CONF_TYPE: CONF_IS_OPEN},
+        {CONF_TYPE: CONF_IS_NOT_OPEN},
+    ],
     BinarySensorDeviceClass.VIBRATION: [
         {CONF_TYPE: CONF_IS_VIBRATION},
         {CONF_TYPE: CONF_IS_NO_VIBRATION},
