@@ -9,8 +9,9 @@
       },
       "stations": {
         "data": {
-          "station_from": "From station",
-          "station_to": "To station"
+          "from": "From station",
+          "via": "Via station",
+          "to": "To station"
         }
       }
     },
