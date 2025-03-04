@@ -262,7 +262,6 @@ async def build_item_response(
         item_type = browse_data.content_type_to_child_type[search_type]
 
         children = []
-        list_playable = []
         for item in result["items"]:
             if search_type == "Favorites":
                 child_media = _build_response_favorites(item)
@@ -317,8 +316,6 @@ async def build_item_response(
 
             children.append(child_media)
 
-            list_playable.append(child_media.can_play)
-
     if children is None:
         raise BrowseError(f"Media not found: {search_type} / {search_id}")
 
@@ -332,7 +329,7 @@ async def build_item_response(
         children_media_class=media_class["children"],
         media_content_id=search_id,
         media_content_type=search_type,
-        can_play=any(list_playable),
+        can_play=any(child.can_play for child in children),
         children=children,
         can_expand=True,
     )
