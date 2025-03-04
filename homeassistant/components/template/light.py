@@ -1023,7 +1023,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         if render in (None, "None", ""):
             self._supports_transition = False
             return
-        self._attr_supported_features &= LightEntityFeature.EFFECT
+        self._attr_supported_features &= ~LightEntityFeature.TRANSITION
         self._supports_transition = bool(render)
         if self._supports_transition:
             self._attr_supported_features |= LightEntityFeature.TRANSITION

@@ -39,6 +39,11 @@ class ForkedDaapdUpdater:
         self._all_output_ids: set[str] = set()
         self._entry_id = entry_id
 
+    @property
+    def api(self) -> ForkedDaapdAPI:
+        """Return the API object."""
+        return self._api
+
     async def async_init(self) -> None:
         """Perform async portion of class initialization."""
         if not (server_config := await self._api.get_request("config")):

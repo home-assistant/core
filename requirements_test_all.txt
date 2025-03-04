@@ -249,7 +249,7 @@ aioharmony==0.4.1
 aiohasupervisor==0.3.0
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.15.1
+aiohomeconnect==0.16.2
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.8
@@ -534,7 +534,7 @@ bimmer-connected[china]==0.17.2
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.9.0
+bleak-esphome==2.10.2
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.9.0
@@ -1249,7 +1249,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==4.0.0
 
 # homeassistant.components.nexia
-nexia==2.0.9
+nexia==2.1.1
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -1885,7 +1885,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.4.1
+pysmartthings==2.5.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
