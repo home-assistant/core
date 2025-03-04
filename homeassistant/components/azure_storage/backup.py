@@ -141,7 +141,7 @@ class AzureStorageBackupAgent(BackupAgent):
         """Delete a backup file."""
         blob = await self._find_blob_by_backup_id(backup_id)
         if blob is None:
-            return
+            raise BackupNotFound(f"Backup {backup_id} not found")
         await self._client.delete_blob(blob.name)
 
     @handle_backup_errors
@@ -163,11 +163,11 @@ class AzureStorageBackupAgent(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup | None:
+    ) -> AgentBackup:
         """Return a backup."""
         blob = await self._find_blob_by_backup_id(backup_id)
         if blob is None:
-            return None
+            raise BackupNotFound(f"Backup {backup_id} not found")
 
         return AgentBackup.from_dict(json.loads(blob.metadata["backup_metadata"]))
 
