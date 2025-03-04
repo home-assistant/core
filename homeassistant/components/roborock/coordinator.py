@@ -179,6 +179,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             # Get the rooms for that map id.
             await self.set_current_map_rooms()
         except RoborockException as ex:
+            _LOGGER.debug("Failed to update data: %s", ex)
             raise UpdateFailed(ex) from ex
         return self.roborock_device_info.props
 

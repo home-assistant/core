@@ -14,6 +14,7 @@ from itertools import chain
 import json
 from pathlib import Path, PurePath
 import shutil
+import sys
 import tarfile
 import time
 from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast
@@ -63,6 +64,7 @@ from .models import (
     AgentBackup,
     BackupError,
     BackupManagerError,
+    BackupNotFound,
     BackupReaderWriterError,
     BaseBackup,
     Folder,
@@ -306,6 +308,12 @@ class DecryptOnDowloadNotSupported(BackupManagerError):
 
     error_code = "decrypt_on_download_not_supported"
     _message = "On-the-fly decryption is not supported for this backup."
+
+
+class BackupManagerExceptionGroup(BackupManagerError, ExceptionGroup):
+    """Raised when multiple exceptions occur."""
+
+    error_code = "multiple_errors"
 
 
 class BackupManager:
@@ -641,6 +649,8 @@ class BackupManager:
         )
         for idx, result in enumerate(get_backup_results):
             agent_id = agent_ids[idx]
+            if isinstance(result, BackupNotFound):
+                continue
             if isinstance(result, BackupAgentError):
                 agent_errors[agent_id] = result
                 continue
@@ -652,6 +662,8 @@ class BackupManager:
                 continue
             if isinstance(result, BaseException):
                 raise result  # unexpected error
+            # Check for None to be backwards compatible with the old BackupAgent API,
+            # this can be removed in HA Core 2025.10
             if not result:
                 continue
             if backup is None:
@@ -716,6 +728,8 @@ class BackupManager:
         )
         for idx, result in enumerate(delete_backup_results):
             agent_id = agent_ids[idx]
+            if isinstance(result, BackupNotFound):
+                continue
             if isinstance(result, BackupAgentError):
                 agent_errors[agent_id] = result
                 continue
@@ -825,7 +839,7 @@ class BackupManager:
         agent_errors = {
             backup_id: error
             for backup_id, error in zip(backup_ids, delete_results, strict=True)
-            if error
+            if error and not isinstance(error, BackupNotFound)
         }
         if agent_errors:
             LOGGER.error(
@@ -1257,7 +1271,15 @@ class BackupManager:
     ) -> None:
         """Initiate restoring a backup."""
         agent = self.backup_agents[agent_id]
-        if not await agent.async_get_backup(backup_id):
+        try:
+            backup = await agent.async_get_backup(backup_id)
+        except BackupNotFound as err:
+            raise BackupManagerError(
+                f"Backup {backup_id} not found in agent {agent_id}"
+            ) from err
+        # Check for None to be backwards compatible with the old BackupAgent API,
+        # this can be removed in HA Core 2025.10
+        if not backup:
             raise BackupManagerError(
                 f"Backup {backup_id} not found in agent {agent_id}"
             )
@@ -1345,7 +1367,15 @@ class BackupManager:
             agent = self.backup_agents[agent_id]
         except KeyError as err:
             raise BackupManagerError(f"Invalid agent selected: {agent_id}") from err
-        if not await agent.async_get_backup(backup_id):
+        try:
+            backup = await agent.async_get_backup(backup_id)
+        except BackupNotFound as err:
+            raise BackupManagerError(
+                f"Backup {backup_id} not found in agent {agent_id}"
+            ) from err
+        # Check for None to be backwards compatible with the old BackupAgent API,
+        # this can be removed in HA Core 2025.10
+        if not backup:
             raise BackupManagerError(
                 f"Backup {backup_id} not found in agent {agent_id}"
             )
@@ -1605,10 +1635,24 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             )
         finally:
             # Inform integrations the backup is done
+            # If there's an unhandled exception, we keep it so we can rethrow it in case
+            # the post backup actions also fail.
+            unhandled_exc = sys.exception()
             try:
-                await manager.async_post_backup_actions()
-            except BackupManagerError as err:
-                raise BackupReaderWriterError(str(err)) from err
+                try:
+                    await manager.async_post_backup_actions()
+                except BackupManagerError as err:
+                    raise BackupReaderWriterError(str(err)) from err
+            except Exception as err:
+                if not unhandled_exc:
+                    raise
+                # If there's an unhandled exception, we wrap both that and the exception
+                # from the post backup actions in an ExceptionGroup so the caller is
+                # aware of both exceptions.
+                raise BackupManagerExceptionGroup(
+                    f"Multiple errors when creating backup: {unhandled_exc}, {err}",
+                    [unhandled_exc, err],
+                ) from None
 
     def _mkdir_and_generate_backup_contents(
         self,

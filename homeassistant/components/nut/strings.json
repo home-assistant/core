@@ -74,7 +74,11 @@
       "test_failure_stop": "Stop simulating a power failure",
       "test_panel_start": "Start testing the UPS panel",
       "test_panel_stop": "Stop a UPS panel test",
-      "test_system_start": "Start a system test"
+      "test_system_start": "Start a system test",
+      "outlet_1_load_on": "Power outlet 1 on",
+      "outlet_1_load_off": "Power outlet 1 off",
+      "outlet_2_load_on": "Power outlet 2 on",
+      "outlet_2_load_off": "Power outlet 2 off"
     }
   },
   "entity": {
