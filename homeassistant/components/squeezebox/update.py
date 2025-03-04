@@ -14,7 +14,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from . import SqueezeboxConfigEntry
@@ -44,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SqueezeboxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntitiesCallback,
 ) -> None:
     """Platform setup using common elements."""
 
