@@ -17,16 +17,8 @@
     }),
     dict({
       'agent_id': 'conversation.claude',
-      'content': None,
-      'role': 'assistant',
-      'thinking': 'The user asked me to call a test function.Is it a test? What would the function do? Would it violate any privacy or security policies?',
-      'tool_calls': None,
-    }),
-    dict({
-      'agent_id': 'conversation.claude',
       'content': 'Certainly, calling it now!',
       'role': 'assistant',
-      'thinking': "Okay, let's give it a shot. Will I pass the test?",
       'tool_calls': list([
         dict({
           'id': 'toolu_0123456789AbCdEfGhIjKlM',
@@ -48,7 +40,6 @@
       'agent_id': 'conversation.claude',
       'content': 'I have successfully called the function',
       'role': 'assistant',
-      'thinking': None,
       'tool_calls': None,
     }),
   ])

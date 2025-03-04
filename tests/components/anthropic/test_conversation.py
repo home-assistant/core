@@ -469,8 +469,7 @@ async def test_function_exception(
         "role": "user",
         "content": [
             {
-                "content": '{"error": "HomeAssistantError", "error_text": "Test tool '
-                'exception"}',
+                "content": '{"error": "HomeAssistantError", "error_text": "Test tool exception"}',
                 "tool_use_id": "toolu_0123456789AbCdEfGhIjKlM",
                 "type": "tool_result",
             }
@@ -643,13 +642,6 @@ async def test_extended_thinking(
     )
     assert len(chat_log.content) == 3
     assert chat_log.content[1].content == "hello"
-    assert (
-        chat_log.content[2].thinking
-        == 'The user has just greeted me with "Hi". This is a simple greeting and '
-        "doesn't require any Home Assistant function calls. I should respond with a "
-        "friendly greeting and let them know I'm available to help with their smart "
-        "home."
-    )
     assert chat_log.content[2].content == "Hello, how can I help you today?"
 
 

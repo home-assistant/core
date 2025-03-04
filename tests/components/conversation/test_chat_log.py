@@ -503,28 +503,6 @@ async def test_tool_call_exception(
                 ]
             },
         ],
-        # With thinking
-        [
-            {"role": "assistant"},
-            {"thinking": "Test"},
-        ],
-        # With 2 thinking, content, and tool call
-        [
-            {"role": "assistant"},
-            {"thinking": "Test"},
-            {"role": "assistant"},
-            {"thinking": "Test 2"},
-            {"content": "Test"},
-            {
-                "tool_calls": [
-                    llm.ToolInput(
-                        id="mock-tool-call-id",
-                        tool_name="test_tool",
-                        tool_args={"param1": "Test Param 1"},
-                    )
-                ]
-            },
-        ],
     ],
 )
 async def test_add_delta_content_stream(

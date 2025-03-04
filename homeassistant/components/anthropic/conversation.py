@@ -189,8 +189,6 @@ async def _transform_stream(
         | None
     ) = None
     current_tool_args: str
-    has_text = False
-    has_thinking = False
 
     async for response in result:
         LOGGER.debug("Received response: %s", response)
@@ -198,9 +196,6 @@ async def _transform_stream(
         if isinstance(response, RawMessageStartEvent):
             if response.message.role != "assistant":
                 raise ValueError("Unexpected message role")
-            yield {"role": "assistant"}
-            has_text = False
-            has_thinking = False
             current_message = MessageParam(role=response.message.role, content=[])
         elif isinstance(response, RawContentBlockStartEvent):
             if isinstance(response.content_block, ToolUseBlock):
@@ -215,11 +210,7 @@ async def _transform_stream(
                 current_block = TextBlockParam(
                     type="text", text=response.content_block.text
                 )
-                if has_text:  # already have one text block, starting a new message
-                    yield {"role": "assistant"}
-                    has_thinking = False
-                else:  # adding text to the current message
-                    has_text = True
+                yield {"role": "assistant"}
                 if response.content_block.text:
                     yield {"content": response.content_block.text}
             elif isinstance(response.content_block, ThinkingBlock):
@@ -228,13 +219,6 @@ async def _transform_stream(
                     thinking=response.content_block.thinking,
                     signature=response.content_block.signature,
                 )
-                if has_thinking:
-                    yield {"role": "assistant"}
-                    has_text = False
-                else:
-                    has_thinking = True
-                if response.content_block.thinking:
-                    yield {"thinking": response.content_block.thinking}
             elif isinstance(response.content_block, RedactedThinkingBlock):
                 current_block = RedactedThinkingBlockParam(
                     type="redacted_thinking", data=response.content_block.data
@@ -256,15 +240,13 @@ async def _transform_stream(
             elif isinstance(response.delta, ThinkingDelta):
                 thinking_block = cast(ThinkingBlockParam, current_block)
                 thinking_block["thinking"] += response.delta.thinking
-                yield {"thinking": response.delta.thinking}
             elif isinstance(response.delta, SignatureDelta):
                 thinking_block = cast(ThinkingBlockParam, current_block)
                 thinking_block["signature"] += response.delta.signature
         elif isinstance(response, RawContentBlockStopEvent):
-            if (
-                isinstance(current_block, dict)
-                and current_block.get("type") == "tool_use"
-            ):
+            if current_block is None:
+                raise ValueError("Unexpected stop event without a current block")
+            if current_block["type"] == "tool_use":
                 tool_block = cast(ToolUseBlockParam, current_block)
                 tool_args = json.loads(current_tool_args)
                 tool_block["input"] = tool_args
@@ -277,6 +259,10 @@ async def _transform_stream(
                         )
                     ]
                 }
+            elif current_block["type"] == "thinking":
+                thinking_block = cast(ThinkingBlockParam, current_block)
+                LOGGER.debug("Thinking:\n%s", thinking_block["thinking"])
+
             if current_message is None:
                 raise ValueError("Unexpected stop event without a current message")
             current_message["content"].append(current_block)  # type: ignore[union-attr]

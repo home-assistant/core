@@ -9,7 +9,6 @@
       'agent_id': 'conversation.openai',
       'content': None,
       'role': 'assistant',
-      'thinking': None,
       'tool_calls': list([
         dict({
           'id': 'call_call_1',
@@ -45,7 +44,6 @@
       'agent_id': 'conversation.openai',
       'content': 'Cool',
       'role': 'assistant',
-      'thinking': None,
       'tool_calls': None,
     }),
   ])
