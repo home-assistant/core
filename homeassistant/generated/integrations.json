@@ -345,6 +345,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "apollo_automation": {
+      "name": "Apollo Automation",
+      "integration_type": "virtual",
+      "supported_by": "esphome"
+    },
     "appalachianpower": {
       "name": "Appalachian Power",
       "integration_type": "virtual",
