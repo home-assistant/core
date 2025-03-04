@@ -11,11 +11,9 @@ from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import (
     ArrayOfCommands,
     ArrayOfEvents,
-    ArrayOfHomeAppliances,
     ArrayOfOptions,
     ArrayOfPrograms,
     ArrayOfSettings,
-    ArrayOfStatus,
     Event,
     EventKey,
     EventMessage,
@@ -41,20 +39,15 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_json_object_fixture
-
-MOCK_APPLIANCES = ArrayOfHomeAppliances.from_dict(
-    load_json_object_fixture("home_connect/appliances.json")["data"]
-)
-MOCK_PROGRAMS: dict[str, Any] = load_json_object_fixture("home_connect/programs.json")
-MOCK_SETTINGS: dict[str, Any] = load_json_object_fixture("home_connect/settings.json")
-MOCK_STATUS = ArrayOfStatus.from_dict(
-    load_json_object_fixture("home_connect/status.json")["data"]
-)
-MOCK_AVAILABLE_COMMANDS: dict[str, Any] = load_json_object_fixture(
-    "home_connect/available_commands.json"
+from . import (
+    MOCK_APPLIANCES,
+    MOCK_AVAILABLE_COMMANDS,
+    MOCK_PROGRAMS,
+    MOCK_SETTINGS,
+    MOCK_STATUS,
 )
 
+from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"

@@ -98,6 +98,7 @@ class HomeConnectCoordinator(
             CALLBACK_TYPE, tuple[CALLBACK_TYPE, tuple[EventKey, ...]]
         ] = {}
         self.device_registry = dr.async_get(self.hass)
+        self.data = {}
 
     @cached_property
     def context_listeners(self) -> dict[tuple[str, EventKey], list[CALLBACK_TYPE]]:
@@ -161,6 +162,14 @@ class HomeConnectCoordinator(
                 async for event_message in self.client.stream_all_events():
                     retry_time = 10
                     event_message_ha_id = event_message.ha_id
+                    if (
+                        event_message_ha_id in self.data
+                        and not self.data[event_message_ha_id].info.connected
+                    ):
+                        self.data[event_message_ha_id].info.connected = True
+                        self._call_all_event_listeners_for_appliance(
+                            event_message_ha_id
+                        )
                     match event_message.type:
                         case EventType.STATUS:
                             statuses = self.data[event_message_ha_id].status
@@ -295,6 +304,8 @@ class HomeConnectCoordinator(
                 translation_placeholders=get_dict_from_home_connect_error(error),
             ) from error
         except HomeConnectError as error:
+            for appliance_data in self.data.values():
+                appliance_data.info.connected = False
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="fetch_api_error",
@@ -303,7 +314,7 @@ class HomeConnectCoordinator(
 
         return {
             appliance.ha_id: await self._get_appliance_data(
-                appliance, self.data.get(appliance.ha_id) if self.data else None
+                appliance, self.data.get(appliance.ha_id)
             )
             for appliance in appliances.homeappliances
         }
