@@ -154,7 +154,7 @@ class HomeConnectCoordinator(
             f"home_connect-events_listener_task-{self.config_entry.entry_id}",
         )
 
-    async def _event_listener(self) -> None:  # noqa: C901
+    async def _event_listener(self) -> None:
         """Match event with listener for event type."""
         retry_time = 10
         while True:
@@ -269,11 +269,6 @@ class HomeConnectCoordinator(
                     type(error).__name__,
                     retry_time,
                 )
-                for appliance_data in self.data.values():
-                    appliance_data.info.connected = False
-                    self._call_all_event_listeners_for_appliance(
-                        appliance_data.info.ha_id
-                    )
                 await asyncio.sleep(retry_time)
                 retry_time = min(retry_time * 2, 3600)
             except HomeConnectApiError as error:

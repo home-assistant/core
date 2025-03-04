@@ -459,10 +459,6 @@ async def test_event_listener_resilience(
     future.set_exception(exception)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "unavailable"
-
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
