@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime
 from datetime import timedelta
 import logging
 from typing import Any
@@ -103,7 +104,7 @@ class EphEmberThermostat(ClimateEntity):
         self._zone = zone
 
         # hot water = true, is immersive device without target temperature.
-        if zone["deviceType"] != 773:
+        if zone["deviceType"] == 773:
             self._hot_water = False
         else:
             self._hot_water = True
@@ -204,7 +205,16 @@ class EphEmberThermostat(ClimateEntity):
 
     def update(self) -> None:
         """Get the latest data."""
-        self._zone = self._ember.get_zone(self._zone["zoneid"])
+        zone = self._ember.get_zone(self._zone["zoneid"])
+        targetDateTime = datetime.datetime.fromtimestamp(
+            zone["timestamp"] / 1e3
+        ) + datetime.timedelta(seconds=10)
+
+        if targetDateTime < datetime.datetime.now():
+            self._ember.get_zones(True)
+            zone = self._ember.get_zone(self._zone["zoneid"])
+
+        self._zone = zone
 
     @staticmethod
     def map_mode_hass_eph(operation_mode):
