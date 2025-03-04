@@ -130,30 +130,30 @@ MOCK_SUBENTRY_DATA = {
         "name": "Milk notifier",
         "sw_version": "1.0",
         "hw_version": "2.1 rev a",
-        "model": "Bottle XL",
+        "model": "Model XL",
         "model_id": "mn002",
         "configuration_url": "https://example.com",
     },
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1 | MOCK_SUBENTRY_NOTIFY_COMPONENT2,
 }
 
-MOCK_SUBENTRY_DATA_SINGLE_WITH_ENTITY_NAME = {
+MOCK_SUBENTRY_DATA_NOTIFY = {
     "device": {
         "name": "Milk notifier",
         "sw_version": "1.0",
         "hw_version": "2.1 rev a",
-        "model": "Bottle XL",
+        "model": "Model XL",
         "model_id": "mn002",
         "configuration_url": "https://example.com",
     },
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1,
 }
-MOCK_SUBENTRY_DATA_SINGLE_NO_ENTITY_NAME = {
+MOCK_SUBENTRY_DATA_NOTIFY_NO_NAME = {
     "device": {
         "name": "Milk notifier",
         "sw_version": "1.0",
         "hw_version": "2.1 rev a",
-        "model": "Bottle XL",
+        "model": "Model XL",
         "model_id": "mn002",
         "configuration_url": "https://example.com",
     },
@@ -165,7 +165,7 @@ MOCK_SUBENTRY_DATA_SET_MIX = {
         "name": "Milk notifier",
         "sw_version": "1.0",
         "hw_version": "2.1 rev a",
-        "model": "Bottle XL",
+        "model": "Model XL",
         "model_id": "mn002",
         "configuration_url": "https://example.com",
     },
@@ -180,7 +180,7 @@ MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA = {
         "name": "Milk notifier",
         "sw_version": "1.0",
         "hw_version": "2.1 rev a",
-        "model": "Bottle XL",
+        "model": "Model XL",
         "model_id": "mn002",
         "configuration_url": "https://example.com",
     },
