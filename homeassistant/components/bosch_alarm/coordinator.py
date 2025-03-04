@@ -66,8 +66,8 @@ class BoschAlarmCoordinator(DataUpdateCoordinator[None]):
             await self.panel.disconnect()
             raise ConfigEntryNotReady("Connection failed") from err
 
-    async def _async_update_data(self) -> Panel:
-        return self.panel
+    async def _async_update_data(self) -> None:
+        pass
 
     async def async_shutdown(self) -> None:
         """Run shutdown clean up."""
