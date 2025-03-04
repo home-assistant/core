@@ -1,5 +1,6 @@
 """Define fixtures for Bosch Alarm tests."""
 
+import asyncio
 from collections.abc import Generator
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, patch
@@ -11,8 +12,11 @@ import pytest
 from homeassistant.components.bosch_alarm.const import (
     CONF_INSTALLER_CODE,
     CONF_USER_CODE,
+    DOMAIN,
 )
-from homeassistant.const import CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PASSWORD, CONF_PORT
+
+from tests.common import MockConfigEntry
 
 
 @dataclass
@@ -75,13 +79,20 @@ def bosch_alarm_test_data_fixture(
     if request.param == "B5512 (US1B)":
         config = MockBoschAlarmConfig(request.param, 1234567890, data_b5512, None)
 
-    async def area_arm(self: Panel, area_id: int, arm_type: int) -> None:
-        if arm_type == AREA_ARMING_STATUS.DISARM:
-            self.areas[area_id].status = AREA_STATUS.DISARMED
+    def area_arm_update(self: Panel, area_id: int, arm_type: int) -> None:
         if arm_type == self._all_arming_id:
             self.areas[area_id].status = AREA_STATUS.ALL_ARMED[0]
         if arm_type == self._partial_arming_id:
             self.areas[area_id].status = AREA_STATUS.PART_ARMED[0]
+
+    async def area_arm(self: Panel, area_id: int, arm_type: int) -> None:
+        if arm_type == AREA_ARMING_STATUS.DISARM:
+            self.areas[area_id].status = AREA_STATUS.DISARMED
+        if arm_type in (self._all_arming_id, self._partial_arming_id):
+            self.areas[area_id].status = AREA_STATUS.ARMING[0]
+            asyncio.get_event_loop().call_later(
+                0.1, area_arm_update, self, area_id, arm_type
+            )
 
     async def connect(self: Panel, load_selector: int = 0):
         if config.side_effect:
@@ -95,3 +106,18 @@ def bosch_alarm_test_data_fixture(
         patch("bosch_alarm_mode2.panel.Panel._area_arm", area_arm),
     ):
         yield config
+
+
+@pytest.fixture(name="bosch_config_entry")
+def bosch_config_entry_fixture(bosch_alarm_test_data: MockBoschAlarmConfig):
+    """Mock config entry for bosch alarm."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="unique_id",
+        data={
+            CONF_HOST: "0.0.0.0",
+            CONF_PORT: 7700,
+            CONF_MODEL: bosch_alarm_test_data.model,
+            **bosch_alarm_test_data.config,
+        },
+    )
