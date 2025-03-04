@@ -39,6 +39,11 @@ class AreaAlarmControlPanel(
     """An alarm control panel entity for a bosch alarm panel."""
 
     _attr_has_entity_name = True
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
+    _attr_code_arm_required = False
 
     def __init__(
         self,
