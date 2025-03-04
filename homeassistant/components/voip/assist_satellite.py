@@ -196,7 +196,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """
         if announcement.media_id_source != "tts":
             raise HomeAssistantError(
-                "VoIP does not currently support non-TTS announcements"
+                translation_domain=DOMAIN,
+                translation_key="non_tts_announcement",
             )
 
         self._announcement_future = asyncio.Future()
