@@ -478,6 +478,9 @@
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
+      "temperature_external": {
+        "name": "Probe temperature"
+      },
       "humidity": {
         "name": "[%key:component::sensor::entity_component::humidity::name%]"
       },
