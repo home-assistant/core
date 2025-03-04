@@ -1,0 +1,21 @@
+{
+  "title": "Nederlandse Spoorwegen",
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "stations": {
+        "data": {
+          "station_from": "From station",
+          "station_to": "To station"
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    }
+  }
+}
