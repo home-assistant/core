@@ -30,6 +30,7 @@ class TuyaAlarmControlPanelEntityDescription(AlarmControlPanelEntityDescription)
     master_state: DPCode | None = None
     alarm_msg: DPCode | None = None
 
+
 class Mode(StrEnum):
     """Alarm modes."""
 
@@ -38,11 +39,13 @@ class Mode(StrEnum):
     HOME = "home"
     SOS = "sos"
 
+
 class State(StrEnum):
     """Alarm states."""
 
     NORMAL = "normal"
     ALARM = "alarm"
+
 
 STATE_MAPPING: dict[str, AlarmControlPanelState] = {
     Mode.DISARMED: AlarmControlPanelState.DISARMED,
@@ -103,7 +106,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     _attr_name = None
     _attr_code_arm_required = False
     _master_state: EnumTypeData | None = None
-    _alarm_msg_dpcode: DPCode  | None = None
+    _alarm_msg_dpcode: DPCode | None = None
 
     def __init__(
         self,
@@ -131,15 +134,13 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
 
         # Determine master state
         if enum_type := self.find_dpcode(
-                description.master_state, dptype=DPType.ENUM, prefer_function=True
-            ):
-                self._master_state = enum_type
+            description.master_state, dptype=DPType.ENUM, prefer_function=True
+        ):
+            self._master_state = enum_type
 
         # Determine alarm message
-        if dp_code := self.find_dpcode(
-                description.alarm_msg, prefer_function=True
-            ):
-                self._alarm_msg_dpcode = dp_code
+        if dp_code := self.find_dpcode(description.alarm_msg, prefer_function=True):
+            self._alarm_msg_dpcode = dp_code
 
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:
@@ -161,7 +162,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
             if self.device.status.get(self._master_state.dpcode) == State.ALARM:
                 encoded_msg = self.device.status.get(self._alarm_msg_dpcode)
                 if encoded_msg:
-                    return b64decode(encoded_msg).decode('utf-16be')
+                    return b64decode(encoded_msg).decode("utf-16be")
         return None
 
     def alarm_disarm(self, code: str | None = None) -> None:
