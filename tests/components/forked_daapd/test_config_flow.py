@@ -75,7 +75,7 @@ async def test_config_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -
             new=AsyncMock(),
         ) as mock_test_connection,
         patch(
-            "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
+            "homeassistant.components.forked_daapd.ForkedDaapdAPI.get_request",
             autospec=True,
         ) as mock_get_request,
     ):
@@ -232,7 +232,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
     """Test config flow options."""
 
     with patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
+        "homeassistant.components.forked_daapd.ForkedDaapdAPI.get_request",
         autospec=True,
     ) as mock_get_request:
         mock_get_request.return_value = SAMPLE_CONFIG
@@ -261,7 +261,7 @@ async def test_async_setup_entry_not_ready(
     """Test that a PlatformNotReady exception is thrown during platform setup."""
 
     with patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        "homeassistant.components.forked_daapd.ForkedDaapdAPI",
         autospec=True,
     ) as mock_api:
         mock_api.return_value.get_request.return_value = None
