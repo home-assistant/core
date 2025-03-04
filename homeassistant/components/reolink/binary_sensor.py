@@ -177,6 +177,98 @@ BINARY_SMART_SENSORS = (
             and "dog_cat" in api.baichuan.smart_ai_type_list(ch, "crossline", loc)
         ),
     ),
+    ReolinkSmartBinarySensorEntityDescription(
+        key="intrusion",
+        ai_type="people",
+        cmd_id=33,
+        translation_key="intrusion_person",
+        value=lambda api, ch, loc: (
+            api.baichuan.smart_ai_state(ch, "intrusion", loc, "people")
+        ),
+        supported=lambda api, ch, loc: (
+            api.supported(ch, "ai_intrusion")
+            and "people" in api.baichuan.smart_ai_type_list(ch, "intrusion", loc)
+        ),
+    ),
+    ReolinkSmartBinarySensorEntityDescription(
+        key="intrusion",
+        ai_type="vehicle",
+        cmd_id=33,
+        translation_key="intrusion_vehicle",
+        value=lambda api, ch, loc: (
+            api.baichuan.smart_ai_state(ch, "intrusion", loc, "vehicle")
+        ),
+        supported=lambda api, ch, loc: (
+            api.supported(ch, "ai_intrusion")
+            and "vehicle" in api.baichuan.smart_ai_type_list(ch, "intrusion", loc)
+        ),
+    ),
+    ReolinkSmartBinarySensorEntityDescription(
+        key="intrusion",
+        ai_type="dog_cat",
+        cmd_id=33,
+        translation_key="intrusion_dog_cat",
+        value=lambda api, ch, loc: (
+            api.baichuan.smart_ai_state(ch, "intrusion", loc, "dog_cat")
+        ),
+        supported=lambda api, ch, loc: (
+            api.supported(ch, "ai_intrusion")
+            and "dog_cat" in api.baichuan.smart_ai_type_list(ch, "intrusion", loc)
+        ),
+    ),
+    ReolinkSmartBinarySensorEntityDescription(
+        key="linger",
+        ai_type="people",
+        cmd_id=33,
+        translation_key="linger_person",
+        value=lambda api, ch, loc: (
+            api.baichuan.smart_ai_state(ch, "linger", loc, "people")
+        ),
+        supported=lambda api, ch, loc: (
+            api.supported(ch, "ai_linger")
+            and "people" in api.baichuan.smart_ai_type_list(ch, "linger", loc)
+        ),
+    ),
+    ReolinkSmartBinarySensorEntityDescription(
+        key="linger",
+        ai_type="vehicle",
+        cmd_id=33,
+        translation_key="linger_vehicle",
+        value=lambda api, ch, loc: (
+            api.baichuan.smart_ai_state(ch, "linger", loc, "vehicle")
+        ),
+        supported=lambda api, ch, loc: (
+            api.supported(ch, "ai_linger")
+            and "vehicle" in api.baichuan.smart_ai_type_list(ch, "linger", loc)
+        ),
+    ),
+    ReolinkSmartBinarySensorEntityDescription(
+        key="linger",
+        ai_type="dog_cat",
+        cmd_id=33,
+        translation_key="linger_dog_cat",
+        value=lambda api, ch, loc: (
+            api.baichuan.smart_ai_state(ch, "linger", loc, "dog_cat")
+        ),
+        supported=lambda api, ch, loc: (
+            api.supported(ch, "ai_linger")
+            and "dog_cat" in api.baichuan.smart_ai_type_list(ch, "linger", loc)
+        ),
+    ),
+    ReolinkSmartBinarySensorEntityDescription(
+        key="legacy",
+        cmd_id=33,
+        translation_key="forgotten_item",
+        value=lambda api, ch, loc: (api.baichuan.smart_ai_state(ch, "legacy", loc)),
+        supported=lambda api, ch, loc: api.supported(ch, "ai_forgotten_item"),
+    ),
+    ReolinkSmartBinarySensorEntityDescription(
+        key="loss",
+        cmd_id=33,
+        translation_key="taken_item",
+        value=lambda api, ch, loc: (api.baichuan.smart_ai_state(ch, "loss", loc)),
+        supported=lambda api, ch, loc: api.supported(ch, "ai_taken_item"),
+    ),
 )
 
 
