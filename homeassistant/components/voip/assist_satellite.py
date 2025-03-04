@@ -28,6 +28,7 @@ from homeassistant.components.assist_satellite import (
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -193,6 +194,12 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
         Optionally run a voice pipeline after the announcement has finished.
         """
+        if announcement.media_id_source != "tts":
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="non_tts_announcement",
+            )
+
         self._announcement_future = asyncio.Future()
         self._run_pipeline_after_announce = run_pipeline_after
 
