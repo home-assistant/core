@@ -193,10 +193,10 @@ async def test_block_device_unique_ids(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
     mock_block_device: Mock,
-    model,
-    sleep,
-    entity,
-    unique_id,
+    model: str,
+    sleep: int,
+    entity: str,
+    unique_id: str,
 ) -> None:
     """Test block device unique_ids."""
     await init_integration(hass, 1, model=model, sleep_period=sleep)
