@@ -630,7 +630,7 @@ async def test_fetch_allowed_values_after_rate_limit_error(
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
     with patch(
-        "homeassistant.components.home_connect.select.async_call_later",
+        "homeassistant.components.home_connect.entity.async_call_later",
         side_effect=lambda hass, delay, action: async_call_later(hass, 0, action),
     ) as _async_call_later:
         assert await integration_setup(client)

@@ -1,11 +1,10 @@
 """Provides number enties for Home Connect."""
 
-from datetime import datetime
 import logging
 from typing import cast
 
 from aiohomeconnect.model import GetSetting, OptionKey, SettingKey
-from aiohomeconnect.model.error import HomeConnectError, TooManyRequestsError
+from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -15,11 +14,9 @@ from homeassistant.components.number import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 
 from .common import setup_home_connect_entry
 from .const import (
-    API_DEFAULT_RETRY_AFTER,
     DOMAIN,
     SVE_TRANSLATION_KEY_SET_SETTING,
     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
@@ -28,7 +25,7 @@ from .const import (
     UNIT_MAP,
 )
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
-from .entity import HomeConnectEntity, HomeConnectOptionEntity
+from .entity import HomeConnectEntity, HomeConnectOptionEntity, constraint_fetcher
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
@@ -192,31 +189,18 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
                 },
             ) from err
 
-    async def async_fetch_constraints(self, datetime_: datetime | None = None) -> None:
+    @constraint_fetcher
+    async def async_fetch_constraints(self) -> None:
         """Fetch the max and min values and step for the number entity."""
         setting_key = cast(SettingKey, self.bsh_key)
         data = self.appliance.settings.get(setting_key)
         if not data or not data.unit or not data.constraints:
-            try:
-                data = await self.coordinator.client.get_setting(
-                    self.appliance.info.ha_id, setting_key=setting_key
-                )
-            except TooManyRequestsError as err:
-                async_call_later(
-                    self.hass,
-                    err.retry_after or API_DEFAULT_RETRY_AFTER,
-                    self.async_fetch_constraints,
-                )
-            except HomeConnectError as err:
-                _LOGGER.error(
-                    "Error when fetching constraints for %s: %s", self.entity_id, err
-                )
-            else:
-                if data.unit:
-                    self._attr_native_unit_of_measurement = data.unit
-                self.set_constraints(data)
-                if datetime_ is not None:
-                    self.async_write_ha_state()
+            data = await self.coordinator.client.get_setting(
+                self.appliance.info.ha_id, setting_key=setting_key
+            )
+            if data.unit:
+                self._attr_native_unit_of_measurement = data.unit
+            self.set_constraints(data)
 
     def set_constraints(self, setting: GetSetting) -> None:
         """Set constraints for the number entity."""

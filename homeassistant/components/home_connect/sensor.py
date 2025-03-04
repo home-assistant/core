@@ -1,12 +1,11 @@
 """Provides a sensor for Home Connect."""
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import cast
 
 from aiohomeconnect.model import EventKey, StatusKey
-from aiohomeconnect.model.error import HomeConnectError, TooManyRequestsError
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,12 +16,10 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util, slugify
 
 from .common import setup_home_connect_entry
 from .const import (
-    API_DEFAULT_RETRY_AFTER,
     APPLIANCES_WITH_PROGRAMS,
     BSH_OPERATION_STATE_FINISHED,
     BSH_OPERATION_STATE_PAUSE,
@@ -30,7 +27,7 @@ from .const import (
     UNIT_MAP,
 )
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
-from .entity import HomeConnectEntity
+from .entity import HomeConnectEntity, constraint_fetcher
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -339,29 +336,14 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
             else:
                 await self.fetch_unit()
 
-    async def fetch_unit(self, datetime_: datetime | None = None) -> None:
+    @constraint_fetcher
+    async def fetch_unit(self) -> None:
         """Fetch the unit of measurement."""
-        try:
-            data = await self.coordinator.client.get_status_value(
-                self.appliance.info.ha_id, status_key=cast(StatusKey, self.bsh_key)
-            )
-        except TooManyRequestsError as err:
-            async_call_later(
-                self.hass,
-                err.retry_after or API_DEFAULT_RETRY_AFTER,
-                self.fetch_unit,
-            )
-        except HomeConnectError as err:
-            _LOGGER.error(
-                "Error when fetching constraints for %s: %s", self.entity_id, err
-            )
-        else:
-            if data.unit:
-                self._attr_native_unit_of_measurement = UNIT_MAP.get(
-                    data.unit, data.unit
-                )
-                if datetime_ is not None:
-                    self.async_write_ha_state()
+        data = await self.coordinator.client.get_status_value(
+            self.appliance.info.ha_id, status_key=cast(StatusKey, self.bsh_key)
+        )
+        if data.unit:
+            self._attr_native_unit_of_measurement = UNIT_MAP.get(data.unit, data.unit)
 
 
 class HomeConnectProgramSensor(HomeConnectSensor):

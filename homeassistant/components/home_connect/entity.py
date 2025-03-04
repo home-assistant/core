@@ -1,20 +1,26 @@
 """Home Connect entity base class."""
 
 from abc import abstractmethod
+from collections.abc import Callable, Coroutine
 import contextlib
 import logging
-from typing import cast
+from typing import Any, Concatenate, cast
 
 from aiohomeconnect.model import EventKey, OptionKey
-from aiohomeconnect.model.error import ActiveProgramNotSetError, HomeConnectError
+from aiohomeconnect.model.error import (
+    ActiveProgramNotSetError,
+    HomeConnectError,
+    TooManyRequestsError,
+)
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import API_DEFAULT_RETRY_AFTER, DOMAIN
 from .coordinator import HomeConnectApplianceData, HomeConnectCoordinator
 from .utils import get_dict_from_home_connect_error
 
@@ -121,3 +127,44 @@ class HomeConnectOptionEntity(HomeConnectEntity):
     def bsh_key(self) -> OptionKey:
         """Return the BSH key."""
         return cast(OptionKey, self.entity_description.key)
+
+
+def constraint_fetcher[_EntityT: HomeConnectEntity, **_P](
+    func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate the function to catch Home Connect too many requests error and retry later.
+
+    If it needs to be called later, it will call async_write_ha_state function
+    """
+
+    async def handler_and_write_ha_state(
+        self: _EntityT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except TooManyRequestsError as err:
+            async_call_later(
+                self.hass,
+                err.retry_after or API_DEFAULT_RETRY_AFTER,
+                lambda _: handler_and_write_ha_state(self, *args, **kwargs),
+            )
+        except HomeConnectError as err:
+            _LOGGER.error("Error fetching constraints for %s: %s", self.entity_id, err)
+        else:
+            self.async_write_ha_state()
+
+    async def first_attempt_handler(
+        self: _EntityT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except TooManyRequestsError as err:
+            async_call_later(
+                self.hass,
+                err.retry_after or API_DEFAULT_RETRY_AFTER,
+                lambda _: handler_and_write_ha_state(self, *args, **kwargs),
+            )
+        except HomeConnectError as err:
+            _LOGGER.error("Error fetching constraints for %s: %s", self.entity_id, err)
+
+    return first_attempt_handler
