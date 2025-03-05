@@ -110,7 +110,7 @@
 # ---
 # name: test_report_usage_find_issue_tracker_other_thread[custom integration]
   list([
-    "Detected that custom integration 'test_custom_integration' test_report_string at custom_components/test_custom_integration/light.py, line 23: self.light.is_on. Please create a bug report at https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+test_custom_integration%22",
+    "Detected that custom integration 'test_custom_integration' test_report_string at custom_components/test_custom_integration/light.py, line 23: self.light.is_on. Please create a bug report at https://blablabla.com",
   ])
 # ---
 # name: test_report_usage_find_issue_tracker_other_thread[unknown custom integration]

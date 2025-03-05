@@ -16,7 +16,7 @@ from typing import Any, cast
 
 from propcache.api import cached_property
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import (
     Integration,
@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 _REPORTED_INTEGRATIONS: set[str] = set()
 
 
-class _Hass(threading.local):
+class _Hass:
     """Container which makes a HomeAssistant instance available to frame helper."""
 
     hass: HomeAssistant | None = None
@@ -40,6 +40,7 @@ class _Hass(threading.local):
 _hass = _Hass()
 
 
+@callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the frame helper."""
     _hass.hass = hass
@@ -220,10 +221,11 @@ def report_usage(
     :param integration_domain: fallback for identifying the integration if the
     frame is not found
     """
-    if _hass.hass is None:
+    if (hass := _hass.hass) is None:
         raise RuntimeError("Frame helper not set up")
     _report_usage_partial = functools.partial(
         _report_usage,
+        hass,
         what,
         breaks_in_ha_version=breaks_in_ha_version,
         core_behavior=core_behavior,
@@ -233,14 +235,15 @@ def report_usage(
         integration_domain=integration_domain,
         level=level,
     )
-    if _hass.hass.loop_thread_id != threading.get_ident():
-        future = run_callback_threadsafe(_hass.hass.loop, _report_usage_partial)
+    if hass.loop_thread_id != threading.get_ident():
+        future = run_callback_threadsafe(hass.loop, _report_usage_partial)
         future.result()
         return
     _report_usage_partial()
 
 
 def _report_usage(
+    hass: HomeAssistant,
     what: str,
     *,
     breaks_in_ha_version: str | None,
@@ -260,9 +263,9 @@ def _report_usage(
             exclude_integrations=exclude_integrations
         )
     except MissingIntegrationFrame as err:
-        if integration := async_get_issue_integration(_hass.hass, integration_domain):
+        if integration := async_get_issue_integration(hass, integration_domain):
             _report_integration_domain(
-                _hass.hass,
+                hass,
                 what,
                 breaks_in_ha_version,
                 integration,
@@ -289,6 +292,7 @@ def _report_usage(
 
     if integration_behavior is not ReportBehavior.IGNORE:
         _report_integration_frame(
+            hass,
             what,
             breaks_in_ha_version,
             integration_frame,
@@ -348,6 +352,7 @@ def _report_integration_domain(
 
 
 def _report_integration_frame(
+    hass: HomeAssistant,
     what: str,
     breaks_in_ha_version: str | None,
     integration_frame: IntegrationFrame,
@@ -365,7 +370,7 @@ def _report_integration_frame(
     _REPORTED_INTEGRATIONS.add(key)
 
     report_issue = async_suggest_report_issue(
-        _hass.hass,
+        hass,
         integration_domain=integration_frame.integration,
         module=integration_frame.module,
     )
