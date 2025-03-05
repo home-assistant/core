@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field as dc_field
 from datetime import timedelta
 from decimal import Decimal
 from enum import Enum
@@ -19,7 +19,6 @@ from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     SERVICE_GET_EVENTS,
 )
-from homeassistant.components.climate import INTENT_GET_TEMPERATURE
 from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
@@ -36,6 +35,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
+from homeassistant.util.ulid import ulid_now
 
 from . import (
     area_registry as ar,
@@ -139,6 +139,8 @@ class ToolInput:
 
     tool_name: str
     tool_args: dict[str, Any]
+    # Using lambda for default to allow patching in tests
+    id: str = dc_field(default_factory=lambda: ulid_now())  # pylint: disable=unnecessary-lambda
 
 
 class Tool:
@@ -282,7 +284,7 @@ class AssistAPI(API):
     """API exposing Assist API to LLMs."""
 
     IGNORE_INTENTS = {
-        INTENT_GET_TEMPERATURE,
+        intent.INTENT_GET_TEMPERATURE,
         INTENT_GET_WEATHER,
         INTENT_OPEN_COVER,  # deprecated
         INTENT_CLOSE_COVER,  # deprecated
@@ -527,9 +529,11 @@ def _get_exposed_entities(
             info["areas"] = ", ".join(area_names)
 
         if attributes := {
-            attr_name: str(attr_value)
-            if isinstance(attr_value, (Enum, Decimal, int))
-            else attr_value
+            attr_name: (
+                str(attr_value)
+                if isinstance(attr_value, (Enum, Decimal, int))
+                else attr_value
+            )
             for attr_name, attr_value in state.attributes.items()
             if attr_name in interesting_attributes
         }:

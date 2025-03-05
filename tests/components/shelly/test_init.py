@@ -312,13 +312,10 @@ async def test_sleeping_rpc_device_online_new_firmware(
 
 async def test_sleeping_rpc_device_online_during_setup(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
-    monkeypatch: pytest.MonkeyPatch,
+    mock_sleepy_rpc_device: Mock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sleeping device Gen2 woke up by user during setup."""
-    monkeypatch.setattr(mock_rpc_device, "connected", False)
-    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     await init_integration(hass, 2, sleep_period=1000)
     await hass.async_block_till_done(wait_background_tasks=True)
 

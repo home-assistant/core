@@ -432,32 +432,26 @@ def ws_expose_entity(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "homeassistant/expose_entity/list",
-        vol.Optional("assistant"): vol.In(KNOWN_ASSISTANTS),
     }
 )
 def ws_list_exposed_entities(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Expose an entity to an assistant."""
+    """List entities which are exposed to assistants."""
     result: dict[str, Any] = {}
 
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
-    required_assistant = msg.get("assistant")
     entity_registry = er.async_get(hass)
     for entity_id in chain(exposed_entities.entities, entity_registry.entities):
+        exposed_to = {}
         entity_settings = async_get_entity_settings(hass, entity_id)
-        if required_assistant and (
-            (required_assistant not in entity_settings)
-            or (not entity_settings[required_assistant].get("should_expose"))
-        ):
-            # Not exposed to required assistant
-            continue
-
-        result[entity_id] = {}
         for assistant, settings in entity_settings.items():
-            if "should_expose" not in settings:
+            if "should_expose" not in settings or not settings["should_expose"]:
                 continue
-            result[entity_id][assistant] = settings["should_expose"]
+            exposed_to[assistant] = True
+        if not exposed_to:
+            continue
+        result[entity_id] = exposed_to
     connection.send_result(msg["id"], {"exposed_entities": result})
 
 

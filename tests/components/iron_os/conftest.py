@@ -24,6 +24,7 @@ from pynecil import (
 import pytest
 
 from homeassistant.components.iron_os import DOMAIN
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import CONF_ADDRESS
 
 from tests.common import MockConfigEntry
@@ -107,6 +108,19 @@ def mock_config_entry() -> MockConfigEntry:
         data={},
         unique_id="c0:ff:ee:c0:ff:ee",
         entry_id="1234567890",
+    )
+
+
+@pytest.fixture(name="config_entry_ignored")
+def mock_config_entry_ignored() -> MockConfigEntry:
+    """Mock Pinecil configuration entry for ignored device."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=DEFAULT_NAME,
+        data={},
+        unique_id="c0:ff:ee:c0:ff:ee",
+        entry_id="1234567890",
+        source=SOURCE_IGNORE,
     )
 
 

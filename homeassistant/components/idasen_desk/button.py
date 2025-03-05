@@ -8,9 +8,9 @@ from typing import Any, Final
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IdasenDeskConfigEntry, IdasenDeskCoordinator
+from .coordinator import IdasenDeskConfigEntry, IdasenDeskCoordinator
 from .entity import IdasenDeskEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ BUTTONS: Final = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IdasenDeskConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set buttons for device."""
     coordinator = entry.runtime_data

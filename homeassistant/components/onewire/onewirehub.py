@@ -58,6 +58,7 @@ class OneWireHub:
 
     owproxy: protocol._Proxy
     devices: list[OWDeviceDescription]
+    _version: str
 
     def __init__(self, hass: HomeAssistant, config_entry: OneWireConfigEntry) -> None:
         """Initialize."""
@@ -73,6 +74,7 @@ class OneWireHub:
         port = self._config_entry.data[CONF_PORT]
         _LOGGER.debug("Initializing connection to %s:%s", host, port)
         self.owproxy = protocol.proxy(host, port)
+        self._version = self.owproxy.read(protocol.PTH_VERSION).decode()
         self.devices = _discover_devices(self.owproxy)
 
     async def initialize(self) -> None:
@@ -85,6 +87,7 @@ class OneWireHub:
         """Populate the device registry."""
         device_registry = dr.async_get(self._hass)
         for device in devices:
+            device.device_info["sw_version"] = self._version
             device_registry.async_get_or_create(
                 config_entry_id=self._config_entry.entry_id,
                 **device.device_info,
