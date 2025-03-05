@@ -842,7 +842,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
     'original_name': 'Wind direction',
     'platform': 'weatherflow_cloud',
@@ -857,6 +857,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'device_class': 'wind_direction',
       'friendly_name': 'My Home Station Wind direction',
       'unit_of_measurement': '°',
     }),

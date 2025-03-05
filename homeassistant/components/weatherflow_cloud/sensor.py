@@ -111,6 +111,7 @@ WEBSOCKET_WIND_SENSORS: tuple[
         translation_key="wind_direction",
         value_fn=lambda data: data.wind_direction_degrees,
         icon_fn=_get_wind_direction_icon,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
         native_unit_of_measurement="°",
     ),
 )
