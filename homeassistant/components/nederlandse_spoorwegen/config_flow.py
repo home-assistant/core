@@ -48,7 +48,9 @@ class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return subentries supported by this integration."""
         return {"train": NederlandseSpoorwegenSubentryFlowHandler}
 
-    async def async_step_user(self, user_input) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -58,11 +60,6 @@ class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
                 loop = asyncio.get_running_loop()
                 station_data = await loop.run_in_executor(None, nsapi.get_stations)
                 self._stations = {
-                    station.code: station.names["long"]
-                    for station in station_data
-                    if station.country == "NL"
-                }
-                self._stations_short = {
                     station.code: station.names["middle"]
                     for station in station_data
                     if station.country == "NL"
@@ -73,7 +70,11 @@ class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
             except RequestParametersError:
                 errors["base"] = "invalid_api_key"
             else:
-                return await self.async_step_stations()
+                await self.async_set_unique_id("NSAPI" + self.api_key[0:2])
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title="NS API", data={CONF_API_KEY: self.api_key}
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -81,15 +82,12 @@ class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_stations(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_stations(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the step to add stations."""
         if user_input is not None:
-            await self.async_set_unique_id(
-                user_input[CONF_STATION_FROM]
-                + (user_input.get(CONF_STATION_VIA, ""))
-                + user_input[CONF_STATION_TO]
-                + (user_input.get(CONF_TIME, ""))
-            )
+            await self.async_set_unique_id()
             self._abort_if_unique_id_configured()
             station_via = user_input.get(CONF_STATION_VIA, None)
 
@@ -133,18 +131,30 @@ class NederlandseSpoorwegenSubentryFlowHandler(ConfigSubentryFlow):
         """User flow to add a new train."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            title = user_input[CONF_STATION_FROM]
+            if CONF_STATION_VIA in user_input:
+                title = title + " - " + user_input[CONF_STATION_VIA]
+            title = title + " - " + user_input[CONF_STATION_TO]
+            if CONF_TIME in user_input:
+                title = title + " - " + user_input[CONF_TIME]
             return self.async_create_entry(
-                title="subentry_train2",
+                title=title,
                 data={
-                    CONF_API_KEY: "bf85caa2826c41f5b8e0c5c7dd404f5a",
-                    CONF_STATION_FROM: "Ut",
-                    CONF_STATION_VIA: None,
-                    CONF_STATION_TO: "Nkk",
-                    CONF_TIME: None,
+                    CONF_STATION_FROM: user_input[CONF_STATION_FROM],
+                    CONF_STATION_VIA: user_input.get(CONF_STATION_VIA, None),
+                    CONF_STATION_TO: user_input[CONF_STATION_TO],
+                    CONF_TIME: user_input.get(CONF_TIME, None),
                 },
             )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_STATION_FROM): str,  # vol.In(self._stations),
+                    vol.Optional(CONF_STATION_VIA): str,  # vol.In(self._stations),
+                    vol.Required(CONF_STATION_TO): str,  # vol.In(self._stations),
+                    vol.Optional(CONF_TIME): TimeSelector(),
+                }
+            ),
             errors=errors,
         )
