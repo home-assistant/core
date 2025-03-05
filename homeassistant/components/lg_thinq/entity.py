@@ -16,7 +16,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import COMPANY, DOMAIN, DEVICE_UNIT_TO_HA
+from .const import COMPANY, DEVICE_UNIT_TO_HA, DOMAIN
 from .coordinator import DeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
