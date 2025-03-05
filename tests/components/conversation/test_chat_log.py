@@ -661,7 +661,7 @@ async def test_chat_log_continue_conversation(
         chat_log.async_add_assistant_content_without_tools(
             AssistantContent(
                 agent_id="mock-agent-id",
-                content="Hey?",
+                content="Hey? ",
             )
         )
         assert chat_log.continue_conversation is True
