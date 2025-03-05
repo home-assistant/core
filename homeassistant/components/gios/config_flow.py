@@ -76,7 +76,6 @@ class GiosFlowHandler(ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_STATION_ID): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
-                        multiple=False,
                         sort=True,
                         mode=SelectSelectorMode.DROPDOWN,
                     ),
