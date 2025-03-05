@@ -495,7 +495,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1.12',
   })
 # ---
 # name: test_all_entities[sensor.test_model_dhw_top_temperature-entry]
