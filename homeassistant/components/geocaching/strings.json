@@ -7,6 +7,19 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Geocaching integration needs to re-authenticate your account"
+      },
+      "additional_config": {
+        "title": "Configure tracked objects",
+        "description": "The integration can track caches and trackables, for which entities will be generated",
+        "sections": {
+          "tracked_geocache_ids": {
+            "name": "Tracked Geocaches",
+            "description": "Optionally add geocaches to track",
+            "data": {
+              "tracked_cache_ref_code": "Geocache Reference Code"
+            }
+          }
+        }
       }
     },
     "abort": {

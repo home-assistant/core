@@ -12,13 +12,20 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, ENVIRONMENT, LOGGER, UPDATE_INTERVAL
+from .const import (
+    CONFIG_FLOW_GEOCACHES_SECTION_ID,
+    DOMAIN,
+    ENVIRONMENT,
+    LOGGER,
+    UPDATE_INTERVAL,
+)
 
 
 class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
     """Class to manage fetching Geocaching data from single endpoint."""
 
     config_entry: ConfigEntry
+    verified: bool = False
 
     def __init__(
         self, hass: HomeAssistant, *, entry: ConfigEntry, session: OAuth2Session
@@ -36,6 +43,8 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
 
         settings: GeocachingSettings = GeocachingSettings()
 
+        settings.set_tracked_caches(set(entry.data[CONFIG_FLOW_GEOCACHES_SECTION_ID]))
+
         self.geocaching = GeocachingApi(
             environment=ENVIRONMENT,
             settings=settings,
@@ -43,6 +52,8 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
             session=client_session,
             token_refresh_method=async_token_refresh,
         )
+
+        self.verified = False
 
         super().__init__(
             hass,
@@ -55,6 +66,10 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
     async def fetch_new_status(self) -> GeocachingStatus:
         """Fetch the latest Geocaching status."""
         try:
+            # If the settings have not been verified yet, do so now
+            if not self.verified:
+                await self.geocaching.verify_settings()
+                self.verified = True
             return await self.geocaching.update()
         except GeocachingInvalidSettingsError as error:
             raise UpdateFailed(error) from error
