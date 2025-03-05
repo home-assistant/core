@@ -82,45 +82,6 @@ class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_stations(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the step to add stations."""
-        if user_input is not None:
-            await self.async_set_unique_id()
-            self._abort_if_unique_id_configured()
-            station_via = user_input.get(CONF_STATION_VIA, None)
-
-            title = self._stations_short[user_input[CONF_STATION_FROM]]
-            title = (
-                title + " - " + self._stations_short[station_via]
-                if station_via
-                else title
-            )
-            title = title + " - " + self._stations_short[user_input[CONF_STATION_TO]]
-            return self.async_create_entry(
-                title=title,
-                data={
-                    CONF_API_KEY: self.api_key,
-                    CONF_STATION_FROM: user_input[CONF_STATION_FROM],
-                    CONF_STATION_VIA: station_via,
-                    CONF_STATION_TO: user_input[CONF_STATION_TO],
-                    CONF_TIME: user_input.get(CONF_TIME, None),
-                },
-            )
-
-        return self.async_show_form(
-            step_id="stations",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_STATION_FROM): vol.In(self._stations),
-                    vol.Optional(CONF_STATION_VIA): vol.In(self._stations),
-                    vol.Required(CONF_STATION_TO): vol.In(self._stations),
-                    vol.Optional(CONF_TIME): TimeSelector(),
-                }
-            ),
-        )
-
 
 class NederlandseSpoorwegenSubentryFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow for adding and modifying a location."""
