@@ -26,7 +26,10 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: exempt
+    comment: |
+      No custom actions are defined.
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
