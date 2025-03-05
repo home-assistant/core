@@ -218,8 +218,8 @@ def report_usage(
     breaking version
     :param exclude_integrations: skip specified integration when reviewing the stack.
     If no integration is found, the core behavior will be applied
-    :param integration_domain: fallback for identifying the integration if the
-    frame is not found
+    :param integration_domain: domain of the integration causing the issue. If None, the
+    stack frame will be searched to identify the integration causing the issue.
     """
     if (hass := _hass.hass) is None:
         raise RuntimeError("Frame helper not set up")
@@ -258,11 +258,7 @@ def _report_usage(
 
     Must be called from the event loop.
     """
-    try:
-        integration_frame = get_integration_frame(
-            exclude_integrations=exclude_integrations
-        )
-    except MissingIntegrationFrame as err:
+    if integration_domain:
         if integration := async_get_issue_integration(hass, integration_domain):
             _report_integration_domain(
                 hass,
@@ -274,16 +270,15 @@ def _report_usage(
                 level,
             )
             return
-        msg = f"Detected code that {what}. Please report this issue"
-        if core_behavior is ReportBehavior.ERROR:
-            raise RuntimeError(msg) from err
-        if core_behavior is ReportBehavior.LOG:
-            if breaks_in_ha_version:
-                msg = (
-                    f"Detected code that {what}. This will stop working in Home "
-                    f"Assistant {breaks_in_ha_version}, please report this issue"
-                )
-            _LOGGER.warning(msg, stack_info=True)
+        _report_integration_unknown(what, core_behavior, breaks_in_ha_version, None)
+        return
+
+    try:
+        integration_frame = get_integration_frame(
+            exclude_integrations=exclude_integrations
+        )
+    except MissingIntegrationFrame as err:
+        _report_integration_unknown(what, core_behavior, breaks_in_ha_version, err)
         return
 
     integration_behavior = core_integration_behavior
@@ -398,6 +393,25 @@ def _report_integration_frame(
         f"{integration_frame.line_number}: {integration_frame.line}. "
         f"Please {report_issue}"
     )
+
+
+def _report_integration_unknown(
+    what: str,
+    core_behavior: ReportBehavior,
+    breaks_in_ha_version: str | None,
+    err: MissingIntegrationFrame | None,
+) -> None:
+    """Report incorrect usage when an integration is not identified."""
+    msg = f"Detected code that {what}. Please report this issue"
+    if core_behavior is ReportBehavior.ERROR:
+        raise RuntimeError(msg) from err
+    if core_behavior is ReportBehavior.LOG:
+        if breaks_in_ha_version:
+            msg = (
+                f"Detected code that {what}. This will stop working in Home "
+                f"Assistant {breaks_in_ha_version}, please report this issue"
+            )
+        _LOGGER.warning(msg, stack_info=True)
 
 
 def warn_use[_CallableT: Callable](func: _CallableT, what: str) -> _CallableT:
