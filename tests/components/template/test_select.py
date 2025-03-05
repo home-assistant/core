@@ -264,6 +264,7 @@ async def test_templates_with_entities(
 async def test_trigger_select(hass: HomeAssistant) -> None:
     """Test trigger based template select."""
     events = async_capture_events(hass, "test_number_event")
+    action_events = async_capture_events(hass, "action_event")
     assert await setup.async_setup_component(
         hass,
         "template",
@@ -274,6 +275,10 @@ async def test_trigger_select(hass: HomeAssistant) -> None:
                 {
                     "unique_id": "listening-test-event",
                     "trigger": {"platform": "event", "event_type": "test_event"},
+                    "variables": {"beer": "{{ trigger.event.data.beer }}"},
+                    "action": [
+                        {"event": "action_event", "event_data": {"beer": "{{ beer }}"}}
+                    ],
                     "select": [
                         {
                             "name": "Hello Name",
@@ -282,7 +287,10 @@ async def test_trigger_select(hass: HomeAssistant) -> None:
                             "options": "{{ trigger.event.data.beers }}",
                             "select_option": {
                                 "event": "test_number_event",
-                                "event_data": {"entity_id": "{{ this.entity_id }}"},
+                                "event_data": {
+                                    "entity_id": "{{ this.entity_id }}",
+                                    "beer": "{{ beer }}",
+                                },
                             },
                             "optimistic": True,
                         },
@@ -311,6 +319,12 @@ async def test_trigger_select(hass: HomeAssistant) -> None:
     assert state.state == "duff"
     assert state.attributes["options"] == ["duff", "alamo"]
 
+    assert len(action_events) == 1
+    assert action_events[0].event_type == "action_event"
+    beer = action_events[0].data.get("beer")
+    assert beer is not None
+    assert beer == "duff"
+
     await hass.services.async_call(
         SELECT_DOMAIN,
         SELECT_SERVICE_SELECT_OPTION,
@@ -322,6 +336,10 @@ async def test_trigger_select(hass: HomeAssistant) -> None:
     entity_id = events[0].data.get("entity_id")
     assert entity_id is not None
     assert entity_id == "select.hello_name"
+
+    beer = events[0].data.get("beer")
+    assert beer is not None
+    assert beer == "duff"
 
 
 def _verify(
