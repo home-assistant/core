@@ -8849,7 +8849,8 @@ async def test_options_flow_deprecated_config_entry_setter(
         "config_entry explicitly, which is deprecated at "
         "custom_components/my_integration/light.py, line 23: "
         "self.light.is_on. This will stop working in Home Assistant 2025.12, please "
-        "create a bug report at " in caplog.text
+        "report it to the author of the 'my_integration' custom integration"
+        in caplog.text
     )
 
 
