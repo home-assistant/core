@@ -466,6 +466,8 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     "input.voltage.status": SensorEntityDescription(
         key="input.voltage.status",
         translation_key="input_voltage_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "input.L1-N.voltage": SensorEntityDescription(
         key="input.L1-N.voltage",
@@ -678,6 +680,8 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     "input.current.status": SensorEntityDescription(
         key="input.current.status",
         translation_key="input_current_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     "input.L1.current": SensorEntityDescription(
         key="input.L1.current",
