@@ -117,7 +117,9 @@ def _validate_supported_feature(supported_feature: str) -> int:
         raise vol.Invalid(f"Unknown supported feature '{supported_feature}'") from exc
 
 
-def _validate_supported_features(supported_features: int | list[str]) -> int:
+def _validate_supported_features(
+    supported_features: int | list[str] | list[int],
+) -> int:
     """Validate a supported feature and resolve an enum string to its value."""
 
     if isinstance(supported_features, int):
@@ -126,7 +128,10 @@ def _validate_supported_features(supported_features: int | list[str]) -> int:
     feature_mask = 0
 
     for supported_feature in supported_features:
-        feature_mask |= _validate_supported_feature(supported_feature)
+        if isinstance(supported_feature, int):
+            feature_mask |= supported_feature
+        else:
+            feature_mask |= _validate_supported_feature(supported_feature)
 
     return feature_mask
 
@@ -141,7 +146,7 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
         # Features supported by the entity
         vol.Optional("supported_features"): [
-            vol.All(cv.ensure_list, [str], _validate_supported_features)
+            vol.All(cv.ensure_list, _validate_supported_features)
         ],
     }
 )
