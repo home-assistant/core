@@ -124,11 +124,7 @@ class AdaxDevice(ClimateEntity):
                 continue
             self._attr_name = room["name"]
             self._attr_current_temperature = room.get("temperature")
-            self._attr_target_temperature = (
-                room.get("targetTemperature")
-                if room.get("targetTemperature") != 0
-                else self._attr_min_temp
-            )
+            self._attr_target_temperature = room.get("targetTemperature")
             self._attr_available = self._attr_current_temperature is not None
             if room["heatingEnabled"]:
                 self._attr_hvac_mode = HVACMode.HEAT
