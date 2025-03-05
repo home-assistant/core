@@ -169,16 +169,18 @@ def config() -> EvoConfigFileDictT:
 def config_entry_fixture(config: EvoConfigFileDictT) -> MockConfigEntry:
     """Define a config entry fixture."""
 
+    data = {k: v for k, v in config.items() if k != CONF_SCAN_INTERVAL}
+
     options = {
         CONF_HIGH_PRECISION: True,
         CONF_SCAN_INTERVAL: config[CONF_SCAN_INTERVAL].seconds,
     }
 
     return MockConfigEntry(
+        title="Evohome",
         domain=DOMAIN,
-        entry_id="uuid",
-        unique_id=config[CONF_USERNAME],
-        data={k: v for k, v in config.items() if k != CONF_SCAN_INTERVAL},
+        unique_id=config[CONF_USERNAME].lower(),
+        data=data,
         options=options,
     )
 
