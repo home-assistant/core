@@ -66,7 +66,10 @@ rules:
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      No repairs
   stale-devices:
     status: exempt
     comment: |
