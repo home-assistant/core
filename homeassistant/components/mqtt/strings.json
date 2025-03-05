@@ -181,7 +181,7 @@
             "component": "Select the entity you want to update."
           }
         },
-        "entity_platform_config": {
+        "mqtt_platform_config": {
           "title": "Configure MQTT device \"{mqtt_device}\"",
           "description": "Please configure MQTT specific details for {platform} entity \"{entity}\":",
           "data": {

@@ -2709,7 +2709,7 @@ async def test_subentry_configflow(
         | mock_entity_user_input,
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "entity_platform_config"
+    assert result["step_id"] == "mqtt_platform_config"
     assert result["errors"] == {}
     assert result["description_placeholders"] == {
         "mqtt_device": "Milk notifier",
@@ -2973,7 +2973,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "entity_platform_config"
+    assert result["step_id"] == "mqtt_platform_config"
 
     # submit the new platform specific entity data
     result = await hass.config_entries.subentries.async_configure(
@@ -3084,7 +3084,7 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "entity_platform_config"
+    assert result["step_id"] == "mqtt_platform_config"
 
     # submit the new platform specific entity data,
     result = await hass.config_entries.subentries.async_configure(
@@ -3210,7 +3210,7 @@ async def test_subentry_reconfigure_add_entity(
         user_input=user_input_entity,
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "entity_platform_config"
+    assert result["step_id"] == "mqtt_platform_config"
 
     # submit the new platform specific entity data
     result = await hass.config_entries.subentries.async_configure(
