@@ -5,6 +5,7 @@ import pytest
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_SWING_MODE,
@@ -48,6 +49,16 @@ from homeassistant.components.modbus.const import (
     CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_TOP,
     CONF_FAN_MODE_VALUES,
+    CONF_HVAC_ACTION_COOLING,
+    CONF_HVAC_ACTION_DEFROSTING,
+    CONF_HVAC_ACTION_DRYING,
+    CONF_HVAC_ACTION_FAN,
+    CONF_HVAC_ACTION_HEATING,
+    CONF_HVAC_ACTION_IDLE,
+    CONF_HVAC_ACTION_OFF,
+    CONF_HVAC_ACTION_PREHEATING,
+    CONF_HVAC_ACTION_REGISTER,
+    CONF_HVAC_ACTION_VALUES,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
     CONF_HVAC_MODE_DRY,
@@ -279,15 +290,17 @@ async def test_config_hvac_mode_register(hass: HomeAssistant, mock_modbus) -> No
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
-                    CONF_HVAC_MODE_REGISTER: {
-                        CONF_ADDRESS: 11,
-                        CONF_HVAC_MODE_VALUES: {
-                            CONF_HVAC_MODE_OFF: 0,
-                            CONF_HVAC_MODE_HEAT: 1,
-                            CONF_HVAC_MODE_COOL: 2,
-                            CONF_HVAC_MODE_HEAT_COOL: 3,
-                            CONF_HVAC_MODE_AUTO: 4,
-                            CONF_HVAC_MODE_FAN_ONLY: 5,
+                    CONF_HVAC_ACTION_REGISTER: {
+                        CONF_ADDRESS: 15,
+                        CONF_HVAC_ACTION_VALUES: {
+                            CONF_HVAC_ACTION_COOLING: 0,
+                            CONF_HVAC_ACTION_DEFROSTING: 1,
+                            CONF_HVAC_ACTION_DRYING: 2,
+                            CONF_HVAC_ACTION_FAN: 3,
+                            CONF_HVAC_ACTION_HEATING: 4,
+                            CONF_HVAC_ACTION_IDLE: 5,
+                            CONF_HVAC_ACTION_OFF: 6,
+                            CONF_HVAC_ACTION_PREHEATING: 7,
                         },
                     },
                 }
@@ -298,14 +311,14 @@ async def test_config_hvac_mode_register(hass: HomeAssistant, mock_modbus) -> No
 async def test_config_hvac_action_register(hass: HomeAssistant, mock_modbus) -> None:
     """Run configuration test for HVAC action register."""
     state = hass.states.get(ENTITY_ID)
-    assert HVACAction.COOLING in state.attributes[ATTR_HVAC_MODES]
-    assert HVACAction.DEFROSTING in state.attributes[ATTR_HVAC_MODES]
-    assert HVACAction.DRYING in state.attributes[ATTR_HVAC_MODES]
-    assert HVACAction.FAN in state.attributes[ATTR_HVAC_MODES]
-    assert HVACAction.HEATING in state.attributes[ATTR_HVAC_MODES]
-    assert HVACAction.IDLE in state.attributes[ATTR_HVAC_MODES]
-    assert HVACAction.OFF in state.attributes[ATTR_HVAC_MODES]
-    assert HVACAction.PREHEATING in state.attributes[ATTR_HVAC_MODES]
+    assert HVACAction.COOLING in state.attributes[ATTR_HVAC_ACTION]
+    assert HVACAction.DEFROSTING in state.attributes[ATTR_HVAC_ACTION]
+    assert HVACAction.DRYING in state.attributes[ATTR_HVAC_ACTION]
+    assert HVACAction.FAN in state.attributes[ATTR_HVAC_ACTION]
+    assert HVACAction.HEATING in state.attributes[ATTR_HVAC_ACTION]
+    assert HVACAction.IDLE in state.attributes[ATTR_HVAC_ACTION]
+    assert HVACAction.OFF in state.attributes[ATTR_HVAC_ACTION]
+    assert HVACAction.PREHEATING in state.attributes[ATTR_HVAC_ACTION]
 
 
 @pytest.mark.parametrize(
