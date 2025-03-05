@@ -1,5 +1,6 @@
 """Test homee sensors."""
 
+from types import NoneType
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -115,12 +116,24 @@ async def test_brightness_sensor(
     assert sensor_state.attributes["friendly_name"] == "Test MultiSensor Illuminance 2"
 
 
-async def test_sensor_deprecation_issue(
+@pytest.mark.parametrize(
+    ("patch_used_in", "disabler", "expected_entity", "expected_issue"),
+    [
+        (False, None, er.RegistryEntry, NoneType),
+        (True, None, er.RegistryEntry, ir.IssueEntry),
+        (True, er.RegistryEntryDisabler.USER, NoneType, NoneType),
+    ],
+)
+async def test_sensor_deprecation(
     hass: HomeAssistant,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
     entity_registry: er.EntityRegistry,
+    patch_used_in: bool,
+    disabler: er.RegistryEntryDisabler,
+    expected_entity: object,
+    expected_issue: object,
 ) -> None:
     """Test sensor deprecation issue."""
     entity_uid = f"{HOMEE_ID}-1-9"
@@ -130,51 +143,26 @@ async def test_sensor_deprecation_issue(
         DOMAIN,
         entity_uid,
         suggested_object_id=entity_id,
-        disabled_by=None,
+        disabled_by=disabler,
     )
 
-    with patch(
-        "homeassistant.components.homee.sensor.entity_used_in", return_value=True
-    ):
+    if patch_used_in:
+        with patch(
+            "homeassistant.components.homee.sensor.entity_used_in", return_value=True
+        ):
+            await setup_sensor(hass, mock_homee, mock_config_entry)
+    else:
         await setup_sensor(hass, mock_homee, mock_config_entry)
 
-    assert entity_registry.async_get(f"sensor.{entity_id}") is not None
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id=f"deprecated_entity_{entity_uid}",
-    )
-
-
-async def test_sensor_deprecation_delete_disabled(
-    hass: HomeAssistant,
-    mock_homee: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    issue_registry: ir.IssueRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test sensor deprecation issue."""
-    entity_uid = f"{HOMEE_ID}-1-9"
-    entity_id = "test_multisensor_valve_position"
-    entity_registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        entity_uid,
-        suggested_object_id=entity_id,
-        disabled_by=er.RegistryEntryDisabler.USER,
-    )
-
-    with patch(
-        "homeassistant.components.homee.sensor.entity_used_in", return_value=True
-    ):
-        await setup_sensor(hass, mock_homee, mock_config_entry)
-
-    assert entity_registry.async_get(f"sensor.{entity_id}") is None
+    assert type(entity_registry.async_get(f"sensor.{entity_id}")) is expected_entity
     assert (
-        issue_registry.async_get_issue(
-            domain=DOMAIN,
-            issue_id=f"deprecated_entity_{entity_uid}",
+        type(
+            issue_registry.async_get_issue(
+                domain=DOMAIN,
+                issue_id=f"deprecated_entity_{entity_uid}",
+            )
         )
-        is None
+        is expected_issue
     )
 
 
