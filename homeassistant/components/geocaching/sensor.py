@@ -4,19 +4,27 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import datetime
 from typing import cast
 
 from geocachingapi.models import GeocachingStatus
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, PROFILE_ID_SENSOR_FORMAT
 from .coordinator import GeocachingDataUpdateCoordinator
+from .entity import GeocachingCache, GeoEntityBaseCache
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -75,6 +83,15 @@ async def async_setup_entry(
         for description in PROFILE_SENSORS
     )
 
+    status: GeocachingStatus = await coordinator.fetch_new_status()
+    entities: list[Entity] = []
+
+    # Add entities for tracked caches
+    for cache in status.tracked_caches:
+        entities.extend(get_cache_entities(coordinator, cache))
+
+    async_add_entities(entities)
+
 
 class GeocachingProfileSensor(
     CoordinatorEntity[GeocachingDataUpdateCoordinator], SensorEntity
@@ -107,3 +124,85 @@ class GeocachingProfileSensor(
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+@dataclass(frozen=True, kw_only=True)
+class GeocachingCacheSensorDescription(SensorEntityDescription):
+    """Define Sensor entity description class."""
+
+    value_fn: Callable[[GeocachingCache], StateType | datetime.date]
+
+
+CACHE_SENSORS: tuple[GeocachingCacheSensorDescription, ...] = (
+    GeocachingCacheSensorDescription(
+        key="name",
+        value_fn=lambda cache: cache.name,
+    ),
+    GeocachingCacheSensorDescription(
+        key="owner",
+        value_fn=lambda cache: cache.owner.username,
+    ),
+    GeocachingCacheSensorDescription(
+        key="found",
+        value_fn=lambda cache: None
+        if cache.found_by_user is None
+        else "Yes"
+        if cache.found_by_user is True
+        else "No",
+    ),
+    GeocachingCacheSensorDescription(
+        key="found_date",
+        device_class=SensorDeviceClass.DATE,
+        value_fn=lambda cache: cache.found_date_time,
+    ),
+    GeocachingCacheSensorDescription(
+        key="favorite_points",
+        native_unit_of_measurement="points",
+        value_fn=lambda cache: cache.favorite_points,
+    ),
+    GeocachingCacheSensorDescription(
+        key="hidden_date",
+        device_class=SensorDeviceClass.DATE,
+        value_fn=lambda cache: cache.hidden_date,
+    ),
+)
+
+
+def get_cache_entities(
+    coordinator: GeocachingDataUpdateCoordinator,
+    cache: GeocachingCache,
+) -> list[GeoEntityBaseCache]:
+    """Generate all entities for a single cache."""
+    entities: list[GeoEntityBaseCache] = []
+
+    # Sensor entities
+    entities.extend(
+        [
+            GeoEntityCacheSensorEntity(coordinator, cache, description)
+            for description in CACHE_SENSORS
+        ]
+    )
+
+    return entities
+
+
+class GeoEntityCacheSensorEntity(GeoEntityBaseCache, SensorEntity):
+    """Representation of a cache sensor."""
+
+    entity_description: GeocachingCacheSensorDescription
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: GeocachingDataUpdateCoordinator,
+        cache: GeocachingCache,
+        description: GeocachingCacheSensorDescription,
+    ) -> None:
+        """Initialize the Geocaching sensor."""
+        super().__init__(coordinator, cache, description.key)
+        self.entity_description = description
+
+    @property
+    def native_value(self) -> StateType | datetime.date:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.cache)

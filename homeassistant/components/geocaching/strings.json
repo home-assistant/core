@@ -31,7 +31,25 @@
       "hide_count": { "name": "Total hides" },
       "favorite_points": { "name": "Favorite points" },
       "souvenir_count": { "name": "Total souvenirs" },
-      "awarded_favorite_points": { "name": "Awarded favorite points" }
+      "awarded_favorite_points": { "name": "Awarded favorite points" },
+      "cache_name": {
+        "name": "Name"
+      },
+      "cache_owner": {
+        "name": "Owner"
+      },
+      "cache_found_date": {
+        "name": "Found date"
+      },
+      "cache_found": {
+        "name": "Found"
+      },
+      "cache_favorite_points": {
+        "name": "Favorite points"
+      },
+      "cache_hidden_date": {
+        "name": "Hidden date"
+      }
     }
   }
 }
