@@ -98,7 +98,7 @@ class DiscoverDeviceInfo:
         return self._entities
 
     @property
-    def cordinator(self) -> PGLabSensorsCoordinator:
+    def coordinator(self) -> PGLabSensorsCoordinator:
         """Return the coordinator."""
         return self._coordinator
 
@@ -110,7 +110,7 @@ async def createDiscoverDeviceInfo(
     discovery_info = DiscoverDeviceInfo(hass, pglab_device)
 
     # Subscribe to sensor state changes.
-    await discovery_info.cordinator.subscribe_topics()
+    await discovery_info.coordinator.subscribe_topics()
     return discovery_info
 
 
@@ -258,7 +258,7 @@ class PGLabDiscovery:
                 hass,
                 CREATE_NEW_ENTITY[Platform.SENSOR],
                 pglab_device,
-                discovery_info.cordinator,
+                discovery_info.coordinator,
             )
 
         topics = {
