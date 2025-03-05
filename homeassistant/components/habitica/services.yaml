@@ -183,7 +183,7 @@ update_reward:
 create_reward:
   fields:
     config_entry: *config_entry
-    name:
+    name: &name
       required: true
       selector:
         text:
@@ -199,7 +199,7 @@ update_habit:
     task: *task
     rename: *rename
     notes: *notes
-    up_down:
+    up_down: &up_down
       required: false
       selector:
         select:
@@ -210,7 +210,7 @@ update_habit:
               label: "➖"
           multiple: true
           mode: list
-    priority:
+    priority: &priority
       required: false
       selector:
         select:
@@ -221,7 +221,7 @@ update_habit:
             - "hard"
           mode: dropdown
           translation_key: "priority"
-    frequency:
+    frequency: &frequency
       required: false
       selector:
         select:
@@ -252,3 +252,13 @@ update_habit:
               unit_of_measurement: "➖"
               mode: box
         alias: *alias
+create_habit:
+  fields:
+    config_entry: *config_entry
+    name: *name
+    notes: *notes
+    up_down: *up_down
+    priority: *priority
+    frequency: *frequency
+    tag: *tag
+    developer_options: *developer_options

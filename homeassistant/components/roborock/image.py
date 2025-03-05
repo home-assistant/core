@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import datetime
 import io
+import logging
 
 from roborock import RoborockCommand
 from vacuum_map_parser_base.config.color import ColorsPalette
@@ -30,6 +31,8 @@ from .const import (
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -48,7 +51,11 @@ async def async_setup_entry(
     )
 
     def parse_image(map_bytes: bytes) -> bytes | None:
-        parsed_map = parser.parse(map_bytes)
+        try:
+            parsed_map = parser.parse(map_bytes)
+        except (IndexError, ValueError) as err:
+            _LOGGER.debug("Exception when parsing map contents: %s", err)
+            return None
         if parsed_map.image is None:
             return None
         img_byte_arr = io.BytesIO()
@@ -150,6 +157,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
                 not isinstance(response[0], bytes)
                 or (content := self.parser(response[0])) is None
             ):
+                _LOGGER.debug("Failed to parse map contents: %s", response[0])
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="map_failure",
