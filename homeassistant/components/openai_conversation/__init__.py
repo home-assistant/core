@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+from mimetypes import guess_file_type
 from pathlib import Path
 
 import openai
@@ -58,10 +59,13 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 type OpenAIConfigEntry = ConfigEntry[openai.AsyncClient]
 
 
-def encode_image(image_path: str) -> str:
+def encode_file(file_path: str) -> tuple[str, str]:
     """Return base64 version of file contents."""
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode("utf-8")
+    mime_type, _ = guess_file_type(file_path)
+    if mime_type is None:
+        mime_type = "application/octet-stream"
+    with open(file_path, "rb") as image_file:
+        return (mime_type, base64.b64encode(image_file.read()).decode("utf-8"))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -109,6 +113,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
         model: str = entry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        client: openai.AsyncClient = entry.runtime_data
 
         prompt_parts: list[ChatCompletionContentPartParam] = [
             ChatCompletionContentPartTextParam(
@@ -117,31 +122,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         ]
 
-        client: openai.AsyncClient = entry.runtime_data
-
         def append_files_to_prompt() -> None:
-            if CONF_FILENAMES in call.data:
-                for filename in call.data[CONF_FILENAMES]:
-                    if not hass.config.is_allowed_path(filename):
-                        raise HomeAssistantError(
-                            f"Cannot read `{filename}`, no access to path; "
-                            "`allowlist_external_dirs` may need to be adjusted in "
-                            "`configuration.yaml`"
-                        )
-                    if not Path(filename).exists():
-                        raise HomeAssistantError(f"`{filename}` does not exist")
-                    base64_image: str = encode_image(filename)
-                    image_content: ChatCompletionContentPartImageParam = (
-                        ChatCompletionContentPartImageParam(
-                            type="image_url",
-                            image_url=ImageURL(
-                                url=f"data:image/jpeg;base64,{base64_image}"
-                            ),
-                        )
+            for filename in call.data[CONF_FILENAMES]:
+                if not hass.config.is_allowed_path(filename):
+                    raise HomeAssistantError(
+                        f"Cannot read `{filename}`, no access to path; "
+                        "`allowlist_external_dirs` may need to be adjusted in "
+                        "`configuration.yaml`"
                     )
-                    prompt_parts.append(image_content)
+                if not Path(filename).exists():
+                    raise HomeAssistantError(f"`{filename}` does not exist")
+                mime_type, base64_file = encode_file(filename)
+                if "image/" not in mime_type:
+                    raise HomeAssistantError(
+                        "Only images are supported by the OpenAI API,"
+                        f"`{filename}` is not an image file"
+                    )
+                prompt_parts.append(
+                    ChatCompletionContentPartImageParam(
+                        type="image_url",
+                        image_url=ImageURL(
+                            url=f"data:{mime_type};base64,{base64_file}"
+                        ),
+                    )
+                )
 
-        await hass.async_add_executor_job(append_files_to_prompt)
+        if CONF_FILENAMES in call.data:
+            await hass.async_add_executor_job(append_files_to_prompt)
 
         messages: list[ChatCompletionUserMessageParam] = [
             ChatCompletionUserMessageParam(
@@ -155,7 +162,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 model=model,
                 messages=messages,
                 n=1,
-                response_format={"type": "json_object"},
+                response_format={
+                    "type": "json_object",
+                },
             )
 
         except openai.OpenAIError as err:

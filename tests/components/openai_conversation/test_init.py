@@ -377,6 +377,80 @@ async def test_generate_content_service(
             assert mock_file.call_args_list[idx][0][0] == file
 
 
+@pytest.mark.parametrize(
+    (
+        "service_data",
+        "error",
+        "number_of_files",
+        "exists_side_effect",
+        "is_allowed_side_effect",
+    ),
+    [
+        (
+            {"prompt": "Picture of a dog", "filenames": ["/a/b/c.jpg"]},
+            "`/a/b/c.jpg` does not exist",
+            0,
+            [False],
+            [True],
+        ),
+        (
+            {
+                "prompt": "Picture of a dog",
+                "filenames": ["/a/b/c.jpg", "d/e/f.png"],
+            },
+            "Cannot read `d/e/f.png`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`",
+            1,
+            [True, True],
+            [True, False],
+        ),
+        (
+            {"prompt": "Not a picture of a dog", "filenames": ["/a/b/c.pdf"]},
+            "Only images are supported by the OpenAI API,`/a/b/c.pdf` is not an image file",
+            1,
+            [True],
+            [True],
+        ),
+    ],
+)
+async def test_generate_content_service_invalid(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    service_data,
+    error,
+    number_of_files,
+    exists_side_effect,
+    is_allowed_side_effect,
+) -> None:
+    """Test generate content service."""
+    service_data["config_entry"] = mock_config_entry.entry_id
+
+    with (
+        patch(
+            "openai.resources.chat.completions.AsyncCompletions.create",
+            new_callable=AsyncMock,
+        ) as mock_create,
+        patch(
+            "base64.b64encode", side_effect=[b"BASE64IMAGE1", b"BASE64IMAGE2"]
+        ) as mock_b64encode,
+        patch("builtins.open", mock_open(read_data="ABC")),
+        patch("pathlib.Path.exists", side_effect=exists_side_effect),
+        patch.object(
+            hass.config, "is_allowed_path", side_effect=is_allowed_side_effect
+        ),
+    ):
+        with pytest.raises(HomeAssistantError, match=error):
+            await hass.services.async_call(
+                "openai_conversation",
+                "generate_content",
+                service_data,
+                blocking=True,
+                return_response=True,
+            )
+        assert len(mock_create.mock_calls) == 0
+        assert mock_b64encode.call_count == number_of_files
+
+
 @pytest.mark.usefixtures("mock_init_component")
 async def test_generate_content_service_error(
     hass: HomeAssistant,
