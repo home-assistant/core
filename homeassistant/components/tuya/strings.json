@@ -820,6 +820,9 @@
       "energy_saving": {
         "name": "Energy saving"
       },
+      "open_valve_detection": {
+        "name": "Valve Open detection"
+      },
       "open_window_detection": {
         "name": "Open window detection"
       },
