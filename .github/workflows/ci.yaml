@@ -1452,7 +1452,7 @@ jobs:
     name: Upload test results to Codecov
     # codecov/test-results-action currently doesn't support tokenless uploads
     # therefore we can't run it on forks
-    if: ${{ !github.event.pull_request.head.repo.fork && needs.info.outputs.skip_coverage != 'true' && !cancelled() }}
+    if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork) && needs.info.outputs.skip_coverage != 'true' && !cancelled() }}
     runs-on: ubuntu-24.04
     needs:
       - info
