@@ -23,7 +23,7 @@ async def test_extract_frame_integration(
         custom_integration=False,
         frame=mock_integration_frame,
         integration="hue",
-        module=None,
+        module="homeassistant.components.hue.light",
         relative_filename="homeassistant/components/hue/light.py",
     )
 
