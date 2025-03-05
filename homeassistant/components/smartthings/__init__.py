@@ -174,11 +174,12 @@ def process_status(
         list[Capability | str],
         disabled_capabilities_capability[Attribute.DISABLED_CAPABILITIES].value,
     )
-    for capability in disabled_capabilities:
-        # We still need to make sure the climate entity can work without this capability
-        if (
-            capability in main_component
-            and capability != Capability.DEMAND_RESPONSE_LOAD_CONTROL
-        ):
-            del main_component[capability]
+    if disabled_capabilities is not None:
+        for capability in disabled_capabilities:
+            # We still need to make sure the climate entity can work without this capability
+            if (
+                capability in main_component
+                and capability != Capability.DEMAND_RESPONSE_LOAD_CONTROL
+            ):
+                del main_component[capability]
     return status
