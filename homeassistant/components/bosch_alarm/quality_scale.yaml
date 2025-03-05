@@ -65,5 +65,8 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession: todo
+  inject-websession:
+    status: exempt
+    comment: |
+      Integration does not make any HTTP requests.
   strict-typing: done
