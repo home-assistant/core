@@ -222,7 +222,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             (CONF_RGBW_ACTION, ColorMode.RGBW),
             (CONF_RGBWW_ACTION, ColorMode.RGBWW),
         ):
-            if (action_config := config.get(action_id)) is not None:
+            if action_config := config.get(action_id):
                 self.add_script(action_id, action_config, name, DOMAIN)
                 color_modes.add(color_mode)
         self._supported_color_modes = filter_supported_color_modes(color_modes)
@@ -232,7 +232,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._color_mode = next(iter(self._supported_color_modes))
 
         self._attr_supported_features = LightEntityFeature(0)
-        if self._action_scripts.get(CONF_EFFECT_ACTION) is not None:
+        if self._action_scripts.get(CONF_EFFECT_ACTION):
             self._attr_supported_features |= LightEntityFeature.EFFECT
         if self._supports_transition is True:
             self._attr_supported_features |= LightEntityFeature.TRANSITION
@@ -530,12 +530,8 @@ class LightTemplate(TemplateEntity, LightEntity):
         if ATTR_TRANSITION in kwargs and self._supports_transition is True:
             common_params["transition"] = kwargs[ATTR_TRANSITION]
 
-        if (
-            ATTR_COLOR_TEMP_KELVIN in kwargs
-            and (
-                temperature_script := self._action_scripts.get(CONF_TEMPERATURE_ACTION)
-            )
-            is not None
+        if ATTR_COLOR_TEMP_KELVIN in kwargs and (
+            temperature_script := self._action_scripts.get(CONF_TEMPERATURE_ACTION)
         ):
             common_params["color_temp"] = color_util.color_temperature_kelvin_to_mired(
                 kwargs[ATTR_COLOR_TEMP_KELVIN]
@@ -546,10 +542,8 @@ class LightTemplate(TemplateEntity, LightEntity):
                 run_variables=common_params,
                 context=self._context,
             )
-        elif (
-            ATTR_EFFECT in kwargs
-            and (effect_script := self._action_scripts.get(CONF_EFFECT_ACTION))
-            is not None
+        elif ATTR_EFFECT in kwargs and (
+            effect_script := self._action_scripts.get(CONF_EFFECT_ACTION)
         ):
             assert self._effect_list is not None
             effect = kwargs[ATTR_EFFECT]
@@ -567,10 +561,8 @@ class LightTemplate(TemplateEntity, LightEntity):
             await self.async_run_script(
                 effect_script, run_variables=common_params, context=self._context
             )
-        elif (
-            ATTR_HS_COLOR in kwargs
-            and (color_script := self._action_scripts.get(CONF_COLOR_ACTION))
-            is not None
+        elif ATTR_HS_COLOR in kwargs and (
+            color_script := self._action_scripts.get(CONF_COLOR_ACTION)
         ):
             hs_value = kwargs[ATTR_HS_COLOR]
             common_params["hs"] = hs_value
@@ -580,9 +572,8 @@ class LightTemplate(TemplateEntity, LightEntity):
             await self.async_run_script(
                 color_script, run_variables=common_params, context=self._context
             )
-        elif (
-            ATTR_HS_COLOR in kwargs
-            and (hs_script := self._action_scripts.get(CONF_HS_ACTION)) is not None
+        elif ATTR_HS_COLOR in kwargs and (
+            hs_script := self._action_scripts.get(CONF_HS_ACTION)
         ):
             hs_value = kwargs[ATTR_HS_COLOR]
             common_params["hs"] = hs_value
@@ -592,10 +583,8 @@ class LightTemplate(TemplateEntity, LightEntity):
             await self.async_run_script(
                 hs_script, run_variables=common_params, context=self._context
             )
-        elif (
-            ATTR_RGBWW_COLOR in kwargs
-            and (rgbww_script := self._action_scripts.get(CONF_RGBWW_ACTION))
-            is not None
+        elif ATTR_RGBWW_COLOR in kwargs and (
+            rgbww_script := self._action_scripts.get(CONF_RGBWW_ACTION)
         ):
             rgbww_value = kwargs[ATTR_RGBWW_COLOR]
             common_params["rgbww"] = rgbww_value
@@ -613,9 +602,8 @@ class LightTemplate(TemplateEntity, LightEntity):
             await self.async_run_script(
                 rgbww_script, run_variables=common_params, context=self._context
             )
-        elif (
-            ATTR_RGBW_COLOR in kwargs
-            and (rgbw_script := self._action_scripts.get(CONF_RGBW_ACTION)) is not None
+        elif ATTR_RGBW_COLOR in kwargs and (
+            rgbw_script := self._action_scripts.get(CONF_RGBW_ACTION)
         ):
             rgbw_value = kwargs[ATTR_RGBW_COLOR]
             common_params["rgbw"] = rgbw_value
@@ -632,9 +620,8 @@ class LightTemplate(TemplateEntity, LightEntity):
             await self.async_run_script(
                 rgbw_script, run_variables=common_params, context=self._context
             )
-        elif (
-            ATTR_RGB_COLOR in kwargs
-            and (rgb_script := self._action_scripts.get(CONF_RGB_ACTION)) is not None
+        elif ATTR_RGB_COLOR in kwargs and (
+            rgb_script := self._action_scripts.get(CONF_RGB_ACTION)
         ):
             rgb_value = kwargs[ATTR_RGB_COLOR]
             common_params["rgb"] = rgb_value
@@ -645,10 +632,8 @@ class LightTemplate(TemplateEntity, LightEntity):
             await self.async_run_script(
                 rgb_script, run_variables=common_params, context=self._context
             )
-        elif (
-            ATTR_BRIGHTNESS in kwargs
-            and (level_script := self._action_scripts.get(CONF_LEVEL_ACTION))
-            is not None
+        elif ATTR_BRIGHTNESS in kwargs and (
+            level_script := self._action_scripts.get(CONF_LEVEL_ACTION)
         ):
             await self.async_run_script(
                 level_script, run_variables=common_params, context=self._context
@@ -1023,7 +1008,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         if render in (None, "None", ""):
             self._supports_transition = False
             return
-        self._attr_supported_features &= LightEntityFeature.EFFECT
+        self._attr_supported_features &= ~LightEntityFeature.TRANSITION
         self._supports_transition = bool(render)
         if self._supports_transition:
             self._attr_supported_features |= LightEntityFeature.TRANSITION

@@ -208,7 +208,7 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         if self._optimistic:
             self._attr_native_value = value
             self.async_write_ha_state()
-        if (set_value := self._action_scripts.get(CONF_SET_VALUE)) is not None:
+        if set_value := self._action_scripts.get(CONF_SET_VALUE):
             await self.async_run_script(
                 set_value,
                 run_variables={ATTR_VALUE: value},

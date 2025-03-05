@@ -37,8 +37,6 @@ class AbstractTemplateEntity(Entity):
     ):
         """Add an action script."""
 
-        # Cannot use self.hass because it may be None in child class
-        # at instantiation.
         self._action_scripts[script_id] = Script(
             self.hass,
             config,
