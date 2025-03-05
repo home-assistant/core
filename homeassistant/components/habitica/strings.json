@@ -894,7 +894,7 @@
     },
     "update_todo": {
       "name": "Update a to-do",
-      "description": "Update a specific to-do for a selected Habitica character",
+      "description": "Updates a specific to-do for a selected Habitica character",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
