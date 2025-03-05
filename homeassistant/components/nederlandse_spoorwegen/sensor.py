@@ -19,10 +19,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
+from homeassistant.util import Throttle, dt as dt_util
 
-from .const import CONF_STATION_FROM, CONF_STATION_TO
+from .const import CONF_STATION_FROM, CONF_STATION_TO, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,10 +59,21 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform from config_entry."""
+    print("test")
+
     nsapi = ns_api.NSAPI(entry.data["api_key"])
+    print("test")
     async_add_entities(
         [NSDepartureSensor(hass, entry, nsapi, entry.unique_id)], update_before_add=True
     )
+
+    for subentry_id, subentry in entry.subentries.items():
+        print(subentry_id)
+        async_add_entities(
+            [NSDepartureSensor(hass, subentry, nsapi, subentry_id)],
+            update_before_add=True,
+            config_subentry_id=subentry_id,
+        )
 
 
 def valid_stations(stations, given_stations):
@@ -92,7 +104,7 @@ class NSDepartureSensor(SensorEntity):
         """Initialize the sensor."""
         self._hass = hass
         self._nsapi = nsapi
-        self._name = "test NS"
+        self._name = entry.title
         self._departure = entry.data[CONF_STATION_FROM]
         self._via = entry.data[CONF_VIA]
         self._heading = entry.data[CONF_STATION_TO]
@@ -102,7 +114,12 @@ class NSDepartureSensor(SensorEntity):
         self._first_trip = None
         self._next_trip = None
         self._attr_unique_id = unique_id
-        self._attr_name = "test"
+        # self._attr_device_info = DeviceInfo(
+        #     identifiers={(DOMAIN, nsapi.subscription_key)},
+        #     entry_type=DeviceEntryType.SERVICE,
+        #     name="Nederlandse Spoorwegen",
+        # )
+        print(entry.data)
 
     @property
     def name(self) -> str:
@@ -197,9 +214,10 @@ class NSDepartureSensor(SensorEntity):
 
         return attributes
 
-    # @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Get the trip information."""
+        # print(self._attr_unique_id)
 
         # Set the search parameter to search from a specific trip time
         # or to just search for next trip.
