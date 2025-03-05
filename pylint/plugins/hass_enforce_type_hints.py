@@ -666,6 +666,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="available",
         return_type="bool",
+        compulsory=True,
     ),
     TypeHintMatch(
         function_name="assumed_state",
