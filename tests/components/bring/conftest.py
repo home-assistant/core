@@ -4,11 +4,13 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 import uuid
 
-from bring_api.types import (
+from bring_api import (
+    BringActivityResponse,
     BringAuthResponse,
     BringItemsResponse,
     BringListResponse,
     BringUserSettingsResponse,
+    BringUsersResponse,
 )
 import pytest
 
@@ -60,6 +62,13 @@ def mock_bring_client() -> Generator[AsyncMock]:
         client.get_all_user_settings.return_value = BringUserSettingsResponse.from_json(
             load_fixture("usersettings.json", DOMAIN)
         )
+        client.get_activity.return_value = BringActivityResponse.from_json(
+            load_fixture("activity.json", DOMAIN)
+        )
+        client.get_list_users.return_value = BringUsersResponse.from_json(
+            load_fixture("users.json", DOMAIN)
+        )
+
         yield client
 
 
