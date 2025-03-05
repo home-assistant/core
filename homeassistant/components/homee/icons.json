@@ -1,6 +1,12 @@
 {
   "entity": {
     "sensor": {
+      "brightness": {
+        "default": "mdi:brightness-5"
+      },
+      "brightness_instance": {
+        "default": "mdi:brightness-5"
+      },
       "link_quality": {
         "default": "mdi:signal"
       },
@@ -9,7 +15,7 @@
       }
     },
     "switch": {
-      "watchdog_on_off": {
+      "watchdog": {
         "default": "mdi:dog"
       },
       "manual_operation": {

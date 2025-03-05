@@ -58,7 +58,7 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
 
         info = self._device.device_info
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
+            identifiers={(DOMAIN, f"{gateway_id}-{self._device_id}")},
             manufacturer=info.manufacturer,
             model=info.model_number,
             name=self._device.name,
