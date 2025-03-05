@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
+from pypglab.const import SENSOR_REBOOT_TIME, SENSOR_TEMPERATURE, SENSOR_VOLTAGE
 from pypglab.device import Device as PyPGLabDevice
 from pypglab.sensor import Sensor as PyPGLabSensors
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, LOGGER
 
@@ -43,6 +46,20 @@ class PGLabSensorsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def get_sensor_value(self, sensor_key: str) -> Any:
         """Return the value of a sensor."""
+
         if self.data:
-            return self.data[sensor_key]
+            value = self.data[sensor_key]
+
+            if (sensor_key == SENSOR_REBOOT_TIME) and value:
+                # convert the reboot time to a datetime object
+                return utcnow() - timedelta(seconds=value)
+
+            if (sensor_key == SENSOR_TEMPERATURE) and value:
+                # convert the temperature value to a float
+                return float(value)
+
+            if (sensor_key == SENSOR_VOLTAGE) and value:
+                # convert the voltage value to a float
+                return float(value)
+
         return None

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-
 from pypglab.const import SENSOR_REBOOT_TIME, SENSOR_TEMPERATURE, SENSOR_VOLTAGE
 from pypglab.device import Device as PyPGLabDevice
 
@@ -16,7 +14,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import Platform, UnitOfElectricPotential, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.dt import utcnow
 
 from . import PGLABConfigEntry
 from .coordinator import PGLabSensorsCoordinator
@@ -101,13 +98,9 @@ class PGLabSensor(PGLabSensorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
 
-        value = self.coordinator.get_sensor_value(self.entity_description.key)
-
-        if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
-            self._attr_native_value = utcnow() - timedelta(seconds=value)
-        else:
-            self._attr_native_value = value
-
+        self._attr_native_value = self.coordinator.get_sensor_value(
+            self.entity_description.key
+        )
         super()._handle_coordinator_update()
 
     @property
