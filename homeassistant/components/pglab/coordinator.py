@@ -57,7 +57,7 @@ class PGLabSensorsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # set the callback to be called when a new sensor values are available
         self._sensors.set_on_state_callback(self._new_sensors_data)
 
-    def get_sensor_value(self, sensor_key: str) -> None | float | datetime:
+    def get_sensor_value(self, sensor_key: str) -> float | datetime | None:
         """Return the value of a sensor."""
 
         if self.data:
