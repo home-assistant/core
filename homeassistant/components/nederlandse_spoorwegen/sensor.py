@@ -3,54 +3,28 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from typing import Any
 
 import ns_api
 import requests
-import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
-    SensorEntity,
-)
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle, dt as dt_util
 
-from .const import CONF_STATION_FROM, CONF_STATION_TO, DOMAIN
+from .const import (
+    CONF_STATION_FROM,
+    CONF_STATION_TO,
+    CONF_STATION_VIA,
+    CONF_TIME,
+    MIN_TIME_BETWEEN_UPDATES,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_ROUTES = "routes"
-CONF_FROM = "from"
-CONF_TO = "to"
-CONF_VIA = "via"
-CONF_TIME = "time"
-
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
-
-ROUTE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_FROM): cv.string,
-        vol.Required(CONF_TO): cv.string,
-        vol.Optional(CONF_VIA): cv.string,
-        vol.Optional(CONF_TIME): cv.time,
-    }
-)
-
-ROUTES_SCHEMA = vol.All(cv.ensure_list, [ROUTE_SCHEMA])
-
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_API_KEY): cv.string, vol.Optional(CONF_ROUTES): ROUTES_SCHEMA}
-)
 
 
 async def async_setup_entry(
@@ -59,16 +33,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform from config_entry."""
-    print("test")
-
-    nsapi = ns_api.NSAPI(entry.data["api_key"])
-    print("test")
-    async_add_entities(
-        [NSDepartureSensor(hass, entry, nsapi, entry.unique_id)], update_before_add=True
-    )
 
     for subentry_id, subentry in entry.subentries.items():
-        print(subentry_id)
         async_add_entities(
             [
                 NSDepartureSensor(
@@ -110,7 +76,7 @@ class NSDepartureSensor(SensorEntity):
         self._nsapi = nsapi
         self._name = entry.title
         self._departure = entry.data[CONF_STATION_FROM]
-        self._via = entry.data[CONF_VIA]
+        self._via = entry.data[CONF_STATION_VIA]
         self._heading = entry.data[CONF_STATION_TO]
         self._time = entry.data[CONF_TIME]
         self._state = None
@@ -118,12 +84,6 @@ class NSDepartureSensor(SensorEntity):
         self._first_trip = None
         self._next_trip = None
         self._attr_unique_id = unique_id
-        # self._attr_device_info = DeviceInfo(
-        #     identifiers={(DOMAIN, nsapi.subscription_key)},
-        #     entry_type=DeviceEntryType.SERVICE,
-        #     name="Nederlandse Spoorwegen",
-        # )
-        print(entry.data)
 
     @property
     def name(self) -> str:
