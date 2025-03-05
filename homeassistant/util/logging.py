@@ -59,8 +59,8 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
             self._log_counts[logger_name] = LoggerCount(1, now)
             return
 
-        ellapsed_time = now - module_count.start_time
-        if ellapsed_time > self.monitor_time_window:
+        elapsed_time = now - module_count.start_time
+        if elapsed_time > self.monitor_time_window:
             module_count.count = 1
             module_count.start_time = now
             return
@@ -73,7 +73,7 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
             "Module %s is logging too frequently. %d messages in the last %s seconds",
             logger_name,
             module_count.count,
-            int(ellapsed_time.total_seconds()),
+            int(elapsed_time.total_seconds()),
         )
         module_count.count = 1
         module_count.start_time = now
