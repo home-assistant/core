@@ -99,7 +99,7 @@ async def test_select_snapshot(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the multisensor snapshot."""
+    """Test the select entity snapshot."""
     with patch("homeassistant.components.homee.PLATFORMS", [Platform.SELECT]):
         await setup_select(hass, mock_homee, mock_config_entry)
 
