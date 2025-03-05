@@ -23,9 +23,7 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: todo
   docs-removal-instructions: todo
-  entity-event-setup:
-    status: exempt
-    comment: Integration does not subscribe to events
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
