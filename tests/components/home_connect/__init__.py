@@ -11,6 +11,3 @@ MOCK_SETTINGS: dict[str, Any] = load_json_object_fixture("home_connect/settings.
 MOCK_STATUS = ArrayOfStatus.from_dict(
     load_json_object_fixture("home_connect/status.json")["data"]  # type: ignore[arg-type]
 )
-MOCK_AVAILABLE_COMMANDS: dict[str, Any] = load_json_object_fixture(
-    "home_connect/available_commands.json"
-)

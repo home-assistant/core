@@ -40,9 +40,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import MOCK_AVAILABLE_COMMANDS, MOCK_PROGRAMS, MOCK_SETTINGS, MOCK_STATUS
+from . import MOCK_PROGRAMS, MOCK_SETTINGS, MOCK_STATUS
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -262,6 +262,7 @@ def _get_set_program_options_side_effect(
 def mock_client(
     appliances: list[HomeAppliance],
     appliance: HomeAppliance | None,
+    available_commands: dict[str, dict[str, list[dict[str, str]]]],
     request: pytest.FixtureRequest,
 ) -> MagicMock:
     """Fixture to mock Client from HomeConnect."""
@@ -366,10 +367,8 @@ def mock_client(
     async def _get_available_commands_side_effect(ha_id: str) -> ArrayOfCommands:
         """Get available commands."""
         for appliance_ in appliances:
-            if appliance_.ha_id == ha_id and appliance_.type in MOCK_AVAILABLE_COMMANDS:
-                return ArrayOfCommands.from_dict(
-                    MOCK_AVAILABLE_COMMANDS[appliance_.type]
-                )
+            if appliance_.ha_id == ha_id and appliance_.type in available_commands:
+                return ArrayOfCommands.from_dict(available_commands[appliance_.type])
         raise HomeConnectApiError("error.key", "error description")
 
     mock.start_program = AsyncMock(
@@ -521,5 +520,14 @@ def mock_appliance(
 
 @pytest.fixture(name="appliances_data")
 def appliances_data_fixture() -> str:
-    """Fixture to return a the string for an array of appliances."""
+    """Fixture to return a string for an array of appliances."""
     return load_fixture("appliances.json", integration=DOMAIN)
+
+
+@pytest.fixture(name="available_commands")
+def available_commands_fixture() -> dict[str, dict[str, list[dict[str, str]]]]:
+    """Fixture to return a string for available commands."""
+    return cast(
+        dict[str, dict[str, list[dict[str, str]]]],
+        load_json_object_fixture("available_commands.json", integration=DOMAIN),
+    )
