@@ -25,7 +25,7 @@ async def async_setup_entry(
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the Homee platform for the select integration."""
+    """Add the Homee platform for the select component."""
 
     async_add_entities(
         HomeeSelect(attribute, config_entry, SELECT_DESCRIPTIONS[attribute.type])
@@ -36,7 +36,7 @@ async def async_setup_entry(
 
 
 class HomeeSelect(HomeeEntity, SelectEntity):
-    """Representation of a Homee select device."""
+    """Representation of a Homee select entity."""
 
     def __init__(
         self,

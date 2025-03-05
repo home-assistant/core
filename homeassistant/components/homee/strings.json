@@ -112,7 +112,7 @@
     },
     "select": {
       "repeater_mode": {
-        "name": "EnOcean repeater mode",
+        "name": "Repeater mode",
         "state": {
           "off": "[%key:common::state::off%]",
           "level1": "Level 1",

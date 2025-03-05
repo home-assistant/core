@@ -33,13 +33,19 @@ async def setup_select(
 
 
 @pytest.mark.parametrize(
-    ("service", "expected"),
+    ("service", "extra_options", "expected"),
     [
-        (SERVICE_SELECT_FIRST, 0),
-        (SERVICE_SELECT_LAST, 2),
-        (SERVICE_SELECT_NEXT, 2),
-        (SERVICE_SELECT_PREVIOUS, 0),
-        (SERVICE_SELECT_OPTION, 2),
+        (SERVICE_SELECT_FIRST, {}, 0),
+        (SERVICE_SELECT_LAST, {}, 2),
+        (SERVICE_SELECT_NEXT, {}, 2),
+        (SERVICE_SELECT_PREVIOUS, {}, 0),
+        (
+            SERVICE_SELECT_OPTION,
+            {
+                "option": "level2",
+            },
+            2,
+        ),
     ],
 )
 async def test_select_services(
@@ -47,18 +53,14 @@ async def test_select_services(
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
     service: str,
+    extra_options: dict[str, str],
     expected: int,
 ) -> None:
     """Test the select services."""
     await setup_select(hass, mock_homee, mock_config_entry)
 
-    if service == SERVICE_SELECT_OPTION:
-        OPTIONS = {
-            ATTR_ENTITY_ID: "select.test_select_enocean_repeater_mode",
-            "option": "level2",
-        }
-    else:
-        OPTIONS = {ATTR_ENTITY_ID: "select.test_select_enocean_repeater_mode"}
+    OPTIONS = {ATTR_ENTITY_ID: "select.test_select_repeater_mode"}
+    OPTIONS.update(extra_options)
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -70,12 +72,12 @@ async def test_select_services(
     mock_homee.set_value.assert_called_once_with(1, 1, expected)
 
 
-async def test_select_service_error(
+async def test_select_option_service_error(
     hass: HomeAssistant,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the select service called with invalid option."""
+    """Test the select_option service called with invalid option."""
     await setup_select(hass, mock_homee, mock_config_entry)
 
     with pytest.raises(ServiceValidationError):
@@ -83,7 +85,7 @@ async def test_select_service_error(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.test_select_enocean_repeater_mode",
+                ATTR_ENTITY_ID: "select.test_select_repeater_mode",
                 "option": "invalid",
             },
             blocking=True,
