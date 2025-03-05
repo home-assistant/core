@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pypglab.const import SENSOR_REBOOT_TIME, SENSOR_TEMPERATURE, SENSOR_VOLTAGE
 from pypglab.device import Device as PyPGLabDevice
@@ -15,17 +15,30 @@ from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, LOGGER
 
+if TYPE_CHECKING:
+    from . import PGLabConfigEntry
+
 
 class PGLabSensorsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to update Sensor Entities when receiving new data."""
 
-    def __init__(self, hass: HomeAssistant, pglab_device: PyPGLabDevice) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: PGLabConfigEntry,
+        pglab_device: PyPGLabDevice,
+    ) -> None:
         """Initialize."""
 
         # get a reference of PG Lab device internal sensors state
         self._sensors: PyPGLabSensors = pglab_device.sensors
 
-        super().__init__(hass, LOGGER, name=DOMAIN, always_update=True)
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+        )
 
     @callback
     def _new_sensors_data(self, payload: str) -> None:

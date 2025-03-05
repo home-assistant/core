@@ -69,7 +69,12 @@ def get_device_id_from_discovery_topic(topic: str) -> str | None:
 class DiscoverDeviceInfo:
     """Keeps information of the PGLab discovered device."""
 
-    def __init__(self, hass: HomeAssistant, pglab_device: PyPGLabDevice) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: PGLabConfigEntry,
+        pglab_device: PyPGLabDevice,
+    ) -> None:
         """Initialize the device discovery info."""
 
         # Hash string represents the devices actual configuration,
@@ -77,7 +82,7 @@ class DiscoverDeviceInfo:
         # When the hash string changes the devices entities must be rebuilt.
         self._hash = pglab_device.hash
         self._entities: list[tuple[str, str]] = []
-        self._coordinator = PGLabSensorsCoordinator(hass, pglab_device)
+        self._coordinator = PGLabSensorsCoordinator(hass, config_entry, pglab_device)
 
     def add_entity(self, entity: Entity) -> None:
         """Add an entity."""
@@ -104,10 +109,10 @@ class DiscoverDeviceInfo:
 
 
 async def create_discover_device_info(
-    hass: HomeAssistant, pglab_device: PyPGLabDevice
+    hass: HomeAssistant, config_entry: PGLabConfigEntry, pglab_device: PyPGLabDevice
 ) -> DiscoverDeviceInfo:
     """Create a new DiscoverDeviceInfo instance."""
-    discovery_info = DiscoverDeviceInfo(hass, pglab_device)
+    discovery_info = DiscoverDeviceInfo(hass, config_entry, pglab_device)
 
     # Subscribe to sensor state changes.
     await discovery_info.coordinator.subscribe_topics()
@@ -246,7 +251,9 @@ class PGLabDiscovery:
                 self.__clean_discovered_device(hass, pglab_device.id)
 
             # Add a new device.
-            discovery_info = await create_discover_device_info(hass, pglab_device)
+            discovery_info = await create_discover_device_info(
+                hass, config_entry, pglab_device
+            )
             self._discovered[pglab_device.id] = discovery_info
 
             # Create all new relay entities.
