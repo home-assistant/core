@@ -186,7 +186,10 @@ class PGLabDiscovery:
         del self._discovered[device_id]
 
     async def start(
-        self, hass: HomeAssistant, mqtt: PyPGLabMqttClient, entry: PGLabConfigEntry
+        self,
+        hass: HomeAssistant,
+        mqtt: PyPGLabMqttClient,
+        config_entry: PGLabConfigEntry,
     ) -> None:
         """Start discovering a PGLab devices."""
 
@@ -212,7 +215,7 @@ class PGLabDiscovery:
             # Create a new device.
             device_registry = dr.async_get(hass)
             device_registry.async_get_or_create(
-                config_entry_id=entry.entry_id,
+                config_entry_id=config_entry.entry_id,
                 configuration_url=f"http://{pglab_device.ip}/",
                 connections={(CONNECTION_NETWORK_MAC, pglab_device.mac)},
                 identifiers={(DOMAIN, pglab_device.id)},
@@ -269,7 +272,7 @@ class PGLabDiscovery:
         }
 
         # Forward setup all HA supported platforms.
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
         self._mqtt_client = mqtt
         self._substate = async_prepare_subscribe_topics(hass, self._substate, topics)
@@ -284,9 +287,9 @@ class PGLabDiscovery:
         )
         self._disconnect_platform.append(disconnect_callback)
 
-    async def stop(self, hass: HomeAssistant, entry: PGLabConfigEntry) -> None:
+    async def stop(self, hass: HomeAssistant, config_entry: PGLabConfigEntry) -> None:
         """Stop to discovery PG LAB devices."""
-        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+        await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
         # Disconnect all registered platforms.
         for disconnect_callback in self._disconnect_platform:
