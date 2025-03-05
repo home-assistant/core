@@ -581,6 +581,11 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.SOUND,
+            translation_key="sound",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     # Thermostatic Radiator Valve
     # Not documented
