@@ -41,10 +41,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: exempt
-    comment: |
-      There is no data to diagnose.
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |
@@ -73,10 +70,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: |
-      Nothing to reconfigure.
+  reconfiguration-flow: done
   repair-issues: done
   stale-devices:
     status: exempt
