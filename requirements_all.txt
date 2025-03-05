@@ -234,7 +234,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2024.2.1
+aioecowitt==2025.3.1
 
 # homeassistant.components.co2signal
 aioelectricitymaps==0.4.0
@@ -1155,7 +1155,7 @@ holidays==0.68
 home-assistant-frontend==20250305.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.2.26
+home-assistant-intents==2025.3.5
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.1.7
@@ -1565,7 +1565,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.0.12
+onedrive-personal-sdk==0.0.13
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.2.5
@@ -2346,7 +2346,7 @@ pysqueezebox==0.12.0
 pystiebeleltron==0.0.1.dev2
 
 # homeassistant.components.suez_water
-pysuezV2==2.0.3
+pysuezV2==2.0.4
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
