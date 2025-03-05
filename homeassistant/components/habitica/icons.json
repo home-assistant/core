@@ -237,6 +237,12 @@
         "tag_options": "mdi:tag",
         "developer_options": "mdi:test-tube"
       }
+    },
+    "create_habit": {
+      "service": "mdi:contrast-box",
+      "sections": {
+        "developer_options": "mdi:test-tube"
+      }
     }
   }
 }

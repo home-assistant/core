@@ -120,8 +120,7 @@ class SynologyDSMBackupAgent(BackupAgent):
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         :return: A tuple of tar_filename and meta_filename
         """
-        if await self.async_get_backup(backup_id) is None:
-            raise BackupNotFound
+        await self.async_get_backup(backup_id)
         base_name = self.backup_base_names[backup_id]
         return (f"{base_name}.tar", f"{base_name}_meta.json")
 
@@ -195,13 +194,7 @@ class SynologyDSMBackupAgent(BackupAgent):
 
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
-        try:
-            (filename_tar, filename_meta) = await self._async_backup_filenames(
-                backup_id
-            )
-        except BackupAgentError:
-            # backup meta data could not be found, so we can't delete the backup
-            return
+        (filename_tar, filename_meta) = await self._async_backup_filenames(backup_id)
 
         for filename in (filename_tar, filename_meta):
             try:
@@ -269,7 +262,9 @@ class SynologyDSMBackupAgent(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup | None:
+    ) -> AgentBackup:
         """Return a backup."""
         backups = await self._async_list_backups()
-        return backups.get(backup_id)
+        if backup_id not in backups:
+            raise BackupNotFound(f"Backup {backup_id} not found")
+        return backups[backup_id]
