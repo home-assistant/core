@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
 from tests.common import MockConfigEntry
 
-TEST_NAME = "Test TiltPi"
+TEST_NAME = "Test Tilt Pi"
 TEST_HOST = "192.168.1.123"
 TEST_PORT = 1880
 

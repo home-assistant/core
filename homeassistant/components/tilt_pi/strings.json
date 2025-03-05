@@ -6,12 +6,12 @@
       },
       "user": {
         "data": {
-          "name": "Tilt Pi Friendly Name",
-          "host": "Tilt Pi Hostname or IP Address",
-          "port": "Tilt Pi Port"
+          "name": "Tilt Pi friendly name",
+          "host": "Tilt Pi hostname or IP address",
+          "port": "Tilt Pi port"
         },
         "data_description": {
-          "host": "The host and port of the TiltPi device."
+          "host": "The host and port of the Tilt Pi device."
         }
       }
     },
