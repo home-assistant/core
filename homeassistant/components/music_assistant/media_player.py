@@ -276,19 +276,19 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             self._attr_state = MediaPlayerState(player.state.value)
         else:
             self._attr_state = MediaPlayerState(STATE_OFF)
-         
+
         group_members_entity_ids: list[str] = []
         coordinator_id: str | None = None
         group_childs: set[str] = set()
         if player.group_childs:
             # This player is the coordinator, with children players
             coordinator_id = self.player_id
-            group_childs = set(player.group_childs) - set([self.player_id])
+            group_childs = set(player.group_childs) - {self.player_id}
         elif player.synced_to:
             # This player is a child player, with a coordinator
             coordinator_id = player.synced_to
             # Do not list siblings. It's unclear if we should list all siblings or just this player
-            group_childs = set([self.player_id])
+            group_childs = {self.player_id}
 
         if coordinator_id and group_childs:
             # Set the coordinator as the first entity by convention
@@ -304,7 +304,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                     )
                 )
             ]
-        
+
         self._attr_group_members = group_members_entity_ids
         self._attr_volume_level = (
             player.volume_level / 100 if player.volume_level is not None else None
