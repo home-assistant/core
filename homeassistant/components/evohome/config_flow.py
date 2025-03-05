@@ -109,8 +109,8 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize a config flow handler for Evohome."""
 
         self._username: str | None = None  # username.lower() is used as the unique_id
-        self._password: str = ""
-        self._location_idx: int = DEFAULT_LOCATION_IDX
+        self._password: str | None = None
+        self._location_idx: int | None = None
         self._token_data: EvoTokenDataT | None = None
 
         self._num_locations: int | None = None
@@ -258,6 +258,38 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
+    async def async_step_location(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the second/final step (location index)."""
+
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            self._location_idx = int(user_input[CONF_LOCATION_IDX])
+            return await self._update_or_create_entry()
+
+        assert self._num_locations is not None  # mypy
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_LOCATION_IDX, default=DEFAULT_LOCATION_IDX): vol.All(
+                    NumberSelector(
+                        NumberSelectorConfig(
+                            max=self._num_locations - 1,
+                            min=0,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        )
+                    ),
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="location", data_schema=data_schema, errors=errors
+        )
+
     async def _test_credentials(
         self, username: str, password: str
     ) -> ec2.EvohomeClient:
@@ -287,38 +319,6 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
             raise ConfigEntryNotReady("cannot_connect") from err
 
         return ec2.EvohomeClient(token_manager)
-
-    async def async_step_location(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the second/final step (location index)."""
-
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            self._location_idx = int(user_input[CONF_LOCATION_IDX])
-            return await self._update_or_create_entry()
-
-        assert self._num_locations is not None  # mypy
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_LOCATION_IDX, default=self._location_idx): vol.All(
-                    NumberSelector(
-                        NumberSelectorConfig(
-                            max=self._num_locations - 1,
-                            min=0,
-                            step=1,
-                            mode=NumberSelectorMode.SLIDER,
-                        )
-                    ),
-                ),
-            }
-        )
-
-        return self.async_show_form(
-            step_id="location", data_schema=data_schema, errors=errors
-        )
 
     async def _test_installation(self, client: ec2.EvohomeClient) -> int:
         """Retrieve the user installation and return the number of locations."""
@@ -352,6 +352,8 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create the config entry for this account, or update an existing entry."""
 
         assert self._username is not None  # mypy
+        assert self._password is not None  # mypy
+        assert self._location_idx is not None  # mypy
 
         config: EvoConfigDataT = {
             CONF_USERNAME: self._username,
