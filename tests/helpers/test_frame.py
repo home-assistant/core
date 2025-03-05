@@ -1,15 +1,17 @@
 """Test the frame helper."""
 
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import frame
 from homeassistant.loader import async_get_integration
 
-from tests.common import extract_stack_to_frame
+from tests.common import MockModule, extract_stack_to_frame, mock_integration
 
 
 async def test_extract_frame_integration(
@@ -159,68 +161,68 @@ async def test_get_integration_logger_no_integration(
 
 
 @pytest.mark.parametrize(
-    ("integration_frame_path", "keywords", "expected_error", "expected_log"),
+    ("integration_frame_path", "keywords", "expected_result", "expected_log"),
     [
         pytest.param(
             "homeassistant/test_core",
             {},
-            True,
+            pytest.raises(RuntimeError, match="test_report_string"),
             0,
             id="core default",
         ),
         pytest.param(
             "homeassistant/components/test_core_integration",
             {},
-            False,
+            does_not_raise(),
             1,
             id="core integration default",
         ),
         pytest.param(
             "custom_components/test_custom_integration",
             {},
-            False,
+            does_not_raise(),
             1,
             id="custom integration default",
         ),
         pytest.param(
             "custom_components/test_custom_integration",
             {"custom_integration_behavior": frame.ReportBehavior.IGNORE},
-            False,
+            does_not_raise(),
             0,
             id="custom integration ignore",
         ),
         pytest.param(
             "custom_components/test_custom_integration",
             {"custom_integration_behavior": frame.ReportBehavior.ERROR},
-            True,
+            pytest.raises(RuntimeError, match="test_report_string"),
             1,
             id="custom integration error",
         ),
         pytest.param(
             "homeassistant/components/test_integration_frame",
             {"core_integration_behavior": frame.ReportBehavior.IGNORE},
-            False,
+            does_not_raise(),
             0,
             id="core_integration_behavior ignore",
         ),
         pytest.param(
             "homeassistant/components/test_integration_frame",
             {"core_integration_behavior": frame.ReportBehavior.ERROR},
-            True,
+            pytest.raises(RuntimeError, match="test_report_string"),
             1,
             id="core_integration_behavior error",
         ),
         pytest.param(
             "homeassistant/test_integration_frame",
             {"core_behavior": frame.ReportBehavior.IGNORE},
-            False,
+            does_not_raise(),
             0,
             id="core_behavior ignore",
         ),
         pytest.param(
             "homeassistant/test_integration_frame",
             {"core_behavior": frame.ReportBehavior.LOG},
-            False,
+            does_not_raise(),
             1,
             id="core_behavior log",
         ),
@@ -229,24 +231,142 @@ async def test_get_integration_logger_no_integration(
 @pytest.mark.usefixtures("mock_integration_frame")
 async def test_report_usage(
     caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
     keywords: dict[str, Any],
-    expected_error: bool,
+    expected_result: AbstractContextManager,
     expected_log: int,
 ) -> None:
-    """Test report."""
+    """Test report_usage.
+
+    Note: This test doesn't set up mock integrations, so it will not
+    find the correct issue tracker URL, and we don't check for that.
+    """
 
     what = "test_report_string"
 
-    errored = False
-    try:
-        with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
-            frame.report_usage(what, **keywords)
-    except RuntimeError:
-        errored = True
-
-    assert errored == expected_error
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expected_result:
+        frame.report_usage(what, **keywords)
 
     assert caplog.text.count(what) == expected_log
+    reports = [
+        rec.message for rec in caplog.records if rec.message.startswith("Detected")
+    ]
+    assert reports == snapshot
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path",
+    [
+        pytest.param(
+            "homeassistant/test_core",
+            id="core",
+        ),
+        pytest.param(
+            "homeassistant/components/test_core_integration",
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_components/test_custom_integration",
+            id="custom integration",
+        ),
+        pytest.param(
+            "custom_components/unknown_custom_integration",
+            id="unknown custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_report_usage_find_issue_tracker(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test report_usage finds the correct issue tracker.
+
+    Note: The issue tracker is found by loader.async_suggest_report_issue, this
+    test is a sanity check to ensure async_suggest_report_issue is given the
+    right parameters.
+    """
+
+    what = "test_report_string"
+    mock_integration(hass, MockModule("test_core_integration"))
+    mock_integration(
+        hass,
+        MockModule(
+            "test_custom_integration",
+            partial_manifest={"issue_tracker": "https://blablabla.com"},
+        ),
+        built_in=False,
+    )
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        frame.report_usage(what, core_behavior=frame.ReportBehavior.LOG)
+
+    assert caplog.text.count(what) == 1
+    reports = [
+        rec.message for rec in caplog.records if rec.message.startswith("Detected")
+    ]
+    assert reports == snapshot
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path",
+    [
+        pytest.param(
+            "homeassistant/test_core",
+            id="core",
+        ),
+        pytest.param(
+            "homeassistant/components/test_core_integration",
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_components/test_custom_integration",
+            id="custom integration",
+        ),
+        pytest.param(
+            "custom_components/unknown_custom_integration",
+            id="unknown custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_report_usage_find_issue_tracker_other_thread(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test report_usage finds the correct issue tracker.
+
+    In this test, we run the report_usage in a separate thread.
+
+    Note: The issue tracker is found by loader.async_suggest_report_issue, this
+    test is a sanity check to ensure async_suggest_report_issue is given the
+    right parameters.
+    """
+
+    what = "test_report_string"
+    mock_integration(hass, MockModule("test_core_integration"))
+    mock_integration(
+        hass,
+        MockModule(
+            "test_custom_integration",
+            partial_manifest={"issue_tracker": "https://blablabla.com"},
+        ),
+        built_in=False,
+    )
+
+    def sync_job() -> None:
+        with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+            frame.report_usage(what, core_behavior=frame.ReportBehavior.LOG)
+
+    await hass.async_add_executor_job(sync_job)
+
+    assert caplog.text.count(what) == 1
+    reports = [
+        rec.message for rec in caplog.records if rec.message.startswith("Detected")
+    ]
+    assert reports == snapshot
 
 
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())
@@ -365,61 +485,61 @@ async def test_report_error_if_integration(
 
 
 @pytest.mark.parametrize(
-    ("integration_frame_path", "keywords", "expected_error", "expected_log"),
+    ("integration_frame_path", "keywords", "expected_result", "expected_log"),
     [
         pytest.param(
             "homeassistant/test_core",
             {},
-            True,
+            pytest.raises(RuntimeError, match="test_report_string"),
             0,
             id="core default",
         ),
         pytest.param(
             "homeassistant/components/test_core_integration",
             {},
-            False,
+            does_not_raise(),
             1,
             id="core integration default",
         ),
         pytest.param(
             "custom_components/test_custom_integration",
             {},
-            False,
+            does_not_raise(),
             1,
             id="custom integration default",
         ),
         pytest.param(
             "custom_components/test_integration_frame",
             {"log_custom_component_only": True},
-            False,
+            does_not_raise(),
             1,
             id="log_custom_component_only with custom integration",
         ),
         pytest.param(
             "homeassistant/components/test_integration_frame",
             {"log_custom_component_only": True},
-            False,
+            does_not_raise(),
             0,
             id="log_custom_component_only with core integration",
         ),
         pytest.param(
             "homeassistant/test_integration_frame",
             {"error_if_core": False},
-            False,
+            does_not_raise(),
             1,
             id="disable error_if_core",
         ),
         pytest.param(
             "custom_components/test_integration_frame",
             {"error_if_integration": True},
-            True,
+            pytest.raises(RuntimeError, match="test_report_string"),
             1,
             id="error_if_integration with custom integration",
         ),
         pytest.param(
             "homeassistant/components/test_integration_frame",
             {"error_if_integration": True},
-            True,
+            pytest.raises(RuntimeError, match="test_report_string"),
             1,
             id="error_if_integration with core integration",
         ),
@@ -428,24 +548,27 @@ async def test_report_error_if_integration(
 @pytest.mark.usefixtures("mock_integration_frame")
 async def test_report(
     caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
     keywords: dict[str, Any],
-    expected_error: bool,
+    expected_result: AbstractContextManager,
     expected_log: int,
 ) -> None:
-    """Test report."""
+    """Test report.
+
+    Note: This test doesn't set up mock integrations, so it will not
+    find the correct issue tracker URL, and we don't check for that.
+    """
 
     what = "test_report_string"
 
-    errored = False
-    try:
-        with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
-            frame.report(what, **keywords)
-    except RuntimeError:
-        errored = True
-
-    assert errored == expected_error
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expected_result:
+        frame.report(what, **keywords)
 
     assert caplog.text.count(what) == expected_log
+    reports = [
+        rec.message for rec in caplog.records if rec.message.startswith("Detected")
+    ]
+    assert reports == snapshot
 
 
 @pytest.mark.parametrize(
@@ -496,7 +619,7 @@ async def test_report(
             "homeassistant/components/hue",
             "that integration 'hue'",
             False,
-            id="core integration",
+            id="core integration stack mismatch",
         ),
         # Assert integration found in stack frame has priority over integration_domain
         pytest.param(
@@ -505,7 +628,7 @@ async def test_report(
             "custom_components/hue",
             "that custom integration 'hue'",
             False,
-            id="custom integration",
+            id="custom integration stack mismatch",
         ),
     ],
 )
@@ -518,7 +641,7 @@ async def test_report_integration_domain(
     source: str,
     logs_again: bool,
 ) -> None:
-    """Test report."""
+    """Test report_usage when integration_domain is specified."""
     await async_get_integration(hass, "sensor")
     await async_get_integration(hass, "test_package")
 
