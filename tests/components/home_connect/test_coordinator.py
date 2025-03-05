@@ -2,17 +2,19 @@
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
+    ArrayOfHomeAppliances,
     ArrayOfSettings,
     ArrayOfStatus,
     Event,
     EventKey,
     EventMessage,
     EventType,
+    HomeAppliance,
 )
 from aiohomeconnect.model.error import (
     EventStreamInterruptedError,
@@ -20,6 +22,7 @@ from aiohomeconnect.model.error import (
     HomeConnectError,
     HomeConnectRequestError,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.home_connect.const import (
@@ -36,6 +39,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -72,6 +76,132 @@ async def test_coordinator_update_failing_get_appliances(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client_with_exception)
     assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.parametrize("platforms", [("binary_sensor",)])
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+async def test_coordinator_failure_refresh_and_stream(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    appliance: HomeAppliance,
+) -> None:
+    """Test entity available state via coordinator refresh and event stream."""
+    appliance_data = (
+        cast(str, appliance.to_json())
+        .replace("ha_id", "haId")
+        .replace("e_number", "enumber")
+    )
+    entity_id_1 = "binary_sensor.washer_remote_control"
+    entity_id_2 = "binary_sensor.washer_remote_start"
+    await async_setup_component(hass, "homeassistant", {})
+    await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+    state = hass.states.get(entity_id_1)
+    assert state
+    assert state.state != "unavailable"
+    state = hass.states.get(entity_id_2)
+    assert state
+    assert state.state != "unavailable"
+
+    client.get_home_appliances.side_effect = HomeConnectError()
+
+    # Force a coordinator refresh.
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id_1}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id_1)
+    assert state
+    assert state.state == "unavailable"
+    state = hass.states.get(entity_id_2)
+    assert state
+    assert state.state == "unavailable"
+
+    # Test that the entity becomes available again after a successful update.
+
+    client.get_home_appliances.side_effect = None
+    client.get_home_appliances.return_value = ArrayOfHomeAppliances(
+        [HomeAppliance.from_json(appliance_data)]
+    )
+
+    # Move time forward to pass the debounce time.
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Force a coordinator refresh.
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id_1}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id_1)
+    assert state
+    assert state.state != "unavailable"
+    state = hass.states.get(entity_id_2)
+    assert state
+    assert state.state != "unavailable"
+
+    # Test that the event stream makes the entity go available too.
+
+    # First make the entity unavailable.
+    client.get_home_appliances.side_effect = HomeConnectError()
+
+    # Move time forward to pass the debounce time
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Force a coordinator refresh
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id_1}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id_1)
+    assert state
+    assert state.state == "unavailable"
+    state = hass.states.get(entity_id_2)
+    assert state
+    assert state.state == "unavailable"
+
+    # Now make the entity available again.
+    client.get_home_appliances.side_effect = None
+    client.get_home_appliances.return_value = ArrayOfHomeAppliances(
+        [HomeAppliance.from_json(appliance_data)]
+    )
+
+    # One event should make all entities for this appliance available again.
+    event_message = EventMessage(
+        appliance.ha_id,
+        EventType.STATUS,
+        ArrayOfEvents(
+            [
+                Event(
+                    key=EventKey.BSH_COMMON_STATUS_REMOTE_CONTROL_ACTIVE,
+                    raw_key=EventKey.BSH_COMMON_STATUS_REMOTE_CONTROL_ACTIVE.value,
+                    timestamp=0,
+                    level="",
+                    handling="",
+                    value=False,
+                )
+            ],
+        ),
+    )
+    await client.add_events([event_message])
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id_1)
+    assert state
+    assert state.state != "unavailable"
+    state = hass.states.get(entity_id_2)
+    assert state
+    assert state.state != "unavailable"
 
 
 @pytest.mark.parametrize(
@@ -277,6 +407,9 @@ async def test_event_listener_error(
     assert not config_entry._background_tasks
 
 
+@pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.parametrize("platforms", [("sensor",)])
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 @pytest.mark.parametrize(
     "exception",
     [HomeConnectRequestError(), EventStreamInterruptedError()],
@@ -307,11 +440,10 @@ async def test_event_listener_resilience(
     after_event_expected_state: str,
     exception: HomeConnectError,
     hass: HomeAssistant,
+    appliance: HomeAppliance,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-    appliance_ha_id: str,
 ) -> None:
     """Test that the event listener is resilient to interruptions."""
     future = hass.loop.create_future()
@@ -330,11 +462,13 @@ async def test_event_listener_resilience(
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(config_entry._background_tasks) == 1
 
-    assert hass.states.is_state(entity_id, initial_state)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == initial_state
 
-    await hass.async_block_till_done()
     future.set_exception(exception)
     await hass.async_block_till_done()
+
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
@@ -343,7 +477,7 @@ async def test_event_listener_resilience(
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.STATUS,
                 ArrayOfEvents(
                     [
@@ -362,4 +496,6 @@ async def test_event_listener_resilience(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(entity_id, after_event_expected_state)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == after_event_expected_state
