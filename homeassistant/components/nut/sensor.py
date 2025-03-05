@@ -47,12 +47,12 @@ NUT_DEV_INFO_TO_DEV_INFO: dict[str, str] = {
 }
 
 AMBIENT_PRESENT = "ambient.present"
-AMBIENT_SENSORS = [
+AMBIENT_SENSORS = {
     "ambient.humidity",
     "ambient.humidity.status",
     "ambient.temperature",
     "ambient.temperature.status",
-]
+}
 AMBIENT_THRESHOLD_STATUS_OPTIONS = [
     "good",
     "warning-low",
