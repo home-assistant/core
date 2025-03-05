@@ -290,14 +290,14 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             # Do not list siblings. It's unclear if we should list all siblings or just this player
             group_childs = set([self.player_id])
 
-        if group_childs:
+        if coordinator_id and group_childs:
             # Set the coordinator as the first entity by convention
-            group_childs.insert(0, coordinator_id)
+            group_members = [coordinator_id, *sorted(group_childs)]
             # translate MA group_childs to HA group_members as entity id's
             entity_registry = er.async_get(self.hass)
             group_members_entity_ids = [
                 entity_id
-                for child_id in group_childs
+                for child_id in group_members
                 if (
                     entity_id := entity_registry.async_get_entity_id(
                         self.platform.domain, DOMAIN, child_id
