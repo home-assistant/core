@@ -15,7 +15,7 @@ from homeassistant.const import Platform, UnitOfElectricPotential, UnitOfTempera
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PGLABConfigEntry
+from . import PGLabConfigEntry
 from .coordinator import PGLabSensorsCoordinator
 from .discovery import PGLabDiscovery
 from .entity import PGLabSensorEntity
@@ -47,7 +47,7 @@ SENSOR_INFO: list[SensorEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: PGLABConfigEntry,
+    config_entry: PGLabConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor for device."""

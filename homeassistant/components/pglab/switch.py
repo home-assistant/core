@@ -12,7 +12,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PGLABConfigEntry
+from . import PGLabConfigEntry
 from .discovery import PGLabDiscovery
 from .entity import PGLabEntity
 
@@ -21,7 +21,7 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: PGLABConfigEntry,
+    config_entry: PGLabConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches for device."""

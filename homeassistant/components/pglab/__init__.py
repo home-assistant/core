@@ -23,12 +23,12 @@ from homeassistant.helpers import config_validation as cv
 from .const import DOMAIN, LOGGER
 from .discovery import PGLabDiscovery
 
-type PGLABConfigEntry = ConfigEntry[PGLabDiscovery]
+type PGLabConfigEntry = ConfigEntry[PGLabDiscovery]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PGLabConfigEntry) -> bool:
     """Set up PG LAB Electronics integration from a config entry."""
 
     async def mqtt_publish(topic: str, payload: str, qos: int, retain: bool) -> None:
@@ -75,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> boo
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PGLabConfigEntry) -> bool:
     """Unload a config entry."""
 
     # Stop PGLab device discovery.

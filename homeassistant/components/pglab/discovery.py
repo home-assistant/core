@@ -31,7 +31,7 @@ from .const import DISCOVERY_TOPIC, DOMAIN, LOGGER
 from .coordinator import PGLabSensorsCoordinator
 
 if TYPE_CHECKING:
-    from . import PGLABConfigEntry
+    from . import PGLabConfigEntry
 
 # Supported platforms.
 PLATFORMS = [
@@ -186,7 +186,7 @@ class PGLabDiscovery:
         del self._discovered[device_id]
 
     async def start(
-        self, hass: HomeAssistant, mqtt: PyPGLabMqttClient, entry: PGLABConfigEntry
+        self, hass: HomeAssistant, mqtt: PyPGLabMqttClient, entry: PGLabConfigEntry
     ) -> None:
         """Start discovering a PGLab devices."""
 
@@ -284,7 +284,7 @@ class PGLabDiscovery:
         )
         self._disconnect_platform.append(disconnect_callback)
 
-    async def stop(self, hass: HomeAssistant, entry: PGLABConfigEntry) -> None:
+    async def stop(self, hass: HomeAssistant, entry: PGLabConfigEntry) -> None:
         """Stop to discovery PG LAB devices."""
         await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
