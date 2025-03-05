@@ -1002,7 +1002,7 @@ jobs:
           overwrite: true
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: test-results-full-${{ matrix.python-version }}-${{ matrix.group }}
           path: junit.xml
@@ -1136,7 +1136,7 @@ jobs:
           overwrite: true
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: test-results-mariadb-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -1272,7 +1272,7 @@ jobs:
           overwrite: true
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: test-results-postgres-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1418,7 +1418,7 @@ jobs:
           overwrite: true
       - name: Upload test results artifact
         if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: test-results-partial-${{ matrix.python-version }}-${{ matrix.group }}
           path: junit.xml
@@ -1463,7 +1463,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4.1.9
         with:
           pattern: test-results-*
       - name: Upload test results to Codecov
