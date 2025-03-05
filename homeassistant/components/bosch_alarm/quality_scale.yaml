@@ -4,7 +4,10 @@ rules:
     status: exempt
     comment: |
       No custom actions defined
-  appropriate-polling: done
+  appropriate-polling:
+    status: exempt
+    comment: |
+      No polling
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -33,7 +36,7 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
-  entity-unavailable: done
+  entity-unavailable: todo
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: todo
@@ -52,7 +55,10 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Device type integration
   entity-category: todo
   entity-device-class: todo
   entity-disabled-by-default: todo
@@ -61,7 +67,10 @@ rules:
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: todo
+  stale-devices:
+    status: exempt
+    comment: |
+      Device type integration
 
   # Platinum
   async-dependency: done
