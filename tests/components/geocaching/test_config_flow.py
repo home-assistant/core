@@ -49,6 +49,7 @@ async def test_full_flow(
     mock_setup_entry: MagicMock,
 ) -> None:
     """Check full flow."""
+    # Auth step
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -83,6 +84,12 @@ async def test_full_flow(
             "refresh_token": "mock-refresh_token",
         },
     )
+
+    # Additional config step
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "additional_config"
 
     await hass.config_entries.flow.async_configure(result["flow_id"])
 
