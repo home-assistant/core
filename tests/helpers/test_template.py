@@ -149,6 +149,7 @@ async def test_template_render_info_collision(hass: HomeAssistant) -> None:
         template_obj.async_render_to_info()
 
 
+@pytest.mark.usefixtures("hass")
 def test_template_equality() -> None:
     """Test template comparison and hashing."""
     template_one = template.Template("{{ template_one }}")
@@ -5166,6 +5167,7 @@ def test_iif(hass: HomeAssistant) -> None:
     assert tpl.async_render() == "no"
 
 
+@pytest.mark.usefixtures("hass")
 async def test_cache_garbage_collection() -> None:
     """Test caching a template."""
     template_string = (

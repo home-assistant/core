@@ -84,6 +84,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
+    frame,
     issue_registry as ir,
     label_registry as lr,
     recorder as recorder_helper,
@@ -433,6 +434,7 @@ def reset_hass_threading_local_object() -> Generator[None]:
     """Reset the _Hass threading.local object for every test case."""
     yield
     ha._hass.__dict__.clear()
+    frame.async_setup(None)
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -599,6 +601,7 @@ async def hass(
     async with async_test_home_assistant(loop, load_registries) as hass:
         orig_exception_handler = loop.get_exception_handler()
         loop.set_exception_handler(exc_handle)
+        frame.async_setup(hass)
 
         yield hass
 
