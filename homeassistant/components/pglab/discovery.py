@@ -103,7 +103,7 @@ class DiscoverDeviceInfo:
         return self._coordinator
 
 
-async def createDiscoverDeviceInfo(
+async def create_discover_device_info(
     hass: HomeAssistant, pglab_device: PyPGLabDevice
 ) -> DiscoverDeviceInfo:
     """Create a new DiscoverDeviceInfo instance."""
@@ -243,7 +243,7 @@ class PGLabDiscovery:
                 self.__clean_discovered_device(hass, pglab_device.id)
 
             # Add a new device.
-            discovery_info = await createDiscoverDeviceInfo(hass, pglab_device)
+            discovery_info = await create_discover_device_info(hass, pglab_device)
             self._discovered[pglab_device.id] = discovery_info
 
             # Create all new relay entities.
