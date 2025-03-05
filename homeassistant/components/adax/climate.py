@@ -110,9 +110,12 @@ class AdaxDevice(ClimateEntity):
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        await self._adax_data_handler.set_room_target_temperature(
-            self._device_id, temperature, True
-        )
+        if temperature == 0:
+            await self.async_set_hvac_mode(HVACMode.OFF)
+        else:
+            await self._adax_data_handler.set_room_target_temperature(
+                self._device_id, temperature, True
+            )
 
     async def async_update(self) -> None:
         """Get the latest data."""
@@ -122,6 +125,7 @@ class AdaxDevice(ClimateEntity):
             self._attr_name = room["name"]
             self._attr_current_temperature = room.get("temperature")
             self._attr_target_temperature = room.get("targetTemperature")
+            self._attr_available = self._attr_current_temperature is not None
             if room["heatingEnabled"]:
                 self._attr_hvac_mode = HVACMode.HEAT
                 self._attr_icon = "mdi:radiator"
