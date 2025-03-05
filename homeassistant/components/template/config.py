@@ -125,6 +125,10 @@ async def _async_resolve_blueprints(
             for prop in (CONF_NAME, CONF_UNIQUE_ID):
                 if prop in config:
                     config[platform][prop] = config.pop(prop)
+            # For regular template entities, CONF_VARIABLES should be removed because they just
+            # house input results for template entities.  For Trigger based template entities
+            # CONF_VARIABLES should not be removed because the variables are always
+            # executed between the trigger and action.
             if CONF_TRIGGER not in config and CONF_VARIABLES in config:
                 config[platform][CONF_VARIABLES] = config.pop(CONF_VARIABLES)
         raw_config = dict(config)
