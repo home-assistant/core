@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -23,6 +23,7 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
+    hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
     with patch("homeassistant.components.lg_thinq.PLATFORMS", [Platform.CLIMATE]):
         await setup_integration(hass, mock_config_entry)
 

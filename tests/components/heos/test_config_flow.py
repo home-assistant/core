@@ -7,7 +7,9 @@ from pyheos import (
     CommandFailedError,
     ConnectionState,
     HeosError,
+    HeosHost,
     HeosSystem,
+    NetworkType,
 )
 import pytest
 
@@ -118,17 +120,44 @@ async def test_discovery(
 
 
 async def test_discovery_flow_aborts_already_setup(
-    hass: HomeAssistant, discovery_data: SsdpServiceInfo, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    discovery_data_bedroom: SsdpServiceInfo,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
 ) -> None:
-    """Test discovery flow aborts when entry already setup."""
+    """Test discovery flow aborts when entry already setup and hosts didn't change."""
     config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.data[CONF_HOST] == "127.0.0.1"
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data
+        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data_bedroom
     )
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+    assert controller.get_system_info.call_count == 0
+    assert config_entry.data[CONF_HOST] == "127.0.0.1"
+
+
+async def test_discovery_aborts_same_system(
+    hass: HomeAssistant,
+    discovery_data_bedroom: SsdpServiceInfo,
+    controller: MockHeos,
+    config_entry: MockConfigEntry,
+    system: HeosSystem,
+) -> None:
+    """Test discovery does not update when current host is part of discovered's system."""
+    config_entry.add_to_hass(hass)
+    assert config_entry.data[CONF_HOST] == "127.0.0.1"
+
+    controller.get_system_info.return_value = system
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data_bedroom
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+    assert controller.get_system_info.call_count == 1
+    assert config_entry.data[CONF_HOST] == "127.0.0.1"
 
 
 async def test_discovery_fails_to_connect_aborts(
@@ -143,6 +172,26 @@ async def test_discovery_fails_to_connect_aborts(
     assert result["reason"] == "cannot_connect"
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
+
+
+async def test_discovery_updates(
+    hass: HomeAssistant,
+    discovery_data_bedroom: SsdpServiceInfo,
+    controller: MockHeos,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test discovery updates existing entry."""
+    config_entry.add_to_hass(hass)
+    assert config_entry.data[CONF_HOST] == "127.0.0.1"
+
+    host = HeosHost("Player", "Model", None, None, "127.0.0.2", NetworkType.WIRED, True)
+    controller.get_system_info.return_value = HeosSystem(None, host, [host])
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data_bedroom
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_HOST] == "127.0.0.2"
 
 
 async def test_reconfigure_validates_and_updates_config(
