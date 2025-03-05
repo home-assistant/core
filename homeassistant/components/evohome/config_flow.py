@@ -48,7 +48,7 @@ from .const import (
 )
 from .storage import EvoTokenDataT, TokenManager
 
-DEFAULT_OPTIONS: Final = {
+DEFAULT_OPTIONS: Final[EvoOptionDataT] = {
     CONF_HIGH_PRECISION: DEFAULT_HIGH_PRECISION,
     CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
 }
@@ -61,8 +61,8 @@ class EvoConfigDataT(TypedDict):
     """Evohome's configuration dict as stored in a config entry."""
 
     username: str
-    password: NotRequired[str]
-    location_idx: NotRequired[int]
+    password: str
+    location_idx: int
     token_data: NotRequired[EvoTokenDataT]
 
 
@@ -103,15 +103,19 @@ class _TokenStoreT(TypedDict):
 class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for Evohome."""
 
-    _token_manager: TokenManager
     _client: ec2.EvohomeClient
 
     def __init__(self) -> None:
         """Initialize a config flow handler for Evohome."""
 
-        self._config: EvoConfigDataT = {}  # type: ignore[typeddict-item]
-        self._options: dict[str, Any] = DEFAULT_OPTIONS
+        self._username: str | None = None  # username.lower() is used as the unique_id
+        self._password: str = ""
+        self._location_idx: int = DEFAULT_LOCATION_IDX
         self._token_data: EvoTokenDataT | None = None
+
+        self._num_locations: int | None = None
+
+        self._options: EvoOptionDataT = DEFAULT_OPTIONS
 
     async def async_step_import(self, config: EvoConfigFileDictT) -> ConfigFlowResult:
         """Handle a flow initiated by import from a configuration file.
@@ -123,11 +127,9 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(config[CONF_USERNAME].lower())
         self._abort_if_unique_id_configured()  # dont import a config if already exists
 
-        self._config = {
-            CONF_USERNAME: config[CONF_USERNAME],
-            CONF_PASSWORD: config[CONF_PASSWORD],
-            CONF_LOCATION_IDX: config[CONF_LOCATION_IDX],
-        }
+        self._username = config[CONF_USERNAME]
+        self._password = config[CONF_PASSWORD]
+        self._location_idx = config[CONF_LOCATION_IDX]
 
         # leverage any cached tokens by importing them into the config entry
         store: Store[_TokenStoreT] = Store(self.hass, STORAGE_VER, STORAGE_KEY)
@@ -135,7 +137,7 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await store.async_remove()
 
-        if cache and cache.pop(CONF_USERNAME) == config[CONF_USERNAME]:
+        if cache and cache.pop(CONF_USERNAME) == self._username:
             self._token_data = cache
 
         # a timedelta is not serializable, so convert to seconds
@@ -151,10 +153,8 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the reauth step after a ConfigEntryAuthFailed."""
 
-        self._config = {
-            CONF_USERNAME: entry_data[CONF_USERNAME],
-            CONF_LOCATION_IDX: entry_data[CONF_LOCATION_IDX],
-        }
+        self._username = entry_data[CONF_USERNAME]
+        self._location_idx = entry_data[CONF_LOCATION_IDX]
 
         return await self.async_step_reauth_confirm()
 
@@ -163,12 +163,14 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the reauth step (username/password)."""
 
+        assert self._username is not None  # mypy
+
         errors: dict[str, str] = {}
 
         if user_input is not None:
             try:
-                self._token_manager = await self._test_credentials(
-                    self._config[CONF_USERNAME], user_input[CONF_PASSWORD]
+                self._client = await self._test_credentials(
+                    self._username, user_input[CONF_PASSWORD]
                 )
 
             except (ConfigEntryAuthFailed, ConfigEntryNotReady) as err:
@@ -177,14 +179,12 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = str(err)
 
             else:
-                self._config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+                self._password = user_input[CONF_PASSWORD]
                 return await self._update_or_create_entry()
 
         data_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_PASSWORD,
-                ): TextSelector(
+                vol.Required(CONF_PASSWORD): TextSelector(
                     TextSelectorConfig(
                         type=TextSelectorType.PASSWORD,
                         autocomplete="current-password",
@@ -205,17 +205,22 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # store username now, as needed in our _save_token_data callback
-            self._config[CONF_USERNAME] = user_input[CONF_USERNAME]
+            # username is needed in  schema, and_save_token_data callback
+            self._username = user_input[CONF_USERNAME]
 
-            await self.async_set_unique_id(self._config[CONF_USERNAME].lower())
+            assert self._username is not None  # mypy
+
+            await self.async_set_unique_id(self._username.lower())
 
             try:
                 self._abort_if_unique_id_configured()  # to avoid unnecessary I/O
 
-                self._token_manager = await self._test_credentials(
-                    self._config[CONF_USERNAME], user_input[CONF_PASSWORD]
+                self._client = await self._test_credentials(
+                    self._username,
+                    user_input[CONF_PASSWORD],
                 )
+
+                self._num_locations = await self._test_installation(self._client)
 
             except AbortFlow as err:
                 errors["base"] = str(err.reason)  # usually: 'already_configured'
@@ -226,14 +231,14 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = str(err)
 
             else:
-                self._config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+                self._password = user_input[CONF_PASSWORD]
                 return await self.async_step_location()
 
         data_schema = vol.Schema(
             {
                 vol.Required(
                     CONF_USERNAME,
-                    default=self._config.get(CONF_USERNAME),
+                    default=self._username,
                 ): TextSelector(
                     TextSelectorConfig(
                         type=TextSelectorType.EMAIL,
@@ -253,11 +258,10 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def _test_credentials(self, username: str, password: str) -> TokenManager:
-        """Validate the user credentials (that authentication is successful).
-
-        Requires self._config[CONF_USERNAME] for the _save_token_data callback.
-        """
+    async def _test_credentials(
+        self, username: str, password: str
+    ) -> ec2.EvohomeClient:
+        """Validate the user credentials and return a client."""
 
         token_manager = TokenManager(
             username,
@@ -282,7 +286,7 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
                 raise ConfigEntryNotReady("rate_exceeded") from err
             raise ConfigEntryNotReady("cannot_connect") from err
 
-        return token_manager
+        return ec2.EvohomeClient(token_manager)
 
     async def async_step_location(
         self, user_input: dict[str, Any] | None = None
@@ -292,34 +296,20 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            user_input[CONF_LOCATION_IDX] = int(user_input[CONF_LOCATION_IDX])
+            self._location_idx = int(user_input[CONF_LOCATION_IDX])
+            return await self._update_or_create_entry()
 
-            try:
-                self._client = await self._test_location_idx(
-                    self._token_manager, user_input[CONF_LOCATION_IDX]
-                )
-
-            except (ConfigEntryAuthFailed, ConfigEntryNotReady) as err:
-                if str(err) not in ("bad_location", "cannot_connect"):
-                    raise  # pragma: no cover
-                errors["base"] = str(err)
-
-            else:
-                self._config[CONF_LOCATION_IDX] = user_input[CONF_LOCATION_IDX]
-                return await self._update_or_create_entry()
+        assert self._num_locations is not None  # mypy
 
         data_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_LOCATION_IDX,
-                    default=DEFAULT_LOCATION_IDX,
-                ): vol.All(
-                    vol.Coerce(int),
+                vol.Required(CONF_LOCATION_IDX, default=self._location_idx): vol.All(
                     NumberSelector(
                         NumberSelectorConfig(
+                            max=self._num_locations - 1,
                             min=0,
                             step=1,
-                            mode=NumberSelectorMode.BOX,
+                            mode=NumberSelectorMode.SLIDER,
                         )
                     ),
                 ),
@@ -330,12 +320,8 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="location", data_schema=data_schema, errors=errors
         )
 
-    async def _test_location_idx(
-        self, token_manager: TokenManager, location_idx: int
-    ) -> ec2.EvohomeClient:
-        """Validate the location_idx (that the location exists)."""
-
-        client = ec2.EvohomeClient(token_manager)
+    async def _test_installation(self, client: ec2.EvohomeClient) -> int:
+        """Retrieve the user installation and return the number of locations."""
 
         try:
             await client.update(dont_update_status=True)  # ? raise ec2.EvohomeError:
@@ -344,18 +330,7 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.warning("Request failed: %s", err)
             raise ConfigEntryNotReady("cannot_connect") from err
 
-        try:
-            client.locations[location_idx]
-
-        except IndexError as err:
-            msg = (
-                f"Config error: 'location_idx' = {location_idx}, "
-                f"but the valid range is 0-{len(client.locations) - 1}"
-            )
-            _LOGGER.warning(msg)
-            raise ConfigEntryNotReady("bad_location") from err
-
-        return client
+        return len(client.locations)
 
     @staticmethod
     @callback
@@ -370,25 +345,35 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _save_token_data(self, client_id: str, token_data: EvoTokenDataT) -> None:
         """Save the token data to the config entry, so it can be used later."""
 
-        if client_id == self._config[CONF_USERNAME]:
+        if client_id == self._username:
             self._token_data = token_data
 
     async def _update_or_create_entry(self) -> ConfigFlowResult:
         """Create the config entry for this account, or update an existing entry."""
 
+        assert self._username is not None  # mypy
+
+        config: EvoConfigDataT = {
+            CONF_USERNAME: self._username,
+            CONF_PASSWORD: self._password,
+            CONF_LOCATION_IDX: self._location_idx,
+        }
+        if self._token_data is not None:
+            config.update({SZ_TOKEN_DATA: self._token_data})
+
         # from step_reauth: user/pass/locn, td
         if config_entry := await self.async_set_unique_id(
-            self._config[CONF_USERNAME].lower()
+            self._username.lower(),
         ):
             return self.async_update_reload_and_abort(
                 config_entry,
-                data=self._config | {SZ_TOKEN_DATA: self._token_data},
+                data=config,
             )
 
         # from step_user or step_import: user/pass/locn, td & (default) options
         return self.async_create_entry(
             title="Evohome",
-            data=self._config | {SZ_TOKEN_DATA: self._token_data},
+            data=config,
             options=self._options,
         )
 
@@ -420,8 +405,8 @@ class EvoOptionsFlowHandler(OptionsFlow):
         # the options schema is built to encourage a responsible configuration
         # legacy settings, from an imported configuration, are respected
 
-        # suggest False, rather than previous behaviour, True
-        default_high_precision = DEFAULT_HIGH_PRECISION
+        # suggest the previous behaviour
+        default_high_precision = self._options[CONF_HIGH_PRECISION]
 
         # suggest a default of 300 (not 180) secs, unless previously set higher
         default_scan_interval = max(

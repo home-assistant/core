@@ -51,10 +51,12 @@ EXC_USER_502 = ec2.AuthenticationFailedError(
     status=HTTPStatus.BAD_GATEWAY,
 )
 
+# exceptions raised when authorizing requests
 STEP_LOCN_EXCEPTIONS = {
     "cannot_connect": EXC_LOCN_503,
 }
 
+# exceptions raised when authenticating user credentials
 STEP_USER_EXCEPTIONS = {
     "cannot_connect": EXC_USER_502,
     "invalid_auth": EXC_USER_401,
@@ -96,12 +98,12 @@ async def test_step_reauth_errors(
 
 
 @pytest.mark.parametrize("error_key", STEP_USER_EXCEPTIONS)
-async def test_step_user_errors(
+async def test_step_user_errors1(
     hass: HomeAssistant,
     config: EvoConfigFileDictT,
     error_key: str,
 ) -> None:
-    """Test exceptions raised during step_user."""
+    """Test exceptions raised during authentication."""
 
     with patch(
         "evohomeasync2.auth.AbstractTokenManager.fetch_access_token",
@@ -124,17 +126,23 @@ async def test_step_user_errors(
 
 
 @pytest.mark.parametrize("error_key", STEP_LOCN_EXCEPTIONS)
-async def test_step_location_errors(
+async def test_step_user_errors2(
     hass: HomeAssistant,
     config: EvoConfigFileDictT,
     install: str,
     error_key: str,
 ) -> None:
-    """Test exceptions raised during step_location."""
+    """Test exceptions raised during authorization."""
 
-    with patch(
-        "evohomeasync2.auth.CredentialsManagerBase._post_request",
-        mock_post_request(install),
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request(install),
+        ),
+        patch(
+            "evohome.auth.AbstractAuth._make_request",
+            side_effect=STEP_LOCN_EXCEPTIONS[error_key],
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -148,69 +156,8 @@ async def test_step_location_errors(
         await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "location"
-    assert result.get("errors") == {}
-
-    with patch(
-        "evohome.auth.AbstractAuth._make_request",
-        side_effect=STEP_LOCN_EXCEPTIONS[error_key],
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_LOCATION_IDX: config[CONF_LOCATION_IDX],
-            },
-        )
-
-        await hass.async_block_till_done()
-
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "location"
+    assert result.get("step_id") == "user"
     assert result.get("errors") == {"base": error_key}
-
-
-async def test_step_location_bad_index(
-    hass: HomeAssistant,
-    config: EvoConfigFileDictT,
-    install: str,
-) -> None:
-    """Test invalid location_idx during step_location."""
-
-    with patch(
-        "evohomeasync2.auth.CredentialsManagerBase._post_request",
-        mock_post_request(install),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
-                CONF_USERNAME: config[CONF_USERNAME],
-                CONF_PASSWORD: config[CONF_PASSWORD],
-            },
-        )
-
-        await hass.async_block_till_done()
-
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "location"
-    assert result.get("errors") == {}
-
-    with patch(
-        "evohome.auth.AbstractAuth._make_request",
-        mock_make_request(install),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_LOCATION_IDX: 1e9,  # invalid location_idx
-            },
-        )
-
-        await hass.async_block_till_done()
-
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "location"
-    assert result.get("errors") == {"base": "bad_location"}
 
 
 async def test_config_flow(
@@ -231,9 +178,15 @@ async def test_config_flow(
     assert result.get("step_id") == "user"
     assert result.get("errors") == {}
 
-    with patch(
-        "evohomeasync2.auth.CredentialsManagerBase._post_request",
-        mock_post_request(install),
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request(install),
+        ),
+        patch(
+            "evohome.auth.AbstractAuth._make_request",
+            mock_make_request(install),
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -245,15 +198,9 @@ async def test_config_flow(
 
     assert result.get("type") is FlowResultType.FORM
 
-    with (
-        patch(
-            "evohome.auth.AbstractAuth._make_request",
-            mock_make_request(install),
-        ),
-        patch(
-            "homeassistant.components.evohome.async_setup_entry", return_value=True
-        ) as mock_setup_entry,
-    ):
+    with patch(
+        "homeassistant.components.evohome.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
