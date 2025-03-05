@@ -254,6 +254,13 @@ async def test_report_usage(
     assert reports == snapshot
 
 
+async def test_report_usage_no_hass() -> None:
+    """Test report_usage when frame helper is not set up."""
+
+    with pytest.raises(RuntimeError, match="Frame helper not set up"):
+        frame.report_usage("blablabla")
+
+
 @pytest.mark.parametrize(
     "integration_frame_path",
     [
