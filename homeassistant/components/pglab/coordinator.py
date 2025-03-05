@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from pypglab.const import SENSOR_REBOOT_TIME, SENSOR_TEMPERATURE, SENSOR_VOLTAGE
@@ -57,7 +57,7 @@ class PGLabSensorsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # set the callback to be called when a new sensor values are available
         self._sensors.set_on_state_callback(self._new_sensors_data)
 
-    def get_sensor_value(self, sensor_key: str) -> Any:
+    def get_sensor_value(self, sensor_key: str) -> None | float | datetime:
         """Return the value of a sensor."""
 
         if self.data:
