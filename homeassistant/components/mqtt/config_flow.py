@@ -941,7 +941,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                     ]:
                         component_data.pop(field)
                 component_data.update(user_input)
-                return await self.async_step_entity_platform_config()
+                return await self.async_step_mqtt_platform_config()
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
         elif self.source == SOURCE_RECONFIGURE and self._object_id is not None:
             suggested_values = deepcopy(
@@ -1020,10 +1020,10 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             step_id="delete_entity", data_schema=data_schema, last_step=False
         )
 
-    async def async_step_entity_platform_config(
+    async def async_step_mqtt_platform_config(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Configure entity details."""
+        """Configure entity platform MQTT details."""
         errors: dict[str, str] = {}
         if TYPE_CHECKING:
             assert self._object_id is not None
@@ -1065,7 +1065,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             )
 
         return self.async_show_form(
-            step_id="entity_platform_config",
+            step_id="mqtt_platform_config",
             data_schema=data_schema,
             description_placeholders={
                 "mqtt_device": device_name,
