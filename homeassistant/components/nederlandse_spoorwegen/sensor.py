@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -178,7 +178,7 @@ class NSDepartureSensor(SensorEntity):
 
         return attributes
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @Throttle(timedelta(seconds=MIN_TIME_BETWEEN_UPDATES))
     async def async_update(self) -> None:
         """Get the trip information."""
         # print(self._attr_unique_id)
