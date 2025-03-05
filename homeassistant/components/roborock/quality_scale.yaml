@@ -4,9 +4,9 @@ rules:
   appropriate-polling:
     status: todo
     comment: |
-      The device currently polls every 30 seconds, which I think is a bit high
-      when idle. We should consider dynamic polling intervals (e.g. when cleaning)
-      or separate cloud vs local intervals to reduce rate limiting reports #139592
+      The device currently polls every 30 seconds, which is a bit high when idle.
+      We should consider dynamic polling intervals (e.g. when cleaning) and
+      separate cloud vs local intervals.
   brands: done
   common-modules: done
   config-flow:
