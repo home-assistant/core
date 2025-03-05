@@ -428,7 +428,7 @@ async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
 
 @pytest.mark.usefixtures("mock_as_custom_component")
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())
-async def test_alarm_control_panel_deprecated_state_does_not_break_state(
+async def test_vacuum_deprecated_state_does_not_break_state(
     hass: HomeAssistant,
     config_flow_fixture: None,
     caplog: pytest.LogCaptureFixture,
