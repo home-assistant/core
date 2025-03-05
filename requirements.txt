@@ -43,7 +43,7 @@ SQLAlchemy==2.0.38
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.12.2,<5.0
-ulid-transform==1.2.1
+ulid-transform==1.3.0
 urllib3>=1.26.5,<2
 uv==0.6.1
 voluptuous==0.15.2
@@ -51,4 +51,4 @@ voluptuous-serialize==2.6.0
 voluptuous-openapi==0.0.6
 yarl==1.18.3
 webrtc-models==0.3.0
-zeroconf==0.145.1
+zeroconf==0.146.0
