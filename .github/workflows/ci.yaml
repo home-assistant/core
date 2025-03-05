@@ -1001,8 +1001,8 @@ jobs:
           path: coverage.xml
           overwrite: true
       - name: Upload test results artifact
-        if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.6.0
+        if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: test-results-full-${{ matrix.python-version }}-${{ matrix.group }}
           path: junit.xml
@@ -1135,8 +1135,8 @@ jobs:
           path: coverage.xml
           overwrite: true
       - name: Upload test results artifact
-        if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.6.0
+        if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: test-results-mariadb-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -1271,8 +1271,8 @@ jobs:
           path: coverage.xml
           overwrite: true
       - name: Upload test results artifact
-        if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.6.0
+        if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: test-results-postgres-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1417,8 +1417,8 @@ jobs:
           path: coverage.xml
           overwrite: true
       - name: Upload test results artifact
-        if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.6.0
+        if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: test-results-partial-${{ matrix.python-version }}-${{ matrix.group }}
           path: junit.xml
@@ -1452,7 +1452,7 @@ jobs:
     name: Upload test results to Codecov
     # codecov/test-results-action currently doesn't support tokenless uploads
     # therefore we can't run it on forks
-    if: github.repository_owner == 'home-assistant' && needs.info.outputs.skip_coverage != 'true' && !cancelled()
+    if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork) && needs.info.outputs.skip_coverage != 'true' && !cancelled() }}
     runs-on: ubuntu-24.04
     needs:
       - info
@@ -1463,7 +1463,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4.1.8
+        uses: actions/download-artifact@v4.1.9
         with:
           pattern: test-results-*
       - name: Upload test results to Codecov
