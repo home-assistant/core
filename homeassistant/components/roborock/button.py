@@ -68,8 +68,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock button platform."""
-    scene_lists = await asyncio.gather(
-        *[coordinator.get_scenes() for coordinator in config_entry.runtime_data.v1],
+    routines_lists = await asyncio.gather(
+        *[coordinator.get_routines() for coordinator in config_entry.runtime_data.v1],
     )
     async_add_entities(
         itertools.chain(
@@ -83,17 +83,17 @@ async def async_setup_entry(
                 if isinstance(coordinator, RoborockDataUpdateCoordinator)
             ),
             (
-                RoborockSceneButtonEntity(
+                RoborockRoutineButtonEntity(
                     coordinator,
                     ButtonEntityDescription(
-                        key=str(scene.id),
-                        name=scene.name,
+                        key=str(routine.id),
+                        name=routine.name,
                     ),
                 )
-                for coordinator, scenes in zip(
-                    config_entry.runtime_data.v1, scene_lists, strict=True
+                for coordinator, routines in zip(
+                    config_entry.runtime_data.v1, routines_lists, strict=True
                 )
-                for scene in scenes
+                for routine in routines
             ),
         )
     )
@@ -122,8 +122,8 @@ class RoborockButtonEntity(RoborockEntityV1, ButtonEntity):
         await self.send(self.entity_description.command, self.entity_description.param)
 
 
-class RoborockSceneButtonEntity(RoborockEntity, ButtonEntity):
-    """A class to define Roborock scene button entities."""
+class RoborockRoutineButtonEntity(RoborockEntity, ButtonEntity):
+    """A class to define Roborock routines button entities."""
 
     entity_description: ButtonEntityDescription
 
@@ -132,16 +132,16 @@ class RoborockSceneButtonEntity(RoborockEntity, ButtonEntity):
         coordinator: RoborockDataUpdateCoordinator,
         entity_description: ButtonEntityDescription,
     ) -> None:
-        """Create a scene entity."""
+        """Create a button entity."""
         super().__init__(
             f"{entity_description.key}_{coordinator.duid_slug}",
             coordinator.device_info,
             coordinator.api,
         )
-        self._scene_id = int(entity_description.key)
+        self._routine_id = int(entity_description.key)
         self._coordinator = coordinator
         self.entity_description = entity_description
 
     async def async_press(self, **kwargs: Any) -> None:
         """Press the button."""
-        await self._coordinator.execute_scene(self._scene_id)
+        await self._coordinator.execute_routines(self._routine_id)

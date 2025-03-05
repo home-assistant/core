@@ -107,19 +107,19 @@ async def test_update_failure(
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_get_button_scenes_failure(
+async def test_get_button_routines_failure(
     hass: HomeAssistant,
     bypass_api_client_get_scenes_fixture,
     setup_entry: MockConfigEntry,
     entity_id: str,
 ) -> None:
-    """Test that if scene retrieval fails, no entity is being created."""
+    """Test that if routine retrieval fails, no entity is being created."""
     # Ensure that the entity does not exist
     assert hass.states.get(entity_id) is None
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "scene_id"),
+    ("entity_id", "routine_id"),
     [
         ("button.roborock_s7_maxv_sc1", 12),
         ("button.roborock_s7_maxv_sc2", 24),
@@ -127,14 +127,14 @@ async def test_get_button_scenes_failure(
 )
 @pytest.mark.freeze_time("2023-10-30 08:50:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_press_scene_button_success(
+async def test_press_routine_button_success(
     hass: HomeAssistant,
     bypass_api_fixture,
     setup_entry: MockConfigEntry,
     entity_id: str,
-    scene_id: int,
+    routine_id: int,
 ) -> None:
-    """Test activating the scene entities."""
+    """Test pressing the button entities."""
     with patch(
         "homeassistant.components.roborock.RoborockApiClient.execute_scene"
     ) as mock_execute_scene:
@@ -144,26 +144,26 @@ async def test_press_scene_button_success(
             blocking=True,
             target={"entity_id": entity_id},
         )
-    mock_execute_scene.assert_called_once_with(ANY, scene_id)
+    mock_execute_scene.assert_called_once_with(ANY, routine_id)
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "scene_id"),
+    ("entity_id", "routine_id"),
     [
         ("button.roborock_s7_maxv_sc1", 12),
     ],
 )
 @pytest.mark.freeze_time("2023-10-30 08:50:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_press_scene_button_failure(
+async def test_press_routine_button_failure(
     hass: HomeAssistant,
     bypass_api_fixture,
     setup_entry: MockConfigEntry,
     entity_id: str,
-    scene_id: int,
+    routine_id: int,
 ) -> None:
-    """Test failure while activating the scene entity."""
+    """Test failure while pressing the button entity."""
     with (
         patch(
             "homeassistant.components.roborock.RoborockApiClient.execute_scene",
@@ -177,5 +177,5 @@ async def test_press_scene_button_failure(
             blocking=True,
             target={"entity_id": entity_id},
         )
-    mock_execute_scene.assert_called_once_with(ANY, scene_id)
+    mock_execute_scene.assert_called_once_with(ANY, routine_id)
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
