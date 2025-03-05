@@ -48,7 +48,11 @@ class PGLabBaseEntity(Entity):
         # Inform PGLab discovery instance that a new entity is available.
         # This is important to know in case the device needs to be reconfigured
         # and the entity can be potentially destroyed.
-        await self._discovery.add_entity(self, self._device_id)
+        await self._discovery.add_entity(
+            self.platform.domain,
+            self.unique_id,
+            self._device_id,
+        )
 
         # propagate the async_added_to_hass to the super class
         await super().async_added_to_hass()

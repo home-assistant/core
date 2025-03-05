@@ -25,7 +25,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
 
 from .const import DISCOVERY_TOPIC, DOMAIN, LOGGER
 from .coordinator import PGLabSensorsCoordinator
@@ -84,13 +83,13 @@ class DiscoverDeviceInfo:
         self._entities: list[tuple[str, str]] = []
         self.coordinator = PGLabSensorsCoordinator(hass, config_entry, pglab_device)
 
-    def add_entity(self, entity: Entity) -> None:
+    def add_entity(self, platform_domain: str, entity_unique_id: str | None) -> None:
         """Add an entity."""
 
         # PGLabEntity always have unique IDs
         if TYPE_CHECKING:
-            assert entity.unique_id is not None
-        self._entities.append((entity.platform.domain, entity.unique_id))
+            assert entity_unique_id is not None
+        self._entities.append((platform_domain, entity_unique_id))
 
     @property
     def hash(self) -> int:
@@ -299,7 +298,9 @@ class PGLabDiscovery:
 
         async_unsubscribe_topics(hass, self._substate)
 
-    async def add_entity(self, entity: Entity, device_id: str):
+    async def add_entity(
+        self, platform_domain: str, entity_unique_id: str | None, device_id: str
+    ):
         """Save a new PG LAB device entity."""
 
         # Be sure that the device is been discovered.
@@ -307,4 +308,4 @@ class PGLabDiscovery:
             raise PGLabDiscoveryError("Unknown device, device_id not discovered")
 
         discovery_info = self._discovered[device_id]
-        discovery_info.add_entity(entity)
+        discovery_info.add_entity(platform_domain, entity_unique_id)
