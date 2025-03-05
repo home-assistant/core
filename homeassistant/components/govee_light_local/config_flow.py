@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 import logging
-from typing import Any, cast
+from typing import Any
 
 from govee_local_api import GoveeController
 import voluptuous as vol
@@ -27,12 +27,17 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_AUTO_DISCOVERY,
+    CONF_DEVICE_IP,
+    CONF_IPS_TO_REMOVE,
     CONF_LISTENING_PORT_DEFAULT,
+    CONF_MANUAL_DEVICES,
     CONF_MULTICAST_ADDRESS_DEFAULT,
     CONF_TARGET_PORT_DEFAULT,
     DISCOVERY_TIMEOUT,
     DOMAIN,
 )
+from .coordinator import GoveeLocalApiConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,16 +90,16 @@ class GoveeConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is not None:
-            if user_input["auto_discovery"]:
+            if user_input.get(CONF_AUTO_DISCOVERY):
                 return await self.async_step_govee_discovery()
-            return self.async_create_entry(title="", data={"auto_discovery": False})
+            return self.async_create_entry(title="", data={CONF_AUTO_DISCOVERY: False})
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        "auto_discovery",
+                        CONF_AUTO_DISCOVERY,
                         default=True,
                     ): BooleanSelector(),
                 }
@@ -113,11 +118,7 @@ class GoveeConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         in_progress = self._async_in_progress()
 
         if not (has_devices := bool(in_progress)):
-            discovery_result = _async_has_devices(self.hass)
-            if isinstance(discovery_result, bool):
-                has_devices = discovery_result
-            else:
-                has_devices = await cast("asyncio.Future[bool]", discovery_result)
+            has_devices = await _async_has_devices(self.hass)
 
         if not has_devices:
             return self.async_abort(reason="no_devices_found")
@@ -129,7 +130,7 @@ class GoveeConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        return self.async_create_entry(title="", data={"auto_discovery": True})
+        return self.async_create_entry(title="", data={CONF_AUTO_DISCOVERY: True})
 
     @staticmethod
     @callback
@@ -146,14 +147,7 @@ class GoveeOptionsFlowHandler(OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the options flow."""
         super().__init__()
-
         self._config_entry = config_entry
-        self._controller = self._config_entry.runtime_data
-        self._options = {
-            "manual_devices": set(self.config_entry.options["manual_devices"])
-            if "manual_devices" in self.config_entry.options
-            else set(),
-        }
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -173,19 +167,24 @@ class GoveeOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Configure auto discovery."""
         if user_input is not None:
-            self._options["auto_discovery"] = user_input["auto_discovery"]
-            return self.async_create_entry(title="", data=self._options)
+            return self.async_create_entry(
+                title="", data={CONF_AUTO_DISCOVERY: user_input[CONF_AUTO_DISCOVERY]}
+            )
+
+        config: GoveeLocalApiConfig = GoveeLocalApiConfig.from_config_entry(
+            self._config_entry
+        )
 
         return self.async_show_form(
             step_id="configure_auto_discovery",
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        "auto_discovery",
-                        default=self._config_entry.data.get("auto_discovery", True),
+                        CONF_AUTO_DISCOVERY, default=config.auto_discovery
                     ): BooleanSelector(),
                 }
             ),
+            last_step=True,
         )
 
     async def async_step_add_device(
@@ -194,13 +193,12 @@ class GoveeOptionsFlowHandler(OptionsFlow):
         """Manage the options."""
 
         if user_input is not None:
-            self._options.setdefault("manual_devices", set()).add(
-                user_input["device_ip"]
+            return self.async_create_entry(
+                title="", data={CONF_MANUAL_DEVICES: [user_input[CONF_DEVICE_IP]]}
             )
-            return self.async_create_entry(title="", data=self._options)
 
         option_schema = {
-            vol.Required("device_ip"): vol.All(cv.string),
+            vol.Required(CONF_DEVICE_IP): vol.All(cv.string),
         }
 
         return self.async_show_form(
@@ -214,10 +212,13 @@ class GoveeOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Remove a device."""
         if user_input is not None:
-            self._options.setdefault("ips_to_remove", set()).add(
-                user_input["device_ip"]
+            ips_to_remove: list[str] = user_input[CONF_IPS_TO_REMOVE]
+            if CONF_MANUAL_DEVICES in self._config_entry.options:
+                for ip in ips_to_remove:
+                    self.config_entry.options[CONF_MANUAL_DEVICES].remove(ip)
+            return self.async_create_entry(
+                title="", data={CONF_IPS_TO_REMOVE: user_input[CONF_IPS_TO_REMOVE]}
             )
-            return self.async_create_entry(title="", data=self._options)
 
         coordinator = self.config_entry.runtime_data
 
@@ -226,8 +227,11 @@ class GoveeOptionsFlowHandler(OptionsFlow):
             *coordinator.discovery_queue,
         }
 
+        if not manual_devices:
+            return self.async_abort(reason="no_devices")
+
         option_schema = {
-            vol.Required("ips_to_remove"): SelectSelector(
+            vol.Required(CONF_IPS_TO_REMOVE): SelectSelector(
                 SelectSelectorConfig(
                     options=list(manual_devices),
                     mode=SelectSelectorMode.DROPDOWN,

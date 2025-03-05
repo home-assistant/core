@@ -2,13 +2,9 @@
   "config": {
     "step": {
       "user": {
-        "description": "Make a choice",
+        "description": "Please make a choice",
         "data": {
-          "auto_discovery": "Auto discovery"
-        },
-        "menu_options": {
-          "govee_discovery": "Automatically discovery devices (Can be enabled later)",
-          "manual": "Enter one or more devices ip address"
+          "auto_discovery": "Auto discovery enabled"
         }
       },
       "confirm": {
@@ -23,23 +19,34 @@
   "options": {
     "step": {
       "init": {
-        "description": "Make a choice",
+        "description": "Please make a choice",
         "menu_options": {
-          "configure_auto_discovery": "Enable or disable auto discovery",
-          "add_device": "Enter a device ip address",
+          "configure_auto_discovery": "Enable or disable automatic discovery",
+          "add_device": "Enter a device's IP address",
           "remove_device": "Remove a manually added device"
         }
       },
-      "remove_device": {
-        "description": "Select one or more ip address to remove",
-        "ips_to_remove": "IPs to remove"
+      "add_device": {
+        "description": "Enter the device's IP address",
+        "data": {
+          "device_ip": "Device IP"
+        }
       },
-      "auto_discovery": {
-        "description": "Enable or disable auto discovery",
+      "remove_device": {
+        "description": "Select one or more IP addresses to remove",
+        "data": {
+          "ips_to_remove": "IPs to remove"
+        }
+      },
+      "configure_auto_discovery": {
+        "description": "Enable or disable automatic discovery",
         "data": {
           "auto_discovery": "Auto discovery enabled"
         }
       }
+    },
+    "abort": {
+      "no_devices": "No manually added devices were found"
     }
   },
   "entity": {

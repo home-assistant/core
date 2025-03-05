@@ -12,28 +12,24 @@ from govee_local_api.controller import LISTENING_PORT
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DISCOVERY_TIMEOUT
-from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
+from .const import (
+    CONF_AUTO_DISCOVERY,
+    CONF_IPS_TO_REMOVE,
+    CONF_MANUAL_DEVICES,
+    DISCOVERY_TIMEOUT,
+    SIGNAL_GOVEE_DEVICE_REMOVE,
+)
+from .coordinator import (
+    GoveeLocalApiConfig,
+    GoveeLocalApiCoordinator,
+    GoveeLocalConfigEntry,
+)
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def update_listener(
-    hass: HomeAssistant, config_entry: GoveeLocalConfigEntry
-) -> None:
-    """Handle options update."""
-    coordinator: GoveeLocalApiCoordinator = config_entry.runtime_data
-
-    if devices := config_entry.options.get("manual_devices", set()):
-        for device in devices:
-            if coordinator.get_device_by_ip(device) is None:
-                coordinator.add_device_to_discovery_queue(device)
-
-    if enable_discovery := config_entry.options.get("auto_discovery"):
-        coordinator.enable_discovery(enable_discovery)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> bool:
@@ -46,10 +42,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
             await asyncio.wait_for(cleanup_complete.wait(), 1)
 
     entry.async_on_unload(await_cleanup)
-    entry.async_on_unload(entry.add_update_listener(update_listener))
+    entry.async_on_unload(entry.add_update_listener(update_options_listener))
 
-    if entry.options and "manual_devices" in entry.options:
-        for device in entry.options["manual_devices"]:
+    if entry.options and CONF_MANUAL_DEVICES in entry.options:
+        for device in entry.options[CONF_MANUAL_DEVICES]:
             coordinator.add_device_to_discovery_queue(device)
 
     try:
@@ -63,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
 
     await coordinator.async_config_entry_first_refresh()
 
-    if entry.data.get("auto_discovery", True):
+    if entry.data.get(CONF_AUTO_DISCOVERY, True):
         try:
             async with asyncio.timeout(delay=DISCOVERY_TIMEOUT):
                 while not coordinator.devices:
@@ -74,6 +70,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def update_options_listener(
+    hass: HomeAssistant, config_entry: GoveeLocalConfigEntry
+) -> None:
+    """Handle options update."""
+    coordinator: GoveeLocalApiCoordinator = config_entry.runtime_data
+    config: GoveeLocalApiConfig = GoveeLocalApiConfig.from_config_entry(config_entry)
+
+    if config.manual_devices:
+        for ip in config.manual_devices:
+            if coordinator.get_device_by_ip(ip) is None:
+                coordinator.add_device_to_discovery_queue(ip)
+        await hass.config_entries.async_reload(config_entry.entry_id)
+
+    if config.ips_to_remove:
+        for ip in config.ips_to_remove:
+            if device := coordinator.get_device_by_ip(ip):
+                async_dispatcher_send(
+                    hass, SIGNAL_GOVEE_DEVICE_REMOVE, device.fingerprint
+                )
+
+            coordinator.remove_device_from_discovery_queue(ip)
+            config_entry.options[CONF_IPS_TO_REMOVE].remove(ip)
+        await hass.config_entries.async_reload(config_entry.entry_id)
+
+    coordinator.enable_discovery(config.auto_discovery)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> bool:

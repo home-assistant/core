@@ -18,11 +18,12 @@ from homeassistant.components.light import (
     filter_supported_color_modes,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER, SIGNAL_GOVEE_DEVICE_REMOVE
 from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +46,7 @@ async def async_setup_entry(
         return True
 
     async_add_entities(
-        GoveeLight(coordinator, device) for device in coordinator.devices
+        GoveeLight(coordinator, govee_device) for govee_device in coordinator.devices
     )
 
     await coordinator.set_discovery_callback(discovery_callback)
@@ -82,7 +83,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         self._device = device
         device.set_update_callback(self._update_callback)
 
-        self._attr_unique_id = device.fingerprint
+        self._attr_unique_id: str = device.fingerprint
 
         capabilities = device.capabilities
         color_modes = {ColorMode.ONOFF}
@@ -108,7 +109,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
             # If the light supports only a single color mode, set it now
             self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
 
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, device.fingerprint)
@@ -116,8 +117,38 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
             name=device.sku,
             manufacturer=MANUFACTURER,
             model_id=device.sku,
+            model=device.sku,
             serial_number=device.fingerprint,
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_GOVEE_DEVICE_REMOVE,
+                self.async_signal_govee_device_removed,
+            )
+        )
+
+    async def async_signal_govee_device_removed(self, fingerprint: str) -> None:
+        """Handle device removal."""
+        if self._device.fingerprint == fingerprint:
+            ent_registry = er.async_get(self.hass)
+            if self.entity_id in ent_registry.entities:
+                ent_registry.async_remove(self.entity_id)
+
+            if dev_registry := dr.async_get(self.hass):
+                device_identifiers = {(DOMAIN, self._device.fingerprint)}
+                if device := dev_registry.async_get_device(device_identifiers):
+                    dev_registry.async_update_device(
+                        device.id,
+                        remove_config_entry_id=self.coordinator.config_entry.entry_id,
+                    )
+
+            await self.async_remove(force_remove=True)
 
     @property
     def is_on(self) -> bool:

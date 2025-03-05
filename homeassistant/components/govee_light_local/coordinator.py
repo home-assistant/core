@@ -2,7 +2,9 @@
 
 import asyncio
 from collections.abc import Callable
+from dataclasses import dataclass
 import logging
+from typing import Self
 
 from govee_local_api import GoveeController, GoveeDevice
 
@@ -11,8 +13,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    CONF_AUTO_DISCOVERY,
     CONF_DISCOVERY_INTERVAL_DEFAULT,
+    CONF_IPS_TO_REMOVE,
     CONF_LISTENING_PORT_DEFAULT,
+    CONF_MANUAL_DEVICES,
     CONF_MULTICAST_ADDRESS_DEFAULT,
     CONF_TARGET_PORT_DEFAULT,
     SCAN_INTERVAL,
@@ -23,17 +28,26 @@ _LOGGER = logging.getLogger(__name__)
 type GoveeLocalConfigEntry = ConfigEntry[GoveeLocalApiCoordinator]
 
 
-# @dataclass
-# class GoveeLocalApiConfig:
-#     """Govee light local configuration."""
+@dataclass
+class GoveeLocalApiConfig:
+    """Govee light local configuration."""
 
-#     auto_discovery: bool
-#     manual_devices: list[str]
+    auto_discovery: bool
+    manual_devices: set[str]
+    ips_to_remove: set[str]
 
-#     @staticmethod
-#     def from_config_entry(config_entry: GoveeLocalConfigEntry) -> GoveeLocalApiConfig:
-#         """Return Govee light local configuration from config entry."""
-#         return GoveeLocalApiConfig(True, [])
+    @classmethod
+    def from_config_entry(cls, config_entry: GoveeLocalConfigEntry) -> Self:
+        """Return Govee light local configuration from config entry."""
+
+        config = config_entry.data
+        options = config_entry.options
+
+        return cls(
+            options.get(CONF_AUTO_DISCOVERY, config.get(CONF_AUTO_DISCOVERY, True)),
+            set(options.get(CONF_MANUAL_DEVICES, [])),
+            set(options.get(CONF_IPS_TO_REMOVE, [])),
+        )
 
 
 class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
@@ -53,7 +67,9 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             update_interval=SCAN_INTERVAL,
         )
 
-        auto_discovery = config_entry.data.get("auto_discovery", True)
+        config: GoveeLocalApiConfig = GoveeLocalApiConfig.from_config_entry(
+            config_entry
+        )
 
         self._controller = GoveeController(
             loop=hass.loop,
@@ -61,7 +77,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
             broadcast_port=CONF_TARGET_PORT_DEFAULT,
             listening_port=CONF_LISTENING_PORT_DEFAULT,
-            discovery_enabled=auto_discovery,
+            discovery_enabled=config.auto_discovery,
             discovery_interval=CONF_DISCOVERY_INTERVAL_DEFAULT,
             discovered_callback=None,
             update_enabled=False,
@@ -77,6 +93,10 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     ) -> None:
         """Set discovery callback for automatic Govee light discovery."""
         self._controller.set_device_discovered_callback(callback)
+
+    def enable_discovery(self, enable: bool) -> None:
+        """Enable or disable automatic Govee light discovery."""
+        self._controller.set_discovery_enabled(enable)
 
     def add_device_to_discovery_queue(self, ip: str) -> bool:
         """Add a device by IP address to discovery queue."""
