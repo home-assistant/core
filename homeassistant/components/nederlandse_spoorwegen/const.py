@@ -5,3 +5,5 @@ CONF_STATION_VIA = "via"
 CONF_STATION_TO = "to"
 CONF_TIME = "time"
 DOMAIN = "nederlandse_spoorwegen"
+
+MIN_TIME_BETWEEN_UPDATES = 120
