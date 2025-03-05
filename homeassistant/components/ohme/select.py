@@ -85,9 +85,8 @@ class OhmeSelect(OhmeEntity, SelectEntity):
         """Return a set of selectable options."""
         if self.entity_description.options_fn:
             return self.entity_description.options_fn(self.coordinator.client)
-        if self.entity_description.options:
-            return self.entity_description.options
-        return []
+        assert self.entity_description.options
+        return self.entity_description.options
 
     @property
     def current_option(self) -> str | None:
