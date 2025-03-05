@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-import time
 from typing import Any
 
 import botocore.exceptions
@@ -11,21 +10,35 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    AbstractOAuth2FlowHandler,
+    async_get_implementations,
+)
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class SRPFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle homelink OAuth2 authentication."""
+
+    DOMAIN = DOMAIN
+    VERSION = 1
+
+    async def logger(self):
+        """Get the logger."""
+        return _LOGGER
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Ask for username and password."""
+        implementations = await async_get_implementations(self.hass, self.DOMAIN)
+        self.flow_impl = await list(implementations.values())[0]
         errors: dict[str, str] = {}
         if user_input is not None:
+            _LOGGER.info(user_input)
             self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
 
             srp_auth = SRPAuth()
@@ -41,30 +54,13 @@ class SRPFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "Error authenticating HomeLink account"
             except Exception:
                 _LOGGER.exception("An unexpected error occurred")
+
                 errors["base"] = "unknown"
             else:
-                new_token = {}
-                new_token["access_token"] = tokens["AuthenticationResult"][
-                    "AccessToken"
-                ]
-                new_token["refresh_token"] = tokens["AuthenticationResult"][
-                    "RefreshToken"
-                ]
-                new_token["token_type"] = tokens["AuthenticationResult"]["TokenType"]
-                new_token["expires_in"] = tokens["AuthenticationResult"]["ExpiresIn"]
-                new_token["expires_at"] = (
-                    time.time() + tokens["AuthenticationResult"]["ExpiresIn"]
-                )
+                _LOGGER.info("Got tokens, passing to creation")
+                self.external_data = {"tokens": tokens}
+                return await self.async_step_creation()
 
-                return self.async_create_entry(
-                    title=f"{user_input[CONF_EMAIL]} HomeLink integration",
-                    data={
-                        "token": new_token,
-                        "auth_implementation": DOMAIN,
-                        "last_update_id": None,
-                        CONF_EMAIL: user_input[CONF_EMAIL],
-                    },
-                )
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
