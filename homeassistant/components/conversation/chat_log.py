@@ -185,7 +185,7 @@ class ChatLog:
 
     @property
     def continue_conversation(self) -> bool:
-        """Return if the conversation should continue."""
+        """Return whether the conversation should continue."""
         if not self.content:
             return False
 
@@ -194,7 +194,12 @@ class ChatLog:
         return (
             last_msg.role == "assistant"
             and last_msg.content is not None  # type: ignore[union-attr]
-            and last_msg.content.strip()[-1] == "?"  # type: ignore[union-attr]
+            and last_msg.content.strip().endswith(  # type: ignore[union-attr]
+                (
+                    "?",
+                    ";",  # Greek question mark
+                )
+            )
         )
 
     @property
