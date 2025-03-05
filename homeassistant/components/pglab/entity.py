@@ -22,24 +22,24 @@ class PGLabBaseEntity(Entity):
 
     def __init__(
         self,
-        discovery: PGLabDiscovery,
-        device: PyPGLabDevice,
+        pglab_discovery: PGLabDiscovery,
+        pglab_device: PyPGLabDevice,
     ) -> None:
         """Initialize the class."""
 
-        self._device_id = device.id
-        self._discovery = discovery
+        self._device_id = pglab_device.id
+        self._discovery = pglab_discovery
 
         # Information about the device that is partially visible in the UI.
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.id)},
-            name=device.name,
-            sw_version=device.firmware_version,
-            hw_version=device.hardware_version,
-            model=device.type,
-            manufacturer=device.manufactor,
-            configuration_url=f"http://{device.ip}/",
-            connections={(CONNECTION_NETWORK_MAC, device.mac)},
+            identifiers={(DOMAIN, pglab_device.id)},
+            name=pglab_device.name,
+            sw_version=pglab_device.firmware_version,
+            hw_version=pglab_device.hardware_version,
+            model=pglab_device.type,
+            manufacturer=pglab_device.manufactor,
+            configuration_url=f"http://{pglab_device.ip}/",
+            connections={(CONNECTION_NETWORK_MAC, pglab_device.mac)},
         )
 
     async def async_added_to_hass(self) -> None:
@@ -59,16 +59,16 @@ class PGLabEntity(PGLabBaseEntity):
 
     def __init__(
         self,
-        discovery: PGLabDiscovery,
-        device: PyPGLabDevice,
-        entity: PyPGLabEntity,
+        pglab_discovery: PGLabDiscovery,
+        pglab_device: PyPGLabDevice,
+        pglab_entity: PyPGLabEntity,
     ) -> None:
         """Initialize the class."""
 
-        super().__init__(discovery, device)
+        super().__init__(pglab_discovery, pglab_device)
 
-        self._id = entity.id
-        self._entity = entity
+        self._id = pglab_entity.id
+        self._entity = pglab_entity
 
     async def async_added_to_hass(self) -> None:
         """Update the device discovery info."""
@@ -95,11 +95,11 @@ class PGLabSensorEntity(PGLabBaseEntity, CoordinatorEntity[PGLabSensorsCoordinat
 
     def __init__(
         self,
-        discovery: PGLabDiscovery,
-        device: PyPGLabDevice,
-        coordinator: PGLabSensorsCoordinator,
+        pglab_discovery: PGLabDiscovery,
+        pglab_device: PyPGLabDevice,
+        pglab_coordinator: PGLabSensorsCoordinator,
     ) -> None:
         """Initialize the class."""
 
-        PGLabBaseEntity.__init__(self, discovery, device)
-        CoordinatorEntity.__init__(self, coordinator)
+        PGLabBaseEntity.__init__(self, pglab_discovery, pglab_device)
+        CoordinatorEntity.__init__(self, pglab_coordinator)

@@ -86,15 +86,15 @@ class PGLabSensor(PGLabSensorEntity, SensorEntity):
     def __init__(
         self,
         description: SensorEntityDescription,
-        discovery: PGLabDiscovery,
-        device: PyPGLabDevice,
-        coordinator: PGLabSensorsCoordinator,
+        pglab_discovery: PGLabDiscovery,
+        pglab_device: PyPGLabDevice,
+        pglab_coordinator: PGLabSensorsCoordinator,
     ) -> None:
         """Initialize the Sensor class."""
 
-        super().__init__(discovery, device, coordinator)
+        super().__init__(pglab_discovery, pglab_device, pglab_coordinator)
 
-        self._attr_unique_id = f"{device.id}_{description.key}"
+        self._attr_unique_id = f"{pglab_device.id}_{description.key}"
         self.entity_description = description
 
     @callback

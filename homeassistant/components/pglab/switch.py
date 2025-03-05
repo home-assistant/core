@@ -52,9 +52,9 @@ class PGLabSwitch(PGLabEntity, SwitchEntity):
         """Initialize the Switch class."""
 
         super().__init__(
-            discovery=pglab_discovery,
-            device=pglab_device,
-            entity=pglab_relay,
+            pglab_discovery,
+            pglab_device,
+            pglab_relay,
         )
 
         self._attr_unique_id = f"{pglab_device.id}_relay{pglab_relay.id}"
