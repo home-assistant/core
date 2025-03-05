@@ -68,12 +68,15 @@ class PGLabEntity(PGLabBaseEntity):
         super().__init__(pglab_discovery, pglab_device)
 
         self._id = pglab_entity.id
-        self._entity = pglab_entity
+        self._entity: PyPGLabEntity = pglab_entity
 
     async def async_added_to_hass(self) -> None:
-        """Update the device discovery info."""
+        """Subscribe pypglab entity to be updated from mqtt when pypglab entity internal state change."""
 
+        # set the callback to be called when pypglab entity state is changed
         self._entity.set_on_state_callback(self.state_updated)
+
+        # subscribe to the pypglab entity to receive updates from the mqtt broker
         await self._entity.subscribe_topics()
         await super().async_added_to_hass()
 
