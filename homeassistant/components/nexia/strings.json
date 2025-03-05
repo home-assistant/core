@@ -58,6 +58,9 @@
     "switch": {
       "hold": {
         "name": "Hold"
+      },
+      "emergency_heat": {
+        "name": "Emergency Heat"
       }
     }
   },
