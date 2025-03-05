@@ -40,52 +40,6 @@ LOG_HINT_429_AUTH = ("evohome.auth", logging.ERROR, _MSG_429)
 LOG_HINT_OTH_AUTH = ("evohome.auth", logging.ERROR, _MSG_OTH)
 LOG_HINT_USR_AUTH = ("evohome.auth", logging.ERROR, _MSG_USR)
 
-LOG_FAIL_CONNECTION = (
-    "homeassistant.components.evohome",
-    logging.ERROR,
-    "Failed to fetch initial data: Authenticator response is invalid: Connection error",
-)
-LOG_FAIL_CREDENTIALS = (
-    "homeassistant.components.evohome",
-    logging.ERROR,
-    "Failed to fetch initial data: "
-    "Authenticator response is invalid: {'error': 'invalid_grant'}",
-)
-LOG_FAIL_GATEWAY = (
-    "homeassistant.components.evohome",
-    logging.ERROR,
-    "Failed to fetch initial data: "
-    "Authenticator response is invalid: 502 Bad Gateway, response=None",
-)
-LOG_FAIL_TOO_MANY = (
-    "homeassistant.components.evohome",
-    logging.ERROR,
-    "Failed to fetch initial data: "
-    "Authenticator response is invalid: 429 Too Many Requests, response=None",
-)
-
-LOG_FGET_CONNECTION = (
-    "homeassistant.components.evohome",
-    logging.ERROR,
-    "Failed to fetch initial data: "
-    "GET https://tccna.resideo.com/WebAPI/emea/api/v1/userAccount: "
-    "Connection error",
-)
-LOG_FGET_GATEWAY = (
-    "homeassistant.components.evohome",
-    logging.ERROR,
-    "Failed to fetch initial data: "
-    "GET https://tccna.resideo.com/WebAPI/emea/api/v1/userAccount: "
-    "502 Bad Gateway, response=None",
-)
-LOG_FGET_TOO_MANY = (
-    "homeassistant.components.evohome",
-    logging.ERROR,
-    "Failed to fetch initial data: "
-    "GET https://tccna.resideo.com/WebAPI/emea/api/v1/userAccount: "
-    "429 Too Many Requests, response=None",
-)
-
 
 EXC_BAD_CONNECTION = aiohttp.ClientConnectionError(
     "Connection error",
@@ -94,15 +48,56 @@ EXC_BAD_CREDENTIALS = exc.AuthenticationFailedError(
     "Authenticator response is invalid: {'error': 'invalid_grant'}",
     status=HTTPStatus.BAD_REQUEST,
 )
+EXC_BAD_GATEWAY = aiohttp.ClientResponseError(
+    Mock(), (), status=HTTPStatus.BAD_GATEWAY, message=HTTPStatus.BAD_GATEWAY.phrase
+)
 EXC_TOO_MANY_REQUESTS = aiohttp.ClientResponseError(
     Mock(),
     (),
     status=HTTPStatus.TOO_MANY_REQUESTS,
     message=HTTPStatus.TOO_MANY_REQUESTS.phrase,
 )
-EXC_BAD_GATEWAY = aiohttp.ClientResponseError(
-    Mock(), (), status=HTTPStatus.BAD_GATEWAY, message=HTTPStatus.BAD_GATEWAY.phrase
+
+
+def generate_error_set(
+    errors: tuple, base_msg: str = "Authenticator response is invalid: "
+) -> tuple[tuple[str, int, str], ...]:
+    """Generate log message tuples for common errors."""
+
+    return tuple(
+        (
+            "homeassistant.components.evohome",
+            logging.ERROR,
+            f"Failed to fetch initial data: {base_msg}{e}",
+        )
+        for e in errors
+    )
+
+
+_AUTH_ERRORS = (
+    "Connection error",
+    "{'error': 'invalid_grant'}",
+    "502 Bad Gateway, response=None",
+    "429 Too Many Requests, response=None",
 )
+LOG_FAIL_CONNECTION, LOG_FAIL_CREDENTIALS, LOG_FAIL_GATEWAY, LOG_FAIL_TOO_MANY = (
+    generate_error_set(
+        _AUTH_ERRORS,
+        base_msg="Authenticator response is invalid: ",
+    )
+)
+
+
+_FGET_ERRORS = (
+    "Connection error",
+    "502 Bad Gateway, response=None",
+    "429 Too Many Requests, response=None",
+)
+LOG_FGET_CONNECTION, LOG_FGET_GATEWAY, LOG_FGET_TOO_MANY = generate_error_set(
+    _FGET_ERRORS,
+    base_msg="GET https://tccna.resideo.com/WebAPI/emea/api/v1/userAccount: ",
+)
+
 
 AUTHENTICATION_TESTS: dict[Exception, list] = {
     EXC_BAD_CONNECTION: [LOG_HINT_OTH_CREDS, LOG_FAIL_CONNECTION],
@@ -110,7 +105,6 @@ AUTHENTICATION_TESTS: dict[Exception, list] = {
     EXC_BAD_GATEWAY: [LOG_HINT_OTH_CREDS, LOG_FAIL_GATEWAY],
     EXC_TOO_MANY_REQUESTS: [LOG_HINT_429_CREDS, LOG_FAIL_TOO_MANY],
 }
-
 CLIENT_REQUEST_TESTS: dict[Exception, list] = {
     EXC_BAD_CONNECTION: [LOG_HINT_OTH_AUTH, LOG_FGET_CONNECTION],
     EXC_BAD_GATEWAY: [LOG_HINT_OTH_AUTH, LOG_FGET_GATEWAY],
