@@ -31,6 +31,7 @@ from homeassistant.components.climate import (
     SWING_OFF,
     SWING_ON,
     SWING_VERTICAL,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
@@ -266,6 +267,45 @@ async def test_config_hvac_mode_register(hass: HomeAssistant, mock_modbus) -> No
     assert HVACMode.HEAT_COOL in state.attributes[ATTR_HVAC_MODES]
     assert HVACMode.AUTO in state.attributes[ATTR_HVAC_MODES]
     assert HVACMode.FAN_ONLY in state.attributes[ATTR_HVAC_MODES]
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_HVAC_MODE_REGISTER: {
+                        CONF_ADDRESS: 11,
+                        CONF_HVAC_MODE_VALUES: {
+                            CONF_HVAC_MODE_OFF: 0,
+                            CONF_HVAC_MODE_HEAT: 1,
+                            CONF_HVAC_MODE_COOL: 2,
+                            CONF_HVAC_MODE_HEAT_COOL: 3,
+                            CONF_HVAC_MODE_AUTO: 4,
+                            CONF_HVAC_MODE_FAN_ONLY: 5,
+                        },
+                    },
+                }
+            ],
+        },
+    ],
+)
+async def test_config_hvac_action_register(hass: HomeAssistant, mock_modbus) -> None:
+    """Run configuration test for HVAC action register."""
+    state = hass.states.get(ENTITY_ID)
+    assert HVACAction.COOLING in state.attributes[ATTR_HVAC_MODES]
+    assert HVACAction.DEFROSTING in state.attributes[ATTR_HVAC_MODES]
+    assert HVACAction.DRYING in state.attributes[ATTR_HVAC_MODES]
+    assert HVACAction.FAN in state.attributes[ATTR_HVAC_MODES]
+    assert HVACAction.HEATING in state.attributes[ATTR_HVAC_MODES]
+    assert HVACAction.IDLE in state.attributes[ATTR_HVAC_MODES]
+    assert HVACAction.OFF in state.attributes[ATTR_HVAC_MODES]
+    assert HVACAction.PREHEATING in state.attributes[ATTR_HVAC_MODES]
 
 
 @pytest.mark.parametrize(
