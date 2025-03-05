@@ -82,7 +82,7 @@ class DiscoverDeviceInfo:
         # When the hash string changes the devices entities must be rebuilt.
         self._hash = pglab_device.hash
         self._entities: list[tuple[str, str]] = []
-        self._coordinator = PGLabSensorsCoordinator(hass, config_entry, pglab_device)
+        self.coordinator = PGLabSensorsCoordinator(hass, config_entry, pglab_device)
 
     def add_entity(self, entity: Entity) -> None:
         """Add an entity."""
@@ -101,11 +101,6 @@ class DiscoverDeviceInfo:
     def entities(self) -> list[tuple[str, str]]:
         """Return array of entities available."""
         return self._entities
-
-    @property
-    def coordinator(self) -> PGLabSensorsCoordinator:
-        """Return the coordinator."""
-        return self._coordinator
 
 
 async def create_discover_device_info(
