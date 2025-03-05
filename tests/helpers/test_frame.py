@@ -449,11 +449,18 @@ async def test_report(
 
 
 @pytest.mark.parametrize(
-    ("behavior", "integration_domain", "source", "logs_again"),
+    (
+        "behavior",
+        "integration_domain",
+        "integration_frame_path",
+        "source",
+        "logs_again",
+    ),
     [
         pytest.param(
             "core_behavior",
             None,
+            "homeassistant",
             "code that",
             True,
             id="core",
@@ -461,6 +468,7 @@ async def test_report(
         pytest.param(
             "core_behavior",
             "unknown_integration",
+            "homeassistant",
             "code that",
             True,
             id="unknown integration",
@@ -468,6 +476,7 @@ async def test_report(
         pytest.param(
             "core_integration_behavior",
             "sensor",
+            "homeassistant",
             "that integration 'sensor'",
             False,
             id="core integration",
@@ -475,13 +484,32 @@ async def test_report(
         pytest.param(
             "custom_integration_behavior",
             "test_package",
+            "homeassistant",
             "that custom integration 'test_package'",
+            False,
+            id="custom integration",
+        ),
+        # Assert integration found in stack frame has priority over integration_domain
+        pytest.param(
+            "core_integration_behavior",
+            "sensor",
+            "homeassistant/components/hue",
+            "that integration 'hue'",
+            False,
+            id="core integration",
+        ),
+        # Assert integration found in stack frame has priority over integration_domain
+        pytest.param(
+            "custom_integration_behavior",
+            "test_package",
+            "custom_components/hue",
+            "that custom integration 'hue'",
             False,
             id="custom integration",
         ),
     ],
 )
-@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.usefixtures("enable_custom_integrations", "mock_integration_frame")
 async def test_report_integration_domain(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
