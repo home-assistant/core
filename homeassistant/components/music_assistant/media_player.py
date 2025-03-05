@@ -280,8 +280,8 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         group_members: list[str] = []
         if player.group_childs:
             group_members = player.group_childs
-        elif player.synced_to:
-            group_members = self.mass.players[player.synced_to].group_childs
+        elif player.synced_to and (parent := self.mass.players.get(player.synced_to)):
+            group_members = parent.group_childs
 
         # translate MA group_childs to HA group_members as entity id's
         entity_registry = er.async_get(self.hass)
