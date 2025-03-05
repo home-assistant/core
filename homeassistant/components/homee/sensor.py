@@ -340,17 +340,14 @@ async def async_setup_entry(
 
         # Node attributes that are sensors.
         for attribute in node.attributes:
-            if attribute.type in SENSOR_DESCRIPTIONS:
-                if attribute.type == AttributeType.CURRENT_VALVE_POSITION:
-                    add_deprecated_entity(
-                        attribute, SENSOR_DESCRIPTIONS[attribute.type]
+            if attribute.type == AttributeType.CURRENT_VALVE_POSITION:
+                add_deprecated_entity(attribute, SENSOR_DESCRIPTIONS[attribute.type])
+            elif attribute.type in SENSOR_DESCRIPTIONS and not attribute.editable:
+                devices.append(
+                    HomeeSensor(
+                        attribute, config_entry, SENSOR_DESCRIPTIONS[attribute.type]
                     )
-                elif not attribute.editable:
-                    devices.append(
-                        HomeeSensor(
-                            attribute, config_entry, SENSOR_DESCRIPTIONS[attribute.type]
-                        )
-                    )
+                )
 
     if devices:
         async_add_devices(devices)
