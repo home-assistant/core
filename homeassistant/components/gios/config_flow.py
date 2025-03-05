@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 from gios import ApiError, Gios, InvalidSensorsDataError, NoStationError
@@ -49,7 +49,9 @@ class GiosFlowHandler(ConfigFlow, domain=DOMAIN):
                 # GIOS treats station ID as int
                 user_input[CONF_STATION_ID] = int(station_id)
 
-                assert gios.station_name is not None
+                if TYPE_CHECKING:
+                    assert gios.station_name is not None
+
                 return self.async_create_entry(
                     title=gios.station_name,
                     data=user_input,
