@@ -66,6 +66,7 @@ from .const import (
     SERVICE_API_CALL,
     SERVICE_CANCEL_QUEST,
     SERVICE_CAST_SKILL,
+    SERVICE_CREATE_HABIT,
     SERVICE_CREATE_REWARD,
     SERVICE_GET_TASKS,
     SERVICE_LEAVE_QUEST,
@@ -190,6 +191,7 @@ SERVICE_TASK_TYPE_MAP = {
     SERVICE_UPDATE_REWARD: TaskType.REWARD,
     SERVICE_CREATE_REWARD: TaskType.REWARD,
     SERVICE_UPDATE_HABIT: TaskType.HABIT,
+    SERVICE_CREATE_HABIT: TaskType.HABIT,
 }
 
 
@@ -596,7 +598,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         data = Task()
 
         if not is_update:
-            data["type"] = TaskType.REWARD
+            data["type"] = SERVICE_TASK_TYPE_MAP[call.service]
 
         if (text := call.data.get(ATTR_RENAME)) or (text := call.data.get(ATTR_NAME)):
             data["text"] = text
@@ -729,6 +731,13 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     hass.services.async_register(
         DOMAIN,
         SERVICE_CREATE_REWARD,
+        create_or_update_task,
+        schema=SERVICE_CREATE_TASK_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CREATE_HABIT,
         create_or_update_task,
         schema=SERVICE_CREATE_TASK_SCHEMA,
         supports_response=SupportsResponse.ONLY,
