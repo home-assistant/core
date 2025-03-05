@@ -17,36 +17,37 @@ from tests.common import load_fixture
 
 CONFIG = {
     CONF_NAME: "Foo",
-    CONF_STATION_ID: 123,
+    CONF_STATION_ID: "123",
 }
 
 
 async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
-    flow = config_flow.GiosFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=None)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
-async def test_invalid_station_id(hass: HomeAssistant) -> None:
-    """Test that errors are shown when measuring station ID is invalid."""
     with patch(
         "homeassistant.components.gios.coordinator.Gios._get_stations",
         return_value=STATIONS,
     ):
         flow = config_flow.GiosFlowHandler()
         flow.hass = hass
-        flow.context = {}
 
-        result = await flow.async_step_user(
-            user_input={CONF_NAME: "Foo", CONF_STATION_ID: 0}
-        )
+        result = await flow.async_step_user(user_input=None)
 
-        assert result["errors"] == {CONF_STATION_ID: "wrong_station_id"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_form_with_api_error(hass: HomeAssistant) -> None:
+    """Test the form is aborted because of API error."""
+    with patch(
+        "homeassistant.components.gios.coordinator.Gios._get_stations",
+        side_effect=ApiError("error"),
+    ):
+        flow = config_flow.GiosFlowHandler()
+        flow.hass = hass
+
+        result = await flow.async_step_user()
+
+    assert result["type"] is FlowResultType.ABORT
 
 
 async def test_invalid_sensor_data(hass: HomeAssistant) -> None:
@@ -76,9 +77,15 @@ async def test_invalid_sensor_data(hass: HomeAssistant) -> None:
 
 async def test_cannot_connect(hass: HomeAssistant) -> None:
     """Test that errors are shown when cannot connect to GIOS server."""
-    with patch(
-        "homeassistant.components.gios.coordinator.Gios._async_get",
-        side_effect=ApiError("error"),
+    with (
+        patch(
+            "homeassistant.components.gios.coordinator.Gios._get_stations",
+            return_value=STATIONS,
+        ),
+        patch(
+            "homeassistant.components.gios.coordinator.Gios._async_get",
+            side_effect=ApiError("error"),
+        ),
     ):
         flow = config_flow.GiosFlowHandler()
         flow.hass = hass
