@@ -277,33 +277,23 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         else:
             self._attr_state = MediaPlayerState(STATE_OFF)
 
-        group_members_entity_ids: list[str] = []
-        coordinator_id: str | None = None
-        group_childs: set[str] = set()
+        group_members: list[str] = []
         if player.group_childs:
-            # This player is the coordinator, with children players
-            coordinator_id = self.player_id
-            group_childs = set(player.group_childs) - {self.player_id}
+            group_members = player.group_childs
         elif player.synced_to:
-            # This player is a child player, with a coordinator
-            coordinator_id = player.synced_to
-            # Do not list siblings. It's unclear if we should list all siblings or just this player
-            group_childs = {self.player_id}
+            group_members = self.mass.players[player.synced_to].group_childs
 
-        if coordinator_id and group_childs:
-            # Set the coordinator as the first entity by convention
-            group_members = [coordinator_id, *sorted(group_childs)]
-            # translate MA group_childs to HA group_members as entity id's
-            entity_registry = er.async_get(self.hass)
-            group_members_entity_ids = [
-                entity_id
-                for child_id in group_members
-                if (
-                    entity_id := entity_registry.async_get_entity_id(
-                        self.platform.domain, DOMAIN, child_id
-                    )
+        # translate MA group_childs to HA group_members as entity id's
+        entity_registry = er.async_get(self.hass)
+        group_members_entity_ids: list[str] = [
+            entity_id
+            for child_id in group_members
+            if (
+                entity_id := entity_registry.async_get_entity_id(
+                    self.platform.domain, DOMAIN, child_id
                 )
-            ]
+            )
+        ]
 
         self._attr_group_members = group_members_entity_ids
         self._attr_volume_level = (

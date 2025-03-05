@@ -109,7 +109,6 @@
       'entity_picture_local': None,
       'friendly_name': 'Test Group Player 1',
       'group_members': list([
-        'media_player.test_group_player_1',
         'media_player.test_player_1',
         'media_player.my_super_test_player_2',
       ]),
