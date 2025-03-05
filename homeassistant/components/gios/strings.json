@@ -5,7 +5,7 @@
         "title": "GIO\u015a (Polish Chief Inspectorate Of Environmental Protection)",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
-          "station_id": "ID of the measuring station"
+          "station_id": "Measuring station"
         }
       }
     },
