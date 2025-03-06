@@ -33,6 +33,24 @@
       },
       "cache_hidden_date": {
         "default": "mdi:calendar-badge"
+      },
+      "trackable_name": {
+        "default": "mdi:label"
+      },
+      "trackable_owner": {
+        "default": "mdi:account"
+      },
+      "trackable_traveled_distance": {
+        "default": "mdi:map-marker-distance"
+      },
+      "trackable_current_cache_code": {
+        "default": "mdi:package-variant-closed"
+      },
+      "trackable_current_cache_name": {
+        "default": "mdi:package-variant-closed"
+      },
+      "trackable_release_date": {
+        "default": "mdi:calendar-badge"
       }
     }
   }

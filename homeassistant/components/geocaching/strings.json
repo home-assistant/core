@@ -18,6 +18,13 @@
             "data": {
               "tracked_cache_ref_code": "Geocache Reference Code"
             }
+          },
+          "tracked_trackable_ids": {
+            "name": "Tracked Trackables",
+            "description": "Optionally add trackables to track",
+            "data": {
+              "tracked_trackable_ref_code": "Trackable Reference Code"
+            }
           }
         }
       }
@@ -62,6 +69,24 @@
       },
       "cache_hidden_date": {
         "name": "Hidden date"
+      },
+      "trackable_name": {
+        "name": "Name"
+      },
+      "trackable_owner": {
+        "name": "Owner"
+      },
+      "trackable_traveled_distance": {
+        "name": "Traveled distance"
+      },
+      "trackable_current_cache_code": {
+        "name": "Current cache code"
+      },
+      "trackable_current_cache_name": {
+        "name": "Current cache name"
+      },
+      "trackable_release_date": {
+        "name": "Release date"
       }
     }
   }

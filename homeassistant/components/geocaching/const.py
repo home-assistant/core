@@ -34,13 +34,17 @@ PLATFORMS = [Platform.SENSOR]
 # Sensor ID formats
 PROFILE_ID_SENSOR_FORMAT = DOMAIN + ".{}_{}"
 CACHE_ID_SENSOR_FORMAT = DOMAIN + ".{}_{}"
+TRACKABLE_ID_SENSOR_FORMAT = DOMAIN + ".{}_{}"
 
 # Section IDs for the config flow
 # Note that changing these will require updating the `strings.json` paths, and recompiling the translations
 CONFIG_FLOW_GEOCACHES_SECTION_ID = "tracked_geocache_ids"
+CONFIG_FLOW_TRACKABLES_SECTION_ID = "tracked_trackable_ids"
 
 # Configuration limits
 MAX_TRACKED_CACHES = 25
+MAX_TRACKED_TRACKABLES = 10
 
 # Configuration title keys
 CACHES_SINGLE_TITLE = "tracked_cache_ref_code"
+TRACKABLES_SINGLE_TITLE = "tracked_trackable_ref_code"

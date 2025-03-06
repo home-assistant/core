@@ -14,6 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     CONFIG_FLOW_GEOCACHES_SECTION_ID,
+    CONFIG_FLOW_TRACKABLES_SECTION_ID,
     DOMAIN,
     ENVIRONMENT,
     LOGGER,
@@ -45,6 +46,10 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
 
         settings.set_tracked_caches(
             set(entry.data.get(CONFIG_FLOW_GEOCACHES_SECTION_ID, []))
+        )
+
+        settings.set_tracked_trackables(
+            set(entry.data.get(CONFIG_FLOW_TRACKABLES_SECTION_ID, []))
         )
 
         self.geocaching = GeocachingApi(

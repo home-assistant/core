@@ -24,7 +24,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, PROFILE_ID_SENSOR_FORMAT
 from .coordinator import GeocachingDataUpdateCoordinator
-from .entity import GeocachingCache, GeoEntityBaseCache
+from .entity import (
+    GeocachingCache,
+    GeocachingTrackable,
+    GeoEntityBaseCache,
+    GeoEntityBaseTrackable,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -90,6 +95,10 @@ async def async_setup_entry(
     for cache in status.tracked_caches:
         entities.extend(get_cache_entities(coordinator, cache))
 
+    # Add entities for tracked trackables
+    for trackable in status.trackables.values():
+        entities.extend(get_trackable_entities(coordinator, trackable))
+
     async_add_entities(entities)
 
 
@@ -124,6 +133,85 @@ class GeocachingProfileSensor(
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+@dataclass(frozen=True, kw_only=True)
+class GeocachingTrackableEntityDescription(SensorEntityDescription):
+    """Define Sensor entity description class."""
+
+    value_fn: Callable[[GeocachingTrackable], StateType | datetime.date]
+
+
+TRACKABLE_SENSORS: tuple[GeocachingTrackableEntityDescription, ...] = (
+    GeocachingTrackableEntityDescription(
+        key="name",
+        value_fn=lambda trackable: trackable.name,
+    ),
+    GeocachingTrackableEntityDescription(
+        key="owner",
+        value_fn=lambda trackable: trackable.owner.username,
+    ),
+    GeocachingTrackableEntityDescription(
+        key="traveled_distance",
+        native_unit_of_measurement="km",
+        value_fn=lambda trackable: None
+        if trackable.kilometers_traveled is None
+        else round(trackable.kilometers_traveled),
+    ),
+    GeocachingTrackableEntityDescription(
+        key="current_cache_code",
+        value_fn=lambda trackable: trackable.current_geocache_code,
+    ),
+    GeocachingTrackableEntityDescription(
+        key="current_cache_name",
+        value_fn=lambda trackable: trackable.current_geocache_name,
+    ),
+    GeocachingTrackableEntityDescription(
+        key="release_date",
+        device_class=SensorDeviceClass.DATE,
+        value_fn=lambda trackable: trackable.release_date,
+    ),
+)
+
+
+def get_trackable_entities(
+    coordinator: GeocachingDataUpdateCoordinator, trackable: GeocachingTrackable
+) -> list[GeoEntityBaseTrackable]:
+    """Generate all entities for a single trackable."""
+
+    entities: list[GeoEntityBaseTrackable] = []
+
+    # Sensor entities
+    entities.extend(
+        [
+            GeoEntityTrackableSensorEntity(coordinator, trackable, description)
+            for description in TRACKABLE_SENSORS
+        ]
+    )
+
+    return entities
+
+
+class GeoEntityTrackableSensorEntity(GeoEntityBaseTrackable, SensorEntity):
+    """Representation of a trackable sensor."""
+
+    entity_description: GeocachingTrackableEntityDescription
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: GeocachingDataUpdateCoordinator,
+        trackable: GeocachingTrackable,
+        description: GeocachingTrackableEntityDescription,
+    ) -> None:
+        """Initialize the Geocaching sensor."""
+        super().__init__(coordinator, trackable, description.key)
+        self.entity_description = description
+
+    @property
+    def native_value(self) -> StateType | datetime.date:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.trackable)
 
 
 @dataclass(frozen=True, kw_only=True)

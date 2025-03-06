@@ -18,9 +18,12 @@ from homeassistant.helpers.selector import TextSelector, TextSelectorType
 from .const import (
     CACHES_SINGLE_TITLE,
     CONFIG_FLOW_GEOCACHES_SECTION_ID,
+    CONFIG_FLOW_TRACKABLES_SECTION_ID,
     DOMAIN,
     ENVIRONMENT,
     MAX_TRACKED_CACHES,
+    MAX_TRACKED_TRACKABLES,
+    TRACKABLES_SINGLE_TITLE,
 )
 
 
@@ -102,6 +105,12 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                             string_list_schema(CACHES_SINGLE_TITLE),
                             {"collapsed": False},
                         ),
+                        vol.Required(
+                            CONFIG_FLOW_TRACKABLES_SECTION_ID
+                        ): data_entry_flow.section(
+                            string_list_schema(TRACKABLES_SINGLE_TITLE),
+                            {"collapsed": False},
+                        ),
                     }
                 ),
             )
@@ -124,5 +133,14 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         )
         if len(self.data[CONFIG_FLOW_GEOCACHES_SECTION_ID]) > MAX_TRACKED_CACHES:
             raise ValueError(f"Cannot track more than {MAX_TRACKED_CACHES} caches")
+
+        # Store the provided tracked trackables
+        self.data[CONFIG_FLOW_TRACKABLES_SECTION_ID] = get_or_default(
+            [CONFIG_FLOW_TRACKABLES_SECTION_ID, TRACKABLES_SINGLE_TITLE], []
+        )
+        if len(self.data[CONFIG_FLOW_TRACKABLES_SECTION_ID]) > MAX_TRACKED_TRACKABLES:
+            raise ValueError(
+                f"Cannot track more than {MAX_TRACKED_TRACKABLES} trackables"
+            )
 
         return self.async_create_entry(title=self.title, data=self.data)
