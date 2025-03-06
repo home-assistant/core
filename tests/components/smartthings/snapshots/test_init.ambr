@@ -207,7 +207,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': '1.0',
+    'hw_version': None,
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -219,14 +219,14 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'ARTIK051_KRAC_18K',
+    'model': None,
     'model_id': None,
     'name': 'AC Office Granit',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': 'Theater',
-    'sw_version': '0.1.0',
+    'sw_version': None,
     'via_device_id': None,
   })
 # ---
