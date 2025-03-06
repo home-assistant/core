@@ -22,7 +22,7 @@ from evohomeasync2.const import (
     SZ_USE_DAYLIGHT_SAVE_SWITCHING,
     SZ_ZONES,
 )
-from evohomeasync2.schemas.typedefs import EvoLocStatusResponseT
+from evohomeasync2.schemas.typedefs import EvoLocStatusResponseT, EvoTcsConfigResponseT
 
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -115,9 +115,8 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                     SZ_USE_DAYLIGHT_SAVE_SWITCHING
                 ],
             }
-            tcs_info = self.tcs.config | {
-                SZ_ZONES: [zone.config for zone in self.tcs.zones],
-            }
+            tcs_info: EvoTcsConfigResponseT = self.tcs.config  # type: ignore[assignment]
+            tcs_info[SZ_ZONES] = [zone.config for zone in self.tcs.zones]
             if self.tcs.hotwater:
                 tcs_info[SZ_DHW] = self.tcs.hotwater.config
             gwy_info = {
