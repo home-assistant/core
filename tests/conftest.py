@@ -430,11 +430,16 @@ def verify_cleanup(
 
 
 @pytest.fixture(autouse=True)
-def reset_hass_threading_local_object() -> Generator[None]:
-    """Reset the _Hass threading.local object for every test case."""
+def reset_globals() -> Generator[None]:
+    """Reset global objects for every test case."""
     yield
+
+    # Reset the _Hass threading.local object
     ha._hass.__dict__.clear()
+
+    # Reset the frame helper globals
     frame.async_setup(None)
+    frame._REPORTED_INTEGRATIONS.clear()
 
 
 @pytest.fixture(autouse=True, scope="session")
