@@ -15,7 +15,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, PROFILE_ID_SENSOR_FORMAT
+from .const import DOMAIN
 from .coordinator import GeocachingDataUpdateCoordinator
 
 
@@ -92,8 +92,8 @@ class GeocachingProfileSensor(
         """Initialize the Geocaching sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = PROFILE_ID_SENSOR_FORMAT.format(
-            coordinator.data.user.reference_code, description.key
+        self._attr_unique_id = (
+            f"{coordinator.data.user.reference_code}_{description.key}"
         )
 
         self._attr_device_info = DeviceInfo(

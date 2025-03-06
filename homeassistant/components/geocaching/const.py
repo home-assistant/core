@@ -26,7 +26,3 @@ ENVIRONMENT_URLS = {
 }
 
 ENVIRONMENT = GeocachingApiEnvironment.Production
-
-# Sensor ID formats
-PROFILE_ID_SENSOR_FORMAT = "{}_{}"
-CACHE_ID_SENSOR_FORMAT = "{}_{}"
