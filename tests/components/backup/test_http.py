@@ -20,7 +20,6 @@ from homeassistant.components.backup import (
 )
 from homeassistant.components.backup.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import frame
 
 from .common import TEST_BACKUP_ABC123, aiter_from_iter, setup_backup_integration
 
@@ -235,7 +234,6 @@ async def test_downloading_backup_not_found(
     assert resp.status == 404
 
 
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_downloading_backup_not_found_get_backup_returns_none(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

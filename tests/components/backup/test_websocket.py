@@ -27,7 +27,7 @@ from homeassistant.components.backup.manager import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import frame, issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
@@ -234,7 +234,6 @@ async def test_details_with_errors(
         assert await client.receive_json() == snapshot
 
 
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_details_get_backup_returns_none(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -750,7 +749,6 @@ async def test_restore_remote_agent(
     assert len(restart_calls) == snapshot
 
 
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_restore_remote_agent_get_backup_returns_none(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -3603,7 +3601,6 @@ async def test_can_decrypt_on_download_with_agent_error(
 
 
 @pytest.mark.usefixtures("mock_backups")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_can_decrypt_on_download_get_backup_returns_none(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
