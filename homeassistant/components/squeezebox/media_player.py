@@ -224,23 +224,13 @@ class SqueezeBoxMediaPlayerEntity(
         self._remove_dispatcher: Callable | None = None
         self._previous_media_position = 0
         self._attr_unique_id = format_mac(player.player_id)
-        _manufacturer = None
-        if player.model.startswith("SqueezeLite") or "SqueezePlay" in player.model:
-            _manufacturer = "Ralph Irving"
-        elif (
-            "Squeezebox" in player.model
-            or "Transporter" in player.model
-            or "Slim" in player.model
-        ):
-            _manufacturer = "Logitech"
-
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=player.name,
             connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)},
             via_device=(DOMAIN_SERVER, coordinator.server_uuid),
-            model=player.model,
-            manufacturer=_manufacturer,
+            default_model=player.model,
+            default_manufacturer=player.creator,
         )
         self._browse_data = BrowseData()
 
