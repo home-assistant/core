@@ -395,14 +395,14 @@ async def test_prevent_flooding(
         f"q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+{integration}%22"
     )
 
-    frame.report(what, error_if_core=False)
+    frame.report_usage(what, core_behavior=frame.ReportBehavior.LOG)
     assert expected_message in caplog.text
     assert key in frame._REPORTED_INTEGRATIONS
     assert len(frame._REPORTED_INTEGRATIONS) == 1
 
     caplog.clear()
 
-    frame.report(what, error_if_core=False)
+    frame.report_usage(what, core_behavior=frame.ReportBehavior.LOG)
     assert expected_message not in caplog.text
     assert key in frame._REPORTED_INTEGRATIONS
     assert len(frame._REPORTED_INTEGRATIONS) == 1
@@ -442,13 +442,13 @@ async def test_report_missing_integration_frame(
         "homeassistant.helpers.frame.get_integration_frame",
         side_effect=frame.MissingIntegrationFrame,
     ):
-        frame.report(what, error_if_core=False)
+        frame.report_usage(what, core_behavior=frame.ReportBehavior.LOG)
         assert what in caplog.text
         assert caplog.text.count(what) == 1
 
         caplog.clear()
 
-        frame.report(what, error_if_core=False, log_custom_component_only=True)
+        frame.report_usage(what, core_behavior=frame.ReportBehavior.IGNORE)
         assert caplog.text == ""
 
 
@@ -492,94 +492,9 @@ async def test_report_error_if_integration(
             ),
         ),
     ):
-        frame.report("did a bad thing", error_if_integration=True)
-
-
-@pytest.mark.parametrize(
-    ("integration_frame_path", "keywords", "expected_result", "expected_log"),
-    [
-        pytest.param(
-            "homeassistant/test_core",
-            {},
-            pytest.raises(RuntimeError, match="test_report_string"),
-            0,
-            id="core default",
-        ),
-        pytest.param(
-            "homeassistant/components/test_core_integration",
-            {},
-            does_not_raise(),
-            1,
-            id="core integration default",
-        ),
-        pytest.param(
-            "custom_components/test_custom_integration",
-            {},
-            does_not_raise(),
-            1,
-            id="custom integration default",
-        ),
-        pytest.param(
-            "custom_components/test_integration_frame",
-            {"log_custom_component_only": True},
-            does_not_raise(),
-            1,
-            id="log_custom_component_only with custom integration",
-        ),
-        pytest.param(
-            "homeassistant/components/test_integration_frame",
-            {"log_custom_component_only": True},
-            does_not_raise(),
-            0,
-            id="log_custom_component_only with core integration",
-        ),
-        pytest.param(
-            "homeassistant/test_integration_frame",
-            {"error_if_core": False},
-            does_not_raise(),
-            1,
-            id="disable error_if_core",
-        ),
-        pytest.param(
-            "custom_components/test_integration_frame",
-            {"error_if_integration": True},
-            pytest.raises(RuntimeError, match="test_report_string"),
-            1,
-            id="error_if_integration with custom integration",
-        ),
-        pytest.param(
-            "homeassistant/components/test_integration_frame",
-            {"error_if_integration": True},
-            pytest.raises(RuntimeError, match="test_report_string"),
-            1,
-            id="error_if_integration with core integration",
-        ),
-    ],
-)
-@pytest.mark.usefixtures("hass", "mock_integration_frame")
-async def test_report(
-    caplog: pytest.LogCaptureFixture,
-    snapshot: SnapshotAssertion,
-    keywords: dict[str, Any],
-    expected_result: AbstractContextManager,
-    expected_log: int,
-) -> None:
-    """Test report.
-
-    Note: This test doesn't set up mock integrations, so it will not
-    find the correct issue tracker URL, and we don't check for that.
-    """
-
-    what = "test_report_string"
-
-    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expected_result:
-        frame.report(what, **keywords)
-
-    assert caplog.text.count(what) == expected_log
-    reports = [
-        rec.message for rec in caplog.records if rec.message.startswith("Detected")
-    ]
-    assert reports == snapshot
+        frame.report_usage(
+            "did a bad thing", core_integration_behavior=frame.ReportBehavior.ERROR
+        )
 
 
 @pytest.mark.parametrize(
