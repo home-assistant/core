@@ -270,7 +270,7 @@ def _report_usage(
                 level,
             )
             return
-        _report_integration_unknown(what, core_behavior, breaks_in_ha_version, None)
+        _report_no_integration(what, core_behavior, breaks_in_ha_version, None)
         return
 
     try:
@@ -278,7 +278,7 @@ def _report_usage(
             exclude_integrations=exclude_integrations
         )
     except MissingIntegrationFrame as err:
-        _report_integration_unknown(what, core_behavior, breaks_in_ha_version, err)
+        _report_no_integration(what, core_behavior, breaks_in_ha_version, err)
         return
 
     integration_behavior = core_integration_behavior
@@ -395,13 +395,17 @@ def _report_integration_frame(
     )
 
 
-def _report_integration_unknown(
+def _report_no_integration(
     what: str,
     core_behavior: ReportBehavior,
     breaks_in_ha_version: str | None,
     err: MissingIntegrationFrame | None,
 ) -> None:
-    """Report incorrect usage when an integration is not identified."""
+    """Report incorrect usage when no integration could be identified.
+
+    This could happen because the offending call happened outside of an integration,
+    or because the integration could not be identified.
+    """
     msg = f"Detected code that {what}. Please report this issue"
     if core_behavior is ReportBehavior.ERROR:
         raise RuntimeError(msg) from err
