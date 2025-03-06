@@ -324,6 +324,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="sensor_choose",
             entity_category=EntityCategory.CONFIG,
             name="Sensor location",
+            icon="mdi:thermostat-cog",
         ),
     ),
 }
