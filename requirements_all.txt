@@ -234,7 +234,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2024.2.1
+aioecowitt==2025.3.1
 
 # homeassistant.components.co2signal
 aioelectricitymaps==0.4.0
@@ -291,7 +291,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.6.4
 
 # homeassistant.components.lifx
-aiolifx==1.1.2
+aiolifx==1.1.4
 
 # homeassistant.components.lookin
 aiolookin==1.0.0
@@ -422,7 +422,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.3.1
+aiowebdav2==0.4.0
 
 # homeassistant.components.webostv
 aiowebostv==0.7.3
@@ -744,7 +744,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.35.1
+dbus-fast==2.37.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.11
@@ -986,7 +986,7 @@ gcal-sync==7.0.0
 geniushub-client==0.7.1
 
 # homeassistant.components.geocaching
-geocachingapi==0.2.1
+geocachingapi==0.3.0
 
 # homeassistant.components.aprs
 geopy==2.3.0
@@ -1155,7 +1155,7 @@ holidays==0.68
 home-assistant-frontend==20250305.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.2.26
+home-assistant-intents==2025.3.5
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.1.7
@@ -2140,7 +2140,7 @@ pymsteams==0.1.12
 pymysensors==0.24.0
 
 # homeassistant.components.iron_os
-pynecil==4.0.1
+pynecil==4.1.0
 
 # homeassistant.components.netgear
 pynetgear==0.10.10
@@ -2310,7 +2310,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.5.0
+pysmartthings==2.6.1
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2346,7 +2346,7 @@ pysqueezebox==0.12.0
 pystiebeleltron==0.0.1.dev2
 
 # homeassistant.components.suez_water
-pysuezV2==2.0.3
+pysuezV2==2.0.4
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
@@ -2890,7 +2890,7 @@ tessie-api==0.1.1
 # tf-models-official==2.5.0
 
 # homeassistant.components.thermobeacon
-thermobeacon-ble==0.8.0
+thermobeacon-ble==0.8.1
 
 # homeassistant.components.thermopro
 thermopro-ble==0.11.0
