@@ -13,6 +13,7 @@ import queue
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
+from uuid import uuid4
 
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
@@ -78,7 +79,6 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
-from homeassistant.util import slugify
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from .addon import get_addon_manager
@@ -230,12 +230,6 @@ class PlatformField:
     error: str | None = None
 
 
-CORE_PLATFORM_FIELDS = [
-    CONF_PLATFORM,
-    CONF_NAME,
-    CONF_ENTITY_PICTURE,
-]
-
 COMMON_ENTITY_FIELDS = {
     CONF_PLATFORM: PlatformField(SUBENTRY_PLATFORM_SELECTOR, True, str),
     CONF_NAME: PlatformField(TEXT_SELECTOR, False, str),
@@ -247,7 +241,7 @@ COMMON_MQTT_FIELDS = {
     CONF_RETAIN: PlatformField(BOOLEAN_SELECTOR, False, bool),
 }
 PLATFORM_MQTT_FIELDS = {
-    "notify": {
+    Platform.NOTIFY.value: {
         CONF_COMMAND_TOPIC: PlatformField(
             TEXT_SELECTOR, True, valid_publish_topic, "invalid_publish_topic"
         ),
@@ -863,7 +857,6 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
     """Handle MQTT subentry flow."""
 
     _subentry_data: MqttSubentryData
-    _object_id: str | None = None
     _component_id: str | None = None
     _dirty: bool = False
 
@@ -897,9 +890,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 return await self.async_step_summary_menu()
             return await self.async_step_entity()
 
-        data_schema = MQTT_DEVICE_SCHEMA
         data_schema = self.add_suggested_values_to_schema(
-            data_schema,
+            MQTT_DEVICE_SCHEMA,
             self._subentry_data[CONF_DEVICE] if user_input is None else user_input,
         )
         return self.async_show_form(
@@ -918,34 +910,26 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         data_schema_fields = COMMON_ENTITY_FIELDS
         data_schema = data_schema_from_fields(data_schema_fields)
         if user_input is not None:
-            # Add the component but check if the object ID is unique and not reconfiguring
             validate_user_input(user_input, data_schema_fields, errors)
-            platform_object_id = (
-                f"{user_input['platform']}_{slugify(user_input.get('name', 'none'))}"
-            )
-            if self._object_id != platform_object_id:
-                if platform_object_id in self._subentry_data["components"]:
-                    errors[CONF_NAME] = "name_not_unique"
-                if self._object_id is not None and self.source == SOURCE_RECONFIGURE:
-                    errors[CONF_NAME] = "name_not_mutable"
             if not errors:
-                self._object_id = platform_object_id
+                if self._component_id is None:
+                    self._component_id = uuid4().hex
                 if component_data := self._subentry_data["components"].setdefault(
-                    platform_object_id, {}
+                    self._component_id, {}
                 ):
                     # Remove the fields from the component data if they are not in the user input
                     for field in [
                         core_field
-                        for core_field in CORE_PLATFORM_FIELDS
+                        for core_field in COMMON_ENTITY_FIELDS
                         if core_field in component_data and core_field not in user_input
                     ]:
                         component_data.pop(field)
                 component_data.update(user_input)
                 return await self.async_step_mqtt_platform_config()
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
-        elif self.source == SOURCE_RECONFIGURE and self._object_id is not None:
+        elif self.source == SOURCE_RECONFIGURE and self._component_id is not None:
             suggested_values = deepcopy(
-                self._subentry_data["components"][self._object_id]
+                self._subentry_data["components"][self._component_id]
             )
             data_schema = self.add_suggested_values_to_schema(
                 data_schema, suggested_values
@@ -964,7 +948,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Select the entity to update."""
         if user_input:
-            self._object_id = user_input["component"]
+            self._component_id = user_input["component"]
             return await self.async_step_entity()
         device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
         entities = [
@@ -974,7 +958,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             for key, component in self._subentry_data["components"].items()
         ]
         if len(entities) == 1:
-            self._object_id = entities[0]["value"]
+            self._component_id = entities[0]["value"]
             return await self.async_step_entity()
         data_schema = vol.Schema(
             {
@@ -1026,11 +1010,11 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         """Configure entity platform MQTT details."""
         errors: dict[str, str] = {}
         if TYPE_CHECKING:
-            assert self._object_id is not None
+            assert self._component_id is not None
         device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
-        platform = self._subentry_data["components"][self._object_id][CONF_PLATFORM]
+        platform = self._subentry_data["components"][self._component_id][CONF_PLATFORM]
         entity_name: str | None
-        if entity_name := self._subentry_data["components"][self._object_id].get(
+        if entity_name := self._subentry_data["components"][self._component_id].get(
             CONF_NAME
         ):
             full_entity_name: str = f"{device_name} {entity_name}"
@@ -1043,7 +1027,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             # Test entity fields against the validator
             validate_user_input(user_input, data_schema_fields, errors)
             if not errors:
-                component_data = self._subentry_data["components"][self._object_id]
+                component_data = self._subentry_data["components"][self._component_id]
                 # Remove the fields from the component data if they are not in the user input
                 for field in [
                     form_field
@@ -1052,7 +1036,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 ]:
                     component_data.pop(field)
                 component_data.update(user_input)
-                self._object_id = None
+                self._component_id = None
                 if self.source == SOURCE_RECONFIGURE:
                     self._dirty = True
                     return await self.async_step_summary_menu()
@@ -1061,7 +1045,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
         else:
             data_schema = self.add_suggested_values_to_schema(
-                data_schema, self._subentry_data["components"][self._object_id]
+                data_schema, self._subentry_data["components"][self._component_id]
             )
 
         return self.async_show_form(
@@ -1105,7 +1089,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Show summary menu and decide to add more entities or to finish the flow."""
-        self._object_id = None
+        self._component_id = None
         mqtt_device = self._subentry_data[CONF_DEVICE][CONF_NAME]
         mqtt_items = ", ".join(
             f"{mqtt_device} {component.get(CONF_NAME, '-')}"

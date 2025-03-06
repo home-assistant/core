@@ -2699,7 +2699,21 @@ async def test_subentry_configflow(
     assert result["step_id"] == "entity"
     assert result["errors"] == {}
 
-    # Process entity flow
+    # Process entity flow (initial step)
+
+    # Test the entity picture URL validation
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "platform": component["platform"],
+            "entity_picture": "invalid url",
+        }
+        | mock_entity_user_input,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity"
+
+    # Try again with valid data
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={
@@ -2719,7 +2733,7 @@ async def test_subentry_configflow(
 
     # Process entity platform config flow
 
-    # Test an invalid mqtt user input case
+    # Test an invalid mqtt user_input case
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input=mock_failed_mqtt_user_input,
@@ -2735,16 +2749,12 @@ async def test_subentry_configflow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device_name
 
-    subentry_id = next(iter(config_entry.subentries.keys()))
-    assert config_entry.subentries == {
-        subentry_id: config_entries.ConfigSubentry(
-            data=config_subentries_data,
-            subentry_id=subentry_id,
-            subentry_type="device",
-            title=device_name,
-            unique_id=None,
-        )
-    }
+    subentry_component = next(
+        iter(next(iter(config_entry.subentries.values())).data["components"].values())
+    )
+    assert subentry_component == next(
+        iter(config_subentries_data["components"].values())
+    )
 
     await hass.async_block_till_done()
 
@@ -2951,18 +2961,6 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "entity"
 
-    # submit the new common entity data and try to change the name
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        user_input={
-            "platform": component_list[1]["platform"],
-            "name": "New name not possible",
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "entity"
-    assert result["errors"] == {"name": "name_not_mutable"}
-
     # submit the common entity data with changed entity_picture
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -2991,7 +2989,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
-    # Check we still have out components
+    # Check we still have our components
     new_components = deepcopy(dict(subentry.data))["components"]
 
     # Check the second component was updated
@@ -3048,9 +3046,9 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     components = deepcopy(dict(subentry.data))["components"]
     assert len(components) == 1
 
-    object_id, component = next(iter(components.items()))
+    component_id, component = next(iter(components.items()))
 
-    unique_entity_id = f"{subentry_id}_{object_id}"
+    unique_entity_id = f"{subentry_id}_{component_id}"
     entity_id = entity_registry.async_get_entity_id(
         domain=component["platform"], platform=mqtt.DOMAIN, unique_id=unique_entity_id
     )
@@ -3107,11 +3105,11 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     assert len(new_components) == 1
 
     # Check our update was successful
-    assert "entity_picture" not in new_components[object_id]
+    assert "entity_picture" not in new_components[component_id]
 
     # Check the second component was updated
     for key, value in user_input_mqtt.items():
-        assert new_components[object_id][key] == value
+        assert new_components[component_id][key] == value
 
 
 @pytest.mark.parametrize(
@@ -3165,8 +3163,8 @@ async def test_subentry_reconfigure_add_entity(
     # assert we have an entity for the subentry component
     components = deepcopy(dict(subentry.data))["components"]
     assert len(components) == 1
-    object_id_1, component1 = next(iter(components.items()))
-    unique_entity_id = f"{subentry_id}_{object_id_1}"
+    component_id_1, component1 = next(iter(components.items()))
+    unique_entity_id = f"{subentry_id}_{component_id_1}"
     entity_id = entity_registry.async_get_entity_id(
         domain=component1["platform"], platform=mqtt.DOMAIN, unique_id=unique_entity_id
     )
@@ -3191,20 +3189,7 @@ async def test_subentry_reconfigure_add_entity(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "entity"
 
-    # submit the new common entity but not with a unique name
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        user_input={
-            "platform": component1["platform"],
-            "name": component1["name"],
-            "entity_picture": "https://example.com",
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "entity"
-    assert result["errors"] == {"name": "name_not_unique"}
-
-    # submit the new common entity data, with unique name
+    # submit the new common entity data
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input=user_input_entity,
@@ -3220,7 +3205,7 @@ async def test_subentry_reconfigure_add_entity(
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
 
-    # finish reconfigure flow
+    # Finish reconfigure flow
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {"next_step_id": "finish_reconfigure"},
@@ -3232,12 +3217,12 @@ async def test_subentry_reconfigure_add_entity(
     new_components = deepcopy(dict(subentry.data))["components"]
     assert len(new_components) == 2
 
-    object_id_2 = next(iter(set(new_components) - {object_id_1}))
+    component_id_2 = next(iter(set(new_components) - {component_id_1}))
 
     # Check our new entity was added correctly
     expected_component_config = user_input_entity | user_input_mqtt
     for key, value in expected_component_config.items():
-        assert new_components[object_id_2][key] == value
+        assert new_components[component_id_2][key] == value
 
 
 @pytest.mark.parametrize(
