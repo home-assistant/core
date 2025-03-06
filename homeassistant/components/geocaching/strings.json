@@ -52,6 +52,9 @@
       "favorite_points": { "name": "Favorite points" },
       "souvenir_count": { "name": "Total souvenirs" },
       "awarded_favorite_points": { "name": "Awarded favorite points" },
+      "total_tracked_trackables_distance_traveled": {
+        "name": "Total tracked trackables distance traveled"
+      },
       "cache_name": {
         "name": "Name"
       },

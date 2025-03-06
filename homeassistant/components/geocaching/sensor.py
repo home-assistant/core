@@ -74,6 +74,19 @@ PROFILE_SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
         entity_registry_visible_default=False,
         value_fn=lambda status: status.user.awarded_favorite_points,
     ),
+    GeocachingSensorEntityDescription(
+        key="total_tracked_trackables_distance_traveled",
+        translation_key="total_tracked_trackables_distance_traveled",
+        native_unit_of_measurement="km",
+        value_fn=lambda status: round(
+            sum(
+                [
+                    trackable.kilometers_traveled or 0
+                    for trackable in status.trackables.values()
+                ]
+            )
+        ),
+    ),
 )
 
 

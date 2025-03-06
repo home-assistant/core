@@ -16,6 +16,9 @@
       "awarded_favorite_points": {
         "default": "mdi:heart"
       },
+      "total_tracked_trackables_distance_traveled": {
+        "default": "mdi:map-marker-distance"
+      },
       "cache_name": {
         "default": "mdi:label"
       },
