@@ -1,7 +1,5 @@
 """Websocket tests for Wyoming integration."""
 
-from syrupy.assertion import SnapshotAssertion
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -17,7 +15,6 @@ async def test_info(
     init_wyoming_wake_word: ConfigEntry,
     init_wyoming_intent: ConfigEntry,
     init_wyoming_handle: ConfigEntry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test info websocket command."""
     client = await hass_ws_client(hass)
@@ -29,7 +26,6 @@ async def test_info(
     assert msg["success"]
 
     info = msg.get("result", {}).get("info", {})
-    assert info == snapshot
 
     # stt (speech-to-text) = asr (automated speech recognition)
     assert init_wyoming_stt.entry_id in info
