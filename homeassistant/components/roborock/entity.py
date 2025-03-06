@@ -57,16 +57,13 @@ class RoborockEntityV1(RoborockEntity):
         """Get an item from the api cache."""
         return self._api.cache[attribute]
 
-    async def send(
+    async def _send_command(
         self,
         command: RoborockCommand | str,
+        api: RoborockClientV1,
         params: dict[str, Any] | list[Any] | int | None = None,
-        cloud_api: RoborockMqttClientV1 | None = None,
     ) -> dict:
-        """Send a command to a vacuum cleaner."""
-        api = self._api
-        if cloud_api is not None:
-            api = cloud_api
+        """Send a Roborock command with params to a given api."""
         try:
             response: dict = await api.send_command(command, params)
         except RoborockException as err:
@@ -82,6 +79,14 @@ class RoborockEntityV1(RoborockEntity):
                 },
             ) from err
         return response
+
+    async def send(
+        self,
+        command: RoborockCommand | str,
+        params: dict[str, Any] | list[Any] | int | None = None,
+    ) -> dict:
+        """Send a command to a vacuum cleaner."""
+        return await self._send_command(command, self._api, params)
 
     @property
     def api(self) -> RoborockClientV1:
@@ -158,13 +163,12 @@ class RoborockCoordinatedEntityV1(
         self,
         command: RoborockCommand | str,
         params: dict[str, Any] | list[Any] | int | None = None,
-        cloud_api: RoborockMqttClientV1 | None = None,
     ) -> dict:
         """Overloads normal send command but refreshes coordinator."""
         if command in CLOUD_REQUIRED:
-            res = await super().send(command, params, self.coordinator.cloud_api)
+            res = await self._send_command(command, self.coordinator.cloud_api, params)
         else:
-            res = await super().send(command, params)
+            res = await self._send_command(command, self._api, params)
         await self.coordinator.async_refresh()
         return res
 
