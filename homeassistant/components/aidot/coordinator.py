@@ -12,7 +12,7 @@ from aidot.const import (
     CONF_LOGIN_INFO,
     CONF_TYPE,
 )
-from aidot.device_client import DeviceClient, DeviceInformation, DeviceStatusData
+from aidot.device_client import DeviceClient, DeviceStatusData
 from aidot.exceptions import AidotAuthFailed, AidotNotLogin, AidotUserOrPassIncorrect
 
 from homeassistant.components.sensor import timedelta
@@ -51,7 +51,6 @@ class AidotDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceStatusData]):
             update_interval=timedelta(seconds=1),
         )
         self.device_client = device_client
-        # self.hass.loop.create_task(device_client.ping_task())
         self.identifier = config_entry.entry_id
 
     async def _async_setup(self) -> None:
@@ -68,25 +67,21 @@ class AidotDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceStatusData]):
     async def _async_update_data(self) -> DeviceStatusData:
         """Update data async."""
         try:
+            if self.device_client.connect_and_login is False:
+                await self.device_client.async_login()
             status = await self.device_client.read_status()
         except AidotNotLogin:
-            await self.device_client.async_login()
-            return DeviceStatusData()
+            status = self.device_client.status
+            status.online = False
         return status
 
-    @property
-    def device_info(self) -> DeviceInformation:
-        """Device information."""
-        return self.device_client.info
 
-
-class AidotDeviceManagerCoordinator(
-    DataUpdateCoordinator[dict[str, AidotDeviceUpdateCoordinator]]
-):
+class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Aidot data."""
 
     config_entry: AidotConfigEntry
     client: AidotClient
+    device_coordinators: dict[str, AidotDeviceUpdateCoordinator]
 
     def __init__(
         self,
@@ -108,6 +103,7 @@ class AidotDeviceManagerCoordinator(
         self.client.start_discover()
         self.client.set_token_fresh_cb(self.token_fresh_cb)
         self.identifier = config_entry.entry_id
+        self.device_coordinators = {}
 
     async def _async_setup(self) -> None:
         """Set up the coordinator.
@@ -120,7 +116,7 @@ class AidotDeviceManagerCoordinator(
         except AidotUserOrPassIncorrect as error:
             raise ConfigEntryError from error
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> None:
         """Update data async."""
         try:
             data = await self.client.async_get_all_device()
@@ -128,10 +124,6 @@ class AidotDeviceManagerCoordinator(
             self.token_fresh_cb()
             raise ConfigEntryError from error
 
-        current_coordinators: dict[str, AidotDeviceUpdateCoordinator] = self.data
-        if current_coordinators is None:
-            current_coordinators = {}
-        final_coordinators: dict[str, AidotDeviceUpdateCoordinator] = {}
         for device in data.get(CONF_DEVICE_LIST):
             if (
                 device[CONF_TYPE] == Platform.LIGHT
@@ -139,15 +131,13 @@ class AidotDeviceManagerCoordinator(
                 and device[CONF_AES_KEY][0] is not None
             ):
                 dev_id = device.get(CONF_ID)
-                update_coordinator = current_coordinators.get(dev_id)
-                device_client = self.client.get_device_client(device)
-                if update_coordinator is None:
-                    update_coordinator = AidotDeviceUpdateCoordinator(
+                if dev_id not in self.device_coordinators:
+                    device_client = self.client.get_device_client(device)
+                    device_coordinator = AidotDeviceUpdateCoordinator(
                         self.hass, self.config_entry, device_client
                     )
-                    await update_coordinator.async_config_entry_first_refresh()
-                final_coordinators[dev_id] = update_coordinator
-        return final_coordinators
+                    await device_coordinator.async_config_entry_first_refresh()
+                    self.device_coordinators[dev_id] = device_coordinator
 
     def cleanup(self) -> None:
         """Perform cleanup actions."""
