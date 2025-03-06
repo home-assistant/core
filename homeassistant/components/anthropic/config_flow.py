@@ -139,11 +139,14 @@ class AnthropicOptionsFlow(OptionsFlow):
                 if user_input[CONF_LLM_HASS_API] == "none":
                     user_input.pop(CONF_LLM_HASS_API)
 
+                thinking_budget = user_input.get(
+                    CONF_THINKING_BUDGET_TOKENS, RECOMMENDED_THINKING_BUDGET_TOKENS
+                )
+
+                extended_thinking_enabled: bool = thinking_budget >= MIN_THINKING_BUDGET
+
                 if (
-                    user_input.get(
-                        CONF_THINKING_BUDGET_TOKENS, RECOMMENDED_THINKING_BUDGET_TOKENS
-                    )
-                    >= MIN_THINKING_BUDGET
+                    extended_thinking_enabled
                     and user_input.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
                     not in THINKING_MODELS
                 ):
@@ -152,17 +155,14 @@ class AnthropicOptionsFlow(OptionsFlow):
                     )
 
                 if (
-                    user_input.get(
-                        CONF_THINKING_BUDGET_TOKENS, RECOMMENDED_THINKING_BUDGET_TOKENS
-                    )
-                    >= MIN_THINKING_BUDGET
+                    extended_thinking_enabled
                     and user_input.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE) != 1.0
                 ):
                     errors[CONF_TEMPERATURE] = "thinking_budget_incompatible"
 
-                if user_input.get(
-                    CONF_THINKING_BUDGET_TOKENS, RECOMMENDED_THINKING_BUDGET_TOKENS
-                ) >= user_input.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS):
+                if thinking_budget >= user_input.get(
+                    CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
+                ):
                     errors[CONF_MAX_TOKENS] = "thinking_budget_too_large"
 
                 if not errors:
