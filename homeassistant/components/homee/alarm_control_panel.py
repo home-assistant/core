@@ -1,4 +1,4 @@
-"""The homee alarm control panel platform."""
+"""The Homee alarm control panel platform."""
 
 from dataclasses import dataclass
 
@@ -23,7 +23,7 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class HomeeAlarmControlPanelEntityDescription(AlarmControlPanelEntityDescription):
-    """Describes a homee alarm panel entity."""
+    """Describes a Homee alarm panel entity."""
 
     code_arm_required: bool = False
     state_list: list[AlarmControlPanelState]
@@ -64,7 +64,7 @@ async def async_setup_entry(
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the homee platform for the alarm control panel component."""
+    """Add the Homee platform for the alarm control panel component."""
 
     async_add_entities(
         HomeeAlarmPanel(attribute, config_entry, ALARM_DESCRIPTIONS[attribute.type])
@@ -75,7 +75,7 @@ async def async_setup_entry(
 
 
 class HomeeAlarmPanel(HomeeEntity, AlarmControlPanelEntity):
-    """Representation of a homee alarm control panel."""
+    """Representation of a Homee alarm control panel."""
 
     entity_description: HomeeAlarmControlPanelEntityDescription
 
@@ -85,7 +85,7 @@ class HomeeAlarmPanel(HomeeEntity, AlarmControlPanelEntity):
         entry: HomeeConfigEntry,
         description: HomeeAlarmControlPanelEntityDescription,
     ) -> None:
-        """Initialize a homee alarm Control panel entity."""
+        """Initialize a Homee alarm Control panel entity."""
         super().__init__(attribute, entry)
         self.entity_description = description
         self._attr_code_arm_required = description.code_arm_required
@@ -99,20 +99,11 @@ class HomeeAlarmPanel(HomeeEntity, AlarmControlPanelEntity):
 
     @property
     def changed_by(self) -> str:
-        """Return by what the lock was last changed."""
+        """Return by whom or what  the entity was last changed."""
         changed_by_name = get_name_for_enum(
             AttributeChangedBy, self._attribute.changed_by
         )
         return f"{changed_by_name}-{self._attribute.changed_by_id}"
-
-    async def async_alarm_disarm(self, code: str | None = None) -> None:
-        """Send disarm command."""
-        if AlarmControlPanelState.DISARMED in self.entity_description.state_list:
-            await self.async_set_homee_value(
-                self.entity_description.state_list.index(
-                    AlarmControlPanelState.DISARMED
-                )
-            )
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
