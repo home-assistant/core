@@ -487,6 +487,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "homekit",
     "homekit_controller",
     "homematic",
+    "homematicip_cloud",
     "homeworks",
     "honeywell",
     "horizon",
