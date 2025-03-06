@@ -26,7 +26,7 @@ async def test_load_unload(
     integration: MockConfigEntry,
     receive_message: Callable[[str], None],
 ) -> None:
-    """Test a loading and unloading the MySensors config entry."""
+    """Test loading and unloading the MySensors config entry."""
     config_entry = integration
 
     assert config_entry.state == ConfigEntryState.LOADED
