@@ -951,6 +951,7 @@ UNITS = {
     "F": UnitOfTemperature.FAHRENHEIT,
     "lux": LIGHT_LUX,
     "mG": None,
+    "μg/m^3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
 }
 
 
