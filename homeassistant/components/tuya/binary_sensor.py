@@ -286,7 +286,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             key=DPCode.VALVE_STATE,
             device_class=BinarySensorDeviceClass.RUNNING,
             on_value="open",
-            name = "Status",
+            name="Status",
             icon="mdi:radiator",
         ),
     ),

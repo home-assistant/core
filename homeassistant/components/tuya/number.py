@@ -303,6 +303,34 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Thermostat
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
+    "wk": (
+        NumberEntityDescription(
+            key=DPCode.BACKLIGHT,
+            translation_key="backlight",
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.CONFIG,
+            name = "Backlight",
+            icon="mdi:knob",
+        ),
+        # NumberEntityDescription(
+        #     key=DPCode.CALIBRATION,
+        #     translation_key="calibration",
+        #     native_unit_of_measurement=PERCENTAGE,
+        #     entity_category=EntityCategory.CONFIG,
+        #     name = "Calibration",
+        #     icon="mdi:thermometer",
+        # ),
+        # NumberEntityDescription(
+        #     key=DPCode.CALIBRATION_TEMP,
+        #     translation_key="calibration_temperature",
+        #     device_class=NumberDeviceClass.TEMPERATURE,
+        #     entity_category=EntityCategory.CONFIG,
+        #     name = "Calibration Temperature",
+        #     icon="mdi:thermometer",
+        # ),
+    )
 }
 
 # Smart Camera - Low power consumption camera (duplicate of `sp`)

@@ -196,6 +196,9 @@
       },
       "down_delay": {
         "name": "Down delay"
+      },
+      "backlight_brightness": {
+        "name": "Backlight brightness"
       }
     },
     "select": {
