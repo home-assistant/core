@@ -70,6 +70,9 @@
       "cache_hidden_date": {
         "name": "Hidden date"
       },
+      "cache_location": {
+        "name": "Location"
+      },
       "trackable_name": {
         "name": "Name"
       },
@@ -87,6 +90,9 @@
       },
       "trackable_release_date": {
         "name": "Release date"
+      },
+      "trackable_location": {
+        "name": "Location"
       }
     }
   }

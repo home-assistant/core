@@ -24,6 +24,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, PROFILE_ID_SENSOR_FORMAT
 from .coordinator import GeocachingDataUpdateCoordinator
+from .device_tracker import GeoEntityCacheLocation, GeoEntityTrackableLocation
 from .entity import (
     GeocachingCache,
     GeocachingTrackable,
@@ -181,6 +182,9 @@ def get_trackable_entities(
 
     entities: list[GeoEntityBaseTrackable] = []
 
+    # Tracker entities
+    entities.extend([GeoEntityTrackableLocation(coordinator, trackable)])
+
     # Sensor entities
     entities.extend(
         [
@@ -262,6 +266,9 @@ def get_cache_entities(
 ) -> list[GeoEntityBaseCache]:
     """Generate all entities for a single cache."""
     entities: list[GeoEntityBaseCache] = []
+
+    # Tracker entities
+    entities.extend([GeoEntityCacheLocation(coordinator, cache)])
 
     # Sensor entities
     entities.extend(
