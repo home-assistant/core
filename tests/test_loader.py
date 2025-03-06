@@ -56,12 +56,35 @@ async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
     with pytest.raises(loader.CircularDependency):
         await loader._async_component_dependencies(hass, mod_4)
 
+    # Create a circular after_dependency without a hard dependency
+    mock_integration(
+        hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod4"]})
+    )
+    mod_4 = mock_integration(
+        hass, MockModule("mod4", partial_manifest={"after_dependencies": ["mod2"]})
+    )
+    # this currently doesn't raise, but it should. Will be improved in a follow-up.
+    await loader._async_component_dependencies(hass, mod_4)
+
 
 async def test_nonexistent_component_dependencies(hass: HomeAssistant) -> None:
     """Test if we can detect nonexistent dependencies of components."""
     mod_1 = mock_integration(hass, MockModule("mod1", dependencies=["nonexistent"]))
     with pytest.raises(loader.IntegrationNotFound):
         await loader._async_component_dependencies(hass, mod_1)
+    mod_2 = mock_integration(hass, MockModule("mod2", dependencies=["mod1"]))
+
+    assert not await mod_2.resolve_dependencies()
+    assert mod_2.all_dependencies_resolved
+    with pytest.raises(RuntimeError):
+        mod_2.all_dependencies  # noqa: B018
+
+    # this currently is not resolved, because intermediate results are not cached
+    # this will be improved in a follow-up
+    assert not mod_1.all_dependencies_resolved
+    assert not await mod_1.resolve_dependencies()
+    with pytest.raises(RuntimeError):
+        mod_1.all_dependencies  # noqa: B018
 
 
 def test_component_loader(hass: HomeAssistant) -> None:
