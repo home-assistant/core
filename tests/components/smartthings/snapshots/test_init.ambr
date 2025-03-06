@@ -263,6 +263,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ac_rac_100001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'theater',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'F8042E25-0E53-0000-0000-000000000000',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'TP6X_RAC_15K',
+    'model_id': None,
+    'name': 'Corridor A/C',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': 'Theater',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ks_microwave_0101x]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
