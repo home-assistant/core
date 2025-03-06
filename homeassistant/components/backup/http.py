@@ -59,10 +59,13 @@ class DownloadBackupView(HomeAssistantView):
         if agent_id not in manager.backup_agents:
             return Response(status=HTTPStatus.BAD_REQUEST)
         agent = manager.backup_agents[agent_id]
-        backup = await agent.async_get_backup(backup_id)
+        try:
+            backup = await agent.async_get_backup(backup_id)
+        except BackupNotFound:
+            return Response(status=HTTPStatus.NOT_FOUND)
 
-        # We don't need to check if the path exists, aiohttp.FileResponse will handle
-        # that
+        # Check for None to be backwards compatible with the old BackupAgent API,
+        # this can be removed in HA Core 2025.10
         if backup is None:
             return Response(status=HTTPStatus.NOT_FOUND)
 
@@ -92,6 +95,8 @@ class DownloadBackupView(HomeAssistantView):
     ) -> StreamResponse | FileResponse | Response:
         if agent_id in manager.local_backup_agents:
             local_agent = manager.local_backup_agents[agent_id]
+            # We don't need to check if the path exists, aiohttp.FileResponse will
+            # handle that
             path = local_agent.get_backup_path(backup_id)
             return FileResponse(path=path.as_posix(), headers=headers)
 

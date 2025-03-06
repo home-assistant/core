@@ -81,6 +81,7 @@ from .helpers import (
     entity,
     entity_registry,
     floor_registry,
+    frame,
     issue_registry,
     label_registry,
     recorder,
@@ -442,9 +443,10 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
     if DATA_REGISTRIES_LOADED in hass.data:
         return
     hass.data[DATA_REGISTRIES_LOADED] = None
-    translation.async_setup(hass)
     entity.async_setup(hass)
+    frame.async_setup(hass)
     template.async_setup(hass)
+    translation.async_setup(hass)
     await asyncio.gather(
         create_eager_task(get_internal_store_manager(hass).async_initialize()),
         create_eager_task(area_registry.async_load(hass)),
@@ -665,11 +667,10 @@ def _create_log_file(
         err_handler = _RotatingFileHandlerWithoutShouldRollOver(
             err_log_path, backupCount=1
         )
-
-    try:
-        err_handler.doRollover()
-    except OSError as err:
-        _LOGGER.error("Error rolling over log file: %s", err)
+        try:
+            err_handler.doRollover()
+        except OSError as err:
+            _LOGGER.error("Error rolling over log file: %s", err)
 
     return err_handler
 
