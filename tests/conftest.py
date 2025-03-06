@@ -437,6 +437,13 @@ def reset_hass_threading_local_object() -> Generator[None]:
     frame.async_setup(None)
 
 
+@pytest.fixture(autouse=True)
+def reset_frame_reported_integrations() -> Generator[None]:
+    """Reset the frame._REPORTED_INTEGRATIONS set for every test case."""
+    yield
+    frame._REPORTED_INTEGRATIONS.clear()
+
+
 @pytest.fixture(autouse=True, scope="session")
 def bcrypt_cost() -> Generator[None]:
     """Run with reduced rounds during tests, to speed up uses."""

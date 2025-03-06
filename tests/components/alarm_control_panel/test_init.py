@@ -1,7 +1,6 @@
 """Test for the alarm control panel const module."""
 
 from typing import Any
-from unittest.mock import patch
 
 import pytest
 
@@ -23,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_registry as er, frame
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from . import help_async_setup_entry_init, help_async_unload_entry
@@ -222,7 +221,6 @@ async def test_alarm_control_panel_with_default_code(
     mock_alarm_control_panel_entity.calls_disarm.assert_called_with("1234")
 
 
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_alarm_control_panel_not_log_deprecated_state_warning(
     hass: HomeAssistant,
     mock_alarm_control_panel_entity: MockAlarmControlPanel,
@@ -238,7 +236,6 @@ async def test_alarm_control_panel_not_log_deprecated_state_warning(
 
 
 @pytest.mark.usefixtures("mock_as_custom_component")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_alarm_control_panel_log_deprecated_state_warning_using_state_prop(
     hass: HomeAssistant,
     code_format: CodeFormat | None,
@@ -303,7 +300,6 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_state_prop
 
 
 @pytest.mark.usefixtures("mock_as_custom_component")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state_attr(
     hass: HomeAssistant,
     code_format: CodeFormat | None,
@@ -385,7 +381,6 @@ async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state
 
 
 @pytest.mark.usefixtures("mock_as_custom_component")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_alarm_control_panel_deprecated_state_does_not_break_state(
     hass: HomeAssistant,
     code_format: CodeFormat | None,
