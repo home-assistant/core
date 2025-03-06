@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import base64
+import binascii
 from collections.abc import Callable, Coroutine
 import dataclasses
-from datetime import datetime
 from functools import partial, wraps
 from typing import Any, Concatenate, Literal, cast
 
@@ -455,9 +456,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_node_capabilities)
     websocket_api.async_register_command(hass, websocket_invoke_cc_api)
     websocket_api.async_register_command(hass, websocket_get_integration_settings)
-    hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
-    hass.http.register_view(BackupNVMRawView())
-    hass.http.register_view(RestoreNVMView())
+    websocket_api.async_register_command(hass, websocket_backup_nvm_raw)
+    websocket_api.async_register_command(hass, websocket_restore_nvm)
 
 
 @websocket_api.require_admin
@@ -2784,96 +2784,72 @@ def websocket_get_integration_settings(
     )
 
 
-class BackupNVMRawView(HomeAssistantView):
-    """View to backup NVM raw data."""
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/backup_nvm_raw",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_backup_nvm_raw(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Backup NVM data."""
+    result = await driver.controller.async_backup_nvm_raw()
+    connection.send_result(
+        msg[ID],
+        {
+            "data": base64.b64encode(result).decode(),
+        },
+    )
 
-    url = r"/api/zwave_js/nvm_backup/{entry_id}"
-    name = "api:zwave_js:nvm_backup"
 
-    @require_admin
-    async def get(self, request: web.Request, entry_id: str) -> web.Response:
-        """Handle backup NVM raw data request."""
-        hass = request.app[KEY_HASS]
-
-        entry = hass.config_entries.async_get_entry(entry_id)
-        if entry is None:
-            raise web_exceptions.HTTPNotFound(
-                reason=f"Config entry {entry_id} not found"
-            )
-
-        if entry.state is not ConfigEntryState.LOADED:
-            raise web_exceptions.HTTPServiceUnavailable(
-                reason=f"Config entry {entry_id} not loaded"
-            )
-
-        client: Client = entry.runtime_data[DATA_CLIENT]
-
-        if client.driver is None:
-            raise web_exceptions.HTTPServiceUnavailable(
-                reason=f"Config entry {entry_id} not loaded, driver not ready"
-            )
-
-        data = await client.driver.controller.async_backup_nvm_raw()
-
-        # Generate a filename with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"zwavejs_nvm_backup_{timestamp}.bin"
-
-        # Return the data as a downloadable file
-        return web.Response(
-            body=data,
-            headers={
-                "Content-Disposition": f'attachment; filename="{filename}"',
-                "Content-Type": "application/octet-stream",
-            },
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/restore_nvm",
+        vol.Required(ENTRY_ID): str,
+        vol.Required("data"): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_restore_nvm(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Restore NVM data."""
+    try:
+        nvm_data = base64.b64decode(msg["data"])
+    except binascii.Error:
+        connection.send_error(
+            msg[ID],
+            ERR_INVALID_FORMAT,
+            "Invalid base64 data",
         )
+        return
 
+    try:
+        await driver.controller.async_restore_nvm(nvm_data)
+    except BaseZwaveJSServerError as err:
+        connection.send_error(
+            msg[ID],
+            ERR_INVALID_FORMAT,
+            str(err),
+        )
+        return
 
-class RestoreNVMView(HomeAssistantView):
-    """View to restore NVM data."""
-
-    url = r"/api/zwave_js/nvm_restore/{entry_id}"
-    name = "api:zwave_js:nvm_restore"
-
-    @require_admin
-    async def post(self, request: web.Request, entry_id: str) -> web.Response:
-        """Handle restore NVM data request."""
-        hass = request.app[KEY_HASS]
-
-        entry = hass.config_entries.async_get_entry(entry_id)
-        if entry is None:
-            raise web_exceptions.HTTPNotFound(
-                reason=f"Config entry {entry_id} not found"
-            )
-
-        if entry.state is not ConfigEntryState.LOADED:
-            raise web_exceptions.HTTPServiceUnavailable(
-                reason=f"Config entry {entry_id} not loaded"
-            )
-
-        client: Client = entry.runtime_data[DATA_CLIENT]
-
-        if client.driver is None:
-            raise web_exceptions.HTTPServiceUnavailable(
-                reason=f"Config entry {entry_id} not loaded, driver not ready"
-            )
-
-        # Increase max payload
-        request._client_max_size = 1024 * 1024 * 10  # noqa: SLF001
-
-        data = await request.post()
-
-        if "file" not in data or not isinstance(data["file"], web_request.FileField):
-            raise web_exceptions.HTTPBadRequest(
-                reason="No file uploaded or invalid file field"
-            )
-
-        uploaded_file: web_request.FileField = data["file"]
-        nvm_data = await hass.async_add_executor_job(uploaded_file.file.read)
-
-        try:
-            await client.driver.controller.async_restore_nvm(nvm_data)
-        except BaseZwaveJSServerError as err:
-            raise web_exceptions.HTTPBadRequest(reason=str(err)) from err
-
-        return self.json({"success": True})
+    connection.send_result(msg[ID])
