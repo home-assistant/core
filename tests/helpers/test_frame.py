@@ -442,13 +442,13 @@ async def test_report_missing_integration_frame(
         "homeassistant.helpers.frame.get_integration_frame",
         side_effect=frame.MissingIntegrationFrame,
     ):
-        frame.report(what, error_if_core=False)
+        frame.report_usage(what, core_behavior=frame.ReportBehavior.LOG)
         assert what in caplog.text
         assert caplog.text.count(what) == 1
 
         caplog.clear()
 
-        frame.report(what, error_if_core=False, log_custom_component_only=True)
+        frame.report_usage(what, core_behavior=frame.ReportBehavior.IGNORE)
         assert caplog.text == ""
 
 
