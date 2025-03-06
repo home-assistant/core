@@ -11,6 +11,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import HomeeConfigEntry
 from .entity import HomeeEntity
 
+PARALLEL_UPDATES = 0
+
 SELECT_DESCRIPTIONS: dict[AttributeType, SelectEntityDescription] = {
     AttributeType.REPEATER_MODE: SelectEntityDescription(
         key="repeater_mode",
