@@ -40,10 +40,22 @@ def get_window_value(attribute: HomeeAttribute) -> str | None:
     return vals.get(attribute.current_value)
 
 
+def get_brightness_device_class(
+    attribute: HomeeAttribute, device_class: SensorDeviceClass | None
+) -> SensorDeviceClass | None:
+    """Return the device class for a brightness sensor."""
+    if attribute.unit == "%":
+        return None
+    return device_class
+
+
 @dataclass(frozen=True, kw_only=True)
 class HomeeSensorEntityDescription(SensorEntityDescription):
     """A class that describes Homee sensor entities."""
 
+    device_class_fn: Callable[
+        [HomeeAttribute, SensorDeviceClass | None], SensorDeviceClass | None
+    ] = lambda attribute, device_class: device_class
     value_fn: Callable[[HomeeAttribute], str | float | None] = (
         lambda value: value.current_value
     )
@@ -67,6 +79,7 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
     AttributeType.BRIGHTNESS: HomeeSensorEntityDescription(
         key="brightness",
         device_class=SensorDeviceClass.ILLUMINANCE,
+        device_class_fn=get_brightness_device_class,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=(
             lambda attribute: attribute.current_value * 1000
@@ -303,6 +316,9 @@ class HomeeSensor(HomeeEntity, SensorEntity):
         if attribute.instance > 0:
             self._attr_translation_key = f"{self._attr_translation_key}_instance"
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
+        self._attr_device_class = description.device_class_fn(
+            attribute, description.device_class
+        )
 
     @property
     def native_value(self) -> float | str | None:
