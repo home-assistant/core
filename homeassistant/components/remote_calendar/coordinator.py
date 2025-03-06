@@ -48,6 +48,7 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
         """Update data from the url."""
         try:
             res = await self._client.get(self._url, follow_redirects=True)
+            res.raise_for_status()
         except (UnsupportedProtocol, ConnectError, HTTPStatusError, ValueError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -62,5 +63,4 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_parse",
-                translation_placeholders={"err": str(err)},
             ) from err

@@ -46,6 +46,7 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         client = get_async_client(self.hass)
         try:
             res = await client.get(user_input[CONF_URL], follow_redirects=True)
+            res.raise_for_status()
         except UnsupportedProtocol as err:
             errors["base"] = "unsupported_protocol"
             _LOGGER.debug("Unsupported Protokol: %s", err)

@@ -30,7 +30,7 @@
       "message": "Unable to fetch calendar data: {err}"
     },
     "unable_to_parse": {
-      "message": "Unable to parse calendar data: {err}"
+      "message": "[%key:component::local_calendar::config::error::invalid_ics_file%]"
     }
   }
 }
