@@ -725,8 +725,9 @@ async def _async_resolve_domains_and_preload(
     """Resolve all dependencies and return integrations to set up.
 
     The return value is a tuple of two dictionaries:
-    - The first dictionary contains integrations to set up.
-    - The second dictionary contains integrations to set up with all their dependencies.
+    - The first dictionary contains integrations specified by the configuration (including config entries).
+    - The second dictionary contains the same integrations as the first dictionary together
+      with all their dependencies.
     """
     domains_to_setup = _get_domains(hass, config)
     platform_integrations = conf_util.extract_platform_integrations(

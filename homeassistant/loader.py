@@ -1427,9 +1427,17 @@ async def resolve_integrations_dependencies(
     Detects circular dependencies and missing integrations.
     """
 
+    def cache_get(itg: Integration) -> set[str] | Exception | None:
+        return itg._all_dependencies  # noqa: SLF001
+
+    def cache_set(itg: Integration, all_dependencies: set[str] | Exception) -> None:
+        itg._all_dependencies = all_dependencies  # noqa: SLF001
+
     async def task(itg: Integration) -> set[str] | None:
         try:
-            return await _do_resolve_dependencies(itg, cache_key="_all_dependencies")
+            return await _do_resolve_dependencies(
+                itg, cache=_ResolveDependenciesCache(cache_get, cache_set)
+            )
         except Exception as exc:  # noqa: BLE001
             _log_dependencies_exceptions(itg, exc)
             return None
@@ -1469,7 +1477,7 @@ async def resolve_integrations_after_dependencies(
         if ignore_exceptions:
             return await _do_resolve_dependencies(
                 itg,
-                cache=resolved,
+                cache=_ResolveDependenciesCache.from_dict(resolved),
                 possible_after_dependencies=possible_after_dependencies,
                 ignore_exceptions=ignore_exceptions,
             )
@@ -1477,7 +1485,7 @@ async def resolve_integrations_after_dependencies(
         try:
             return await _do_resolve_dependencies(
                 itg,
-                cache=resolved,
+                cache=_ResolveDependenciesCache.from_dict(resolved),
                 possible_after_dependencies=possible_after_dependencies,
                 ignore_exceptions=ignore_exceptions,
             )
@@ -1503,17 +1511,37 @@ async def resolve_integrations_after_dependencies(
     }
 
 
+@dataclass
+class _ResolveDependenciesCache:
+    """Cache for resolve_dependencies."""
+
+    retrieve: Callable[[Integration], set[str] | Exception | None]
+    update: Callable[[Integration, set[str] | Exception], None]
+
+    @classmethod
+    def from_dict(
+        cls,
+        cache_dict: dict[str, set[str] | Exception],
+    ) -> _ResolveDependenciesCache:
+        """Create a cache from a dictionary."""
+        return cls(
+            lambda itg: cache_dict.get(itg.domain),
+            lambda itg, all_dependencies: cache_dict.__setitem__(
+                itg.domain, all_dependencies
+            ),
+        )
+
+
 async def _do_resolve_dependencies(
     itg: Integration,
     *,
-    cache: dict[str, set[str] | Exception] | None = None,
-    cache_key: str | None = None,
+    cache: _ResolveDependenciesCache | None = None,
     possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
     ignore_exceptions: bool = False,
 ) -> set[str]:
     """Recursively resolve all dependencies.
 
-    Uses `cache` or `cache_key` to cache the results.
+    Uses `cache` to cache the results.
 
     If `possible_after_dependencies` is not UNDEFINED, listed after dependencies are also considered.
     If it is None, all the possible after dependencies are considered.
@@ -1521,23 +1549,19 @@ async def _do_resolve_dependencies(
     If `ignore_exceptions` is True, exceptions are caught and ignored and the normal resolution
     algorithm continues. Otherwise, they are raised.
     """
-    resolved = cache if cache is not None else {}
-    resolving: set[str] = set()
+    if cache is not None:
+        resolved = cache
+    else:
+        cache_dict: dict[str, set[str] | Exception] = {}
+        resolved = _ResolveDependenciesCache.from_dict(cache_dict)
 
-    def cache_result(itg: Integration, result: set[str] | Exception) -> None:
-        if cache_key is not None:
-            setattr(itg, cache_key, result)
-        else:
-            resolved[itg.domain] = result
+    resolving: set[str] = set()
 
     async def do_resolve_dependencies_impl(itg: Integration) -> set[str]:
         domain = itg.domain
+
         # If it's already resolved, no point doing it again.
-        if cache_key is not None:
-            result = cast(set[str] | Exception | None, getattr(itg, cache_key, None))
-        else:
-            result = resolved.get(domain)
-        if result is not None:
+        if (result := resolved.retrieve(itg)) is not None:
             if isinstance(result, Exception):
                 raise result
             return result
@@ -1545,10 +1569,10 @@ async def _do_resolve_dependencies(
         # If we are already resolving it, we have a circular dependency.
         if domain in resolving:
             if ignore_exceptions:
-                cache_result(itg, set())
+                resolved.update(itg, set())
                 return set()
             exc = CircularDependency([domain])
-            cache_result(itg, exc)
+            resolved.update(itg, exc)
             raise exc
 
         resolving.add(domain)
@@ -1569,7 +1593,7 @@ async def _do_resolve_dependencies(
             if isinstance(dep_integration, Exception):
                 if ignore_exceptions:
                     continue
-                cache_result(itg, dep_integration)
+                resolved.update(itg, dep_integration)
                 raise dep_integration
 
             all_dependencies.add(dep_domain)
@@ -1578,17 +1602,17 @@ async def _do_resolve_dependencies(
                 dep_dependencies = await do_resolve_dependencies_impl(dep_integration)
             except CircularDependency as exc:
                 exc.domain_cycle = [domain, *exc.domain_cycle]
-                cache_result(itg, exc)
+                resolved.update(itg, exc)
                 raise
             except Exception as exc:
-                cache_result(itg, exc)
+                resolved.update(itg, exc)
                 raise
 
             all_dependencies.update(dep_dependencies)
 
         resolving.remove(domain)
 
-        cache_result(itg, all_dependencies)
+        resolved.update(itg, all_dependencies)
         return all_dependencies
 
     return await do_resolve_dependencies_impl(itg)
