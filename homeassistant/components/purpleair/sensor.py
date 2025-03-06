@@ -167,6 +167,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up PurpleAir sensors based on a config entry."""
     index_list: list[int] = async_get_sensor_index_list(dict(entry.options)) or []
+    assert index_list is not None and len(index_list) > 0, (
+        "No sensor indexes found in configuration"
+    )
 
     async_add_entities(
         PurpleAirSensorEntity(entry, sensor_index, description)

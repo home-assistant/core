@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 import voluptuous as vol
@@ -19,17 +19,24 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
+    CONF_RADIUS,
     CONF_SHOW_ON_MAP,
+    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowHandler
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    LocationSelector,
+    LocationSelectorConfig,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import CONF_SENSOR_INDEX, DOMAIN, LOGGER, SCHEMA_VERSION
 from .coordinator import (
@@ -43,46 +50,22 @@ from .coordinator import (
     async_remove_sensor_from_sensor_list,
 )
 
-CONF_DISTANCE: Final = "distance"
-CONF_NEARBY_SENSOR_OPTIONS: Final = "nearby_sensor_options"
-CONF_SENSOR_DEVICE_ID: Final = "sensor_device_id"
-CONF_COORDINATES_GROUP: Final = "coords"
+CONF_NEARBY_SENSOR_LIST: Final = "nearby_sensor_list"
+CONF_MAP_LOCATION: Final = "map_location"
+CONF_REMOVE_SENSOR: Final = "remove_sensor"
+CONF_SETTINGS: Final = "settings"
+CONF_INIT: Final = "init"
+CONF_USER: Final = "user"
+CONF_SELECT_SENSOR: Final = "select_sensor"
 
-DEFAULT_DISTANCE: Final = 5
-LIMIT_RESULTS: Final = 10
+CONF_RADIUS_DEFAULT: Final = 2000
+
+LIMIT_RESULTS: Final = 25
 TITLE: Final = "PurpleAir"
 
 
-@callback
-def async_get_api_key_schema(api_key: str | None = None) -> vol.Schema:
-    """Return a schema for entering an API key."""
-    return vol.Schema(
-        {
-            vol.Required(CONF_API_KEY, default=api_key): cv.string,
-        }
-    )
-
-
-@callback
-def async_get_coordinates_schema(hass: HomeAssistant) -> vol.Schema:
-    """Return a schema for searching for sensors near a coordinate pair."""
-    # TODO: Convert to map selector # pylint: disable=fixme
-    return vol.Schema(
-        {
-            vol.Inclusive(
-                CONF_LATITUDE, CONF_COORDINATES_GROUP, default=hass.config.latitude
-            ): cv.latitude,
-            vol.Inclusive(
-                CONF_LONGITUDE, CONF_COORDINATES_GROUP, default=hass.config.longitude
-            ): cv.longitude,
-            vol.Optional(CONF_DISTANCE, default=DEFAULT_DISTANCE): cv.positive_int,
-        }
-    )
-
-
-@callback
 def async_get_sensor_select_schema(sensor_list: list[SensorInfo]) -> vol.Schema:
-    """Return a schema for selecting a sensor from a list."""
+    """Return schema for selecting sensor from list."""
     selection_list = [
         SelectOptionDict(
             value=str(sensor.index),
@@ -100,6 +83,26 @@ def async_get_sensor_select_schema(sensor_list: list[SensorInfo]) -> vol.Schema:
                 )
             )
         }
+    )
+
+
+def async_get_location_schema(flow_handler: FlowHandler) -> vol.Schema:
+    """Return schema for selecting location from map."""
+    return flow_handler.add_suggested_values_to_schema(
+        vol.Schema(
+            {
+                vol.Required(
+                    CONF_LOCATION,
+                ): LocationSelector(LocationSelectorConfig(radius=True)),
+            }
+        ),
+        {
+            CONF_LOCATION: {
+                CONF_LATITUDE: flow_handler.hass.config.latitude,
+                CONF_LONGITUDE: flow_handler.hass.config.longitude,
+                CONF_RADIUS: CONF_RADIUS_DEFAULT,
+            }
+        },
     )
 
 
@@ -159,7 +162,7 @@ async def async_validate_coordinates(
         errors["base"] = "unknown"
     else:
         if not nearby_sensor_results:
-            errors["base"] = "no_sensors_near_coordinates"
+            errors["base"] = "no_sensors_found"
 
     if errors:
         return ValidationResult(errors=errors)
@@ -168,7 +171,7 @@ async def async_validate_coordinates(
 
 
 class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for PurpleAir."""
+    """Handle config flow for PurpleAir."""
 
     VERSION = SCHEMA_VERSION
 
@@ -176,50 +179,84 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._flow_data: dict[str, Any] = {}
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> PurpleAirOptionsFlow:
-        """Define the config flow to handle options."""
-        return PurpleAirOptionsFlow()
+    @property
+    def api_key_schema(self) -> vol.Schema:
+        """API key schema."""
+        return vol.Schema(
+            {
+                vol.Required(
+                    CONF_API_KEY, default=self._flow_data.get(CONF_API_KEY)
+                ): cv.string,
+            }
+        )
 
-    async def async_step_by_coordinates(
+    async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the discovery of sensors near a latitude/longitude."""
+        """Set up configuration."""
         if user_input is None:
             return self.async_show_form(
-                step_id="by_coordinates",
-                data_schema=async_get_coordinates_schema(self.hass),
+                step_id=CONF_USER, data_schema=self.api_key_schema
+            )
+
+        api_key = user_input[CONF_API_KEY]
+
+        validation = await async_validate_api_key(self.hass, api_key)
+        if validation.errors:
+            return self.async_show_form(
+                step_id=CONF_USER,
+                data_schema=self.api_key_schema,
+                errors=validation.errors,
+            )
+
+        await self.async_set_unique_id(api_key)
+        self._abort_if_unique_id_configured()
+
+        self._flow_data[CONF_API_KEY] = api_key
+
+        return await self.async_step_map_location()
+
+    async def async_step_map_location(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Search sensors from map."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id=CONF_MAP_LOCATION,
+                data_schema=async_get_location_schema(cast(FlowHandler, self)),
             )
 
         validation = await async_validate_coordinates(
             self.hass,
             self._flow_data[CONF_API_KEY],
-            user_input[CONF_LATITUDE],
-            user_input[CONF_LONGITUDE],
-            user_input[CONF_DISTANCE],
+            user_input[CONF_LOCATION][CONF_LATITUDE],
+            user_input[CONF_LOCATION][CONF_LONGITUDE],
+            DistanceConverter.convert(
+                user_input[CONF_LOCATION][CONF_RADIUS],
+                UnitOfLength.METERS,
+                UnitOfLength.KILOMETERS,
+            ),
         )
+
         if validation.errors:
             return self.async_show_form(
-                step_id="by_coordinates",
-                data_schema=async_get_coordinates_schema(self.hass),
+                step_id=CONF_MAP_LOCATION,
+                data_schema=async_get_location_schema(cast(FlowHandler, self)),
                 errors=validation.errors,
             )
 
-        self._flow_data[CONF_NEARBY_SENSOR_OPTIONS] = validation.data
+        self._flow_data[CONF_NEARBY_SENSOR_LIST] = validation.data
 
-        return await self.async_step_choose_sensor()
+        return await self.async_step_select_sensor()
 
-    async def async_step_choose_sensor(
+    async def async_step_select_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the selection of a sensor."""
+        """Select sensor from list."""
         if user_input is None:
-            options = self._flow_data.pop(CONF_NEARBY_SENSOR_OPTIONS)
+            options = self._flow_data.pop(CONF_NEARBY_SENSOR_LIST)
             return self.async_show_form(
-                step_id="choose_sensor",
+                step_id=CONF_SELECT_SENSOR,
                 data_schema=async_get_sensor_select_schema(
                     async_get_sensor_nearby_sensors_list(options)
                 ),
@@ -237,8 +274,14 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
             None,
         )
 
-        # TODO: Use static title or dynamic title based on e.g. API key? # pylint: disable=fixme
-        return self.async_create_entry(title=TITLE, data=data_config, options=options)
+        title: str = TITLE
+        config_list = self.hass.config_entries.async_loaded_entries(DOMAIN)
+        if len(config_list) > 0:
+            title = f"{TITLE} ({len(config_list)})"
+
+        return self.async_create_entry(
+            title=title, data=data_config, options=options_config
+        )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -253,7 +296,7 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=async_get_api_key_schema(self._flow_data.get(CONF_API_KEY)),
+                data_schema=self.api_key_schema,
             )
 
         api_key = user_input[CONF_API_KEY]
@@ -262,39 +305,13 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
         if validation.errors:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=async_get_api_key_schema(api_key),
+                data_schema=self.api_key_schema,
                 errors=validation.errors,
             )
 
         return self.async_update_reload_and_abort(
             self._get_reauth_entry(), data_updates={CONF_API_KEY: api_key}
         )
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=async_get_api_key_schema(self._flow_data.get(CONF_API_KEY)),
-            )
-
-        api_key = user_input[CONF_API_KEY]
-
-        validation = await async_validate_api_key(self.hass, api_key)
-        if validation.errors:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=async_get_api_key_schema(api_key),
-                errors=validation.errors,
-            )
-
-        await self.async_set_unique_id(api_key)
-        self._abort_if_unique_id_configured()
-
-        self._flow_data[CONF_API_KEY] = api_key
-        return await self.async_step_by_coordinates()
 
     async def async_step_reconfigure(
         self, user_input: Mapping[str, Any]
@@ -305,67 +322,72 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_user()
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> PurpleAirOptionsFlow:
+        """Define config flow to handle options."""
+        return PurpleAirOptionsFlow()
+
 
 class PurpleAirOptionsFlow(OptionsFlow):
-    """Handle a PurpleAir options flow."""
+    """Handle options flow for PurpleAir."""
 
     def __init__(self) -> None:
         """Initialize."""
         self._flow_data: dict[str, Any] = {}
 
-    @property
-    def settings_schema(self) -> vol.Schema:
-        """Return the settings schema."""
-        return vol.Schema(
-            {
-                vol.Optional(
-                    CONF_SHOW_ON_MAP,
-                    description={
-                        "suggested_value": self.config_entry.options.get(
-                            CONF_SHOW_ON_MAP
-                        )
-                    },
-                ): bool
-            }
-        )
-
-    async def async_step_add_sensor(
+    async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Add a sensor."""
+        """Set options."""
+        return self.async_show_menu(
+            step_id=CONF_INIT,
+            menu_options=[CONF_MAP_LOCATION, CONF_REMOVE_SENSOR, CONF_SETTINGS],
+        )
+
+    async def async_step_map_location(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Search sensors from map."""
         if user_input is None:
             return self.async_show_form(
-                step_id="add_sensor",
-                data_schema=async_get_coordinates_schema(self.hass),
+                step_id=CONF_MAP_LOCATION,
+                data_schema=async_get_location_schema(cast(FlowHandler, self)),
             )
 
         validation = await async_validate_coordinates(
             self.hass,
             self.config_entry.data[CONF_API_KEY],
-            user_input[CONF_LATITUDE],
-            user_input[CONF_LONGITUDE],
-            user_input[CONF_DISTANCE],
+            user_input[CONF_LOCATION][CONF_LATITUDE],
+            user_input[CONF_LOCATION][CONF_LONGITUDE],
+            DistanceConverter.convert(
+                user_input[CONF_LOCATION][CONF_RADIUS],
+                UnitOfLength.METERS,
+                UnitOfLength.KILOMETERS,
+            ),
         )
 
         if validation.errors:
             return self.async_show_form(
-                step_id="add_sensor",
-                data_schema=async_get_coordinates_schema(self.hass),
+                step_id=CONF_MAP_LOCATION,
+                data_schema=async_get_location_schema(cast(FlowHandler, self)),
                 errors=validation.errors,
             )
 
-        self._flow_data[CONF_NEARBY_SENSOR_OPTIONS] = validation.data
+        self._flow_data[CONF_NEARBY_SENSOR_LIST] = validation.data
 
-        return await self.async_step_choose_sensor()
+        return await self.async_step_select_sensor()
 
-    async def async_step_choose_sensor(
+    async def async_step_select_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Choose a sensor."""
+        """Select sensor from list."""
         if user_input is None:
-            options = self._flow_data.pop(CONF_NEARBY_SENSOR_OPTIONS)
+            options = self._flow_data.pop(CONF_NEARBY_SENSOR_LIST)
             return self.async_show_form(
-                step_id="choose_sensor",
+                step_id=CONF_SELECT_SENSOR,
                 data_schema=async_get_sensor_select_schema(
                     async_get_sensor_nearby_sensors_list(options)
                 ),
@@ -382,22 +404,13 @@ class PurpleAirOptionsFlow(OptionsFlow):
 
         return self.async_create_entry(data=options)
 
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        return self.async_show_menu(
-            step_id="init",
-            menu_options=["add_sensor", "remove_sensor", "settings"],
-        )
-
     async def async_step_remove_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Remove a sensor."""
+        """Remove sensor."""
         if user_input is None:
             return self.async_show_form(
-                step_id="remove_sensor",
+                step_id=CONF_REMOVE_SENSOR,
                 data_schema=async_get_sensor_select_schema(
                     async_get_sensor_device_info_list(
                         self.hass, self.config_entry.entry_id
@@ -415,13 +428,25 @@ class PurpleAirOptionsFlow(OptionsFlow):
 
         return self.async_create_entry(data=options)
 
+    @property
+    def settings_schema(self) -> vol.Schema:
+        """Settings schema."""
+        return vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SHOW_ON_MAP,
+                    default=self.config_entry.options.get(CONF_SHOW_ON_MAP, False),
+                ): bool
+            }
+        )
+
     async def async_step_settings(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage settings."""
         if user_input is None:
             return self.async_show_form(
-                step_id="settings", data_schema=self.settings_schema
+                step_id=CONF_SETTINGS, data_schema=self.settings_schema
             )
 
         options = deepcopy(dict(self.config_entry.options))

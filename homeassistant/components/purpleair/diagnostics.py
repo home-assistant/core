@@ -13,19 +13,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_TITLE
 from .coordinator import PurpleAirConfigEntry
 
-TO_REDACT = {
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    # TODO: Why is API key used in title? # pylint: disable=fixme
-    # TODO: What about unique id is sensitive? # pylint: disable=fixme
-    # Config entry title and unique ID contain the API key (whole or part):
-    CONF_TITLE,
-    CONF_UNIQUE_ID,
-}
+TO_REDACT = {CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_UNIQUE_ID}
 
 
 async def async_get_config_entry_diagnostics(

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -9,6 +11,7 @@ from .const import (
     CONF_SENSOR_INDEX,
     CONF_SENSOR_INDICES,
     CONF_SENSOR_LIST,
+    CONF_SENSOR_READ_KEY,
     SCHEMA_VERSION,
 )
 from .coordinator import (
@@ -41,17 +44,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) ->
 async def async_migrate_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) -> bool:
     """Migrate config entry."""
     # v1 stored sensor indexes in config_entry.options[CONF_SENSOR_INDICES] as list[int]
-    # v2 stores sensor indexes in config_entry.data[CONF_SENSOR_LIST] as type SensorConfigList = list[dict[str, any]]
+    # v2 stores sensor indexes in config_entry.options[CONF_SENSOR_LIST] as type SensorConfigList = list[dict[str, any]]
     if entry.version == 1:
-        new_options = entry.options.copy()
-        new_options.pop(CONF_SENSOR_INDICES, None)
-
         index_list: list[int] = entry.options[CONF_SENSOR_INDICES]
         sensor_list: SensorConfigList = [
-            {CONF_SENSOR_INDEX: int(sensor_index)} for sensor_index in index_list
+            {CONF_SENSOR_INDEX: int(sensor_index), CONF_SENSOR_READ_KEY: None}
+            for sensor_index in index_list
         ]
-        new_data = entry.data.copy()
-        new_data[CONF_SENSOR_LIST] = sensor_list
+
+        new_options = deepcopy(dict(entry.options))
+        new_options.pop(CONF_SENSOR_INDICES, None)
+        new_options[CONF_SENSOR_LIST] = sensor_list
+
+        new_data = deepcopy(dict(entry.data))
 
         hass.config_entries.async_update_entry(
             entry, data=new_data, options=new_options, version=SCHEMA_VERSION

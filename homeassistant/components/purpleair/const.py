@@ -13,5 +13,3 @@ CONF_SENSOR_INDICES: Final = "sensor_indices"  # Deprecated in v2 schema
 CONF_SENSOR_LIST: Final = "sensor_list"
 CONF_SENSOR_INDEX: Final = "sensor_index"
 CONF_SENSOR_READ_KEY: Final = "sensor_read_key"
-# TODO: Where is CONF_TITLE used (except in diagnostics.py)? # pylint: disable=fixme
-CONF_TITLE: Final = "title"

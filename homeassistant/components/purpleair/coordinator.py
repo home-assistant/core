@@ -13,7 +13,7 @@ from aiopurpleair.models.sensors import GetSensorsResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -77,21 +77,21 @@ class SensorInfo:
         self.id = id
 
 
-@callback
 def async_get_api(hass: HomeAssistant, api_key: str) -> API:
     """Create aiopurpleair API object."""
     session = aiohttp_client.async_get_clientsession(hass)
     return API(api_key, session=session)
 
 
-@callback
 def async_get_sensor_list(options: dict[str, Any]) -> SensorConfigList:
     """Get sensor list from options."""
-    sensor_list: SensorConfigList = options.get(CONF_SENSOR_LIST, [])
+    sensor_list: SensorConfigList | None = options.get(CONF_SENSOR_LIST)
+    if sensor_list is None:
+        sensor_list = []
+        options[CONF_SENSOR_LIST] = sensor_list
     return sensor_list
 
 
-@callback
 def async_get_sensor_index_list(options: dict[str, Any]) -> list[int] | None:
     """Get sensor index list from options."""
     index_list = async_get_list_from_sensor_list(
@@ -102,7 +102,6 @@ def async_get_sensor_index_list(options: dict[str, Any]) -> list[int] | None:
     return index_list
 
 
-@callback
 def async_get_sensor_read_key_list(options: dict[str, Any]) -> list[str] | None:
     """Get sensor read key list from options."""
     read_key_list = async_get_list_from_sensor_list(
@@ -113,7 +112,6 @@ def async_get_sensor_read_key_list(options: dict[str, Any]) -> list[str] | None:
     return read_key_list
 
 
-@callback
 def async_get_list_from_sensor_list(
     sensor_list: SensorConfigList, key: str
 ) -> list[Any] | None:
@@ -123,7 +121,6 @@ def async_get_list_from_sensor_list(
     return [sensor[key] for sensor in sensor_list if sensor.get(key)]
 
 
-@callback
 def async_add_sensor_to_sensor_list(
     options: dict[str, Any], sensor_index: int, read_key: str | None
 ) -> SensorConfigList:
@@ -135,7 +132,6 @@ def async_add_sensor_to_sensor_list(
     return sensor_list
 
 
-@callback
 def async_remove_sensor_from_sensor_list(
     options: dict[str, Any], sensor_index: int
 ) -> SensorConfigList:
@@ -149,7 +145,6 @@ def async_remove_sensor_from_sensor_list(
     return sensor_list
 
 
-@callback
 def async_get_sensor_nearby_sensors_list(
     nearby_sensor_results: list[NearbySensorResult],
 ) -> list[SensorInfo]:
@@ -162,7 +157,6 @@ def async_get_sensor_nearby_sensors_list(
     ]
 
 
-@callback
 def async_get_sensor_device_info_list(
     hass: HomeAssistant, entry_id: str
 ) -> list[SensorInfo]:
@@ -200,27 +194,30 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
 
     async def _async_update_data(self) -> GetSensorsResponse:
         """Get the latest sensor information."""
+        index_list = async_get_sensor_index_list(dict(self.config_entry.options))
+        assert index_list is not None and len(index_list) > 0, (
+            "No sensor indexes found in configuration"
+        )
+
+        read_keys_list = async_get_sensor_read_key_list(dict(self.config_entry.options))
+        if read_keys_list is None or len(read_keys_list) == 0:
+            read_keys_list = None
+
         try:
             return await self._api.sensors.async_get_sensors(
                 SENSOR_FIELDS_TO_RETRIEVE,
-                sensor_indices=async_get_sensor_index_list(
-                    dict(self.config_entry.options)
-                ),
-                read_keys=async_get_sensor_read_key_list(
-                    dict(self.config_entry.options)
-                ),
+                sensor_indices=index_list,
+                read_keys=read_keys_list,
             )
         except InvalidApiKeyError as err:
             raise ConfigEntryAuthFailed("Invalid API key") from err
         except PurpleAirError as err:
             raise UpdateFailed(f"Error while fetching data: {err}") from err
 
-    @callback
     def async_get_map_url(self, sensor_index: int) -> str:
         """Get the map URL for a sensor index."""
         return self._api.get_map_url(sensor_index)
 
-    @callback
     def async_delete_orphans_from_device_registry(self) -> None:
         """Delete unreferenced sensors from the device registry."""
         device_list = async_get_sensor_device_info_list(
