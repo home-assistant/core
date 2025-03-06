@@ -986,7 +986,7 @@ gcal-sync==7.0.0
 geniushub-client==0.7.1
 
 # homeassistant.components.geocaching
-geocachingapi==0.2.1
+geocachingapi==0.3.0
 
 # homeassistant.components.aprs
 geopy==2.3.0
