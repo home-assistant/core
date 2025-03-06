@@ -1479,7 +1479,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '46',
   })
 # ---
 # name: test_all_entities[da_ac_rac_100001][sensor.corridor_a_c_pm2_5-entry]
@@ -1531,7 +1531,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '10',
   })
 # ---
 # name: test_all_entities[da_ac_rac_100001][sensor.corridor_a_c_temperature-entry]
