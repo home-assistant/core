@@ -28,10 +28,8 @@ rules:
   has-entity-name: done
   runtime-data: done
   test-before-configure:
-    status: todo
-    comment: |
-      The config flow does attempt to verify credentials, but does not test
-      talking to devices before creating the config entry.
+    status: done
+    comment: The config flow verifies credentials and the cloud APIs.
   test-before-setup: done
   unique-config-entry: done
   # Silver
@@ -47,10 +45,10 @@ rules:
   test-coverage: done
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery:
-    status: exempt
-    comment: Devices do not support discovery.
+    status: todo
+    comment: Determine if these devices can support discovery
   discovery-update-info:
     status: exempt
     comment: Devices do not support discovery.
