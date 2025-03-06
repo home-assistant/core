@@ -52,7 +52,7 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
             update_interval=UPDATE_INTERVAL,
         )
 
-    async def fetch_new_status(self) -> GeocachingStatus:
+    async def _async_update_data(self) -> GeocachingStatus:
         """Fetch the latest Geocaching status."""
         try:
             return await self.geocaching.update()
@@ -60,6 +60,3 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
             raise UpdateFailed(f"Invalid integration configuration: {error}") from error
         except GeocachingApiError as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
-
-    async def _async_update_data(self) -> GeocachingStatus:
-        return await self.fetch_new_status()
