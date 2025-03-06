@@ -112,9 +112,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
                 device_registry.async_get_or_create(
                     config_entry_id=entry.entry_id,
                     identifiers={(DOMAIN, dev.device.device_id)},
-                    connections={
-                        (dr.CONNECTION_NETWORK_MAC, dev.device.hub.mac_address)
-                    },
+                    connections=(
+                        {(dr.CONNECTION_NETWORK_MAC, dev.device.hub.mac_address)}
+                        if dev.device.hub.mac_address
+                        else set()
+                    ),
                     name=dev.device.label,
                     sw_version=dev.device.hub.firmware_version,
                     model=dev.device.hub.hardware_type,
@@ -197,11 +199,12 @@ def process_status(
         list[Capability | str],
         disabled_capabilities_capability[Attribute.DISABLED_CAPABILITIES].value,
     )
-    for capability in disabled_capabilities:
-        # We still need to make sure the climate entity can work without this capability
-        if (
-            capability in main_component
-            and capability != Capability.DEMAND_RESPONSE_LOAD_CONTROL
-        ):
-            del main_component[capability]
+    if disabled_capabilities is not None:
+        for capability in disabled_capabilities:
+            # We still need to make sure the climate entity can work without this capability
+            if (
+                capability in main_component
+                and capability != Capability.DEMAND_RESPONSE_LOAD_CONTROL
+            ):
+                del main_component[capability]
     return status
