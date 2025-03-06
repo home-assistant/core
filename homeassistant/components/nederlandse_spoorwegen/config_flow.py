@@ -58,15 +58,7 @@ class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 nsapi = ns_api.NSAPI(self.api_key)
                 loop = asyncio.get_running_loop()
-                station_data = await loop.run_in_executor(None, nsapi.get_stations)
-                self._stations = {
-                    station.code: station.names["middle"]
-                    for station in station_data
-                    if station.country == "NL"
-                }
-                self._stations = dict(
-                    sorted(self._stations.items(), key=lambda item: item[1])
-                )
+                await loop.run_in_executor(None, nsapi.get_stations)
             except RequestParametersError:
                 errors["base"] = "invalid_api_key"
             else:
@@ -111,9 +103,9 @@ class NederlandseSpoorwegenSubentryFlowHandler(ConfigSubentryFlow):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_STATION_FROM): str,  # vol.In(self._stations),
-                    vol.Optional(CONF_STATION_VIA): str,  # vol.In(self._stations),
-                    vol.Required(CONF_STATION_TO): str,  # vol.In(self._stations),
+                    vol.Required(CONF_STATION_FROM): str,
+                    vol.Optional(CONF_STATION_VIA): str,
+                    vol.Required(CONF_STATION_TO): str,
                     vol.Optional(CONF_TIME): TimeSelector(),
                 }
             ),
