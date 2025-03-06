@@ -184,7 +184,9 @@ class MqttEvent(MqttEntity, EventEntity):
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        self.add_subscription(CONF_STATE_TOPIC, self._event_received)
+        self.add_subscription(
+            CONF_STATE_TOPIC, self._event_received, disable_write_state=True
+        )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""

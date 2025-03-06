@@ -1449,6 +1449,8 @@ class MqttEntity(
         self,
         msg_callback: MessageCallbackType,
         msg: ReceiveMessage,
+        *,
+        disable_write_state: bool = False,
     ) -> None:
         """Process the message callback."""
         mqtt_data = self.hass.data[DATA_MQTT]
@@ -1464,12 +1466,14 @@ class MqttEntity(
             _LOGGER.warning(exc)
             return
 
-        mqtt_data.state_write_requests.write_state_request(self)
+        if not disable_write_state:
+            mqtt_data.state_write_requests.write_state_request(self)
 
     def add_subscription(
         self,
         state_topic_config_key: str,
         msg_callback: Callable[[ReceiveMessage], None],
+        disable_write_state: bool = False,
         disable_encoding: bool = False,
     ) -> bool:
         """Add a subscription."""
@@ -1483,7 +1487,11 @@ class MqttEntity(
         ):
             self._subscriptions[state_topic_config_key] = {
                 "topic": self._config[state_topic_config_key],
-                "msg_callback": partial(self._message_callback, msg_callback),
+                "msg_callback": partial(
+                    self._message_callback,
+                    msg_callback,
+                    disable_write_state=disable_write_state,
+                ),
                 "entity_id": self.entity_id,
                 "qos": qos,
                 "encoding": encoding,
