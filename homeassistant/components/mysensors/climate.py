@@ -21,7 +21,6 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .entity import MySensorsChildEntity
-from .helpers import on_unload
 
 DICT_HA_TO_MYS = {
     HVACMode.AUTO: "AutoChangeOver",
@@ -57,9 +56,7 @@ async def async_setup_entry(
             async_add_entities=async_add_entities,
         )
 
-    on_unload(
-        hass,
-        config_entry.entry_id,
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             MYSENSORS_DISCOVERY.format(config_entry.entry_id, Platform.CLIMATE),
