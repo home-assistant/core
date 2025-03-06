@@ -28,6 +28,7 @@ from .util import (
     HVAC_MOCK,
     HVAC_VERSION_MOCK,
     HVAC_WEBSERVER_MOCK,
+    USER_INPUT,
 )
 
 from tests.common import MockConfigEntry
@@ -81,7 +82,7 @@ async def test_form(hass: HomeAssistant) -> None:
         assert result["errors"] == {}
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], CONFIG
+            result["flow_id"], USER_INPUT
         )
 
         await hass.async_block_till_done()
@@ -94,7 +95,7 @@ async def test_form(hass: HomeAssistant) -> None:
         assert result["title"] == f"Airzone {CONFIG[CONF_HOST]}:{CONFIG[CONF_PORT]}"
         assert result["data"][CONF_HOST] == CONFIG[CONF_HOST]
         assert result["data"][CONF_PORT] == CONFIG[CONF_PORT]
-        assert CONF_ID not in result["data"]
+        assert result["data"][CONF_ID] == CONFIG[CONF_ID]
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -129,7 +130,7 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
         ),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -154,7 +155,7 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert (
             result["title"]
-            == f"Airzone {CONFIG_ID1[CONF_HOST]}:{CONFIG_ID1[CONF_PORT]}"
+            == f"Airzone {CONFIG_ID1[CONF_HOST]}:{CONFIG_ID1[CONF_PORT]} #{CONFIG_ID1[CONF_ID]}"
         )
         assert result["data"][CONF_HOST] == CONFIG_ID1[CONF_HOST]
         assert result["data"][CONF_PORT] == CONFIG_ID1[CONF_PORT]
@@ -167,6 +168,7 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
     """Test setting up duplicated entry."""
 
     config_entry = MockConfigEntry(
+        minor_version=2,
         data=CONFIG,
         domain=DOMAIN,
         unique_id="airzone_unique_id",
@@ -174,7 +176,7 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -189,7 +191,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         side_effect=AirzoneError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
         )
 
         assert result["errors"] == {"base": "cannot_connect"}

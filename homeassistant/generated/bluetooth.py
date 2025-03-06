@@ -190,6 +190,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": False,
         "domain": "govee_ble",
+        "local_name": "GV5179*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
         "local_name": "GVH5127*",
     },
     {
@@ -433,10 +438,6 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "led_ble",
         "local_name": "AP-*",
-    },
-    {
-        "domain": "led_ble",
-        "local_name": "MELK-*",
     },
     {
         "domain": "led_ble",
@@ -685,6 +686,15 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
             0,
         ],
         "manufacturer_id": 17,
+        "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "thermobeacon",
+        "manufacturer_data_start": [
+            0,
+        ],
+        "manufacturer_id": 20,
         "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
     },
     {

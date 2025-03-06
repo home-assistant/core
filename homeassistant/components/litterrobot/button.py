@@ -11,17 +11,17 @@ from pylitterbot import FeederRobot, LitterRobot3, LitterRobot4, Robot
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, _RobotT
+from .coordinator import LitterRobotConfigEntry
+from .entity import LitterRobotEntity, _WhiskerEntityT
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotButtonEntityDescription(ButtonEntityDescription, Generic[_RobotT]):
+class RobotButtonEntityDescription(ButtonEntityDescription, Generic[_WhiskerEntityT]):
     """A class that describes robot button entities."""
 
-    press_fn: Callable[[_RobotT], Coroutine[Any, Any, bool]]
+    press_fn: Callable[[_WhiskerEntityT], Coroutine[Any, Any, bool]]
 
 
 ROBOT_BUTTON_MAP: dict[type[Robot], RobotButtonEntityDescription] = {
@@ -48,25 +48,26 @@ ROBOT_BUTTON_MAP: dict[type[Robot], RobotButtonEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LitterRobotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
-    hub = entry.runtime_data
-    entities = [
-        LitterRobotButtonEntity(robot=robot, hub=hub, description=description)
-        for robot in hub.account.robots
+    coordinator = entry.runtime_data
+    async_add_entities(
+        LitterRobotButtonEntity(
+            robot=robot, coordinator=coordinator, description=description
+        )
+        for robot in coordinator.account.robots
         for robot_type, description in ROBOT_BUTTON_MAP.items()
         if isinstance(robot, robot_type)
-    ]
-    async_add_entities(entities)
+    )
 
 
-class LitterRobotButtonEntity(LitterRobotEntity[_RobotT], ButtonEntity):
+class LitterRobotButtonEntity(LitterRobotEntity[_WhiskerEntityT], ButtonEntity):
     """Litter-Robot button entity."""
 
-    entity_description: RobotButtonEntityDescription[_RobotT]
+    entity_description: RobotButtonEntityDescription[_WhiskerEntityT]
 
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.press_fn(self.robot)
-        self.coordinator.async_set_updated_data(True)
+        self.coordinator.async_set_updated_data(None)

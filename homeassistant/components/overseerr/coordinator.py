@@ -47,6 +47,7 @@ class OverseerrCoordinator(DataUpdateCoordinator[RequestCount]):
             session=async_get_clientsession(hass),
         )
         self.url = URL.build(host=host, port=port, scheme="https" if ssl else "http")
+        self.push = False
 
     async def _async_update_data(self) -> RequestCount:
         """Fetch data from API endpoint."""

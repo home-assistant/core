@@ -1,4 +1,4 @@
-"""Tests for the WebOS TV integration."""
+"""Tests for the LG webOS TV integration."""
 
 from homeassistant.components.webostv.const import DOMAIN
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
