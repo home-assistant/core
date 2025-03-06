@@ -4,8 +4,8 @@ from httpx import ConnectError, Response, UnsupportedProtocol
 import pytest
 import respx
 
-from homeassistant.components.remote_calendar.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -30,7 +30,7 @@ async def test_load_unload(
 
     state = hass.states.get(TEST_ENTITY)
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_OFF
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -50,7 +50,6 @@ async def test_raise_for_status(
         )
     )
     await setup_integration(hass, config_entry)
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
@@ -70,8 +69,5 @@ async def test_update_failed(
 ) -> None:
     """Test update failed using respx to simulate different exceptions."""
     respx.get(CALENDER_URL).mock(side_effect=side_effect)
-
     await setup_integration(hass, config_entry)
-
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
