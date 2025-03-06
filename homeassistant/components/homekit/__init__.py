@@ -221,33 +221,6 @@ UNPAIR_SERVICE_SCHEMA = vol.All(
 )
 
 
-def _async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
-    """All active HomeKit instances."""
-    hk_data: HomeKitEntryData | None
-    return [
-        hk_data.homekit
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if (hk_data := getattr(entry, "runtime_data", None))
-    ]
-
-
-def _async_get_imported_entries_indices(
-    current_entries: list[ConfigEntry],
-) -> tuple[dict[str, ConfigEntry], dict[int, ConfigEntry]]:
-    """Return a dicts of the entries by name and port."""
-
-    # For backwards compat, its possible the first bridge is using the default
-    # name.
-    entries_by_name: dict[str, ConfigEntry] = {}
-    entries_by_port: dict[int, ConfigEntry] = {}
-    for entry in current_entries:
-        if entry.source != SOURCE_IMPORT:
-            continue
-        entries_by_name[entry.data.get(CONF_NAME, BRIDGE_NAME)] = entry
-        entries_by_port[entry.data.get(CONF_PORT, DEFAULT_PORT)] = entry
-    return entries_by_name, entries_by_port
-
-
 @callback
 def _async_update_entries_from_yaml(
     hass: HomeAssistant, config: ConfigType, start_import_flow: bool
@@ -274,6 +247,33 @@ def _async_update_entries_from_yaml(
                 ),
                 eager_start=True,
             )
+
+
+def _async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
+    """All active HomeKit instances."""
+    hk_data: HomeKitEntryData | None
+    return [
+        hk_data.homekit
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if (hk_data := getattr(entry, "runtime_data", None))
+    ]
+
+
+def _async_get_imported_entries_indices(
+    current_entries: list[ConfigEntry],
+) -> tuple[dict[str, ConfigEntry], dict[int, ConfigEntry]]:
+    """Return a dicts of the entries by name and port."""
+
+    # For backwards compat, its possible the first bridge is using the default
+    # name.
+    entries_by_name: dict[str, ConfigEntry] = {}
+    entries_by_port: dict[int, ConfigEntry] = {}
+    for entry in current_entries:
+        if entry.source != SOURCE_IMPORT:
+            continue
+        entries_by_name[entry.data.get(CONF_NAME, BRIDGE_NAME)] = entry
+        entries_by_port[entry.data.get(CONF_PORT, DEFAULT_PORT)] = entry
+    return entries_by_name, entries_by_port
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
