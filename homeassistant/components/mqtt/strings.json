@@ -208,9 +208,7 @@
         "invalid_input": "Invalid value",
         "invalid_subscribe_topic": "Invalid subscribe topic",
         "invalid_template": "Invalid template",
-        "invalid_url": "Invalid URL",
-        "name_not_unique": "This entity name must be unique for this device, and can be left blank for one entity",
-        "name_not_mutable": "The entity name is not mutable when reconfiguring an entity. Instead remove the entity, and then re-add it"
+        "invalid_url": "Invalid URL"
       }
     }
   },
@@ -327,12 +325,6 @@
     }
   },
   "selector": {
-    "entity_category": {
-      "options": {
-        "diagnostic": "Diagnostic",
-        "config": "Configuration"
-      }
-    },
     "platform": {
       "options": {
         "notify": "Notify"
