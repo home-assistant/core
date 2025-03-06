@@ -9,7 +9,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
 
 from . import CLIENT_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
 
