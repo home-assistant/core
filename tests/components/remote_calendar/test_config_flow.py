@@ -37,6 +37,11 @@ async def test_form_import_ics(hass: HomeAssistant, ics_content: str) -> None:
             CONF_URL: CALENDER_URL,
         },
     )
+    assert result2["title"] == CALENDAR_NAME
+    assert result2["data"] == {
+        CONF_CALENDAR_NAME: CALENDAR_NAME,
+        CONF_URL: CALENDER_URL,
+    }
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
