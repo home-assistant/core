@@ -14,7 +14,15 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BUTTON, Platform.COVER, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VALVE,
+]
 
 type HomeeConfigEntry = ConfigEntry[Homee]
 
