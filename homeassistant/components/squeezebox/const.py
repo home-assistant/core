@@ -2,14 +2,12 @@
 
 CONF_HTTPS = "https"
 DISCOVERY_TASK = "discovery_task"
-DISCOVERY_INTERVAL = 60
 DOMAIN = "squeezebox"
 DEFAULT_PORT = 9000
 KNOWN_PLAYERS = "known_players"
 KNOWN_SERVERS = "known_servers"
 MANUFACTURER = "https://lyrion.org/"
 PLAYER_DISCOVERY_UNSUB = "player_discovery_unsub"
-PLAYER_UPDATE_INTERVAL = 5
 SENSOR_UPDATE_INTERVAL = 60
 SERVER_MODEL = "Lyrion Music Server"
 STATUS_API_TIMEOUT = 10
