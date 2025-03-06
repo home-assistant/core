@@ -260,7 +260,7 @@ def _report_usage(
     """
     if integration_domain:
         if integration := async_get_issue_integration(hass, integration_domain):
-            _report_integration_domain(
+            _report_usage_integration_domain(
                 hass,
                 what,
                 breaks_in_ha_version,
@@ -270,7 +270,7 @@ def _report_usage(
                 level,
             )
             return
-        _report_no_integration(what, core_behavior, breaks_in_ha_version, None)
+        _report_usage_no_integration(what, core_behavior, breaks_in_ha_version, None)
         return
 
     try:
@@ -278,7 +278,7 @@ def _report_usage(
             exclude_integrations=exclude_integrations
         )
     except MissingIntegrationFrame as err:
-        _report_no_integration(what, core_behavior, breaks_in_ha_version, err)
+        _report_usage_no_integration(what, core_behavior, breaks_in_ha_version, err)
         return
 
     integration_behavior = core_integration_behavior
@@ -286,7 +286,7 @@ def _report_usage(
         integration_behavior = custom_integration_behavior
 
     if integration_behavior is not ReportBehavior.IGNORE:
-        _report_integration_frame(
+        _report_usage_integration_frame(
             hass,
             what,
             breaks_in_ha_version,
@@ -296,7 +296,7 @@ def _report_usage(
         )
 
 
-def _report_integration_domain(
+def _report_usage_integration_domain(
     hass: HomeAssistant | None,
     what: str,
     breaks_in_ha_version: str | None,
@@ -346,7 +346,7 @@ def _report_integration_domain(
         )
 
 
-def _report_integration_frame(
+def _report_usage_integration_frame(
     hass: HomeAssistant,
     what: str,
     breaks_in_ha_version: str | None,
@@ -395,13 +395,13 @@ def _report_integration_frame(
     )
 
 
-def _report_no_integration(
+def _report_usage_no_integration(
     what: str,
     core_behavior: ReportBehavior,
     breaks_in_ha_version: str | None,
     err: MissingIntegrationFrame | None,
 ) -> None:
-    """Report incorrect usage when no integration could be identified.
+    """Report incorrect usage without an integration.
 
     This could happen because the offending call happened outside of an integration,
     or because the integration could not be identified.
