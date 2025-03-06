@@ -80,7 +80,7 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
             BoilerType.STEAM
         ].current_temperature,
         supported_fn=lambda coordinator: coordinator.device.model
-        != MachineModel.LINEA_MINI,
+        not in (MachineModel.LINEA_MINI, MachineModel.LINEA_MINI_R),
     ),
 )
 
@@ -125,7 +125,8 @@ SCALE_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
             device.config.scale.battery if device.config.scale else 0
         ),
         supported_fn=(
-            lambda coordinator: coordinator.device.model == MachineModel.LINEA_MINI
+            lambda coordinator: coordinator.device.model
+            in (MachineModel.LINEA_MINI, MachineModel.LINEA_MINI_R)
         ),
     ),
 )
@@ -148,7 +149,8 @@ async def async_setup_entry(
     ]
 
     if (
-        config_coordinator.device.model == MachineModel.LINEA_MINI
+        config_coordinator.device.model
+        in (MachineModel.LINEA_MINI, MachineModel.LINEA_MINI_R)
         and config_coordinator.device.config.scale
     ):
         entities.extend(
