@@ -7,6 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["ical"],
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["ical==8.3.0"]
 }

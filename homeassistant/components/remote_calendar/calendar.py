@@ -17,7 +17,8 @@ from .coordinator import RemoteCalendarDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 1
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
