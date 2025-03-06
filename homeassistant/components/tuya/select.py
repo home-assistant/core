@@ -316,6 +316,16 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Thermostat
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
+    "wk": (
+        SelectEntityDescription(
+            key=DPCode.SENSOR_CHOOSE,
+            translation_key="sensor_choose",
+            entity_category=EntityCategory.CONFIG,
+            name="Sensor location",
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)

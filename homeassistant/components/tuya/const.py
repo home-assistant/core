@@ -180,6 +180,7 @@ class DPCode(StrEnum):
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
     DOORCONTACT_STATE_3 = "doorcontact_state_3"
     DUSTER_CLOTH = "duster_cloth"
+    ECO = "eco"  # Economy mode with thermostats
     ECO2 = "eco2"
     EDGE_BRUSH = "edge_brush"
     ELECTRICITY_LEFT = "electricity_left"
@@ -275,6 +276,7 @@ class DPCode(StrEnum):
     ROLL_BRUSH = "roll_brush"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
+    SENSOR_CHOOSE = "sensor_choose"  # Sensor in/out = Internal / External
     SENSOR_HUMIDITY = "sensor_humidity"
     SENSOR_TEMPERATURE = "sensor_temperature"
     SHAKE = "shake"  # Oscillating
@@ -286,7 +288,7 @@ class DPCode(StrEnum):
     SMOKE_SENSOR_STATE = "smoke_sensor_state"
     SMOKE_SENSOR_STATUS = "smoke_sensor_status"
     SMOKE_SENSOR_VALUE = "smoke_sensor_value"
-    SOUND = "sound"  # Key press sound
+    SOUND = "sound"  # Keypad sounds for thermostats
     SOS = "sos"  # Emergency State
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level

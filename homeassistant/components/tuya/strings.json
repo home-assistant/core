@@ -436,6 +436,13 @@
           "5": "Mood 5"
         }
       },
+      "sensor_choose": {
+        "name": "Sensor selection",
+        "state": {
+          "out": "External",
+          "in": "Internal"
+        }
+      },
       "weather_delay": {
         "name": "Weather delay",
         "state": {
@@ -822,6 +829,12 @@
       },
       "open_valve_detection": {
         "name": "Valve Open detection"
+      },
+      "keypad_sound": {
+        "name": "Keypad sound"
+      },
+      "economy_mode": {
+        "name": "Economy mode"
       },
       "open_window_detection": {
         "name": "Open window detection"

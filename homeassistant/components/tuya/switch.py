@@ -580,11 +580,20 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
+            # name="child lock",
         ),
         SwitchEntityDescription(
             key=DPCode.SOUND,
-            translation_key="sound",
+            # translation_key="sound",
+            translation_key="keypad_sound",
             entity_category=EntityCategory.CONFIG,
+            name="Keypad sound",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.ECO,
+            translation_key="economy_mode",
+            entity_category=EntityCategory.CONFIG,
+            name="Economy mode",
         ),
     ),
     # Thermostatic Radiator Valve
@@ -788,6 +797,8 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
+        # If the name is not set, use the translation key
+        # self._attr_name = description.name if description.name else description.translation_key.replace("_", " ").title()
 
     @property
     def is_on(self) -> bool:

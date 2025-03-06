@@ -341,6 +341,12 @@
       "energy_saving": {
         "default": "mdi:leaf"
       },
+      "keypad_sound": {
+        "default": "mdi:volume-medium"
+      },
+      "economy_mode": {
+        "default": "mdi:leaf"
+      },
       "open_window_detection": {
         "default": "mdi:window-open"
       },
