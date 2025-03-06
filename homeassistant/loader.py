@@ -950,187 +950,8 @@ class Integration:
                 return None
             return self._all_dependencies
 
-        result = await self.resolve_multiple_dependencies(self.hass, (self,))
+        result = await resolve_integrations_dependencies(self.hass, (self,))
         return result.get(self.domain)
-
-    @staticmethod
-    async def resolve_multiple_dependencies(
-        hass: HomeAssistant, integrations: Iterable[Integration]
-    ) -> dict[str, set[str]]:
-        """Resolve all dependencies for integrations.
-
-        Detects circular dependencies and missing integrations.
-        """
-        resolve_dependencies_tasks = {
-            itg.domain: create_eager_task(
-                itg._do_resolve_dependencies(cache_key="_all_dependencies"),  # noqa: SLF001
-                name=f"resolve dependencies {itg.domain}",
-                loop=hass.loop,
-            )
-            for itg in integrations
-        }
-
-        result = await asyncio.gather(*resolve_dependencies_tasks.values())
-
-        return {
-            domain: deps
-            for domain, deps in zip(resolve_dependencies_tasks, result, strict=True)
-            if deps is not None
-        }
-
-    @staticmethod
-    async def resolve_multiple_after_dependencies(
-        hass: HomeAssistant,
-        integrations: Iterable[Integration],
-        possible_after_dependencies: set[str] | None = None,
-        *,
-        ignore_exceptions: bool | None = None,
-    ) -> dict[str, set[str]]:
-        """Resolve all dependencies, including after_dependencies, for integrations.
-
-        Detects circular dependencies and missing integrations.
-        """
-        resolved: dict[str, set[str] | Exception] = {}
-
-        resolve_dependencies_tasks = {
-            itg.domain: create_eager_task(
-                itg._do_resolve_dependencies(  # noqa: SLF001
-                    cache=resolved,
-                    possible_after_dependencies=possible_after_dependencies,
-                    ignore_exceptions=ignore_exceptions,
-                ),
-                name=f"resolve after dependencies {itg.domain}",
-                loop=hass.loop,
-            )
-            for itg in integrations
-        }
-
-        result = await asyncio.gather(*resolve_dependencies_tasks.values())
-
-        return {
-            domain: deps
-            for domain, deps in zip(resolve_dependencies_tasks, result, strict=True)
-            if deps is not None
-        }
-
-    async def _do_resolve_dependencies(
-        self,
-        *,
-        cache: dict[str, set[str] | Exception] | None = None,
-        cache_key: str | None = None,
-        possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
-        ignore_exceptions: bool | None = None,
-    ) -> set[str] | None:
-        """Recursively resolve all dependencies.
-
-        Uses `cache` or `cache_key` to cache the results.
-
-        If `include_after_dependencies` is not UNDEFINED, listed after dependencies are also considered.
-        If it is None, all the possible after dependencies are considered.
-
-        If `ignore_exceptions` is True, exceptions are caught and ignored and the normal resolution
-        algorithm continues. Otherwise, if `ignore_exceptions` is False, they are raised. If it is None,
-        the normal resolution algorithm is interrupted, but exceptions are not raised, and instead
-        None is returned as a result.
-        """
-        resolved = cache if cache is not None else {}
-        resolving: set[str] = set()
-
-        def cache_result(itg: Integration, result: set[str] | Exception) -> None:
-            if cache_key is not None:
-                setattr(itg, cache_key, result)
-            else:
-                resolved[itg.domain] = result
-
-        async def do_resolve_dependencies_impl(itg: Integration) -> set[str]:
-            domain = itg.domain
-            # If it's already resolved, no point doing it again.
-            if cache_key is not None:
-                result = cast(
-                    set[str] | Exception | None, getattr(itg, cache_key, None)
-                )
-            else:
-                result = resolved.get(domain)
-            if result is not None:
-                if isinstance(result, Exception):
-                    raise result
-                return result
-
-            # If we are already resolving it, we have a circular dependency.
-            if domain in resolving:
-                if ignore_exceptions:
-                    cache_result(itg, set())
-                    return set()
-                exc = CircularDependency([domain])
-                cache_result(itg, exc)
-                raise exc
-
-            resolving.add(domain)
-
-            dependencies_domains = set(itg.dependencies)
-            if possible_after_dependencies is not UNDEFINED:
-                if possible_after_dependencies is None:
-                    after_dependencies: Iterable[str] = itg.after_dependencies
-                else:
-                    after_dependencies = (
-                        set(itg.after_dependencies) & possible_after_dependencies
-                    )
-                dependencies_domains.update(after_dependencies)
-            dependencies = await async_get_integrations(itg.hass, dependencies_domains)
-
-            all_dependencies = set()
-            for dep_domain, dep_integration in dependencies.items():
-                if isinstance(dep_integration, Exception):
-                    if ignore_exceptions:
-                        continue
-                    cache_result(itg, dep_integration)
-                    raise dep_integration
-
-                all_dependencies.add(dep_domain)
-
-                try:
-                    dep_dependencies = await do_resolve_dependencies_impl(
-                        dep_integration
-                    )
-                except CircularDependency as exc:
-                    exc.domain_cycle = [domain, *exc.domain_cycle]
-                    cache_result(itg, exc)
-                    raise
-                except Exception as exc:
-                    cache_result(itg, exc)
-                    raise
-
-                all_dependencies.update(dep_dependencies)
-
-            resolving.remove(domain)
-
-            cache_result(itg, all_dependencies)
-            return all_dependencies
-
-        if ignore_exceptions is not None:
-            return await do_resolve_dependencies_impl(self)
-
-        try:
-            return await do_resolve_dependencies_impl(self)
-        except IntegrationNotFound as err:
-            _LOGGER.error(
-                (
-                    "Unable to resolve dependencies for %s: unable to resolve"
-                    " (sub)dependency %s"
-                ),
-                self.domain,
-                err.domain,
-            )
-        except CircularDependency as err:
-            _LOGGER.error(
-                (
-                    "Unable to resolve dependencies for %s: it contains a circular"
-                    " dependency: %s"
-                ),
-                self.domain,
-                err.domain_cycle,
-            )
-        return None
 
     async def async_get_component(self) -> ComponentProtocol:
         """Return the component.
@@ -1596,6 +1417,203 @@ async def async_get_integrations(
                 future.set_result(exc)
 
     return results
+
+
+async def resolve_integrations_dependencies(
+    hass: HomeAssistant, integrations: Iterable[Integration]
+) -> dict[str, set[str]]:
+    """Resolve all dependencies for integrations.
+
+    Detects circular dependencies and missing integrations.
+    """
+
+    async def task(itg: Integration) -> set[str] | None:
+        try:
+            return await _do_resolve_dependencies(itg, cache_key="_all_dependencies")
+        except Exception as exc:  # noqa: BLE001
+            _log_dependencies_exceptions(itg, exc)
+            return None
+
+    resolve_dependencies_tasks = {
+        itg.domain: create_eager_task(
+            task(itg),
+            name=f"resolve dependencies {itg.domain}",
+            loop=hass.loop,
+        )
+        for itg in integrations
+    }
+
+    result = await asyncio.gather(*resolve_dependencies_tasks.values())
+
+    return {
+        domain: deps
+        for domain, deps in zip(resolve_dependencies_tasks, result, strict=True)
+        if deps is not None
+    }
+
+
+async def resolve_integrations_after_dependencies(
+    hass: HomeAssistant,
+    integrations: Iterable[Integration],
+    possible_after_dependencies: set[str] | None = None,
+    *,
+    ignore_exceptions: bool = False,
+) -> dict[str, set[str]]:
+    """Resolve all dependencies, including after_dependencies, for integrations.
+
+    Detects circular dependencies and missing integrations.
+    """
+    resolved: dict[str, set[str] | Exception] = {}
+
+    async def task(itg: Integration) -> set[str] | None:
+        if ignore_exceptions:
+            return await _do_resolve_dependencies(
+                itg,
+                cache=resolved,
+                possible_after_dependencies=possible_after_dependencies,
+                ignore_exceptions=ignore_exceptions,
+            )
+
+        try:
+            return await _do_resolve_dependencies(
+                itg,
+                cache=resolved,
+                possible_after_dependencies=possible_after_dependencies,
+                ignore_exceptions=ignore_exceptions,
+            )
+        except Exception as exc:  # noqa: BLE001
+            _log_dependencies_exceptions(itg, exc)
+            return None
+
+    resolve_dependencies_tasks = {
+        itg.domain: create_eager_task(
+            task(itg),
+            name=f"resolve after dependencies {itg.domain}",
+            loop=hass.loop,
+        )
+        for itg in integrations
+    }
+
+    result = await asyncio.gather(*resolve_dependencies_tasks.values())
+
+    return {
+        domain: deps
+        for domain, deps in zip(resolve_dependencies_tasks, result, strict=True)
+        if deps is not None
+    }
+
+
+async def _do_resolve_dependencies(
+    itg: Integration,
+    *,
+    cache: dict[str, set[str] | Exception] | None = None,
+    cache_key: str | None = None,
+    possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
+    ignore_exceptions: bool = False,
+) -> set[str]:
+    """Recursively resolve all dependencies.
+
+    Uses `cache` or `cache_key` to cache the results.
+
+    If `possible_after_dependencies` is not UNDEFINED, listed after dependencies are also considered.
+    If it is None, all the possible after dependencies are considered.
+
+    If `ignore_exceptions` is True, exceptions are caught and ignored and the normal resolution
+    algorithm continues. Otherwise, they are raised.
+    """
+    resolved = cache if cache is not None else {}
+    resolving: set[str] = set()
+
+    def cache_result(itg: Integration, result: set[str] | Exception) -> None:
+        if cache_key is not None:
+            setattr(itg, cache_key, result)
+        else:
+            resolved[itg.domain] = result
+
+    async def do_resolve_dependencies_impl(itg: Integration) -> set[str]:
+        domain = itg.domain
+        # If it's already resolved, no point doing it again.
+        if cache_key is not None:
+            result = cast(set[str] | Exception | None, getattr(itg, cache_key, None))
+        else:
+            result = resolved.get(domain)
+        if result is not None:
+            if isinstance(result, Exception):
+                raise result
+            return result
+
+        # If we are already resolving it, we have a circular dependency.
+        if domain in resolving:
+            if ignore_exceptions:
+                cache_result(itg, set())
+                return set()
+            exc = CircularDependency([domain])
+            cache_result(itg, exc)
+            raise exc
+
+        resolving.add(domain)
+
+        dependencies_domains = set(itg.dependencies)
+        if possible_after_dependencies is not UNDEFINED:
+            if possible_after_dependencies is None:
+                after_dependencies: Iterable[str] = itg.after_dependencies
+            else:
+                after_dependencies = (
+                    set(itg.after_dependencies) & possible_after_dependencies
+                )
+            dependencies_domains.update(after_dependencies)
+        dependencies = await async_get_integrations(itg.hass, dependencies_domains)
+
+        all_dependencies = set()
+        for dep_domain, dep_integration in dependencies.items():
+            if isinstance(dep_integration, Exception):
+                if ignore_exceptions:
+                    continue
+                cache_result(itg, dep_integration)
+                raise dep_integration
+
+            all_dependencies.add(dep_domain)
+
+            try:
+                dep_dependencies = await do_resolve_dependencies_impl(dep_integration)
+            except CircularDependency as exc:
+                exc.domain_cycle = [domain, *exc.domain_cycle]
+                cache_result(itg, exc)
+                raise
+            except Exception as exc:
+                cache_result(itg, exc)
+                raise
+
+            all_dependencies.update(dep_dependencies)
+
+        resolving.remove(domain)
+
+        cache_result(itg, all_dependencies)
+        return all_dependencies
+
+    return await do_resolve_dependencies_impl(itg)
+
+
+def _log_dependencies_exceptions(itg: Integration, exc: Exception) -> None:
+    if isinstance(exc, IntegrationNotFound):
+        _LOGGER.error(
+            "Unable to resolve dependencies for %s: unable to resolve (sub)dependency %s",
+            itg.domain,
+            exc.domain,
+        )
+        return
+    if isinstance(exc, CircularDependency):
+        _LOGGER.error(
+            "Unable to resolve dependencies for %s: it contains a circular dependency: %s",
+            itg.domain,
+            exc.domain_cycle,
+        )
+        return
+    _LOGGER.error(
+        "Unable to resolve dependencies for %s: an unexpected error occurred: %s",
+        itg.domain,
+        exc,
+    )
 
 
 class LoaderError(Exception):

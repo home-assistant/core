@@ -17,7 +17,6 @@ from homeassistant.components.hue import light as hue_light
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import frame
 from homeassistant.helpers.json import json_dumps
-from homeassistant.loader import Integration
 from homeassistant.util.json import json_loads
 
 from .common import MockModule, async_get_persistent_notifications, mock_integration
@@ -31,26 +30,26 @@ async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
     mod_4 = mock_integration(hass, MockModule("mod4", dependencies=["mod2", "mod3"]))
     all_domains = {"mod1", "mod2", "mod3", "mod4"}
 
-    deps = await mod_4._do_resolve_dependencies(ignore_exceptions=False)
+    deps = await loader._do_resolve_dependencies(mod_4)
     assert deps == {"mod1", "mod2", "mod3"}
 
     # Create a circular dependency
     mock_integration(hass, MockModule("mod1", dependencies=["mod4"]))
     with pytest.raises(loader.CircularDependency):
-        await mod_4._do_resolve_dependencies(ignore_exceptions=False)
+        await loader._do_resolve_dependencies(mod_4)
 
     # Create a different circular dependency
     mock_integration(hass, MockModule("mod1", dependencies=["mod3"]))
     with pytest.raises(loader.CircularDependency):
-        await mod_4._do_resolve_dependencies(ignore_exceptions=False)
+        await loader._do_resolve_dependencies(mod_4)
 
     # Create a circular after_dependency
     mock_integration(
         hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod4"]})
     )
     with pytest.raises(loader.CircularDependency):
-        await mod_4._do_resolve_dependencies(
-            possible_after_dependencies=all_domains, ignore_exceptions=False
+        await loader._do_resolve_dependencies(
+            mod_4, possible_after_dependencies=all_domains
         )
 
     # Create a different circular after_dependency
@@ -58,25 +57,28 @@ async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
         hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod3"]})
     )
     with pytest.raises(loader.CircularDependency):
-        await mod_4._do_resolve_dependencies(
-            possible_after_dependencies=all_domains, ignore_exceptions=False
+        await loader._do_resolve_dependencies(
+            mod_4, possible_after_dependencies=all_domains
         )
 
     # Create a circular after_dependency without a hard dependency
     mock_integration(
         hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod4"]})
     )
-    mock_integration(
+    mod_4 = mock_integration(
         hass, MockModule("mod4", partial_manifest={"after_dependencies": ["mod2"]})
     )
     with pytest.raises(loader.CircularDependency):
-        await mod_4._do_resolve_dependencies(
-            possible_after_dependencies=all_domains, ignore_exceptions=False
+        await loader._do_resolve_dependencies(
+            mod_4, possible_after_dependencies=all_domains
         )
-    result = await mod_4._do_resolve_dependencies(
-        possible_after_dependencies=all_domains, ignore_exceptions=True
+
+    result = await loader.resolve_integrations_after_dependencies(hass, (mod_4,))
+    assert result == {}
+    result = await loader.resolve_integrations_after_dependencies(
+        hass, (mod_4,), ignore_exceptions=True
     )
-    assert result == all_domains
+    assert result["mod4"] == {"mod4", "mod2", "mod1"}
 
 
 async def test_nonexistent_component_dependencies(hass: HomeAssistant) -> None:
@@ -94,7 +96,7 @@ async def test_nonexistent_component_dependencies(hass: HomeAssistant) -> None:
     with pytest.raises(loader.IntegrationNotFound):
         mod_1.all_dependencies  # noqa: B018
 
-    result = await Integration.resolve_multiple_dependencies(hass, (mod_2, mod_1))
+    result = await loader.resolve_integrations_dependencies(hass, (mod_2, mod_1))
     assert result == {}
 
     mod_1 = mock_integration(
@@ -103,7 +105,7 @@ async def test_nonexistent_component_dependencies(hass: HomeAssistant) -> None:
     )
     mod_2 = mock_integration(hass, MockModule("mod2", dependencies=["mod1"]))
 
-    result = await Integration.resolve_multiple_after_dependencies(hass, (mod_2, mod_1))
+    result = await loader.resolve_integrations_after_dependencies(hass, (mod_2, mod_1))
     assert result == {}
 
 
