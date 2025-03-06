@@ -43,7 +43,9 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
 
         settings: GeocachingSettings = GeocachingSettings()
 
-        settings.set_tracked_caches(set(entry.data[CONFIG_FLOW_GEOCACHES_SECTION_ID]))
+        settings.set_tracked_caches(
+            set(entry.data.get(CONFIG_FLOW_GEOCACHES_SECTION_ID, []))
+        )
 
         self.geocaching = GeocachingApi(
             environment=ENVIRONMENT,
