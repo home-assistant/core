@@ -29,6 +29,7 @@ async def test_info(
     assert msg["success"]
 
     info = msg.get("result", {}).get("info", {})
+    assert info == snapshot
 
     # stt (speech-to-text) = asr (automated speech recognition)
     assert init_wyoming_stt.entry_id in info
