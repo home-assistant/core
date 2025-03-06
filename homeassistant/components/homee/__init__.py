@@ -24,6 +24,8 @@ PLATFORMS = [
     Platform.VALVE,
 ]
 
+PARALLEL_UPDATES = 0
+
 type HomeeConfigEntry = ConfigEntry[Homee]
 
 
