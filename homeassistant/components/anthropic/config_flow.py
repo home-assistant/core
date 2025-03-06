@@ -34,13 +34,13 @@ from .const import (
     CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
-    CONF_THINKING_BUDGET_TOKENS,
+    CONF_THINKING_BUDGET,
     DOMAIN,
     MIN_THINKING_BUDGET,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
-    RECOMMENDED_THINKING_BUDGET_TOKENS,
+    RECOMMENDED_THINKING_BUDGET,
     THINKING_MODELS,
 )
 
@@ -140,7 +140,7 @@ class AnthropicOptionsFlow(OptionsFlow):
                     user_input.pop(CONF_LLM_HASS_API)
 
                 thinking_budget = user_input.get(
-                    CONF_THINKING_BUDGET_TOKENS, RECOMMENDED_THINKING_BUDGET_TOKENS
+                    CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET
                 )
 
                 extended_thinking_enabled: bool = thinking_budget >= MIN_THINKING_BUDGET
@@ -150,9 +150,7 @@ class AnthropicOptionsFlow(OptionsFlow):
                     and user_input.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
                     not in THINKING_MODELS
                 ):
-                    errors[CONF_THINKING_BUDGET_TOKENS] = (
-                        "model_does_not_support_thinking"
-                    )
+                    errors[CONF_THINKING_BUDGET] = "model_does_not_support_thinking"
 
                 if (
                     extended_thinking_enabled
@@ -240,8 +238,8 @@ def anthropic_config_option_schema(
                 default=RECOMMENDED_TEMPERATURE,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Optional(
-                CONF_THINKING_BUDGET_TOKENS,
-                default=RECOMMENDED_THINKING_BUDGET_TOKENS,
+                CONF_THINKING_BUDGET,
+                default=RECOMMENDED_THINKING_BUDGET,
             ): int,
         }
     )

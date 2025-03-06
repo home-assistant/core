@@ -21,11 +21,11 @@ from homeassistant.components.anthropic.const import (
     CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
-    CONF_THINKING_BUDGET_TOKENS,
+    CONF_THINKING_BUDGET,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
-    RECOMMENDED_THINKING_BUDGET_TOKENS,
+    RECOMMENDED_THINKING_BUDGET,
 )
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
@@ -109,14 +109,12 @@ async def test_options_non_thinking_model(
             "prompt": "Speak like a pirate",
             "max_tokens": 8192,
             "chat_model": "claude-3-opus-20240229",
-            "thinking_budget_tokens": 1024,
+            "thinking_budget": 1024,
         },
     )
     await hass.async_block_till_done()
     assert options["type"] is FlowResultType.FORM
-    assert options["errors"] == {
-        "thinking_budget_tokens": "model_does_not_support_thinking"
-    }
+    assert options["errors"] == {"thinking_budget": "model_does_not_support_thinking"}
 
 
 async def test_options_thinking_with_temperature(
@@ -133,7 +131,7 @@ async def test_options_thinking_with_temperature(
             "max_tokens": 8192,
             "chat_model": "claude-3-7-sonnet-latest",
             "temperature": 0.3,
-            "thinking_budget_tokens": 1024,
+            "thinking_budget": 1024,
         },
     )
     await hass.async_block_till_done()
@@ -155,7 +153,7 @@ async def test_options_thinking_budget_more_than_max(
             "max_tokens": 8192,
             "chat_model": "claude-3-7-sonnet-latest",
             "temperature": 1,
-            "thinking_budget_tokens": 16384,
+            "thinking_budget": 16384,
         },
     )
     await hass.async_block_till_done()
@@ -255,7 +253,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                CONF_THINKING_BUDGET_TOKENS: RECOMMENDED_THINKING_BUDGET_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
             },
         ),
         (
@@ -265,7 +263,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                CONF_THINKING_BUDGET_TOKENS: RECOMMENDED_THINKING_BUDGET_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
             },
             {
                 CONF_RECOMMENDED: True,

@@ -49,14 +49,14 @@ from .const import (
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_TEMPERATURE,
-    CONF_THINKING_BUDGET_TOKENS,
+    CONF_THINKING_BUDGET,
     DOMAIN,
     LOGGER,
     MIN_THINKING_BUDGET,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
-    RECOMMENDED_THINKING_BUDGET_TOKENS,
+    RECOMMENDED_THINKING_BUDGET,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -371,9 +371,7 @@ class AnthropicConversationEntity(
         client = self.entry.runtime_data
 
         # To prevent infinite loops, we limit the number of iterations
-        thinking_budget = options.get(
-            CONF_THINKING_BUDGET_TOKENS, RECOMMENDED_THINKING_BUDGET_TOKENS
-        )
+        thinking_budget = options.get(CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET)
         if thinking_budget < MIN_THINKING_BUDGET:
             thinking: ThinkingConfigParam = ThinkingConfigDisabledParam(type="disabled")
         else:
