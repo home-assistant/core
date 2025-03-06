@@ -465,23 +465,14 @@ class MqttCover(MqttEntity, CoverEntity):
         self.add_subscription(
             CONF_GET_POSITION_TOPIC,
             self._position_message_received,
-            {
-                "_attr_current_cover_position",
-                "_attr_current_cover_tilt_position",
-                "_attr_is_closed",
-                "_attr_is_closing",
-                "_attr_is_opening",
-            },
         )
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._state_message_received,
-            {"_attr_is_closed", "_attr_is_closing", "_attr_is_opening"},
         )
         self.add_subscription(
             CONF_TILT_STATUS_TOPIC,
             self._tilt_message_received,
-            {"_attr_current_cover_tilt_position"},
         )
 
     async def _subscribe_topics(self) -> None:

@@ -339,12 +339,6 @@ class MqttValve(MqttEntity, ValveEntity):
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._state_message_received,
-            {
-                "_attr_current_valve_position",
-                "_attr_is_closed",
-                "_attr_is_closing",
-                "_attr_is_opening",
-            },
         )
 
     async def _subscribe_topics(self) -> None:

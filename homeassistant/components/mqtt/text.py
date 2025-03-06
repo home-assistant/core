@@ -163,7 +163,6 @@ class MqttTextEntity(MqttEntity, TextEntity):
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._handle_state_message_received,
-            {"_attr_native_value"},
         )
 
     async def _subscribe_topics(self) -> None:

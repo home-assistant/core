@@ -137,9 +137,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        self.add_subscription(
-            CONF_STATE_TOPIC, self._tracker_message_received, {"_location_name"}
-        )
+        self.add_subscription(CONF_STATE_TOPIC, self._tracker_message_received)
 
     @property
     def force_update(self) -> bool:

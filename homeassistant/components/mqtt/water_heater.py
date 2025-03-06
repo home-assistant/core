@@ -290,7 +290,6 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
         self.add_subscription(
             CONF_MODE_STATE_TOPIC,
             self._handle_current_mode_received,
-            {"_attr_current_operation"},
         )
         # add subscriptions for MqttTemperatureControlEntity
         self.prepare_subscribe_topics()

@@ -170,9 +170,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        if not self.add_subscription(
-            CONF_ACTIVITY_STATE_TOPIC, self._message_received, {"_attr_activity"}
-        ):
+        if not self.add_subscription(CONF_ACTIVITY_STATE_TOPIC, self._message_received):
             # Force into optimistic mode.
             self._attr_assumed_state = True
             return

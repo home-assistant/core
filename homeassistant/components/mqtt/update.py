@@ -229,21 +229,10 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._handle_state_message_received,
-            {
-                "_attr_entity_picture",
-                "_attr_in_progress",
-                "_attr_installed_version",
-                "_attr_latest_version",
-                "_attr_title",
-                "_attr_release_summary",
-                "_attr_release_url",
-                "_attr_update_percentage",
-            },
         )
         self.add_subscription(
             CONF_LATEST_VERSION_TOPIC,
             self._handle_latest_version_received,
-            {"_attr_latest_version"},
         )
 
     async def _subscribe_topics(self) -> None:

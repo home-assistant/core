@@ -399,7 +399,6 @@ class MqttAttributesMixin(Entity):
                     "msg_callback": partial(
                         self._message_callback,  # type: ignore[attr-defined]
                         self._attributes_message_received,
-                        {"_attr_extra_state_attributes"},
                     ),
                     "entity_id": self.entity_id,
                     "qos": self._attributes_config.get(CONF_QOS),
@@ -513,7 +512,6 @@ class MqttAvailabilityMixin(Entity):
                 "msg_callback": partial(
                     self._message_callback,  # type: ignore[attr-defined]
                     self._availability_message_received,
-                    {"available"},
                 ),
                 "entity_id": self.entity_id,
                 "qos": self._avail_config[CONF_QOS],
@@ -1450,7 +1448,6 @@ class MqttEntity(
     def _message_callback(
         self,
         msg_callback: MessageCallbackType,
-        attributes: set[str] | None,
         msg: ReceiveMessage,
     ) -> None:
         """Process the message callback."""
@@ -1467,14 +1464,12 @@ class MqttEntity(
             _LOGGER.warning(exc)
             return
 
-        if attributes is not None:
-            mqtt_data.state_write_requests.write_state_request(self)
+        mqtt_data.state_write_requests.write_state_request(self)
 
     def add_subscription(
         self,
         state_topic_config_key: str,
         msg_callback: Callable[[ReceiveMessage], None],
-        tracked_attributes: set[str] | None,
         disable_encoding: bool = False,
     ) -> bool:
         """Add a subscription."""
@@ -1488,9 +1483,7 @@ class MqttEntity(
         ):
             self._subscriptions[state_topic_config_key] = {
                 "topic": self._config[state_topic_config_key],
-                "msg_callback": partial(
-                    self._message_callback, msg_callback, tracked_attributes
-                ),
+                "msg_callback": partial(self._message_callback, msg_callback),
                 "entity_id": self.entity_id,
                 "qos": qos,
                 "encoding": encoding,

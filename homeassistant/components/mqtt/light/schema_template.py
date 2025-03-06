@@ -278,14 +278,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._state_received,
-            {
-                "_attr_brightness",
-                "_attr_color_mode",
-                "_attr_color_temp_kelvin",
-                "_attr_effect",
-                "_attr_hs_color",
-                "_attr_is_on",
-            },
         )
 
     async def _subscribe_topics(self) -> None:

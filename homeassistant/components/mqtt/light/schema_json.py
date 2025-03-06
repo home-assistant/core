@@ -329,18 +329,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._state_received,
-            {
-                "_attr_brightness",
-                "_attr_color_temp_kelvin",
-                "_attr_effect",
-                "_attr_hs_color",
-                "_attr_is_on",
-                "_attr_rgb_color",
-                "_attr_rgbw_color",
-                "_attr_rgbww_color",
-                "_attr_xy_color",
-                "color_mode",
-            },
         )
 
     async def _subscribe_topics(self) -> None:

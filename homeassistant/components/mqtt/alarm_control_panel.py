@@ -195,9 +195,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        self.add_subscription(
-            CONF_STATE_TOPIC, self._state_message_received, {"_attr_alarm_state"}
-        )
+        self.add_subscription(CONF_STATE_TOPIC, self._state_message_received)
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""

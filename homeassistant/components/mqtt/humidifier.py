@@ -396,23 +396,17 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
-        self.add_subscription(
-            CONF_ACTION_TOPIC, self._action_received, {"_attr_action"}
-        )
+        self.add_subscription(CONF_STATE_TOPIC, self._state_received)
+        self.add_subscription(CONF_ACTION_TOPIC, self._action_received)
         self.add_subscription(
             CONF_CURRENT_HUMIDITY_TOPIC,
             self._current_humidity_received,
-            {"_attr_current_humidity"},
         )
         self.add_subscription(
             CONF_TARGET_HUMIDITY_STATE_TOPIC,
             self._target_humidity_received,
-            {"_attr_target_humidity"},
         )
-        self.add_subscription(
-            CONF_MODE_STATE_TOPIC, self._mode_received, {"_attr_mode"}
-        )
+        self.add_subscription(CONF_MODE_STATE_TOPIC, self._mode_received)
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""

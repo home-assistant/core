@@ -112,9 +112,7 @@ class MqttCamera(MqttEntity, Camera):
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
-        self.add_subscription(
-            CONF_TOPIC, self._image_received, None, disable_encoding=True
-        )
+        self.add_subscription(CONF_TOPIC, self._image_received, disable_encoding=True)
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""

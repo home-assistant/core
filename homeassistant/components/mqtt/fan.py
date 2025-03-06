@@ -432,25 +432,20 @@ class MqttFan(MqttEntity, FanEntity):
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
-        self.add_subscription(
-            CONF_PERCENTAGE_STATE_TOPIC, self._percentage_received, {"_attr_percentage"}
-        )
+        self.add_subscription(CONF_STATE_TOPIC, self._state_received)
+        self.add_subscription(CONF_PERCENTAGE_STATE_TOPIC, self._percentage_received)
         self.add_subscription(
             CONF_PRESET_MODE_STATE_TOPIC,
             self._preset_mode_received,
-            {"_attr_preset_mode"},
         )
         if self.add_subscription(
             CONF_OSCILLATION_STATE_TOPIC,
             self._oscillation_received,
-            {"_attr_oscillating"},
         ):
             self._attr_oscillating = False
         self.add_subscription(
             CONF_DIRECTION_STATE_TOPIC,
             self._direction_received,
-            {"_attr_current_direction"},
         )
 
     async def _subscribe_topics(self) -> None:
