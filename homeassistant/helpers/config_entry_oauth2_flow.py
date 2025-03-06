@@ -169,8 +169,8 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         return {}
 
     @property
-    def extra_token_redeem_data(self) -> dict:
-        """Extra data that needs to be included in the token redeem request."""
+    def extra_token_resolve_data(self) -> dict:
+        """Extra data that needs to be included in the token resolve request, after getting the code."""
         return {}
 
     async def async_generate_authorize_url(self, flow_id: str) -> str:
@@ -198,7 +198,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             "code": external_data["code"],
             "redirect_uri": external_data["state"]["redirect_uri"],
         }
-        request_data.update(self.extra_token_redeem_data)
+        request_data.update(self.extra_token_resolve_data)
         return await self._token_request(request_data)
 
     async def _async_refresh_token(self, token: dict) -> dict:
@@ -269,8 +269,19 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
         )
 
     @property
-    def code_challenge_data(self) -> dict:
-        """Return the generated code challenge and method."""
+    def extra_authorize_data(self) -> dict:
+        """Extra data that needs to be appended to the authorize url.
+
+        If you want to override this method, calling super is mandatory (for adding scopes):
+        ```
+        @def extra_authorize_data(self) -> dict:
+            data: dict = {
+                "scope": "openid profile email",
+            }
+            data.update(super().extra_authorize_data)
+            return data
+        ```
+        """
         return {
             "code_challenge": LocalOAuth2ImplementationWithPkce.compute_code_challenge(
                 self.code_verifier
@@ -279,19 +290,21 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
         }
 
     @property
-    def extra_authorize_data(self) -> dict:
-        """Extra data that needs to be appended to the authorize url."""
-        return self.code_challenge_data
+    def extra_token_resolve_data(self) -> dict:
+        """Extra data that needs to be included in the token resolve request.
 
-    @property
-    def code_verifier_data(self) -> dict:
-        """Return the code verifier."""
+        If you want to override this method, calling super is mandatory (for adding `someKey`):
+        ```
+        @def extra_token_resolve_data(self) -> dict:
+            data: dict = {
+                "someKey": "someValue",
+            }
+            data.update(super().extra_token_resolve_data)
+            return data
+        ```
+        """
+
         return {"code_verifier": self.code_verifier}
-
-    @property
-    def extra_token_redeem_data(self) -> dict:
-        """Extra data that needs to be included in the token redeem request."""
-        return self.code_verifier_data
 
     @staticmethod
     def generate_code_verifier(code_verifier_length: int = 128) -> str:
