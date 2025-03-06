@@ -19,7 +19,7 @@
   "security": 0,
   "attributes": [
     {
-      "id": 2,
+      "id": 1,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -40,7 +40,7 @@
       "name": ""
     },
     {
-      "id": 3,
+      "id": 2,
       "node_id": 1,
       "instance": 0,
       "minimum": -75,
@@ -61,7 +61,7 @@
       "name": ""
     },
     {
-      "id": 4,
+      "id": 3,
       "node_id": 1,
       "instance": 0,
       "minimum": 4,
@@ -82,7 +82,7 @@
       "name": ""
     },
     {
-      "id": 5,
+      "id": 4,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -103,7 +103,7 @@
       "name": ""
     },
     {
-      "id": 6,
+      "id": 5,
       "node_id": 1,
       "instance": 0,
       "minimum": 1,
@@ -124,7 +124,7 @@
       "name": ""
     },
     {
-      "id": 7,
+      "id": 6,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -145,7 +145,7 @@
       "name": ""
     },
     {
-      "id": 8,
+      "id": 7,
       "node_id": 1,
       "instance": 0,
       "minimum": 5,
@@ -166,7 +166,7 @@
       "name": ""
     },
     {
-      "id": 9,
+      "id": 8,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -187,7 +187,7 @@
       "name": ""
     },
     {
-      "id": 10,
+      "id": 9,
       "node_id": 1,
       "instance": 0,
       "minimum": -127,
@@ -208,7 +208,7 @@
       "name": ""
     },
     {
-      "id": 11,
+      "id": 10,
       "node_id": 1,
       "instance": 0,
       "minimum": -127,
@@ -229,7 +229,7 @@
       "name": ""
     },
     {
-      "id": 12,
+      "id": 11,
       "node_id": 1,
       "instance": 0,
       "minimum": 1,
@@ -250,7 +250,7 @@
       "name": ""
     },
     {
-      "id": 13,
+      "id": 12,
       "node_id": 1,
       "instance": 0,
       "minimum": -5,
@@ -271,7 +271,7 @@
       "name": ""
     },
     {
-      "id": 14,
+      "id": 13,
       "node_id": 1,
       "instance": 0,
       "minimum": 4,
@@ -292,7 +292,7 @@
       "name": ""
     },
     {
-      "id": 15,
+      "id": 14,
       "node_id": 1,
       "instance": 0,
       "minimum": 30,
@@ -313,7 +313,7 @@
       "name": ""
     },
     {
-      "id": 16,
+      "id": 15,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -331,6 +331,27 @@
       "changed_by_id": 0,
       "based_on": 1,
       "data": "fixed_value",
+      "name": ""
+    },
+    {
+      "id": 16,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 9,
+      "current_value": 2.0,
+      "target_value": 2.0,
+      "last_value": 2.0,
+      "unit": "n/a",
+      "step_value": 1.0,
+      "editable": 1,
+      "type": 338,
+      "state": 1,
+      "last_changed": 1684668852,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
       "name": ""
     }
   ]
