@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "reauth_successful": "Reauthentication was successful."
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "already_configured": "A config entry already exists for that account.",
@@ -16,19 +16,26 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
-        }
+        },
+        "description": "user: The Evohome integration"
       },
       "location": {
         "title": "Location Index",
         "data": {
           "location_idx": "location index"
-        }
+        },
+        "description": "location: The Evohome integration"
       },
       "reauth": {
         "title": "User Credentials",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
-        }
+        },
+        "description": "reauth: The Evohome integration"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Evohome integration needs to re-authenticate your account"
       }
     }
   },

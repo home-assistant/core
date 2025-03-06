@@ -21,6 +21,7 @@ from homeassistant.components.evohome.const import (
 )
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
+    SOURCE_RECONFIGURE,
     SOURCE_USER,
     ConfigEntryState,
     ConfigFlowResult,
@@ -330,7 +331,9 @@ async def test_reauth_flow(
     """Test a successful reauth flow."""
 
     config_entry.add_to_hass(hass)
+    old_password = config_entry.data[CONF_PASSWORD]
 
+    # start the reauth flow
     result = await config_entry.start_reauth_flow(hass)
 
     assert result.get("type") is FlowResultType.FORM
@@ -343,15 +346,61 @@ async def test_reauth_flow(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_PASSWORD: "new_password",
+                CONF_PASSWORD: f"new_{old_password}",
             },
         )
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reauth_successful"
 
-    assert len(hass.config_entries.async_entries()) == 1
-    assert config_entry.data[CONF_PASSWORD] == "new_password"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.data[CONF_PASSWORD] == f"new_{old_password}"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    install: str,
+) -> None:
+    """Test a successful reconfigure flow."""
+
+    config_entry.add_to_hass(hass)
+    old_location_idx = config_entry.data[CONF_LOCATION_IDX]
+
+    # start the reconfigure flow
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reconfigure"
+
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request(install),
+        ),
+        patch(
+            "evohome.auth.AbstractAuth._make_request",
+            mock_make_request(install),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_LOCATION_IDX: old_location_idx,
+            },
+        )
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.source == SOURCE_RECONFIGURE
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.runtime_data is not None
+
+    # start the reconfigure flow
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reconfigure"
 
 
 async def test_abort_single_instance_allowed(

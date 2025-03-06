@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Any, Final, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Any, Final, NotRequired, TypedDict
 
 import evohomeasync2 as ec2
 import voluptuous as vol
@@ -48,6 +48,10 @@ from .const import (
 )
 from .storage import EvoTokenDataT, TokenManager
 
+if TYPE_CHECKING:
+    from .coordinator import EvoDataUpdateCoordinator  # circular import
+
+
 DEFAULT_OPTIONS: Final[EvoOptionDataT] = {
     CONF_HIGH_PRECISION: DEFAULT_HIGH_PRECISION,
     CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
@@ -76,7 +80,7 @@ class EvoOptionDataT(TypedDict):
 class EvoRuntimeDataT(TypedDict):
     """Evohome's runtime data dict as stored in a config entry."""
 
-    coordinator: str
+    coordinator: EvoDataUpdateCoordinator
     token_manager: TokenManager
 
 
@@ -162,6 +166,7 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the reauth step (username/password)."""
+        # self._get_reauth_entry()
 
         assert self._username is not None  # mypy
 
@@ -290,6 +295,47 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="location", data_schema=data_schema, errors=errors
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the reconfigure step (location index)."""
+        # self._get_reconfigure_entry()
+
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            self._location_idx = int(user_input[CONF_LOCATION_IDX])
+            return await self._update_or_create_entry()
+
+        config_entry = self._get_reconfigure_entry()
+
+        config: EvoConfigDataT = config_entry.data  # type: ignore[assignment]
+        self._username = config[CONF_USERNAME]
+        self._password = config[CONF_PASSWORD]
+        self._location_idx = config[CONF_LOCATION_IDX]
+
+        runtime_data: EvoRuntimeDataT = config_entry.runtime_data
+        self._num_locations = len(runtime_data["coordinator"].client.locations)
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_LOCATION_IDX, default=self._location_idx): vol.All(
+                    NumberSelector(
+                        NumberSelectorConfig(
+                            max=self._num_locations - 1,
+                            min=0,
+                            step=1,
+                            mode=NumberSelectorMode.SLIDER,
+                        )
+                    ),
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="reconfigure", data_schema=data_schema, errors=errors
+        )
+
     async def _test_credentials(
         self, username: str, password: str
     ) -> ec2.EvohomeClient:
@@ -363,16 +409,17 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._token_data is not None:
             config.update({SZ_TOKEN_DATA: self._token_data})
 
-        # from step_reauth: user/pass/locn, td
+        # from step_reauth or step_reconfigure
+        #  - self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE)
         if config_entry := await self.async_set_unique_id(
             self._username.lower(),
         ):
             return self.async_update_reload_and_abort(
                 config_entry,
-                data=config,
+                data=config,  # is easier not to use data_updates
             )
 
-        # from step_user or step_import: user/pass/locn, td & (default) options
+        # from step_user or step_import
         return self.async_create_entry(
             title="Evohome",
             data=config,
