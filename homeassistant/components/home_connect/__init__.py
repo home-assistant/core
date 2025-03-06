@@ -187,6 +187,7 @@ SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,
@@ -202,7 +203,13 @@ async def _get_client_and_ha_id(
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(device_id)
     if device_entry is None:
-        raise ServiceValidationError("Device entry not found for device id")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_entry_not_found",
+            translation_placeholders={
+                "device_id": device_id,
+            },
+        )
     entry: HomeConnectConfigEntry | None = None
     for entry_id in device_entry.config_entries:
         _entry = hass.config_entries.async_get_entry(entry_id)
@@ -212,7 +219,11 @@ async def _get_client_and_ha_id(
             break
     if entry is None:
         raise ServiceValidationError(
-            "Home Connect config entry not found for that device id"
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_found",
+            translation_placeholders={
+                "device_id": device_id,
+            },
         )
 
     ha_id = next(
@@ -403,6 +414,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     ) -> None:
         """Execute calls to services executing a command."""
         client, ha_id = await _get_client_and_ha_id(hass, call.data[ATTR_DEVICE_ID])
+
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_command_actions",
+            breaks_in_ha_version="2025.9.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_command_actions",
+        )
 
         try:
             await client.put_command(ha_id, command_key=command_key, value=True)
@@ -609,6 +631,7 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     async_delete_issue(hass, DOMAIN, "deprecated_set_program_and_option_actions")
+    async_delete_issue(hass, DOMAIN, "deprecated_command_actions")
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
