@@ -97,40 +97,51 @@ class EphEmberThermostat(ClimateEntity):
     _attr_hvac_modes = OPERATION_LIST
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, ember, zone):
+    def __init__(self, ember, zone) -> None:
         """Initialize the thermostat."""
         self._ember = ember
         self._zone_name = zone_name(zone)
         self._zone = zone
+        self.unique_id = zone["zoneid"]
 
         # hot water = true, is immersive device without target temperature.
-        if zone["deviceType"] == 773:
-            self._hot_water = False
-        else:
+        if zone["deviceType"] == 514:
             self._hot_water = True
+        else:
+            self._hot_water = False
 
         self._attr_name = self._zone_name
 
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.AUX_HEAT
-        )
         self._attr_target_temperature_step = 0.5
         if self._hot_water:
             self._attr_supported_features = ClimateEntityFeature.AUX_HEAT
             self._attr_target_temperature_step = None
-        self._attr_supported_features |= (
-            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
-        )
+            self._is_aux_heat = True
+        else:
+            self._attr_supported_features = (
+                ClimateEntityFeature.TURN_OFF
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TARGET_TEMPERATURE
+                | ClimateEntityFeature.AUX_HEAT
+            )
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return zone_current_temperature(self._zone)
+        match self._zone["deviceType"]:
+            case 514:
+                return None
+            case _:
+                return zone_current_temperature(self._zone)
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return zone_target_temperature(self._zone)
+        match self._zone["deviceType"]:
+            case 514:
+                return None
+            case _:
+                return zone_target_temperature(self._zone)
 
     @property
     def hvac_action(self) -> HVACAction:
@@ -155,7 +166,7 @@ class EphEmberThermostat(ClimateEntity):
             _LOGGER.error("Invalid operation mode provided %s", hvac_mode)
 
     @property
-    def is_aux_heat(self):
+    def is_aux_heat(self) -> bool:
         """Return true if aux heater."""
 
         return zone_is_boost_active(self._zone)
@@ -184,7 +195,7 @@ class EphEmberThermostat(ClimateEntity):
         if temperature > self.max_temp or temperature < self.min_temp:
             return
 
-        self._ember.set_target_temperture_by_name(self._zone_name, temperature)
+        self._ember.set_zone_target_temperature(self._zone["zoneid"], temperature)
 
     @property
     def min_temp(self):
