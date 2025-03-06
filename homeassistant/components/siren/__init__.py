@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any, TypedDict, cast, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -68,10 +68,8 @@ def process_turn_on_params(
             isinstance(siren.available_tones, dict)
             and tone in siren.available_tones.values()
         )
-        if (
-            not siren.available_tones
-            or tone not in siren.available_tones
-            and not is_tone_dict_value
+        if not siren.available_tones or (
+            tone not in siren.available_tones and not is_tone_dict_value
         ):
             raise ValueError(
                 f"Invalid tone specified for entity {siren.entity_id}: {tone}, "

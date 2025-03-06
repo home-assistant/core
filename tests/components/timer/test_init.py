@@ -197,6 +197,12 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "data": {},
         },
         {
+            "call": SERVICE_CANCEL,
+            "state": STATUS_IDLE,
+            "event": None,
+            "data": {},
+        },
+        {
             "call": SERVICE_START,
             "state": STATUS_ACTIVE,
             "event": EVENT_TIMER_STARTED,
@@ -206,6 +212,12 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "call": SERVICE_FINISH,
             "state": STATUS_IDLE,
             "event": EVENT_TIMER_FINISHED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_FINISH,
+            "state": STATUS_IDLE,
+            "event": None,
             "data": {},
         },
         {
@@ -242,6 +254,18 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "call": SERVICE_START,
             "state": STATUS_ACTIVE,
             "event": EVENT_TIMER_RESTARTED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_PAUSE,
+            "state": STATUS_PAUSED,
+            "event": EVENT_TIMER_PAUSED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_FINISH,
+            "state": STATUS_IDLE,
+            "event": EVENT_TIMER_FINISHED,
             "data": {},
         },
     ]

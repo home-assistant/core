@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.somfy_mylink.const import (
     CONF_REVERSED_TARGET_IDS,
     CONF_SYSTEM_ID,
@@ -14,6 +13,7 @@ from homeassistant.components.somfy_mylink.const import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -263,7 +263,7 @@ async def test_form_user_already_configured_from_dhcp(hass: HomeAssistant) -> No
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.1.1.1",
                 macaddress="aabbccddeeff",
                 hostname="somfy_eeff",
@@ -287,7 +287,7 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip="1.1.1.1",
             macaddress="aabbccddeeff",
             hostname="somfy_eeff",
@@ -302,7 +302,7 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip="1.1.1.1",
             macaddress="aabbccddeeff",
             hostname="somfy_eeff",

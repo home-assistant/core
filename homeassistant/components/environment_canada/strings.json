@@ -113,6 +113,10 @@
     }
   },
   "services": {
+    "get_forecasts": {
+      "name": "Get forecasts",
+      "description": "Retrieves the forecast from selected weather services."
+    },
     "set_radar_type": {
       "name": "Set radar type",
       "description": "Sets the type of radar image to retrieve.",

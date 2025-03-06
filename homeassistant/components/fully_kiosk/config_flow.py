@@ -11,7 +11,6 @@ from fullykiosk import FullyKiosk
 from fullykiosk.exceptions import FullyKioskError
 import voluptuous as vol
 
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -22,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from .const import DEFAULT_PORT, DOMAIN, LOGGER

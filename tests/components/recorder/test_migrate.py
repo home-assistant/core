@@ -30,19 +30,18 @@ from homeassistant.components.recorder.db_schema import (
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import recorder as recorder_helper
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from .common import async_wait_recording_done, create_engine_test
+from .common import async_wait_recorder, async_wait_recording_done, create_engine_test
 from .conftest import InstrumentedMigration
 
 from tests.common import async_fire_time_changed
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -641,7 +640,7 @@ async def test_schema_migrate(
         )
         await hass.async_add_executor_job(instrument_migration.migration_started.wait)
         assert recorder.util.async_migration_in_progress(hass) is True
-        await recorder_helper.async_wait_recorder(hass)
+        await async_wait_recorder(hass)
 
         assert recorder.util.async_migration_in_progress(hass) is True
         assert recorder.util.async_migration_is_live(hass) == live

@@ -66,7 +66,6 @@ async def test_switch_platform(
         ("switch.pinecil_detailed_idle_screen", CharSetting.IDLE_SCREEN_DETAILS),
         ("switch.pinecil_detailed_solder_screen", CharSetting.SOLDER_SCREEN_DETAILS),
         ("switch.pinecil_invert_screen", CharSetting.DISPLAY_INVERT),
-        ("switch.pinecil_power_delivery_3_1_epr", CharSetting.USB_PD_MODE),
         ("switch.pinecil_swap_buttons", CharSetting.INVERT_BUTTONS),
     ],
 )

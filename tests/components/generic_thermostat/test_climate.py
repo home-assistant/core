@@ -7,7 +7,7 @@ from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
-from homeassistant import config as hass_config
+from homeassistant import config as hass_config, core as ha
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
@@ -35,7 +35,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-import homeassistant.core as ha
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
@@ -317,6 +316,20 @@ async def test_set_target_temp(hass: HomeAssistant) -> None:
         await common.async_set_temperature(hass, None)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 30.0
+
+
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_set_target_temp_change_preset(hass: HomeAssistant) -> None:
+    """Test the setting of the target temperature.
+
+    Verify that preset is changed.
+    """
+    await common.async_set_temperature(hass, 30)
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("preset_mode") == PRESET_NONE
+    await common.async_set_temperature(hass, 20)
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("preset_mode") == PRESET_COMFORT
 
 
 @pytest.mark.parametrize(

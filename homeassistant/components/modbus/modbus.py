@@ -30,11 +30,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_ADDRESS,
@@ -70,50 +71,59 @@ from .const import (
 from .validators import check_config
 
 _LOGGER = logging.getLogger(__name__)
+DATA_MODBUS_HUBS: HassKey[dict[str, ModbusHub]] = HassKey(DOMAIN)
 
 
-ConfEntry = namedtuple("ConfEntry", "call_type attr func_name")  # noqa: PYI024
-RunEntry = namedtuple("RunEntry", "attr func")  # noqa: PYI024
+ConfEntry = namedtuple("ConfEntry", "call_type attr func_name value_attr_name")  # noqa: PYI024
+RunEntry = namedtuple("RunEntry", "attr func value_attr_name")  # noqa: PYI024
 PB_CALL = [
     ConfEntry(
         CALL_TYPE_COIL,
         "bits",
         "read_coils",
+        "count",
     ),
     ConfEntry(
         CALL_TYPE_DISCRETE,
         "bits",
         "read_discrete_inputs",
+        "count",
     ),
     ConfEntry(
         CALL_TYPE_REGISTER_HOLDING,
         "registers",
         "read_holding_registers",
+        "count",
     ),
     ConfEntry(
         CALL_TYPE_REGISTER_INPUT,
         "registers",
         "read_input_registers",
+        "count",
     ),
     ConfEntry(
         CALL_TYPE_WRITE_COIL,
-        "value",
+        "bits",
         "write_coil",
+        "value",
     ),
     ConfEntry(
         CALL_TYPE_WRITE_COILS,
         "count",
         "write_coils",
+        "values",
     ),
     ConfEntry(
         CALL_TYPE_WRITE_REGISTER,
-        "value",
+        "registers",
         "write_register",
+        "value",
     ),
     ConfEntry(
         CALL_TYPE_WRITE_REGISTERS,
         "count",
         "write_registers",
+        "values",
     ),
 ]
 
@@ -128,14 +138,14 @@ async def async_modbus_setup(
         config[DOMAIN] = check_config(hass, config[DOMAIN])
         if not config[DOMAIN]:
             return False
-    if DOMAIN in hass.data and config[DOMAIN] == []:
-        hubs = hass.data[DOMAIN]
-        for name in hubs:
-            if not await hubs[name].async_setup():
+    if DATA_MODBUS_HUBS in hass.data and config[DOMAIN] == []:
+        hubs = hass.data[DATA_MODBUS_HUBS]
+        for hub in hubs.values():
+            if not await hub.async_setup():
                 return False
-        hub_collect = hass.data[DOMAIN]
+        hub_collect = hass.data[DATA_MODBUS_HUBS]
     else:
-        hass.data[DOMAIN] = hub_collect = {}
+        hass.data[DATA_MODBUS_HUBS] = hub_collect = {}
 
     for conf_hub in config[DOMAIN]:
         my_hub = ModbusHub(hass, conf_hub)
@@ -322,7 +332,9 @@ class ModbusHub:
 
         for entry in PB_CALL:
             func = getattr(self._client, entry.func_name)
-            self._pb_request[entry.call_type] = RunEntry(entry.attr, func)
+            self._pb_request[entry.call_type] = RunEntry(
+                entry.attr, func, entry.value_attr_name
+            )
 
         self.hass.async_create_background_task(
             self.async_pb_connect(), "modbus-connect"
@@ -368,10 +380,18 @@ class ModbusHub:
         self, slave: int | None, address: int, value: int | list[int], use_call: str
     ) -> ModbusPDU | None:
         """Call sync. pymodbus."""
-        kwargs = {"slave": slave} if slave else {}
+        kwargs: dict[str, Any] = (
+            {ATTR_SLAVE: slave} if slave is not None else {ATTR_SLAVE: 1}
+        )
         entry = self._pb_request[use_call]
+
+        if use_call in {"write_registers", "write_coils"}:
+            if not isinstance(value, list):
+                value = [value]
+
+        kwargs[entry.value_attr_name] = value
         try:
-            result: ModbusPDU = await entry.func(address, value, **kwargs)
+            result: ModbusPDU = await entry.func(address, **kwargs)
         except ModbusException as exception_error:
             error = f"Error: device: {slave} address: {address} -> {exception_error!s}"
             self._log_error(error)

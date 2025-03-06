@@ -1,0 +1,109 @@
+{
+  "items": [
+    {
+      "deviceId": "0d94e5db-8501-2355-eb4f-214163702cac",
+      "name": "Soundbar",
+      "label": "Soundbar Living",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "VD-NetworkAudio-002S",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "c4189ac1-208f-461a-8ab6-ea67937b3743",
+      "ownerId": "85ea07e1-7063-f673-3ba5-125293f297c8",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
+      "deviceTypeName": "Samsung OCF Network Audio Player",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "audioVolume",
+              "version": 1
+            },
+            {
+              "id": "audioMute",
+              "version": 1
+            },
+            {
+              "id": "audioTrackData",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.audioInputSource",
+              "version": 1
+            },
+            {
+              "id": "mediaPlayback",
+              "version": 1
+            },
+            {
+              "id": "audioNotification",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.soundFrom",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.thingStatus",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.audioGroupInfo",
+              "version": 1,
+              "ephemeral": true
+            }
+          ],
+          "categories": [
+            {
+              "name": "NetworkAudio",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2024-10-26T02:58:40.549Z",
+      "profile": {
+        "id": "3a714028-20ea-3feb-9891-46092132c737"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.networkaudio",
+        "name": "Soundbar Living",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "HW-Q990C",
+        "platformVersion": "7.0",
+        "platformOS": "Tizen",
+        "hwVersion": "",
+        "firmwareVersion": "SAT-iMX8M23WWC-1010.5",
+        "vendorId": "VD-NetworkAudio-002S",
+        "vendorResourceClientServerVersion": "3.2.41",
+        "lastSignupTime": "2024-10-26T02:58:36.491256384Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "CLOUD"
+    }
+  ],
+  "_links": {}
+}

@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import comp_entity_ids
 from homeassistant.helpers.service import (
     async_register_admin_service,

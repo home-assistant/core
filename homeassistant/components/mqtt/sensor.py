@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
+    DEVICE_CLASS_UNITS,
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     STATE_CLASSES_SCHEMA,
@@ -30,8 +31,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
@@ -107,6 +108,20 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
                 f"got `{CONF_DEVICE_CLASS}` '{device_class}'"
             )
 
+    if (device_class := config.get(CONF_DEVICE_CLASS)) is None or (
+        unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)
+    ) is None:
+        return config
+
+    if (
+        device_class in DEVICE_CLASS_UNITS
+        and unit_of_measurement not in DEVICE_CLASS_UNITS[device_class]
+    ):
+        raise vol.Invalid(
+            f"The unit of measurement `{unit_of_measurement}` is not valid "
+            f"together with device class `{device_class}`"
+        )
+
     return config
 
 
@@ -124,7 +139,7 @@ DISCOVERY_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT sensor through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(

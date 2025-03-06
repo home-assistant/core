@@ -9,10 +9,10 @@ from arcam.fmj.client import Client, ConnectionFailed
 from arcam.fmj.utils import get_uniqueid_from_host, get_uniqueid_from_udn
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
@@ -88,12 +88,12 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered device."""
         host = str(urlparse(discovery_info.ssdp_location).hostname)
         port = DEFAULT_PORT
-        uuid = get_uniqueid_from_udn(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
+        uuid = get_uniqueid_from_udn(discovery_info.upnp[ATTR_UPNP_UDN])
         if not uuid:
             return self.async_abort(reason="cannot_connect")
 

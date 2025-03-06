@@ -1,6 +1,29 @@
 {
-  "availableFeatures": ["nightMode", "equalizer", "balance"],
+  "availableFeatures": [
+    "nightMode",
+    "equalizer",
+    "balance",
+    "preferredInterfaceControl"
+  ],
+  "devices": [
+    {
+      "deviceId": "1abcdef2-3456-67g8-9h0i-1jk23456lm78",
+      "isSystemLeader": true,
+      "name": "Livingroom",
+      "role": null,
+      "serial": "L05P00066EW14"
+    },
+    {
+      "deviceId": "1zzyyxx2-3456-67g8-9h0i-1zz23456lz78",
+      "isSystemLeader": false,
+      "name": "Phantom I Silver-123a",
+      "role": null,
+      "serial": "M05P00066EW15"
+    }
+  ],
   "groupId": "12345678-901a-2b3c-def4-567g89h0i12j",
+  "multiroomFamily": "sync33",
   "systemId": "a12b345c-67d8-90e1-12f4-g5hij67890kl",
-  "systemName": "Devialet"
+  "systemName": "Devialet",
+  "systemType": "stereo"
 }

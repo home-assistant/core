@@ -2,7 +2,7 @@
 
 import pytest
 
-import homeassistant.components.media_player as mp
+from homeassistant.components import media_player as mp
 from homeassistant.const import (
     STATE_IDLE,
     STATE_OFF,

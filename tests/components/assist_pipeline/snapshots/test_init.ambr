@@ -3,8 +3,13 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/mpeg',
+          'url': '/api/tts_proxy/test_token.mp3',
+        }),
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
@@ -32,7 +37,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': None,
+        'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test transcript',
@@ -44,7 +49,8 @@
     dict({
       'data': dict({
         'intent_output': dict({
-          'conversation_id': None,
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
             }),
@@ -94,8 +100,13 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/mpeg',
+          'url': '/api/tts_proxy/test_token.mp3',
+        }),
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
@@ -123,7 +134,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': None,
+        'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test transcript',
@@ -135,7 +146,8 @@
     dict({
       'data': dict({
         'intent_output': dict({
-          'conversation_id': None,
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
             }),
@@ -185,8 +197,13 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/mpeg',
+          'url': '/api/tts_proxy/test_token.mp3',
+        }),
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
@@ -214,7 +231,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': None,
+        'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test transcript',
@@ -226,7 +243,8 @@
     dict({
       'data': dict({
         'intent_output': dict({
-          'conversation_id': None,
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
             }),
@@ -276,8 +294,13 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/mpeg',
+          'url': '/api/tts_proxy/test_token.mp3',
+        }),
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
@@ -329,7 +352,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': None,
+        'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test transcript',
@@ -341,7 +364,8 @@
     dict({
       'data': dict({
         'intent_output': dict({
-          'conversation_id': None,
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
             }),
@@ -391,8 +415,13 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/mpeg',
+          'url': '/api/tts_proxy/mocked-token.mp3',
+        }),
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),
@@ -427,6 +456,7 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
       }),
@@ -434,7 +464,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': None,
+        'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test input',
@@ -446,7 +476,114 @@
     dict({
       'data': dict({
         'intent_output': dict({
-          'conversation_id': None,
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
+          'response': dict({
+            'card': dict({
+            }),
+            'data': dict({
+              'failed': list([
+              ]),
+              'success': list([
+              ]),
+              'targets': list([
+              ]),
+            }),
+            'language': 'en',
+            'response_type': 'action_done',
+            'speech': dict({
+            }),
+          }),
+        }),
+        'processed_locally': True,
+      }),
+      'type': <PipelineEventType.INTENT_END: 'intent-end'>,
+    }),
+    dict({
+      'data': None,
+      'type': <PipelineEventType.RUN_END: 'run-end'>,
+    }),
+  ])
+# ---
+# name: test_stt_language_used_instead_of_conversation_language
+  list([
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'language': 'en',
+        'pipeline': <ANY>,
+      }),
+      'type': <PipelineEventType.RUN_START: 'run-start'>,
+    }),
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'device_id': None,
+        'engine': 'conversation.home_assistant',
+        'intent_input': 'test input',
+        'language': 'en-US',
+        'prefer_local_intents': False,
+      }),
+      'type': <PipelineEventType.INTENT_START: 'intent-start'>,
+    }),
+    dict({
+      'data': dict({
+        'intent_output': dict({
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
+          'response': dict({
+            'card': dict({
+            }),
+            'data': dict({
+              'failed': list([
+              ]),
+              'success': list([
+              ]),
+              'targets': list([
+              ]),
+            }),
+            'language': 'en',
+            'response_type': 'action_done',
+            'speech': dict({
+            }),
+          }),
+        }),
+        'processed_locally': True,
+      }),
+      'type': <PipelineEventType.INTENT_END: 'intent-end'>,
+    }),
+    dict({
+      'data': None,
+      'type': <PipelineEventType.RUN_END: 'run-end'>,
+    }),
+  ])
+# ---
+# name: test_tts_language_used_instead_of_conversation_language
+  list([
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'language': 'en',
+        'pipeline': <ANY>,
+      }),
+      'type': <PipelineEventType.RUN_START: 'run-start'>,
+    }),
+    dict({
+      'data': dict({
+        'conversation_id': 'mock-ulid',
+        'device_id': None,
+        'engine': 'conversation.home_assistant',
+        'intent_input': 'test input',
+        'language': 'en-us',
+        'prefer_local_intents': False,
+      }),
+      'type': <PipelineEventType.INTENT_START: 'intent-start'>,
+    }),
+    dict({
+      'data': dict({
+        'intent_output': dict({
+          'continue_conversation': False,
+          'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
             }),
@@ -478,8 +615,13 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
+        'tts_output': dict({
+          'mime_type': 'audio/mpeg',
+          'url': '/api/tts_proxy/mocked-token.mp3',
+        }),
       }),
       'type': <PipelineEventType.RUN_START: 'run-start'>,
     }),

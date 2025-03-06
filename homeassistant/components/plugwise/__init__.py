@@ -4,22 +4,19 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN, LOGGER, PLATFORMS
-from .coordinator import PlugwiseDataUpdateCoordinator
-
-type PlugwiseConfigEntry = ConfigEntry[PlugwiseDataUpdateCoordinator]
+from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> bool:
     """Set up Plugwise components from a config entry."""
     await er.async_migrate_entries(hass, entry.entry_id, async_migrate_entity_entry)
 
-    coordinator = PlugwiseDataUpdateCoordinator(hass)
+    coordinator = PlugwiseDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     migrate_sensor_entities(hass, coordinator)
 
@@ -82,7 +79,7 @@ def migrate_sensor_entities(
 
     # Migrating opentherm_outdoor_temperature
     # to opentherm_outdoor_air_temperature sensor
-    for device_id, device in coordinator.data.devices.items():
+    for device_id, device in coordinator.data.items():
         if device["dev_class"] != "heater_central":
             continue
 

@@ -16,6 +16,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -37,7 +38,7 @@
     'platform': 'twinkly',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'mode',
     'unique_id': '00:2d:13:3b:aa:bb_mode',
     'unit_of_measurement': None,
   })

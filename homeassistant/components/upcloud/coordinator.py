@@ -15,6 +15,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
+type UpCloudConfigEntry = ConfigEntry[UpCloudDataUpdateCoordinator]
+
+
 class UpCloudDataUpdateCoordinator(
     DataUpdateCoordinator[dict[str, upcloud_api.Server]]
 ):
@@ -24,17 +27,22 @@ class UpCloudDataUpdateCoordinator(
         self,
         hass: HomeAssistant,
         *,
+        config_entry: UpCloudConfigEntry,
         cloud_manager: upcloud_api.CloudManager,
         update_interval: timedelta,
         username: str,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
-            hass, _LOGGER, name=f"{username}@UpCloud", update_interval=update_interval
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{username}@UpCloud",
+            update_interval=update_interval,
         )
         self.cloud_manager = cloud_manager
 
-    async def async_update_config(self, config_entry: ConfigEntry) -> None:
+    async def async_update_config(self, config_entry: UpCloudConfigEntry) -> None:
         """Handle config update."""
         self.update_interval = timedelta(
             seconds=config_entry.options[CONF_SCAN_INTERVAL]

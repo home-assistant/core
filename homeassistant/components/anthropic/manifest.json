@@ -8,5 +8,5 @@
   "documentation": "https://www.home-assistant.io/integrations/anthropic",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["anthropic==0.31.2"]
+  "requirements": ["anthropic==0.47.2"]
 }

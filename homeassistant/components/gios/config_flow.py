@@ -37,7 +37,7 @@ class GiosFlowHandler(ConfigFlow, domain=DOMAIN):
                 websession = async_get_clientsession(self.hass)
 
                 async with asyncio.timeout(API_TIMEOUT):
-                    gios = Gios(user_input[CONF_STATION_ID], websession)
+                    gios = await Gios.create(websession, user_input[CONF_STATION_ID])
                     await gios.async_update()
 
                 assert gios.station_name is not None

@@ -55,8 +55,7 @@ def validate(
     config_flow = ast_parse_module(config_flow_file)
     if not (_has_discovery_function(config_flow)):
         return [
-            f"Integration is missing one of {CONFIG_FLOW_STEPS} "
-            f"in {config_flow_file}"
+            f"Integration is missing one of {CONFIG_FLOW_STEPS} in {config_flow_file}"
         ]
 
     return None

@@ -2,28 +2,27 @@
 
 from __future__ import annotations
 
-from boschshcpy import SHCBatteryDevice, SHCSession, SHCShutterContact
+from boschshcpy import SHCBatteryDevice, SHCShutterContact
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_SESSION, DOMAIN
+from . import BoschConfigEntry
 from .entity import SHCEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: BoschConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SHC binary sensor platform."""
-    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
+    session = config_entry.runtime_data
 
     entities: list[BinarySensorEntity] = [
         ShutterContactSensor(

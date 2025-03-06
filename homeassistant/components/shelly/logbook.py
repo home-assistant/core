@@ -42,7 +42,7 @@ def async_describe_events(
         if click_type in RPC_INPUTS_EVENTS_TYPES:
             rpc_coordinator = get_rpc_coordinator_by_device_id(hass, device_id)
             if rpc_coordinator and rpc_coordinator.device.initialized:
-                key = f"input:{channel-1}"
+                key = f"input:{channel - 1}"
                 input_name = get_rpc_entity_name(rpc_coordinator.device, key)
 
         elif click_type in BLOCK_INPUTS_EVENTS_TYPES:

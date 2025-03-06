@@ -17,17 +17,17 @@ from homeassistant.components.recorder.auto_repairs.statistics.duplicates import
 from homeassistant.components.recorder.statistics import async_add_external_statistics
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from ...common import async_wait_recording_done
 
 from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -134,7 +134,7 @@ def _create_engine_28(*args, **kwargs):
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_delete_metadata_duplicates(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of duplicated statistics."""
@@ -242,7 +242,7 @@ async def test_delete_metadata_duplicates(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_delete_metadata_duplicates_many(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of duplicated statistics."""

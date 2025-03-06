@@ -39,7 +39,12 @@ def fixture_brand(request: pytest.FixtureRequest) -> tuple[str, Brand]:
 @pytest.fixture(name="mock_auth_api")
 def fixture_mock_auth_api():
     """Set up Auth fixture."""
-    with mock.patch("homeassistant.components.whirlpool.Auth") as mock_auth:
+    with (
+        mock.patch("homeassistant.components.whirlpool.Auth") as mock_auth,
+        mock.patch(
+            "homeassistant.components.whirlpool.config_flow.Auth", new=mock_auth
+        ),
+    ):
         mock_auth.return_value.do_auth = AsyncMock()
         mock_auth.return_value.is_access_token_valid.return_value = True
         yield mock_auth
@@ -48,9 +53,15 @@ def fixture_mock_auth_api():
 @pytest.fixture(name="mock_appliances_manager_api")
 def fixture_mock_appliances_manager_api():
     """Set up AppliancesManager fixture."""
-    with mock.patch(
-        "homeassistant.components.whirlpool.AppliancesManager"
-    ) as mock_appliances_manager:
+    with (
+        mock.patch(
+            "homeassistant.components.whirlpool.AppliancesManager"
+        ) as mock_appliances_manager,
+        mock.patch(
+            "homeassistant.components.whirlpool.config_flow.AppliancesManager",
+            new=mock_appliances_manager,
+        ),
+    ):
         mock_appliances_manager.return_value.fetch_appliances = AsyncMock()
         mock_appliances_manager.return_value.aircons = [
             {"SAID": MOCK_SAID1, "NAME": "TestZone"},
@@ -81,9 +92,15 @@ def fixture_mock_appliances_manager_laundry_api():
 @pytest.fixture(name="mock_backend_selector_api")
 def fixture_mock_backend_selector_api():
     """Set up BackendSelector fixture."""
-    with mock.patch(
-        "homeassistant.components.whirlpool.BackendSelector"
-    ) as mock_backend_selector:
+    with (
+        mock.patch(
+            "homeassistant.components.whirlpool.BackendSelector"
+        ) as mock_backend_selector,
+        mock.patch(
+            "homeassistant.components.whirlpool.config_flow.BackendSelector",
+            new=mock_backend_selector,
+        ),
+    ):
         yield mock_backend_selector
 
 

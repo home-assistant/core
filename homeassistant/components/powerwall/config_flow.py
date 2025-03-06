@@ -17,7 +17,6 @@ from tesla_powerwall import (
 )
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
@@ -28,10 +27,11 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.util.network import is_ip_address
 
 from . import async_last_update_was_successful
-from .const import DOMAIN
+from .const import CONFIG_ENTRY_COOKIE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,7 +116,7 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         ) and not await _powerwall_is_reachable(ip_address, password)
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         self.ip_address = discovery_info.ip
@@ -257,8 +257,10 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
                 {CONF_IP_ADDRESS: reauth_entry.data[CONF_IP_ADDRESS], **user_input}
             )
             if not errors:
+                # We have a new valid connection, old cookie is no longer valid
+                user_input[CONFIG_ENTRY_COOKIE] = None
                 return self.async_update_reload_and_abort(
-                    reauth_entry, data_updates=user_input
+                    reauth_entry, data_updates={**user_input, CONFIG_ENTRY_COOKIE: None}
                 )
 
         self.context["title_placeholders"] = {

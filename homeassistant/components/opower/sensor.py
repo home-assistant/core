@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import date
 
 from opower import Forecast, MeterType, UnitOfMeasure
 
@@ -13,23 +14,22 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import OpowerCoordinator
+from .coordinator import OpowerConfigEntry, OpowerCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
 class OpowerEntityDescription(SensorEntityDescription):
     """Class describing Opower sensors entities."""
 
-    value_fn: Callable[[Forecast], str | float]
+    value_fn: Callable[[Forecast], str | float | date]
 
 
 # suggested_display_precision=0 for all sensors since
@@ -183,11 +183,13 @@ GAS_SENSORS: tuple[OpowerEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: OpowerConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Opower sensor."""
 
-    coordinator: OpowerCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities: list[OpowerSensor] = []
     forecasts = coordinator.data.values()
     for forecast in forecasts:
@@ -245,7 +247,7 @@ class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
         self.utility_account_id = utility_account_id
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | date:
         """Return the state."""
         if self.coordinator.data is not None:
             return self.entity_description.value_fn(

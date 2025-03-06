@@ -275,10 +275,10 @@ async def handle_call_service(
                 translation_domain=const.DOMAIN,
                 translation_key="child_service_not_found",
                 translation_placeholders={
-                    "domain": err.domain,
-                    "service": err.service,
-                    "child_domain": msg["domain"],
-                    "child_service": msg["service"],
+                    "domain": msg["domain"],
+                    "service": msg["service"],
+                    "child_domain": err.domain,
+                    "child_service": err.service,
                 },
             )
     except vol.Invalid as err:

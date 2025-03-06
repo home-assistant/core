@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import lawn_mower
 from homeassistant.components.lawn_mower import (
+    ENTITY_ID_FORMAT,
     LawnMowerActivity,
     LawnMowerEntity,
     LawnMowerEntityFeature,
@@ -18,7 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
@@ -50,7 +51,6 @@ CONF_START_MOWING_COMMAND_TOPIC = "start_mowing_command_topic"
 CONF_START_MOWING_COMMAND_TEMPLATE = "start_mowing_command_template"
 
 DEFAULT_NAME = "MQTT Lawn Mower"
-ENTITY_ID_FORMAT = lawn_mower.DOMAIN + ".{}"
 
 MQTT_LAWN_MOWER_ATTRIBUTES_BLOCKED: frozenset[str] = frozenset()
 
@@ -80,7 +80,7 @@ DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EX
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT lawn mower through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(

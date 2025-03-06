@@ -1,0 +1,31 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config': dict({
+      'auth_implementation': 'onedrive',
+      'folder_id': 'my_folder_id',
+      'folder_name': 'name',
+      'token': '**REDACTED**',
+    }),
+    'drive': dict({
+      'drive_type': 'personal',
+      'id': 'mock_drive_id',
+      'name': 'My Drive',
+      'owner': dict({
+        'application': None,
+        'user': dict({
+          'display_name': '**REDACTED**',
+          'email': '**REDACTED**',
+          'id': 'id',
+        }),
+      }),
+      'quota': dict({
+        'deleted': 5,
+        'remaining': 805306368,
+        'state': 'nearing',
+        'total': 5368709120,
+        'used': 4250000000,
+      }),
+    }),
+  })
+# ---

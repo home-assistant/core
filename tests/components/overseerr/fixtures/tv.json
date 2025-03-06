@@ -1,0 +1,2052 @@
+{
+  "createdBy": [
+    {
+      "id": 2282154,
+      "credit_id": "673fc8e2d7bee5585c559789",
+      "name": "Jimmy Donaldson",
+      "original_name": "Jimmy Donaldson",
+      "gender": 2,
+      "profile_path": "/dE6VIMrvZsY5a9gIaWoX40tzYkV.jpg"
+    },
+    {
+      "id": 4886515,
+      "credit_id": "673fc8ecd7bee5585c55979f",
+      "name": "Tyler Conklin",
+      "original_name": "Tyler Conklin",
+      "gender": 2,
+      "profile_path": null
+    },
+    {
+      "id": 572350,
+      "credit_id": "673fc8f4d7bee5585c5597a7",
+      "name": "Sean Klitzner",
+      "original_name": "Sean Klitzner",
+      "gender": 2,
+      "profile_path": "/rTVGa5hK5N9mhJwrd2oGOWzbeh7.jpg"
+    },
+    {
+      "id": 5073789,
+      "credit_id": "673fc8f88337acae076dca7d",
+      "name": "Mack Hopkins",
+      "original_name": "Mack Hopkins",
+      "gender": 2,
+      "profile_path": "/5yaA2crWsdzTf2BFnlZ3ZuvFaL8.jpg"
+    }
+  ],
+  "episodeRunTime": [],
+  "firstAirDate": "2024-12-19",
+  "genres": [
+    {
+      "id": 10764,
+      "name": "Reality"
+    }
+  ],
+  "relatedVideos": [
+    {
+      "site": "YouTube",
+      "key": "37ZG9lddxto",
+      "name": "Official Trailer",
+      "size": 1080,
+      "type": "Trailer",
+      "url": "https://www.youtube.com/watch?v=37ZG9lddxto"
+    },
+    {
+      "site": "YouTube",
+      "key": "2lyCZnx71ps",
+      "name": "Teaser Trailer",
+      "size": 1080,
+      "type": "Teaser",
+      "url": "https://www.youtube.com/watch?v=2lyCZnx71ps"
+    }
+  ],
+  "homepage": "https://www.amazon.com/dp/B0CZ7S3N9Y",
+  "id": 249522,
+  "inProduction": true,
+  "languages": ["da", "en"],
+  "lastAirDate": "2024-12-26",
+  "name": "Beast Games",
+  "networks": [
+    {
+      "id": 1024,
+      "name": "Prime Video",
+      "originCountry": "",
+      "logoPath": "/ifhbNuuVnlwYy5oXA5VIb2YR8AZ.png"
+    }
+  ],
+  "numberOfEpisodes": 10,
+  "numberOfSeasons": 1,
+  "originCountry": ["US"],
+  "originalLanguage": "en",
+  "originalName": "Beast Games",
+  "tagline": "1,000 players. 5 million dollars. 1 winner.",
+  "overview": "I gathered 1,000 people to fight for $5,000,000, the LARGEST cash prize in TV history! We're also giving away a private island, Lamborghinis, and millions more in cash throughout the competition! Go watch to see the greatest show ever made!",
+  "popularity": 769.189,
+  "productionCompanies": [
+    {
+      "id": 210099,
+      "name": "Amazon MGM Studios",
+      "originCountry": "US",
+      "logoPath": "/d6HwljzlOzxJ4tXlrpRkNZaZMWL.png"
+    },
+    {
+      "id": 247865,
+      "name": "MrBeast",
+      "originCountry": "US",
+      "logoPath": "/9jchzJF1IonYRakcyVIu2fKb8Mz.png"
+    }
+  ],
+  "productionCountries": [
+    {
+      "iso_3166_1": "US",
+      "name": "United States of America"
+    }
+  ],
+  "contentRatings": {
+    "results": [
+      {
+        "descriptors": [],
+        "iso_3166_1": "SG",
+        "rating": "G"
+      },
+      {
+        "descriptors": [],
+        "iso_3166_1": "BR",
+        "rating": "L"
+      },
+      {
+        "descriptors": [],
+        "iso_3166_1": "MX",
+        "rating": "A"
+      },
+      {
+        "descriptors": [],
+        "iso_3166_1": "US",
+        "rating": "TV-G"
+      },
+      {
+        "descriptors": [],
+        "iso_3166_1": "ES",
+        "rating": "7"
+      }
+    ]
+  },
+  "spokenLanguages": [
+    {
+      "englishName": "Danish",
+      "iso_639_1": "da",
+      "name": "Dansk"
+    },
+    {
+      "englishName": "English",
+      "iso_639_1": "en",
+      "name": "English"
+    }
+  ],
+  "seasons": [
+    {
+      "airDate": "2024-12-19",
+      "episodeCount": 10,
+      "id": 384427,
+      "name": "Season 1",
+      "overview": "",
+      "seasonNumber": 1,
+      "posterPath": "/3itZlypnOcVcqI5xxyO6nvJ52yM.jpg"
+    }
+  ],
+  "status": "Returning Series",
+  "type": "Reality",
+  "voteAverage": 7.523,
+  "voteCount": 44,
+  "backdropPath": "/bXJII8e2iIQ7EzDx4KRhSghn2me.jpg",
+  "lastEpisodeToAir": {
+    "id": 5802152,
+    "airDate": "2024-12-26",
+    "episodeNumber": 3,
+    "name": "The Solitary Experiment",
+    "overview": "What would happen if three best friends were trapped in a room, but only two could escape? Watch and see for yourself right now!",
+    "productionCode": "",
+    "seasonNumber": 1,
+    "showId": 249522,
+    "voteAverage": 4.6,
+    "stillPath": "/r6LRRaA2l2tMDttWbYl3dXdJUij.jpg"
+  },
+  "nextEpisodeToAir": {
+    "id": 5802153,
+    "airDate": "2025-01-02",
+    "episodeNumber": 4,
+    "name": "Episode 4",
+    "overview": "",
+    "productionCode": "",
+    "seasonNumber": 1,
+    "showId": 249522,
+    "voteAverage": 0,
+    "stillPath": null
+  },
+  "posterPath": "/3itZlypnOcVcqI5xxyO6nvJ52yM.jpg",
+  "credits": {
+    "cast": [
+      {
+        "character": "Self - Host",
+        "creditId": "65f9449f15a4a1012c0c8d19",
+        "id": 2282154,
+        "name": "Jimmy Donaldson",
+        "order": 0,
+        "gender": 2,
+        "profilePath": "/dE6VIMrvZsY5a9gIaWoX40tzYkV.jpg"
+      },
+      {
+        "character": "Self - Co-Host",
+        "creditId": "6765bca2330bce6ec990e041",
+        "id": 5131521,
+        "name": "Chandler Hallow",
+        "order": 1,
+        "gender": 2,
+        "profilePath": "/8MAvWDC4FiiSYlmpZ9p2oCovxl0.jpg"
+      },
+      {
+        "character": "Self - Co-Host",
+        "creditId": "6765bcb9330bce6ec990e059",
+        "id": 5131522,
+        "name": "Karl Jacobs",
+        "order": 2,
+        "gender": 2,
+        "profilePath": "/9ZNCxiXh4l3i24KXLD67Lqyv04K.jpg"
+      },
+      {
+        "character": "Self - Co-Host",
+        "creditId": "6765bcbf87b92a43be5e00bd",
+        "id": 5131524,
+        "name": "Nolan Hansen",
+        "order": 3,
+        "gender": 2,
+        "profilePath": "/uyEUcMieLKH6pn9JTPuoI5nURWB.jpg"
+      },
+      {
+        "character": "Self - Co-Host",
+        "creditId": "6765bcca919287ef5390dc73",
+        "id": 5131525,
+        "name": "Tareq Salameh",
+        "order": 4,
+        "gender": 2,
+        "profilePath": "/bFZn6A8CSn7EPi9MHcIYxTpLAlF.jpg"
+      },
+      {
+        "character": "Self - Co-Host",
+        "creditId": "6765bcd1919287ef5390dc7c",
+        "id": 5073789,
+        "name": "Mack Hopkins",
+        "order": 5,
+        "gender": 2,
+        "profilePath": "/5yaA2crWsdzTf2BFnlZ3ZuvFaL8.jpg"
+      },
+      {
+        "character": "Self",
+        "creditId": "6767dae0ae1b411f405e4af9",
+        "id": 1126417,
+        "name": "Arturo del Puerto",
+        "order": 6,
+        "gender": 2,
+        "profilePath": "/tALGmngyUUtxyeQtMSy7KyzjdYc.jpg"
+      }
+    ],
+    "crew": [
+      {
+        "creditId": "65f94625223e20016079bd7c",
+        "department": "Production",
+        "id": 2282154,
+        "job": "Executive Producer",
+        "name": "Jimmy Donaldson",
+        "gender": 2,
+        "profilePath": "/dE6VIMrvZsY5a9gIaWoX40tzYkV.jpg"
+      },
+      {
+        "creditId": "673fcb2b7b825e685b4e0a34",
+        "department": "Production",
+        "id": 4886515,
+        "job": "Executive Producer",
+        "name": "Tyler Conklin",
+        "gender": 2,
+        "profilePath": null
+      },
+      {
+        "creditId": "673fcb357b825e685b4e0a37",
+        "department": "Production",
+        "id": 572350,
+        "job": "Executive Producer",
+        "name": "Sean Klitzner",
+        "gender": 2,
+        "profilePath": "/rTVGa5hK5N9mhJwrd2oGOWzbeh7.jpg"
+      },
+      {
+        "creditId": "673fcb41dae2e6a938254d38",
+        "department": "Production",
+        "id": 5073789,
+        "job": "Executive Producer",
+        "name": "Mack Hopkins",
+        "gender": 2,
+        "profilePath": "/5yaA2crWsdzTf2BFnlZ3ZuvFaL8.jpg"
+      },
+      {
+        "creditId": "673fcb57dae2e6a938254d4e",
+        "department": "Production",
+        "id": 5073813,
+        "job": "Executive Producer",
+        "name": "Michael Cruz",
+        "gender": 0,
+        "profilePath": null
+      },
+      {
+        "creditId": "673fcb605cac041cfae26a54",
+        "department": "Production",
+        "id": 4851894,
+        "job": "Executive Producer",
+        "name": "Matt Apps",
+        "gender": 0,
+        "profilePath": null
+      },
+      {
+        "creditId": "673fcb6b7b825e685b4e0a3d",
+        "department": "Production",
+        "id": 4007900,
+        "job": "Executive Producer",
+        "name": "Charles Wachter",
+        "gender": 0,
+        "profilePath": null
+      },
+      {
+        "creditId": "673fcb747b825e685b4e0a43",
+        "department": "Production",
+        "id": 2292335,
+        "job": "Executive Producer",
+        "name": "Keith Geller",
+        "gender": 0,
+        "profilePath": null
+      },
+      {
+        "creditId": "673fcb807b825e685b4e0a4d",
+        "department": "Production",
+        "id": 1251868,
+        "job": "Executive Producer",
+        "name": "Joe Coleman",
+        "gender": 2,
+        "profilePath": null
+      },
+      {
+        "creditId": "673fcb877b825e685b4e0a53",
+        "department": "Production",
+        "id": 1450643,
+        "job": "Executive Producer",
+        "name": "Rachel Skidmore",
+        "gender": 0,
+        "profilePath": null
+      },
+      {
+        "creditId": "673fcb91dae2e6a938254d5c",
+        "department": "Production",
+        "id": 4338334,
+        "job": "Executive Producer",
+        "name": "Chris Keiper",
+        "gender": 0,
+        "profilePath": null
+      },
+      {
+        "creditId": "673fcb9a5cac041cfae26a5c",
+        "department": "Production",
+        "id": 5073815,
+        "job": "Executive Producer",
+        "name": "Joshua Kulic",
+        "gender": 0,
+        "profilePath": null
+      }
+    ]
+  },
+  "externalIds": {
+    "facebookId": null,
+    "freebaseId": null,
+    "freebaseMid": null,
+    "imdbId": "tt31812476",
+    "instagramId": "beastgamesonprime",
+    "tvdbId": 447806,
+    "tvrageId": null,
+    "twitterId": null
+  },
+  "keywords": [
+    {
+      "id": 271,
+      "name": "competition"
+    },
+    {
+      "id": 4325,
+      "name": "game show"
+    },
+    {
+      "id": 330122,
+      "name": "mrbeast"
+    }
+  ],
+  "mediaInfo": {
+    "downloadStatus": [],
+    "downloadStatus4k": [],
+    "id": 535,
+    "mediaType": "tv",
+    "tmdbId": 249522,
+    "tvdbId": 447806,
+    "imdbId": null,
+    "status": 4,
+    "status4k": 1,
+    "createdAt": "2024-12-26T14:37:30.000Z",
+    "updatedAt": "2024-12-26T14:45:00.000Z",
+    "lastSeasonChange": "2024-12-26T14:37:30.000Z",
+    "mediaAddedAt": "2024-12-26T14:39:56.000Z",
+    "serviceId": 0,
+    "serviceId4k": null,
+    "externalServiceId": 144,
+    "externalServiceId4k": null,
+    "externalServiceSlug": "beast-games",
+    "externalServiceSlug4k": null,
+    "ratingKey": "10189",
+    "ratingKey4k": null,
+    "requests": [
+      {
+        "id": 14,
+        "status": 2,
+        "createdAt": "2024-12-26T14:37:30.000Z",
+        "updatedAt": "2024-12-26T14:37:30.000Z",
+        "type": "tv",
+        "is4k": false,
+        "serverId": 0,
+        "profileId": 7,
+        "rootFolder": "/media/tv",
+        "languageProfileId": 1,
+        "tags": [],
+        "isAutoRequest": false,
+        "media": {
+          "downloadStatus": [],
+          "downloadStatus4k": [],
+          "id": 535,
+          "mediaType": "tv",
+          "tmdbId": 249522,
+          "tvdbId": 447806,
+          "imdbId": null,
+          "status": 4,
+          "status4k": 1,
+          "createdAt": "2024-12-26T14:37:30.000Z",
+          "updatedAt": "2024-12-26T14:45:00.000Z",
+          "lastSeasonChange": "2024-12-26T14:37:30.000Z",
+          "mediaAddedAt": "2024-12-26T14:39:56.000Z",
+          "serviceId": 0,
+          "serviceId4k": null,
+          "externalServiceId": 144,
+          "externalServiceId4k": null,
+          "externalServiceSlug": "beast-games",
+          "externalServiceSlug4k": null,
+          "ratingKey": "10189",
+          "ratingKey4k": null,
+          "plexUrl": "https://app.plex.tv/desktop#!/server/aaaaaaa/details?key=%2Flibrary%2Fmetadata%2F10189",
+          "iOSPlexUrl": "plex://preplay/?metadataKey=%2Flibrary%2Fmetadata%2F10189&server=aaaaaaa",
+          "serviceUrl": "http://192.168.0.2:8989/series/beast-games"
+        },
+        "requestedBy": {
+          "permissions": 2,
+          "id": 1,
+          "email": "me@email.com",
+          "plexUsername": "somebody",
+          "username": null,
+          "recoveryLinkExpirationDate": null,
+          "userType": 1,
+          "plexId": 123123,
+          "avatar": "https://plex.tv/users/123123/avatar?c=123123",
+          "movieQuotaLimit": null,
+          "movieQuotaDays": null,
+          "tvQuotaLimit": null,
+          "tvQuotaDays": null,
+          "createdAt": "2024-12-16T21:13:58.000Z",
+          "updatedAt": "2024-12-16T23:59:03.000Z",
+          "requestCount": 11,
+          "displayName": "somebody"
+        },
+        "modifiedBy": {
+          "permissions": 2,
+          "id": 1,
+          "email": "me@email.com",
+          "plexUsername": "somebody",
+          "username": null,
+          "recoveryLinkExpirationDate": null,
+          "userType": 1,
+          "plexId": 123123,
+          "avatar": "https://plex.tv/users/123123/avatar?c=123123",
+          "movieQuotaLimit": null,
+          "movieQuotaDays": null,
+          "tvQuotaLimit": null,
+          "tvQuotaDays": null,
+          "createdAt": "2024-12-16T21:13:58.000Z",
+          "updatedAt": "2024-12-16T23:59:03.000Z",
+          "requestCount": 11,
+          "displayName": "somebody"
+        },
+        "seasons": [
+          {
+            "id": 4,
+            "seasonNumber": 1,
+            "status": 2,
+            "createdAt": "2024-12-26T14:37:30.000Z",
+            "updatedAt": "2024-12-26T14:37:30.000Z"
+          }
+        ],
+        "seasonCount": 1
+      }
+    ],
+    "issues": [
+      {
+        "id": 1,
+        "issueType": 2,
+        "status": 1,
+        "problemSeason": 1,
+        "problemEpisode": 0,
+        "createdAt": "2024-12-28T14:22:29.000Z",
+        "updatedAt": "2024-12-28T14:22:54.000Z",
+        "media": {
+          "downloadStatus": [],
+          "downloadStatus4k": [],
+          "id": 535,
+          "mediaType": "tv",
+          "tmdbId": 249522,
+          "tvdbId": 447806,
+          "imdbId": null,
+          "status": 4,
+          "status4k": 1,
+          "createdAt": "2024-12-26T14:37:30.000Z",
+          "updatedAt": "2024-12-26T14:45:00.000Z",
+          "lastSeasonChange": "2024-12-26T14:37:30.000Z",
+          "mediaAddedAt": "2024-12-26T14:39:56.000Z",
+          "serviceId": 0,
+          "serviceId4k": null,
+          "externalServiceId": 144,
+          "externalServiceId4k": null,
+          "externalServiceSlug": "beast-games",
+          "externalServiceSlug4k": null,
+          "ratingKey": "10189",
+          "ratingKey4k": null,
+          "plexUrl": "https://app.plex.tv/desktop#!/server/aaaaaaa/details?key=%2Flibrary%2Fmetadata%2F10189",
+          "iOSPlexUrl": "plex://preplay/?metadataKey=%2Flibrary%2Fmetadata%2F10189&server=aaaaaaa",
+          "serviceUrl": "http://192.168.0.2:8989/series/beast-games"
+        },
+        "createdBy": {
+          "permissions": 2,
+          "id": 1,
+          "email": "me@email.com",
+          "plexUsername": "somebody",
+          "username": null,
+          "recoveryLinkExpirationDate": null,
+          "userType": 1,
+          "plexId": 123123,
+          "avatar": "https://plex.tv/users/123123/avatar?c=123123",
+          "movieQuotaLimit": null,
+          "movieQuotaDays": null,
+          "tvQuotaLimit": null,
+          "tvQuotaDays": null,
+          "createdAt": "2024-12-16T21:13:58.000Z",
+          "updatedAt": "2024-12-16T23:59:03.000Z",
+          "requestCount": 11,
+          "displayName": "somebody"
+        },
+        "modifiedBy": null,
+        "comments": [
+          {
+            "id": 2,
+            "message": "boop",
+            "createdAt": "2024-12-28T14:22:54.000Z",
+            "updatedAt": "2024-12-28T14:22:54.000Z"
+          },
+          {
+            "id": 1,
+            "message": "test",
+            "createdAt": "2024-12-28T14:22:29.000Z",
+            "updatedAt": "2024-12-28T14:22:29.000Z"
+          }
+        ]
+      }
+    ],
+    "seasons": [
+      {
+        "id": 577,
+        "seasonNumber": 1,
+        "status": 4,
+        "status4k": 1,
+        "createdAt": "2024-12-26T14:45:00.000Z",
+        "updatedAt": "2024-12-26T14:45:00.000Z"
+      }
+    ],
+    "plexUrl": "https://app.plex.tv/desktop#!/server/aaaaaaa/details?key=%2Flibrary%2Fmetadata%2F10189",
+    "iOSPlexUrl": "plex://preplay/?metadataKey=%2Flibrary%2Fmetadata%2F10189&server=aaaaaaa",
+    "serviceUrl": "http://192.168.0.2:8989/series/beast-games"
+  },
+  "watchProviders": [
+    {
+      "iso_3166_1": "AD",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=AD",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "AE",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=AE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 9,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "AG",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=AG",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "AL",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=AL",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "AR",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=AR",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "AT",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=AT",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 9,
+          "name": "Amazon Prime Video"
+        },
+        {
+          "displayPriority": 65,
+          "logoPath": "/8aBqoNeGGr0oSA85iopgNZUOTOc.jpg",
+          "id": 2100,
+          "name": "Amazon Prime Video with Ads"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "AU",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=AU",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BA",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=BA",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BB",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=BB",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BE",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=BE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BG",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=BG",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BH",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=BH",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BM",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=BM",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BO",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=BO",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BR",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=BR",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BS",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=BS",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CA",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=CA",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 3,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        },
+        {
+          "displayPriority": 152,
+          "logoPath": "/8aBqoNeGGr0oSA85iopgNZUOTOc.jpg",
+          "id": 2100,
+          "name": "Amazon Prime Video with Ads"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CH",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=CH",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CI",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=CI",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CL",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=CL",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CO",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=CO",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CR",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=CR",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CZ",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=CZ",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "DE",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=DE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 9,
+          "name": "Amazon Prime Video"
+        },
+        {
+          "displayPriority": 157,
+          "logoPath": "/8aBqoNeGGr0oSA85iopgNZUOTOc.jpg",
+          "id": 2100,
+          "name": "Amazon Prime Video with Ads"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "DK",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=DK",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "DO",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=DO",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "DZ",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=DZ",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "EC",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=EC",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "EE",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=EE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "EG",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=EG",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "ES",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=ES",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 3,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "FI",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=FI",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "FR",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=FR",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "GB",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=GB",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 9,
+          "name": "Amazon Prime Video"
+        },
+        {
+          "displayPriority": 136,
+          "logoPath": "/8aBqoNeGGr0oSA85iopgNZUOTOc.jpg",
+          "id": 2100,
+          "name": "Amazon Prime Video with Ads"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "GF",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=GF",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "GG",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=GG",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "GH",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=GH",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "GI",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=GI",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "GR",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=GR",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "GT",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=GT",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "HK",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=HK",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 5,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "HN",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=HN",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "HR",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=HR",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "HU",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=HU",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "ID",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=ID",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 7,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "IE",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=IE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "IL",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=IL",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "IN",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=IN",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "IQ",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=IQ",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "IS",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=IS",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "IT",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=IT",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        },
+        {
+          "displayPriority": 15,
+          "logoPath": "/6FDKQWcR6JfmRKLqezSsvGgRuUY.jpg",
+          "id": 109,
+          "name": "Timvision"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "JM",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=JM",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "JO",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=JO",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "JP",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=JP",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 4,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 9,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "KE",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=KE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "KR",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=KR",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "KW",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=KW",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "LB",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=LB",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "LC",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=LC",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "LI",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=LI",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "LT",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=LT",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "LV",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=LV",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "LY",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=LY",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MA",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=MA",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MC",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=MC",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MD",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=MD",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MK",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=MK",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MT",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=MT",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MX",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=MX",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MY",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=MY",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 9,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MZ",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=MZ",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "NE",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=NE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "NG",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=NG",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "NL",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=NL",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "NO",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=NO",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "NZ",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=NZ",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "OM",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=OM",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PA",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=PA",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PE",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=PE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PF",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=PF",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PH",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=PH",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PK",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=PK",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PL",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=PL",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 5,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PS",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=PS",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PT",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=PT",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PY",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=PY",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "QA",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=QA",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "RO",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=RO",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "RS",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=RS",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "SA",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=SA",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 23,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "SE",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=SE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "SG",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=SG",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "SI",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=SI",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "SK",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=SK",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "SM",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=SM",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "SV",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=SV",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "TC",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=TC",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "TH",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=TH",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 3,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "TN",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=TN",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "TR",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=TR",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 6,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "TT",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=TT",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "TW",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=TW",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "UG",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=UG",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "US",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=US",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 9,
+          "name": "Amazon Prime Video"
+        },
+        {
+          "displayPriority": 258,
+          "logoPath": "/8aBqoNeGGr0oSA85iopgNZUOTOc.jpg",
+          "id": 2100,
+          "name": "Amazon Prime Video with Ads"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "UY",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=UY",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "VA",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=VA",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "VE",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=VE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "YE",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=YE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "ZA",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=ZA",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "ZM",
+      "link": "https://www.themoviedb.org/tv/249522-beast-games/watch?locale=ZM",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/pvske1MyAoymrs5bguRfVqYiM9a.jpg",
+          "id": 119,
+          "name": "Amazon Prime Video"
+        }
+      ]
+    }
+  ]
+}

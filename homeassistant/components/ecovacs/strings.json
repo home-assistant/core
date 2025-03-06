@@ -250,7 +250,7 @@
       "message": "Params are required for the command: {command}"
     },
     "vacuum_raw_get_positions_not_supported": {
-      "message": "Getting the positions of the chargers and the device itself is not supported"
+      "message": "Retrieving the positions of the chargers and the device itself is not supported"
     }
   },
   "selector": {
@@ -264,7 +264,7 @@
   "services": {
     "raw_get_positions": {
       "name": "Get raw positions",
-      "description": "Get the raw response for the positions of the chargers and the device itself."
+      "description": "Retrieves a raw response containing the positions of the chargers and the device itself."
     }
   }
 }

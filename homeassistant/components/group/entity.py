@@ -440,10 +440,8 @@ class Group(Entity):
         if not self._on_off:
             return
 
-        if (
-            tr_state is None
-            or self._assumed_state
-            and not tr_state.attributes.get(ATTR_ASSUMED_STATE)
+        if tr_state is None or (
+            self._assumed_state and not tr_state.attributes.get(ATTR_ASSUMED_STATE)
         ):
             self._assumed_state = self.mode(self._assumed.values())
 

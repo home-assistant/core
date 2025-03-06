@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-
+from freezegun.api import FrozenDateTimeFactory
 from kasa import Device, Module
 from syrupy.assertion import SnapshotAssertion
 
@@ -11,13 +10,15 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
 
-from . import DEVICE_ID, _mocked_device, setup_platform_for_device, snapshot_platform
+from . import _mocked_device, setup_platform_for_device, snapshot_platform
+from .const import DEVICE_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -56,6 +57,7 @@ async def test_fan_unique_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a fan unique id."""
     fan = _mocked_device(modules=[Module.Fan], alias="my_fan")
@@ -66,12 +68,16 @@ async def test_fan_unique_id(
     )
     assert device_entries
     entity_id = "fan.my_fan"
-    entity_registry = er.async_get(hass)
+
     assert entity_registry.async_get(entity_id).unique_id == DEVICE_ID
 
 
-async def test_fan(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
-    """Test a color fan and that all transitions are correctly passed."""
+async def test_fan(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test fan functionality."""
     device = _mocked_device(modules=[Module.Fan], alias="my_fan")
     fan = device.modules[Module.Fan]
     fan.fan_speed_level = 0
@@ -83,26 +89,29 @@ async def test_fan(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> N
     assert state.state == "off"
 
     await hass.services.async_call(
-        FAN_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     fan.set_fan_speed_level.assert_called_once_with(4)
     fan.set_fan_speed_level.reset_mock()
 
     fan.fan_speed_level = 4
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+
+    freezer.tick(10)
+    async_fire_time_changed(hass)
+
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get(entity_id)
     assert state.state == "on"
 
     await hass.services.async_call(
-        FAN_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     fan.set_fan_speed_level.assert_called_once_with(0)
     fan.set_fan_speed_level.reset_mock()
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 50},
         blocking=True,
     )

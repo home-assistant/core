@@ -27,7 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -64,7 +64,7 @@ ENERGY_VOLT_AMPERE_REACTIVE_HOUR: Final = "varh"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: FroniusConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Fronius sensor entities based on a config entry."""
     solar_net = config_entry.runtime_data
@@ -794,7 +794,7 @@ class LoggerSensor(_FroniusSensorEntity):
             "unit"
         )
         self._attr_unique_id = (
-            f'{logger_data["unique_identifier"]["value"]}-{description.key}'
+            f"{logger_data['unique_identifier']['value']}-{description.key}"
         )
 
 
@@ -815,7 +815,7 @@ class MeterSensor(_FroniusSensorEntity):
         if (meter_uid := meter_data["serial"]["value"]) == "n.a.":
             meter_uid = (
                 f"{coordinator.solar_net.solar_net_device_id}:"
-                f'{meter_data["model"]["value"]}'
+                f"{meter_data['model']['value']}"
             )
 
         self._attr_device_info = DeviceInfo(
@@ -849,7 +849,7 @@ class OhmpilotSensor(_FroniusSensorEntity):
             sw_version=device_data["software"]["value"],
             via_device=(DOMAIN, coordinator.solar_net.solar_net_device_id),
         )
-        self._attr_unique_id = f'{device_data["serial"]["value"]}-{description.key}'
+        self._attr_unique_id = f"{device_data['serial']['value']}-{description.key}"
 
 
 class PowerFlowSensor(_FroniusSensorEntity):
@@ -883,7 +883,7 @@ class StorageSensor(_FroniusSensorEntity):
         super().__init__(coordinator, description, solar_net_id)
         storage_data = self._device_data()
 
-        self._attr_unique_id = f'{storage_data["serial"]["value"]}-{description.key}'
+        self._attr_unique_id = f"{storage_data['serial']['value']}-{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, storage_data["serial"]["value"])},
             manufacturer=storage_data["manufacturer"]["value"],

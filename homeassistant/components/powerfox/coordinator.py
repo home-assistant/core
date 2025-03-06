@@ -7,6 +7,7 @@ from powerfox import (
     Powerfox,
     PowerfoxAuthenticationError,
     PowerfoxConnectionError,
+    PowerfoxNoDataError,
     Poweropti,
 )
 
@@ -17,15 +18,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
+type PowerfoxConfigEntry = ConfigEntry[list[PowerfoxDataUpdateCoordinator]]
+
 
 class PowerfoxDataUpdateCoordinator(DataUpdateCoordinator[Poweropti]):
     """Class to manage fetching Powerfox data from the API."""
 
-    config_entry: ConfigEntry
+    config_entry: PowerfoxConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: PowerfoxConfigEntry,
         client: Powerfox,
         device: Device,
     ) -> None:
@@ -33,6 +37,7 @@ class PowerfoxDataUpdateCoordinator(DataUpdateCoordinator[Poweropti]):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
@@ -45,5 +50,5 @@ class PowerfoxDataUpdateCoordinator(DataUpdateCoordinator[Poweropti]):
             return await self.client.device(device_id=self.device.id)
         except PowerfoxAuthenticationError as err:
             raise ConfigEntryAuthFailed(err) from err
-        except PowerfoxConnectionError as err:
+        except (PowerfoxConnectionError, PowerfoxNoDataError) as err:
             raise UpdateFailed(err) from err

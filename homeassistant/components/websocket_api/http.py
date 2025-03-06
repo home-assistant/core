@@ -63,27 +63,27 @@ class WebSocketAdapter(logging.LoggerAdapter):
     def process(self, msg: str, kwargs: Any) -> tuple[str, Any]:
         """Add connid to websocket log messages."""
         assert self.extra is not None
-        return f'[{self.extra["connid"]}] {msg}', kwargs
+        return f"[{self.extra['connid']}] {msg}", kwargs
 
 
 class WebSocketHandler:
     """Handle an active websocket client connection."""
 
     __slots__ = (
-        "_hass",
-        "_loop",
-        "_request",
-        "_wsock",
-        "_handle_task",
-        "_writer_task",
-        "_closing",
         "_authenticated",
-        "_logger",
-        "_peak_checker_unsub",
+        "_closing",
         "_connection",
+        "_handle_task",
+        "_hass",
+        "_logger",
+        "_loop",
         "_message_queue",
+        "_peak_checker_unsub",
         "_ready_future",
         "_release_ready_queue_size",
+        "_request",
+        "_writer_task",
+        "_wsock",
     )
 
     def __init__(self, hass: HomeAssistant, request: web.Request) -> None:
@@ -197,7 +197,7 @@ class WebSocketHandler:
             # max pending messages.
             return
 
-        if type(message) is not bytes:  # noqa: E721
+        if type(message) is not bytes:
             if isinstance(message, dict):
                 message = message_to_json_bytes(message)
             elif isinstance(message, str):
@@ -387,7 +387,14 @@ class WebSocketHandler:
             raise Disconnect("Received close message during auth phase")
 
         if msg.type is not WSMsgType.TEXT:
-            raise Disconnect("Received non-Text message during auth phase")
+            if msg.type is WSMsgType.ERROR:
+                # msg.data is the exception
+                raise Disconnect(
+                    f"Received error message during auth phase: {msg.data}"
+                )
+            raise Disconnect(
+                f"Received non-Text message of type {msg.type} during auth phase"
+            )
 
         try:
             auth_msg_data = json_loads(msg.data)
@@ -477,7 +484,12 @@ class WebSocketHandler:
                 continue
 
             if msg_type is not WSMsgType.TEXT:
-                raise Disconnect("Received non-Text message.")
+                if msg_type is WSMsgType.ERROR:
+                    # msg.data is the exception
+                    raise Disconnect(
+                        f"Received error message during command phase: {msg.data}"
+                    )
+                raise Disconnect(f"Received non-Text message of type {msg_type}.")
 
             try:
                 command_msg_data = json_loads(msg_data)
@@ -490,7 +502,7 @@ class WebSocketHandler:
                 )
 
             # command_msg_data is always deserialized from JSON as a list
-            if type(command_msg_data) is not list:  # noqa: E721
+            if type(command_msg_data) is not list:
                 async_handle_str(command_msg_data)
                 continue
 

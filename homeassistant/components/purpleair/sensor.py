@@ -25,7 +25,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_SENSOR_INDICES, DOMAIN
 from .coordinator import PurpleAirDataUpdateCoordinator
@@ -166,7 +166,7 @@ SENSOR_DESCRIPTIONS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PurpleAir sensors based on a config entry."""
     coordinator: PurpleAirDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]

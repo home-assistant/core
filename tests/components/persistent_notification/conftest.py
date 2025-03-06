@@ -2,7 +2,7 @@
 
 import pytest
 
-import homeassistant.components.persistent_notification as pn
+from homeassistant.components import persistent_notification as pn
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

@@ -7,7 +7,6 @@ from ssl import SSLError
 
 from deluge_client.client import DelugeRPCClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -19,12 +18,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_WEB_PORT
-from .coordinator import DelugeDataUpdateCoordinator
+from .coordinator import DelugeConfigEntry, DelugeDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
-type DelugeConfigEntry = ConfigEntry[DelugeDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DelugeConfigEntry) -> bool:
@@ -41,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DelugeConfigEntry) -> bo
         await hass.async_add_executor_job(api.connect)
     except (ConnectionRefusedError, TimeoutError, SSLError) as ex:
         raise ConfigEntryNotReady("Connection to Deluge Daemon failed") from ex
-    except Exception as ex:  # noqa: BLE001
+    except Exception as ex:
         if type(ex).__name__ == "BadLoginError":
             raise ConfigEntryAuthFailed(
                 "Credentials for Deluge client are not valid"

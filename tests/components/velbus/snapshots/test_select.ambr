@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[select.select-entry]
+# name: test_entities[select.kitchen_select-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13,13 +13,14 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.select',
-    'has_entity_name': False,
+    'entity_id': 'select.kitchen_select',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -39,10 +40,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[select.select-state]
+# name: test_entities[select.kitchen_select-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'select',
+      'friendly_name': 'Kitchen select',
       'options': list([
         'none',
         'summer',
@@ -51,7 +52,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.select',
+    'entity_id': 'select.kitchen_select',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -25,17 +25,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN, LOGGER, MODELS
 from .coordinator import (
+    TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
     TeslaFleetVehicleDataCoordinator,
@@ -139,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 api = VehicleSigned(tesla.vehicle, vin)
             else:
                 api = VehicleSpecific(tesla.vehicle, vin)
-            coordinator = TeslaFleetVehicleDataCoordinator(hass, api, product)
+            coordinator = TeslaFleetVehicleDataCoordinator(hass, entry, api, product)
 
             await coordinator.async_config_entry_first_refresh()
 
@@ -175,10 +175,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
 
             api = EnergySpecific(tesla.energy, site_id)
 
-            live_coordinator = TeslaFleetEnergySiteLiveCoordinator(hass, api)
-            info_coordinator = TeslaFleetEnergySiteInfoCoordinator(hass, api, product)
+            live_coordinator = TeslaFleetEnergySiteLiveCoordinator(hass, entry, api)
+            history_coordinator = TeslaFleetEnergySiteHistoryCoordinator(
+                hass, entry, api
+            )
+            info_coordinator = TeslaFleetEnergySiteInfoCoordinator(
+                hass, entry, api, product
+            )
 
             await live_coordinator.async_config_entry_first_refresh()
+            await history_coordinator.async_config_entry_first_refresh()
             await info_coordinator.async_config_entry_first_refresh()
 
             # Create energy site model
@@ -211,6 +217,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 TeslaFleetEnergyData(
                     api=api,
                     live_coordinator=live_coordinator,
+                    history_coordinator=history_coordinator,
                     info_coordinator=info_coordinator,
                     id=site_id,
                     device=device,

@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock
 from androidtvremote2 import CannotConnect, ConnectionClosed, InvalidAuth
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.androidtv_remote.config_flow import (
     APPS_NEW_ID,
     CONF_APP_DELETE,
@@ -22,6 +21,7 @@ from homeassistant.components.androidtv_remote.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -444,7 +444,7 @@ async def test_zeroconf_flow_success(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address(host),
             ip_addresses=[ip_address(host)],
             port=6466,
@@ -522,7 +522,7 @@ async def test_zeroconf_flow_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address(host),
             ip_addresses=[ip_address(host)],
             port=6466,
@@ -573,7 +573,7 @@ async def test_zeroconf_flow_pairing_invalid_auth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address(host),
             ip_addresses=[ip_address(host)],
             port=6466,
@@ -657,7 +657,7 @@ async def test_zeroconf_flow_already_configured_host_changed_reloads_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address(host),
             ip_addresses=[ip_address(host)],
             port=6466,
@@ -710,7 +710,7 @@ async def test_zeroconf_flow_already_configured_host_not_changed_no_reload_entry
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address(host),
             ip_addresses=[ip_address(host)],
             port=6466,
@@ -743,7 +743,7 @@ async def test_zeroconf_flow_abort_if_mac_is_missing(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address(host),
             ip_addresses=[ip_address(host)],
             port=6466,
@@ -787,7 +787,7 @@ async def test_zeroconf_flow_already_configured_zeroconf_has_multiple_invalid_ip
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.2.3.5"),
             ip_addresses=[ip_address("1.2.3.5"), ip_address(host)],
             port=6466,

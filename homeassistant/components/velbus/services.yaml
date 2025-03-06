@@ -1,29 +1,38 @@
 sync_clock:
   fields:
     interface:
-      required: true
       example: "192.168.1.5:27015"
       default: ""
       selector:
         text:
+    config_entry:
+      selector:
+        config_entry:
+          integration: velbus
 
 scan:
   fields:
     interface:
-      required: true
       example: "192.168.1.5:27015"
       default: ""
       selector:
         text:
+    config_entry:
+      selector:
+        config_entry:
+          integration: velbus
 
 clear_cache:
   fields:
     interface:
-      required: true
       example: "192.168.1.5:27015"
       default: ""
       selector:
         text:
+    config_entry:
+      selector:
+        config_entry:
+          integration: velbus
     address:
       required: false
       selector:
@@ -34,11 +43,14 @@ clear_cache:
 set_memo_text:
   fields:
     interface:
-      required: true
       example: "192.168.1.5:27015"
       default: ""
       selector:
         text:
+    config_entry:
+      selector:
+        config_entry:
+          integration: velbus
     address:
       required: true
       selector:

@@ -179,7 +179,7 @@ async def test_alexa_config_invalidate_token(
     assert await async_setup_component(hass, "homeassistant", {})
 
     aioclient_mock.post(
-        "https://example/access_token",
+        "https://example/alexa/access_token",
         json={
             "access_token": "mock-token",
             "event_endpoint": "http://example.com/alexa_endpoint",
@@ -192,7 +192,7 @@ async def test_alexa_config_invalidate_token(
         "mock-user-id",
         cloud_prefs,
         Mock(
-            alexa_server="example",
+            servicehandlers_server="example",
             auth=Mock(async_check_token=AsyncMock()),
             websession=async_get_clientsession(hass),
         ),
@@ -239,7 +239,7 @@ async def test_alexa_config_fail_refresh_token(
     )
 
     aioclient_mock.post(
-        "https://example/access_token",
+        "https://example/alexa/access_token",
         json={
             "access_token": "mock-token",
             "event_endpoint": "http://example.com/alexa_endpoint",
@@ -256,7 +256,7 @@ async def test_alexa_config_fail_refresh_token(
         "mock-user-id",
         cloud_prefs,
         Mock(
-            alexa_server="example",
+            servicehandlers_server="example",
             auth=Mock(async_check_token=AsyncMock()),
             websession=async_get_clientsession(hass),
         ),
@@ -286,7 +286,7 @@ async def test_alexa_config_fail_refresh_token(
     conf.async_invalidate_access_token()
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        "https://example/access_token",
+        "https://example/alexa/access_token",
         json={"reason": reject_reason},
         status=400,
     )
@@ -312,7 +312,7 @@ async def test_alexa_config_fail_refresh_token(
     # State reporting should now be re-enabled for Alexa
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        "https://example/access_token",
+        "https://example/alexa/access_token",
         json={
             "access_token": "mock-token",
             "event_endpoint": "http://example.com/alexa_endpoint",

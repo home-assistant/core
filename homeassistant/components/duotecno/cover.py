@@ -4,27 +4,25 @@ from __future__ import annotations
 
 from typing import Any
 
-from duotecno.controller import PyDuotecno
 from duotecno.unit import DuoswitchUnit
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import DuotecnoConfigEntry
 from .entity import DuotecnoEntity, api_call
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: DuotecnoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the duoswitch endities."""
-    cntrl: PyDuotecno = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        DuotecnoCover(channel) for channel in cntrl.get_units("DuoswitchUnit")
+        DuotecnoCover(channel)
+        for channel in entry.runtime_data.get_units("DuoswitchUnit")
     )
 
 

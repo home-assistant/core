@@ -1,0 +1,84 @@
+# serializer version: 1
+# name: test_entities[event.overseerr_last_media_event-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'pending',
+        'approved',
+        'available',
+        'failed',
+        'declined',
+        'auto_approved',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.overseerr_last_media_event',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last media event',
+    'platform': 'overseerr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_media_event',
+    'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-media',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[event.overseerr_last_media_event-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/something.jpg',
+      'event_type': 'auto_approved',
+      'event_types': list([
+        'pending',
+        'approved',
+        'available',
+        'failed',
+        'declined',
+        'auto_approved',
+      ]),
+      'friendly_name': 'Overseerr Last media event',
+      'media': dict({
+        'media_type': 'movie',
+        'status': 'pending',
+        'status4k': 'unknown',
+        'tmdb_id': 123,
+        'tvdb_id': None,
+      }),
+      'message': 'Here is an interesting Linux ISO that was automatically approved.',
+      'request': dict({
+        'request_id': 16,
+        'requested_by_avatar': 'https://plex.tv/users/abc/avatar?c=123',
+        'requested_by_email': 'my@email.com',
+        'requested_by_settings_discord_id': '123',
+        'requested_by_settings_telegram_chat_id': '',
+        'requested_by_username': 'henk',
+      }),
+      'subject': 'Something (2024)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.overseerr_last_media_event',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-10-21T00:00:00.000+00:00',
+  })
+# ---

@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["slack"],
-  "requirements": ["slackclient==2.5.0"]
+  "requirements": ["slack_sdk==3.33.4"]
 }

@@ -1,0 +1,57 @@
+{
+  "components": {
+    "main": {
+      "healthCheck": {
+        "checkInterval": {
+          "value": 60,
+          "unit": "s",
+          "data": {
+            "deviceScheme": "UNTRACKED",
+            "protocol": "cloud"
+          },
+          "timestamp": "2024-12-04T10:10:02.934Z"
+        },
+        "healthStatus": {
+          "value": null
+        },
+        "DeviceWatch-Enroll": {
+          "value": null
+        },
+        "DeviceWatch-DeviceStatus": {
+          "value": "online",
+          "data": {},
+          "timestamp": "2025-02-09T10:09:47.758Z"
+        }
+      },
+      "refresh": {},
+      "airConditionerMode": {
+        "availableAcModes": {
+          "value": null
+        },
+        "supportedAcModes": {
+          "value": null
+        },
+        "airConditionerMode": {
+          "value": "cool",
+          "timestamp": "2025-02-09T10:09:47.758Z"
+        }
+      },
+      "thermostatCoolingSetpoint": {
+        "coolingSetpointRange": {
+          "value": null
+        },
+        "coolingSetpoint": {
+          "value": 20,
+          "unit": "C",
+          "timestamp": "2025-02-09T10:09:47.758Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-02-09T10:09:47.758Z"
+        }
+      }
+    }
+  }
+}

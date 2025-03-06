@@ -6,7 +6,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The yolink integration needs to re-authenticate your account"
+        "description": "The YoLink integration needs to re-authenticate your account"
       }
     },
     "abort": {
@@ -99,11 +99,11 @@
   "services": {
     "play_on_speaker_hub": {
       "name": "Play on SpeakerHub",
-      "description": "Convert text to audio play on YoLink SpeakerHub",
+      "description": "Converts text to speech for playback on a YoLink SpeakerHub",
       "fields": {
         "target_device": {
-          "name": "SpeakerHub Device",
-          "description": "SpeakerHub Device"
+          "name": "SpeakerHub device",
+          "description": "SpeakerHub device for audio playback."
         },
         "message": {
           "name": "Text message",
@@ -115,7 +115,7 @@
         },
         "volume": {
           "name": "Volume",
-          "description": "Speaker volume during playback."
+          "description": "Overrides the speaker volume during playback of this message only."
         },
         "repeat": {
           "name": "Repeat",

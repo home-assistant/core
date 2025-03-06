@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.components.palazzetti.const import FAN_AUTO, FAN_HIGH, FAN_SILENT
+from homeassistant.components.palazzetti.const import FAN_AUTO, FAN_HIGH
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -118,15 +118,6 @@ async def test_async_set_data(
         )
 
     # Set Fan Mode: Success
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: FAN_SILENT},
-        blocking=True,
-    )
-    mock_palazzetti_client.set_fan_silent.assert_called_once()
-    mock_palazzetti_client.set_fan_silent.reset_mock()
-
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,

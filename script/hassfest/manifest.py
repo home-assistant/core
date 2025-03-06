@@ -19,6 +19,7 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
+from script.util import sort_manifest as util_sort_manifest
 
 from .model import Config, Integration, ScaledQualityScaleTiers
 
@@ -26,6 +27,8 @@ DOCUMENTATION_URL_SCHEMA = "https"
 DOCUMENTATION_URL_HOST = "www.home-assistant.io"
 DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
 DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
+
+_CORE_DOCUMENTATION_BASE = "https://www.home-assistant.io/integrations"
 
 
 class NonScaledQualityScaleTiers(StrEnum):
@@ -117,19 +120,26 @@ NO_IOT_CLASS = [
 ]
 
 
-def documentation_url(value: str) -> str:
+def core_documentation_url(value: str) -> str:
     """Validate that a documentation url has the correct path and domain."""
     if value in DOCUMENTATION_URL_EXCEPTIONS:
         return value
+    if not value.startswith(_CORE_DOCUMENTATION_BASE):
+        raise vol.Invalid(
+            f"Documentation URL does not begin with {_CORE_DOCUMENTATION_BASE}"
+        )
 
+    return value
+
+
+def custom_documentation_url(value: str) -> str:
+    """Validate that a custom integration documentation url is correct."""
     parsed_url = urlparse(value)
     if parsed_url.scheme != DOCUMENTATION_URL_SCHEMA:
         raise vol.Invalid("Documentation url is not prefixed with https")
-    if parsed_url.netloc == DOCUMENTATION_URL_HOST and not parsed_url.path.startswith(
-        DOCUMENTATION_URL_PATH_PREFIX
-    ):
+    if value.startswith(_CORE_DOCUMENTATION_BASE):
         raise vol.Invalid(
-            "Documentation url does not begin with www.home-assistant.io/integrations"
+            "Documentation URL should point to the custom integration documentation"
         )
 
     return value
@@ -258,7 +268,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
                 }
             )
         ],
-        vol.Required("documentation"): vol.All(vol.Url(), documentation_url),
+        vol.Required("documentation"): vol.All(vol.Url(), core_documentation_url),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
         vol.Optional("dependencies"): [str],
@@ -293,6 +303,7 @@ def manifest_schema(value: dict[str, Any]) -> vol.Schema:
 
 CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
     {
+        vol.Required("documentation"): vol.All(vol.Url(), custom_documentation_url),
         vol.Optional("version"): vol.All(str, verify_version),
         vol.Optional("issue_tracker"): vol.Url(),
         vol.Optional("import_executor"): bool,
@@ -366,20 +377,20 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
         validate_version(integration)
 
 
-_SORT_KEYS = {"domain": ".domain", "name": ".name"}
-
-
-def _sort_manifest_keys(key: str) -> str:
-    return _SORT_KEYS.get(key, key)
-
-
 def sort_manifest(integration: Integration, config: Config) -> bool:
     """Sort manifest."""
-    keys = list(integration.manifest.keys())
-    if (keys_sorted := sorted(keys, key=_sort_manifest_keys)) != keys:
-        manifest = {key: integration.manifest[key] for key in keys_sorted}
+    if integration.manifest_path is None:
+        integration.add_error(
+            "manifest",
+            "Manifest path not set, unable to sort manifest keys",
+        )
+        return False
+
+    if util_sort_manifest(integration.manifest):
         if config.action == "generate":
-            integration.manifest_path.write_text(json.dumps(manifest, indent=2))
+            integration.manifest_path.write_text(
+                json.dumps(integration.manifest, indent=2) + "\n"
+            )
             text = "have been sorted"
         else:
             text = "are not sorted correctly"

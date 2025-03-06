@@ -9,7 +9,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
-from . import CO2SignalConfigEntry
+from .coordinator import CO2SignalConfigEntry
 
 TO_REDACT = {CONF_API_KEY}
 

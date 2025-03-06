@@ -48,4 +48,5 @@ async def test_wifi_signal(
     assert device.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device.manufacturer == "LaMetric Inc."
     assert device.name == "Frenck's LaMetric"
+    assert device.serial_number == "SA110405124500W00BS9"
     assert device.sw_version == "2.2.2"

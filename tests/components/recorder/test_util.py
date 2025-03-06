@@ -35,7 +35,6 @@ from homeassistant.components.recorder.models import (
 from homeassistant.components.recorder.util import (
     MIN_VERSION_SQLITE,
     RETRYABLE_MYSQL_ERRORS,
-    UPCOMING_MIN_VERSION_SQLITE,
     database_job_retry_wrapper,
     end_incomplete_runs,
     is_second_sunday,
@@ -56,12 +55,12 @@ from .common import (
 )
 
 from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -236,7 +235,7 @@ def test_setup_connection_for_dialect_mysql(mysql_version) -> None:
 
 @pytest.mark.parametrize(
     "sqlite_version",
-    [str(UPCOMING_MIN_VERSION_SQLITE)],
+    [str(MIN_VERSION_SQLITE)],
 )
 def test_setup_connection_for_dialect_sqlite(sqlite_version: str) -> None:
     """Test setting up the connection for a sqlite dialect."""
@@ -289,7 +288,7 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version: str) -> None:
 
 @pytest.mark.parametrize(
     "sqlite_version",
-    [str(UPCOMING_MIN_VERSION_SQLITE)],
+    [str(MIN_VERSION_SQLITE)],
 )
 def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
     sqlite_version: str,
@@ -418,7 +417,12 @@ def test_supported_mysql(caplog: pytest.LogCaptureFixture, mysql_version) -> Non
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "mysql", dbapi_connection, True)
+    database_engine = util.setup_connection_for_dialect(
+        instance_mock, "mysql", dbapi_connection, True
+    )
+    assert database_engine is not None
+    assert database_engine.optimizer.slow_range_in_select is False
+    assert database_engine.optimizer.slow_dependent_subquery is True
 
     assert "minimum supported version" not in caplog.text
 
@@ -503,6 +507,7 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
     assert "minimum supported version" not in caplog.text
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is True
+    assert database_engine.optimizer.slow_dependent_subquery is False
 
 
 @pytest.mark.parametrize(
@@ -510,11 +515,11 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
     [
         (
             "3.30.0",
-            "Version 3.30.0 of SQLite is not supported; minimum supported version is 3.31.0.",
+            "Version 3.30.0 of SQLite is not supported; minimum supported version is 3.40.1.",
         ),
         (
             "2.0.0",
-            "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.31.0.",
+            "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.40.1.",
         ),
     ],
 )
@@ -552,8 +557,8 @@ def test_fail_outdated_sqlite(
 @pytest.mark.parametrize(
     "sqlite_version",
     [
-        ("3.31.0"),
-        ("3.33.0"),
+        ("3.40.1"),
+        ("3.41.0"),
     ],
 )
 def test_supported_sqlite(caplog: pytest.LogCaptureFixture, sqlite_version) -> None:
@@ -584,6 +589,7 @@ def test_supported_sqlite(caplog: pytest.LogCaptureFixture, sqlite_version) -> N
     assert "minimum supported version" not in caplog.text
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is False
+    assert database_engine.optimizer.slow_dependent_subquery is False
 
 
 @pytest.mark.parametrize(
@@ -676,6 +682,7 @@ async def test_issue_for_mariadb_with_MDEV_25020(
 
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is True
+    assert database_engine.optimizer.slow_dependent_subquery is False
 
 
 @pytest.mark.parametrize(
@@ -732,63 +739,7 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
 
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is False
-
-
-async def test_issue_for_old_sqlite(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test we create and delete an issue for old sqlite versions."""
-    instance_mock = MagicMock()
-    instance_mock.hass = hass
-    execute_args = []
-    close_mock = MagicMock()
-    min_version = str(MIN_VERSION_SQLITE)
-
-    def execute_mock(statement):
-        nonlocal execute_args
-        execute_args.append(statement)
-
-    def fetchall_mock():
-        nonlocal execute_args
-        if execute_args[-1] == "SELECT sqlite_version()":
-            return [[min_version]]
-        return None
-
-    def _make_cursor_mock(*_):
-        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
-
-    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
-
-    database_engine = await hass.async_add_executor_job(
-        util.setup_connection_for_dialect,
-        instance_mock,
-        "sqlite",
-        dbapi_connection,
-        True,
-    )
-    await hass.async_block_till_done()
-
-    issue = issue_registry.async_get_issue(DOMAIN, "sqlite_too_old")
-    assert issue is not None
-    assert issue.translation_placeholders == {
-        "min_version": str(UPCOMING_MIN_VERSION_SQLITE),
-        "server_version": min_version,
-    }
-
-    min_version = str(UPCOMING_MIN_VERSION_SQLITE)
-    database_engine = await hass.async_add_executor_job(
-        util.setup_connection_for_dialect,
-        instance_mock,
-        "sqlite",
-        dbapi_connection,
-        True,
-    )
-    await hass.async_block_till_done()
-
-    issue = issue_registry.async_get_issue(DOMAIN, "sqlite_too_old")
-    assert issue is None
-    assert database_engine is not None
+    assert database_engine.optimizer.slow_dependent_subquery is False
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])

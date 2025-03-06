@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Protocol, cast
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -48,8 +48,7 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
-from homeassistant.helpers import condition
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.issue_registry import (
@@ -636,9 +635,9 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         alias = ""
         if "trigger" in run_variables:
             if "description" in run_variables["trigger"]:
-                reason = f' by {run_variables["trigger"]["description"]}'
+                reason = f" by {run_variables['trigger']['description']}"
             if "alias" in run_variables["trigger"]:
-                alias = f' trigger \'{run_variables["trigger"]["alias"]}\''
+                alias = f" trigger '{run_variables['trigger']['alias']}'"
         self._logger.debug("Automation%s triggered%s", alias, reason)
 
         # Create a new context referring to the old context.

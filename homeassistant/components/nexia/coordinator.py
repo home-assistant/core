@@ -8,6 +8,7 @@ from typing import Any
 
 from nexia.home import NexiaHome
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -19,9 +20,12 @@ DEFAULT_UPDATE_RATE = 120
 class NexiaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """DataUpdateCoordinator for nexia homes."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         nexia_home: NexiaHome,
     ) -> None:
         """Initialize DataUpdateCoordinator for the nexia home."""
@@ -29,6 +33,7 @@ class NexiaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Nexia update",
             update_interval=timedelta(seconds=DEFAULT_UPDATE_RATE),
             always_update=False,

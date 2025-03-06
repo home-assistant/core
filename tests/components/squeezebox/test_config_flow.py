@@ -6,11 +6,16 @@ from unittest.mock import patch
 from pysqueezebox import Server
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
-from homeassistant.components.squeezebox.const import CONF_HTTPS, DOMAIN
+from homeassistant.components.squeezebox.const import (
+    CONF_BROWSE_LIMIT,
+    CONF_HTTPS,
+    CONF_VOLUME_STEP,
+    DOMAIN,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -19,6 +24,8 @@ HOST2 = "2.2.2.2"
 PORT = 9000
 UUID = "test-uuid"
 UNKNOWN_ERROR = "1234"
+BROWSE_LIMIT = 10
+VOLUME_STEP = 1
 
 
 async def mock_discover(_discovery_callback):
@@ -87,6 +94,45 @@ async def test_user_form(hass: HomeAssistant) -> None:
         assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_options_form(hass: HomeAssistant) -> None:
+    """Test we can configure options."""
+    entry = MockConfigEntry(
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+            CONF_HTTPS: False,
+        },
+        unique_id=UUID,
+        domain=DOMAIN,
+        options={CONF_BROWSE_LIMIT: 1000, CONF_VOLUME_STEP: 5},
+    )
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # simulate manual input of options
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_BROWSE_LIMIT: BROWSE_LIMIT, CONF_VOLUME_STEP: VOLUME_STEP},
+    )
+
+    # put some meaningful asserts here
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    assert result["data"] == {
+        CONF_BROWSE_LIMIT: BROWSE_LIMIT,
+        CONF_VOLUME_STEP: VOLUME_STEP,
+    }
+
+
 async def test_user_form_timeout(hass: HomeAssistant) -> None:
     """Test we handle server search timeout."""
     with (
@@ -143,27 +189,67 @@ async def test_user_form_duplicate(hass: HomeAssistant) -> None:
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "edit"}
-    )
 
     async def patch_async_query(self, *args):
         self.http_status = HTTPStatus.UNAUTHORIZED
         return False
 
-    with patch("pysqueezebox.Server.async_query", new=patch_async_query):
+    with (
+        patch(
+            "pysqueezebox.Server.async_query",
+            return_value={"uuid": UUID},
+        ),
+        patch(
+            "homeassistant.components.squeezebox.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.squeezebox.config_flow.async_discover",
+            mock_discover,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "edit"
+
+        with patch(
+            "homeassistant.components.squeezebox.config_flow.Server.async_query",
+            new=patch_async_query,
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_HOST: HOST,
+                    CONF_PORT: PORT,
+                    CONF_USERNAME: "test-username",
+                    CONF_PASSWORD: "test-password",
+                },
+            )
+
+            assert result["type"] is FlowResultType.FORM
+            assert result["errors"] == {"base": "invalid_auth"}
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_HOST: HOST,
                 CONF_PORT: PORT,
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+                CONF_USERNAME: "",
+                CONF_PASSWORD: "",
+                CONF_HTTPS: False,
             },
         )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == HOST
+        assert result["data"] == {
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+            CONF_HTTPS: False,
+        }
 
 
 async def test_form_validate_exception(hass: HomeAssistant) -> None:
@@ -293,7 +379,7 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.1.1.1",
                 macaddress="aabbccddeeff",
                 hostname="any",
@@ -315,7 +401,7 @@ async def test_dhcp_discovery_no_server_found(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.1.1.1",
                 macaddress="aabbccddeeff",
                 hostname="any",
@@ -334,7 +420,7 @@ async def test_dhcp_discovery_existing_player(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.1.1.1",
                 macaddress="aabbccddeeff",
                 hostname="any",

@@ -6,10 +6,13 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.tradfri import config_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 from . import TRADFRI_PATH
 
@@ -115,13 +118,13 @@ async def test_discovery_connection(
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.123"),
             ip_addresses=[ip_address("123.123.123.123")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            properties={ATTR_PROPERTIES_ID: "homekit-id"},
             type="mock_type",
         ),
     )
@@ -150,13 +153,13 @@ async def test_discovery_duplicate_aborted(hass: HomeAssistant) -> None:
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.124"),
             ip_addresses=[ip_address("123.123.123.124")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            properties={ATTR_PROPERTIES_ID: "homekit-id"},
             type="mock_type",
         ),
     )
@@ -174,13 +177,13 @@ async def test_duplicate_discovery(
     result = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.123"),
             ip_addresses=[ip_address("123.123.123.123")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            properties={ATTR_PROPERTIES_ID: "homekit-id"},
             type="mock_type",
         ),
     )
@@ -190,13 +193,13 @@ async def test_duplicate_discovery(
     result2 = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.123"),
             ip_addresses=[ip_address("123.123.123.123")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            properties={ATTR_PROPERTIES_ID: "homekit-id"},
             type="mock_type",
         ),
     )
@@ -215,13 +218,13 @@ async def test_discovery_updates_unique_id(hass: HomeAssistant) -> None:
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.123"),
             ip_addresses=[ip_address("123.123.123.123")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            properties={ATTR_PROPERTIES_ID: "homekit-id"},
             type="mock_type",
         ),
     )

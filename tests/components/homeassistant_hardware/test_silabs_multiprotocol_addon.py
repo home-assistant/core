@@ -450,10 +450,7 @@ async def test_option_flow_install_multi_pan_addon_zha_other_radio(
     }
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.options.abort.not_hassio"],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_option_flow_non_hassio(
     hass: HomeAssistant,
 ) -> None:
@@ -766,10 +763,7 @@ async def test_option_flow_addon_installed_same_device_do_not_uninstall_multi_pa
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.options.abort.addon_already_running"],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_option_flow_flasher_already_running_failure(
     hass: HomeAssistant,
     addon_info,
@@ -881,10 +875,7 @@ async def test_option_flow_addon_installed_same_device_flasher_already_installed
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.options.abort.addon_install_failed"],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_option_flow_flasher_install_failure(
     hass: HomeAssistant,
     addon_info,
@@ -951,10 +942,7 @@ async def test_option_flow_flasher_install_failure(
     assert result["reason"] == "addon_install_failed"
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.options.abort.addon_start_failed"],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_option_flow_flasher_addon_flash_failure(
     hass: HomeAssistant,
     addon_info,
@@ -1017,10 +1005,7 @@ async def test_option_flow_flasher_addon_flash_failure(
     assert result["description_placeholders"]["addon_name"] == "Silicon Labs Flasher"
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.options.abort.zha_migration_failed"],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 @patch(
     "homeassistant.components.zha.radio_manager.ZhaMultiPANMigrationHelper.async_initiate_migration",
     side_effect=Exception("Boom!"),
@@ -1082,10 +1067,7 @@ async def test_option_flow_uninstall_migration_initiate_failure(
     mock_initiate_migration.assert_called_once()
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.options.abort.zha_migration_failed"],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 @patch(
     "homeassistant.components.zha.radio_manager.ZhaMultiPANMigrationHelper.async_finish_migration",
     side_effect=Exception("Boom!"),
@@ -1187,10 +1169,7 @@ async def test_option_flow_do_not_install_multi_pan_addon(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.options.abort.addon_install_failed"],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_option_flow_install_multi_pan_addon_install_fails(
     hass: HomeAssistant,
     addon_store_info,
@@ -1234,10 +1213,7 @@ async def test_option_flow_install_multi_pan_addon_install_fails(
     assert result["reason"] == "addon_install_failed"
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.options.abort.addon_start_failed"],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_option_flow_install_multi_pan_addon_start_fails(
     hass: HomeAssistant,
     addon_store_info,
@@ -1299,10 +1275,7 @@ async def test_option_flow_install_multi_pan_addon_start_fails(
     assert result["reason"] == "addon_start_failed"
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.options.abort.addon_set_config_failed"],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_option_flow_install_multi_pan_addon_set_options_fails(
     hass: HomeAssistant,
     addon_store_info,
@@ -1346,10 +1319,7 @@ async def test_option_flow_install_multi_pan_addon_set_options_fails(
     assert result["reason"] == "addon_set_config_failed"
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.options.abort.addon_info_failed"],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_option_flow_addon_info_fails(
     hass: HomeAssistant,
     addon_store_info,
@@ -1373,10 +1343,7 @@ async def test_option_flow_addon_info_fails(
     assert result["reason"] == "addon_info_failed"
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.options.abort.zha_migration_failed"],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 @patch(
     "homeassistant.components.zha.radio_manager.ZhaMultiPANMigrationHelper.async_initiate_migration",
     side_effect=Exception("Boom!"),
@@ -1432,10 +1399,7 @@ async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_1(
     set_addon_options.assert_not_called()
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.options.abort.zha_migration_failed"],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 @patch(
     "homeassistant.components.zha.radio_manager.ZhaMultiPANMigrationHelper.async_finish_migration",
     side_effect=Exception("Boom!"),

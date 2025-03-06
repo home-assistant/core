@@ -49,6 +49,7 @@ from .helpers import (
     InputType,
     async_update_config_entry,
     generate_unique_id,
+    purge_device_registry,
     register_lcn_address_devices,
     register_lcn_host_device,
 )
@@ -119,6 +120,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # register/update devices for host, modules and groups in device registry
     register_lcn_host_device(hass, config_entry)
     register_lcn_address_devices(hass, config_entry)
+
+    # clean up orphaned devices
+    purge_device_registry(hass, config_entry.entry_id, {**config_entry.data})
 
     # forward config_entry to components
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

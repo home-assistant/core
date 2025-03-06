@@ -1,18 +1,19 @@
 # serializer version: 1
-# name: test_entities[button.buttonon-entry]
+# name: test_entities[button.bedroom_kid_1_buttonon-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.buttonon',
-    'has_entity_name': False,
+    'entity_id': 'button.bedroom_kid_1_buttonon',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -32,13 +33,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.buttonon-state]
+# name: test_entities[button.bedroom_kid_1_buttonon-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ButtonOn',
+      'friendly_name': 'Bedroom kid 1 ButtonOn',
     }),
     'context': <ANY>,
-    'entity_id': 'button.buttonon',
+    'entity_id': 'button.bedroom_kid_1_buttonon',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

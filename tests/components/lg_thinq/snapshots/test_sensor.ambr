@@ -1,4 +1,52 @@
 # serializer version: 1
+# name: test_all_entities[sensor.test_air_conditioner_filter_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_air_conditioner_filter_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filter remaining',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <Property.FILTER_LIFETIME: 'filter_lifetime'>,
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_filter_lifetime',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_all_entities[sensor.test_air_conditioner_filter_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test air conditioner Filter remaining',
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_air_conditioner_filter_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '540',
+  })
+# ---
 # name: test_all_entities[sensor.test_air_conditioner_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -8,6 +56,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -59,6 +108,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -110,6 +160,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -161,6 +212,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -201,5 +253,151 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '24',
+  })
+# ---
+# name: test_all_entities[sensor.test_air_conditioner_schedule_turn_off-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_air_conditioner_schedule_turn_off',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Schedule turn-off',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <TimerProperty.RELATIVE_TO_STOP: 'relative_to_stop'>,
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_relative_to_stop',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_all_entities[sensor.test_air_conditioner_schedule_turn_off-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Test air conditioner Schedule turn-off',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_air_conditioner_schedule_turn_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.test_air_conditioner_schedule_turn_on-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_air_conditioner_schedule_turn_on',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Schedule turn-on',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <TimerProperty.RELATIVE_TO_START: 'relative_to_start'>,
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_relative_to_start',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_all_entities[sensor.test_air_conditioner_schedule_turn_on-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Test air conditioner Schedule turn-on',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_air_conditioner_schedule_turn_on',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.test_air_conditioner_schedule_turn_on_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_air_conditioner_schedule_turn_on_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Schedule turn-on',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <TimerProperty.ABSOLUTE_TO_START: 'absolute_to_start'>,
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_absolute_to_start',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.test_air_conditioner_schedule_turn_on_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Test air conditioner Schedule turn-on',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_air_conditioner_schedule_turn_on_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-10-10T13:14:00+00:00',
   })
 # ---

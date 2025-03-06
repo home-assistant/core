@@ -1,0 +1,337 @@
+# serializer version: 1
+# name: test_all_entities[LPH31][binary_sensor.garden_low_water-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.garden_low_water',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Low water',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'low_water',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH31ABCD_low_water',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[LPH31][binary_sensor.garden_low_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Garden Low water',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.garden_low_water',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[LPH31][binary_sensor.garden_pump-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.garden_pump',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Pump',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pump',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH31ABCD_pump',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[LPH31][binary_sensor.garden_pump-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'Garden Pump',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.garden_pump',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[LPH31][binary_sensor.garden_pump_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.garden_pump_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Pump error',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pump_error',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH31ABCD_pump_error',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[LPH31][binary_sensor.garden_pump_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Garden Pump error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.garden_pump_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[LPH63][binary_sensor.garden_low_nutrients-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.garden_low_nutrients',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Low nutrients',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'low_nutrients',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH63ABCD_low_nutrients',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[LPH63][binary_sensor.garden_low_nutrients-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Garden Low nutrients',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.garden_low_nutrients',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[LPH63][binary_sensor.garden_low_water-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.garden_low_water',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Low water',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'low_water',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH63ABCD_low_water',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[LPH63][binary_sensor.garden_low_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Garden Low water',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.garden_low_water',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[LPH63][binary_sensor.garden_pump-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.garden_pump',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Pump',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pump',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH63ABCD_pump',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[LPH63][binary_sensor.garden_pump-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'Garden Pump',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.garden_pump',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[LPH63][binary_sensor.garden_refill_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.garden_refill_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Refill error',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'refill_error',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH63ABCD_refill_error',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[LPH63][binary_sensor.garden_refill_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Garden Refill error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.garden_refill_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

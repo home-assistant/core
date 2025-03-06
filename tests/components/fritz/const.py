@@ -1,8 +1,6 @@
 """Common stuff for Fritz!Tools tests."""
 
-from homeassistant.components import ssdp
 from homeassistant.components.fritz.const import DOMAIN
-from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -10,6 +8,11 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+)
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
 )
 
 ATTR_HOST = "host"
@@ -941,7 +944,7 @@ MOCK_DEVICE_INFO = {
     ATTR_HOST: MOCK_HOST,
     ATTR_NEW_SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
 }
-MOCK_SSDP_DATA = ssdp.SsdpServiceInfo(
+MOCK_SSDP_DATA = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location=f"https://{MOCK_IPS['fritz.box']}:12345/test",

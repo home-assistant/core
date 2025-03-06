@@ -12,7 +12,6 @@ import getmac
 from samsungtvws.encrypted.authenticator import SamsungTVEncryptedWSAsyncAuthenticator
 import voluptuous as vol
 
-from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
@@ -32,6 +31,14 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
 from .const import (
@@ -59,7 +66,7 @@ DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME):
 
 
 def _strip_uuid(udn: str) -> str:
-    return udn[5:] if udn.startswith("uuid:") else udn
+    return udn.removeprefix("uuid:")
 
 
 def _entry_is_complete(
@@ -439,11 +446,11 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             raise AbortFlow(RESULT_NOT_SUPPORTED)
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by ssdp discovery."""
         LOGGER.debug("Samsung device found via SSDP: %s", discovery_info)
-        model_name: str = discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or ""
+        model_name: str = discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME) or ""
         if discovery_info.ssdp_st == UPNP_SVC_RENDERING_CONTROL:
             self._ssdp_rendering_control_location = discovery_info.ssdp_location
             LOGGER.debug(
@@ -456,12 +463,10 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
                 "Set SSDP MainTvAgent location to: %s",
                 self._ssdp_main_tv_agent_location,
             )
-        self._udn = self._upnp_udn = _strip_uuid(
-            discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
-        )
+        self._udn = self._upnp_udn = _strip_uuid(discovery_info.upnp[ATTR_UPNP_UDN])
         if hostname := urlparse(discovery_info.ssdp_location or "").hostname:
             self._host = hostname
-        self._manufacturer = discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER)
+        self._manufacturer = discovery_info.upnp.get(ATTR_UPNP_MANUFACTURER)
         self._abort_if_manufacturer_is_not_samsung()
 
         # Set defaults, in case they cannot be extracted from device_info
@@ -486,7 +491,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by dhcp discovery."""
         LOGGER.debug("Samsung device found via DHCP: %s", discovery_info)
@@ -498,7 +503,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         LOGGER.debug("Samsung device found via ZEROCONF: %s", discovery_info)

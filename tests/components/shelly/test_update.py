@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components.shelly.const import (
     DOMAIN,
     GEN1_RELEASE_URL,
+    GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
 )
 from homeassistant.components.update import (
@@ -572,7 +573,6 @@ async def test_rpc_beta_update(
     assert state.attributes[ATTR_LATEST_VERSION] == "1"
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
-    assert state.attributes[ATTR_RELEASE_URL] is None
 
     monkeypatch.setitem(
         mock_rpc_device.status["sys"],
@@ -589,7 +589,7 @@ async def test_rpc_beta_update(
     assert state.attributes[ATTR_INSTALLED_VERSION] == "1"
     assert state.attributes[ATTR_LATEST_VERSION] == "2b"
     assert state.attributes[ATTR_IN_PROGRESS] is False
-    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+    assert state.attributes[ATTR_RELEASE_URL] == GEN2_BETA_RELEASE_URL
 
     await hass.services.async_call(
         UPDATE_DOMAIN,

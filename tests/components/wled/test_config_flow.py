@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from wled import WLEDConnectionError
 
-from homeassistant.components import zeroconf
 from homeassistant.components.wled.const import CONF_KEEP_MAIN_LIGHT, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -43,7 +43,7 @@ async def test_full_zeroconf_flow_implementation(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.123"),
             ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
@@ -87,7 +87,7 @@ async def test_zeroconf_during_onboarding(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.123"),
             ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
@@ -132,7 +132,7 @@ async def test_zeroconf_connection_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.123"),
             ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
@@ -175,7 +175,7 @@ async def test_zeroconf_without_mac_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.123"),
             ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
@@ -200,7 +200,7 @@ async def test_zeroconf_with_mac_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.123"),
             ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",

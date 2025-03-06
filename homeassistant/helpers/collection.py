@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from dataclasses import dataclass
@@ -11,9 +11,8 @@ from hashlib import md5
 from itertools import groupby
 import logging
 from operator import attrgetter
-from typing import Any, Generic, TypedDict
+from typing import Any, TypedDict
 
-from typing_extensions import TypeVar
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -36,8 +35,6 @@ SAVE_DELAY = 10
 CHANGE_ADDED = "added"
 CHANGE_UPDATED = "updated"
 CHANGE_REMOVED = "removed"
-
-_EntityT = TypeVar("_EntityT", bound=Entity, default=Entity)
 
 
 @dataclass(slots=True)
@@ -129,7 +126,7 @@ class CollectionEntity(Entity):
         """Handle updated configuration."""
 
 
-class ObservableCollection[_ItemT](ABC):
+class ObservableCollection[_ItemT]:
     """Base collection type that can be observed."""
 
     def __init__(self, id_manager: IDManager | None) -> None:
@@ -448,7 +445,7 @@ _GROUP_BY_KEY = attrgetter("change_type")
 
 
 @dataclass(slots=True, frozen=True)
-class _CollectionLifeCycle(Generic[_EntityT]):
+class _CollectionLifeCycle[_EntityT: Entity = Entity]:
     """Life cycle for a collection of entities."""
 
     domain: str
@@ -523,7 +520,7 @@ class _CollectionLifeCycle(Generic[_EntityT]):
 
 
 @callback
-def sync_entity_lifecycle(
+def sync_entity_lifecycle[_EntityT: Entity = Entity](
     hass: HomeAssistant,
     domain: str,
     platform: str,

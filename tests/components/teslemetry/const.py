@@ -18,6 +18,7 @@ VEHICLE_DATA_ALT = load_json_object_fixture("vehicle_data_alt.json", DOMAIN)
 LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
 SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
 ENERGY_HISTORY = load_json_object_fixture("energy_history.json", DOMAIN)
+METADATA = load_json_object_fixture("metadata.json", DOMAIN)
 
 COMMAND_OK = {"response": {"result": True, "reason": ""}}
 COMMAND_REASON = {"response": {"result": False, "reason": "already closed"}}

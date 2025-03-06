@@ -5,9 +5,9 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FliprConfigEntry
+from .coordinator import FliprConfigEntry
 from .entity import FliprEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: FliprConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch for Flipr hub."""
     coordinators = config_entry.runtime_data.hub_coordinators

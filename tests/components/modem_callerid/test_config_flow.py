@@ -10,10 +10,11 @@ from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.const import CONF_DEVICE, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from . import com_port, patch_config_flow_modem
 
-DISCOVERY_INFO = usb.UsbServiceInfo(
+DISCOVERY_INFO = UsbServiceInfo(
     device=phone_modem.DEFAULT_PORT,
     pid="1340",
     vid="0572",

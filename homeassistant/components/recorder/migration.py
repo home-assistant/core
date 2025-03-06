@@ -52,6 +52,7 @@ from .auto_repairs.statistics.schema import (
 from .const import (
     CONTEXT_ID_AS_BINARY_SCHEMA_VERSION,
     EVENT_TYPE_IDS_SCHEMA_VERSION,
+    LEGACY_STATES_EVENT_FOREIGN_KEYS_FIXED_SCHEMA_VERSION,
     LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     STATES_META_SCHEMA_VERSION,
     SupportedDialect,
@@ -2073,10 +2074,7 @@ def _wipe_old_string_time_columns(
         session.execute(text("UPDATE events set time_fired=NULL LIMIT 100000;"))
         session.commit()
         session.execute(
-            text(
-                "UPDATE states set last_updated=NULL, last_changed=NULL "
-                " LIMIT 100000;"
-            )
+            text("UPDATE states set last_updated=NULL, last_changed=NULL LIMIT 100000;")
         )
         session.commit()
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
@@ -2150,7 +2148,7 @@ def _migrate_columns_to_timestamp(
                     )
                 )
         result = None
-        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+        while result is None or result.rowcount > 0:
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(
@@ -2181,7 +2179,7 @@ def _migrate_columns_to_timestamp(
                     )
                 )
         result = None
-        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+        while result is None or result.rowcount > 0:
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(
@@ -2280,7 +2278,7 @@ def _migrate_statistics_columns_to_timestamp(
         # updated all rows in the table until the rowcount is 0
         for table in STATISTICS_TABLES:
             result = None
-            while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+            while result is None or result.rowcount > 0:
                 with session_scope(session=session_maker()) as session:
                     result = session.connection().execute(
                         text(
@@ -2302,7 +2300,7 @@ def _migrate_statistics_columns_to_timestamp(
         # updated all rows in the table until the rowcount is 0
         for table in STATISTICS_TABLES:
             result = None
-            while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+            while result is None or result.rowcount > 0:
                 with session_scope(session=session_maker()) as session:
                     result = session.connection().execute(
                         text(
@@ -2493,9 +2491,10 @@ class BaseMigration(ABC):
         if self.initial_schema_version > self.max_initial_schema_version:
             _LOGGER.debug(
                 "Data migration '%s' not needed, database created with version %s "
-                "after migrator was added",
+                "after migrator was added in version %s",
                 self.migration_id,
                 self.initial_schema_version,
+                self.max_initial_schema_version,
             )
             return False
         if self.start_schema_version < self.required_schema_version:
@@ -2755,9 +2754,9 @@ class EventTypeIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
                     for db_event_type in missing_db_event_types:
                         # We cannot add the assigned ids to the event_type_manager
                         # because the commit could get rolled back
-                        assert (
-                            db_event_type.event_type is not None
-                        ), "event_type should never be None"
+                        assert db_event_type.event_type is not None, (
+                            "event_type should never be None"
+                        )
                         event_type_to_id[db_event_type.event_type] = (
                             db_event_type.event_type_id
                         )
@@ -2833,9 +2832,9 @@ class EntityIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
                     for db_states_metadata in missing_states_metadata:
                         # We cannot add the assigned ids to the event_type_manager
                         # because the commit could get rolled back
-                        assert (
-                            db_states_metadata.entity_id is not None
-                        ), "entity_id should never be None"
+                        assert db_states_metadata.entity_id is not None, (
+                            "entity_id should never be None"
+                        )
                         entity_id_to_metadata_id[db_states_metadata.entity_id] = (
                             db_states_metadata.metadata_id
                         )
@@ -2871,7 +2870,14 @@ class EventIDPostMigration(BaseRunTimeMigration):
     """Migration to remove old event_id index from states."""
 
     migration_id = "event_id_post_migration"
-    max_initial_schema_version = LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION - 1
+    # Note we don't subtract 1 from the max_initial_schema_version
+    # in this case because we need to run this migration on databases
+    # version >= 43 because the schema was not bumped when the table
+    # rebuild was added in
+    # https://github.com/home-assistant/core/pull/120779
+    # which means its only safe to assume version 44 and later
+    # do not need the table rebuild
+    max_initial_schema_version = LEGACY_STATES_EVENT_FOREIGN_KEYS_FIXED_SCHEMA_VERSION
     task = MigrationTask
     migration_version = 2
 

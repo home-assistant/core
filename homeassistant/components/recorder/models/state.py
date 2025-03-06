@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any
 
-from propcache import cached_property
+from propcache.api import cached_property
 from sqlalchemy.engine.row import Row
 
 from homeassistant.const import (
@@ -16,7 +16,7 @@ from homeassistant.const import (
     COMPRESSED_STATE_STATE,
 )
 from homeassistant.core import Context, State
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .state_attributes import decode_attributes_from_source
 
@@ -58,8 +58,8 @@ class LazyState(State):
         self.attr_cache = attr_cache
         self.context = EMPTY_CONTEXT
 
-    @cached_property  # type: ignore[override]
-    def attributes(self) -> dict[str, Any]:
+    @cached_property
+    def attributes(self) -> dict[str, Any]:  # type: ignore[override]
         """State attributes."""
         return decode_attributes_from_source(
             getattr(self._row, "attributes", None), self.attr_cache

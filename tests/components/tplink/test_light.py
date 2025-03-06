@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import re
 from unittest.mock import MagicMock, PropertyMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -19,6 +20,11 @@ from kasa.iot import IotDevice
 import pytest
 
 from homeassistant.components import tplink
+from homeassistant.components.homeassistant.scene import (
+    CONF_SCENE_ID,
+    CONF_SNAPSHOT,
+    SERVICE_CREATE,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -34,8 +40,15 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     EFFECT_OFF,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.tplink.const import DOMAIN
+from homeassistant.components.tplink.light import (
+    SERVICE_RANDOM_EFFECT,
+    SERVICE_SEQUENCE_EFFECT,
+)
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -48,17 +61,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import (
-    DEVICE_ID,
-    MAC_ADDRESS,
     _mocked_device,
     _mocked_feature,
     _patch_connect,
     _patch_discovery,
     _patch_single_discovery,
 )
+from .const import DEVICE_ID, MAC_ADDRESS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -83,7 +95,7 @@ async def test_light_unique_id(
     light = _mocked_device(modules=[Module.Light], alias="my_light")
     light.device_type = device_type
     with _patch_discovery(device=light), _patch_connect(device=light):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
@@ -93,8 +105,11 @@ async def test_light_unique_id(
     )
 
 
-async def test_legacy_dimmer_unique_id(hass: HomeAssistant) -> None:
-    """Test a light unique id."""
+async def test_legacy_dimmer_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test dimmer unique id."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
@@ -108,16 +123,16 @@ async def test_legacy_dimmer_unique_id(hass: HomeAssistant) -> None:
     light.device_type = DeviceType.Dimmer
 
     with _patch_discovery(device=light), _patch_connect(device=light):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
-    entity_registry = er.async_get(hass)
+
     assert entity_registry.async_get(entity_id).unique_id == "aa:bb:cc:dd:ee:ff"
 
 
 @pytest.mark.parametrize(
-    ("device", "transition"),
+    ("device", "extra_data", "expected_transition"),
     [
         (
             _mocked_device(
@@ -130,7 +145,138 @@ async def test_legacy_dimmer_unique_id(hass: HomeAssistant) -> None:
                     ),
                 ],
             ),
-            2.0,
+            {ATTR_TRANSITION: 2.0},
+            2.0 * 1_000,
+        ),
+        (
+            _mocked_device(
+                modules=[Module.Light],
+                features=[
+                    _mocked_feature("brightness", value=50),
+                    _mocked_feature("hsv", value=(10, 30, 5)),
+                    _mocked_feature(
+                        "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+                    ),
+                ],
+            ),
+            {},
+            None,
+        ),
+    ],
+)
+async def test_color_light(
+    hass: HomeAssistant,
+    device: MagicMock,
+    extra_data: dict,
+    expected_transition: float | None,
+) -> None:
+    """Test a color light and that all transitions are correctly passed."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    light = device.modules[Module.Light]
+
+    # Setting color_temp to None emulates a device without color temp
+    light.color_temp = None
+
+    with _patch_discovery(device=device), _patch_connect(device=device):
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    BASE_PAYLOAD = {ATTR_ENTITY_ID: entity_id}
+    BASE_PAYLOAD |= extra_data
+
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+    attributes = state.attributes
+    assert attributes[ATTR_BRIGHTNESS] == 128
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
+
+    assert attributes.get(ATTR_EFFECT) is None
+
+    assert attributes[ATTR_COLOR_MODE] == "hs"
+    assert attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 4000
+    assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 9000
+    assert attributes[ATTR_HS_COLOR] == (10, 30)
+    assert attributes[ATTR_RGB_COLOR] == (255, 191, 178)
+    assert attributes[ATTR_XY_COLOR] == (0.42, 0.336)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, BASE_PAYLOAD, blocking=True
+    )
+    light.set_state.assert_called_once_with(
+        LightState(light_on=False, transition=expected_transition)
+    )
+    light.set_state.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, BASE_PAYLOAD, blocking=True
+    )
+    light.set_state.assert_called_once_with(
+        LightState(light_on=True, transition=expected_transition)
+    )
+    light.set_state.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {**BASE_PAYLOAD, ATTR_BRIGHTNESS: 100},
+        blocking=True,
+    )
+    light.set_brightness.assert_called_with(39, transition=expected_transition)
+    light.set_brightness.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {**BASE_PAYLOAD, ATTR_COLOR_TEMP_KELVIN: 6666},
+        blocking=True,
+    )
+    light.set_color_temp.assert_called_with(
+        6666, brightness=None, transition=expected_transition
+    )
+    light.set_color_temp.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {**BASE_PAYLOAD, ATTR_COLOR_TEMP_KELVIN: 6666},
+        blocking=True,
+    )
+    light.set_color_temp.assert_called_with(
+        6666, brightness=None, transition=expected_transition
+    )
+    light.set_color_temp.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {**BASE_PAYLOAD, ATTR_HS_COLOR: (10, 30)},
+        blocking=True,
+    )
+    light.set_hsv.assert_called_with(10, 30, None, transition=expected_transition)
+    light.set_hsv.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("device", "extra_data", "expected_transition"),
+    [
+        (
+            _mocked_device(
+                modules=[Module.Light, Module.LightEffect],
+                features=[
+                    _mocked_feature("brightness", value=50),
+                    _mocked_feature("hsv", value=(10, 30, 5)),
+                    _mocked_feature(
+                        "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+                    ),
+                ],
+            ),
+            {ATTR_TRANSITION: 2.0},
+            2.0 * 1_000,
         ),
         (
             _mocked_device(
@@ -143,12 +289,16 @@ async def test_legacy_dimmer_unique_id(hass: HomeAssistant) -> None:
                     ),
                 ],
             ),
+            {},
             None,
         ),
     ],
 )
-async def test_color_light(
-    hass: HomeAssistant, device: MagicMock, transition: float | None
+async def test_color_light_with_active_effect(
+    hass: HomeAssistant,
+    device: MagicMock,
+    extra_data: dict,
+    expected_transition: float | None,
 ) -> None:
     """Test a color light and that all transitions are correctly passed."""
     already_migrated_config_entry = MockConfigEntry(
@@ -157,93 +307,84 @@ async def test_color_light(
     already_migrated_config_entry.add_to_hass(hass)
     light = device.modules[Module.Light]
 
-    # Setting color_temp to None emulates a device with active effects
-    light.color_temp = None
-
     with _patch_discovery(device=device), _patch_connect(device=device):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
-    KASA_TRANSITION_VALUE = transition * 1_000 if transition is not None else None
 
     BASE_PAYLOAD = {ATTR_ENTITY_ID: entity_id}
-    if transition:
-        BASE_PAYLOAD[ATTR_TRANSITION] = transition
+    BASE_PAYLOAD |= extra_data
 
     state = hass.states.get(entity_id)
     assert state.state == "on"
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
+
     # If effect is active, only the brightness can be controlled
-    if attributes.get(ATTR_EFFECT) is not None:
-        assert attributes[ATTR_COLOR_MODE] == "brightness"
-    else:
-        assert attributes[ATTR_COLOR_MODE] == "hs"
-        assert attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 4000
-        assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 9000
-        assert attributes[ATTR_HS_COLOR] == (10, 30)
-        assert attributes[ATTR_RGB_COLOR] == (255, 191, 178)
-        assert attributes[ATTR_XY_COLOR] == (0.42, 0.336)
+    assert attributes.get(ATTR_EFFECT) is not None
+    assert attributes[ATTR_COLOR_MODE] == "brightness"
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_off", BASE_PAYLOAD, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, BASE_PAYLOAD, blocking=True
     )
     light.set_state.assert_called_once_with(
-        LightState(light_on=False, transition=KASA_TRANSITION_VALUE)
+        LightState(light_on=False, transition=expected_transition)
     )
     light.set_state.reset_mock()
 
-    await hass.services.async_call(LIGHT_DOMAIN, "turn_on", BASE_PAYLOAD, blocking=True)
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, BASE_PAYLOAD, blocking=True
+    )
     light.set_state.assert_called_once_with(
-        LightState(light_on=True, transition=KASA_TRANSITION_VALUE)
+        LightState(light_on=True, transition=expected_transition)
     )
     light.set_state.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {**BASE_PAYLOAD, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    light.set_brightness.assert_called_with(39, transition=KASA_TRANSITION_VALUE)
+    light.set_brightness.assert_called_with(39, transition=expected_transition)
     light.set_brightness.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {**BASE_PAYLOAD, ATTR_COLOR_TEMP_KELVIN: 6666},
         blocking=True,
     )
     light.set_color_temp.assert_called_with(
-        6666, brightness=None, transition=KASA_TRANSITION_VALUE
+        6666, brightness=None, transition=expected_transition
     )
     light.set_color_temp.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {**BASE_PAYLOAD, ATTR_COLOR_TEMP_KELVIN: 6666},
         blocking=True,
     )
     light.set_color_temp.assert_called_with(
-        6666, brightness=None, transition=KASA_TRANSITION_VALUE
+        6666, brightness=None, transition=expected_transition
     )
     light.set_color_temp.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {**BASE_PAYLOAD, ATTR_HS_COLOR: (10, 30)},
         blocking=True,
     )
-    light.set_hsv.assert_called_with(10, 30, None, transition=KASA_TRANSITION_VALUE)
+    light.set_hsv.assert_called_with(10, 30, None, transition=expected_transition)
     light.set_hsv.reset_mock()
 
 
 async def test_color_light_no_temp(hass: HomeAssistant) -> None:
-    """Test a light."""
+    """Test a color light with no color temp."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
@@ -258,7 +399,7 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
 
     type(light).color_temp = PropertyMock(side_effect=Exception)
     with _patch_discovery(device=device), _patch_connect(device=device):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
@@ -274,20 +415,20 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
     assert attributes[ATTR_XY_COLOR] == (0.42, 0.336)
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
@@ -296,7 +437,7 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (10, 30)},
         blocking=True,
     )
@@ -304,51 +445,28 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
     light.set_hsv.reset_mock()
 
 
-@pytest.mark.parametrize(
-    ("device", "is_color"),
-    [
-        (
-            _mocked_device(
-                modules=[Module.Light],
-                alias="my_light",
-                features=[
-                    _mocked_feature("brightness", value=50),
-                    _mocked_feature("hsv", value=(10, 30, 5)),
-                    _mocked_feature(
-                        "color_temp", value=4000, minimum_value=4000, maximum_value=9000
-                    ),
-                ],
+async def test_color_temp_light_color(hass: HomeAssistant) -> None:
+    """Test a color temp light with color."""
+    device = _mocked_device(
+        modules=[Module.Light],
+        alias="my_light",
+        features=[
+            _mocked_feature("brightness", value=50),
+            _mocked_feature("hsv", value=(10, 30, 5)),
+            _mocked_feature(
+                "color_temp", value=4000, minimum_value=4000, maximum_value=9000
             ),
-            True,
-        ),
-        (
-            _mocked_device(
-                modules=[Module.Light],
-                alias="my_light",
-                features=[
-                    _mocked_feature("brightness", value=50),
-                    _mocked_feature(
-                        "color_temp", value=4000, minimum_value=4000, maximum_value=9000
-                    ),
-                ],
-            ),
-            False,
-        ),
-    ],
-)
-async def test_color_temp_light(
-    hass: HomeAssistant, device: MagicMock, is_color: bool
-) -> None:
-    """Test a light."""
+        ],
+    )
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    # device = _mocked_device(modules=[Module.Light], alias="my_light")
+
     light = device.modules[Module.Light]
 
     with _patch_discovery(device=device), _patch_connect(device=device):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
@@ -358,29 +476,24 @@ async def test_color_temp_light(
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "color_temp"
-    if is_color:
-        assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
-    else:
-        assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp"]
-    assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 9000
-    assert attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 4000
-    assert attributes[ATTR_COLOR_TEMP_KELVIN] == 4000
+
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
@@ -389,7 +502,7 @@ async def test_color_temp_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6666},
         blocking=True,
     )
@@ -399,7 +512,7 @@ async def test_color_temp_light(
     # Verify color temp is clamped to the valid range
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 20000},
         blocking=True,
     )
@@ -409,7 +522,94 @@ async def test_color_temp_light(
     # Verify color temp is clamped to the valid range
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 1},
+        blocking=True,
+    )
+    light.set_color_temp.assert_called_with(4000, brightness=None, transition=None)
+    light.set_color_temp.reset_mock()
+
+
+async def test_color_temp_light_no_color(hass: HomeAssistant) -> None:
+    """Test a color temp light with no color."""
+    device = _mocked_device(
+        modules=[Module.Light],
+        alias="my_light",
+        features=[
+            _mocked_feature("brightness", value=50),
+            _mocked_feature(
+                "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+            ),
+        ],
+    )
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+
+    light = device.modules[Module.Light]
+
+    with _patch_discovery(device=device), _patch_connect(device=device):
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_light"
+
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+    attributes = state.attributes
+    assert attributes[ATTR_BRIGHTNESS] == 128
+    assert attributes[ATTR_COLOR_MODE] == "color_temp"
+
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp"]
+    assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 9000
+    assert attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 4000
+    assert attributes[ATTR_COLOR_TEMP_KELVIN] == 4000
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    light.set_state.assert_called_once()
+    light.set_state.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    light.set_state.assert_called_once()
+    light.set_state.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
+        blocking=True,
+    )
+    light.set_brightness.assert_called_with(39, transition=None)
+    light.set_brightness.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6666},
+        blocking=True,
+    )
+    light.set_color_temp.assert_called_with(6666, brightness=None, transition=None)
+    light.set_color_temp.reset_mock()
+
+    # Verify color temp is clamped to the valid range
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 20000},
+        blocking=True,
+    )
+    light.set_color_temp.assert_called_with(9000, brightness=None, transition=None)
+    light.set_color_temp.reset_mock()
+
+    # Verify color temp is clamped to the valid range
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 1},
         blocking=True,
     )
@@ -418,7 +618,7 @@ async def test_color_temp_light(
 
 
 async def test_brightness_only_light(hass: HomeAssistant) -> None:
-    """Test a light."""
+    """Test a light brightness."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
@@ -430,7 +630,7 @@ async def test_brightness_only_light(hass: HomeAssistant) -> None:
     light = device.modules[Module.Light]
 
     with _patch_discovery(device=device), _patch_connect(device=device):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
@@ -443,20 +643,20 @@ async def test_brightness_only_light(hass: HomeAssistant) -> None:
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["brightness"]
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
@@ -465,7 +665,7 @@ async def test_brightness_only_light(hass: HomeAssistant) -> None:
 
 
 async def test_on_off_light(hass: HomeAssistant) -> None:
-    """Test a light."""
+    """Test a light turns on and off."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
@@ -474,7 +674,7 @@ async def test_on_off_light(hass: HomeAssistant) -> None:
     light = device.modules[Module.Light]
 
     with _patch_discovery(device=device), _patch_connect(device=device):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
@@ -485,20 +685,20 @@ async def test_on_off_light(hass: HomeAssistant) -> None:
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["onoff"]
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
 
 async def test_off_at_start_light(hass: HomeAssistant) -> None:
-    """Test a light."""
+    """Test a light off at startup."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
@@ -509,7 +709,7 @@ async def test_off_at_start_light(hass: HomeAssistant) -> None:
     light.state = LightState(light_on=False)
 
     with _patch_discovery(device=device), _patch_connect(device=device):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
@@ -521,7 +721,7 @@ async def test_off_at_start_light(hass: HomeAssistant) -> None:
 
 
 async def test_dimmer_turn_on_fix(hass: HomeAssistant) -> None:
-    """Test a light."""
+    """Test a dimmer turns on without brightness being set."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
@@ -532,7 +732,7 @@ async def test_dimmer_turn_on_fix(hass: HomeAssistant) -> None:
     light.state = LightState(light_on=False)
 
     with _patch_discovery(device=device), _patch_connect(device=device):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
@@ -541,7 +741,7 @@ async def test_dimmer_turn_on_fix(hass: HomeAssistant) -> None:
     assert state.state == "off"
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once_with(
         LightState(
@@ -582,7 +782,7 @@ async def test_smart_strip_effects(
         _patch_single_discovery(device=device),
         _patch_connect(device=device),
     ):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
@@ -596,7 +796,7 @@ async def test_smart_strip_effects(
     # is in progress calls set_effect to clear the effect
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 4000},
         blocking=True,
     )
@@ -607,7 +807,7 @@ async def test_smart_strip_effects(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "Effect2"},
         blocking=True,
     )
@@ -624,7 +824,7 @@ async def test_smart_strip_effects(
     # Test setting light effect off
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "off"},
         blocking=True,
     )
@@ -639,7 +839,7 @@ async def test_smart_strip_effects(
     caplog.clear()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "Effect3"},
         blocking=True,
     )
@@ -668,7 +868,7 @@ async def test_smart_strip_effects(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -698,7 +898,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
     light_effect = device.modules[Module.LightEffect]
 
     with _patch_discovery(device=device), _patch_connect(device=device):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
@@ -708,7 +908,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        "random_effect",
+        SERVICE_RANDOM_EFFECT,
         {
             ATTR_ENTITY_ID: entity_id,
             "init_states": [340, 20, 50],
@@ -737,7 +937,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        "random_effect",
+        SERVICE_RANDOM_EFFECT,
         {
             ATTR_ENTITY_ID: entity_id,
             "init_states": [340, 20, 50],
@@ -787,7 +987,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -796,7 +996,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        "random_effect",
+        SERVICE_RANDOM_EFFECT,
         {
             ATTR_ENTITY_ID: entity_id,
             "init_states": [340, 20, 50],
@@ -839,6 +1039,84 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
     light_effect.set_custom_effect.reset_mock()
 
 
+@pytest.mark.parametrize(
+    ("service_name", "service_params", "expected_extra_params"),
+    [
+        pytest.param(
+            SERVICE_SEQUENCE_EFFECT,
+            {
+                "sequence": [[340, 20, 50], [20, 50, 50], [0, 100, 50]],
+            },
+            {
+                "type": "sequence",
+                "sequence": [(340, 20, 50), (20, 50, 50), (0, 100, 50)],
+                "repeat_times": 0,
+                "spread": 1,
+                "direction": 4,
+            },
+            id="sequence",
+        ),
+        pytest.param(
+            SERVICE_RANDOM_EFFECT,
+            {"init_states": [340, 20, 50]},
+            {"type": "random", "init_states": [[340, 20, 50]], "random_seed": 100},
+            id="random",
+        ),
+    ],
+)
+async def test_smart_strip_effect_service_error(
+    hass: HomeAssistant,
+    service_name: str,
+    service_params: dict,
+    expected_extra_params: dict,
+) -> None:
+    """Test smart strip effect service errors."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    device = _mocked_device(
+        modules=[Module.Light, Module.LightEffect], alias="my_light"
+    )
+    light_effect = device.modules[Module.LightEffect]
+
+    with _patch_discovery(device=device), _patch_connect(device=device):
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_light"
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    light_effect.set_custom_effect.side_effect = KasaException("failed")
+
+    base = {
+        "custom": 1,
+        "id": "yMwcNpLxijmoKamskHCvvravpbnIqAIN",
+        "brightness": 100,
+        "name": "Custom",
+        "segments": [0],
+        "expansion_strategy": 1,
+        "enable": 1,
+        "duration": 0,
+        "transition": 0,
+    }
+    expected_params = {**base, **expected_extra_params}
+    expected_msg = f"Error trying to set custom effect {expected_params}: failed"
+
+    with pytest.raises(HomeAssistantError, match=re.escape(expected_msg)):
+        await hass.services.async_call(
+            DOMAIN,
+            service_name,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                **service_params,
+            },
+            blocking=True,
+        )
+
+
 async def test_smart_strip_custom_random_effect_at_start(hass: HomeAssistant) -> None:
     """Test smart strip custom random effects at startup."""
     already_migrated_config_entry = MockConfigEntry(
@@ -852,7 +1130,7 @@ async def test_smart_strip_custom_random_effect_at_start(hass: HomeAssistant) ->
     light_effect = device.modules[Module.LightEffect]
     light_effect.effect = LightEffect.LIGHT_EFFECTS_OFF
     with _patch_discovery(device=device), _patch_connect(device=device):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
@@ -862,7 +1140,7 @@ async def test_smart_strip_custom_random_effect_at_start(hass: HomeAssistant) ->
     # fallback to set HSV when custom effect is not known so it does turn back on
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -882,7 +1160,7 @@ async def test_smart_strip_custom_sequence_effect(hass: HomeAssistant) -> None:
     light_effect = device.modules[Module.LightEffect]
 
     with _patch_discovery(device=device), _patch_connect(device=device):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
@@ -892,7 +1170,7 @@ async def test_smart_strip_custom_sequence_effect(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        "sequence_effect",
+        SERVICE_SEQUENCE_EFFECT,
         {
             ATTR_ENTITY_ID: entity_id,
             "sequence": [[340, 20, 50], [20, 50, 50], [0, 100, 50]],
@@ -957,7 +1235,7 @@ async def test_light_errors_when_turned_on(
     light.set_state.side_effect = exception_type(msg)
 
     with _patch_discovery(device=device), _patch_connect(device=device):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
@@ -968,7 +1246,7 @@ async def test_light_errors_when_turned_on(
 
     with pytest.raises(HomeAssistantError, match=msg):
         await hass.services.async_call(
-            LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
     await hass.async_block_till_done()
     assert light.set_state.call_count == 1
@@ -1008,7 +1286,7 @@ async def test_light_child(
     )
 
     with _patch_discovery(device=parent_device), _patch_connect(device=parent_device):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_device"
@@ -1049,14 +1327,16 @@ async def test_scene_effect_light(
     light_effect.effect = LightEffect.LIGHT_EFFECTS_OFF
 
     with _patch_discovery(device=device), _patch_connect(device=device):
-        assert await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
-        assert await async_setup_component(hass, "scene", {})
+        assert await hass.config_entries.async_setup(
+            already_migrated_config_entry.entry_id
+        )
+        assert await async_setup_component(hass, SCENE_DOMAIN, {})
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     await hass.async_block_till_done()
     freezer.tick(5)
@@ -1068,9 +1348,9 @@ async def test_scene_effect_light(
     assert state.attributes["effect"] is EFFECT_OFF
 
     await hass.services.async_call(
-        "scene",
-        "create",
-        {"scene_id": "effect_off_scene", "snapshot_entities": [entity_id]},
+        SCENE_DOMAIN,
+        SERVICE_CREATE,
+        {CONF_SCENE_ID: "effect_off_scene", CONF_SNAPSHOT: [entity_id]},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1078,7 +1358,7 @@ async def test_scene_effect_light(
     assert scene_state.state is STATE_UNKNOWN
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     await hass.async_block_till_done()
     freezer.tick(5)
@@ -1089,10 +1369,10 @@ async def test_scene_effect_light(
     assert state.state is STATE_OFF
 
     await hass.services.async_call(
-        "scene",
-        "turn_on",
+        SCENE_DOMAIN,
+        SERVICE_TURN_ON,
         {
-            "entity_id": "scene.effect_off_scene",
+            ATTR_ENTITY_ID: "scene.effect_off_scene",
         },
         blocking=True,
     )

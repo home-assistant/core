@@ -16,11 +16,14 @@ class SkybellDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, device: SkybellDevice) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, device: SkybellDevice
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=device.name,
             update_interval=timedelta(seconds=30),
         )

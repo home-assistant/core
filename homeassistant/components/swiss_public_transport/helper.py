@@ -6,7 +6,7 @@ from typing import Any
 
 from opendata_transport import OpendataTransport
 
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DESTINATION,

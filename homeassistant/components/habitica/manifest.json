@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/habitica",
   "iot_class": "cloud_polling",
   "loggers": ["habiticalib"],
-  "requirements": ["habiticalib==0.3.2"]
+  "quality_scale": "platinum",
+  "requirements": ["habiticalib==0.3.7"]
 }

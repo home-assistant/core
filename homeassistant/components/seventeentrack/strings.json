@@ -37,19 +37,6 @@
       }
     }
   },
-  "issues": {
-    "deprecate_sensor": {
-      "title": "17Track package sensors are being deprecated",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::seventeentrack::issues::deprecate_sensor::title%]",
-            "description": "17Track package sensors are deprecated and will be removed.\nPlease update your automations and scripts to get data using the `seventeentrack.get_packages` action."
-          }
-        }
-      }
-    }
-  },
   "entity": {
     "sensor": {
       "not_found": {
@@ -70,8 +57,8 @@
       "delivered": {
         "name": "Delivered"
       },
-      "returned": {
-        "name": "Returned"
+      "alert": {
+        "name": "Alert"
       },
       "package": {
         "name": "Package {name}"
@@ -81,7 +68,7 @@
   "services": {
     "get_packages": {
       "name": "Get packages",
-      "description": "Get packages from 17Track",
+      "description": "Queries the 17track API for the latest package data.",
       "fields": {
         "package_state": {
           "name": "Package states",
@@ -95,7 +82,7 @@
     },
     "archive_package": {
       "name": "Archive package",
-      "description": "Archive a package",
+      "description": "Archives a package using the 17track API.",
       "fields": {
         "package_tracking_number": {
           "name": "Package tracking number",
@@ -117,7 +104,7 @@
         "ready_to_be_picked_up": "[%key:component::seventeentrack::entity::sensor::ready_to_be_picked_up::name%]",
         "undelivered": "[%key:component::seventeentrack::entity::sensor::undelivered::name%]",
         "delivered": "[%key:component::seventeentrack::entity::sensor::delivered::name%]",
-        "returned": "[%key:component::seventeentrack::entity::sensor::returned::name%]"
+        "alert": "[%key:component::seventeentrack::entity::sensor::alert::name%]"
       }
     }
   }

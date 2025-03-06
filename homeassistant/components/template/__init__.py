@@ -53,6 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _reload_config(call: Event | ServiceCall) -> None:
         """Reload top-level + platforms."""
+        await async_get_blueprints(hass).async_reset_cache()
         try:
             unprocessed_conf = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
@@ -93,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             continue
         if isinstance(entry.options[key], str):
             raise ConfigEntryError(
-                f"The '{entry.options.get(CONF_NAME) or ""}' number template needs to "
+                f"The '{entry.options.get(CONF_NAME) or ''}' number template needs to "
                 f"be reconfigured, {key} must be a number, got '{entry.options[key]}'"
             )
 

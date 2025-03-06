@@ -16,13 +16,13 @@ from serial.tools.list_ports_common import ListPortInfo
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries
-from homeassistant.components import usb
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import ADDON_SLUG, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -33,7 +33,7 @@ ADDON_DISCOVERY_INFO = {
 }
 
 
-USB_DISCOVERY_INFO = usb.UsbServiceInfo(
+USB_DISCOVERY_INFO = UsbServiceInfo(
     device="/dev/zwave",
     pid="AAAA",
     vid="AAAA",
@@ -42,7 +42,7 @@ USB_DISCOVERY_INFO = usb.UsbServiceInfo(
     manufacturer="test",
 )
 
-NORTEK_ZIGBEE_DISCOVERY_INFO = usb.UsbServiceInfo(
+NORTEK_ZIGBEE_DISCOVERY_INFO = UsbServiceInfo(
     device="/dev/zigbee",
     pid="8A2A",
     vid="10C4",
@@ -51,7 +51,7 @@ NORTEK_ZIGBEE_DISCOVERY_INFO = usb.UsbServiceInfo(
     manufacturer="nortek",
 )
 
-CP2652_ZIGBEE_DISCOVERY_INFO = usb.UsbServiceInfo(
+CP2652_ZIGBEE_DISCOVERY_INFO = UsbServiceInfo(
     device="/dev/zigbee",
     pid="EA60",
     vid="10C4",

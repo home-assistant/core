@@ -22,12 +22,15 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from . import WatergateConfigEntry
-from .coordinator import WatergateAgregatedRequests, WatergateDataCoordinator
+from .coordinator import (
+    WatergateAgregatedRequests,
+    WatergateConfigEntry,
+    WatergateDataCoordinator,
+)
 from .entity import WatergateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,7 +93,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
     WatergateSensorEntityDescription(
         value_fn=lambda data: (
             dt_util.as_utc(
-                dt_util.now() - timedelta(microseconds=data.networking.wifi_uptime)
+                dt_util.now() - timedelta(milliseconds=data.networking.wifi_uptime)
             )
             if data.networking
             else None
@@ -104,7 +107,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
     WatergateSensorEntityDescription(
         value_fn=lambda data: (
             dt_util.as_utc(
-                dt_util.now() - timedelta(microseconds=data.networking.mqtt_uptime)
+                dt_util.now() - timedelta(milliseconds=data.networking.mqtt_uptime)
             )
             if data.networking
             else None
@@ -158,7 +161,11 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
     ),
     WatergateSensorEntityDescription(
         value_fn=lambda data: (
-            PowerSupplyMode(data.state.power_supply.replace("+", "_"))
+            PowerSupplyMode(
+                data.state.power_supply.replace("+", "_").replace(
+                    "external_battery", "battery_external"
+                )
+            )
             if data.state
             else None
         ),
@@ -175,7 +182,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: WatergateConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all entries for Watergate Platform."""
 

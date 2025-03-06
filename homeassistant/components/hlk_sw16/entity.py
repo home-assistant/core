@@ -35,7 +35,7 @@ class SW16Entity(Entity):
         self.async_write_ha_state()
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self._client.is_connected)
 
@@ -44,7 +44,7 @@ class SW16Entity(Entity):
         """Update availability state."""
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register update callback."""
         self._client.register_status_callback(
             self.handle_event_callback, self._device_port

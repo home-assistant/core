@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from roborock import DeviceData, HomeDataDevice
 from roborock.const import (
     FILTER_REPLACE_TIME,
@@ -12,6 +13,7 @@ from roborock.const import (
 from roborock.roborock_message import RoborockMessage, RoborockMessageProtocol
 from roborock.version_1_apis import RoborockMqttClientV1
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .mock_data import CONSUMABLE, STATUS, USER_DATA
@@ -19,9 +21,15 @@ from .mock_data import CONSUMABLE, STATUS, USER_DATA
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set platforms used in the test."""
+    return [Platform.SENSOR]
+
+
 async def test_sensors(hass: HomeAssistant, setup_entry: MockConfigEntry) -> None:
     """Test sensors and check test values are correctly set."""
-    assert len(hass.states.async_all("sensor")) == 38
+    assert len(hass.states.async_all("sensor")) == 40
     assert hass.states.get("sensor.roborock_s7_maxv_main_brush_time_left").state == str(
         MAIN_BRUSH_REPLACE_TIME - 74382
     )
@@ -46,6 +54,7 @@ async def test_sensors(hass: HomeAssistant, setup_entry: MockConfigEntry) -> Non
     assert hass.states.get("sensor.roborock_s7_maxv_vacuum_error").state == "none"
     assert hass.states.get("sensor.roborock_s7_maxv_battery").state == "100"
     assert hass.states.get("sensor.roborock_s7_maxv_dock_error").state == "ok"
+    assert hass.states.get("sensor.roborock_s7_maxv_total_cleaning_count").state == "31"
     assert (
         hass.states.get("sensor.roborock_s7_maxv_last_clean_begin").state
         == "2023-01-01T03:22:10+00:00"
