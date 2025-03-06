@@ -1454,11 +1454,6 @@ class MqttEntity(
         msg: ReceiveMessage,
     ) -> None:
         """Process the message callback."""
-        if attributes is not None:
-            attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...] = tuple(
-                (attribute, getattr(self, attribute, UNDEFINED))
-                for attribute in attributes
-            )
         mqtt_data = self.hass.data[DATA_MQTT]
         messages = mqtt_data.debug_info_entities[self.entity_id]["subscriptions"][
             msg.subscribed_topic
@@ -1472,7 +1467,7 @@ class MqttEntity(
             _LOGGER.warning(exc)
             return
 
-        if attributes is not None and self._attrs_have_changed(attrs_snapshot):
+        if attributes is not None:
             mqtt_data.state_write_requests.write_state_request(self)
 
     def add_subscription(

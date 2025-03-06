@@ -44,7 +44,6 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
-    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -1048,56 +1047,6 @@ async def test_unload_entry(
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
     )
-
-
-@pytest.mark.parametrize(
-    "hass_config",
-    [
-        help_custom_config(
-            siren.DOMAIN,
-            DEFAULT_CONFIG,
-            (
-                {
-                    "state_topic": "test-topic",
-                    "available_tones": ["siren", "bell"],
-                    "availability_topic": "availability-topic",
-                    "json_attributes_topic": "json-attributes-topic",
-                },
-            ),
-        )
-    ],
-)
-@pytest.mark.parametrize(
-    ("topic", "payload1", "payload2"),
-    [
-        ("availability-topic", "online", "offline"),
-        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
-        ("test-topic", "ON", "OFF"),
-        ("test-topic", '{"state": "ON"}', '{"state": "OFF"}'),
-        ("test-topic", '{"state":"ON","tone":"siren"}', '{"state":"ON","tone":"bell"}'),
-        (
-            "test-topic",
-            '{"state":"ON","tone":"siren"}',
-            '{"state":"OFF","tone":"siren"}',
-        ),
-        # Attribute volume_level 2 is invalid, but the state is valid and should update
-        (
-            "test-topic",
-            '{"state":"ON","volume_level":0.5}',
-            '{"state":"OFF","volume_level":2}',
-        ),
-    ],
-)
-async def test_skipped_async_ha_write_state(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    topic: str,
-    payload1: str,
-    payload2: str,
-) -> None:
-    """Test a write state command is only called when there is change."""
-    await mqtt_mock_entry()
-    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
 
 
 @pytest.mark.parametrize(
