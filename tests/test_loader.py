@@ -15,7 +15,6 @@ from homeassistant import loader
 from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import frame
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads
 
@@ -1314,7 +1313,6 @@ async def test_config_folder_not_in_path() -> None:
     ],
 )
 @pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_hass_components_use_reported(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -2010,7 +2008,6 @@ async def test_has_services(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_hass_helpers_use_reported(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
