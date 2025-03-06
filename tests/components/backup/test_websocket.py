@@ -27,7 +27,7 @@ from homeassistant.components.backup.manager import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import frame, issue_registry as ir
 from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
@@ -232,6 +232,32 @@ async def test_details_with_errors(
             {"type": "backup/details", "backup_id": "abc123"}
         )
         assert await client.receive_json() == snapshot
+
+
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_details_get_backup_returns_none(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test getting backup info when the agent returns None from get_backup."""
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
+    mock_agents["test.remote"].async_get_backup.return_value = None
+    mock_agents["test.remote"].async_get_backup.side_effect = None
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    with patch("pathlib.Path.exists", return_value=True):
+        await client.send_json_auto_id(
+            {"type": "backup/details", "backup_id": "abc123"}
+        )
+        assert await client.receive_json() == snapshot
+    assert (
+        "Detected that integration 'test' returns None from BackupAgent.async_get_backup."
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(
@@ -722,6 +748,37 @@ async def test_restore_remote_agent(
         )
         assert await client.receive_json() == snapshot
     assert len(restart_calls) == snapshot
+
+
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_restore_remote_agent_get_backup_returns_none(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test calling the restore command when the agent returns None from get_backup."""
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
+    mock_agents["test.remote"].async_get_backup.return_value = None
+    mock_agents["test.remote"].async_get_backup.side_effect = None
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/restore",
+            "backup_id": "abc123",
+            "agent_id": "test.remote",
+        }
+    )
+    assert await client.receive_json() == snapshot
+    assert len(restart_calls) == 0
+    assert (
+        "Detected that integration 'test' returns None from BackupAgent.async_get_backup."
+        in caplog.text
+    )
 
 
 async def test_restore_wrong_password(
@@ -3543,3 +3600,33 @@ async def test_can_decrypt_on_download_with_agent_error(
         }
     )
     assert await client.receive_json() == snapshot
+
+
+@pytest.mark.usefixtures("mock_backups")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_can_decrypt_on_download_get_backup_returns_none(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test can decrypt on download when the agent returns None from get_backup."""
+
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
+    mock_agents["test.remote"].async_get_backup.return_value = None
+    mock_agents["test.remote"].async_get_backup.side_effect = None
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "backup/can_decrypt_on_download",
+            "backup_id": TEST_BACKUP_ABC123.backup_id,
+            "agent_id": "test.remote",
+            "password": "hunter2",
+        }
+    )
+    assert await client.receive_json() == snapshot
+    assert (
+        "Detected that integration 'test' returns None from BackupAgent.async_get_backup."
+        in caplog.text
+    )
