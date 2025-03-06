@@ -16,6 +16,7 @@ import reprlib
 from shutil import rmtree
 import sqlite3
 import ssl
+import sys
 import threading
 from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
@@ -83,6 +84,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
+    frame,
     issue_registry as ir,
     label_registry as lr,
     recorder as recorder_helper,
@@ -432,6 +434,7 @@ def reset_hass_threading_local_object() -> Generator[None]:
     """Reset the _Hass threading.local object for every test case."""
     yield
     ha._hass.__dict__.clear()
+    frame.async_setup(None)
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -598,6 +601,7 @@ async def hass(
     async with async_test_home_assistant(loop, load_registries) as hass:
         orig_exception_handler = loop.get_exception_handler()
         loop.set_exception_handler(exc_handle)
+        frame.async_setup(hass)
 
         yield hass
 
@@ -1889,12 +1893,15 @@ def mock_integration_frame(integration_frame_path: str) -> Generator[Mock]:
     Defaults to calling from `hue` core integration, and can be parametrized
     with `integration_frame_path`.
     """
+    correct_filename = f"/home/paulus/{integration_frame_path}/light.py"
+    correct_module_name = f"{integration_frame_path.replace('/', '.')}.light"
     correct_frame = Mock(
         filename=f"/home/paulus/{integration_frame_path}/light.py",
         lineno="23",
         line="self.light.is_on",
     )
     with (
+        patch.dict(sys.modules, {correct_module_name: Mock(__file__=correct_filename)}),
         patch(
             "homeassistant.helpers.frame.linecache.getline",
             return_value=correct_frame.line,

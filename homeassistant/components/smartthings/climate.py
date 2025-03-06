@@ -569,5 +569,6 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                 Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
             )
             if (state := AC_MODE_TO_STATE.get(mode)) is not None
+            if state not in modes
         )
         return modes
