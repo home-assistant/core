@@ -19,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -45,7 +45,7 @@ from .storage.const import CONF_ENTITY, CONF_GA_PASSIVE, CONF_GA_SENSOR, CONF_GA
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the KNX binary sensor platform."""
     knx_module = hass.data[KNX_MODULE_KEY]

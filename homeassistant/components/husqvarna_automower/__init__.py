@@ -5,7 +5,6 @@ import logging
 from aioautomower.session import AutomowerSession
 from aiohttp import ClientResponseError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -13,7 +12,7 @@ from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from homeassistant.util import dt as dt_util
 
 from . import api
-from .coordinator import AutomowerDataUpdateCoordinator
+from .coordinator import AutomowerConfigEntry, AutomowerDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,8 +27,6 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-
-type AutomowerConfigEntry = ConfigEntry[AutomowerDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) -> bool:
@@ -61,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
         # without the scope. So only polling would be possible.
         raise ConfigEntryAuthFailed
 
-    coordinator = AutomowerDataUpdateCoordinator(hass, automower_api)
+    coordinator = AutomowerDataUpdateCoordinator(hass, entry, automower_api)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

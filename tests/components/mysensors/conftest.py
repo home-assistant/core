@@ -53,7 +53,7 @@ def gateway_nodes_fixture() -> dict[int, Sensor]:
 async def serial_transport_fixture(
     gateway_nodes: dict[int, Sensor],
     is_serial_port: MagicMock,
-) -> AsyncGenerator[dict[int, Sensor]]:
+) -> AsyncGenerator[MagicMock]:
     """Mock a serial transport."""
     with (
         patch(

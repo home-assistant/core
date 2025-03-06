@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 import logging
 from types import MappingProxyType
 from typing import Any
@@ -59,13 +60,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = anthropic.AsyncAnthropic(api_key=data[CONF_API_KEY])
-    await client.messages.create(
-        model="claude-3-haiku-20240307",
-        max_tokens=1,
-        messages=[{"role": "user", "content": "Hi"}],
-        timeout=10.0,
+    client = await hass.async_add_executor_job(
+        partial(anthropic.AsyncAnthropic, api_key=data[CONF_API_KEY])
     )
+    await client.models.list(timeout=10.0)
 
 
 class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):

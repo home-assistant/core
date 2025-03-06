@@ -12,6 +12,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -54,5 +55,61 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_selects[select.ohme_home_pro_vehicle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Nissan Leaf',
+        'Tesla Model 3',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ohme_home_pro_vehicle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vehicle',
+    'platform': 'ohme',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle',
+    'unique_id': 'chargerid_vehicle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[select.ohme_home_pro_vehicle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ohme Home Pro Vehicle',
+      'options': list([
+        'Nissan Leaf',
+        'Tesla Model 3',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ohme_home_pro_vehicle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Nissan Leaf',
   })
 # ---
