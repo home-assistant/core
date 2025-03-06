@@ -11,6 +11,7 @@ from typing import Any
 import evohomeasync as ec1
 import evohomeasync2 as ec2
 from evohomeasync2.const import (
+    SZ_DHW,
     SZ_GATEWAY_ID,
     SZ_GATEWAY_INFO,
     SZ_GATEWAYS,
@@ -19,6 +20,7 @@ from evohomeasync2.const import (
     SZ_TEMPERATURE_CONTROL_SYSTEMS,
     SZ_TIME_ZONE,
     SZ_USE_DAYLIGHT_SAVE_SWITCHING,
+    SZ_ZONES,
 )
 from evohomeasync2.schemas.typedefs import EvoLocStatusResponseT
 
@@ -113,17 +115,20 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                     SZ_USE_DAYLIGHT_SAVE_SWITCHING
                 ],
             }
+            tcs_info = self.tcs.config | {
+                SZ_ZONES: [zone.config for zone in self.tcs.zones],
+            }
+            if self.tcs.hotwater:
+                tcs_info[SZ_DHW] = self.tcs.hotwater.config
             gwy_info = {
                 SZ_GATEWAY_ID: self.loc.gateways[0].id,
-                SZ_TEMPERATURE_CONTROL_SYSTEMS: [
-                    self.loc.gateways[0].systems[0].config
-                ],
+                SZ_TEMPERATURE_CONTROL_SYSTEMS: [tcs_info],
             }
             config = {
                 SZ_LOCATION_INFO: loc_info,
                 SZ_GATEWAYS: [{SZ_GATEWAY_INFO: gwy_info}],
             }
-            self.logger.debug("Config = %s", config)
+            self.logger.debug("Config = %s", [config])
 
     async def call_client_api(
         self,
