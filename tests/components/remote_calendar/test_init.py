@@ -1,7 +1,5 @@
 """Tests for init platform of Remote Calendar."""
 
-from unittest.mock import AsyncMock
-
 from httpx import ConnectError, Response, UnsupportedProtocol
 import pytest
 import respx
@@ -16,10 +14,17 @@ from .conftest import CALENDER_URL, TEST_ENTITY
 from tests.common import MockConfigEntry
 
 
+@respx.mock
 async def test_load_unload(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_httpx_client: AsyncMock
+    hass: HomeAssistant, config_entry: MockConfigEntry, ics_content: str
 ) -> None:
     """Test loading and unloading a config entry."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=ics_content,
+        )
+    )
     await setup_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.LOADED
 

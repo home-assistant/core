@@ -2,39 +2,45 @@
 
 from datetime import datetime
 import textwrap
-from unittest.mock import AsyncMock
 
+from httpx import Response
 import pytest
+import respx
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .conftest import FRIENDLY_NAME, TEST_ENTITY, GetEventsFn, event_fields
+from .conftest import (
+    CALENDER_URL,
+    FRIENDLY_NAME,
+    TEST_ENTITY,
+    GetEventsFn,
+    event_fields,
+)
 
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize(
-    "ics_content",
-    [
-        textwrap.dedent(
-            """BEGIN:VCALENDAR
-                VERSION:2.0
-                PRODID:-//hacksw/handcal//NONSGML v1.0//EN
-                END:VCALENDAR
-            """
-        )
-    ],
-    indirect=True,
-)
+@respx.mock
 async def test_empty_calendar(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     get_events: GetEventsFn,
-    mock_httpx_client: AsyncMock,
 ) -> None:
     """Test querying the API and fetching events."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=textwrap.dedent(
+                """BEGIN:VCALENDAR
+                VERSION:2.0
+                PRODID:-//hacksw/handcal//NONSGML v1.0//EN
+                END:VCALENDAR
+            """
+            ),
+        )
+    )
     await setup_integration(hass, config_entry)
     events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
     assert len(events) == 0
@@ -99,15 +105,21 @@ async def test_empty_calendar(
             """
         ),
     ],
-    indirect=True,
 )
+@respx.mock
 async def test_api_date_time_event(
     get_events: GetEventsFn,
-    mock_httpx_client: AsyncMock,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    ics_content: str,
 ) -> None:
     """Test an event with a start/end date time."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=ics_content,
+        )
+    )
     await setup_integration(hass, config_entry)
     events = await get_events("1997-07-14T00:00:00Z", "1997-07-16T00:00:00Z")
     assert list(map(event_fields, events)) == [
@@ -141,11 +153,18 @@ async def test_api_date_time_event(
     assert len(events) == 1
 
 
-@pytest.mark.parametrize(
-    "ics_content",
-    [
-        textwrap.dedent(
-            """\
+@respx.mock
+async def test_api_date_event(
+    get_events: GetEventsFn,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test an event with a start/end date all day event."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=textwrap.dedent(
+                """\
             BEGIN:VCALENDAR
             VERSION:2.0
             BEGIN:VEVENT
@@ -155,18 +174,9 @@ async def test_api_date_time_event(
             END:VEVENT
             END:VCALENDAR
             """
-        ),
-    ],
-    indirect=True,
-)
-async def test_api_date_event(
-    mock_httpx_client: AsyncMock,
-    get_events: GetEventsFn,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test an event with a start/end date all day event."""
-
+            ),
+        )
+    )
     await setup_integration(hass, config_entry)
     events = await get_events("2007-06-20T00:00:00", "2007-07-20T00:00:00")
     assert list(map(event_fields, events)) == [
@@ -193,11 +203,18 @@ async def test_api_date_event(
 
 
 @pytest.mark.freeze_time(datetime(2007, 6, 28, 12))
-@pytest.mark.parametrize(
-    "ics_content",
-    [
-        textwrap.dedent(
-            """\
+@respx.mock
+async def test_active_event(
+    get_events: GetEventsFn,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test an event with a start/end date time."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=textwrap.dedent(
+                """\
             BEGIN:VCALENDAR
             VERSION:2.0
             BEGIN:VEVENT
@@ -208,18 +225,9 @@ async def test_api_date_event(
             END:VEVENT
             END:VCALENDAR
             """
-        ),
-    ],
-    indirect=True,
-)
-async def test_active_event(
-    mock_httpx_client: AsyncMock,
-    get_events: GetEventsFn,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test an event with a start/end date time."""
-
+            ),
+        )
+    )
     await setup_integration(hass, config_entry)
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -237,11 +245,18 @@ async def test_active_event(
 
 
 @pytest.mark.freeze_time(datetime(2007, 6, 27, 12))
-@pytest.mark.parametrize(
-    "ics_content",
-    [
-        textwrap.dedent(
-            """\
+@respx.mock
+async def test_upcoming_event(
+    get_events: GetEventsFn,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test an event with a start/end date time."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=textwrap.dedent(
+                """\
             BEGIN:VCALENDAR
             VERSION:2.0
             BEGIN:VEVENT
@@ -252,17 +267,9 @@ async def test_active_event(
             END:VEVENT
             END:VCALENDAR
             """
-        ),
-    ],
-    indirect=True,
-)
-async def test_upcoming_event(
-    mock_httpx_client: AsyncMock,
-    get_events: GetEventsFn,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test an event with a start/end date time."""
+            ),
+        )
+    )
     await setup_integration(hass, config_entry)
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -279,11 +286,18 @@ async def test_upcoming_event(
     }
 
 
-@pytest.mark.parametrize(
-    "ics_content",
-    [
-        textwrap.dedent(
-            """\
+@respx.mock
+async def test_recurring_event(
+    get_events: GetEventsFn,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test an event with a recurrence rule."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=textwrap.dedent(
+                """\
             BEGIN:VCALENDAR
             BEGIN:VEVENT
             DTSTART:20220829T090000
@@ -293,17 +307,9 @@ async def test_upcoming_event(
             END:VEVENT
             END:VCALENDAR
             """
-        ),
-    ],
-    indirect=True,
-)
-async def test_recurring_event(
-    mock_httpx_client: AsyncMock,
-    get_events: GetEventsFn,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test an event with a recurrence rule."""
+            ),
+        )
+    )
     await setup_integration(hass, config_entry)
 
     events = await get_events("2022-08-20T00:00:00", "2022-09-20T00:00:00")
@@ -335,11 +341,28 @@ async def test_recurring_event(
     ]
 
 
+@respx.mock
 @pytest.mark.parametrize(
-    "ics_content",
+    ("time_zone", "event_order"),
     [
-        textwrap.dedent(
-            """\
+        ("America/Los_Angeles", ["One", "Two", "All Day Event"]),
+        ("America/Regina", ["One", "Two", "All Day Event"]),
+        ("UTC", ["One", "All Day Event", "Two"]),
+        ("Asia/Tokyo", ["All Day Event", "One", "Two"]),
+    ],
+)
+async def test_all_day_iter_order(
+    get_events: GetEventsFn,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    event_order: list[str],
+) -> None:
+    """Test the sort order of an all day events depending on the time zone."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=textwrap.dedent(
+                """\
             BEGIN:VCALENDAR
 
             BEGIN:VEVENT
@@ -362,118 +385,10 @@ async def test_recurring_event(
 
             END:VCALENDAR
             """
-        ),
-    ],
-    indirect=True,
-)
-@pytest.mark.parametrize(
-    ("time_zone", "event_order"),
-    [
-        ("America/Los_Angeles", ["One", "Two", "All Day Event"]),
-        ("America/Regina", ["One", "Two", "All Day Event"]),
-        ("UTC", ["One", "All Day Event", "Two"]),
-        ("Asia/Tokyo", ["All Day Event", "One", "Two"]),
-    ],
-)
-async def test_all_day_iter_order(
-    mock_httpx_client: AsyncMock,
-    get_events: GetEventsFn,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    event_order: list[str],
-) -> None:
-    """Test the sort order of an all day events depending on the time zone."""
+            ),
+        )
+    )
     await setup_integration(hass, config_entry)
 
     events = await get_events("2022-10-06T00:00:00Z", "2022-10-09T00:00:00Z")
     assert [event["summary"] for event in events] == event_order
-
-
-# @pytest.mark.parametrize(
-#     "ics_content",
-#     [
-#         textwrap.dedent(
-#             """\
-#             BEGIN:VCALENDAR
-#             BEGIN:VEVENT
-#             SUMMARY:Bastille Day Party
-#             DTSTART:19970714
-#             DTEND:19970714
-#             END:VEVENT
-#             END:VCALENDAR
-#         """
-#         ),
-#         textwrap.dedent(
-#             """\
-#             BEGIN:VCALENDAR
-#             BEGIN:VEVENT
-#             SUMMARY:Bastille Day Party
-#             DTSTART:19970714
-#             DTEND:19970710
-#             END:VEVENT
-#             END:VCALENDAR
-#         """
-#         ),
-#     ],
-#     indirect=True,
-# )
-# async def test_invalid_all_day_event(
-#     mock_httpx_client: AsyncMock,
-#     get_events: GetEventsFn,
-#     hass: HomeAssistant,
-#     config_entry: MockConfigEntry,
-# ) -> None:
-#     """Test all day events with invalid durations, which are coerced to be valid."""
-#     await setup_integration(hass, config_entry)
-#     events = await get_events("1997-07-14T00:00:00Z", "1997-07-16T00:00:00Z")
-#     assert list(map(event_fields, events)) == [
-#         {
-#             "summary": "Bastille Day Party",
-#             "start": {"date": "1997-07-14"},
-#             "end": {"date": "1997-07-15"},
-#         }
-#     ]
-
-
-# @pytest.mark.parametrize(
-#     "ics_content",
-#     [
-#         textwrap.dedent(
-#             """\
-#             BEGIN:VCALENDAR
-#             BEGIN:VEVENT
-#             SUMMARY:Bastille Day Party
-#             DTSTART:19970714T110000
-#             DTEND:19970714T110000
-#             END:VEVENT
-#             END:VCALENDAR
-#         """
-#         ),
-#         textwrap.dedent(
-#             """\
-#             BEGIN:VCALENDAR
-#             BEGIN:VEVENT
-#             SUMMARY:Bastille Day Party
-#             DTSTART:19970714T110000
-#             DTEND:19970710T100000
-#             END:VEVENT
-#             END:VCALENDAR
-#         """
-#         ),
-#     ],
-#     ids=["no_duration", "negative"],
-# )
-# async def test_invalid_event_duration(
-#     ws_client: ClientFixture,
-#     setup_integration: None,
-#     get_events: GetEventsFn,
-# ) -> None:
-#     """Test events with invalid durations, which are coerced to be valid."""
-#     events = await get_events("1997-07-14T00:00:00Z", "1997-07-16T00:00:00Z")
-#     assert list(map(event_fields, events)) == [
-#         {
-#             "summary": "Bastille Day Party",
-#             "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
-#             "end": {"dateTime": "1997-07-14T11:30:00-06:00"},
-#         }
-#     ]

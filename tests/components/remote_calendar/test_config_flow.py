@@ -1,10 +1,8 @@
 """Test the Remote Calendar config flow."""
 
-from unittest.mock import AsyncMock
-
-import httpx
-from httpx import ConnectError, HTTPStatusError, UnsupportedProtocol
+from httpx import ConnectError, Response, UnsupportedProtocol
 import pytest
+import respx
 
 from homeassistant.components.remote_calendar.const import CONF_CALENDAR_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -18,10 +16,15 @@ from .conftest import CALENDAR_NAME, CALENDER_URL
 from tests.common import MockConfigEntry
 
 
-async def test_form_import_ics(
-    hass: HomeAssistant, mock_httpx_client: AsyncMock
-) -> None:
+@respx.mock
+async def test_form_import_ics(hass: HomeAssistant, ics_content: str) -> None:
     """Test we get the import form."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=ics_content,
+        )
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -38,50 +41,73 @@ async def test_form_import_ics(
 
 
 @pytest.mark.parametrize(
-    "exception_factory",
+    "side_effect",
     [
-        lambda *args, **kwargs: ValueError("Test error"),
-        lambda *args, **kwargs: ConnectError("Test error"),
-        lambda *args, **kwargs: HTTPStatusError(
-            "Test error",
-            request=httpx.Request("GET", "http://example.com"),
-            response=httpx.Response(
-                400, request=httpx.Request("GET", "http://example.com")
-            ),
-        ),
-        lambda *args, **kwargs: UnsupportedProtocol("Test error"),
+        ConnectError("Connection failed"),
+        UnsupportedProtocol("Unsupported protocol"),
+        ValueError("Invalid response"),
     ],
 )
+@respx.mock
 async def test_form_inavild_url(
-    hass: HomeAssistant, mock_httpx_client: AsyncMock, exception_factory
+    hass: HomeAssistant,
+    side_effect: Exception,
 ) -> None:
     """Test we get the import form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    mock_httpx_client.get.side_effect = exception_factory()
+    respx.get("http://invalid-url.com").mock(side_effect=side_effect)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_CALENDAR_NAME: CALENDAR_NAME,
-            CONF_URL: "invalid",
+            CONF_URL: "http://invalid-url.com",
         },
     )
     assert result2["type"] is FlowResultType.FORM
 
 
-async def test_no_valid_calendar(
-    hass: HomeAssistant, mock_httpx_client: AsyncMock
+@respx.mock
+async def test_form_http_status_error(
+    hass: HomeAssistant,
 ) -> None:
-    """Test, dass bei ungültigem ICS-Content das Import-Formular erneut angezeigt wird."""
+    """Test we http status."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
+    respx.get("http://invalid-url.com").mock(
+        return_value=Response(
+            status_code=403,
+        )
+    )
 
-    setattr(mock_httpx_client.get.return_value, "text", "invalid ICS content")
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: "http://invalid-url.com",
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+
+
+@respx.mock
+async def test_no_valid_calendar(hass: HomeAssistant) -> None:
+    """Test invalid ics content."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text="blabla",
+        )
+    )
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
