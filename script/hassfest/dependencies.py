@@ -153,8 +153,6 @@ ALLOWED_USED_COMPONENTS = {
 }
 
 IGNORE_VIOLATIONS = {
-    # Has same requirement, gets defaults.
-    ("sql", "recorder"),
     # Sharing a base class
     ("lutron_caseta", "lutron"),
     ("ffmpeg_noise", "ffmpeg_motion"),
@@ -168,12 +166,17 @@ IGNORE_VIOLATIONS = {
     ("zha", "homeassistant_sky_connect"),
     ("zha", "homeassistant_yellow"),
     ("homeassistant_sky_connect", "zha"),
+    ("homeassistant_hardware", "zha"),
     # This should become a helper method that integrations can submit data to
     ("websocket_api", "lovelace"),
     ("websocket_api", "shopping_list"),
     "logbook",
     # Temporary needed for migration until 2024.10
     ("conversation", "assist_pipeline"),
+    # The onboarding integration provides a limited backup API used during
+    # onboarding. The onboarding integration waits for the backup manager
+    # to be ready before calling any backup functionality.
+    ("onboarding", "backup"),
 }
 
 

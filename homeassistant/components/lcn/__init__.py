@@ -49,6 +49,7 @@ from .helpers import (
     InputType,
     async_update_config_entry,
     generate_unique_id,
+    purge_device_registry,
     register_lcn_address_devices,
     register_lcn_host_device,
 )
@@ -119,6 +120,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # register/update devices for host, modules and groups in device registry
     register_lcn_host_device(hass, config_entry)
     register_lcn_address_devices(hass, config_entry)
+
+    # clean up orphaned devices
+    purge_device_registry(hass, config_entry.entry_id, {**config_entry.data})
 
     # forward config_entry to components
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -230,8 +234,6 @@ def async_host_input_received(
     )
     identifiers = {(DOMAIN, generate_unique_id(config_entry.entry_id, address))}
     device = device_registry.async_get_device(identifiers=identifiers)
-    if device is None:
-        return
 
     if isinstance(inp, pypck.inputs.ModStatusAccessControl):
         _async_fire_access_control_event(hass, device, address, inp)
@@ -240,7 +242,10 @@ def async_host_input_received(
 
 
 def _async_fire_access_control_event(
-    hass: HomeAssistant, device: dr.DeviceEntry, address: AddressType, inp: InputType
+    hass: HomeAssistant,
+    device: dr.DeviceEntry | None,
+    address: AddressType,
+    inp: InputType,
 ) -> None:
     """Fire access control event (transponder, transmitter, fingerprint, codelock)."""
     event_data = {
@@ -262,7 +267,10 @@ def _async_fire_access_control_event(
 
 
 def _async_fire_send_keys_event(
-    hass: HomeAssistant, device: dr.DeviceEntry, address: AddressType, inp: InputType
+    hass: HomeAssistant,
+    device: dr.DeviceEntry | None,
+    address: AddressType,
+    inp: InputType,
 ) -> None:
     """Fire send_keys event."""
     for table, action in enumerate(inp.actions):

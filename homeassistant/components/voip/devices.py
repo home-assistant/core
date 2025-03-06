@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
+from typing import Any
 
 from voip_utils import CallInfo, VoipDatagramProtocol
 
@@ -136,25 +137,56 @@ class VoIPDevices:
             fw_version = None
 
         dev_reg = dr.async_get(self.hass)
-        voip_id = call_info.caller_ip
+        if call_info.caller_endpoint is None:
+            raise RuntimeError("Could not identify VOIP caller")
+        voip_id = call_info.caller_endpoint.uri
         voip_device = self.devices.get(voip_id)
 
-        if voip_device is not None:
-            device = dev_reg.async_get(voip_device.device_id)
-            if device and fw_version and device.sw_version != fw_version:
-                dev_reg.async_update_device(device.id, sw_version=fw_version)
+        if voip_device is None:
+            # If we couldn't find the device based on SIP URI, see if we can
+            # find an old device based on just the host/IP and migrate it
+            old_id = call_info.caller_endpoint.host
+            voip_device = self.devices.get(old_id)
+            if voip_device is not None:
+                voip_device.voip_id = voip_id
+                self.devices[voip_id] = voip_device
+                dev_reg.async_update_device(
+                    voip_device.device_id, new_identifiers={(DOMAIN, voip_id)}
+                )
+                # Migrate entities
+                old_prefix = f"{old_id}-"
 
-            return voip_device
+                def entity_migrator(entry: er.RegistryEntry) -> dict[str, Any] | None:
+                    """Migrate entities."""
+                    if not entry.unique_id.startswith(old_prefix):
+                        return None
+                    key = entry.unique_id[len(old_prefix) :]
+                    return {
+                        "new_unique_id": f"{voip_id}-{key}",
+                    }
 
+                self.config_entry.async_create_task(
+                    self.hass,
+                    er.async_migrate_entries(
+                        self.hass, self.config_entry.entry_id, entity_migrator
+                    ),
+                    f"voip migrating entities {voip_id}",
+                )
+
+        # Update device with latest info
         device = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             identifiers={(DOMAIN, voip_id)},
-            name=voip_id,
+            name=call_info.caller_endpoint.host,
             manufacturer=manuf,
             model=model,
             sw_version=fw_version,
             configuration_url=f"http://{call_info.caller_ip}",
         )
+
+        if voip_device is not None:
+            return voip_device
+
         voip_device = self.devices[voip_id] = VoIPDevice(
             voip_id=voip_id,
             device_id=device.id,

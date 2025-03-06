@@ -34,7 +34,7 @@ def short_address(address: str) -> str:
 
 def name_from_discovery(discovery: MicroBotAdvertisement) -> str:
     """Get the name from a discovery."""
-    return f'{discovery.data["local_name"]} {short_address(discovery.address)}'
+    return f"{discovery.data['local_name']} {short_address(discovery.address)}"
 
 
 class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):

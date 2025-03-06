@@ -5,12 +5,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DHCP_DATA, DISCOVERY_DATA, HOMEKIT_DATA, MOCK_SERIAL
 
@@ -65,7 +66,7 @@ async def test_form_homekit_and_dhcp_cannot_connect(
     hass: HomeAssistant,
     mock_setup_entry: MagicMock,
     source: str,
-    discovery_info: dhcp.DhcpServiceInfo,
+    discovery_info: DhcpServiceInfo,
     api_version: int,
 ) -> None:
     """Test we get the form with homekit and dhcp source."""
@@ -112,7 +113,7 @@ async def test_form_homekit_and_dhcp(
     hass: HomeAssistant,
     mock_setup_entry: MagicMock,
     source: str,
-    discovery_info: dhcp.DhcpServiceInfo | zeroconf.ZeroconfServiceInfo,
+    discovery_info: DhcpServiceInfo | ZeroconfServiceInfo,
     api_version: int,
 ) -> None:
     """Test we get the form with homekit and dhcp source."""
@@ -166,10 +167,10 @@ async def test_discovered_by_homekit_and_dhcp(
     hass: HomeAssistant,
     mock_setup_entry: MagicMock,
     homekit_source: str,
-    homekit_discovery: zeroconf.ZeroconfServiceInfo,
+    homekit_discovery: ZeroconfServiceInfo,
     api_version: int,
     dhcp_source: str,
-    dhcp_discovery: dhcp.DhcpServiceInfo,
+    dhcp_discovery: DhcpServiceInfo,
     dhcp_api_version: int,
 ) -> None:
     """Test we get the form with homekit and abort for dhcp source when we get both."""
@@ -368,6 +369,7 @@ async def test_migrate_entry(
         version=1,
         minor_version=1,
     )
+    entry.add_to_hass(hass)
 
     # Add entries with int unique_id
     entity_registry.async_get_or_create(
@@ -387,7 +389,6 @@ async def test_migrate_entry(
     assert entry.version == 1
     assert entry.minor_version == 1
 
-    entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 

@@ -51,7 +51,7 @@ class KitchenSinkBackupAgent(BackupAgent):
     def __init__(self, name: str) -> None:
         """Initialize the kitchen sink backup sync agent."""
         super().__init__()
-        self.name = name
+        self.name = self.unique_id = name
         self._uploads = [
             AgentBackup(
                 addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],

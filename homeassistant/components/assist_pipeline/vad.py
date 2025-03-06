@@ -75,7 +75,7 @@ class AudioBuffer:
 class VoiceCommandSegmenter:
     """Segments an audio stream into voice commands."""
 
-    speech_seconds: float = 0.1
+    speech_seconds: float = 0.3
     """Seconds of speech before voice command has started."""
 
     command_seconds: float = 1.0

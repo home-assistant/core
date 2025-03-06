@@ -28,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     DEVICE_ID,
@@ -1012,9 +1012,9 @@ async def test_media_permission_unauthorized(
 
     client = await hass_client()
     response = await client.get(media_url)
-    assert (
-        response.status == HTTPStatus.UNAUTHORIZED
-    ), f"Response not matched: {response}"
+    assert response.status == HTTPStatus.UNAUTHORIZED, (
+        f"Response not matched: {response}"
+    )
 
 
 async def test_multiple_devices(
@@ -1306,9 +1306,9 @@ async def test_media_store_load_filesystem_error(
         response = await client.get(
             f"/api/nest/event_media/{device.id}/{event_identifier}"
         )
-        assert (
-            response.status == HTTPStatus.NOT_FOUND
-        ), f"Response not matched: {response}"
+        assert response.status == HTTPStatus.NOT_FOUND, (
+            f"Response not matched: {response}"
+        )
 
 
 @pytest.mark.parametrize(("device_traits", "cache_size"), [(BATTERY_CAMERA_TRAITS, 5)])

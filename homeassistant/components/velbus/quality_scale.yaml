@@ -8,25 +8,19 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow:
-    status: todo
-    comment: |
-      Dynamically build up the port parameter based on inputs provided by the user, do not fill-in a name parameter, build it up in the config flow
+  config-flow: done
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup: todo
+  entity-event-setup: done
   entity-unique-id: done
-  has-entity-name: todo
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
-  unique-config-entry:
-    status: todo
-    comment: |
-      Manual step does not generate an unique-id
+  unique-config-entry: done
 
   # Silver
   action-exceptions: todo
@@ -41,7 +35,7 @@ rules:
     status: exempt
     comment: |
       This integration does not require authentication.
-  test-coverage: todo
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: done

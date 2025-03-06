@@ -24,6 +24,7 @@ from pynecil import (
 import pytest
 
 from homeassistant.components.iron_os import DOMAIN
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import CONF_ADDRESS
 
 from tests.common import MockConfigEntry
@@ -110,6 +111,19 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
+@pytest.fixture(name="config_entry_ignored")
+def mock_config_entry_ignored() -> MockConfigEntry:
+    """Mock Pinecil configuration entry for ignored device."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=DEFAULT_NAME,
+        data={},
+        unique_id="c0:ff:ee:c0:ff:ee",
+        entry_id="1234567890",
+        source=SOURCE_IGNORE,
+    )
+
+
 @pytest.fixture(name="ble_device")
 def mock_ble_device() -> Generator[MagicMock]:
     """Mock BLEDevice."""
@@ -183,6 +197,14 @@ def mock_pynecil() -> Generator[AsyncMock]:
             desc_scroll_speed=ScrollSpeed.FAST,
             logo_duration=LogoDuration.LOOP,
             locking_mode=LockingMode.FULL_LOCKING,
+            animation_loop=True,
+            cooling_temp_blink=True,
+            idle_screen_details=True,
+            solder_screen_details=True,
+            invert_buttons=True,
+            display_invert=True,
+            calibrate_cjc=True,
+            usb_pd_mode=True,
         )
         client.get_live_data.return_value = LiveDataResponse(
             live_temp=298,
