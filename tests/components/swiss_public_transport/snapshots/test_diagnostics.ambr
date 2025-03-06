@@ -1,0 +1,61 @@
+# serializer version: 1
+# name: test_diagnostics[previous_stats0-None]
+  dict({
+    '2025-01-09': dict({
+      'count': 1,
+      'errors': 0,
+      'timestamps_error': list([
+      ]),
+      'timestamps_success': list([
+        '00:00:00',
+      ]),
+    }),
+  })
+# ---
+# name: test_diagnostics[previous_stats1-None]
+  dict({
+    '2025-01-03': dict({
+      'count': 0,
+      'errors': 0,
+      'timestamps_error': list([
+      ]),
+      'timestamps_success': list([
+      ]),
+    }),
+    '2025-01-09': dict({
+      'count': 1,
+      'errors': 0,
+      'timestamps_error': list([
+      ]),
+      'timestamps_success': list([
+        '00:00:00',
+      ]),
+    }),
+  })
+# ---
+# name: test_diagnostics[previous_stats2-OpendataTransportConnectionError]
+  dict({
+    '2025-01-09': dict({
+      'count': 1,
+      'errors': 1,
+      'timestamps_error': list([
+        '00:00:00',
+      ]),
+      'timestamps_success': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_diagnostics[previous_stats3-OpendataTransportError]
+  dict({
+    '2025-01-09': dict({
+      'count': 1,
+      'errors': 1,
+      'timestamps_error': list([
+        '00:00:00',
+      ]),
+      'timestamps_success': list([
+      ]),
+    }),
+  })
+# ---
