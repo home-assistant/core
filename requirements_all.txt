@@ -422,7 +422,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.3.1
+aiowebdav2==0.4.0
 
 # homeassistant.components.webostv
 aiowebostv==0.7.3
@@ -986,7 +986,7 @@ gcal-sync==7.0.0
 geniushub-client==0.7.1
 
 # homeassistant.components.geocaching
-geocachingapi==0.2.1
+geocachingapi==0.3.0
 
 # homeassistant.components.aprs
 geopy==2.3.0
@@ -2310,7 +2310,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.5.0
+pysmartthings==2.6.1
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
