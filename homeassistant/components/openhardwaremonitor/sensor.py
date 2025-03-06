@@ -12,12 +12,14 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .const import DOMAIN, GROUP_DEVICES_PER_DEPTH_LEVEL
 
 STATE_MIN_VALUE = "minimal_value"
 STATE_MAX_VALUE = "maximum_value"
@@ -36,7 +38,6 @@ OHM_CHILDREN = "Children"
 OHM_IMAGEURL = "ImageURL"
 OHM_NAME = "Text"
 OHM_ID = "id"
-from .const import *
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT, default=8085): cv.port}
@@ -86,7 +87,7 @@ class OpenHardwareMonitorDevice(SensorEntity):
                 manufacturer="Computer",
             )
             return
-        elif groupDevicesPerDepthLevel == 2:
+        if groupDevicesPerDepthLevel == 2:
             manufacturer = "Hardware"
         else:
             manufacturer = "Group"

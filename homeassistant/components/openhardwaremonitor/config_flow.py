@@ -1,14 +1,16 @@
 """Config flow for OpenHardwareMonitor integration."""
 
 from __future__ import annotations
+
 from typing import Any
 
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
-from .const import *
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_PORT
+import homeassistant.helpers.config_validation as cv
+
+from .const import DOMAIN, GROUP_DEVICES_PER_DEPTH_LEVEL
 
 
 class OpenHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):

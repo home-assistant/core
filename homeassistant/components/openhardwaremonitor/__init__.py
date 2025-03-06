@@ -2,18 +2,19 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform, CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import Throttle
-from homeassistant.exceptions import ConfigEntryNotReady
 from datetime import timedelta
 
 from pyopenhardwaremonitor.api import OpenHardwareMonitorAPI
 
-from .const import *
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util import Throttle
+
+from .const import DOMAIN, GROUP_DEVICES_PER_DEPTH_LEVEL
 from .sensor import OpenHardwareMonitorDevice
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
