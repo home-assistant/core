@@ -54,7 +54,7 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "url_not_reachable"
             _LOGGER.debug("ConnectError: %s", err)
         except HTTPStatusError as err:
-            errors["base"] = "not_authorized"
+            errors["base"] = "cannot_connect"
             _LOGGER.debug("HTTPStatusError: %s", err)
         except ValueError as err:
             errors["base"] = "unknown_url_type"

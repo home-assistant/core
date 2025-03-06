@@ -46,45 +46,60 @@ async def test_form_import_ics(hass: HomeAssistant, ics_content: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    ("side_effect", "errors"),
     [
-        ConnectError("Connection failed"),
-        UnsupportedProtocol("Unsupported protocol"),
-        ValueError("Invalid response"),
+        (ConnectError("Connection failed"), "url_not_reachable"),
+        (UnsupportedProtocol("Unsupported protocol"), "unsupported_protocol"),
+        (ValueError("Invalid response"), "unknown_url_type"),
     ],
 )
 @respx.mock
 async def test_form_inavild_url(
     hass: HomeAssistant,
     side_effect: Exception,
+    errors: str,
+    ics_content: str,
 ) -> None:
     """Test we get the import form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    respx.get("http://invalid-url.com").mock(side_effect=side_effect)
+    respx.get("invalid-url.com").mock(side_effect=side_effect)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_CALENDAR_NAME: CALENDAR_NAME,
-            CONF_URL: "http://invalid-url.com",
+            CONF_URL: "invalid-url.com",
         },
     )
     assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": errors}
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=ics_content,
+        )
+    )
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: CALENDER_URL,
+        },
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @respx.mock
-async def test_form_http_status_error(
-    hass: HomeAssistant,
-) -> None:
+async def test_form_http_status_error(hass: HomeAssistant, ics_content: str) -> None:
     """Test we http status."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    respx.get("http://invalid-url.com").mock(
+    respx.get(CALENDER_URL).mock(
         return_value=Response(
             status_code=403,
         )
@@ -94,10 +109,25 @@ async def test_form_http_status_error(
         result["flow_id"],
         {
             CONF_CALENDAR_NAME: CALENDAR_NAME,
-            CONF_URL: "http://invalid-url.com",
+            CONF_URL: CALENDER_URL,
         },
     )
     assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=ics_content,
+        )
+    )
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: CALENDER_URL,
+        },
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @respx.mock
@@ -123,6 +153,7 @@ async def test_no_valid_calendar(hass: HomeAssistant) -> None:
     )
 
     assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_ics_file"}
 
 
 async def test_duplicate_name(
