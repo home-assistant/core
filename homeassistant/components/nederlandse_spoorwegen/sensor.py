@@ -11,7 +11,7 @@ import ns_api
 import requests
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle, dt as dt_util
@@ -67,7 +67,7 @@ class NSDepartureSensor(SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: ConfigSubentry,
         nsapi: ns_api.NSAPI,
         unique_id: str | None,
     ) -> None:
@@ -181,7 +181,6 @@ class NSDepartureSensor(SensorEntity):
     @Throttle(timedelta(seconds=MIN_TIME_BETWEEN_UPDATES))
     async def async_update(self) -> None:
         """Get the trip information."""
-        # print(self._attr_unique_id)
 
         # Set the search parameter to search from a specific trip time
         # or to just search for next trip.
