@@ -25,6 +25,7 @@ from anthropic.types import (
 )
 from freezegun import freeze_time
 from httpx import URL, Request, Response
+import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
@@ -32,7 +33,7 @@ from homeassistant.components import conversation
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import intent, llm
+from homeassistant.helpers import chat_session, intent, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util import ulid as ulid_util
 
@@ -436,7 +437,7 @@ async def test_function_exception(
         return stream_generator(
             create_messages(
                 [
-                    *create_content_block(0, "Certainly, calling it now!"),
+                    *create_content_block(0, ["Certainly, calling it now!"]),
                     *create_tool_use_block(
                         1,
                         "toolu_0123456789AbCdEfGhIjKlM",
@@ -519,7 +520,7 @@ async def test_assist_api_tools_conversion(
         new_callable=AsyncMock,
         return_value=stream_generator(
             create_messages(
-                create_content_block(0, "Hello, how can I help you?"),
+                create_content_block(0, ["Hello, how can I help you?"]),
             ),
         ),
     ) as mock_create:
@@ -564,7 +565,7 @@ async def test_conversation_id(
     def create_stream_generator(*args, **kwargs) -> Any:
         return stream_generator(
             create_messages(
-                create_content_block(0, "Hello, how can I help you?"),
+                create_content_block(0, ["Hello, how can I help you?"]),
             ),
         )
 
@@ -628,7 +629,7 @@ async def test_extended_thinking(
                             " to help with their smart home.",
                         ],
                     ),
-                    *create_content_block(1, "Hello, how can I help you today?"),
+                    *create_content_block(1, ["Hello, how can I help you today?"]),
                 ]
             ),
         ),
@@ -660,7 +661,7 @@ async def test_redacted_thinking(
                     *create_redacted_thinking_block(0),
                     *create_redacted_thinking_block(1),
                     *create_redacted_thinking_block(2),
-                    *create_content_block(3, "How can I help you today?"),
+                    *create_content_block(3, ["How can I help you today?"]),
                 ]
             ),
         ),
@@ -767,3 +768,118 @@ async def test_extended_thinking_tool_call(
 
     assert chat_log.content == snapshot
     assert mock_create.mock_calls[1][2]["messages"] == snapshot
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        [
+            conversation.chat_log.SystemContent("You are a helpful assistant."),
+        ],
+        [
+            conversation.chat_log.SystemContent("You are a helpful assistant."),
+            conversation.chat_log.UserContent("What shape is a donut?"),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude", content="A donut is a torus."
+            ),
+        ],
+        [
+            conversation.chat_log.SystemContent("You are a helpful assistant."),
+            conversation.chat_log.UserContent("What shape is a donut?"),
+            conversation.chat_log.UserContent("Can you tell me?"),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude", content="A donut is a torus."
+            ),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude", content="Hope this helps."
+            ),
+        ],
+        [
+            conversation.chat_log.SystemContent("You are a helpful assistant."),
+            conversation.chat_log.UserContent("What shape is a donut?"),
+            conversation.chat_log.UserContent("Can you tell me?"),
+            conversation.chat_log.UserContent("Please?"),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude", content="A donut is a torus."
+            ),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude", content="Hope this helps."
+            ),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude", content="You are welcome."
+            ),
+        ],
+        [
+            conversation.chat_log.SystemContent("You are a helpful assistant."),
+            conversation.chat_log.UserContent("Turn off the lights and make me coffee"),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude",
+                content="Sure.",
+                tool_calls=[
+                    llm.ToolInput(
+                        id="mock-tool-call-id",
+                        tool_name="HassTurnOff",
+                        tool_args={"domain": "light"},
+                    ),
+                    llm.ToolInput(
+                        id="mock-tool-call-id-2",
+                        tool_name="MakeCoffee",
+                        tool_args={},
+                    ),
+                ],
+            ),
+            conversation.chat_log.UserContent("Thank you"),
+            conversation.chat_log.ToolResultContent(
+                agent_id="conversation.claude",
+                tool_call_id="mock-tool-call-id",
+                tool_name="HassTurnOff",
+                tool_result={"success": True, "response": "Lights are off."},
+            ),
+            conversation.chat_log.ToolResultContent(
+                agent_id="conversation.claude",
+                tool_call_id="mock-tool-call-id-2",
+                tool_name="MakeCoffee",
+                tool_result={"success": False, "response": "Not enough milk."},
+            ),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude",
+                content="Should I add milk to the shopping list?",
+            ),
+        ],
+    ],
+)
+async def test_history_conversion(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    snapshot: SnapshotAssertion,
+    content: list[conversation.chat_log.Content],
+) -> None:
+    """Test conversion of chat_log entries into API parameters."""
+    conversation_id = "conversation_id"
+    with (
+        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        conversation.async_get_chat_log(hass, session) as chat_log,
+        patch(
+            "anthropic.resources.messages.AsyncMessages.create",
+            new_callable=AsyncMock,
+            return_value=stream_generator(
+                create_messages(
+                    [
+                        *create_content_block(0, ["Yes, I am sure!"]),
+                    ]
+                ),
+            ),
+        ) as mock_create,
+    ):
+        chat_log.content = content
+
+        await conversation.async_converse(
+            hass,
+            "Are you sure?",
+            conversation_id,
+            Context(),
+            agent_id="conversation.claude",
+        )
+
+        assert mock_create.mock_calls[0][2]["messages"] == snapshot
