@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from types import MappingProxyType
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
 from aioshelly.block_device import COAP, Block, BlockDevice
@@ -173,6 +173,18 @@ def is_block_momentary_input(
         button_type = button[channel].get("btn_type")
 
     return button_type in momentary_types
+
+
+def is_block_exclude_from_relay(settings: dict[str, Any], block: Block) -> bool:
+    """Return true if block should be excluded from switch platform."""
+
+    if settings.get("mode") == "roller":
+        return True
+
+    if TYPE_CHECKING:
+        assert block.channel is not None
+
+    return is_block_channel_type_light(settings, int(block.channel))
 
 
 def get_device_uptime(uptime: float, last_uptime: datetime | None) -> datetime:
@@ -627,3 +639,14 @@ async def get_rpc_script_event_types(device: RpcDevice, id: int) -> list[str]:
     code_response = await device.script_getcode(id)
     matches = SHELLY_EMIT_EVENT_PATTERN.finditer(code_response["data"])
     return sorted([*{str(event_type.group(1)) for event_type in matches}])
+
+
+def is_rpc_exclude_from_relay(
+    settings: dict[str, Any], status: dict[str, Any], channel: str
+) -> bool:
+    """Return true if rpc channel should be excludeed from switch platform."""
+    ch = int(channel.split(":")[1])
+    if is_rpc_thermostat_internal_actuator(status):
+        return True
+
+    return is_rpc_channel_type_light(settings, ch)
