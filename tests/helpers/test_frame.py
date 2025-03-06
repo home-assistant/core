@@ -395,14 +395,14 @@ async def test_prevent_flooding(
         f"q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+{integration}%22"
     )
 
-    frame.report(what, error_if_core=False)
+    frame.report_usage(what, core_behavior=frame.ReportBehavior.LOG)
     assert expected_message in caplog.text
     assert key in frame._REPORTED_INTEGRATIONS
     assert len(frame._REPORTED_INTEGRATIONS) == 1
 
     caplog.clear()
 
-    frame.report(what, error_if_core=False)
+    frame.report_usage(what, core_behavior=frame.ReportBehavior.LOG)
     assert expected_message not in caplog.text
     assert key in frame._REPORTED_INTEGRATIONS
     assert len(frame._REPORTED_INTEGRATIONS) == 1
