@@ -538,21 +538,21 @@ async def test_report_error_if_integration(
             False,
             id="custom integration",
         ),
-        # Assert integration found in stack frame has priority over integration_domain
+        # Assert integration_domain has priority over integration found in stack frame
         pytest.param(
             "core_integration_behavior",
             "sensor",
             "homeassistant/components/hue",
-            "that integration 'hue'",
+            "that integration 'sensor'",
             False,
             id="core integration stack mismatch",
         ),
-        # Assert integration found in stack frame has priority over integration_domain
+        # Assert integration_domain has priority over integration found in stack frame
         pytest.param(
             "custom_integration_behavior",
             "test_package",
             "custom_components/hue",
-            "that custom integration 'hue'",
+            "that custom integration 'test_package'",
             False,
             id="custom integration stack mismatch",
         ),
