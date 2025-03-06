@@ -37,6 +37,7 @@ from homeassistant.const import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    SERVICE_STOP_COVER_TILT,
     SERVICE_TOGGLE,
     SERVICE_TOGGLE_COVER_TILT,
     STATE_CLOSED,
@@ -934,6 +935,44 @@ async def test_send_stop_cover_command(
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "STOP", 2, False)
     state = hass.states.get("cover.test")
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "tilt_command_topic": "command-topic",
+                    "qos": 2,
+                }
+            }
+        }
+    ],
+)
+async def test_send_stop_tilt_command(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the sending of stop_cover."""
+    mqtt_mock = await mqtt_mock_entry()
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_STOP_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.test"},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "STOP", 2, False)
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+
 
 
 @pytest.mark.parametrize(
