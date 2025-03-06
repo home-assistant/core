@@ -64,28 +64,18 @@ async def async_setup_entry(
 
 
 SUPPORTED_SCHEMA_KEYS = {
-    "min_items",
-    "example",
-    "property_ordering",
-    "pattern",
-    "minimum",
-    "default",
-    "any_of",
-    "max_length",
-    "title",
-    "min_properties",
-    "min_length",
-    "max_items",
-    "maximum",
-    "nullable",
-    "max_properties",
+    # Gemini API does not support all of the OpenAPI schema
+    # SoT: https://ai.google.dev/api/caching#Schema
     "type",
-    "description",
-    "enum",
     "format",
-    "items",
+    "description",
+    "nullable",
+    "enum",
+    "max_items",
+    "min_items",
     "properties",
     "required",
+    "items",
 }
 
 
@@ -109,9 +99,7 @@ def _format_schema(schema: dict[str, Any]) -> Schema:
         key = _camel_to_snake(key)
         if key not in SUPPORTED_SCHEMA_KEYS:
             continue
-        if key == "any_of":
-            val = [_format_schema(subschema) for subschema in val]
-        elif key == "type":
+        if key == "type":
             val = val.upper()
         elif key == "format":
             # Gemini API does not support all formats, see: https://ai.google.dev/api/caching#Schema

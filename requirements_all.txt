@@ -291,7 +291,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.6.4
 
 # homeassistant.components.lifx
-aiolifx==1.1.2
+aiolifx==1.1.4
 
 # homeassistant.components.lookin
 aiolookin==1.0.0
@@ -744,7 +744,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.35.1
+dbus-fast==2.37.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.11
@@ -2140,7 +2140,7 @@ pymsteams==0.1.12
 pymysensors==0.24.0
 
 # homeassistant.components.iron_os
-pynecil==4.0.1
+pynecil==4.1.0
 
 # homeassistant.components.netgear
 pynetgear==0.10.10
@@ -2890,7 +2890,7 @@ tessie-api==0.1.1
 # tf-models-official==2.5.0
 
 # homeassistant.components.thermobeacon
-thermobeacon-ble==0.8.0
+thermobeacon-ble==0.8.1
 
 # homeassistant.components.thermopro
 thermopro-ble==0.11.0

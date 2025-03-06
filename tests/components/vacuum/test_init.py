@@ -356,6 +356,7 @@ async def test_vacuum_log_deprecated_state_warning_using_state_prop(
             async_setup_entry=help_async_setup_entry_init,
             async_unload_entry=help_async_unload_entry,
         ),
+        built_in=False,
     )
     setup_test_component_platform(hass, VACUUM_DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -399,6 +400,7 @@ async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
             async_setup_entry=help_async_setup_entry_init,
             async_unload_entry=help_async_unload_entry,
         ),
+        built_in=False,
     )
     setup_test_component_platform(hass, VACUUM_DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -463,6 +465,7 @@ async def test_vacuum_deprecated_state_does_not_break_state(
             async_setup_entry=help_async_setup_entry_init,
             async_unload_entry=help_async_unload_entry,
         ),
+        built_in=False,
     )
     setup_test_component_platform(hass, VACUUM_DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
