@@ -266,7 +266,7 @@ class HomeConnectCoordinator(
                 _LOGGER.debug(
                     "Non-breaking error (%s) while listening for events,"
                     " continuing in %s seconds",
-                    type(error).__name__,
+                    error,
                     retry_time,
                 )
                 await asyncio.sleep(retry_time)
@@ -343,9 +343,7 @@ class HomeConnectCoordinator(
             _LOGGER.debug(
                 "Error fetching settings for %s: %s",
                 appliance.ha_id,
-                error
-                if isinstance(error, HomeConnectApiError)
-                else type(error).__name__,
+                error,
             )
             settings = {}
         try:
@@ -357,9 +355,7 @@ class HomeConnectCoordinator(
             _LOGGER.debug(
                 "Error fetching status for %s: %s",
                 appliance.ha_id,
-                error
-                if isinstance(error, HomeConnectApiError)
-                else type(error).__name__,
+                error,
             )
             status = {}
 
@@ -373,9 +369,7 @@ class HomeConnectCoordinator(
                 _LOGGER.debug(
                     "Error fetching programs for %s: %s",
                     appliance.ha_id,
-                    error
-                    if isinstance(error, HomeConnectApiError)
-                    else type(error).__name__,
+                    error,
                 )
             else:
                 programs.extend(all_programs.programs)
@@ -465,9 +459,7 @@ class HomeConnectCoordinator(
             _LOGGER.debug(
                 "Error fetching options for %s: %s",
                 ha_id,
-                error
-                if isinstance(error, HomeConnectApiError)
-                else type(error).__name__,
+                error,
             )
             return {}
 
