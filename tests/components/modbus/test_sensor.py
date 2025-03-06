@@ -45,7 +45,6 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -742,7 +741,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                 int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
             ],
             False,
-            ["34899771392.0", "0.0"],
+            ["34899771392.0", STATE_UNAVAILABLE],
         ),
         (
             {
@@ -757,7 +756,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                 int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
             ],
             False,
-            ["34899771392.0", "0.0"],
+            ["34899771392.0", STATE_UNAVAILABLE],
         ),
         (
             {
@@ -802,7 +801,11 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             },
             [0x0102, 0x0304, 0x0403, 0x0201, 0x0403],
             False,
-            [STATE_UNAVAILABLE, STATE_UNKNOWN, STATE_UNKNOWN],
+            [
+                STATE_UNAVAILABLE,
+                STATE_UNAVAILABLE,
+                STATE_UNAVAILABLE,
+            ],
         ),
         (
             {
@@ -857,7 +860,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             },
             [0x0102, 0x0304, 0x0403, 0x0201],
             True,
-            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+            [STATE_UNAVAILABLE, STATE_UNAVAILABLE],
         ),
         (
             {
@@ -866,7 +869,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             },
             [0x0102, 0x0304, 0x0403, 0x0201],
             True,
-            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+            [STATE_UNAVAILABLE, STATE_UNAVAILABLE],
         ),
         (
             {
@@ -875,7 +878,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             },
             [],
             False,
-            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+            [STATE_UNAVAILABLE, STATE_UNAVAILABLE],
         ),
         (
             {
@@ -884,7 +887,35 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             },
             [],
             False,
-            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+            [STATE_UNAVAILABLE, STATE_UNAVAILABLE],
+        ),
+        (
+            {
+                CONF_VIRTUAL_COUNT: 4,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_NAN_VALUE: "0x800000",
+            },
+            [
+                0x0,
+                0x35,
+                0x0,
+                0x38,
+                0x80,
+                0x0,
+                0x80,
+                0x0,
+                0xFFFF,
+                0xFFF6,
+            ],
+            False,
+            [
+                "53",
+                "56",
+                STATE_UNAVAILABLE,
+                STATE_UNAVAILABLE,
+                "-10",
+            ],
         ),
     ],
 )
