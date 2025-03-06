@@ -13,7 +13,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CHARGER_DATA_KEY,
-    CHARGER_ECO_SMART_KEY,
     CHARGER_FEATURES_KEY,
     CHARGER_PLAN_KEY,
     CHARGER_POWER_BOOST_KEY,
@@ -30,14 +29,17 @@ from .entity import WallboxEntity
 class WallboxSelectEntityDescription(SelectEntityDescription):
     """Describes Wallbox select entity."""
 
-    current_option_fn: Callable[[WallboxCoordinator], str]
+    current_option_fn: Callable[[WallboxCoordinator], str | None]
     select_option_fn: Callable[[WallboxCoordinator, str], Awaitable[None]]
 
 
 SELECT_TYPES: dict[str, WallboxSelectEntityDescription] = {
-    CHARGER_ECO_SMART_KEY: WallboxSelectEntityDescription(
-        key=CHARGER_ECO_SMART_KEY,
+    CHARGER_SOLAR_CHARGING_MODE: WallboxSelectEntityDescription(
+        key=CHARGER_SOLAR_CHARGING_MODE,
         translation_key="eco_smart",
+        select_option_fn=lambda coordinator, mode: coordinator.async_set_eco_smart(
+            mode
+        ),
         options=[
             EcoSmartMode.OFF,
             EcoSmartMode.ECO_MODE,
@@ -46,10 +48,7 @@ SELECT_TYPES: dict[str, WallboxSelectEntityDescription] = {
         current_option_fn=lambda coordinator: coordinator.data[
             CHARGER_SOLAR_CHARGING_MODE
         ],
-        select_option_fn=lambda coordinator, mode: coordinator.async_set_eco_smart(
-            mode
-        ),
-    ),
+    )
 }
 
 
@@ -62,7 +61,9 @@ async def async_setup_entry(
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [WallboxSelect(coordinator, entry, SELECT_TYPES[CHARGER_ECO_SMART_KEY])]
+        WallboxSelect(coordinator, entry, description)
+        for ent in coordinator.data
+        if (description := SELECT_TYPES.get(ent))
     )
 
 
