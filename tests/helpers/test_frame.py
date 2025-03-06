@@ -492,7 +492,9 @@ async def test_report_error_if_integration(
             ),
         ),
     ):
-        frame.report("did a bad thing", error_if_integration=True)
+        frame.report_usage(
+            "did a bad thing", core_integration_behavior=frame.ReportBehavior.ERROR
+        )
 
 
 @pytest.mark.parametrize(
