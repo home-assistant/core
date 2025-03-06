@@ -199,6 +199,9 @@
       },
       "backlight_brightness": {
         "name": "Backlight brightness"
+      },
+      "temp_correction": {
+        "name": "Temperature correction"
       }
     },
     "select": {
@@ -838,6 +841,9 @@
       },
       "economy_mode": {
         "name": "Economy mode"
+      },
+      "frost_protection": {
+        "name": "Frost protection"
       },
       "open_window_detection": {
         "name": "Open window detection"

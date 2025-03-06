@@ -594,6 +594,12 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
             name="Economy mode",
         ),
+        SwitchEntityDescription(
+            key=DPCode.FROST,
+            translation_key="frost_protection",
+            entity_category=EntityCategory.CONFIG,
+            name="Frost protection",
+        )
     ),
     # Thermostatic Radiator Valve
     # Not documented

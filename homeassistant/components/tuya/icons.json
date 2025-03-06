@@ -347,6 +347,9 @@
       "economy_mode": {
         "default": "mdi:leaf"
       },
+      "frost_protection": {
+        "default": "mdi:snowflake-thermometer"
+      },
       "open_window_detection": {
         "default": "mdi:window-open"
       },

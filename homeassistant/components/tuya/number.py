@@ -308,28 +308,22 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "wk": (
         NumberEntityDescription(
             key=DPCode.BACKLIGHT,
-            translation_key="backlight",
+            translation_key="backlight_brightness",
             native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.CONFIG,
             name = "Backlight",
             icon="mdi:knob",
         ),
-        # NumberEntityDescription(
-        #     key=DPCode.CALIBRATION,
-        #     translation_key="calibration",
-        #     native_unit_of_measurement=PERCENTAGE,
-        #     entity_category=EntityCategory.CONFIG,
-        #     name = "Calibration",
-        #     icon="mdi:thermometer",
-        # ),
-        # NumberEntityDescription(
-        #     key=DPCode.CALIBRATION_TEMP,
-        #     translation_key="calibration_temperature",
-        #     device_class=NumberDeviceClass.TEMPERATURE,
-        #     entity_category=EntityCategory.CONFIG,
-        #     name = "Calibration Temperature",
-        #     icon="mdi:thermometer",
-        # ),
+        NumberEntityDescription(
+            key=DPCode.TEMP_CORRECTION,
+            translation_key="temp_correction",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            entity_category=EntityCategory.CONFIG,
+            native_min_value=-9,
+            native_max_value=9,
+            name = "Temp correction",
+            icon="mdi:thermometer-lines",
+        ),
     )
 }
 
