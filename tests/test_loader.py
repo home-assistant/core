@@ -16,6 +16,7 @@ from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_dumps
+from homeassistant.loader import _ResolveDependenciesCache
 from homeassistant.util.json import json_loads
 
 from .common import MockModule, async_get_persistent_notifications, mock_integration
@@ -29,18 +30,24 @@ async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
     mod_4 = mock_integration(hass, MockModule("mod4", dependencies=["mod2", "mod3"]))
     all_domains = {"mod1", "mod2", "mod3", "mod4"}
 
-    deps = await loader._do_resolve_dependencies(mod_4)
+    deps = await loader._do_resolve_dependencies(
+        mod_4, cache=_ResolveDependenciesCache.from_dict({})
+    )
     assert deps == {"mod1", "mod2", "mod3"}
 
     # Create a circular dependency
     mock_integration(hass, MockModule("mod1", dependencies=["mod4"]))
     with pytest.raises(loader.CircularDependency):
-        await loader._do_resolve_dependencies(mod_4)
+        await loader._do_resolve_dependencies(
+            mod_4, cache=_ResolveDependenciesCache.from_dict({})
+        )
 
     # Create a different circular dependency
     mock_integration(hass, MockModule("mod1", dependencies=["mod3"]))
     with pytest.raises(loader.CircularDependency):
-        await loader._do_resolve_dependencies(mod_4)
+        await loader._do_resolve_dependencies(
+            mod_4, cache=_ResolveDependenciesCache.from_dict({})
+        )
 
     # Create a circular after_dependency
     mock_integration(
@@ -48,7 +55,9 @@ async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
     )
     with pytest.raises(loader.CircularDependency):
         await loader._do_resolve_dependencies(
-            mod_4, possible_after_dependencies=all_domains
+            mod_4,
+            cache=_ResolveDependenciesCache.from_dict({}),
+            possible_after_dependencies=all_domains,
         )
 
     # Create a different circular after_dependency
@@ -57,7 +66,9 @@ async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
     )
     with pytest.raises(loader.CircularDependency):
         await loader._do_resolve_dependencies(
-            mod_4, possible_after_dependencies=all_domains
+            mod_4,
+            cache=_ResolveDependenciesCache.from_dict({}),
+            possible_after_dependencies=all_domains,
         )
 
     # Create a circular after_dependency without a hard dependency
@@ -69,7 +80,9 @@ async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
     )
     with pytest.raises(loader.CircularDependency):
         await loader._do_resolve_dependencies(
-            mod_4, possible_after_dependencies=all_domains
+            mod_4,
+            cache=_ResolveDependenciesCache.from_dict({}),
+            possible_after_dependencies=all_domains,
         )
 
     result = await loader.resolve_integrations_after_dependencies(hass, (mod_4,))

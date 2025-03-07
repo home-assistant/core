@@ -1535,7 +1535,7 @@ class _ResolveDependenciesCache:
 async def _do_resolve_dependencies(
     itg: Integration,
     *,
-    cache: _ResolveDependenciesCache | None = None,
+    cache: _ResolveDependenciesCache,
     possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
     ignore_exceptions: bool = False,
 ) -> set[str]:
@@ -1549,12 +1549,7 @@ async def _do_resolve_dependencies(
     If `ignore_exceptions` is True, exceptions are caught and ignored and the normal resolution
     algorithm continues. Otherwise, they are raised.
     """
-    if cache is not None:
-        resolved = cache
-    else:
-        cache_dict: dict[str, set[str] | Exception] = {}
-        resolved = _ResolveDependenciesCache.from_dict(cache_dict)
-
+    resolved = cache
     resolving: set[str] = set()
 
     async def do_resolve_dependencies_impl(itg: Integration) -> set[str]:
