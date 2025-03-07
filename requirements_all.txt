@@ -264,7 +264,7 @@ aioharmony==0.4.1
 aiohasupervisor==0.3.0
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.16.2
+aiohomeconnect==0.16.3
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.8
@@ -425,7 +425,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.4.0
+aiowebdav2==0.4.1
 
 # homeassistant.components.webostv
 aiowebostv==0.7.3
@@ -747,7 +747,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.37.0
+dbus-fast==2.39.3
 
 # homeassistant.components.debugpy
 debugpy==1.8.11
@@ -1155,7 +1155,7 @@ hole==0.8.0
 holidays==0.68
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250305.0
+home-assistant-frontend==20250306.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.3.5
@@ -1486,7 +1486,7 @@ nettigo-air-monitor==4.0.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==2.2.1
+nexia==2.2.2
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -1758,7 +1758,7 @@ py-schluter==0.1.7
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.7.0
+py-synologydsm-api==2.7.1
 
 # homeassistant.components.atome
 pyAtome==0.1.1
@@ -2313,7 +2313,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.6.1
+pysmartthings==2.7.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2470,7 +2470,7 @@ python-roborock==2.11.1
 python-smarttub==0.0.39
 
 # homeassistant.components.snoo
-python-snoo==0.6.0
+python-snoo==0.6.1
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -3067,7 +3067,7 @@ webmin-xmlrpc==0.0.2
 weheat==2025.2.26
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.12
+whirlpool-sixth-sense==0.19.1
 
 # homeassistant.components.whois
 whois==0.9.27

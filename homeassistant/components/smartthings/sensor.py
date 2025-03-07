@@ -130,7 +130,6 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     unique_id_separator: str = "."
     capability_ignore_list: list[set[Capability]] | None = None
     options_attribute: Attribute | None = None
-    except_if_state_none: bool = False
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -581,7 +580,6 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["energy"] / 1000,
                 suggested_display_precision=2,
-                except_if_state_none=True,
             ),
             SmartThingsSensorEntityDescription(
                 key="power_meter",
@@ -591,7 +589,6 @@ CAPABILITY_TO_SENSORS: dict[
                 value_fn=lambda value: value["power"],
                 extra_state_attributes_fn=power_attributes,
                 suggested_display_precision=2,
-                except_if_state_none=True,
             ),
             SmartThingsSensorEntityDescription(
                 key="deltaEnergy_meter",
@@ -601,7 +598,6 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["deltaEnergy"] / 1000,
                 suggested_display_precision=2,
-                except_if_state_none=True,
             ),
             SmartThingsSensorEntityDescription(
                 key="powerEnergy_meter",
@@ -611,7 +607,6 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["powerEnergy"] / 1000,
                 suggested_display_precision=2,
-                except_if_state_none=True,
             ),
             SmartThingsSensorEntityDescription(
                 key="energySaved_meter",
@@ -621,7 +616,6 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["energySaved"] / 1000,
                 suggested_display_precision=2,
-                except_if_state_none=True,
             ),
         ]
     },
@@ -951,6 +945,7 @@ UNITS = {
     "F": UnitOfTemperature.FAHRENHEIT,
     "lux": LIGHT_LUX,
     "mG": None,
+    "μg/m^3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
 }
 
 
@@ -981,10 +976,6 @@ async def async_setup_entry(
                 all(capability in device.status[MAIN] for capability in capability_list)
                 for capability_list in description.capability_ignore_list
             )
-        )
-        and (
-            not description.except_if_state_none
-            or device.status[MAIN][capability][attribute].value is not None
         )
     )
 
