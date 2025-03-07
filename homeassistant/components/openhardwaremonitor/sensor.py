@@ -80,6 +80,7 @@ class OpenHardwareMonitorSensorDevice(
         super().__init__(coordinator=coordinator)
 
         self._node = node
+        self._attr_available = bool(node)
         self._fullname = node["FullName"]
         self.attributes = {}
         self._attr_unique_id = f"ohm-{self._fullname}"
@@ -160,4 +161,5 @@ class OpenHardwareMonitorSensorDevice(
     def _handle_coordinator_update(self):
         if node := self.coordinator.get_sensor_node(self._fullname):
             self._apply_data(node)
+        self._attr_available = bool(node)
         return super()._handle_coordinator_update()
