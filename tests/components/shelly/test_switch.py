@@ -519,7 +519,7 @@ async def test_rpc_device_virtual_switch(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert get_entity_state(hass, entity_id) == STATE_OFF
 
     monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", True)
     await hass.services.async_call(
@@ -529,7 +529,7 @@ async def test_rpc_device_virtual_switch(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert get_entity_state(hass, entity_id) == STATE_ON
 
 
 async def test_rpc_device_virtual_binary_sensor(

@@ -45,6 +45,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import (
     get_entity,
+    get_entity_state,
     init_integration,
     mutate_rpc_device_status,
     register_device,
@@ -473,7 +474,7 @@ async def test_rpc_device_switch_type_lights_mode(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert get_entity_state(hass, entity_id) == STATE_ON
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "switch:0", "output", False)
     await hass.services.async_call(
@@ -483,7 +484,7 @@ async def test_rpc_device_switch_type_lights_mode(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert get_entity_state(hass, entity_id) == STATE_OFF
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -730,7 +731,7 @@ async def test_rpc_rgbw_device_light_mode_remove_others(
     # verify we have 4 lights
     for i in range(SHELLY_PLUS_RGBW_CHANNELS):
         entity_id = f"light.test_light_{i}"
-        assert hass.states.get(entity_id).state == STATE_ON
+        assert get_entity_state(hass, entity_id) == STATE_ON
         entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.unique_id == f"123456789ABC-light:{i}"
@@ -793,7 +794,7 @@ async def test_rpc_rgbw_device_rgb_w_modes_remove_others(
 
     # verify we have RGB/w light
     entity_id = f"light.test_{active_mode}_0"
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert get_entity_state(hass, entity_id) == STATE_ON
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == f"123456789ABC-{active_mode}:0"

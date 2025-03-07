@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, register_device, register_entity
+from . import get_entity_state, init_integration, register_device, register_entity
 
 
 @pytest.mark.parametrize(
@@ -47,9 +47,7 @@ async def test_rpc_device_virtual_text(
 
     await init_integration(hass, 3)
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "lorem ipsum"
+    assert get_entity_state(hass, entity_id) == "lorem ipsum"
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -57,7 +55,7 @@ async def test_rpc_device_virtual_text(
 
     monkeypatch.setitem(mock_rpc_device.status["text:203"], "value", "dolor sit amet")
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == "dolor sit amet"
+    assert get_entity_state(hass, entity_id) == "dolor sit amet"
 
     monkeypatch.setitem(mock_rpc_device.status["text:203"], "value", "sed do eiusmod")
     await hass.services.async_call(
@@ -67,7 +65,7 @@ async def test_rpc_device_virtual_text(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == "sed do eiusmod"
+    assert get_entity_state(hass, entity_id) == "sed do eiusmod"
 
 
 async def test_rpc_remove_virtual_text_when_mode_label(

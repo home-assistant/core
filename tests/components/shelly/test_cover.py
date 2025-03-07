@@ -25,7 +25,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, mutate_rpc_device_status
+from . import get_entity_state, init_integration, mutate_rpc_device_status
 
 ROLLER_BLOCK_ID = 1
 
@@ -56,7 +56,7 @@ async def test_block_device_services(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert hass.states.get(entity_id).state == CoverState.OPENING
+    assert get_entity_state(hass, entity_id) == CoverState.OPENING
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -64,7 +64,7 @@ async def test_block_device_services(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert hass.states.get(entity_id).state == CoverState.CLOSING
+    assert get_entity_state(hass, entity_id) == CoverState.CLOSING
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -72,7 +72,7 @@ async def test_block_device_services(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert hass.states.get(entity_id).state == CoverState.CLOSED
+    assert get_entity_state(hass, entity_id) == CoverState.CLOSED
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -131,7 +131,7 @@ async def test_rpc_device_services(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == CoverState.OPENING
+    assert get_entity_state(hass, entity_id) == CoverState.OPENING
 
     mutate_rpc_device_status(
         monkeypatch, mock_rpc_device, "cover:0", "state", "closing"
@@ -143,7 +143,7 @@ async def test_rpc_device_services(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == CoverState.CLOSING
+    assert get_entity_state(hass, entity_id) == CoverState.CLOSING
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
     await hass.services.async_call(
@@ -153,7 +153,7 @@ async def test_rpc_device_services(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == CoverState.CLOSED
+    assert get_entity_state(hass, entity_id) == CoverState.CLOSED
 
     entry = entity_registry.async_get(entity_id)
     assert entry

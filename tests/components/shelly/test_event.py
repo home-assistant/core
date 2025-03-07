@@ -18,7 +18,13 @@ from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, inject_rpc_device_event, register_entity
+from . import (
+    get_entity_attribute,
+    get_entity_state,
+    init_integration,
+    inject_rpc_device_event,
+    register_entity,
+)
 
 DEVICE_BLOCK_ID = 4
 
@@ -33,14 +39,15 @@ async def test_rpc_button(
     await init_integration(hass, 2)
     entity_id = "event.test_name_input_0"
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
+    assert get_entity_state(hass, entity_id) == STATE_UNKNOWN
+    assert get_entity_attribute(hass, entity_id, ATTR_EVENT_TYPES) == unordered(
         ["btn_down", "btn_up", "double_push", "long_push", "single_push", "triple_push"]
     )
-    assert state.attributes.get(ATTR_EVENT_TYPE) is None
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == EventDeviceClass.BUTTON
+    assert get_entity_attribute(hass, entity_id, ATTR_EVENT_TYPE) is None
+    assert (
+        get_entity_attribute(hass, entity_id, ATTR_DEVICE_CLASS)
+        == EventDeviceClass.BUTTON
+    )
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -62,8 +69,7 @@ async def test_rpc_button(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state.attributes.get(ATTR_EVENT_TYPE) == "single_push"
+    assert get_entity_attribute(hass, entity_id, ATTR_EVENT_TYPE) == "single_push"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -186,12 +192,15 @@ async def test_block_event(
     await init_integration(hass, 1)
     entity_id = "event.test_name_channel_1"
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(["single", "long"])
-    assert state.attributes.get(ATTR_EVENT_TYPE) is None
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == EventDeviceClass.BUTTON
+    assert get_entity_state(hass, entity_id) == STATE_UNKNOWN
+    assert get_entity_attribute(hass, entity_id, ATTR_EVENT_TYPES) == unordered(
+        ["single", "long"]
+    )
+    assert get_entity_attribute(hass, entity_id, ATTR_EVENT_TYPE) is None
+    assert (
+        get_entity_attribute(hass, entity_id, ATTR_DEVICE_CLASS)
+        == EventDeviceClass.BUTTON
+    )
 
     entry = entity_registry.async_get(entity_id)
     assert entry

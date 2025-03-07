@@ -34,7 +34,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import MOCK_MAC, init_integration, mutate_rpc_device_status
+from . import MOCK_MAC, get_entity_state, init_integration, mutate_rpc_device_status
 
 from tests.common import MockConfigEntry
 
@@ -374,13 +374,13 @@ async def test_entry_unload(
     entry = await init_integration(hass, gen)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert hass.states.get(entity_id).state is STATE_ON
+    assert get_entity_state(hass, entity_id) is STATE_ON
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
-    assert hass.states.get(entity_id).state is STATE_UNAVAILABLE
+    assert get_entity_state(hass, entity_id) is STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -425,7 +425,7 @@ async def test_entry_unload_not_connected(
         entity_id = "switch.test_switch_0"
 
         assert entry.state is ConfigEntryState.LOADED
-        assert hass.states.get(entity_id).state is STATE_ON
+        assert get_entity_state(hass, entity_id) is STATE_ON
         assert not mock_stop_scanner.call_count
 
         monkeypatch.setattr(mock_rpc_device, "connected", False)
@@ -454,7 +454,7 @@ async def test_entry_unload_not_connected_but_we_think_we_are(
         entity_id = "switch.test_switch_0"
 
         assert entry.state is ConfigEntryState.LOADED
-        assert hass.states.get(entity_id).state is STATE_ON
+        assert get_entity_state(hass, entity_id) is STATE_ON
         assert not mock_stop_scanner.call_count
 
         monkeypatch.setattr(mock_rpc_device, "connected", False)
