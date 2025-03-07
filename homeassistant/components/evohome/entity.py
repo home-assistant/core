@@ -124,6 +124,9 @@ class EvoChild(EvoEntity):
         Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
 
+        if not self._schedule:
+            return self._setpoints
+
         this_sp_dtm, this_sp_val = self._evo_device.this_switchpoint
         next_sp_dtm, next_sp_val = self._evo_device.next_switchpoint
 
@@ -170,8 +173,7 @@ class EvoChild(EvoEntity):
         ):  # must use self._setpoints, not self.setpoints
             await get_schedule()
 
-        if self._schedule:
-            _ = self.setpoints  # update the setpoints attr
+        _ = self.setpoints  # update the setpoints attr
 
     @callback
     def _handle_coordinator_update(self) -> None:

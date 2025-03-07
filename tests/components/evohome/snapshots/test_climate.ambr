@@ -1535,7 +1535,7 @@
       5.0,
     ),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+      'until': None,
     }),
   ])
 # ---
@@ -1589,7 +1589,7 @@
 # name: test_zone_set_temperature[h139906]
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+      'until': None,
     }),
   ])
 # ---

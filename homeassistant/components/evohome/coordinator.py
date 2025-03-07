@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable
+import contextlib
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -207,10 +208,12 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _update_v2_schedules(self) -> None:
         for zone in self.tcs.zones:
-            await zone.get_schedule()
+            with contextlib.suppress(ec2.InvalidScheduleError):
+                await zone.get_schedule()
 
         if dhw := self.tcs.hotwater:
-            await dhw.get_schedule()
+            with contextlib.suppress(ec2.InvalidScheduleError):
+                await dhw.get_schedule()
 
     async def _async_update_data(self) -> EvoLocStatusResponseT:  # type: ignore[override]
         """Fetch the latest state of an entire TCC Location.
