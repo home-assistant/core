@@ -336,7 +336,14 @@ CLIMATE_SCHEMA = vol.All(
                             cv.positive_int, [cv.positive_int]
                         ),
                     },
-                    vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
+                    vol.Optional(
+                        CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING
+                    ): vol.In(
+                        [
+                            CALL_TYPE_REGISTER_HOLDING,
+                            CALL_TYPE_REGISTER_INPUT,
+                        ]
+                    ),
                 }
             ),
             vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(

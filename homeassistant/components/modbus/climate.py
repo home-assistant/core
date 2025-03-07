@@ -85,6 +85,7 @@ from .const import (
     CONF_HVAC_ON_VALUE,
     CONF_HVAC_ONOFF_COIL,
     CONF_HVAC_ONOFF_REGISTER,
+    CONF_INPUT_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_STEP,
@@ -202,10 +203,10 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         if CONF_HVAC_ACTION_REGISTER in config:
             action_config = config[CONF_HVAC_ACTION_REGISTER]
             self._hvac_action_register = action_config[CONF_ADDRESS]
+            self._hvac_action_type = action_config[CONF_INPUT_TYPE]
 
             self._attr_hvac_action = None
             self._hvac_action_mapping: list[tuple[int, HVACAction]] = []
-            self._hvac_action_write_registers = action_config[CONF_WRITE_REGISTERS]
             action_value_config = action_config[CONF_HVAC_ACTION_VALUES]
 
             for hvac_action_kw, hvac_action in (
@@ -498,7 +499,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         # Read the HVAC action register if defined
         if self._hvac_action_register is not None:
             hvac_action = await self._async_read_register(
-                CALL_TYPE_REGISTER_HOLDING, self._hvac_action_register, raw=True
+                self._hvac_action_type, self._hvac_action_register, raw=True
             )
 
             # Translate the value received
