@@ -908,7 +908,7 @@ goslide-api==0.7.0
 gotailwind==0.3.0
 
 # homeassistant.components.govee_ble
-govee-ble==0.43.0
+govee-ble==0.43.1
 
 # homeassistant.components.govee_light_local
 govee-local-api==2.0.1
