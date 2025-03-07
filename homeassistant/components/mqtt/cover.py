@@ -594,10 +594,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
-        """Stop the device.
-
-        This method is a coroutine.
-        """
+        """Stop moving the cover tilt."""
         await self.async_publish_with_config(
             self._config[CONF_TILT_COMMAND_TOPIC], self._config[CONF_PAYLOAD_STOP]
         )
