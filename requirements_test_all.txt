@@ -404,7 +404,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.3.1
+aiowebdav2==0.4.1
 
 # homeassistant.components.webostv
 aiowebostv==0.7.3
@@ -842,7 +842,7 @@ gcal-sync==7.0.0
 geniushub-client==0.7.1
 
 # homeassistant.components.geocaching
-geocachingapi==0.2.1
+geocachingapi==0.3.0
 
 # homeassistant.components.aprs
 geopy==2.3.0
@@ -984,7 +984,7 @@ hole==0.8.0
 holidays==0.68
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250305.0
+home-assistant-frontend==20250306.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.3.5
@@ -1249,7 +1249,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==4.0.0
 
 # homeassistant.components.nexia
-nexia==2.2.1
+nexia==2.2.2
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -1885,7 +1885,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.5.0
+pysmartthings==2.6.1
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2003,7 +2003,7 @@ python-roborock==2.11.1
 python-smarttub==0.0.39
 
 # homeassistant.components.snoo
-python-snoo==0.6.0
+python-snoo==0.6.1
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -2330,7 +2330,7 @@ teslemetry-stream==0.6.10
 tessie-api==0.1.1
 
 # homeassistant.components.thermobeacon
-thermobeacon-ble==0.8.0
+thermobeacon-ble==0.8.1
 
 # homeassistant.components.thermopro
 thermopro-ble==0.11.0
