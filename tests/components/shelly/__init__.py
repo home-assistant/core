@@ -40,13 +40,15 @@ async def init_integration(
     sleep_period=0,
     options: dict[str, Any] | None = None,
     skip_setup: bool = False,
+    data: dict[str, Any] | None = None,
 ) -> MockConfigEntry:
     """Set up the Shelly integration in Home Assistant."""
-    data = {
-        CONF_HOST: "192.168.1.37",
-        CONF_SLEEP_PERIOD: sleep_period,
-        "model": model,
-    }
+    if data is None:
+        data = {
+            CONF_HOST: "192.168.1.37",
+            CONF_SLEEP_PERIOD: sleep_period,
+            "model": model,
+        }
     if gen is not None:
         data[CONF_GEN] = gen
 
