@@ -20,4 +20,4 @@ TEST_INSTALLS: Final = (
 )
 #   "botched",  # as default: but with activeFaults, ghost zones & unknown types
 
-TEST_INSTALLS_WITH_DHW: Final = ("default",)
+TEST_INSTALLS_WITH_DHW: Final = ("default", "botched")
