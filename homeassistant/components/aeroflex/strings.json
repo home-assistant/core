@@ -1,0 +1,41 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "title": "Confirm Aeroflex Bed",
+        "description": "Do you want to set up the Aeroflex bed {name}?",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "name": "The name of the Aeroflex bed"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "entity": {
+    "number": {
+      "head_angle": {
+        "name": "Head Angle",
+        "state_attributes": {
+          "value": {
+            "name": "Angle"
+          }
+        }
+      },
+      "feet_angle": {
+        "name": "Feet Angle",
+        "state_attributes": {
+          "value": {
+            "name": "Angle"
+          }
+        }
+      }
+    }
+  }
+}

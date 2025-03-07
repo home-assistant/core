@@ -1,0 +1,15 @@
+{
+  "domain": "aeroflex",
+  "name": "Aeroflex Adjustable Bed",
+  "bluetooth": [
+    {
+      "service_uuid": "6e400001-b5a3-f393-e0a9-e50e24dcca9e"
+    }
+  ],
+  "codeowners": ["@iddora"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/aeroflex",
+  "iot_class": "calculated",
+  "quality_scale": "bronze"
+}
