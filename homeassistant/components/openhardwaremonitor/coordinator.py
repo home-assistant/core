@@ -56,7 +56,6 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
             self._config.get(CONF_HOST), self._config.get(CONF_PORT), session=session
         )
         data: DataNode = await api.get_data()
-        # _LOGGER.debug("DATA: %s", data)
 
         if not self._computers:
             c = {}
@@ -84,49 +83,29 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
             for n in OpenHardwareMonitorDataCoordinator._parse_sensor_nodes(c)
         ]
 
-        # sensor_nodes = sensor_nodes[:4]  # only test with 1
-        # _LOGGER.info("Sensor nodes: %s", sensor_nodes)
-
-        sensor_data = OpenHardwareMonitorDataCoordinator._format_as_dict(sensor_nodes)
-        # _LOGGER.info("Sensor data: %s", sensor_data)
-        return sensor_data
+        return {n["FullName"]: n for n in sensor_nodes}
 
     def resolve_device_info_for_node(self, node: SensorNode) -> dr.DeviceEntry:
         if self._grouping == 0:
             return None
 
-        paths = node["Paths"]
-        device_name = " ".join(paths[: self._grouping])
-        # _LOGGER.info("Resolved device name for: %s => %s", paths, device_name)
-
         computer = self._computers.get(node["ComputerName"])
-        if computer:
-            computer_device_domain_id = dict(computer.identifiers)[DOMAIN]
-            via_device = (DOMAIN, computer_device_domain_id)
-        else:
-            via_device = None
-
         if self._grouping == 1:
             # Computer device
-            return (
-                dr.DeviceInfo(
+            if computer:
+                return dr.DeviceInfo(
                     identifiers=computer.identifiers,
                     name=computer.name,
                     manufacturer=computer.manufacturer,
                     model=computer.model,
                 )
-                if computer
-                else None
-            )
+            return None
 
-        if self._grouping == 2:
-            manufacturer = "Hardware"
-        else:
-            manufacturer = "Group"
-
-        model = ""
-        if self._grouping == 2:
-            model = paths[1]
+        paths = node["Paths"]
+        device_name = " ".join(paths[: self._grouping])
+        manufacturer = "Hardware" if self._grouping == 2 else "Group"
+        model = paths[1] if self._grouping == 2 else None
+        via_device = (DOMAIN, dict(computer.identifiers)[DOMAIN]) if computer else None
 
         # Hardware or Group device
         return dr.DeviceInfo(
@@ -168,10 +147,6 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
             sensor["Type"] = node.get("Type")
             result.append(sensor)
         return result
-
-    @staticmethod
-    def _format_as_dict(sensor_nodes: list[SensorNode]) -> dict[str, SensorNode]:
-        return {n["FullName"]: n for n in sensor_nodes}
 
     def get_sensor_node(self, fullname: str) -> SensorNode | None:
         """Get the data for specific sensor."""

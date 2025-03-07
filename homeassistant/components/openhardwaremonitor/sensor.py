@@ -26,9 +26,6 @@ from .types import SensorNode
 
 STATE_MIN_VALUE = "minimal_value"
 STATE_MAX_VALUE = "maximum_value"
-STATE_VALUE = "value"
-STATE_OBJECT = "object"
-CONF_INTERVAL = "interval"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -37,8 +34,6 @@ RETRY_INTERVAL = timedelta(seconds=30)
 OHM_VALUE = "Value"
 OHM_MIN = "Min"
 OHM_MAX = "Max"
-OHM_CHILDREN = "Children"
-OHM_IMAGEURL = "ImageURL"
 OHM_NAME = "Text"
 OHM_ID = "id"
 
