@@ -186,7 +186,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-DATA_VALIDATION: dict[
+KEEP_CAPABILITY_QUIRK: dict[
     Capability | str, Callable[[dict[Attribute | str, Status]], bool]
 ] = {
     Capability.WASHER_OPERATING_STATE: (
@@ -195,26 +195,53 @@ DATA_VALIDATION: dict[
     Capability.DEMAND_RESPONSE_LOAD_CONTROL: lambda _: True,
 }
 
+POWER_CONSUMPTION_FIELDS = {
+    "energy",
+    "power",
+    "deltaEnergy",
+    "powerEnergy",
+    "energySaved",
+}
+
+CAPABILITY_VALIDATION: dict[
+    Capability | str, Callable[[dict[Attribute | str, Status]], bool]
+] = {
+    Capability.POWER_CONSUMPTION_REPORT: (
+        lambda status: (
+            (power_consumption := status[Attribute.POWER_CONSUMPTION].value) is not None
+            and all(
+                field in cast(dict, power_consumption)
+                for field in POWER_CONSUMPTION_FIELDS
+            )
+        )
+    )
+}
+
 
 def process_status(
     status: dict[str, dict[Capability | str, dict[Attribute | str, Status]]],
 ) -> dict[str, dict[Capability | str, dict[Attribute | str, Status]]]:
     """Remove disabled capabilities from status."""
-    if (main_component := status.get("main")) is None or (
+    if (main_component := status.get(MAIN)) is None:
+        return status
+    if (
         disabled_capabilities_capability := main_component.get(
             Capability.CUSTOM_DISABLED_CAPABILITIES
         )
-    ) is None:
-        return status
-    disabled_capabilities = cast(
-        list[Capability | str],
-        disabled_capabilities_capability[Attribute.DISABLED_CAPABILITIES].value,
-    )
-    if disabled_capabilities is not None:
-        for capability in disabled_capabilities:
-            if capability in main_component and (
-                capability not in DATA_VALIDATION
-                or not DATA_VALIDATION[capability](main_component[capability])
-            ):
+    ) is not None:
+        disabled_capabilities = cast(
+            list[Capability | str],
+            disabled_capabilities_capability[Attribute.DISABLED_CAPABILITIES].value,
+        )
+        if disabled_capabilities is not None:
+            for capability in disabled_capabilities:
+                if capability in main_component and (
+                    capability not in KEEP_CAPABILITY_QUIRK
+                    or not KEEP_CAPABILITY_QUIRK[capability](main_component[capability])
+                ):
+                    del main_component[capability]
+    for capability in list(main_component):
+        if capability in CAPABILITY_VALIDATION:
+            if not CAPABILITY_VALIDATION[capability](main_component[capability]):
                 del main_component[capability]
     return status
