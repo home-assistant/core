@@ -8,7 +8,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(
+async def test_diagnostics(
     hass: HomeAssistant,
     config_entry,
     hass_client: ClientSessionGenerator,
@@ -18,17 +18,16 @@ async def test_entry_diagnostics(
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
             "entry_id": config_entry.entry_id,
-            "version": 1,
+            "version": 2,
             "minor_version": 1,
             "domain": "purpleair",
-            "title": REDACTED,
+            "title": "PurpleAir",
             "data": {
                 "api_key": REDACTED,
             },
             "options": {
-                "sensor_indices": [
-                    123456,
-                ],
+                "sensor_list": [{"sensor_index": 123456, "sensor_read_key": None}],
+                "show_on_map": False,
             },
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,

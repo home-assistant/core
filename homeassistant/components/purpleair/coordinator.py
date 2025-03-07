@@ -17,9 +17,7 @@ from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .config_schema import ConfigSchema
-from .const import DOMAIN, LOGGER, SENSOR_FIELDS_TO_RETRIEVE
-
-UPDATE_INTERVAL = timedelta(minutes=2)
+from .const import DOMAIN, LOGGER, SENSOR_FIELDS_TO_RETRIEVE, UPDATE_INTERVAL
 
 type PurpleAirConfigEntry = ConfigEntry[PurpleAirDataUpdateCoordinator]
 
@@ -42,7 +40,7 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
             LOGGER,
             config_entry=entry,
             name=entry.title,
-            update_interval=UPDATE_INTERVAL,
+            update_interval=timedelta(UPDATE_INTERVAL),
         )
         self._api = async_get_api(hass, entry.data[CONF_API_KEY])
 

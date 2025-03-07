@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Final
+from typing import Any
 
 import voluptuous as vol
 
@@ -28,22 +28,23 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util.unit_conversion import DistanceConverter
 
-from .config_flow import (
+from .config_schema import ConfigSchema
+from .config_validation import ConfigValidation
+from .const import (
+    CONF_ADD_SENSOR,
+    CONF_ALREADY_CONFIGURED,
+    CONF_INIT,
     CONF_MAP_LOCATION,
     CONF_NEARBY_SENSOR_LIST,
+    CONF_REMOVE_SENSOR,
     CONF_SELECT_SENSOR,
+    CONF_SENSOR_INDEX,
+    CONF_SENSOR_READ_KEY,
+    CONF_SETTINGS,
+    DOMAIN,
     RADIUS_DEFAULT,
 )
-from .config_schema import CONF_SENSOR_INDEX, CONF_SENSOR_READ_KEY, ConfigSchema
-from .config_validation import ConfigValidation
-from .const import DOMAIN
 from .coordinator import PurpleAirDataUpdateCoordinator
-
-CONF_REMOVE_SENSOR: Final = "remove_sensor"
-CONF_INIT: Final = "init"
-CONF_ADD_SENSOR: Final = "add_sensor"
-CONF_ALREADY_CONFIGURED: Final = "already_configured"
-CONF_SETTINGS: Final = "settings"
 
 
 class PurpleAirOptionsFlow(OptionsFlow):

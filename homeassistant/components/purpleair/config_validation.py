@@ -3,23 +3,25 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Final
+from typing import Any
 
 from aiopurpleair.endpoints.sensors import NearbySensorResult
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
+from aiopurpleair.models.sensors import GetSensorsResponse
 
 from homeassistant.core import HomeAssistant
 
-from .const import LOGGER, SENSOR_FIELDS_TO_RETRIEVE
-from .coordinator import GetSensorsResponse, async_get_api
-
-CONF_UNKNOWN: Final = "unknown"
-CONF_BASE: Final = "base"
-CONF_INVALID_API_KEY: Final = "invalid_api_key"
-CONF_NO_SENSORS_FOUND: Final = "no_sensors_found"
-CONF_NO_SENSOR_FOUND: Final = "no_sensor_found"
-
-LIMIT_RESULTS: Final = 25
+from .const import (
+    CONF_BASE,
+    CONF_INVALID_API_KEY,
+    CONF_NO_SENSOR_FOUND,
+    CONF_NO_SENSORS_FOUND,
+    CONF_UNKNOWN,
+    LIMIT_RESULTS,
+    LOGGER,
+    SENSOR_FIELDS_TO_RETRIEVE,
+)
+from .coordinator import async_get_api
 
 
 @dataclass

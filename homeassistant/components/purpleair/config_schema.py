@@ -16,12 +16,12 @@ from .const import (
 )
 
 # Config schema:
-# API Key: config_entry.data[CONF_API_KEY]
-# Sensor list: config_entry.options[CONF_SENSOR_LIST] as list[dict[str, Any]]
-#   Sensor index: CONF_SENSOR_INDEX as int
-#   Sensor read key (for private sensors): CONF_SENSOR_READ_KEY as str
+# API Key: config_entry.data[CONF_API_KEY / "api_key"]
+# Sensor list: config_entry.options[CONF_SENSOR_LIST / "sensor_list"] as list[dict[str, Any]]
+#   Sensor index: CONF_SENSOR_INDEX / "sensor_index" as int
+#   Sensor read key (for private sensors): CONF_SENSOR_READ_KEY / "sensor_read_key" as str
 # Options:
-#   Show sensor on map: config_entry.options[CONF_SHOW_ON_MAP] as bool
+#   Show sensor on map: config_entry.options[CONF_SHOW_ON_MAP / "show_on_map"] as bool
 
 type SensorConfigList = list[dict[str, Any]]
 
@@ -102,7 +102,10 @@ class ConfigSchema:
         # v2 stores sensor indexes in config_entry.options[CONF_SENSOR_LIST] as type SensorConfigList = list[dict[str, any]]
         if entry.version == 1:
             CONF_SENSOR_INDICES: Final = "sensor_indices"
-            index_list: list[int] = entry.options[CONF_SENSOR_INDICES]
+            index_list: Any | None = entry.options.get(CONF_SENSOR_INDICES)
+            if not index_list or type(index_list) is not list or len(index_list) == 0:
+                return True
+
             sensor_list: SensorConfigList = [
                 {CONF_SENSOR_INDEX: int(sensor_index), CONF_SENSOR_READ_KEY: None}
                 for sensor_index in index_list

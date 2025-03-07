@@ -11,10 +11,8 @@ from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import PurpleAirConfigEntry, PurpleAirDataUpdateCoordinator
-
-MANUFACTURER = "PurpleAir, Inc."
 
 
 class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
@@ -53,10 +51,7 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
         if self._entry.options.get(CONF_SHOW_ON_MAP):
             attrs[ATTR_LATITUDE] = self.sensor_data.latitude
             attrs[ATTR_LONGITUDE] = self.sensor_data.longitude
-        else:
-            # TODO: Do we really need to save the coordinates if mapping is False? # pylint: disable=fixme
-            attrs["lati"] = self.sensor_data.latitude
-            attrs["long"] = self.sensor_data.longitude
+
         return attrs
 
     @property

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, Final
+from typing import Any
 
 import voluptuous as vol
 
@@ -29,21 +29,21 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util.unit_conversion import DistanceConverter
 
-from .config_schema import CONF_SENSOR_INDEX, SCHEMA_VERSION, ConfigSchema
+from .config_schema import ConfigSchema
 from .config_validation import ConfigValidation
 from .const import (
     CONF_MAP_LOCATION,
     CONF_NEARBY_SENSOR_LIST,
+    CONF_REAUTH_CONFIRM,
     CONF_SELECT_SENSOR,
+    CONF_SENSOR_INDEX,
+    CONF_USER,
     DOMAIN,
     RADIUS_DEFAULT,
+    SCHEMA_VERSION,
+    TITLE,
 )
 from .options_flow import PurpleAirOptionsFlow
-
-CONF_USER: Final = "user"
-CONF_REAUTH_CONFIRM: Final = "reauth_confirm"
-
-TITLE: Final = "PurpleAir"
 
 
 class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):

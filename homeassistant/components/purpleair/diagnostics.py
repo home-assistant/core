@@ -15,8 +15,6 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import PurpleAirConfigEntry
 
-TO_REDACT = {CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_UNIQUE_ID}
-
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: PurpleAirConfigEntry
@@ -27,5 +25,5 @@ async def async_get_config_entry_diagnostics(
             "entry": entry.as_dict(),
             "data": entry.runtime_data.data.model_dump(),
         },
-        TO_REDACT,
+        {CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_UNIQUE_ID},
     )

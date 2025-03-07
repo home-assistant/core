@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Final
-
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .config_schema import ConfigSchema
+from .const import PLATFORMS
 from .coordinator import PurpleAirConfigEntry, PurpleAirDataUpdateCoordinator
-
-PLATFORMS: Final = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) -> bool:
