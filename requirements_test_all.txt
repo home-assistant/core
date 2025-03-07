@@ -643,7 +643,7 @@ datapoint==0.9.9
 dbus-fast==2.39.3
 
 # homeassistant.components.debugpy
-debugpy==1.8.11
+debugpy==1.8.13
 
 # homeassistant.components.ecovacs
 deebot-client==12.3.1
