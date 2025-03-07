@@ -1,0 +1,7 @@
+send_message:
+  description: "Sends a test notification"
+  fields:
+    message:
+      description: "The message to send"
+    title:
+      description: "The title of the message"
