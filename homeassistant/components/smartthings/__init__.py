@@ -167,7 +167,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
                 },
             )
 
-    client.add_unspecified_device_event_listener(handle_button_press)
+    entry.async_on_unload(
+        client.add_unspecified_device_event_listener(handle_button_press)
+    )
 
     entry.async_create_background_task(
         hass,
