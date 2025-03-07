@@ -170,7 +170,8 @@ class EvoChild(EvoEntity):
         ):  # must use self._setpoints, not self.setpoints
             await get_schedule()
 
-        _ = self.setpoints  # update the setpoints attr
+        if self._schedule:
+            _ = self.setpoints  # update the setpoints attr
 
     @callback
     def _handle_coordinator_update(self) -> None:
