@@ -12,6 +12,7 @@ from pysmartthings import (
     Attribute,
     Capability,
     Device,
+    DeviceEvent,
     Scene,
     SmartThings,
     SmartThingsAuthenticationFailedError,
@@ -29,7 +30,14 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 
-from .const import CONF_INSTALLED_APP_ID, CONF_LOCATION_ID, DOMAIN, MAIN, OLD_DATA
+from .const import (
+    CONF_INSTALLED_APP_ID,
+    CONF_LOCATION_ID,
+    DOMAIN,
+    EVENT_BUTTON,
+    MAIN,
+    OLD_DATA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,6 +148,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         scenes=scenes,
         rooms=rooms,
     )
+
+    def handle_button_press(event: DeviceEvent) -> None:
+        """Handle a button press."""
+        if (
+            event.capability is Capability.BUTTON
+            and event.attribute is Attribute.BUTTON
+        ):
+            hass.bus.async_fire(
+                EVENT_BUTTON,
+                {
+                    "component_id": event.component_id,
+                    "device_id": event.device_id,
+                    "location_id": event.location_id,
+                    "value": event.value,
+                    "name": entry.runtime_data.devices[event.device_id].device.label,
+                    "data": event.data,
+                },
+            )
+
+    client.add_unspecified_device_event_listener(handle_button_press)
 
     entry.async_create_background_task(
         hass,

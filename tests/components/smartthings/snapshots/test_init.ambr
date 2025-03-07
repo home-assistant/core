@@ -1,4 +1,7 @@
 # serializer version: 1
+# name: test_button_event[button]
+  <Event smartthings.button[L]: component_id=main, device_id=c4bdd19f-85d1-4d58-8f9c-e75ac3cf113b, location_id=abc, value=pushed, name=button, data=None>
+# ---
 # name: test_devices[aeotec_home_energy_meter_gen5]
   DeviceRegistryEntrySnapshot({
     'area_id': 'toilet',
