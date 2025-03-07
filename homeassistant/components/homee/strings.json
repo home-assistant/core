@@ -1,4 +1,7 @@
 {
+  "common": {
+    "temperature": "Temperature"
+  },
   "config": {
     "flow_title": "Homee {name} ({host})",
     "abort": {
@@ -26,6 +29,105 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "battery_low": {
+        "name": "[%key:component::binary_sensor::entity_component::battery::name%]"
+      },
+      "blackout_alarm": {
+        "name": "Blackout"
+      },
+      "carbon_monoxide": {
+        "name": "[%key:component::binary_sensor::entity_component::carbon_monoxide::name%]"
+      },
+      "carbon_dioxide": {
+        "name": "Carbon dioxide"
+      },
+      "flood": {
+        "name": "Flood"
+      },
+      "heat": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "leak_alarm": {
+        "name": "Leak"
+      },
+      "load_alarm": {
+        "name": "Load",
+        "state": {
+          "off": "Normal",
+          "on": "Overload"
+        }
+      },
+      "low_temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "malfunction": {
+        "name": "Malfunction"
+      },
+      "maximum": {
+        "name": "Maximum level",
+        "state": {
+          "off": "Level above maximum",
+          "on": "Level below maximum"
+        }
+      },
+      "minimum": {
+        "name": "Minimum level",
+        "state": {
+          "off": "Level above minimum",
+          "on": "Level below minimum"
+        }
+      },
+      "motor_blocked": {
+        "name": "Motor blocked"
+      },
+      "opening": {
+        "name": "[%key:component::binary_sensor::entity_component::opening::name%]"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "overload": {
+        "name": "Overload"
+      },
+      "power_supply": {
+        "name": "[%key:component::binary_sensor::entity_component::power::name%]"
+      },
+      "rain": {
+        "name": "Rain"
+      },
+      "replace_filter": {
+        "name": "Replace filter",
+        "state": {
+          "on": "Replace"
+        }
+      },
+      "smoke": {
+        "name": "Smoke"
+      },
+      "storage": {
+        "name": "Storage",
+        "state": {
+          "off": "Space available",
+          "on": "Storage full"
+        }
+      },
+      "surge": {
+        "name": "Surge"
+      },
+      "tamper": {
+        "name": "[%key:component::binary_sensor::entity_component::tamper::name%]"
+      },
+      "voltage_drop": {
+        "name": "Voltage drop"
+      },
+      "window": {
+        "name": "[%key:component::binary_sensor::entity_component::window::name%]"
+      },
+      "water": {
+        "name": "[%key:component::binary_sensor::entity_component::moisture::name%]"
+      }
+    },
     "button": {
       "automatic_mode": {
         "name": "Automatic mode"
