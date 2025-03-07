@@ -34,8 +34,8 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Ask for username and password."""
-        implementations = await async_get_implementations(self.hass, self.DOMAIN)
-        self.flow_impl = await list(implementations.values())[0]
+        implementations = await async_get_implementations(self.hass, DOMAIN)
+        self.flow_impl = list(implementations.values())[0]
         errors: dict[str, str] = {}
         if user_input is not None:
             _LOGGER.info(user_input)
