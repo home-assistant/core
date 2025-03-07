@@ -23,10 +23,17 @@ from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
-from homeassistant.components.weather import INTENT_GET_WEATHER
+from homeassistant.components.weather import (
+    DOMAIN as WEATHER_DOMAIN,
+    INTENT_GET_WEATHER,
+    SERVICE_GET_FORECASTS,
+)
 from homeassistant.const import (
     ATTR_DOMAIN,
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
     ATTR_SERVICE,
+    ENTITY_MATCH_ALL,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_SERVICE_REMOVED,
 )
@@ -442,6 +449,9 @@ class AssistAPI(API):
             for intent_handler in intent_handlers
         ]
 
+        if exposed_domains and WEATHER_DOMAIN in exposed_domains:
+            tools.append(WeatherForecastTool())
+
         if exposed_entities:
             if exposed_entities[CALENDAR_DOMAIN]:
                 names = []
@@ -746,7 +756,7 @@ class ActionTool(Tool):
         """Init the class."""
         self._domain = domain
         self._action = action
-        self.name = f"{domain}.{action}"
+        self.name = f"{domain}_{action}"
         self.description, self.parameters = _get_cached_action_parameters(
             hass, domain, action
         )
@@ -885,3 +895,48 @@ class CalendarGetEventsTool(Tool):
         ]
 
         return {"success": True, "result": events}
+
+
+class WeatherForecastTool(Tool):
+    """LLM Tool wrapper for weather forecast action."""
+
+    name = f"{WEATHER_DOMAIN}_{SERVICE_GET_FORECASTS}"
+    description = "Get weather forecasts"
+    parameters = vol.Schema(
+        {
+            vol.Required("type"): vol.In(("daily", "hourly", "twice_daily")),
+            vol.Optional(ATTR_NAME, description="Weather entity name"): cv.string,
+        }
+    )
+
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> JsonObjectType:
+        """Get the forecast."""
+        data = self.parameters(tool_input.tool_args)
+        if ATTR_NAME in data:
+            result = intent.async_match_targets(
+                hass,
+                intent.MatchTargetsConstraints(
+                    name=data[ATTR_NAME],
+                    domains=[WEATHER_DOMAIN],
+                    assistant=llm_context.assistant,
+                ),
+            )
+            if not result.is_match:
+                return {"success": False, "error": "Weather entity not found"}
+            data.pop(ATTR_NAME)
+            data[ATTR_ENTITY_ID] = [state.entity_id for state in result.states]
+        else:
+            data[ATTR_ENTITY_ID] = ENTITY_MATCH_ALL
+
+        service_result = await hass.services.async_call(
+            WEATHER_DOMAIN,
+            SERVICE_GET_FORECASTS,
+            data,
+            context=llm_context.context,
+            blocking=True,
+            return_response=True,
+        )
+
+        return {"success": True, "result": service_result}
