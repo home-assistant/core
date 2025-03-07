@@ -173,6 +173,7 @@ class ConfigManagerFlowIndexView(
                 vol.Required("handler"): vol.Any(str, list),
                 vol.Optional("show_advanced_options", default=False): cv.boolean,
                 vol.Optional("entry_id"): cv.string,
+                vol.Optional("virtual_domain"): cv.string,
             },
             extra=vol.ALLOW_EXTRA,
         )
