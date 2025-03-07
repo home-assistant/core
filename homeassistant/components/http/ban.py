@@ -7,7 +7,14 @@ from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
 from datetime import datetime
 from http import HTTPStatus
-from ipaddress import IPv4Address, IPv6Address, ip_address
+from ipaddress import (
+    IPv4Address,
+    IPv6Address,
+    ip_address,
+    ip_network,
+    AddressValueError,
+    NetmaskValueError,
+)
 import logging
 from socket import gethostbyaddr, herror
 from typing import Any, Concatenate, Final
@@ -45,7 +52,10 @@ NOTIFICATION_ID_BAN: Final = "ip-ban"
 NOTIFICATION_ID_LOGIN: Final = "http-login"
 
 IP_BANS_FILE: Final = "ip_bans.yaml"
+NETWORK_BANS_FILE: Final = "network_bans.yaml"
+
 ATTR_BANNED_AT: Final = "banned_at"
+KEY_BANNED_NETWORKS = "networks"
 
 SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
     {vol.Optional("banned_at"): vol.Any(None, cv.datetime)}
@@ -76,12 +86,34 @@ async def ban_middleware(
         _LOGGER.error("IP Ban middleware loaded but banned IPs not loaded")
         return await handler(request)
 
+    ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
     if ip_bans_lookup := ban_manager.ip_bans_lookup:
         # Verify if IP is not banned
-        ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
         if ip_address_ in ip_bans_lookup:
             raise HTTPForbidden
+    # Verify the whole subnet isn't banned
+    if banned_networks := ban_manager.banned_networks:
+        for banned_network in banned_networks:
+            if ip_address_ in banned_network:
+                _LOGGER.warning(
+                    "IP %s is in banned network %s, refused",
+                    ip_address_,
+                    banned_network,
+                )
+                # Circular import with websocket_api
+                # pylint: disable=import-outside-toplevel
+                from homeassistant.components import persistent_notification
 
+                base_msg = f"Prevented login attempt from {ip_address_} which is in banned network {banned_network}"
+                hass = request.app[KEY_HASS]
+                persistent_notification.async_create(
+                    hass,
+                    f"{base_msg}, see log for details",
+                    "IP address blocked",
+                    NOTIFICATION_ID_BAN,
+                )
+                _LOGGER.warning(base_msg)
+                raise HTTPForbidden
     try:
         return await handler(request)
     except HTTPUnauthorized:
@@ -211,10 +243,42 @@ class IpBanManager:
         """Init the ban manager."""
         self.hass = hass
         self.path = hass.config.path(IP_BANS_FILE)
+        self.banned_networks_path = hass.config.path(NETWORK_BANS_FILE)
         self.ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] = {}
+        self.banned_networks: list[ip_network] = []
 
     async def async_load(self) -> None:
         """Load the existing IP bans."""
+        self.banned_networks: list[ip_network] = []
+        try:
+            networks_ = await self.hass.async_add_executor_job(
+                load_yaml_config_file, self.banned_networks_path
+            )
+            if "networks" in networks_:
+                for network in networks_[KEY_BANNED_NETWORKS]:
+                    try:
+                        self.banned_networks.append(ip_network(network, strict=False))
+                    except (AddressValueError, NetmaskValueError, ValueError) as err:
+                        _LOGGER.error(
+                            "Error in banned network %s: %s. Check %s",
+                            network,
+                            str(err),
+                            self.banned_networks_path,
+                        )
+            else:
+                _LOGGER.error(
+                    "Unable to find key '%s' in %s",
+                    KEY_BANNED_NETWORKS,
+                    self.banned_networks_path,
+                )
+
+        except FileNotFoundError:
+            # _LOGGER.info("No banned networks defined: %s", self.banned_networks_path)
+            pass
+
+        except HomeAssistantError as err:
+            _LOGGER.error("Unable to load %s: %s", self.banned_networks_path, str(err))
+
         try:
             list_ = await self.hass.async_add_executor_job(
                 load_yaml_config_file, self.path
