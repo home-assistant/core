@@ -9,12 +9,12 @@ from typing import cast
 from geocachingapi.models import GeocachingStatus
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import GeocachingConfigEntry
 from .const import DOMAIN
 from .coordinator import GeocachingDataUpdateCoordinator
 
@@ -65,11 +65,11 @@ SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GeocachingConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Geocaching sensor entry."""
-    coordinator: GeocachingDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: GeocachingDataUpdateCoordinator = entry.runtime_data.coordinator
     async_add_entities(
         GeocachingSensor(coordinator, description) for description in SENSORS
     )
