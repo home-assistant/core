@@ -970,7 +970,7 @@ async def test_send_stop_tilt_command(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "tilt-command-topic", "TILT_STOP", 2, False
+        "tilt-command-topic", payload_stop, 2, False
     )
     state = hass.states.get("cover.test")
     assert state.state == STATE_UNKNOWN
