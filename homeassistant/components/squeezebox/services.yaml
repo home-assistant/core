@@ -30,7 +30,7 @@ call_query:
       advanced: true
       selector:
         object:
-call_query_response:
+query:
   target:
     entity:
       integration: squeezebox

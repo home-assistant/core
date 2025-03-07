@@ -81,7 +81,7 @@ if TYPE_CHECKING:
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
-SERVICE_CALL_QUERY_RESPONSE = "call_query_response"
+SERVICE_CALL_QUERY_RESPONSE = "query"
 ATTR_QUERY_RESULT = "query_result"
 ATTR_PARAMETERS = "parameters"
 
@@ -141,12 +141,12 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, SIGNAL_PLAYER_DISCOVERED, _player_discovered)
     )
 
-    async def async_call_query_response_helper(
+    async def async_query_helper(
         entity: SqueezeBoxMediaPlayerEntity, call: ServiceCall
     ) -> ServiceResponse:
         """Call Squeezebox JSON/RPC method where we care about the result."""
 
-        return await entity.async_call_query_response(call)
+        return await entity.async_query_response(call)
 
     # Register entity services
     platform = entity_platform.async_get_current_platform()
@@ -178,7 +178,7 @@ async def async_setup_entry(
                 cv.ensure_list, vol.Length(min=1), [cv.string]
             ),
         },
-        async_call_query_response_helper,
+        async_query_helper,
         supports_response=SupportsResponse.ONLY,
     )
     # Start server discovery task if not already running
@@ -633,15 +633,19 @@ class SqueezeBoxMediaPlayerEntity(
             self.hass,
             DOMAIN,
             "Call query deprecation",
-            breaks_in_ha_version="2025.3.0",
+            breaks_in_ha_version="2025.10.0",
             is_fixable=False,
             is_persistent=False,
             learn_more_url="https://www.home-assistant.io/integrations/squeezebox/#:~:text=Copy-,ACTION%20CALL_QUERY,-Call%20a%20custom",
             severity=ir.IssueSeverity.WARNING,
             translation_key="call_query_deprecation",
         )
+        _LOGGER.warning(
+            "You have called the Squeezebox call_query action for command '%s'.  This action is deprecated and will be removed in 2025.10.  Please replace with the Squeezebox query action",
+            command,
+        )
 
-    async def async_call_query_response(self, call: ServiceCall) -> ServiceResponse:
+    async def async_query_response(self, call: ServiceCall) -> ServiceResponse:
         """Call Squeezebox JSON/RPC method where we care about the result.
 
         Additional parameters are added to the command to form the list of

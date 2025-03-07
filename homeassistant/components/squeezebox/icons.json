@@ -28,7 +28,7 @@
     "call_query": {
       "service": "mdi:database-alert"
     },
-    "call_query_response": {
+    "query": {
       "service": "mdi:database"
     }
   }

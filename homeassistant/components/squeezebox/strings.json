@@ -49,7 +49,7 @@
     },
     "call_query": {
       "name": "Call query (deprecated)",
-      "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.  This action is deprecated and replaced by call_query_response.",
+      "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.  This action is deprecated and replaced by the query action.",
       "fields": {
         "command": {
           "name": "Command",
@@ -61,8 +61,8 @@
         }
       }
     },
-    "call_query_response": {
-      "name": "Call query response",
+    "query": {
+      "name": "Query",
       "description": "Calls a custom Squeezebox JSONRPC API and returns the result in the response variable.",
       "fields": {
         "command": {
@@ -136,7 +136,7 @@
   "issues": {
     "call_query_deprecation": {
       "title": "Call query deprecation",
-      "description": "The call_query action is deprecated and will be removed in 2025.10.0.  These call should be replaced with the call_query_response action, which returns its result in a response variable."
+      "description": "The call_query action is deprecated and will be removed in 2025.10.0.  These call should be replaced with the query action, which returns its result in a response variable."
     }
   }
 }
