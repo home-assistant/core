@@ -81,11 +81,13 @@ CONF_TILT_STATUS_TOPIC = "tilt_status_topic"
 CONF_TILT_STATUS_TEMPLATE = "tilt_status_template"
 
 CONF_STATE_STOPPED = "state_stopped"
+CONF_PAYLOAD_STOP_TILT = "payload_stop_tilt"
 CONF_TILT_CLOSED_POSITION = "tilt_closed_value"
 CONF_TILT_MAX = "tilt_max"
 CONF_TILT_MIN = "tilt_min"
 CONF_TILT_OPEN_POSITION = "tilt_opened_value"
 CONF_TILT_STATE_OPTIMISTIC = "tilt_optimistic"
+
 
 TILT_PAYLOAD = "tilt"
 COVER_PAYLOAD = "cover"
@@ -203,6 +205,9 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_GET_POSITION_TEMPLATE): cv.template,
         vol.Optional(CONF_TILT_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_PAYLOAD_STOP_TILT, default=DEFAULT_PAYLOAD_STOP): vol.Any(
+            cv.string, None
+        ),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -596,7 +601,7 @@ class MqttCover(MqttEntity, CoverEntity):
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop moving the cover tilt."""
         await self.async_publish_with_config(
-            self._config[CONF_TILT_COMMAND_TOPIC], self._config[CONF_PAYLOAD_STOP]
+            self._config[CONF_TILT_COMMAND_TOPIC], self._config[CONF_PAYLOAD_STOP_TILT]
         )
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
