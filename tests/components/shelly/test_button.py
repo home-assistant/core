@@ -10,7 +10,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration
+from . import get_entity_state, init_integration
 
 
 async def test_block_button(
@@ -22,7 +22,7 @@ async def test_block_button(
     entity_id = "button.test_name_reboot"
 
     # reboot button
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert get_entity_state(hass, entity_id) == STATE_UNKNOWN
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -46,7 +46,7 @@ async def test_rpc_button(
     entity_id = "button.test_name_reboot"
 
     # reboot button
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert get_entity_state(hass, entity_id) == STATE_UNKNOWN
 
     entry = entity_registry.async_get(entity_id)
     assert entry

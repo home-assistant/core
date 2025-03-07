@@ -66,12 +66,12 @@ async def test_block_sensor(
     entity_id = f"{SENSOR_DOMAIN}.test_name_channel_1_power"
     await init_integration(hass, 1)
 
-    assert hass.states.get(entity_id).state == "53.4"
+    assert get_entity_state(hass, entity_id) == "53.4"
 
     monkeypatch.setattr(mock_block_device.blocks[RELAY_BLOCK_ID], "power", 60.1)
     mock_block_device.mock_update()
 
-    assert hass.states.get(entity_id).state == "60.1"
+    assert get_entity_state(hass, entity_id) == "60.1"
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -147,12 +147,12 @@ async def test_block_rest_sensor(
     entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "rssi")
     await init_integration(hass, 1)
 
-    assert hass.states.get(entity_id).state == "-64"
+    assert get_entity_state(hass, entity_id) == "-64"
 
     monkeypatch.setitem(mock_block_device.status["wifi_sta"], "rssi", -71)
     await mock_rest_update(hass, freezer)
 
-    assert hass.states.get(entity_id).state == "-71"
+    assert get_entity_state(hass, entity_id) == "-71"
 
 
 async def test_block_sleeping_sensor(
@@ -175,12 +175,12 @@ async def test_block_sleeping_sensor(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(entity_id).state == "22.1"
+    assert get_entity_state(hass, entity_id) == "22.1"
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "temp", 23.4)
     mock_block_device.mock_update()
 
-    assert hass.states.get(entity_id).state == "23.4"
+    assert get_entity_state(hass, entity_id) == "23.4"
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -222,7 +222,7 @@ async def test_block_restored_sleeping_sensor(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(entity_id).state == "22.1"
+    assert get_entity_state(hass, entity_id) == "22.1"
 
 
 async def test_block_restored_sleeping_sensor_no_last_state(
@@ -246,14 +246,14 @@ async def test_block_restored_sleeping_sensor_no_last_state(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert get_entity_state(hass, entity_id) == STATE_UNKNOWN
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(entity_id).state == "22.1"
+    assert get_entity_state(hass, entity_id) == "22.1"
 
 
 async def test_block_sensor_error(
@@ -266,12 +266,12 @@ async def test_block_sensor_error(
     entity_id = f"{SENSOR_DOMAIN}.test_name_battery"
     await init_integration(hass, 1)
 
-    assert hass.states.get(entity_id).state == "98"
+    assert get_entity_state(hass, entity_id) == "98"
 
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "battery", -1)
     mock_block_device.mock_update()
 
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -321,7 +321,7 @@ async def test_block_not_matched_restored_sleeping_sensor(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "20.4"
+    assert get_entity_state(hass, entity_id) == "20.4"
 
     # Make device online
     monkeypatch.setattr(
@@ -331,7 +331,7 @@ async def test_block_not_matched_restored_sleeping_sensor(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(entity_id).state == "20.4"
+    assert get_entity_state(hass, entity_id) == "20.4"
 
 
 async def test_block_sensor_without_value(
@@ -355,7 +355,7 @@ async def test_block_sensor_unknown_value(
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "battery", None)
     mock_block_device.mock_update()
 
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert get_entity_state(hass, entity_id) == STATE_UNKNOWN
 
 
 async def test_rpc_sensor(
@@ -365,17 +365,17 @@ async def test_rpc_sensor(
     entity_id = f"{SENSOR_DOMAIN}.test_cover_0_power"
     await init_integration(hass, 2)
 
-    assert hass.states.get(entity_id).state == "85.3"
+    assert get_entity_state(hass, entity_id) == "85.3"
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "apower", "88.2")
     mock_rpc_device.mock_update()
 
-    assert hass.states.get(entity_id).state == "88.2"
+    assert get_entity_state(hass, entity_id) == "88.2"
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "apower", None)
     mock_rpc_device.mock_update()
 
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert get_entity_state(hass, entity_id) == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -411,7 +411,7 @@ async def test_rpc_illuminance_sensor(
     entity_id = f"{SENSOR_DOMAIN}.test_name_illuminance"
     await init_integration(hass, 2)
 
-    assert hass.states.get(entity_id).state == "345"
+    assert get_entity_state(hass, entity_id) == "345"
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -428,14 +428,14 @@ async def test_rpc_sensor_error(
     entity_id = f"{SENSOR_DOMAIN}.test_name_voltmeter"
     await init_integration(hass, 2)
 
-    assert hass.states.get(entity_id).state == "4.321"
+    assert get_entity_state(hass, entity_id) == "4.321"
 
     mutate_rpc_device_status(
         monkeypatch, mock_rpc_device, "voltmeter:100", "voltage", None
     )
     mock_rpc_device.mock_update()
 
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -453,12 +453,12 @@ async def test_rpc_polling_sensor(
     entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
     await init_integration(hass, 2)
 
-    assert hass.states.get(entity_id).state == "-63"
+    assert get_entity_state(hass, entity_id) == "-63"
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "wifi", "rssi", "-70")
     await mock_polling_rpc_update(hass, freezer)
 
-    assert hass.states.get(entity_id).state == "-70"
+    assert get_entity_state(hass, entity_id) == "-70"
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -492,12 +492,12 @@ async def test_rpc_sleeping_sensor(
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(entity_id).state == "22.9"
+    assert get_entity_state(hass, entity_id) == "22.9"
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "temperature:0", "tC", 23.4)
     mock_rpc_device.mock_update()
 
-    assert hass.states.get(entity_id).state == "23.4"
+    assert get_entity_state(hass, entity_id) == "23.4"
 
 
 async def test_rpc_restored_sleeping_sensor(
@@ -525,7 +525,7 @@ async def test_rpc_restored_sleeping_sensor(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "21.0"
+    assert get_entity_state(hass, entity_id) == "21.0"
 
     # Make device online
     monkeypatch.setattr(mock_rpc_device, "initialized", True)
@@ -536,7 +536,7 @@ async def test_rpc_restored_sleeping_sensor(
     mock_rpc_device.mock_update()
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "22.9"
+    assert get_entity_state(hass, entity_id) == "22.9"
 
 
 async def test_rpc_restored_sleeping_sensor_no_last_state(
@@ -562,7 +562,7 @@ async def test_rpc_restored_sleeping_sensor_no_last_state(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert get_entity_state(hass, entity_id) == STATE_UNKNOWN
 
     # Make device online
     monkeypatch.setattr(mock_rpc_device, "initialized", True)
@@ -573,7 +573,7 @@ async def test_rpc_restored_sleeping_sensor_no_last_state(
     mock_rpc_device.mock_update()
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "22.9"
+    assert get_entity_state(hass, entity_id) == "22.9"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -687,7 +687,7 @@ async def test_block_sleeping_update_entity_service(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(entity_id).state == "22.1"
+    assert get_entity_state(hass, entity_id) == "22.1"
 
     await hass.services.async_call(
         HA_DOMAIN,
@@ -734,7 +734,7 @@ async def test_rpc_analog_input_sensors(
     await init_integration(hass, 2)
 
     entity_id = f"{SENSOR_DOMAIN}.test_name_input_1_analog"
-    assert hass.states.get(entity_id).state == "89"
+    assert get_entity_state(hass, entity_id) == "89"
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -782,7 +782,7 @@ async def test_rpc_disabled_xpercent(
     await init_integration(hass, 2)
 
     entity_id = f"{SENSOR_DOMAIN}.test_name_input_1_analog"
-    assert hass.states.get(entity_id).state == "89"
+    assert get_entity_state(hass, entity_id) == "89"
 
     entity_id = f"{SENSOR_DOMAIN}.test_name_input_1_analog_value"
     assert hass.states.get(entity_id) is None
@@ -863,7 +863,7 @@ async def test_rpc_disabled_xtotal_counter(
     await init_integration(hass, 2)
 
     entity_id = f"{SENSOR_DOMAIN}.gas_pulse_counter"
-    assert hass.states.get(entity_id).state == "20635"
+    assert get_entity_state(hass, entity_id) == "20635"
 
     entity_id = f"{SENSOR_DOMAIN}.gas_counter_value"
     assert hass.states.get(entity_id) is None
@@ -978,7 +978,7 @@ async def test_rpc_device_virtual_text_sensor(
 
     monkeypatch.setitem(mock_rpc_device.status["text:203"], "value", "dolor sit amet")
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == "dolor sit amet"
+    assert get_entity_state(hass, entity_id) == "dolor sit amet"
 
 
 async def test_rpc_remove_text_virtual_sensor_when_mode_field(
@@ -1084,7 +1084,7 @@ async def test_rpc_device_virtual_number_sensor(
 
     monkeypatch.setitem(mock_rpc_device.status["number:203"], "value", 56.7)
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == "56.7"
+    assert get_entity_state(hass, entity_id) == "56.7"
 
 
 async def test_rpc_remove_number_virtual_sensor_when_mode_field(
@@ -1200,7 +1200,7 @@ async def test_rpc_device_virtual_enum_sensor(
 
     monkeypatch.setitem(mock_rpc_device.status["enum:203"], "value", "two")
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == "two"
+    assert get_entity_state(hass, entity_id) == "two"
 
 
 async def test_rpc_remove_enum_virtual_sensor_when_mode_dropdown(
