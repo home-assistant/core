@@ -26,7 +26,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import PurpleAirConfigEntry, async_get_sensor_index_list
+from .config_schema import ConfigSchema
+from .coordinator import PurpleAirConfigEntry
 from .entity import PurpleAirEntity
 
 CONCENTRATION_PARTICLES_PER_100_MILLILITERS = f"particles/100{UnitOfVolume.MILLILITERS}"
@@ -166,7 +167,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PurpleAir sensors based on a config entry."""
-    index_list: list[int] = async_get_sensor_index_list(dict(entry.options)) or []
+    index_list: list[int] = (
+        ConfigSchema.async_get_sensor_index_list(dict(entry.options)) or []
+    )
     assert index_list is not None and len(index_list) > 0, (
         "No sensor indexes found in configuration"
     )
