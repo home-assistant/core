@@ -8,6 +8,5 @@
   "quality_scale": "legacy",
   "requirements": ["pyopenhardwaremonitor==0.1.6"],
   "dependencies": [],
-  "config_flow": true,
-  "version": "2.0.0"
+  "config_flow": true
 }

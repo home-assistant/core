@@ -73,7 +73,6 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
                         identifiers={(DOMAIN, f"{self._config_entry_id}__{name}")},
                         manufacturer="Computer",
                     )
-                    _LOGGER.info("get/create Device: %s %s", de.name, de.created_at)
                     computers[name] = de
             _LOGGER.info("Computers: %s", list(computers.keys()))
             self._computers = computers
