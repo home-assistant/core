@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from httpx import ConnectError, HTTPStatusError, UnsupportedProtocol
+from httpx import HTTPError, InvalidURL
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
 from ical.exceptions import CalendarParseError
@@ -49,7 +49,7 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
         try:
             res = await self._client.get(self._url, follow_redirects=True)
             res.raise_for_status()
-        except (UnsupportedProtocol, ConnectError, HTTPStatusError, ValueError) as err:
+        except (HTTPError, InvalidURL) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_fetch",
@@ -63,4 +63,5 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_parse",
+                translation_placeholders={"err": str(err)},
             ) from err

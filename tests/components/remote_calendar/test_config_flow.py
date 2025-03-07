@@ -37,27 +37,25 @@ async def test_form_import_ics(hass: HomeAssistant, ics_content: str) -> None:
             CONF_URL: CALENDER_URL,
         },
     )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == CALENDAR_NAME
     assert result2["data"] == {
         CONF_CALENDAR_NAME: CALENDAR_NAME,
         CONF_URL: CALENDER_URL,
     }
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "errors"),
+    ("side_effect"),
     [
-        (ConnectError("Connection failed"), "url_not_reachable"),
-        (UnsupportedProtocol("Unsupported protocol"), "unsupported_protocol"),
-        (ValueError("Invalid response"), "unknown_url_type"),
+        ConnectError("Connection failed"),
+        UnsupportedProtocol("Unsupported protocol"),
     ],
 )
 @respx.mock
 async def test_form_inavild_url(
     hass: HomeAssistant,
     side_effect: Exception,
-    errors: str,
     ics_content: str,
 ) -> None:
     """Test we get the import form."""
@@ -75,7 +73,7 @@ async def test_form_inavild_url(
         },
     )
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": errors}
+    assert result2["errors"] == {"base": "cannot_connect"}
     respx.get(CALENDER_URL).mock(
         return_value=Response(
             status_code=200,
@@ -90,6 +88,52 @@ async def test_form_inavild_url(
         },
     )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == CALENDAR_NAME
+    assert result3["data"] == {
+        CONF_CALENDAR_NAME: CALENDAR_NAME,
+        CONF_URL: CALENDER_URL,
+    }
+
+
+@pytest.mark.parametrize(
+    ("url", "log_message"),
+    [
+        (
+            "unsupported://protocol.com",  # Test for httpx.UnsupportedProtocol
+            "Request URL has an unsupported protocol 'unsupported://'",
+        ),
+        (
+            "invalid-url",  # Test for httpx.ProtocolError
+            "Request URL is missing an 'http://' or 'https://' protocol",
+        ),
+        (
+            "https://example.com:abc/",  # Test for httpx.InvalidURL
+            "Invalid port: 'abc'",
+        ),
+    ],
+)
+async def test_unsupported_inputs(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, url: str, log_message: str
+) -> None:
+    """Test that an unsupported inputs results in a form error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: url,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+    assert log_message in caplog.text
+    ## It's not possible to test a successful config flow because, we need to mock httpx.get here
+    ## and then the exception isn't raised anymore.
 
 
 @respx.mock
@@ -128,10 +172,15 @@ async def test_form_http_status_error(hass: HomeAssistant, ics_content: str) -> 
         },
     )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == CALENDAR_NAME
+    assert result3["data"] == {
+        CONF_CALENDAR_NAME: CALENDAR_NAME,
+        CONF_URL: CALENDER_URL,
+    }
 
 
 @respx.mock
-async def test_no_valid_calendar(hass: HomeAssistant) -> None:
+async def test_no_valid_calendar(hass: HomeAssistant, ics_content: str) -> None:
     """Test invalid ics content."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -154,6 +203,25 @@ async def test_no_valid_calendar(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_ics_file"}
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=ics_content,
+        )
+    )
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: CALENDER_URL,
+        },
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == CALENDAR_NAME
+    assert result3["data"] == {
+        CONF_CALENDAR_NAME: CALENDAR_NAME,
+        CONF_URL: CALENDER_URL,
+    }
 
 
 async def test_duplicate_name(

@@ -18,11 +18,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
-      "unsupported_protocol": "Request URL is missing an 'http://' or 'https://' protocol.",
-      "url_not_reachable": "URL is not reachable.",
-      "cannot_connect": "You cannot connect to the URL.",
-      "invalid_ics_file": "[%key:component::local_calendar::config::error::invalid_ics_file%]",
-      "unknown_url_type": "Unknown URL type."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_ics_file": "[%key:component::local_calendar::config::error::invalid_ics_file%]"
     }
   },
   "exceptions": {
@@ -30,7 +27,7 @@
       "message": "Unable to fetch calendar data: {err}"
     },
     "unable_to_parse": {
-      "message": "[%key:component::local_calendar::config::error::invalid_ics_file%]"
+      "message": "Unable to parse calendar data: {err}"
     }
   }
 }

@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from httpx import ConnectError, HTTPStatusError, UnsupportedProtocol
+from httpx import HTTPError, InvalidURL
 from ical.calendar_stream import IcsCalendarStream
 from ical.exceptions import CalendarParseError
 import voluptuous as vol
@@ -47,18 +47,9 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             res = await client.get(user_input[CONF_URL], follow_redirects=True)
             res.raise_for_status()
-        except UnsupportedProtocol as err:
-            errors["base"] = "unsupported_protocol"
-            _LOGGER.debug("Unsupported Protokol: %s", err)
-        except ConnectError as err:
-            errors["base"] = "url_not_reachable"
-            _LOGGER.debug("ConnectError: %s", err)
-        except HTTPStatusError as err:
+        except (HTTPError, InvalidURL) as err:
             errors["base"] = "cannot_connect"
-            _LOGGER.debug("HTTPStatusError: %s", err)
-        except ValueError as err:
-            errors["base"] = "unknown_url_type"
-            _LOGGER.debug("ValueError: %s", err)
+            _LOGGER.debug("An error occurred: %s", err)
         else:
             try:
                 await self.hass.async_add_executor_job(
