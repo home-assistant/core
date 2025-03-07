@@ -5,7 +5,7 @@ from http import HTTPStatus
 import logging
 import time
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import aiohttp
 import pytest
@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError
 
-from tests.common import MockConfigEntry, mock_platform
+from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -1034,70 +1034,72 @@ async def test_abort_if_oauth_with_pkce_rejected(
     assert result["description_placeholders"] == {"error": "access_denied"}
 
 
-# @pytest.mark.usefixtures("current_request_with_host")
-# async def test_if_oauth_with_pkce_adds_code_verifier_to_token_resolve(
-#     hass: HomeAssistant,
-#     flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
-#     local_impl_pkce: config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce,
-#     hass_client_no_auth: ClientSessionGenerator,
-#     aioclient_mock: AiohttpClientMocker,
-# ) -> None:
-#     """Check pkce flow."""
-#     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
-#     flow_handler.async_register_implementation(hass, local_impl_pkce)
-#     config_entry_oauth2_flow.async_register_implementation(
-#         hass, TEST_DOMAIN, MockOAuth2Implementation()
-#     )
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_if_oauth_with_pkce_adds_code_verifier_to_token_resolve(
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
+    local_impl_pkce: config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Check pkce flow."""
 
-#     result = await hass.config_entries.flow.async_init(
-#         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
-#     )
+    mock_integration(
+        hass,
+        MockModule(
+            domain=TEST_DOMAIN,
+            async_setup_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+    flow_handler.async_register_implementation(hass, local_impl_pkce)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, MockOAuth2Implementation()
+    )
 
-#     assert result["type"] == data_entry_flow.FlowResultType.FORM
-#     assert result["step_id"] == "pick_implementation"
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-#     # Pick implementation
-#     result = await hass.config_entries.flow.async_configure(
-#         result["flow_id"], user_input={"implementation": TEST_DOMAIN}
-#     )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "pick_implementation"
 
-#     state = config_entry_oauth2_flow._encode_jwt(
-#         hass,
-#         {
-#             "flow_id": result["flow_id"],
-#             "redirect_uri": "https://example.com/auth/external/callback",
-#         },
-#     )
+    # Pick implementation
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"implementation": TEST_DOMAIN}
+    )
 
-#     assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
-#     aioclient_mock.post(
-#         TOKEN_URL,
-#         json={
-#             "refresh_token": REFRESH_TOKEN,
-#             "access_token": ACCESS_TOKEN_1,
-#             "type": "bearer",
-#             "expires_in": 60,
-#         },
-#     )
+    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
 
-#     client = await hass_client_no_auth()
-#     with patch("tests.common.MockModule.async_setup_entry", return_value=True):
-#         resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-#         assert resp.status == 200
-#         assert resp.headers["content-type"] == "text/html; charset=utf-8"
+    # Setup the response when HA tries to fetch a token with the code
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": REFRESH_TOKEN,
+            "access_token": ACCESS_TOKEN_1,
+            "type": "bearer",
+            "expires_in": 60,
+        },
+    )
 
-#         result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    client = await hass_client_no_auth()
+    # trigger the callback
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-#         # assert result["type"] == data_entry_flow.FlowResultType.ABORT
-#         # assert result["reason"] == "user_rejected_authorize"
-#         # assert result["description_placeholders"] == {"error": "access_denied"}
-#
-#         assert len(aioclient_mock.mock_calls) == 1
-#         assert (
-#             aioclient_mock.mock_calls[0][3]["code_verifier"]
-#             == local_impl_pkce.code_verifier
-#         )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Verify the token resolve request occurred
+    assert len(aioclient_mock.mock_calls) == 1
 
 
 @pytest.mark.parametrize("code_verifier_length", [40, 129])
