@@ -2760,6 +2760,11 @@ def shuffle(*args: Any, seed: Any = None) -> MutableSequence[Any]:
     return items
 
 
+def typeof(value: Any) -> Any:
+    """Return the type of value passed to debug types."""
+    return value.__class__.__name__
+
+
 class TemplateContextManager(AbstractContextManager):
     """Context manager to store template being parsed or rendered in a ContextVar."""
 
@@ -2961,6 +2966,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["version"] = version
         self.filters["contains"] = contains
         self.filters["shuffle"] = shuffle
+        self.filters["typeof"] = typeof
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2999,6 +3005,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["version"] = version
         self.globals["zip"] = zip
         self.globals["shuffle"] = shuffle
+        self.globals["typeof"] = typeof
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
         self.tests["set"] = _is_set
