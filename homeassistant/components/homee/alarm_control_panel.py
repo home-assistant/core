@@ -105,47 +105,29 @@ class HomeeAlarmPanel(HomeeEntity, AlarmControlPanelEntity):
         )
         return f"{changed_by_name}-{self._attribute.changed_by_id}"
 
+    async def _async_set_alarm_state(self, state: AlarmControlPanelState) -> None:
+        """Set the alarm state."""
+        if state in self.entity_description.state_list:
+            await self.async_set_homee_value(
+                self.entity_description.state_list.index(state)
+            )
+
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        if AlarmControlPanelState.DISARMED in self.entity_description.state_list:
-            await self.async_set_homee_value(
-                self.entity_description.state_list.index(
-                    AlarmControlPanelState.DISARMED
-                )
-            )
+        await self._async_set_alarm_state(AlarmControlPanelState.DISARMED)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        if AlarmControlPanelState.ARMED_HOME in self.entity_description.state_list:
-            await self.async_set_homee_value(
-                self.entity_description.state_list.index(
-                    AlarmControlPanelState.ARMED_HOME
-                )
-            )
+        await self._async_set_alarm_state(AlarmControlPanelState.ARMED_HOME)
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        if AlarmControlPanelState.ARMED_NIGHT in self.entity_description.state_list:
-            await self.async_set_homee_value(
-                self.entity_description.state_list.index(
-                    AlarmControlPanelState.ARMED_NIGHT
-                )
-            )
+        await self._async_set_alarm_state(AlarmControlPanelState.ARMED_NIGHT)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        if AlarmControlPanelState.ARMED_AWAY in self.entity_description.state_list:
-            await self.async_set_homee_value(
-                self.entity_description.state_list.index(
-                    AlarmControlPanelState.ARMED_AWAY
-                )
-            )
+        await self._async_set_alarm_state(AlarmControlPanelState.ARMED_AWAY)
 
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
-        if AlarmControlPanelState.ARMED_VACATION in self.entity_description.state_list:
-            await self.async_set_homee_value(
-                self.entity_description.state_list.index(
-                    AlarmControlPanelState.ARMED_VACATION
-                )
-            )
+        await self._async_set_alarm_state(AlarmControlPanelState.ARMED_VACATION)
