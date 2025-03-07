@@ -201,7 +201,7 @@ class ConfigManagerFlowIndexView(
         if entry_id := data.get("entry_id"):
             context["source"] = config_entries.SOURCE_RECONFIGURE
             context["entry_id"] = entry_id
-        if virtual_integration := data.get("virtual_domain"):
+        if virtual_domain := data.get("virtual_domain"):
             context["virtual_domain"] = virtual_domain
         return context
 
