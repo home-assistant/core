@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import lru_cache
+from math import floor, log10
 
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
@@ -143,6 +144,18 @@ class BaseUnitConverter:
         """Get unit ratio between units of measurement."""
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
         return from_ratio / to_ratio
+
+    @classmethod
+    @lru_cache
+    def get_unit_floored_log_ratio(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> float:
+        """Get floored log ratio between units of measurement."""
+        from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
+        ratio = from_ratio / to_ratio
+        # Scale the precision when converting to a larger unit
+        # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
+        return floor(max(0, log10(ratio)))
 
     @classmethod
     @lru_cache
