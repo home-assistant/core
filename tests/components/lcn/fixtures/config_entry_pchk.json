@@ -27,7 +27,6 @@
     {
       "address": [0, 7, false],
       "name": "Light_Output1",
-      "resource": "output1",
       "domain": "light",
       "domain_data": {
         "output": "OUTPUT1",
@@ -38,7 +37,6 @@
     {
       "address": [0, 7, false],
       "name": "Light_Output2",
-      "resource": "output2",
       "domain": "light",
       "domain_data": {
         "output": "OUTPUT2",
@@ -49,7 +47,6 @@
     {
       "address": [0, 7, false],
       "name": "Light_Relay1",
-      "resource": "relay1",
       "domain": "light",
       "domain_data": {
         "output": "RELAY1",
@@ -60,7 +57,6 @@
     {
       "address": [0, 7, false],
       "name": "Switch_Output1",
-      "resource": "output1",
       "domain": "switch",
       "domain_data": {
         "output": "OUTPUT1"
@@ -69,7 +65,6 @@
     {
       "address": [0, 7, false],
       "name": "Switch_Output2",
-      "resource": "output2",
       "domain": "switch",
       "domain_data": {
         "output": "OUTPUT2"
@@ -78,7 +73,6 @@
     {
       "address": [0, 7, false],
       "name": "Switch_Relay1",
-      "resource": "relay1",
       "domain": "switch",
       "domain_data": {
         "output": "RELAY1"
@@ -87,7 +81,6 @@
     {
       "address": [0, 7, false],
       "name": "Switch_Relay2",
-      "resource": "relay2",
       "domain": "switch",
       "domain_data": {
         "output": "RELAY2"
@@ -96,7 +89,6 @@
     {
       "address": [0, 7, false],
       "name": "Switch_Regulator1",
-      "resource": "r1varsetpoint",
       "domain": "switch",
       "domain_data": {
         "output": "R1VARSETPOINT"
@@ -105,7 +97,6 @@
     {
       "address": [0, 7, false],
       "name": "Switch_KeyLock1",
-      "resource": "a1",
       "domain": "switch",
       "domain_data": {
         "output": "A1"
@@ -114,7 +105,6 @@
     {
       "address": [0, 5, true],
       "name": "Switch_Group5",
-      "resource": "relay1",
       "domain": "switch",
       "domain_data": {
         "output": "RELAY1"
@@ -123,7 +113,6 @@
     {
       "address": [0, 7, false],
       "name": "Cover_Outputs",
-      "resource": "outputs",
       "domain": "cover",
       "domain_data": {
         "motor": "OUTPUTS",
@@ -133,7 +122,6 @@
     {
       "address": [0, 7, false],
       "name": "Cover_Relays",
-      "resource": "motor1",
       "domain": "cover",
       "domain_data": {
         "motor": "MOTOR1",
@@ -143,12 +131,12 @@
     {
       "address": [0, 7, false],
       "name": "Climate1",
-      "resource": "var1.r1varsetpoint",
       "domain": "climate",
       "domain_data": {
         "source": "VAR1",
         "setpoint": "R1VARSETPOINT",
         "lockable": true,
+        "target_value_locked": -1,
         "min_temp": 0.0,
         "max_temp": 40.0,
         "unit_of_measurement": "°C"
@@ -157,7 +145,6 @@
     {
       "address": [0, 7, false],
       "name": "Romantic",
-      "resource": "0.0",
       "domain": "scene",
       "domain_data": {
         "register": 0,
@@ -169,7 +156,6 @@
     {
       "address": [0, 7, false],
       "name": "Romantic Transition",
-      "resource": "0.1",
       "domain": "scene",
       "domain_data": {
         "register": 0,
@@ -181,7 +167,6 @@
     {
       "address": [0, 7, false],
       "name": "Sensor_LockRegulator1",
-      "resource": "r1varsetpoint",
       "domain": "binary_sensor",
       "domain_data": {
         "source": "R1VARSETPOINT"
@@ -190,7 +175,6 @@
     {
       "address": [0, 7, false],
       "name": "Binary_Sensor1",
-      "resource": "binsensor1",
       "domain": "binary_sensor",
       "domain_data": {
         "source": "BINSENSOR1"
@@ -199,7 +183,6 @@
     {
       "address": [0, 7, false],
       "name": "Sensor_KeyLock",
-      "resource": "a5",
       "domain": "binary_sensor",
       "domain_data": {
         "source": "A5"
@@ -208,7 +191,6 @@
     {
       "address": [0, 7, false],
       "name": "Sensor_Var1",
-      "resource": "var1",
       "domain": "sensor",
       "domain_data": {
         "source": "VAR1",
@@ -218,7 +200,6 @@
     {
       "address": [0, 7, false],
       "name": "Sensor_Setpoint1",
-      "resource": "r1varsetpoint",
       "domain": "sensor",
       "domain_data": {
         "source": "R1VARSETPOINT",
@@ -228,7 +209,6 @@
     {
       "address": [0, 7, false],
       "name": "Sensor_Led6",
-      "resource": "led6",
       "domain": "sensor",
       "domain_data": {
         "source": "LED6",
@@ -238,7 +218,6 @@
     {
       "address": [0, 7, false],
       "name": "Sensor_LogicOp1",
-      "resource": "logicop1",
       "domain": "sensor",
       "domain_data": {
         "source": "LOGICOP1",
