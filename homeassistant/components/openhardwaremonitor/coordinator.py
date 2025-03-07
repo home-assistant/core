@@ -146,7 +146,7 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
                 Paths=paths,
                 FullName=" ".join([*paths, node["Text"]]),
                 ComputerName=paths[0],
-                Type=SensorType(node.get("Type")) if node.get("Type") else None
+                Type=SensorType(node.get("Type")) if node.get("Type") else None,
             )
             result.append(sensor)
         return result

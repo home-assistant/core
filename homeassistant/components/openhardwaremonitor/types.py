@@ -1,3 +1,5 @@
+"""Types for the OpenHardwareMonitor integration."""
+
 from enum import Enum
 from typing import TypedDict
 

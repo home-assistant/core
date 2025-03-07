@@ -21,6 +21,7 @@ class OpenHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Handle default config flow."""
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
