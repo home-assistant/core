@@ -88,7 +88,6 @@ CONF_TILT_MIN = "tilt_min"
 CONF_TILT_OPEN_POSITION = "tilt_opened_value"
 CONF_TILT_STATE_OPTIMISTIC = "tilt_optimistic"
 
-
 TILT_PAYLOAD = "tilt"
 COVER_PAYLOAD = "cover"
 
