@@ -1452,7 +1452,7 @@ async def resolve_integrations_dependencies(
         try:
             return await _do_resolve_dependencies(itg, cache=resolved)
         except Exception as exc:  # noqa: BLE001
-            _log_dependencies_exceptions(itg, exc)
+            _LOGGER.error("Unable to resolve dependencies for %s: %s", itg.domain, exc)
             return None
 
     resolve_dependencies_tasks = {
@@ -1487,14 +1487,6 @@ async def resolve_integrations_after_dependencies(
     resolved: dict[Integration, set[str] | Exception] = {}
 
     async def _resolve_deps_catch_exceptions(itg: Integration) -> set[str] | None:
-        if ignore_exceptions:
-            return await _do_resolve_dependencies(
-                itg,
-                cache=resolved,
-                possible_after_dependencies=possible_after_dependencies,
-                ignore_exceptions=ignore_exceptions,
-            )
-
         try:
             return await _do_resolve_dependencies(
                 itg,
@@ -1503,7 +1495,7 @@ async def resolve_integrations_after_dependencies(
                 ignore_exceptions=ignore_exceptions,
             )
         except Exception as exc:  # noqa: BLE001
-            _log_dependencies_exceptions(itg, exc)
+            _LOGGER.error("Unable to resolve dependencies for %s: %s", itg.domain, exc)
             return None
 
     resolve_dependencies_tasks = {
@@ -1588,7 +1580,7 @@ async def _do_resolve_dependencies(
             try:
                 dep_dependencies = await do_resolve_dependencies_impl(dep_integration)
             except CircularDependency as exc:
-                exc.domain_cycle = [domain, *exc.domain_cycle]
+                exc.extend_cycle(domain)
                 resolved[itg] = exc
                 raise
             except Exception as exc:
@@ -1603,28 +1595,6 @@ async def _do_resolve_dependencies(
         return all_dependencies
 
     return await do_resolve_dependencies_impl(itg)
-
-
-def _log_dependencies_exceptions(itg: Integration, exc: Exception) -> None:
-    if isinstance(exc, CircularDependency):
-        _LOGGER.error(
-            "Unable to resolve dependencies for %s: it contains a circular dependency: %s",
-            itg.domain,
-            exc.domain_cycle,
-        )
-        return
-    if isinstance(exc, IntegrationNotFound):
-        _LOGGER.error(
-            "Unable to resolve dependencies for %s: unable to resolve (sub)dependency %s",
-            itg.domain,
-            exc.domain,
-        )
-        return
-    _LOGGER.error(
-        "Unable to resolve dependencies for %s: an error occurred: %s",
-        itg.domain,
-        exc,
-    )
 
 
 class LoaderError(Exception):
@@ -1654,8 +1624,11 @@ class CircularDependency(LoaderError):
 
     def __init__(self, domain_cycle: list[str]) -> None:
         """Initialize circular dependency error."""
-        super().__init__(f"Circular dependency detected: {domain_cycle}.")
-        self.domain_cycle = domain_cycle
+        super().__init__("Circular dependency detected", domain_cycle)
+
+    def extend_cycle(self, domain: str) -> None:
+        """Extend the cycle with the domain."""
+        self.args[1].insert(0, domain)
 
 
 def _load_file(
