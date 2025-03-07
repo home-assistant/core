@@ -12,7 +12,7 @@ import logging
 from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
 from universal_silabs_flasher.flasher import Flasher
 
-from homeassistant.components.hassio import AddonError, AddonState
+from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.hassio import is_hassio
@@ -42,6 +42,7 @@ class ApplicationType(StrEnum):
     CPC = "cpc"
     EZSP = "ezsp"
     SPINEL = "spinel"
+    ROUTER = "router"
 
     @classmethod
     def from_flasher_application_type(
@@ -143,6 +144,31 @@ class FirmwareInfo:
         return all(states)
 
 
+async def get_otbr_addon_firmware_info(
+    hass: HomeAssistant, otbr_addon_manager: AddonManager
+) -> FirmwareInfo | None:
+    """Get firmware info from the OTBR add-on."""
+    try:
+        otbr_addon_info = await otbr_addon_manager.async_get_addon_info()
+    except AddonError:
+        return None
+
+    if otbr_addon_info.state == AddonState.NOT_INSTALLED:
+        return None
+
+    if (otbr_path := otbr_addon_info.options.get("device")) is None:
+        return None
+
+    # Only create a new entry if there are no existing OTBR ones
+    return FirmwareInfo(
+        device=otbr_path,
+        firmware_type=ApplicationType.SPINEL,
+        firmware_version=None,
+        source="otbr",
+        owners=[OwningAddon(slug=otbr_addon_manager.addon_slug)],
+    )
+
+
 async def guess_hardware_owners(
     hass: HomeAssistant, device_path: str
 ) -> list[FirmwareInfo]:
@@ -155,28 +181,19 @@ async def guess_hardware_owners(
     # It may be possible for the OTBR addon to be present without the integration
     if is_hassio(hass):
         otbr_addon_manager = get_otbr_addon_manager(hass)
+        otbr_addon_fw_info = await get_otbr_addon_firmware_info(
+            hass, otbr_addon_manager
+        )
+        otbr_path = (
+            otbr_addon_fw_info.device if otbr_addon_fw_info is not None else None
+        )
 
-        try:
-            otbr_addon_info = await otbr_addon_manager.async_get_addon_info()
-        except AddonError:
-            pass
-        else:
-            if otbr_addon_info.state != AddonState.NOT_INSTALLED:
-                otbr_path = otbr_addon_info.options.get("device")
-
-                # Only create a new entry if there are no existing OTBR ones
-                if otbr_path is not None and not any(
-                    info.source == "otbr" for info in device_guesses[otbr_path]
-                ):
-                    device_guesses[otbr_path].append(
-                        FirmwareInfo(
-                            device=otbr_path,
-                            firmware_type=ApplicationType.SPINEL,
-                            firmware_version=None,
-                            source="otbr",
-                            owners=[OwningAddon(slug=otbr_addon_manager.addon_slug)],
-                        )
-                    )
+        # Only create a new entry if there are no existing OTBR ones
+        if otbr_path is not None and not any(
+            info.source == "otbr" for info in device_guesses[otbr_path]
+        ):
+            assert otbr_addon_fw_info is not None
+            device_guesses[otbr_path].append(otbr_addon_fw_info)
 
     if is_hassio(hass):
         multipan_addon_manager = await get_multiprotocol_addon_manager(hass)
@@ -232,10 +249,10 @@ async def guess_firmware_info(hass: HomeAssistant, device_path: str) -> Firmware
     return guesses[-1][0]
 
 
-async def probe_silabs_firmware_type(
+async def probe_silabs_firmware_info(
     device: str, *, probe_methods: Iterable[ApplicationType] | None = None
-) -> ApplicationType | None:
-    """Probe the running firmware on a Silabs device."""
+) -> FirmwareInfo | None:
+    """Probe the running firmware on a SiLabs device."""
     flasher = Flasher(
         device=device,
         **(
@@ -253,4 +270,26 @@ async def probe_silabs_firmware_type(
     if flasher.app_type is None:
         return None
 
-    return ApplicationType.from_flasher_application_type(flasher.app_type)
+    return FirmwareInfo(
+        device=device,
+        firmware_type=ApplicationType.from_flasher_application_type(flasher.app_type),
+        firmware_version=(
+            flasher.app_version.orig_version
+            if flasher.app_version is not None
+            else None
+        ),
+        source="probe",
+        owners=[],
+    )
+
+
+async def probe_silabs_firmware_type(
+    device: str, *, probe_methods: Iterable[ApplicationType] | None = None
+) -> ApplicationType | None:
+    """Probe the running firmware type on a SiLabs device."""
+
+    fw_info = await probe_silabs_firmware_info(device, probe_methods=probe_methods)
+    if fw_info is None:
+        return None
+
+    return fw_info.firmware_type

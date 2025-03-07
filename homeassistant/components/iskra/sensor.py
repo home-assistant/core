@@ -24,7 +24,7 @@ from homeassistant.const import (
     UnitOfReactivePower,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_FREQUENCY,
@@ -207,7 +207,7 @@ def get_counter_entity_description(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IskraConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Iskra sensors based on config_entry."""
 
