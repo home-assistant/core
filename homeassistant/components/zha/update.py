@@ -32,6 +32,7 @@ from .helpers import (
     async_add_entities as zha_async_add_entities,
     get_zha_data,
     get_zha_gateway,
+    migrate_entities_unique_ids,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,6 +62,8 @@ async def async_setup_entry(
             hass, get_zha_gateway(hass).application_controller
         )
     entities_to_create = zha_data.platforms[Platform.UPDATE]
+
+    await migrate_entities_unique_ids(hass, Platform.UPDATE, entities_to_create)
 
     unsub = async_dispatcher_connect(
         hass,
