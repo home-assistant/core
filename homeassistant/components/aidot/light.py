@@ -15,7 +15,7 @@ from homeassistant.helpers.device_registry import (
     DeviceInfo,
     format_mac,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -25,7 +25,7 @@ from .coordinator import AidotConfigEntry, AidotDeviceUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AidotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Light."""
     device_manager_coordinator = entry.runtime_data
