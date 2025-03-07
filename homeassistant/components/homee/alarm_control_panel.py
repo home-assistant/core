@@ -23,7 +23,7 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class HomeeAlarmControlPanelEntityDescription(AlarmControlPanelEntityDescription):
-    """Describes a Homee alarm panel entity."""
+    """A class that describes Homee alarm control panel entities."""
 
     code_arm_required: bool = False
     state_list: list[AlarmControlPanelState]
@@ -46,7 +46,7 @@ ALARM_DESCRIPTIONS = {
 def get_supported_features(
     state_list: list[AlarmControlPanelState],
 ) -> AlarmControlPanelEntityFeature:
-    """Return the supported features based on the state list."""
+    """Return supported features based on the state list."""
     supported_features = AlarmControlPanelEntityFeature(0)
     if AlarmControlPanelState.ARMED_HOME in state_list:
         supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
@@ -99,11 +99,20 @@ class HomeeAlarmPanel(HomeeEntity, AlarmControlPanelEntity):
 
     @property
     def changed_by(self) -> str:
-        """Return by whom or what  the entity was last changed."""
+        """Return by whom or what the entity was last changed."""
         changed_by_name = get_name_for_enum(
             AttributeChangedBy, self._attribute.changed_by
         )
         return f"{changed_by_name}-{self._attribute.changed_by_id}"
+
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
+        """Send disarm command."""
+        if AlarmControlPanelState.DISARMED in self.entity_description.state_list:
+            await self.async_set_homee_value(
+                self.entity_description.state_list.index(
+                    AlarmControlPanelState.DISARMED
+                )
+            )
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
