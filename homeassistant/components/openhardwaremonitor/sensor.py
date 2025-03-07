@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -92,21 +93,19 @@ class OpenHardwareMonitorSensorDevice(
         self._attr_device_info = coordinator.resolve_device_info_for_node(node)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self._fullname
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
     @property
     def native_value(self):
         """Return the state of the device."""
-        if self.value == "-":
-            return None
-        return self.value
+        return None if self.value == "-" else self.value
 
     @property
     def extra_state_attributes(self):
@@ -114,7 +113,7 @@ class OpenHardwareMonitorSensorDevice(
         return self.attributes
 
     @property
-    def device_info(self):
+    def device_info(self) -> dr.DeviceInfo | None:
         """Information about this entity's device."""
         return self._attr_device_info
 
