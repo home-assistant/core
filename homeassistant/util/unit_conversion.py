@@ -150,7 +150,7 @@ class BaseUnitConverter:
     def get_unit_floored_log_ratio(
         cls, from_unit: str | None, to_unit: str | None
     ) -> float:
-        """Get floored log ratio between units of measurement."""
+        """Get floored base10 log ratio between units of measurement."""
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
         return floor(max(0, log10(from_ratio / to_ratio)))
 
