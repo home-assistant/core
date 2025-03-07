@@ -1,4 +1,4 @@
-"""The homee binary sensor platform."""
+"""The Homee binary sensor platform."""
 
 from pyHomee.const import AttributeType
 from pyHomee.model import HomeeAttribute
@@ -39,14 +39,13 @@ BINARY_SENSOR_DESCRIPTIONS: dict[AttributeType, BinarySensorEntityDescription] =
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
     AttributeType.HIGH_TEMPERATURE_ALARM: BinarySensorEntityDescription(
-        key="temperature",
+        key="high_temperature",
         device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     AttributeType.LEAK_ALARM: BinarySensorEntityDescription(
         key="leak_alarm",
         device_class=BinarySensorDeviceClass.MOISTURE,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     AttributeType.LOAD_ALARM: BinarySensorEntityDescription(
         key="load_alarm",
@@ -158,7 +157,7 @@ async def async_setup_entry(
     config_entry: HomeeConfigEntry,
     async_add_devices: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the homee platform for the binary sensor integration."""
+    """Add the Homee platform for the binary sensor component."""
 
     async_add_devices(
         HomeeBinarySensor(
@@ -171,7 +170,7 @@ async def async_setup_entry(
 
 
 class HomeeBinarySensor(HomeeEntity, BinarySensorEntity):
-    """Representation of a homee binary sensor device."""
+    """Representation of a Homee binary sensor."""
 
     def __init__(
         self,
@@ -179,7 +178,7 @@ class HomeeBinarySensor(HomeeEntity, BinarySensorEntity):
         entry: HomeeConfigEntry,
         description: BinarySensorEntityDescription,
     ) -> None:
-        """Initialize a homee binary sensor entity."""
+        """Initialize a Homee binary sensor entity."""
         super().__init__(attribute, entry)
 
         self.entity_description = description

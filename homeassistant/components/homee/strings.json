@@ -45,8 +45,8 @@
       "flood": {
         "name": "Flood"
       },
-      "heat": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      "high_temperature": {
+        "name": "High temperature"
       },
       "leak_alarm": {
         "name": "Leak"
@@ -59,7 +59,7 @@
         }
       },
       "low_temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+        "name": "Low temperature"
       },
       "malfunction": {
         "name": "Malfunction"
@@ -67,15 +67,13 @@
       "maximum": {
         "name": "Maximum level",
         "state": {
-          "off": "Level above maximum",
-          "on": "Level below maximum"
+          "on": "Level high"
         }
       },
       "minimum": {
         "name": "Minimum level",
         "state": {
-          "off": "Level above minimum",
-          "on": "Level below minimum"
+          "on": "Level low"
         }
       },
       "motor_blocked": {
