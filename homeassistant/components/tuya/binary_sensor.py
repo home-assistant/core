@@ -284,10 +284,9 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "wk": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.VALVE_STATE,
-            device_class=BinarySensorDeviceClass.RUNNING,
+            translation_key="valve_state",
             on_value="open",
-            name="Status",
-            icon="mdi:radiator",
+            name="Heating",
         ),
     ),
     # Thermostatic Radiator Valve
@@ -414,11 +413,3 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
             return self.device.status[dpcode] in self.entity_description.on_value
 
         return self.device.status[dpcode] == self.entity_description.on_value
-
-    @property
-    def state(self) -> str:
-        """Return modified state of the sensors if matched."""
-        if self.entity_description.key == DPCode.VALVE_STATE:
-            return "Heating" if self.is_on else "Idle"
-        return super().state
-

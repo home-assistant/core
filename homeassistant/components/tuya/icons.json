@@ -15,6 +15,9 @@
       },
       "tilt": {
         "default": "mdi:spirit-level"
+      },
+      "valve_state": {
+        "default": "mdi:radiator-disabled"
       }
     },
     "button": {

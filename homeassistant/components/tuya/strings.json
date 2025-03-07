@@ -56,6 +56,9 @@
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "valve_state": {
+        "name": "Heating"
       }
     },
     "button": {
