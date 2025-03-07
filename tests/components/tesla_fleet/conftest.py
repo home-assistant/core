@@ -180,9 +180,9 @@ def mock_request():
 
 @pytest.fixture(autouse=True)
 def mock_energy_history():
-    """Mock Teslemetry Energy Specific site_info method."""
+    """Mock Tesla Fleet Energy Specific site_info method."""
     with patch(
-        "homeassistant.components.teslemetry.EnergySpecific.energy_history",
+        "homeassistant.components.tesla_fleet.EnergySpecific.energy_history",
         return_value=ENERGY_HISTORY,
     ) as mock_live_status:
         yield mock_live_status

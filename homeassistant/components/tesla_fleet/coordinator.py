@@ -251,7 +251,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         output = {key: 0 for key in ENERGY_HISTORY_FIELDS}
         for period in data.get("time_series", []):
             for key in ENERGY_HISTORY_FIELDS:
-                output[key] += period.get(key, 0)
+                output[key] += abs(period.get(key, 0))
 
         return output
 
