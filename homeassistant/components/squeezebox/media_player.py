@@ -85,16 +85,6 @@ SERVICE_CALL_QUERY_RESPONSE = "call_query_response"
 ATTR_QUERY_RESULT = "query_result"
 ATTR_PARAMETERS = "parameters"
 
-QUERY_RESPONSE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_COMMAND): cv.string,
-        vol.Optional(ATTR_PARAMETERS): vol.All(
-            cv.ensure_list, vol.Length(min=1), [cv.string]
-        ),
-    }
-)
-
-
 _LOGGER = logging.getLogger(__name__)
 
 
