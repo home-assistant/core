@@ -15,7 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 
 from .const import DOMAIN, GROUP_DEVICES_PER_DEPTH_LEVEL
-from .coordinator import OpenHardwareMonitorDataCoordinator
+from .coordinator import OpenHardwareMonitorDataCoordinator, OpenHardwareMonitorConfigEntry
 from .sensor import OpenHardwareMonitorSensorDevice
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
@@ -30,7 +30,6 @@ OHM_CHILDREN = "Children"
 OHM_NAME = "Text"
 OHM_ID = "id"
 
-type OpenHardwareMonitorConfigEntry = ConfigEntry[OpenHardwareMonitorDataCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenHardwareMonitorConfigEntry) -> bool:
@@ -41,15 +40,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenHardwareMonitorConfi
     #     raise ConfigEntryNotReady
 
     coordinator = OpenHardwareMonitorDataCoordinator(hass, entry)
+    entry.runtime_data = coordinator
+
     await coordinator.async_config_entry_first_refresh()
     if not coordinator.data:
         raise ConfigEntryNotReady
 
-    entry.runtime_data = coordinator
+    # d = coordinator.data
+    # first_node = d[list(d)[0]]
+    # if first_node and entry.data.get(GROUP_DEVICES_PER_DEPTH_LEVEL) > 1:
+    #     # Create the 'Computer' device here, if should group in multiple devices
+    #     host = entry.data[CONF_HOST]
+    #     port = entry.data[CONF_PORT]
+    #     device_name = first_node["Text"]
+
+    #     device_registry = dr.async_get(hass)
+    #     coordinator.set_computer_device(
+    #         device_registry.async_get_or_create(
+    #             config_entry_id=entry.entry_id,
+    #             name=device_name,
+    #             identifiers={(DOMAIN, f"{entry.entry_id}_{host}:{port}")},
+    #             manufacturer="Computer",
+    #         )
+    #     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
-
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
@@ -69,6 +85,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     return True
 
 
+# deprecated
 class OpenHardwareMonitorDataHandler:
     """Class used to pull data from OHM and create sensors."""
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 from typing import Any, Mapping
 
 import voluptuous as vol
@@ -44,6 +45,7 @@ OHM_CHILDREN = "Children"
 OHM_IMAGEURL = "ImageURL"
 OHM_NAME = "Text"
 OHM_ID = "id"
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT, default=8085): cv.port}
@@ -60,13 +62,14 @@ async def async_setup_entry(
     if not coordinator.data:
         raise PlatformNotReady
 
-    sensor_data = coordinator.data[:1]  # only test with 5
+    sensor_data = coordinator.data
     entities = ([OpenHardwareMonitorSensorDevice(
-            node=sensor_node,
-            config_entry_data=config_entry.data
+            node=sensor_data[k],
+            config_entry_data=config_entry.data,
+            coordinator=coordinator
             #self, fullname, path, unit_of_measurement, id, child_names, json
         )
-        for sensor_node in sensor_data
+        for k in sensor_data
     ]
     )
     async_add_entities(entities, True)
@@ -81,56 +84,93 @@ class OpenHardwareMonitorSensorDevice(CoordinatorEntity[OpenHardwareMonitorDataC
         self,
         node: SensorNode,
         config_entry_data: Mapping[str, Any],
+        coordinator: OpenHardwareMonitorDataCoordinator,
         data = None, name = None, path = None, unit_of_measurement = None, id = None, child_names = None, json = None
     ) -> None:
         """Initialize an OpenHardwareMonitor sensor."""
+        super().__init__(coordinator=coordinator)
+
+        grouping = config_entry_data.get(GROUP_DEVICES_PER_DEPTH_LEVEL, 2)
+        
         if not child_names:
-            child_names = node["Path"]
+            child_names = node["Paths"]
         if not name:
-            name = node["Text"]
+            node_name = node["Text"]
+            name = " ".join(child_names[grouping:])
         if not id:
             id = node["id"]
         if not unit_of_measurement:
             unit_of_measurement = node["Value"].split(" ")[1]
 
-        fullname = f"{" ".join(child_names)} {name}"
+        fullname = f"{" ".join(child_names)} {node_name}"
         
+        _LOGGER.info("Resolved sensor name for: %s", {"g":grouping, "p":path, "nn": node_name, "n": name, "fn": fullname, "id":id})
         
         # groupDevicesPerDepthLevel = data._config.get(GROUP_DEVICES_PER_DEPTH_LEVEL)
         # host = data._config.get(CONF_HOST)
         # port = data._config.get(CONF_PORT)
         # deviceName = " ".join(child_names[0:groupDevicesPerDepthLevel])
         
-        groupDevicesPerDepthLevel = config_entry_data.get(GROUP_DEVICES_PER_DEPTH_LEVEL)
-        host = config_entry_data.get(CONF_HOST)
-        port = config_entry_data.get(CONF_PORT)
-        deviceName = " ".join(child_names[0:groupDevicesPerDepthLevel])
-        
-
         self._node = node
-        self._name = name
+        self._name = fullname
+        self._fullname = fullname
         self._data = data
-        # self._json = json
-        self.path = path
+        self._path = " ".join(child_names)
         self._path_key = fullname
-        self.id = id
         self.value = None
         self.attributes = {}
         self._unit_of_measurement = unit_of_measurement
-        # self._attr_unique_id = f"ohm-{name}-{id}"
-        
+        self._attr_unique_id = f"ohm-{fullname}"
+
         self._apply_data(node)
+        self._attr_device_info = coordinator.resolve_device_info_for_node(node)
+
+        # manufacturer = ""
+        # if groupDevicesPerDepthLevel == 1:
+        #     # Computer device
+        #     self._attr_device_info = DeviceInfo(
+        #         identifiers={(DOMAIN, f"{host}:{port}")},
+        #         name=str(child_names[0]),
+        #         manufacturer="Computer",
+        #     )
+        #     return
+
+        # if groupDevicesPerDepthLevel == 2:
+        #     manufacturer = "Hardware"
+        # else:
+        #     manufacturer = "Group"
+
+        # model = ""
+        # if groupDevicesPerDepthLevel == 2:
+        #     model = child_names[1]
+
+        # # Hardware or Group device
+        # self._attr_device_info = DeviceInfo(
+        #     identifiers={(DOMAIN, deviceName)},
+        #     via_device=(DOMAIN, f"{host}:{port}"),
+        #     name=deviceName,
+        #     manufacturer=manufacturer,
+        #     model=model,
+        # )
+
+    def _generate_device_info(
+        self,
+        paths: list[str],
+        config_entry: ConfigEntry,
+        groupDevicesPerDepthLevel: int
+    ):
+        groupDevicesPerDepthLevel = config_entry.data.get(GROUP_DEVICES_PER_DEPTH_LEVEL)
+        host = config_entry.data.get(CONF_HOST)
+        port = config_entry.data.get(CONF_PORT)
+        device_name = " ".join(paths[0:groupDevicesPerDepthLevel])
+        
+        computer_device = self.coordinator.get_computer_device()
+        if computer_device:
+            computer_device_domain_id = dict(computer_device.identifiers)[DOMAIN]
+            via_device = (DOMAIN, computer_device_domain_id)
+
 
         manufacturer = ""
-        if groupDevicesPerDepthLevel == 1:
-            # Computer device
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, f"{host}:{port}")},
-                name=str(child_names[0]),
-                manufacturer="Computer",
-            )
-            return
-
         if groupDevicesPerDepthLevel == 2:
             manufacturer = "Hardware"
         else:
@@ -138,13 +178,14 @@ class OpenHardwareMonitorSensorDevice(CoordinatorEntity[OpenHardwareMonitorDataC
 
         model = ""
         if groupDevicesPerDepthLevel == 2:
-            model = child_names[1]
+            model = paths[1]
 
         # Hardware or Group device
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, deviceName)},
-            via_device=(DOMAIN, f"{host}:{port}"),
-            name=deviceName,
+            identifiers={(DOMAIN, device_name)},
+            # via_device=(DOMAIN, f"{host}:{port}"),
+            via_device=via_device,
+            name=device_name,
             manufacturer=manufacturer,
             model=model,
         )
@@ -215,12 +256,16 @@ class OpenHardwareMonitorSensorDevice(CoordinatorEntity[OpenHardwareMonitorDataC
 
     def _apply_data(self, node: SensorNode) -> None:
         self._node = node
+        child_names = node["Paths"]
+        fullname = f"{" ".join(child_names)} {node[OHM_NAME]}"
+
         self.value = self.parse_number(node["Value"].split(" ")[0])
         self.attributes.update(
             {
                 "name": node[OHM_NAME],
-                "path": self.path,
-                "id": self.id,
+                "fullname": fullname,
+                "paths": node.get("Paths"),
+                "id": node.get(OHM_ID),
                 STATE_MIN_VALUE: self.parse_number(
                     node[OHM_MIN].split(" ")[0]
                 ),
