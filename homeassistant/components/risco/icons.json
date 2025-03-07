@@ -1,0 +1,7 @@
+{
+  "services": {
+    "set_time": {
+      "service": "mdi:clock-edit"
+    }
+  }
+}
