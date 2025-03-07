@@ -35,6 +35,15 @@
 # name: test_load_unload_entry[h099625].2
   dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'set_system_mode'])
 # ---
+# name: test_load_unload_entry[h139906]
+  dict_keys([])
+# ---
+# name: test_load_unload_entry[h139906].1
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'set_system_mode'])
+# ---
+# name: test_load_unload_entry[h139906].2
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'set_system_mode'])
+# ---
 # name: test_load_unload_entry[minimal]
   dict_keys([])
 # ---
@@ -75,6 +84,12 @@
   dict_keys([])
 # ---
 # name: test_setup[h099625].1
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'set_system_mode'])
+# ---
+# name: test_setup[h139906]
+  dict_keys([])
+# ---
+# name: test_setup[h139906].1
   dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'set_system_mode'])
 # ---
 # name: test_setup[minimal]
