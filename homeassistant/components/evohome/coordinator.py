@@ -207,10 +207,18 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _update_v2_schedules(self) -> None:
         for zone in self.tcs.zones:
-            await zone.get_schedule()
+            try:
+                await zone.get_schedule()
+            except ec2.InvalidScheduleError as err:
+                self.logger.warning(
+                    "Zone '%s' has an invalid/missing schedule: %r", zone.name, err
+                )
 
         if dhw := self.tcs.hotwater:
-            await dhw.get_schedule()
+            try:
+                await dhw.get_schedule()
+            except ec2.InvalidScheduleError as err:
+                self.logger.warning("DHW has an invalid/missing schedule: %r", err)
 
     async def _async_update_data(self) -> EvoLocStatusResponseT:  # type: ignore[override]
         """Fetch the latest state of an entire TCC Location.
