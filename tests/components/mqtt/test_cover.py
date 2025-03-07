@@ -945,8 +945,8 @@ async def test_send_stop_cover_command(
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
-                    "command_topic": "command-topic",
-                    "tilt_command_topic": "command-topic",
+                    "tilt_command_topic": "tilt-command-topic",
+                    "payload_stop_tilt": "TILT_STOP",
                     "qos": 2,
                 }
             }
@@ -969,10 +969,11 @@ async def test_send_stop_tilt_command(
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "STOP", 2, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "TILT_STOP", 2, False
+    )
     state = hass.states.get("cover.test")
     assert state.state == STATE_UNKNOWN
-
 
 
 @pytest.mark.parametrize(
