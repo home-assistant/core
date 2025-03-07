@@ -23,4 +23,5 @@ class SensorNode(TypedDict):
     ImageURL: str
 
     Paths: list[str]
+    FullName: str
     ComputerName: str

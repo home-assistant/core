@@ -80,8 +80,14 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
             _LOGGER.info("Computers: %s", c)
             self._computers = c
 
-        sensor_nodes = OpenHardwareMonitorDataCoordinator._parse_sensor_nodes(data)
-        sensor_nodes = sensor_nodes[:4]  # only test with 1
+        sensor_nodes = [
+            n
+            for c in data["Children"]
+            for n in OpenHardwareMonitorDataCoordinator._parse_sensor_nodes(c)
+        ]
+
+        # sensor_nodes = sensor_nodes[:4]  # only test with 1
+        # _LOGGER.info("Sensor nodes: %s", sensor_nodes)
 
         sensor_data = OpenHardwareMonitorDataCoordinator._format_as_dict(sensor_nodes)
         _LOGGER.info("Sensor data: %s", sensor_data)
@@ -92,7 +98,7 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
             return None
 
         paths = node["Paths"]
-        device_name = " ".join(paths[0: self._grouping])
+        device_name = " ".join(paths[0 : self._grouping])
         _LOGGER.info("Resolved device name for: %s => %s", paths, device_name)
 
         computer_device = self._computers.get(node["ComputerName"])
@@ -105,14 +111,18 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
         manufacturer = ""
         if self._grouping == 1:
             # Computer device
-            d = dr.DeviceInfo(
-                # identifiers={(DOMAIN, f"{host}:{port}")},
-                # name=str(child_names[0]),
-                # manufacturer="Computer",
-                identifiers=computer_device.identifiers,
-                name=computer_device.name,
-                manufacturer=computer_device.manufacturer,
-            ) if computer_device else None
+            d = (
+                dr.DeviceInfo(
+                    # identifiers={(DOMAIN, f"{host}:{port}")},
+                    # name=str(child_names[0]),
+                    # manufacturer="Computer",
+                    identifiers=computer_device.identifiers,
+                    name=computer_device.name,
+                    manufacturer=computer_device.manufacturer,
+                )
+                if computer_device
+                else None
+            )
             _LOGGER.info("DeviceInfo: %s", d)
             # d = computer_device
             # _LOGGER.info("DeviceEntry: %s", d)
@@ -146,36 +156,33 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
 
     @staticmethod
     def _parse_sensor_nodes(
-        node: DataNode, path: list[str] | None = None
+        node: DataNode, paths: list[str] | None = None
     ) -> list[SensorNode]:
         result: list[SensorNode] = []
-        if path is None:
-            path = []
-        else:
-            path.append(node["Text"])
+        if paths is None:
+            paths = []
 
         if node.get("Children", None):
             for n in node["Children"]:
                 sub_nodes = OpenHardwareMonitorDataCoordinator._parse_sensor_nodes(
-                    n, path.copy()
+                    n, [*paths, node["Text"]]
                 )
                 result.extend(sub_nodes)
         elif node.get("Value"):
             sensor = SensorNode(**node)
             del sensor["Children"]
-            sensor["Paths"] = path
-            sensor["ComputerName"] = path[0]
-
-            # print(sensor)
+            sensor["Paths"] = paths
+            sensor["FullName"] = " ".join([*paths, sensor["Text"]])
+            sensor["ComputerName"] = paths[0]
             result.append(sensor)
         return result
 
     @staticmethod
     def _format_as_dict(sensor_nodes: list[SensorNode]) -> dict[str, SensorNode]:
-        return {" ".join(n["Paths"]): n for n in sensor_nodes}
+        return {n["FullName"]: n for n in sensor_nodes}
 
-    def get_sensor_node(self, path_key: str) -> SensorNode | None:
-        return self.data.get(path_key)
+    def get_sensor_node(self, fullname: str) -> SensorNode | None:
+        return self.data.get(fullname)
 
     # async def refresh(self):
     #     """Get data from OHM remote server."""

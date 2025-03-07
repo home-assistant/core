@@ -90,110 +90,24 @@ class OpenHardwareMonitorSensorDevice(CoordinatorEntity[OpenHardwareMonitorDataC
         """Initialize an OpenHardwareMonitor sensor."""
         super().__init__(coordinator=coordinator)
 
-        grouping = config_entry_data.get(GROUP_DEVICES_PER_DEPTH_LEVEL, 2)
-        
-        if not child_names:
-            child_names = node["Paths"]
-        if not name:
-            node_name = node["Text"]
-            name = " ".join(child_names[grouping:])
-        if not id:
-            id = node["id"]
-        if not unit_of_measurement:
-            unit_of_measurement = node["Value"].split(" ")[1]
+        fullname = node["FullName"]
 
-        fullname = f"{" ".join(child_names)} {node_name}"
-        
-        _LOGGER.info("Resolved sensor name for: %s", {"g":grouping, "p":path, "nn": node_name, "n": name, "fn": fullname, "id":id})
-        
-        # groupDevicesPerDepthLevel = data._config.get(GROUP_DEVICES_PER_DEPTH_LEVEL)
-        # host = data._config.get(CONF_HOST)
-        # port = data._config.get(CONF_PORT)
-        # deviceName = " ".join(child_names[0:groupDevicesPerDepthLevel])
-        
         self._node = node
-        self._name = fullname
         self._fullname = fullname
-        self._data = data
-        self._path = " ".join(child_names)
-        self._path_key = fullname
-        self.value = None
         self.attributes = {}
-        self._unit_of_measurement = unit_of_measurement
         self._attr_unique_id = f"ohm-{fullname}"
+
+        value_parts = node.get("Value", '').split(" ")
+        self._unit_of_measurement = value_parts[1] if len(value_parts) > 1 else None
+        self.value = self.parse_number(value_parts[0]) if len(value_parts) > 0 else None
 
         self._apply_data(node)
         self._attr_device_info = coordinator.resolve_device_info_for_node(node)
 
-        # manufacturer = ""
-        # if groupDevicesPerDepthLevel == 1:
-        #     # Computer device
-        #     self._attr_device_info = DeviceInfo(
-        #         identifiers={(DOMAIN, f"{host}:{port}")},
-        #         name=str(child_names[0]),
-        #         manufacturer="Computer",
-        #     )
-        #     return
-
-        # if groupDevicesPerDepthLevel == 2:
-        #     manufacturer = "Hardware"
-        # else:
-        #     manufacturer = "Group"
-
-        # model = ""
-        # if groupDevicesPerDepthLevel == 2:
-        #     model = child_names[1]
-
-        # # Hardware or Group device
-        # self._attr_device_info = DeviceInfo(
-        #     identifiers={(DOMAIN, deviceName)},
-        #     via_device=(DOMAIN, f"{host}:{port}"),
-        #     name=deviceName,
-        #     manufacturer=manufacturer,
-        #     model=model,
-        # )
-
-    def _generate_device_info(
-        self,
-        paths: list[str],
-        config_entry: ConfigEntry,
-        groupDevicesPerDepthLevel: int
-    ):
-        groupDevicesPerDepthLevel = config_entry.data.get(GROUP_DEVICES_PER_DEPTH_LEVEL)
-        host = config_entry.data.get(CONF_HOST)
-        port = config_entry.data.get(CONF_PORT)
-        device_name = " ".join(paths[0:groupDevicesPerDepthLevel])
-        
-        computer_device = self.coordinator.get_computer_device()
-        if computer_device:
-            computer_device_domain_id = dict(computer_device.identifiers)[DOMAIN]
-            via_device = (DOMAIN, computer_device_domain_id)
-
-
-        manufacturer = ""
-        if groupDevicesPerDepthLevel == 2:
-            manufacturer = "Hardware"
-        else:
-            manufacturer = "Group"
-
-        model = ""
-        if groupDevicesPerDepthLevel == 2:
-            model = paths[1]
-
-        # Hardware or Group device
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_name)},
-            # via_device=(DOMAIN, f"{host}:{port}"),
-            via_device=via_device,
-            name=device_name,
-            manufacturer=manufacturer,
-            model=model,
-        )
-
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        return self._fullname
 
     @property
     def native_unit_of_measurement(self):
@@ -222,49 +136,19 @@ class OpenHardwareMonitorSensorDevice(CoordinatorEntity[OpenHardwareMonitorDataC
         """In some locales a decimal numbers uses ',' instead of '.'."""
         return string.replace(",", ".")
 
-    # async def async_update(self) -> None:
-    #     """Update the device from a new JSON object."""
-    #     # self._data.update()
-    #     await self._data.async_update()
-
-    #     array = self._data.data[OHM_CHILDREN]
-    #     _attributes = {}
-
-    #     for path_index, path_number in enumerate(self.path):
-    #         values = array[path_number]
-
-    #         if path_index == len(self.path) - 1:
-    #             self.value = self.parse_number(values[OHM_VALUE].split(" ")[0])
-    #             _attributes.update(
-    #                 {
-    #                     "name": values[OHM_NAME],
-    #                     "path": self.path,
-    #                     "id": self.id,
-    #                     STATE_MIN_VALUE: self.parse_number(
-    #                         values[OHM_MIN].split(" ")[0]
-    #                     ),
-    #                     STATE_MAX_VALUE: self.parse_number(
-    #                         values[OHM_MAX].split(" ")[0]
-    #                     ),
-    #                 }
-    #             )
-
-    #             self.attributes = _attributes
-    #             return
-    #         array = array[path_number][OHM_CHILDREN]
-    #         _attributes.update({f"level_{path_index}": values[OHM_NAME]})
-
     def _apply_data(self, node: SensorNode) -> None:
         self._node = node
-        child_names = node["Paths"]
-        fullname = f"{" ".join(child_names)} {node[OHM_NAME]}"
+        self._fullname = node["FullName"] if node.get("FullName") else self._fullname or node[OHM_NAME]
 
-        self.value = self.parse_number(node["Value"].split(" ")[0])
+        value_parts = node.get("Value", '').split(" ")
+        self._unit_of_measurement = value_parts[1] if len(value_parts) > 1 and not self._unit_of_measurement else self._unit_of_measurement
+        self.value = self.parse_number(value_parts[0]) if len(value_parts) > 0 else self.value
+
         self.attributes.update(
             {
                 "name": node[OHM_NAME],
-                "fullname": fullname,
-                "paths": node.get("Paths"),
+                "fullname": self._fullname,
+                "paths": str(node.get("Paths")),
                 "id": node.get(OHM_ID),
                 STATE_MIN_VALUE: self.parse_number(
                     node[OHM_MIN].split(" ")[0]
@@ -272,11 +156,12 @@ class OpenHardwareMonitorSensorDevice(CoordinatorEntity[OpenHardwareMonitorDataC
                 STATE_MAX_VALUE: self.parse_number(
                     node[OHM_MAX].split(" ")[0]
                 ),
+                "computer": node.get("ComputerName"),
             }
         )
 
     def _handle_coordinator_update(self):
-        if node := self.coordinator.get_sensor_node(self._path_key):
+        if node := self.coordinator.get_sensor_node(self._fullname):
             self._apply_data(node)
         return super()._handle_coordinator_update()
 
