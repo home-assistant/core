@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, cast
@@ -185,6 +186,16 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+DATA_VALIDATION: dict[
+    Capability | str, Callable[[dict[Attribute | str, Status]], bool]
+] = {
+    Capability.WASHER_OPERATING_STATE: (
+        lambda status: status[Attribute.SUPPORTED_MACHINE_STATES].value is not None
+    ),
+    Capability.DEMAND_RESPONSE_LOAD_CONTROL: lambda _: True,
+}
+
+
 def process_status(
     status: dict[str, dict[Capability | str, dict[Attribute | str, Status]]],
 ) -> dict[str, dict[Capability | str, dict[Attribute | str, Status]]]:
@@ -201,10 +212,9 @@ def process_status(
     )
     if disabled_capabilities is not None:
         for capability in disabled_capabilities:
-            # We still need to make sure the climate entity can work without this capability
-            if (
-                capability in main_component
-                and capability != Capability.DEMAND_RESPONSE_LOAD_CONTROL
+            if capability in main_component and (
+                capability not in DATA_VALIDATION
+                or not DATA_VALIDATION[capability](main_component[capability])
             ):
                 del main_component[capability]
     return status
