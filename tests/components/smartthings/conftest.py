@@ -88,6 +88,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
 @pytest.fixture(
     params=[
         "da_ac_rac_000001",
+        "da_ac_rac_100001",
         "da_ac_rac_01001",
         "multipurpose_sensor",
         "contact_sensor",
@@ -118,6 +119,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "ecobee_sensor",
         "ecobee_thermostat",
         "fake_fan",
+        "generic_fan_3_speed",
     ]
 )
 def device_fixture(
