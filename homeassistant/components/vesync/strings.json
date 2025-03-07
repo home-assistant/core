@@ -65,6 +65,11 @@
         "name": "Mist level"
       }
     },
+    "switch": {
+      "display": {
+        "name": "Display"
+      }
+    },
     "select": {
       "night_light_level": {
         "name": "Night light level",
