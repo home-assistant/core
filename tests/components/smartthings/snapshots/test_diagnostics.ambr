@@ -300,7 +300,7 @@
           'id': '60fbc713-8da5-315d-b31a-6d6dcde4be7b',
         }),
         'restrictionTier': 0,
-        'roomId': '7715151d-0314-457a-a82c-5ce48900e065',
+        'roomId': '85a79db4-9cf2-4f09-a5b2-cd70a5c0cef0',
         'type': 'OCF',
       }),
     ]),
@@ -606,7 +606,7 @@
         'id': '60fbc713-8da5-315d-b31a-6d6dcde4be7b',
       }),
       'restrictionTier': 0,
-      'roomId': '7715151d-0314-457a-a82c-5ce48900e065',
+      'roomId': '85a79db4-9cf2-4f09-a5b2-cd70a5c0cef0',
       'type': 'OCF',
     }),
     'status': dict({
