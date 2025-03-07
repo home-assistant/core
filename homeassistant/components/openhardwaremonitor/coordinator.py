@@ -58,7 +58,7 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
         data: DataNode = await api.get_data()
 
         if not self._computers:
-            c = {}
+            computers = {}
             computer_names = OpenHardwareMonitorDataCoordinator._parse_computer_nodes(
                 data
             )
@@ -72,10 +72,10 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
                         identifiers={(DOMAIN, f"{self.config_entry.entry_id}__{name}")},
                         manufacturer="Computer",
                     )
-                    _LOGGER.info("Get/create device: %s %s", de.name, de.created_at)
-                    c[name] = de
-            _LOGGER.info("Computers: %s", c)
-            self._computers = c
+                    _LOGGER.info("get/create Device: %s %s", de.name, de.created_at)
+                    computers[name] = de
+            _LOGGER.info("Computers: %s", list(computers.keys()))
+            self._computers = computers
 
         sensor_nodes = [
             n
