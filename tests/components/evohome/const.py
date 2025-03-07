@@ -15,6 +15,7 @@ TEST_INSTALLS: Final = (
     "default",  # evohome: multi-zone, with DHW
     "h032585",  # VisionProWifi: no preset modes for TCS, zoneId=systemId
     "h099625",  # RoundThermostat
+    "h139906",  # zone with null schedule
     "sys_004",  # RoundModulation
 )
 #   "botched",  # as default: but with activeFaults, ghost zones & unknown types
