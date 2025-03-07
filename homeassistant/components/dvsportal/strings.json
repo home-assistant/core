@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to DVSPortal",
+        "description": "Enter your DVSPortal credentials to integrate your parking services.",
+        "data": {
+          "host": "Hostname (e.g. parkeren.gemeente.nl)",
+          "username": "Username",
+          "password": "PIN",
+          "user_agent": "User Agent (optional)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unknown error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}
