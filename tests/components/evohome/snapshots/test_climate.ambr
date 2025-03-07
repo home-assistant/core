@@ -1171,10 +1171,6 @@
           'target_heat_temperature': 5.0,
         }),
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-          'next_sp_temp': 18.6,
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
-          'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
           'is_available': True,
