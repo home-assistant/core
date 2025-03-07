@@ -15,7 +15,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 
 from .const import DOMAIN, GROUP_DEVICES_PER_DEPTH_LEVEL
-from .sensor import OpenHardwareMonitorDevice
+from .coordinator import OpenHardwareMonitorDataCoordinator
+from .sensor import OpenHardwareMonitorSensorDevice
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -29,15 +30,22 @@ OHM_CHILDREN = "Children"
 OHM_NAME = "Text"
 OHM_ID = "id"
 
+type OpenHardwareMonitorConfigEntry = ConfigEntry[OpenHardwareMonitorDataCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: OpenHardwareMonitorConfigEntry) -> bool:
     """Set up OpenHardwareMonitor from a config entry."""
-    data_handler = OpenHardwareMonitorDataHandler(entry, hass)
-    await data_handler.initialize()
-    if data_handler.data is None:
+    # data_handler = OpenHardwareMonitorDataHandler(entry, hass)
+    # await data_handler.initialize()
+    # if data_handler.data is None:
+    #     raise ConfigEntryNotReady
+
+    coordinator = OpenHardwareMonitorDataCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
+    if not coordinator.data:
         raise ConfigEntryNotReady
 
-    hass.data["entities"] = data_handler.entities
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -141,8 +149,8 @@ class OpenHardwareMonitorDataHandler:
         child_names.append(json[OHM_NAME])
         fullname = " ".join(child_names)
 
-        dev = OpenHardwareMonitorDevice(
-            self, fullname, path, unit_of_measurement, id, child_names, json
+        dev = OpenHardwareMonitorSensorDevice(
+            data=self, name=fullname, path=path, unit_of_measurement=unit_of_measurement, id=id, child_names=child_names, json=json
         )
 
         result.append(dev)
