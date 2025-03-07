@@ -46,8 +46,9 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
             update_interval=SCAN_INTERVAL,
         )
         self._config = config_entry.data
-        self._grouping = self._config.get(GROUP_DEVICES_PER_DEPTH_LEVEL, 2)
-        self._computers: dict[str, dr.DeviceEntry] = None
+        self._config_entry_id = config_entry.entry_id
+        self._grouping = int(self._config.get(GROUP_DEVICES_PER_DEPTH_LEVEL, 2))
+        self._computers: dict[str, dr.DeviceEntry] = {}
 
     async def _async_update_data(self) -> dict[str, SensorNode]:
         """Get data from OHM remote server."""
@@ -62,14 +63,14 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
             computer_names = OpenHardwareMonitorDataCoordinator._parse_computer_nodes(
                 data
             )
-            if self.config_entry.data.get(GROUP_DEVICES_PER_DEPTH_LEVEL) > 0:
+            if self._grouping > 0:
                 # Create the 'Computer' device here
                 device_registry = dr.async_get(self.hass)
                 for name in computer_names:
                     de = device_registry.async_get_or_create(
-                        config_entry_id=self.config_entry.entry_id,
+                        config_entry_id=self._config_entry_id,
                         name=name,
-                        identifiers={(DOMAIN, f"{self.config_entry.entry_id}__{name}")},
+                        identifiers={(DOMAIN, f"{self._config_entry_id}__{name}")},
                         manufacturer="Computer",
                     )
                     _LOGGER.info("get/create Device: %s %s", de.name, de.created_at)
@@ -85,7 +86,8 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
 
         return {n["FullName"]: n for n in sensor_nodes}
 
-    def resolve_device_info_for_node(self, node: SensorNode) -> dr.DeviceEntry:
+    def resolve_device_info_for_node(self, node: SensorNode) -> dr.DeviceInfo | None:
+        """Get the appropriate device for specified SensorNode."""
         if self._grouping == 0:
             return None
 
@@ -120,7 +122,7 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
     def _parse_computer_nodes(root_node: DataNode) -> list[str]:
         """Get the available computer names in the data."""
         if not root_node or not root_node.get("Children"):
-            return None
+            return []
         return [node["Text"] for node in root_node["Children"] if node.get("Text")]
 
     @staticmethod
@@ -132,19 +134,20 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
         if paths is None:
             paths = []
 
-        if node.get("Children", None):
+        if node.get("Children"):
             for n in node["Children"]:
                 sub_nodes = OpenHardwareMonitorDataCoordinator._parse_sensor_nodes(
                     n, [*paths, node["Text"]]
                 )
                 result.extend(sub_nodes)
         elif node.get("Value"):
-            sensor = SensorNode(**node)
-            del sensor["Children"]
-            sensor["Paths"] = paths
-            sensor["FullName"] = " ".join([*paths, sensor["Text"]])
-            sensor["ComputerName"] = paths[0]
-            sensor["Type"] = node.get("Type")
+            sensor = SensorNode(
+                **node,
+                Paths=paths,
+                FullName=" ".join([*paths, node["Text"]]),
+                ComputerName=paths[0],
+                Type=SensorType(node.get("Type")) if node.get("Type") else None
+            )
             result.append(sensor)
         return result
 

@@ -1,5 +1,5 @@
-from typing import TypedDict
 from enum import Enum
+from typing import TypedDict
 
 
 class SensorType(Enum):
@@ -38,11 +38,11 @@ class DataNode(TypedDict):
     Value: str
     Max: str
     ImageURL: str
-    Children: list["DataNode"] | None
+    Children: list["DataNode"]
 
 
 class SensorNode(TypedDict):
-    """Describes a data point node (smallest decendant, with info about their parents)."""
+    """Describes a data point node (smallest descendant, with info about their parents)."""
 
     id: int
     Text: str

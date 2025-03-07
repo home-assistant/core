@@ -82,7 +82,6 @@ class OpenHardwareMonitorSensorDevice(
         self._node = node
         self._attr_available = bool(node)
         self._fullname = node["FullName"]
-        self.attributes = {}
         self._attr_unique_id = f"ohm-{self._fullname}"
 
         value_parts = node.get("Value", "").split(" ")
@@ -145,18 +144,16 @@ class OpenHardwareMonitorSensorDevice(
         )
 
         # Update attributes
-        self.attributes.update(
-            {
-                "computer": node.get("ComputerName"),
-                "paths": str(node.get("Paths")),
-                "name": node[OHM_NAME],
-                STATE_MIN_VALUE: self.parse_number(node[OHM_MIN].split(" ")[0]),
-                STATE_MAX_VALUE: self.parse_number(node[OHM_MAX].split(" ")[0]),
-                "id": node.get(OHM_ID),
-                "sensorId": node.get("SensorId"),
-                "type": node.get("Type"),
-            }
-        )
+        self.attributes = {
+            "computer": node.get("ComputerName"),
+            "paths": str(node.get("Paths")),
+            "name": node[OHM_NAME],
+            STATE_MIN_VALUE: self.parse_number(node[OHM_MIN].split(" ")[0]),
+            STATE_MAX_VALUE: self.parse_number(node[OHM_MAX].split(" ")[0]),
+            "id": node.get(OHM_ID),
+            "sensorId": node.get("SensorId"),
+            "type": node.get("Type"),
+        }
 
     def _handle_coordinator_update(self):
         if node := self.coordinator.get_sensor_node(self._fullname):
