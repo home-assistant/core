@@ -249,7 +249,7 @@ aioharmony==0.4.1
 aiohasupervisor==0.3.0
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.16.2
+aiohomeconnect==0.16.3
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.8
@@ -404,7 +404,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.4.0
+aiowebdav2==0.4.1
 
 # homeassistant.components.webostv
 aiowebostv==0.7.3
@@ -981,7 +981,7 @@ hole==0.8.0
 holidays==0.68
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250305.0
+home-assistant-frontend==20250306.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.3.5
@@ -1246,7 +1246,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==4.0.0
 
 # homeassistant.components.nexia
-nexia==2.2.1
+nexia==2.2.2
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -2000,7 +2000,7 @@ python-roborock==2.11.1
 python-smarttub==0.0.39
 
 # homeassistant.components.snoo
-python-snoo==0.6.0
+python-snoo==0.6.1
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
