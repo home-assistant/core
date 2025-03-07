@@ -30,3 +30,19 @@ call_query:
       advanced: true
       selector:
         object:
+call_query_response:
+  target:
+    entity:
+      integration: squeezebox
+      domain: media_player
+  fields:
+    command:
+      required: true
+      example: "albums"
+      selector:
+        text:
+    parameters:
+      example: '["0", "20", "search:Revolver"]'
+      advanced: true
+      selector:
+        object:

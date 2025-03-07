@@ -26,6 +26,9 @@
       "service": "mdi:console"
     },
     "call_query": {
+      "service": "mdi:database-alert"
+    },
+    "call_query_response": {
       "service": "mdi:database"
     }
   }

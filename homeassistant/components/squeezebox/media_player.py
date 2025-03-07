@@ -27,13 +27,20 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_PORT, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     discovery_flow,
     entity_platform,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -74,13 +81,23 @@ if TYPE_CHECKING:
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
-
+SERVICE_CALL_QUERY_RESPONSE = "call_query_response"
 ATTR_QUERY_RESULT = "query_result"
+ATTR_PARAMETERS = "parameters"
+
+QUERY_RESPONSE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_COMMAND): cv.string,
+        vol.Optional(ATTR_PARAMETERS): vol.All(
+            cv.ensure_list, vol.Length(min=1), [cv.string]
+        ),
+    }
+)
+
 
 _LOGGER = logging.getLogger(__name__)
 
 
-ATTR_PARAMETERS = "parameters"
 ATTR_OTHER_PLAYER = "other_player"
 
 ATTR_TO_PROPERTY = [
@@ -134,6 +151,13 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, SIGNAL_PLAYER_DISCOVERED, _player_discovered)
     )
 
+    async def async_call_query_response_helper(
+        entity: SqueezeBoxMediaPlayerEntity, call: ServiceCall
+    ) -> ServiceResponse:
+        """Call Squeezebox JSON/RPC method where we care about the result."""
+
+        return await entity.async_call_query_response(call)
+
     # Register entity services
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -156,7 +180,17 @@ async def async_setup_entry(
         },
         "async_call_query",
     )
-
+    platform.async_register_entity_service(
+        SERVICE_CALL_QUERY_RESPONSE,
+        {
+            vol.Required(ATTR_COMMAND): cv.string,
+            vol.Optional(ATTR_PARAMETERS): vol.All(
+                cv.ensure_list, vol.Length(min=1), [cv.string]
+            ),
+        },
+        async_call_query_response_helper,
+        supports_response=SupportsResponse.ONLY,
+    )
     # Start server discovery task if not already running
     entry.async_on_unload(async_at_start(hass, start_server_discovery))
 
@@ -605,6 +639,31 @@ class SqueezeBoxMediaPlayerEntity(
         self._query_result = await self._player.async_query(*all_params)
         _LOGGER.debug("call_query got result %s", self._query_result)
         self.async_write_ha_state()
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "Call query deprecation",
+            breaks_in_ha_version="2025.3.0",
+            is_fixable=False,
+            is_persistent=False,
+            learn_more_url="https://www.home-assistant.io/integrations/squeezebox/#:~:text=Copy-,ACTION%20CALL_QUERY,-Call%20a%20custom",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="call_query_deprecation",
+        )
+
+    async def async_call_query_response(self, call: ServiceCall) -> ServiceResponse:
+        """Call Squeezebox JSON/RPC method where we care about the result.
+
+        Additional parameters are added to the command to form the list of
+        positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
+        """
+        all_params = [call.data[ATTR_COMMAND]]
+        if call.data.get(ATTR_PARAMETERS):
+            all_params.extend(call.data[ATTR_PARAMETERS])
+        result: ServiceResponse = await self._player.async_query(*all_params)
+        if result:
+            return result
+        raise ServiceValidationError("Action returned no result")
 
     async def async_join_players(self, group_members: list[str]) -> None:
         """Add other Squeezebox players to this player's sync group.

@@ -48,8 +48,22 @@
       }
     },
     "call_query": {
-      "name": "Call query",
-      "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.",
+      "name": "Call query (deprecated)",
+      "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.  This action is deprecated and replaced by call_query_response.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "[%key:component::squeezebox::services::call_method::fields::command::description%]"
+        },
+        "parameters": {
+          "name": "Parameters",
+          "description": "[%key:component::squeezebox::services::call_method::fields::parameters::description%]"
+        }
+      }
+    },
+    "call_query_response": {
+      "name": "Call query response",
+      "description": "Calls a custom Squeezebox JSONRPC API and returns the result in the response variable.",
       "fields": {
         "command": {
           "name": "Command",
@@ -117,6 +131,12 @@
           "volume_step": "Amount to adjust the volume when turning volume up or down."
         }
       }
+    }
+  },
+  "issues": {
+    "call_query_deprecation": {
+      "title": "Call query deprecation",
+      "description": "The call_query action is deprecated and will be removed in 2025.10.0.  These call should be replaced with the call_query_response action, which returns its result in a response variable."
     }
   }
 }
