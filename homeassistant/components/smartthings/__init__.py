@@ -200,7 +200,9 @@ def process_status(
     status: dict[str, dict[Capability | str, dict[Attribute | str, Status]]],
 ) -> dict[str, dict[Capability | str, dict[Attribute | str, Status]]]:
     """Remove disabled capabilities from status."""
-    if (main_component := status.get("main")) is None or (
+    if (main_component := status.get(MAIN)) is None:
+        return status
+    or (
         disabled_capabilities_capability := main_component.get(
             Capability.CUSTOM_DISABLED_CAPABILITIES
         )
