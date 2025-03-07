@@ -10,7 +10,8 @@ class DataNode(TypedDict):
     Value: str
     Max: str
     ImageURL: str
-    Children: list['DataNode'] | None
+    Children: list["DataNode"] | None
+
 
 class SensorNode(TypedDict):
     """Describes a data point node (smallest decendant, with info about their parents)."""

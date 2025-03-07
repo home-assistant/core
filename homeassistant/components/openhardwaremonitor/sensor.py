@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
-from typing import Any, Mapping
 
 import voluptuous as vol
 
@@ -13,20 +11,18 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, GROUP_DEVICES_PER_DEPTH_LEVEL
-from .coordinator import OpenHardwareMonitorDataCoordinator
+from .coordinator import (
+    OpenHardwareMonitorConfigEntry,
+    OpenHardwareMonitorDataCoordinator,
+)
 from .types import SensorNode
-
-from . import OpenHardwareMonitorConfigEntry
 
 STATE_MIN_VALUE = "minimal_value"
 STATE_MAX_VALUE = "maximum_value"
@@ -45,7 +41,6 @@ OHM_CHILDREN = "Children"
 OHM_IMAGEURL = "ImageURL"
 OHM_NAME = "Text"
 OHM_ID = "id"
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT, default=8085): cv.port}
@@ -63,19 +58,20 @@ async def async_setup_entry(
         raise PlatformNotReady
 
     sensor_data = coordinator.data
-    entities = ([OpenHardwareMonitorSensorDevice(
+    entities = [
+        OpenHardwareMonitorSensorDevice(
             node=sensor_data[k],
-            config_entry_data=config_entry.data,
-            coordinator=coordinator
-            #self, fullname, path, unit_of_measurement, id, child_names, json
+            coordinator=coordinator,
+            # self, fullname, path, unit_of_measurement, id, child_names, json
         )
         for k in sensor_data
     ]
-    )
     async_add_entities(entities, True)
 
 
-class OpenHardwareMonitorSensorDevice(CoordinatorEntity[OpenHardwareMonitorDataCoordinator], SensorEntity):
+class OpenHardwareMonitorSensorDevice(
+    CoordinatorEntity[OpenHardwareMonitorDataCoordinator], SensorEntity
+):
     """Sensor entity used to display information from OpenHardwareMonitor."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -83,21 +79,17 @@ class OpenHardwareMonitorSensorDevice(CoordinatorEntity[OpenHardwareMonitorDataC
     def __init__(
         self,
         node: SensorNode,
-        config_entry_data: Mapping[str, Any],
         coordinator: OpenHardwareMonitorDataCoordinator,
-        data = None, name = None, path = None, unit_of_measurement = None, id = None, child_names = None, json = None
     ) -> None:
         """Initialize an OpenHardwareMonitor sensor."""
         super().__init__(coordinator=coordinator)
 
-        fullname = node["FullName"]
-
         self._node = node
-        self._fullname = fullname
+        self._fullname = node["FullName"]
         self.attributes = {}
-        self._attr_unique_id = f"ohm-{fullname}"
+        self._attr_unique_id = f"ohm-{self._fullname}"
 
-        value_parts = node.get("Value", '').split(" ")
+        value_parts = node.get("Value", "").split(" ")
         self._unit_of_measurement = value_parts[1] if len(value_parts) > 1 else None
         self.value = self.parse_number(value_parts[0]) if len(value_parts) > 0 else None
 
@@ -137,26 +129,36 @@ class OpenHardwareMonitorSensorDevice(CoordinatorEntity[OpenHardwareMonitorDataC
         return string.replace(",", ".")
 
     def _apply_data(self, node: SensorNode) -> None:
+        # Update info
         self._node = node
-        self._fullname = node["FullName"] if node.get("FullName") else self._fullname or node[OHM_NAME]
+        self._fullname = (
+            node["FullName"]
+            if node.get("FullName")
+            else self._fullname or node[OHM_NAME]
+        )
 
-        value_parts = node.get("Value", '').split(" ")
-        self._unit_of_measurement = value_parts[1] if len(value_parts) > 1 and not self._unit_of_measurement else self._unit_of_measurement
-        self.value = self.parse_number(value_parts[0]) if len(value_parts) > 0 else self.value
+        # Update value
+        value_parts = node.get("Value", "").split(" ")
+        self._unit_of_measurement = (
+            value_parts[1]
+            if len(value_parts) > 1 and not self._unit_of_measurement
+            else self._unit_of_measurement
+        )
+        self.value = (
+            self.parse_number(value_parts[0]) if len(value_parts) > 0 else self.value
+        )
 
+        # Update attributes
         self.attributes.update(
             {
                 "name": node[OHM_NAME],
-                "fullname": self._fullname,
-                "paths": str(node.get("Paths")),
-                "id": node.get(OHM_ID),
-                STATE_MIN_VALUE: self.parse_number(
-                    node[OHM_MIN].split(" ")[0]
-                ),
-                STATE_MAX_VALUE: self.parse_number(
-                    node[OHM_MAX].split(" ")[0]
-                ),
                 "computer": node.get("ComputerName"),
+                "paths": str(node.get("Paths")),
+                STATE_MIN_VALUE: self.parse_number(node[OHM_MIN].split(" ")[0]),
+                STATE_MAX_VALUE: self.parse_number(node[OHM_MAX].split(" ")[0]),
+                "id": node.get(OHM_ID),
+                "sensorId": node.get("SensorId"),
+                "type": node.get("Type"),
             }
         )
 
@@ -164,4 +166,3 @@ class OpenHardwareMonitorSensorDevice(CoordinatorEntity[OpenHardwareMonitorDataC
         if node := self.coordinator.get_sensor_node(self._fullname):
             self._apply_data(node)
         return super()._handle_coordinator_update()
-
