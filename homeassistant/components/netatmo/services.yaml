@@ -40,8 +40,8 @@ set_preset_mode_with_end_datetime:
           options:
             - "away"
             - "frost_guard"
+            - "schedule"
     end_datetime:
-      required: true
       example: '"2019-04-20 05:04:20"'
       selector:
         datetime:
