@@ -1,0 +1,6 @@
+{
+  "domain": "sunricher",
+  "name": "Sunricher",
+  "integration_type": "virtual",
+  "iot_standards": ["zigbee"]
+}
