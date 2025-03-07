@@ -15,7 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, GROUP_DEVICES_PER_DEPTH_LEVEL
-from .types import DataNode, SensorNode
+from .types import DataNode, SensorNode, SensorType
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -88,7 +88,7 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
         # _LOGGER.info("Sensor nodes: %s", sensor_nodes)
 
         sensor_data = OpenHardwareMonitorDataCoordinator._format_as_dict(sensor_nodes)
-        _LOGGER.info("Sensor data: %s", sensor_data)
+        # _LOGGER.info("Sensor data: %s", sensor_data)
         return sensor_data
 
     def resolve_device_info_for_node(self, node: SensorNode) -> dr.DeviceEntry:
@@ -97,7 +97,7 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
 
         paths = node["Paths"]
         device_name = " ".join(paths[: self._grouping])
-        _LOGGER.info("Resolved device name for: %s => %s", paths, device_name)
+        # _LOGGER.info("Resolved device name for: %s => %s", paths, device_name)
 
         computer = self._computers.get(node["ComputerName"])
         if computer:
@@ -165,6 +165,7 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
             sensor["Paths"] = paths
             sensor["FullName"] = " ".join([*paths, sensor["Text"]])
             sensor["ComputerName"] = paths[0]
+            sensor["Type"] = node.get("Type")
             result.append(sensor)
         return result
 

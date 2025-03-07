@@ -1,4 +1,32 @@
 from typing import TypedDict
+from enum import Enum
+
+
+class SensorType(Enum):
+    """What kind of sensor is this."""
+
+    # Copied from `SensorType` enum in: https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/ISensor.cs
+
+    Voltage = "Voltage"  # V
+    Current = "Current"  # A
+    Power = "Power"  # W
+    Clock = "Clock"  # MHz
+    Temperature = "Temperature"  # °C
+    Load = "Load"  # %
+    Frequency = "Frequency"  # Hz
+    Fan = "Fan"  # RPM
+    Flow = "Flow"  # L/h
+    Control = "Control"  # %
+    Level = "Level"  # %
+    Factor = "Factor"  # 1
+    Data = "Data"  # GB = 2^30 Bytes
+    SmallData = "SmallData"  # MB = 2^20 Bytes
+    Throughput = "Throughput"  # B/s
+    TimeSpan = "TimeSpan"  # Seconds
+    Energy = "Energy"  # milliwatt-hour (mWh)
+    Noise = "Noise"  # dBA
+    Conductivity = "Conductivity"  # µS/cm
+    Humidity = "Humidity"  # %
 
 
 class DataNode(TypedDict):
@@ -23,6 +51,7 @@ class SensorNode(TypedDict):
     Max: str
     ImageURL: str
 
+    Type: SensorType | None
     Paths: list[str]
     FullName: str
     ComputerName: str

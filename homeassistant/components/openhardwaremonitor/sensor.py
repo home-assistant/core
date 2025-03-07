@@ -151,9 +151,9 @@ class OpenHardwareMonitorSensorDevice(
         # Update attributes
         self.attributes.update(
             {
-                "name": node[OHM_NAME],
                 "computer": node.get("ComputerName"),
                 "paths": str(node.get("Paths")),
+                "name": node[OHM_NAME],
                 STATE_MIN_VALUE: self.parse_number(node[OHM_MIN].split(" ")[0]),
                 STATE_MAX_VALUE: self.parse_number(node[OHM_MAX].split(" ")[0]),
                 "id": node.get(OHM_ID),
