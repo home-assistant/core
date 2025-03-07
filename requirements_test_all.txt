@@ -222,7 +222,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2024.2.1
+aioecowitt==2025.3.1
 
 # homeassistant.components.co2signal
 aioelectricitymaps==0.4.0
@@ -249,7 +249,7 @@ aioharmony==0.4.1
 aiohasupervisor==0.3.0
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.16.2
+aiohomeconnect==0.16.3
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.8
@@ -273,7 +273,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.6.4
 
 # homeassistant.components.lifx
-aiolifx==1.1.2
+aiolifx==1.1.4
 
 # homeassistant.components.lookin
 aiolookin==1.0.0
@@ -404,7 +404,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.3.1
+aiowebdav2==0.4.1
 
 # homeassistant.components.webostv
 aiowebostv==0.7.3
@@ -640,7 +640,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.35.1
+dbus-fast==2.39.3
 
 # homeassistant.components.debugpy
 debugpy==1.8.11
@@ -839,7 +839,7 @@ gcal-sync==7.0.0
 geniushub-client==0.7.1
 
 # homeassistant.components.geocaching
-geocachingapi==0.2.1
+geocachingapi==0.3.0
 
 # homeassistant.components.aprs
 geopy==2.3.0
@@ -861,7 +861,7 @@ georss-qld-bushfire-alert-client==0.8
 getmac==0.9.5
 
 # homeassistant.components.gios
-gios==5.0.0
+gios==6.0.0
 
 # homeassistant.components.glances
 glances-api==0.8.0
@@ -981,10 +981,10 @@ hole==0.8.0
 holidays==0.68
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250228.0
+home-assistant-frontend==20250306.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.2.26
+home-assistant-intents==2025.3.5
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.1.7
@@ -1246,7 +1246,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==4.0.0
 
 # homeassistant.components.nexia
-nexia==2.2.1
+nexia==2.2.2
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -1313,7 +1313,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.0.12
+onedrive-personal-sdk==0.0.13
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.2.5
@@ -1453,7 +1453,7 @@ py-nightscout==1.2.2
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.7.0
+py-synologydsm-api==2.7.1
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
@@ -1745,7 +1745,7 @@ pymonoprice==0.4
 pymysensors==0.24.0
 
 # homeassistant.components.iron_os
-pynecil==4.0.1
+pynecil==4.1.0
 
 # homeassistant.components.netgear
 pynetgear==0.10.10
@@ -1882,7 +1882,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.5.0
+pysmartthings==2.7.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -1915,7 +1915,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.12.0
 
 # homeassistant.components.suez_water
-pysuezV2==2.0.3
+pysuezV2==2.0.4
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
@@ -2000,7 +2000,7 @@ python-roborock==2.11.1
 python-smarttub==0.0.39
 
 # homeassistant.components.snoo
-python-snoo==0.6.0
+python-snoo==0.6.1
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -2327,7 +2327,7 @@ teslemetry-stream==0.6.10
 tessie-api==0.1.1
 
 # homeassistant.components.thermobeacon
-thermobeacon-ble==0.8.0
+thermobeacon-ble==0.8.1
 
 # homeassistant.components.thermopro
 thermopro-ble==0.11.0
@@ -2462,10 +2462,10 @@ webio-api==0.1.11
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2025.2.22
+weheat==2025.2.26
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.12
+whirlpool-sixth-sense==0.19.1
 
 # homeassistant.components.whois
 whois==0.9.27
