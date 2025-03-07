@@ -18,7 +18,6 @@ from homeassistant.const import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
-    SERVICE_STOP_COVER_TILT,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -140,8 +139,6 @@ async def async_call_action_from_config(
     elif config[CONF_TYPE] == "set_tilt_position":
         service = SERVICE_SET_COVER_TILT_POSITION
         service_data[ATTR_TILT_POSITION] = config["position"]
-    elif config[CONF_TYPE] == "stop_tilt":
-        service = SERVICE_STOP_COVER_TILT
 
     await hass.services.async_call(
         DOMAIN, service, service_data, blocking=True, context=context
