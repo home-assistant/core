@@ -956,7 +956,7 @@ async def test_send_stop_cover_command(
 async def test_send_stop_tilt_command(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test the sending of stop_cover."""
+    """Test the sending of stop_cover_tilt."""
     mqtt_mock = await mqtt_mock_entry()
 
     state = hass.states.get("cover.test")
