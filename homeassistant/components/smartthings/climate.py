@@ -161,9 +161,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
             | ClimateEntityFeature.TURN_OFF
             | ClimateEntityFeature.TURN_ON
         )
-        if self.get_attribute_value(
-            Capability.THERMOSTAT_FAN_MODE, Attribute.THERMOSTAT_FAN_MODE
-        ):
+        if self.supports_capability(Capability.THERMOSTAT_FAN_MODE):
             flags |= ClimateEntityFeature.FAN_MODE
         return flags
 
@@ -445,12 +443,15 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific state attributes.
 
         Include attributes from the Demand Response Load Control (drlc)
         and Power Consumption capabilities.
         """
+        if not self.supports_capability(Capability.DEMAND_RESPONSE_LOAD_CONTROL):
+            return None
+
         drlc_status = self.get_attribute_value(
             Capability.DEMAND_RESPONSE_LOAD_CONTROL,
             Attribute.DEMAND_RESPONSE_LOAD_CONTROL_STATUS,
@@ -560,5 +561,6 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                 Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
             )
             if (state := AC_MODE_TO_STATE.get(mode)) is not None
+            if state not in modes
         )
         return modes

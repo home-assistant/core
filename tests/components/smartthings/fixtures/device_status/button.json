@@ -1,0 +1,21 @@
+{
+  "components": {
+    "main": {
+      "button": {
+        "button": {
+          "value": "pushed",
+          "timestamp": "2025-03-07T12:20:43.363Z"
+        },
+        "numberOfButtons": {
+          "value": 1,
+          "timestamp": "2025-03-07T12:20:43.363Z"
+        },
+        "supportedButtonValues": {
+          "value": ["pushed", "held", "pushed_2x"],
+          "timestamp": "2025-03-07T12:20:43.363Z"
+        }
+      },
+      "refresh": {}
+    }
+  }
+}
