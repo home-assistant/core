@@ -30,6 +30,7 @@ from homeassistant.backup_restore import (
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
+    frame,
     instance_id,
     integration_platform,
     issue_registry as ir,
@@ -665,6 +666,11 @@ class BackupManager:
             # Check for None to be backwards compatible with the old BackupAgent API,
             # this can be removed in HA Core 2025.10
             if not result:
+                frame.report_usage(
+                    "returns None from BackupAgent.async_get_backup",
+                    breaks_in_ha_version="2025.10",
+                    integration_domain=agent_id.partition(".")[0],
+                )
                 continue
             if backup is None:
                 if known_backup := self.known_backups.get(backup_id):
@@ -1280,6 +1286,11 @@ class BackupManager:
         # Check for None to be backwards compatible with the old BackupAgent API,
         # this can be removed in HA Core 2025.10
         if not backup:
+            frame.report_usage(
+                "returns None from BackupAgent.async_get_backup",
+                breaks_in_ha_version="2025.10",
+                integration_domain=agent_id.partition(".")[0],
+            )
             raise BackupManagerError(
                 f"Backup {backup_id} not found in agent {agent_id}"
             )
@@ -1376,6 +1387,11 @@ class BackupManager:
         # Check for None to be backwards compatible with the old BackupAgent API,
         # this can be removed in HA Core 2025.10
         if not backup:
+            frame.report_usage(
+                "returns None from BackupAgent.async_get_backup",
+                breaks_in_ha_version="2025.10",
+                integration_domain=agent_id.partition(".")[0],
+            )
             raise BackupManagerError(
                 f"Backup {backup_id} not found in agent {agent_id}"
             )
