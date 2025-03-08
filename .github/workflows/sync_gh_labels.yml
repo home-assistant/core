@@ -14,12 +14,19 @@ jobs:
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.2.2
+      - name: Filter for integration changes
+        uses: dorny/paths-filter@v3.0.2
+        id: filter
+        with:
+          filters: |
+            manifest: ['homeassistant/components/*/manifest.json']
+          list-files: shell
       - name: Sync integration labels
         run: |
           gh_labels=$(gh api /repos/${OWNER}/${REPO}/labels \
             --paginate \
             --jq '.[] | select(.name | startswith("integration: ")) | "\(.name)|\(.description);"')
-          for integration_manifest in homeassistant/components/*/manifest.json; do
+          for integration_manifest in ${{ steps.filter.outputs.manifest_files }}; do
             IFS='|' read -ra manifest <<< "$(jq -r '"integration: \(.domain)|\(.name)"' $integration_manifest)"
             label_name="${manifest[0]}"
             label_desc="${manifest[1]}"
