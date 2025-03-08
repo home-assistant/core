@@ -122,7 +122,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 stream.game_name if stream else None,
                 stream.title if stream else None,
                 stream.started_at if stream else None,
-                stream.thumbnail_url if stream else None,
+                stream.thumbnail_url.format(width="", height="") if stream else None,
                 channel.profile_image_url,
                 bool(sub),
                 sub.is_gift if sub else None,

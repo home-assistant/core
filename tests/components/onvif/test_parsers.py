@@ -426,6 +426,82 @@ async def test_tapo_tpsmartevent_person(hass: HomeAssistant) -> None:
     )
 
 
+async def test_tapo_tpsmartevent_pet(hass: HomeAssistant) -> None:
+    """Tests tns1:RuleEngine/TPSmartEventDetector/TPSmartEvent - pet."""
+    event = await get_event(
+        {
+            "SubscriptionReference": {
+                "Address": {
+                    "_value_1": "http://192.168.56.63:2020/event-0_2020",
+                    "_attr_1": None,
+                },
+                "ReferenceParameters": None,
+                "Metadata": None,
+                "_value_1": None,
+                "_attr_1": None,
+            },
+            "Topic": {
+                "_value_1": "tns1:RuleEngine/TPSmartEventDetector/TPSmartEvent",
+                "Dialect": "http://www.onvif.org/ver10/tev/topicExpression/ConcreteSet",
+                "_attr_1": {},
+            },
+            "ProducerReference": {
+                "Address": {
+                    "_value_1": "http://192.168.56.63:5656/event",
+                    "_attr_1": None,
+                },
+                "ReferenceParameters": None,
+                "Metadata": None,
+                "_value_1": None,
+                "_attr_1": None,
+            },
+            "Message": {
+                "_value_1": {
+                    "Source": {
+                        "SimpleItem": [
+                            {
+                                "Name": "VideoSourceConfigurationToken",
+                                "Value": "vsconf",
+                            },
+                            {
+                                "Name": "VideoAnalyticsConfigurationToken",
+                                "Value": "VideoAnalyticsToken",
+                            },
+                            {"Name": "Rule", "Value": "MyTPSmartEventDetectorRule"},
+                        ],
+                        "ElementItem": [],
+                        "Extension": None,
+                        "_attr_1": None,
+                    },
+                    "Key": None,
+                    "Data": {
+                        "SimpleItem": [{"Name": "IsPet", "Value": "true"}],
+                        "ElementItem": [],
+                        "Extension": None,
+                        "_attr_1": None,
+                    },
+                    "Extension": None,
+                    "UtcTime": datetime.datetime(
+                        2025, 1, 22, 13, 24, 57, tzinfo=datetime.UTC
+                    ),
+                    "PropertyOperation": "Changed",
+                    "_attr_1": {},
+                }
+            },
+        }
+    )
+
+    assert event is not None
+    assert event.name == "Pet Detection"
+    assert event.platform == "binary_sensor"
+    assert event.device_class == "motion"
+    assert event.value
+    assert event.uid == (
+        f"{TEST_UID}_tns1:RuleEngine/TPSmartEventDetector/"
+        "TPSmartEvent_VideoSourceToken_VideoAnalyticsToken_MyTPSmartEventDetectorRule"
+    )
+
+
 async def test_tapo_cellmotiondetector_person(hass: HomeAssistant) -> None:
     """Tests tns1:RuleEngine/CellMotionDetector/People - person."""
     event = await get_event(

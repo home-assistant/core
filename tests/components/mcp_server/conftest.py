@@ -5,10 +5,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.mcp_server.const import DOMAIN
+from homeassistant.components.mcp_server.const import DOMAIN, LLM_API
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import llm
 
 from tests.common import MockConfigEntry
 
@@ -28,7 +27,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_LLM_HASS_API: LLM_API,
         },
     )
     config_entry.add_to_hass(hass)

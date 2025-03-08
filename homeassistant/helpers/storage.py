@@ -30,8 +30,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
-from homeassistant.util import json as json_util
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.file import WriteError
 from homeassistant.util.hass_dict import HassKey
 
