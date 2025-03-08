@@ -150,7 +150,7 @@ async def test_bluetooth_discovery_encrypted_key(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Lock EEFF"
     assert result["data"] == {
-        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_KEY_ID: "ff",
         CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
         CONF_SENSOR_TYPE: "lock",
@@ -209,7 +209,7 @@ async def test_bluetooth_discovery_already_setup(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
             CONF_NAME: "test-name",
             CONF_PASSWORD: "test-password",
             CONF_SENSOR_TYPE: "bot",
@@ -284,7 +284,7 @@ async def test_user_setup_wohand_already_configured(hass: HomeAssistant) -> None
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
             CONF_NAME: "test-name",
             CONF_PASSWORD: "test-password",
             CONF_SENSOR_TYPE: "bot",
@@ -327,7 +327,7 @@ async def test_user_setup_wocurtain(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Curtain EEFF"
     assert result["data"] == {
-        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_SENSOR_TYPE: "curtain",
     }
 
@@ -363,7 +363,7 @@ async def test_user_setup_wocurtain_or_bot(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Curtain EEFF"
     assert result["data"] == {
-        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_SENSOR_TYPE: "curtain",
     }
 
@@ -503,7 +503,7 @@ async def test_user_setup_woencrypted_key(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Lock EEFF"
     assert result["data"] == {
-        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_KEY_ID: "ff",
         CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
         CONF_SENSOR_TYPE: "lock",
@@ -576,7 +576,7 @@ async def test_user_setup_woencrypted_auth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Lock EEFF"
     assert result["data"] == {
-        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_KEY_ID: "ff",
         CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
         CONF_SENSOR_TYPE: "lock",
@@ -677,7 +677,7 @@ async def test_user_setup_wolock_or_bot(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Lock EEFF"
     assert result["data"] == {
-        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_KEY_ID: "ff",
         CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
         CONF_SENSOR_TYPE: "lock",
@@ -709,7 +709,7 @@ async def test_user_setup_wosensor(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Meter EEFF"
     assert result["data"] == {
-        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_SENSOR_TYPE: "hygrometer",
     }
 
@@ -760,7 +760,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Curtain EEFF"
     assert result2["data"] == {
-        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_SENSOR_TYPE: "curtain",
     }
 
@@ -774,7 +774,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
             CONF_NAME: "test-name",
             CONF_PASSWORD: "test-password",
             CONF_SENSOR_TYPE: "bot",
@@ -838,7 +838,7 @@ async def test_options_flow_lock_pro(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
             CONF_NAME: "test-name",
             CONF_PASSWORD: "test-password",
             CONF_SENSOR_TYPE: "lock_pro",

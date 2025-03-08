@@ -1,6 +1,6 @@
 """Test the switchbot sensors."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -22,8 +22,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import (
-    LEAK_SERVICE_INFO,
+    WOBLINDTILT_SERVICE_INFO,
+    WOCURTAIN3_SERVICE_INFO,
     WOHAND_SERVICE_INFO,
+    WOLEAK_SERVICE_INFO,
+    WOLOCKPRO_SERVICE_INFO,
     WOMETERTHPC_SERVICE_INFO,
     WORELAY_SWITCH_1PM_SERVICE_INFO,
 )
@@ -158,7 +161,7 @@ async def test_relay_switch_1pm_power_sensor(hass: HomeAssistant) -> None:
 async def test_leak_sensor(hass: HomeAssistant) -> None:
     """Test setting up the leak detector."""
     await async_setup_component(hass, DOMAIN, {})
-    inject_bluetooth_service_info(hass, LEAK_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, WOLEAK_SERVICE_INFO)
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -191,6 +194,150 @@ async def test_leak_sensor(hass: HomeAssistant) -> None:
     leak_sensor_attrs = leak_sensor.attributes
     assert leak_sensor.state == "off"
     assert leak_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_lock_pro_sensor(hass: HomeAssistant) -> None:
+    """Test setting up creates lockpro sensor."""
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, WOLOCKPRO_SERVICE_INFO)
+
+    with patch(
+        "switchbot.SwitchbotLock.update",
+        return_value=True,
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+                CONF_NAME: "test-name",
+                CONF_SENSOR_TYPE: "lock_pro",
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+            unique_id="aabbccddee",
+        )
+        entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    battery_sensor = hass.states.get("sensor.test_name_battery")
+    battery_sensor_attrs = battery_sensor.attributes
+    assert battery_sensor.state == "100"
+    assert battery_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Battery"
+    assert battery_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert battery_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_curtain3_sensor(hass: HomeAssistant) -> None:
+    """Test setting up the curtain3 sensor."""
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: "curtain",
+        },
+        unique_id="aabbccddeeff",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    battery_sensor = hass.states.get("sensor.test_name_battery")
+    battery_sensor_attrs = battery_sensor.attributes
+    assert battery_sensor.state == "54"
+    assert battery_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Battery"
+    assert battery_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert battery_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_blindtilt_sensor(hass: HomeAssistant) -> None:
+    """Test setting up the blindtilt sensor."""
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, WOBLINDTILT_SERVICE_INFO)
+    with patch("switchbot.SwitchbotDevice.update", new=Mock(return_value=True)):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+                CONF_NAME: "test-name",
+                CONF_SENSOR_TYPE: "blind_tilt",
+            },
+            unique_id="aabbccddeeff",
+        )
+        entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    battery_sensor = hass.states.get("sensor.test_name_battery")
+    battery_sensor_attrs = battery_sensor.attributes
+    assert battery_sensor.state == "42"
+    assert battery_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Battery"
+    assert battery_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert battery_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_no_rssi_sensor(hass: HomeAssistant) -> None:
+    """Test setting up creates the sensors."""
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, WOHAND_SERVICE_INFO)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_PASSWORD: "test-password",
+            CONF_SENSOR_TYPE: "bot",
+        },
+        unique_id="aabbccddeeff",
+    )
+    entry.add_to_hass(hass)
+
+    mock_service_info = Mock(rssi=-60)
+    with patch(
+        "homeassistant.components.switchbot.sensor.async_last_service_info",
+        return_value=mock_service_info,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        rssi_sensor = hass.states.get("sensor.test_name_bluetooth_signal")
+        assert rssi_sensor is not None
+        assert rssi_sensor.state == "-60"
+
+    with patch(
+        "homeassistant.components.switchbot.sensor.async_last_service_info",
+        return_value=None,
+    ):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+        rssi_sensor = hass.states.get("sensor.test_name_bluetooth_signal")
+        assert rssi_sensor is not None
+        assert rssi_sensor.state == "unknown"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
