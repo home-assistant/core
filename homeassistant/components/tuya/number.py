@@ -316,10 +316,6 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             translation_key="temperature_correction",
             device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
-            # native_min_value=-9,
-            # native_max_value=9,
-            # name = "Temp correction",
-            # icon="mdi:thermometer-lines",
         ),
     )
 }
