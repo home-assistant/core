@@ -1446,12 +1446,11 @@ async def resolve_integrations_dependencies(
 
     Detects circular dependencies and missing integrations.
     """
+    resolved = _ResolveDependenciesCache()
 
     async def _resolve_deps_catch_exceptions(itg: Integration) -> set[str] | None:
         try:
-            return await _do_resolve_dependencies(
-                itg, cache=_ResolveDependenciesCache()
-            )
+            return await _do_resolve_dependencies(itg, cache=resolved)
         except Exception as exc:  # noqa: BLE001
             _log_dependencies_exceptions(itg, exc)
             return None
@@ -1576,7 +1575,7 @@ async def _do_resolve_dependencies(
             dependencies_domains.update(after_dependencies)
         dependencies = await async_get_integrations(itg.hass, dependencies_domains)
 
-        all_dependencies = set()
+        all_dependencies: set[str] = set()
         for dep_domain, dep_integration in dependencies.items():
             if isinstance(dep_integration, Exception):
                 if ignore_exceptions:

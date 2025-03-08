@@ -934,16 +934,16 @@ async def _async_set_up_integrations(
 
         if timeout is None:
             await _async_setup_multi_components(hass, stage_all_domains, config)
-        else:
-            try:
-                async with hass.timeout.async_timeout(timeout, cool_down=COOLDOWN_TIME):
-                    await _async_setup_multi_components(hass, stage_all_domains, config)
-            except TimeoutError:
-                _LOGGER.warning(
-                    "Setup timed out for stage %s waiting on %s - moving forward",
-                    name,
-                    hass._active_tasks,  # noqa: SLF001
-                )
+            continue
+        try:
+            async with hass.timeout.async_timeout(timeout, cool_down=COOLDOWN_TIME):
+                await _async_setup_multi_components(hass, stage_all_domains, config)
+        except TimeoutError:
+            _LOGGER.warning(
+                "Setup timed out for stage %s waiting on %s - moving forward",
+                name,
+                hass._active_tasks,  # noqa: SLF001
+            )
 
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
