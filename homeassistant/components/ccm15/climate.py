@@ -1,7 +1,7 @@
 """Climate device for CCM15 coordinator."""
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from ccm15 import CCM15DeviceState
 
@@ -143,16 +143,19 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
+        hvac: HVACMode | None = cast(HVACMode | None, kwargs.get("hvac_mode"))
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            await self.coordinator.async_set_temperature(self._ac_index, temperature)
+            await self.coordinator.async_set_temperature(
+                self._ac_index, self.data, temperature, hvac
+            )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
-        await self.coordinator.async_set_hvac_mode(self._ac_index, hvac_mode)
+        await self.coordinator.async_set_hvac_mode(self._ac_index, self.data, hvac_mode)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
-        await self.coordinator.async_set_fan_mode(self._ac_index, fan_mode)
+        await self.coordinator.async_set_fan_mode(self._ac_index, self.data, fan_mode)
 
     async def async_turn_off(self) -> None:
         """Turn off."""
