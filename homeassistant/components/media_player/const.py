@@ -221,7 +221,6 @@ class MediaPlayerEntityFeature(IntFlag):
     GROUPING = 524288
     MEDIA_ANNOUNCE = 1048576
     MEDIA_ENQUEUE = 2097152
-    VOLUME_STEP_SET = 4194304
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.

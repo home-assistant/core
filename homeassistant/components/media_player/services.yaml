@@ -64,19 +64,11 @@ volume_set:
           min: 0
           max: 1
           step: 0.01
-
-volume_step_set:
-  target:
-    entity:
-      domain: media_player
-      supported_features:
-        - media_player.MediaPlayerEntityFeature.VOLUME_SET
-  fields:
     volume_step:
-      required: true
+      required: false
       selector:
         number:
-          min: 0.01
+          min: 0.001
           max: 0.1
           step: 0.01
 
