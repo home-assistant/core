@@ -20,8 +20,8 @@ class SuezWaterAggregatedAttributes:
 
     this_month_consumption: dict[str, float]
     previous_month_consumption: dict[str, float]
-    last_year_overall: dict[str, float]
-    this_year_overall: dict[str, float]
+    last_year_overall: int
+    this_year_overall: int
     history: dict[str, float]
     highest_monthly_consumption: float
 

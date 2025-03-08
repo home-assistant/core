@@ -354,12 +354,6 @@
       }
     }
   },
-  "issues": {
-    "deprecated_import_from_configuration_yaml": {
-      "title": "Deprecated configuration",
-      "description": "Configuration of the OpenTherm Gateway integration through configuration.yaml is deprecated. Your configuration has been migrated to config entries. Please remove any OpenTherm Gateway configuration from your configuration.yaml."
-    }
-  },
   "options": {
     "step": {
       "init": {

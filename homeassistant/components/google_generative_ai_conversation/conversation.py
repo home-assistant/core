@@ -64,28 +64,18 @@ async def async_setup_entry(
 
 
 SUPPORTED_SCHEMA_KEYS = {
-    "min_items",
-    "example",
-    "property_ordering",
-    "pattern",
-    "minimum",
-    "default",
-    "any_of",
-    "max_length",
-    "title",
-    "min_properties",
-    "min_length",
-    "max_items",
-    "maximum",
-    "nullable",
-    "max_properties",
+    # Gemini API does not support all of the OpenAPI schema
+    # SoT: https://ai.google.dev/api/caching#Schema
     "type",
-    "description",
-    "enum",
     "format",
-    "items",
+    "description",
+    "nullable",
+    "enum",
+    "max_items",
+    "min_items",
     "properties",
     "required",
+    "items",
 }
 
 
@@ -109,11 +99,20 @@ def _format_schema(schema: dict[str, Any]) -> Schema:
         key = _camel_to_snake(key)
         if key not in SUPPORTED_SCHEMA_KEYS:
             continue
-        if key == "any_of":
-            val = [_format_schema(subschema) for subschema in val]
         if key == "type":
             val = val.upper()
-        if key == "items":
+        elif key == "format":
+            # Gemini API does not support all formats, see: https://ai.google.dev/api/caching#Schema
+            # formats that are not supported are ignored
+            if schema.get("type") == "string" and val not in ("enum", "date-time"):
+                continue
+            if schema.get("type") == "number" and val not in ("float", "double"):
+                continue
+            if schema.get("type") == "integer" and val not in ("int32", "int64"):
+                continue
+            if schema.get("type") not in ("string", "number", "integer"):
+                continue
+        elif key == "items":
             val = _format_schema(val)
         elif key == "properties":
             val = {k: _format_schema(v) for k, v in val.items()}
@@ -460,7 +459,9 @@ class GoogleGenerativeAIConversationEntity(
             " ".join([part.text.strip() for part in response_parts if part.text])
         )
         return conversation.ConversationResult(
-            response=response, conversation_id=chat_log.conversation_id
+            response=response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
         )
 
     async def _async_entry_update_listener(

@@ -33,6 +33,12 @@
     "appliance_not_found": {
       "message": "Appliance for device ID {device_id} not found"
     },
+    "device_entry_not_found": {
+      "message": "Device entry for device ID {device_id} not found"
+    },
+    "config_entry_not_found": {
+      "message": "Config entry for device ID {device_id} not found"
+    },
     "turn_on_light": {
       "message": "Error turning on {entity_id}: {error}"
     },
@@ -107,6 +113,10 @@
     "deprecated_binary_common_door_sensor": {
       "title": "Deprecated binary door sensor detected in some automations or scripts",
       "description": "The binary door sensor `{entity}`, which is deprecated, is used in the following automations or scripts:\n{items}\n\nA sensor entity with additional possible states is available and should be used going forward; Please use it on the above automations or scripts to fix this issue."
+    },
+    "deprecated_command_actions": {
+      "title": "The command related actions are deprecated in favor of the new buttons",
+      "description": "The `pause_program` and `resume_program` actions have been deprecated in favor of new button entities, if the command is available for your appliance. Please update your automations, scripts and panels that use this action to use the button entities instead, and press on submit to fix the issue."
     },
     "deprecated_program_switch": {
       "title": "Deprecated program switch detected in some automations or scripts",
@@ -344,7 +354,7 @@
       "options": {
         "consumer_products_coffee_maker_enum_type_flow_rate_normal": "Normal",
         "consumer_products_coffee_maker_enum_type_flow_rate_intense": "Intense",
-        "consumer_products_coffee_maker_enum_type_flow_rate_intense_plus": "Intense plus"
+        "consumer_products_coffee_maker_enum_type_flow_rate_intense_plus": "Intense +"
       }
     },
     "coffee_milk_ratio": {
@@ -400,7 +410,7 @@
         "laundry_care_dryer_enum_type_drying_target_iron_dry": "Iron dry",
         "laundry_care_dryer_enum_type_drying_target_gentle_dry": "Gentle dry",
         "laundry_care_dryer_enum_type_drying_target_cupboard_dry": "Cupboard dry",
-        "laundry_care_dryer_enum_type_drying_target_cupboard_dry_plus": "Cupboard dry plus",
+        "laundry_care_dryer_enum_type_drying_target_cupboard_dry_plus": "Cupboard dry +",
         "laundry_care_dryer_enum_type_drying_target_extra_dry": "Extra dry"
       }
     },
@@ -582,7 +592,7 @@
           "description": "Defines if the program sequence is optimized with a special drying cycle to ensure more shine on glasses and plastic items."
         },
         "dishcare_dishwasher_option_vario_speed_plus": {
-          "name": "Vario speed plus",
+          "name": "Vario speed +",
           "description": "Defines if the program run time is reduced by up to 66% with the usual optimum cleaning and drying."
         },
         "dishcare_dishwasher_option_silence_on_demand": {
@@ -598,7 +608,7 @@
           "description": "Defines if improved drying for glasses and plasticware is enabled."
         },
         "dishcare_dishwasher_option_hygiene_plus": {
-          "name": "Hygiene plus",
+          "name": "Hygiene +",
           "description": "Defines if the cleaning is done with increased temperature. This ensures maximum hygienic cleanliness for regular use."
         },
         "dishcare_dishwasher_option_eco_dry": {
@@ -873,6 +883,9 @@
       },
       "wine_compartment_3_setpoint_temperature": {
         "name": "Wine compartment 3 temperature"
+      },
+      "color_temperature_percent": {
+        "name": "Functional light color temperature percent"
       },
       "washer_i_dos_1_base_level": {
         "name": "i-Dos 1 base level"
@@ -1449,7 +1462,7 @@
           "inactive": "Inactive",
           "ready": "Ready",
           "delayedstart": "Delayed start",
-          "run": "Run",
+          "run": "Running",
           "pause": "[%key:common::state::paused%]",
           "actionrequired": "Action required",
           "finished": "Finished",
@@ -1515,6 +1528,9 @@
           "map2": "Map 2",
           "map3": "Map 3"
         }
+      },
+      "oven_current_cavity_temperature": {
+        "name": "Current oven cavity temperature"
       },
       "freezer_door_alarm": {
         "name": "Freezer door alarm",

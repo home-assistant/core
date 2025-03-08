@@ -1,6 +1,7 @@
 """Provides a select platform for Home Connect."""
 
 from collections.abc import Callable, Coroutine
+import contextlib
 from dataclasses import dataclass
 from typing import Any, cast
 
@@ -48,6 +49,8 @@ from .coordinator import (
 )
 from .entity import HomeConnectEntity, HomeConnectOptionEntity
 from .utils import bsh_key_to_translation_key, get_dict_from_home_connect_error
+
+PARALLEL_UPDATES = 1
 
 FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM = {
     bsh_key_to_translation_key(option): option
@@ -423,13 +426,6 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
             appliance,
             desc,
         )
-        setting = appliance.settings.get(cast(SettingKey, desc.key))
-        if setting and setting.constraints and setting.constraints.allowed_values:
-            self._attr_options = [
-                desc.values_translation_key[option]
-                for option in setting.constraints.allowed_values
-                if option in desc.values_translation_key
-            ]
 
     async def async_select_option(self, option: str) -> None:
         """Select new option."""
@@ -458,6 +454,28 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
         self._attr_current_option = self.entity_description.values_translation_key.get(
             data.value
         )
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        setting = self.appliance.settings.get(cast(SettingKey, self.bsh_key))
+        if (
+            not setting
+            or not setting.constraints
+            or not setting.constraints.allowed_values
+        ):
+            with contextlib.suppress(HomeConnectError):
+                setting = await self.coordinator.client.get_setting(
+                    self.appliance.info.ha_id,
+                    setting_key=cast(SettingKey, self.bsh_key),
+                )
+
+        if setting and setting.constraints and setting.constraints.allowed_values:
+            self._attr_options = [
+                self.entity_description.values_translation_key[option]
+                for option in setting.constraints.allowed_values
+                if option in self.entity_description.values_translation_key
+            ]
 
 
 class HomeConnectSelectOptionEntity(HomeConnectOptionEntity, SelectEntity):

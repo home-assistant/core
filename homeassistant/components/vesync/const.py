@@ -22,6 +22,7 @@ exceeds the quota of 7700.
 VS_DEVICES = "devices"
 VS_COORDINATOR = "coordinator"
 VS_MANAGER = "manager"
+VS_LISTENERS = "listeners"
 VS_NUMBERS = "numbers"
 
 VS_HUMIDIFIER_MODE_AUTO = "auto"
