@@ -46,7 +46,7 @@ class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        return {"train": NederlandseSpoorwegenSubentryFlowHandler}
+        return {"trip": NederlandseSpoorwegenSubentryFlowHandler}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
