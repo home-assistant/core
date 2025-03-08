@@ -328,6 +328,53 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[generic_ef00_v1][switch.thermostat_kuche-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.thermostat_kuche',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[generic_ef00_v1][switch.thermostat_kuche-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Thermostat Küche',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.thermostat_kuche',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[sensibo_airconditioner_1][switch.office-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
