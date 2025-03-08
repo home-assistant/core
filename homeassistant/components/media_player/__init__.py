@@ -46,6 +46,7 @@ from homeassistant.const import (  # noqa: F401
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_STEP_SET,
     SERVICE_VOLUME_UP,
     STATE_IDLE,
     STATE_OFF,
@@ -119,6 +120,7 @@ from .const import (  # noqa: F401
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_MEDIA_VOLUME_STEP,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     CONTENT_AUTH_EXPIRY_TIME,
@@ -232,6 +234,7 @@ ATTR_TO_PROPERTY = [
     ATTR_SOUND_MODE,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_REPEAT,
+    ATTR_MEDIA_VOLUME_STEP,
 ]
 
 # mypy: disallow-any-generics
@@ -362,6 +365,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ),
         "async_set_volume_level",
         [MediaPlayerEntityFeature.VOLUME_SET],
+    )
+    component.async_register_entity_service(
+        SERVICE_VOLUME_STEP_SET,
+        vol.All(
+            cv.make_entity_service_schema(
+                {vol.Required(ATTR_MEDIA_VOLUME_STEP): cv.small_float}
+            ),
+            _rename_keys(volume_step=ATTR_MEDIA_VOLUME_STEP),
+        ),
+        "async_set_volume_step",
+        [MediaPlayerEntityFeature.VOLUME_STEP_SET],
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_MUTE,
@@ -834,6 +848,15 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Set volume level, range 0..1."""
         await self.hass.async_add_executor_job(self.set_volume_level, volume)
 
+    def set_volume_step(self, volume_step: float) -> None:
+        """Set volume step."""
+        self._attr_volume_step = volume_step
+
+    async def async_set_volume_step(self, volume_step: float) -> None:
+        """Set volume step."""
+        await self.hass.async_add_executor_job(self.set_volume_step, volume_step)
+        self.async_write_ha_state()
+
     def media_play(self) -> None:
         """Send play command."""
         raise NotImplementedError
@@ -966,6 +989,14 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def support_volume_set(self) -> bool:
         """Boolean if setting volume is supported."""
         return MediaPlayerEntityFeature.VOLUME_SET in self.supported_features_compat
+
+    @final
+    @property
+    def support_volume_step_set(self) -> bool:
+        """Boolean if setting volume step is supported."""
+        return (
+            MediaPlayerEntityFeature.VOLUME_STEP_SET in self.supported_features_compat
+        )
 
     @final
     @property

@@ -194,6 +194,16 @@
         }
       }
     },
+    "volume_step_set": {
+      "name": "Set volume step",
+      "description": "Sets the volume step.",
+      "fields": {
+        "volume_step": {
+          "name": "Step",
+          "description": "The volume step percentage between 1 and 10."
+        }
+      }
+    },
     "volume_set": {
       "name": "Set volume",
       "description": "Sets the volume level.",

@@ -12,11 +12,17 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_STEP_SET,
 )
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers import intent
 
-from . import ATTR_MEDIA_VOLUME_LEVEL, DOMAIN, MediaPlayerDeviceClass
+from . import (
+    ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_STEP,
+    DOMAIN,
+    MediaPlayerDeviceClass,
+)
 from .const import MediaPlayerEntityFeature, MediaPlayerState
 
 INTENT_MEDIA_PAUSE = "HassMediaPause"
@@ -24,6 +30,7 @@ INTENT_MEDIA_UNPAUSE = "HassMediaUnpause"
 INTENT_MEDIA_NEXT = "HassMediaNext"
 INTENT_MEDIA_PREVIOUS = "HassMediaPrevious"
 INTENT_SET_VOLUME = "HassSetVolume"
+INTENT_SET_VOLUME_STEP = "HassSetVolumeStep"
 
 
 @dataclass
@@ -101,6 +108,25 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
                 )
             },
             description="Sets the volume of a media player",
+            platforms={DOMAIN},
+            device_classes={MediaPlayerDeviceClass},
+        ),
+    )
+    intent.async_register(
+        hass,
+        intent.ServiceIntentHandler(
+            INTENT_SET_VOLUME_STEP,
+            DOMAIN,
+            SERVICE_VOLUME_STEP_SET,
+            required_domains={DOMAIN},
+            required_states={MediaPlayerState.PLAYING},
+            required_features=MediaPlayerEntityFeature.VOLUME_STEP_SET,
+            required_slots={
+                ATTR_MEDIA_VOLUME_STEP: vol.All(
+                    vol.Coerce(int), vol.Range(min=1, max=10), lambda val: val / 100
+                )
+            },
+            description="Sets the volume step of a media player",
             platforms={DOMAIN},
             device_classes={MediaPlayerDeviceClass},
         ),
