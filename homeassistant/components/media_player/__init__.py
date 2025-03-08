@@ -365,7 +365,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ),
             _rename_keys(volume=ATTR_MEDIA_VOLUME_LEVEL, step=ATTR_MEDIA_VOLUME_STEP),
         ),
-        "async_set_volume_level_step",
+        "async_set_volume_level_and_step",
         [MediaPlayerEntityFeature.VOLUME_SET],
     )
     component.async_register_entity_service(
@@ -846,9 +846,8 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_set_volume_step(self, step: float) -> None:
         """Set volume step."""
         await self.hass.async_add_executor_job(self.set_volume_step, step)
-        self.async_write_ha_state()
 
-    async def async_set_volume_level_step(
+    async def async_set_volume_level_and_step(
         self, volume: float, step: float | None = None
     ) -> None:
         await self.async_set_volume_level(volume)

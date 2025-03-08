@@ -76,12 +76,12 @@ class ExtendedMediaPlayer(SimpleMediaPlayer):
     def volume_up(self):
         """Turn volume up for media player."""
         if self.volume_level < 1:
-            self.set_volume_level(min(1, self.volume_level + 0.1))
+            self.set_volume_level(min(1, self.volume_level + self.volume_step))
 
     def volume_down(self):
         """Turn volume down for media player."""
         if self.volume_level > 0:
-            self.set_volume_level(max(0, self.volume_level - 0.1))
+            self.set_volume_level(max(0, self.volume_level - self.volume_step))
 
     def media_play_pause(self):
         """Play or pause the media player."""
@@ -156,6 +156,19 @@ async def test_volume_down(
     assert player.volume_level == 0.5
     await player.async_volume_down()
     assert player.volume_level == 0.5 - volume_step
+
+
+async def test_volume_set(hass: HomeAssistant) -> None:
+    """Test the volume_set method."""
+    player = SimpleMediaPlayer(hass)
+    assert player.volume_level == 0
+    await player.async_set_volume_level_and_step(0.5, 0.01)
+    assert player.volume_step == 0.01
+    await player.async_volume_up()
+    assert player.volume_level == 0.51
+    await player.async_volume_down()
+    await player.async_volume_down()
+    assert player.volume_level == 0.49
 
 
 async def test_media_play_pause(player) -> None:
