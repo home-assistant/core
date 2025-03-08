@@ -57,8 +57,9 @@ class RoborockEntityV1(RoborockEntity):
         """Get an item from the api cache."""
         return self._api.cache[attribute]
 
+    @classmethod
     async def _send_command(
-        self,
+        cls,
         command: RoborockCommand | str,
         api: RoborockClientV1,
         params: dict[str, Any] | list[Any] | int | None = None,
