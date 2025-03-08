@@ -57,6 +57,7 @@ JOB_STATE_MAP = {
     "freezeProtection": "freeze_protection",
     "preDrain": "pre_drain",
     "preWash": "pre_wash",
+    "prewash": "pre_wash",
     "wrinklePrevent": "wrinkle_prevent",
     "unknown": None,
 }
