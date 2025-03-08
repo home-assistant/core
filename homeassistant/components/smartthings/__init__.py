@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -18,7 +19,7 @@ from pysmartthings import (
     SmartThingsAuthenticationFailedError,
     Status,
 )
-from pysmartthings.exceptions import SmartThingsSinkError
+from pysmartthings.exceptions import SmartThingsForbiddenError, SmartThingsSinkError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
@@ -110,6 +111,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     client.refresh_subscription_url_function = _handle_new_subscription_url
 
+    async def subscribe() -> None:
+        """Subscribe to the SmartThings event stream."""
+        try:
+            await client.subscribe(
+                entry.data[CONF_LOCATION_ID],
+                entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
+                entry.data.get(CONF_SUBSCRIPTION_URL),
+            )
+        except (SmartThingsSinkError, SmartThingsForbiddenError) as err:
+            _LOGGER.error("Error subscribing: %s", err)
+            await asyncio.sleep(300)
+            hass.config_entries.async_schedule_reload(entry.entry_id)
+
     device_status: dict[str, FullDevice] = {}
     try:
         rooms = {
@@ -119,11 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         devices = await client.get_devices()
         entry.async_create_background_task(
             hass,
-            client.subscribe(
-                entry.data[CONF_LOCATION_ID],
-                entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
-                entry.data.get(CONF_SUBSCRIPTION_URL),
-            ),
+            subscribe(),
             "smartthings_socket",
         )
         for device in devices:
