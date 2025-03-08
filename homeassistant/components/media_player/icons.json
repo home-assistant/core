@@ -98,9 +98,6 @@
     "volume_set": {
       "service": "mdi:volume-medium"
     },
-    "volume_step_set": {
-      "service": "mdi:volume-medium"
-    },
     "volume_up": {
       "service": "mdi:volume-plus"
     }
