@@ -1,0 +1,177 @@
+{
+  "common": {
+    "modbus_address": "Modbus device address",
+    "bind_controller": "Bind a controller",
+    "bind_in_progress": "Bind in progress",
+    "bind_product": "Product to bind",
+    "bind_serial": "Serial Number (optional)",
+    "bind_result_not_available": "Bind status not available",
+    "bind_result_outgoing_binding_initialized": "Bind in progress",
+    "bind_result_outgoing_binding_completed": "Binding completed",
+    "bind_result_incoming_binding_active": "Bind in progress",
+    "bind_result_incoming_binding_completed": "Binding completed",
+    "bind_result_outgoing_binding_failed_no_answer": "Binding failed, no answer",
+    "bind_result_outgoing_binding_failed_incompatible_device": "Binding failed, incompatible device",
+    "bind_result_outgoing_binding_failed_node_list_full": "Binding failed, node list full",
+    "bind_result_outgoing_binding_failed_modbus_address_invalid": "Binding failed, invalid Modbus address",
+    "bind_result_incoming_binding_window_closed_without_binding_a_product": "Binding failed, no answer",
+    "bind_result_binding_failed_serial_number_invalid": "Binding failed, invalid serial number",
+    "bind_result_unknown_binding_command": "Binding failed, unknown binding command",
+    "bind_result_unknown_product_type": "Binding failed, unknown product ID",
+    "bind_result_bind_failed": "Failed to bind controller. Check the logs."
+  },
+  "config": {
+    "step": {
+      "user": {
+        "menu_options": {
+          "serial": "Serial",
+          "network": "Ethernet"
+        },
+        "title": "Type of RF bridge"
+      },
+      "network": {
+        "title": "Set up Ethernet RF bridge",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "address": "[%key:component::airios::common::modbus_address%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the RF bridge",
+          "port": "The port on which Modbus server is listening",
+          "address": "The address of the Modbus device"
+        }
+      },
+      "serial": {
+        "title": "Set up serial RF bridge",
+        "data": {
+          "device": "Select device",
+          "address": "[%key:component::airios::common::modbus_address%]"
+        },
+        "data_description": {
+          "device": "The serial port to which the bridge is connected",
+          "address": "The address of the Modbus device"
+        }
+      },
+      "serial_manual_path": {
+        "data": {
+          "device": "USB device path"
+        },
+        "title": "Path"
+      }
+    },
+    "error": {
+      "unexpected_product_id": "Unexpected product ID",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device."
+    }
+  },
+  "config_subentries": {
+    "controller": {
+      "initiate_flow": {
+        "user": "[%key:component::airios::common::bind_controller%]"
+      },
+      "step": {
+        "user": {
+          "title": "[%key:component::airios::common::bind_controller%]",
+          "description": "A controller is typically a ventilation unit.",
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "device": "[%key:component::airios::common::bind_product%]",
+            "rf_address": "[%key:component::airios::common::bind_serial%]"
+          }
+        },
+        "do_bind_controller": {
+          "title": "[%key:component::airios::common::bind_in_progress%]"
+        }
+      },
+      "progress": {
+        "bind_controller": "Please wait while the bridge binds to the controller."
+      },
+      "abort": {
+        "not_available": "[%key:component::airios::common::bind_result_not_available%]",
+        "outgoing_binding_initialized": "[%key:component::airios::common::bind_result_outgoing_binding_initialized%]",
+        "outgoing_binding_completed": "[%key:component::airios::common::bind_result_outgoing_binding_completed%]",
+        "incoming_binding_active": "[%key:component::airios::common::bind_result_incoming_binding_active%]",
+        "incoming_binding_completed": "[%key:component::airios::common::bind_result_incoming_binding_completed%]",
+        "outgoing_binding_failed_no_answer": "[%key:component::airios::common::bind_result_outgoing_binding_failed_no_answer%]",
+        "outgoing_binding_failed_incompatible_device": "[%key:component::airios::common::bind_result_outgoing_binding_failed_incompatible_device%]",
+        "outgoing_binding_failed_node_list_full": "[%key:component::airios::common::bind_result_outgoing_binding_failed_node_list_full%]",
+        "outgoing_binding_failed_modbus_address_invalid": "[%key:component::airios::common::bind_result_outgoing_binding_failed_modbus_address_invalid%]",
+        "incoming_binding_window_closed_without_binding_a_product": "[%key:component::airios::common::bind_result_incoming_binding_window_closed_without_binding_a_product%]",
+        "binding_failed_serial_number_invalid": "[%key:component::airios::common::bind_result_binding_failed_serial_number_invalid%]",
+        "unknown_binding_command": "[%key:component::airios::common::bind_result_unknown_binding_command%]",
+        "unknown_product_type": "[%key:component::airios::common::bind_result_unknown_product_type%]",
+        "bind_failed": "[%key:component::airios::common::bind_result_bind_failed%]"
+      }
+    },
+    "accessory": {
+      "initiate_flow": {
+        "user": "Bind an accessory"
+      },
+      "step": {
+        "user": {
+          "title": "Bind an accessory",
+          "description": "An accessory is a remote control or a sensor already bound to a controller",
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "device": "[%key:component::airios::common::bind_product%]",
+            "rf_address": "[%key:component::airios::common::bind_serial%]",
+            "controller_serial_number": "Controller to bind the accessory to"
+          }
+        },
+        "do_bind_accessory": {
+          "title": "[%key:component::airios::common::bind_in_progress%]"
+        }
+      },
+      "progress": {
+        "bind_accessory": "Waiting for accessory. Perform accessory binding procedure now."
+      },
+      "abort": {
+        "not_available": "[%key:component::airios::common::bind_result_not_available%]",
+        "outgoing_binding_initialized": "[%key:component::airios::common::bind_result_outgoing_binding_initialized%]",
+        "outgoing_binding_completed": "[%key:component::airios::common::bind_result_outgoing_binding_completed%]",
+        "incoming_binding_active": "[%key:component::airios::common::bind_result_incoming_binding_active%]",
+        "incoming_binding_completed": "[%key:component::airios::common::bind_result_incoming_binding_completed%]",
+        "outgoing_binding_failed_no_answer": "[%key:component::airios::common::bind_result_outgoing_binding_failed_no_answer%]",
+        "outgoing_binding_failed_incompatible_device": "[%key:component::airios::common::bind_result_outgoing_binding_failed_incompatible_device%]",
+        "outgoing_binding_failed_node_list_full": "[%key:component::airios::common::bind_result_outgoing_binding_failed_node_list_full%]",
+        "outgoing_binding_failed_modbus_address_invalid": "[%key:component::airios::common::bind_result_outgoing_binding_failed_modbus_address_invalid%]",
+        "incoming_binding_window_closed_without_binding_a_product": "[%key:component::airios::common::bind_result_incoming_binding_window_closed_without_binding_a_product%]",
+        "binding_failed_serial_number_invalid": "[%key:component::airios::common::bind_result_binding_failed_serial_number_invalid%]",
+        "unknown_binding_command": "[%key:component::airios::common::bind_result_unknown_binding_command%]",
+        "unknown_product_type": "[%key:component::airios::common::bind_result_unknown_product_type%]",
+        "bind_failed": "[%key:component::airios::common::bind_result_bind_failed%]"
+      }
+    }
+  },
+  "entity": {
+    "fan": {
+      "ventilation_speed": {
+        "name": "Ventilation speed",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "off": "[%key:common::state::off%]",
+              "low": "[%key:common::state::low%]",
+              "medium": "[%key:common::state::medium%]",
+              "high": "[%key:common::state::high%]",
+              "low_override": "Low (temporary override)",
+              "medium_override": "Medium (temporary override)",
+              "high_override": "High (temporary override)",
+              "away": "[%key:common::state::not_home%]",
+              "boost": "Boost",
+              "auto": "Auto"
+            }
+          }
+        }
+      }
+    }
+  }
+}
