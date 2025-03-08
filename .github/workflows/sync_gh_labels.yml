@@ -27,6 +27,13 @@ jobs:
             --paginate \
             --jq '.[] | select(.name | startswith("integration: ")) | "\(.name)|\(.description);"')
           for integration_manifest in ${{ steps.filter.outputs.manifest_files }}; do
+            domain=$(echo $integration_manifest | cut -d'/' -f 3)
+            if [[ ! -f $integration_manifest ]] && [[ $gh_labels == *"integration: $domain|"* ]]; then
+              # integration deleted, remove label description
+              gh api --method PATCH --silent "/repos/${OWNER}/${REPO}/labels/integration: $domain" -f "description=''"
+              echo "label '$label_name' updated"
+              continue
+            fi
             IFS='|' read -ra manifest <<< "$(jq -r '"integration: \(.domain)|\(.name)"' $integration_manifest)"
             label_name="${manifest[0]}"
             label_desc="${manifest[1]}"
