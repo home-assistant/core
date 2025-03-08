@@ -396,6 +396,7 @@ class ConfigEntry[_DataT = Any]:
     disabled_by: ConfigEntryDisabler | None
     supports_unload: bool | None
     supports_remove_device: bool | None
+    supports_remove_subentry: bool | None
     _supports_options: bool | None
     _supports_reconfigure: bool | None
     _supported_subentry_types: dict[str, dict[str, bool]] | None
@@ -503,6 +504,9 @@ class ConfigEntry[_DataT = Any]:
 
         # Supports remove device
         _setter(self, "supports_remove_device", None)
+
+        # Supports remove subentry
+        _setter(self, "supports_remove_subentry", None)
 
         # Supports options
         _setter(self, "_supports_options", None)
@@ -627,6 +631,7 @@ class ConfigEntry[_DataT = Any]:
             "state": self.state.value,
             "supports_options": self.supports_options,
             "supports_remove_device": self.supports_remove_device or False,
+            "supports_remove_subentry": self.supports_remove_subentry or False,
             "supports_unload": self.supports_unload or False,
             "supports_reconfigure": self.supports_reconfigure,
             "supported_subentry_types": self.supported_subentry_types,
@@ -698,6 +703,10 @@ class ConfigEntry[_DataT = Any]:
             self.supports_unload = await support_entry_unload(hass, self.domain)
         if self.supports_remove_device is None:
             self.supports_remove_device = await support_remove_from_device(
+                hass, self.domain
+            )
+        if self.supports_remove_subentry is None:
+            self.supports_remove_subentry = await support_remove_subentry(
                 hass, self.domain
             )
         try:
@@ -3780,6 +3789,13 @@ async def support_remove_from_device(hass: HomeAssistant, domain: str) -> bool:
     integration = await loader.async_get_integration(hass, domain)
     component = await integration.async_get_component()
     return hasattr(component, "async_remove_config_entry_device")
+
+
+async def support_remove_subentry(hass: HomeAssistant, domain: str) -> bool:
+    """Test if a domain supports removing subentries."""
+    integration = await loader.async_get_integration(hass, domain)
+    component = await integration.async_get_component()
+    return hasattr(component, "async_remove_subentry")
 
 
 async def _support_single_config_entry_only(hass: HomeAssistant, domain: str) -> bool:

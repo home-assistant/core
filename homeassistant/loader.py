@@ -391,6 +391,14 @@ class ComponentProtocol(Protocol):
     ) -> bool:
         """Remove a config entry device."""
 
+    async def async_remove_subentry(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        subentry_id: str,
+    ) -> bool:
+        """Remove a config subentry."""
+
     async def async_reset_platform(
         self, hass: HomeAssistant, integration_name: str
     ) -> None:
