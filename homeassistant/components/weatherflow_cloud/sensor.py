@@ -437,6 +437,7 @@ class WeatherFlowWebsocketSensorWind(WeatherFlowSensorBase):
         value = (
             int(self.native_value)
             if self.native_value is not None
+            and self.native_value != "none"
             and isinstance(self.native_value, (int, float, str))
             else None
         )
