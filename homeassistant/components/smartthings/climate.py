@@ -273,11 +273,15 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
-        return [
-            state
-            for mode in self.get_attribute_value(
+        if (
+            supported_thermostat_modes := self.get_attribute_value(
                 Capability.THERMOSTAT_MODE, Attribute.SUPPORTED_THERMOSTAT_MODES
             )
+        ) is None:
+            return []
+        return [
+            state
+            for mode in supported_thermostat_modes
             if (state := AC_MODE_TO_STATE.get(mode)) is not None
         ]
 
