@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
+import logging
 from typing import Any
 
 import aiodns
@@ -31,10 +31,10 @@ from .const import (
     DEFAULT_HOSTNAME,
     DEFAULT_NAME,
     DEFAULT_PORT,
-    DEFAULT_RESOLVER,
-    DEFAULT_RESOLVER_IPV6,
     DOMAIN,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -54,24 +54,30 @@ DATA_SCHEMA_ADV = vol.Schema(
 
 async def async_validate_hostname(
     hostname: str,
-    resolver_ipv4: str,
-    resolver_ipv6: str,
+    resolver_ipv4: str | None,
+    resolver_ipv6: str | None,
     port: int,
     port_ipv6: int,
 ) -> dict[str, bool]:
     """Validate hostname."""
 
     async def async_check(
-        hostname: str, resolver: str, qtype: str, port: int = 53
+        hostname: str, resolver: str | None, qtype: str, port: int = 53
     ) -> bool:
         """Return if able to resolve hostname."""
-        result = False
-        with contextlib.suppress(DNSError):
-            result = bool(
-                await aiodns.DNSResolver(
-                    nameservers=[resolver], udp_port=port, tcp_port=port
-                ).query(hostname, qtype)
-            )
+        args: dict[str, Any] = {
+            "udp_port": port,
+            "tcp_port": port,
+        }
+        if resolver is not None:
+            args["nameservers"] = [resolver]
+
+        try:
+            result = bool(await aiodns.DNSResolver(**args).query(hostname, qtype))
+        except DNSError as err:
+            _LOGGER.warning("Exception while resolving host: %s", err)
+            result = False
+
         return result
 
     result: dict[str, bool] = {}
@@ -113,8 +119,8 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             hostname = user_input[CONF_HOSTNAME]
             name = DEFAULT_NAME if hostname == DEFAULT_HOSTNAME else hostname
-            resolver = user_input.get(CONF_RESOLVER, DEFAULT_RESOLVER)
-            resolver_ipv6 = user_input.get(CONF_RESOLVER_IPV6, DEFAULT_RESOLVER_IPV6)
+            resolver = user_input.get(CONF_RESOLVER)
+            resolver_ipv6 = user_input.get(CONF_RESOLVER_IPV6)
             port = user_input.get(CONF_PORT, DEFAULT_PORT)
             port_ipv6 = user_input.get(CONF_PORT_IPV6, DEFAULT_PORT)
 
@@ -174,9 +180,9 @@ class DnsIPOptionsFlowHandler(OptionsFlow):
         """Manage the options."""
         errors = {}
         if user_input is not None:
-            resolver = user_input.get(CONF_RESOLVER, DEFAULT_RESOLVER)
+            resolver = user_input.get(CONF_RESOLVER)
             port = user_input.get(CONF_PORT, DEFAULT_PORT)
-            resolver_ipv6 = user_input.get(CONF_RESOLVER_IPV6, DEFAULT_RESOLVER_IPV6)
+            resolver_ipv6 = user_input.get(CONF_RESOLVER_IPV6)
             port_ipv6 = user_input.get(CONF_PORT_IPV6, DEFAULT_PORT)
             validate = await async_validate_hostname(
                 self.config_entry.data[CONF_HOSTNAME],
