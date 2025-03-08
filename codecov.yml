@@ -40,6 +40,10 @@ coverage:
           - homeassistant/components/*/recorder.py
           - homeassistant/components/*/scene.py
 
+comment:
+  layout: "condensed_header, condensed_files, condensed_diff"
+  behavior: once
+
 # To make partial tests possible,
 # we need to carry forward.
 flag_management:
