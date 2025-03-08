@@ -14,7 +14,12 @@ from pyheos import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import selector
@@ -141,8 +146,10 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         hostname = urlparse(discovery_info.ssdp_location).hostname
         assert hostname is not None
 
-        # Abort early when discovered host is part of the current system
-        if entry and hostname in _get_current_hosts(entry):
+        # Abort early when discovery is ignored or host is part of the current system
+        if entry and (
+            entry.source == SOURCE_IGNORE or hostname in _get_current_hosts(entry)
+        ):
             return self.async_abort(reason="single_instance_allowed")
 
         # Connect to discovered host and get system information
