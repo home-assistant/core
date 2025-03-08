@@ -373,17 +373,19 @@ class WeatherFlowSensorEntity(SensorEntity):
     @property
     def icon(self) -> str | None:
         """Get icon."""
+        # Early return if no icon_fn exists
+        if self.entity_description.icon_fn is None:
+            return None
 
-        value = (
-            int(self.native_value)
-            if self.native_value is not None
+        # Convert native_value to int if possible
+        if (
+            self.native_value is not None
             and self.native_value != "none"
             and isinstance(self.native_value, (int, float, str))
-            else None
-        )
-
-        if value and self.entity_description.icon_fn is not None:
+        ):
+            value = int(self.native_value)
             return self.entity_description.icon_fn(value)
+
         return None
 
     @property
