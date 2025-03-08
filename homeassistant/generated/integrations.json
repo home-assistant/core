@@ -106,6 +106,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "airios": {
+      "name": "Airios Ventilation Systems",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "airly": {
       "name": "Airly",
       "integration_type": "service",
@@ -5716,6 +5722,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "siber": {
+      "name": "Siber Ventilation Systems",
+      "integration_type": "virtual",
+      "supported_by": "airios"
     },
     "sigfox": {
       "name": "Sigfox",

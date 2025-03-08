@@ -1,0 +1,429 @@
+{
+  "common": {
+    "slave": "Modbus unit ID",
+    "bind_controller": "Bind a controller",
+    "bind_in_progress": "Bind in progress",
+    "bind_product": "Product to bind",
+    "bind_serial": "Serial Number (optional)",
+    "bind_result_not_available": "Bind status not available",
+    "bind_result_outgoing_binding_initialized": "Bind in progress",
+    "bind_result_outgoing_binding_completed": "Binding completed",
+    "bind_result_incoming_binding_active": "Bind in progress",
+    "bind_result_incoming_binding_completed": "Binding completed",
+    "bind_result_outgoing_binding_failed_no_answer": "Binding failed, no answer",
+    "bind_result_outgoing_binding_failed_incompatible_device": "Binding failed, incompatible device",
+    "bind_result_outgoing_binding_failed_node_list_full": "Binding failed, node list full",
+    "bind_result_outgoing_binding_failed_modbus_address_invalid": "Binding failed, invalid modbus address",
+    "bind_result_incoming_binding_window_closed_without_binding_a_product": "Binding failed, no answer",
+    "bind_result_binding_failed_serial_number_invalid": "Binding failed, invalid serial number",
+    "bind_result_unknown_binding_command": "Binding failed, unknown binding command",
+    "bind_result_unknown_product_type": "Binding failed, unknown product ID",
+    "bind_result_bind_failed": "Failed to bind controller. Check the logs.",
+    "supply": "Supply",
+    "supply_fan_speed": "Supply fan speed",
+    "exhaust": "Exhaust",
+    "exhaust_fan_speed": "Exhaust fan speed"
+  },
+  "config": {
+    "step": {
+      "user": {
+        "menu_options": {
+          "serial": "Serial",
+          "network": "Ethernet"
+        },
+        "title": "Type of RF bridge"
+      },
+      "network": {
+        "title": "Setup Ethernet RF bridge",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "slave": "[%key:component::airios::common::slave%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the RF bridge",
+          "port": "The port on which Modbus server is listening",
+          "slave": "The address of the Modbus slave"
+        }
+      },
+      "serial": {
+        "title": "Setup serial RF bridge",
+        "data": {
+          "device": "Select device",
+          "slave": "[%key:component::airios::common::slave%]"
+        },
+        "data_description": {
+          "device": "The serial port to which the bridge is connected",
+          "slave": "The address of the Modbus slave"
+        }
+      },
+      "serial_manual_path": {
+        "data": {
+          "device": "USB device path"
+        },
+        "title": "Path"
+      }
+    },
+    "error": {
+      "unexpected_product_id": "Unexpected product ID",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device."
+    }
+  },
+  "config_subentries": {
+    "controller": {
+      "initiate_flow": {
+        "user": "[%key:component::airios::common::bind_controller%]"
+      },
+      "step": {
+        "user": {
+          "title": "[%key:component::airios::common::bind_controller%]",
+          "description": "A controller is tipically a ventilation unit.",
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "device": "[%key:component::airios::common::bind_product%]",
+            "rf_address": "[%key:component::airios::common::bind_serial%]"
+          }
+        },
+        "do_bind_controller": {
+          "title": "[%key:component::airios::common::bind_in_progress%]"
+        }
+      },
+      "progress": {
+        "bind_controller": "Please wait while the bridge binds to the controller."
+      },
+      "abort": {
+        "not_available": "[%key:component::airios::common::bind_result_not_available%]",
+        "outgoing_binding_initialized": "[%key:component::airios::common::bind_result_outgoing_binding_initialized%]",
+        "outgoing_binding_completed": "[%key:component::airios::common::bind_result_outgoing_binding_completed%]",
+        "incoming_binding_active": "[%key:component::airios::common::bind_result_incoming_binding_active%]",
+        "incoming_binding_completed": "[%key:component::airios::common::bind_result_incoming_binding_completed%]",
+        "outgoing_binding_failed_no_answer": "[%key:component::airios::common::bind_result_outgoing_binding_failed_no_answer%]",
+        "outgoing_binding_failed_incompatible_device": "[%key:component::airios::common::bind_result_outgoing_binding_failed_incompatible_device%]",
+        "outgoing_binding_failed_node_list_full": "[%key:component::airios::common::bind_result_outgoing_binding_failed_node_list_full%]",
+        "outgoing_binding_failed_modbus_address_invalid": "[%key:component::airios::common::bind_result_outgoing_binding_failed_modbus_address_invalid%]",
+        "incoming_binding_window_closed_without_binding_a_product": "[%key:component::airios::common::bind_result_incoming_binding_window_closed_without_binding_a_product%]",
+        "binding_failed_serial_number_invalid": "[%key:component::airios::common::bind_result_binding_failed_serial_number_invalid%]",
+        "unknown_binding_command": "[%key:component::airios::common::bind_result_unknown_binding_command%]",
+        "unknown_product_type": "[%key:component::airios::common::bind_result_unknown_product_type%]",
+        "bind_failed": "[%key:component::airios::common::bind_result_bind_failed%]"
+      }
+    },
+    "accessory": {
+      "initiate_flow": {
+        "user": "Bind an accessory"
+      },
+      "step": {
+        "user": {
+          "title": "Bind an accessory",
+          "description": "An accessory is a remote control or a sensor binded through an already binded controller",
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "device": "[%key:component::airios::common::bind_product%]",
+            "rf_address": "[%key:component::airios::common::bind_serial%]",
+            "controller_serial_number": "Controller to bind the accessory to"
+          }
+        },
+        "do_bind_accessory": {
+          "title": "[%key:component::airios::common::bind_in_progress%]"
+        }
+      },
+      "progress": {
+        "bind_accessory": "Waiting for accessory. Perform accessory binding prodecure now."
+      },
+      "abort": {
+        "not_available": "[%key:component::airios::common::bind_result_not_available%]",
+        "outgoing_binding_initialized": "[%key:component::airios::common::bind_result_outgoing_binding_initialized%]",
+        "outgoing_binding_completed": "[%key:component::airios::common::bind_result_outgoing_binding_completed%]",
+        "incoming_binding_active": "[%key:component::airios::common::bind_result_incoming_binding_active%]",
+        "incoming_binding_completed": "[%key:component::airios::common::bind_result_incoming_binding_completed%]",
+        "outgoing_binding_failed_no_answer": "[%key:component::airios::common::bind_result_outgoing_binding_failed_no_answer%]",
+        "outgoing_binding_failed_incompatible_device": "[%key:component::airios::common::bind_result_outgoing_binding_failed_incompatible_device%]",
+        "outgoing_binding_failed_node_list_full": "[%key:component::airios::common::bind_result_outgoing_binding_failed_node_list_full%]",
+        "outgoing_binding_failed_modbus_address_invalid": "[%key:component::airios::common::bind_result_outgoing_binding_failed_modbus_address_invalid%]",
+        "incoming_binding_window_closed_without_binding_a_product": "[%key:component::airios::common::bind_result_incoming_binding_window_closed_without_binding_a_product%]",
+        "binding_failed_serial_number_invalid": "[%key:component::airios::common::bind_result_binding_failed_serial_number_invalid%]",
+        "unknown_binding_command": "[%key:component::airios::common::bind_result_unknown_binding_command%]",
+        "unknown_product_type": "[%key:component::airios::common::bind_result_unknown_product_type%]",
+        "bind_failed": "[%key:component::airios::common::bind_result_bind_failed%]"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Airios integration options",
+        "data": {
+          "scan_interval": "Scan interval (seconds)"
+        },
+        "data_description": {
+          "scan_interval": "Poll interval in seconds"
+        }
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "bypass_mode": {
+        "name": "Bypass mode",
+        "state": {
+          "open": "Open",
+          "close": "Close",
+          "auto": "Auto",
+          "error": "Error"
+        }
+      }
+    },
+    "fan": {
+      "ventilation_speed": {
+        "name": "Ventilation speed",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "off": "Off",
+              "low": "Low",
+              "mid": "Medium",
+              "high": "High",
+              "low_override": "Low (temporary override)",
+              "mid_override": "Medium (temporary override)",
+              "high_override": "High (temporary override)",
+              "away": "Away",
+              "boost": "Boost",
+              "auto": "Auto"
+            }
+          }
+        }
+      }
+    },
+    "binary_sensor": {
+      "fault_status": {
+        "name": "Fault status"
+      },
+      "rf_comm_status": {
+        "name": "RF comm status"
+      },
+      "battery_status": {
+        "name": "Battery status",
+        "state": {
+          "off": "OK",
+          "on": "Battery low"
+        }
+      },
+      "filter_dirty": {
+        "name": "Filter",
+        "state": {
+          "off": "OK",
+          "on": "Dirty"
+        }
+      },
+      "defrost": {
+        "name": "Defrost"
+      }
+    },
+    "button": {
+      "filter_reset": {
+        "name": "Reset filter counter"
+      }
+    },
+    "sensor": {
+      "rf_load_last_hour": {
+        "name": "RF load last hour"
+      },
+      "rf_load_current_hour": {
+        "name": "RF load"
+      },
+      "rf_sent_messages_last_hour": {
+        "name": "RF messages last hour"
+      },
+      "rf_sent_messages_current_hour": {
+        "name": "RF messages"
+      },
+      "power_on_time": {
+        "name": "Uptime"
+      },
+      "indoor_air_temperature": {
+        "name": "Indoor temperature"
+      },
+      "outdoor_air_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "exhaust_air_temperature": {
+        "name": "Exhaust temperature"
+      },
+      "supply_air_temperature": {
+        "name": "Supply temperature"
+      },
+      "exhaust_fan_rpm": {
+        "name": "Exhaust fan speed"
+      },
+      "supply_fan_rpm": {
+        "name": "Supply fan speed"
+      },
+      "supply_fan_speed": {
+        "name": "Supply fan speed"
+      },
+      "exhaust_fan_speed": {
+        "name": "Exhaust fan speed"
+      },
+      "error_code": {
+        "name": "Error code",
+        "state": {
+          "no_error": "No error",
+          "non_specific_fault": "Non specific fault",
+          "emergency_stop": "Emergency stop",
+          "fan_1_error": "Fan 1 error",
+          "fan_2_error": "Fan 2 error",
+          "x20_sensor_error": "X20 sensor error",
+          "x21_sensor_error": "X21 sensor error",
+          "x22_sensor_error": "X22 sensor error",
+          "x23_sensor_error": "X23 sensor error",
+          "binding_mode_active": "Binding mode active",
+          "identification_active": "Identification active"
+        }
+      },
+      "filter_duration_days": {
+        "name": "Filter duration"
+      },
+      "filter_remaining_percent": {
+        "name": "Filter remaining"
+      },
+      "bypass_position": {
+        "name": "Bypass position"
+      },
+      "postheater": {
+        "name": "Postheater"
+      },
+      "override_remaining_time": {
+        "name": "Temporary override remaining time"
+      }
+    },
+    "number": {
+      "preheater_setpoint": {
+        "name": "Preheater setpoint"
+      },
+      "free_ventilation_setpoint": {
+        "name": "Free ventilation setpoint"
+      },
+      "free_ventilation_cooling_offset": {
+        "name": "Free ventilation cooling offset"
+      },
+      "frost_protection_preheater_setpoint": {
+        "name": "Frost protection preheater setpoint"
+      },
+      "preset_high_fan_speed_supply": {
+        "name": "High supply fan speed"
+      },
+      "preset_high_fan_speed_exhaust": {
+        "name": "High exhaust fan speed"
+      },
+      "preset_medium_fan_speed_supply": {
+        "name": "Medium supply fan speed"
+      },
+      "preset_medium_fan_speed_exhaust": {
+        "name": "Medium exhaust fan speed"
+      },
+      "preset_low_fan_speed_supply": {
+        "name": "Low supply fan speed"
+      },
+      "preset_low_fan_speed_exhaust": {
+        "name": "Low exhaust fan speed"
+      },
+      "preset_standby_fan_speed_supply": {
+        "name": "Standby supply fan speed"
+      },
+      "preset_standby_fan_speed_exhaust": {
+        "name": "Standby exhaust fan speed"
+      }
+    }
+  },
+  "services": {
+    "set_preset_mode_duration": {
+      "name": "Set a preset for a fixed duration",
+      "description": "Set a preset for a fixed duration. The unit will switch back to the previous preset.",
+      "fields": {
+        "preset_mode": {
+          "name": "Preset name",
+          "description": "The preset name"
+        },
+        "preset_override_time": {
+          "name": "Duration",
+          "description": "The preset override time"
+        }
+      }
+    },
+    "set_preset_fan_speed_away": {
+      "name": "Set away preset fans speeds",
+      "description": "Sets the supply and exhaust fans speeds of the Away preset.",
+      "fields": {
+        "supply_fan_speed": {
+          "name": "[%key:component::airios::common::supply%]",
+          "description": "[%key:component::airios::common::supply_fan_speed%]"
+        },
+        "exhaust_fan_speed": {
+          "name": "[%key:component::airios::common::exhaust%]",
+          "description": "[%key:component::airios::common::exhaust_fan_speed%]"
+        }
+      }
+    },
+    "set_preset_fan_speed_low": {
+      "name": "Set low preset fans speeds",
+      "description": "Sets the supply and exhaust fans speeds of the Low preset.",
+      "fields": {
+        "supply_fan_speed": {
+          "name": "[%key:component::airios::common::supply%]",
+          "description": "[%key:component::airios::common::supply_fan_speed%]"
+        },
+        "exhaust_fan_speed": {
+          "name": "[%key:component::airios::common::exhaust%]",
+          "description": "[%key:component::airios::common::exhaust_fan_speed%]"
+        }
+      }
+    },
+    "set_preset_fan_speed_medium": {
+      "name": "Set medium preset fans speeds",
+      "description": "Sets the supply and exhaust fans speeds of the Medium preset.",
+      "fields": {
+        "supply_fan_speed": {
+          "name": "[%key:component::airios::common::supply%]",
+          "description": "[%key:component::airios::common::supply_fan_speed%]"
+        },
+        "exhaust_fan_speed": {
+          "name": "[%key:component::airios::common::exhaust%]",
+          "description": "[%key:component::airios::common::exhaust_fan_speed%]"
+        }
+      }
+    },
+    "set_preset_fan_speed_high": {
+      "name": "Set high preset fans speeds",
+      "description": "Sets the supply and exhaust fans speeds of the High preset.",
+      "fields": {
+        "supply_fan_speed": {
+          "name": "[%key:component::airios::common::supply%]",
+          "description": "[%key:component::airios::common::supply_fan_speed%]"
+        },
+        "exhaust_fan_speed": {
+          "name": "[%key:component::airios::common::exhaust%]",
+          "description": "[%key:component::airios::common::exhaust_fan_speed%]"
+        }
+      }
+    },
+    "filter_reset": {
+      "name": "Reset filter counter",
+      "description": "Resets the filter counter after repacing or cleaning the filters."
+    },
+    "device_reset": {
+      "name": "Reset the device",
+      "description": "Resets the device preserving the configuration."
+    },
+    "factory_reset": {
+      "name": "Factory reset the device",
+      "description": "Resets the device to factory state."
+    }
+  }
+}

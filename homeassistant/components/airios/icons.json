@@ -1,0 +1,141 @@
+{
+  "entity": {
+    "select": {
+      "bypass_mode": {
+        "default": "mdi:valve",
+        "state": {
+          "open": "mdi:valve-open",
+          "close": "mdi:valve-closed",
+          "error": "mdi:alert-circle"
+        }
+      }
+    },
+    "sensor": {
+      "error_code": {
+        "default": "mdi:alert-circle",
+        "state": {
+          "no_error": "mdi:check-circle"
+        }
+      },
+      "override_remaining_time": {
+        "default": "mdi:fan-clock"
+      },
+      "postheater": {
+        "default": "mdi:heating-coil"
+      },
+      "bypass_position": {
+        "default": "mdi:valve",
+        "state": {
+          "0": "mdi:valve-closed",
+          "100": "mdi:valve-open"
+        }
+      },
+      "filter_remaining_percent": {
+        "default": "mdi:air-filter"
+      },
+      "filter_duration_days": {
+        "default": "mdi:air-filter"
+      },
+      "exhaust_fan_speed": {
+        "default": "mdi:fan"
+      },
+      "supply_fan_speed": {
+        "default": "mdi:fan"
+      },
+      "exhaust_fan_rpm": {
+        "default": "mdi:fan"
+      },
+      "supply_fan_rpm": {
+        "default": "mdi:fan"
+      },
+      "supply_air_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "exhaust_air_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "outdoor_air_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "indoor_air_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "rf_sent_messages_current_hour": {
+        "default": "mdi:network-pos"
+      },
+      "rf_sent_messages_last_hour": {
+        "default": "mdi:network-pos"
+      },
+      "rf_load_last_hour": {
+        "default": "mdi:radio-tower"
+      },
+      "rf_load_current_hour": {
+        "default": "mdi:radio-tower"
+      }
+    },
+    "number": {
+      "preset_setpoint": {
+        "default": "mdi:thermostat"
+      },
+      "free_ventilation_setpoint": {
+        "default": "mdi:weather-windy"
+      },
+      "free_ventilation_cooling_offset": {
+        "default": "mdi:weather-windy"
+      },
+      "frost_protection_preheater_setpoint": {
+        "default": "mdi:thermostat"
+      },
+      "preset_high_fan_speed_supply": {
+        "default": "mdi:fan"
+      },
+      "preset_high_fan_speed_exhaust": {
+        "default": "mdi:fan"
+      },
+      "preset_medium_fan_speed_supply": {
+        "default": "mdi:fan"
+      },
+      "preset_medium_fan_speed_exhaust": {
+        "default": "mdi:fan"
+      },
+      "preset_low_fan_speed_supply": {
+        "default": "mdi:fan"
+      },
+      "preset_low_fan_speed_exhaust": {
+        "default": "mdi:fan"
+      },
+      "preset_standby_fan_speed_supply": {
+        "default": "mdi:fan"
+      },
+      "preset_standby_fan_speed_exhaust": {
+        "default": "mdi:fan"
+      }
+    }
+  },
+  "services": {
+    "set_preset_fan_speed_away": {
+      "service": "mdi:walk"
+    },
+    "set_preset_fan_speed_low": {
+      "service": "mdi:fan-speed-1"
+    },
+    "set_preset_fan_speed_medium": {
+      "service": "mdi:fan-speed-2"
+    },
+    "set_preset_fan_speed_high": {
+      "service": "mdi:fan-speed-3"
+    },
+    "set_preset_mode_duration": {
+      "service": "mdi:fan-clock"
+    },
+    "filter_reset": {
+      "service": "mdi:air-filter"
+    },
+    "device_reset": {
+      "service": "mdi:restart"
+    },
+    "factory_reset": {
+      "service": "mdi:alert"
+    }
+  }
+}

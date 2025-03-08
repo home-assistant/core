@@ -1,0 +1,128 @@
+factory_reset:
+  target:
+    entity:
+      integration: airios
+      supported_features:
+        - airios.VMDEntityFeature.FACTORY_RESET
+device_reset:
+  target:
+    entity:
+      integration: airios
+      supported_features:
+        - airios.VMDEntityFeature.DEVICE_RESET
+filter_reset:
+  target:
+    entity:
+      integration: airios
+      supported_features:
+        - airios.VMDEntityFeature.FILTER_RESET
+set_preset_fan_speed_away:
+  target:
+    entity:
+      integration: airios
+      domain: fan
+  fields:
+    supply_fan_speed:
+      required: true
+      default: 13
+      selector:
+        number:
+          min: 0
+          max: 40
+          unit_of_measurement: "%"
+    exhaust_fan_speed:
+      required: true
+      default: 7
+      selector:
+        number:
+          min: 0
+          max: 40
+          unit_of_measurement: "%"
+set_preset_fan_speed_low:
+  target:
+    entity:
+      integration: airios
+      domain: fan
+  fields:
+    supply_fan_speed:
+      required: true
+      default: 27
+      selector:
+        number:
+          min: 0
+          max: 80
+          unit_of_measurement: "%"
+    exhaust_fan_speed:
+      required: true
+      default: 13
+      selector:
+        number:
+          min: 0
+          max: 80
+          unit_of_measurement: "%"
+set_preset_fan_speed_medium:
+  target:
+    entity:
+      integration: airios
+      domain: fan
+  fields:
+    supply_fan_speed:
+      required: true
+      default: 32
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    exhaust_fan_speed:
+      required: true
+      default: 26
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+set_preset_fan_speed_high:
+  target:
+    entity:
+      integration: airios
+      domain: fan
+  fields:
+    supply_fan_speed:
+      required: true
+      default: 54
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    exhaust_fan_speed:
+      required: true
+      default: 46
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+set_preset_mode_duration:
+  target:
+    entity:
+      integration: airios
+      domain: fan
+  fields:
+    preset_mode:
+      required: true
+      selector:
+        select:
+          options:
+            - "low"
+            - "mid"
+            - "high"
+    preset_override_time:
+      required: true
+      default: 30
+      selector:
+        number:
+          min: 10
+          max: 1080
+          unit_of_measurement: minutes
