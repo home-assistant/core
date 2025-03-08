@@ -14,7 +14,12 @@ from pyheos import (
 import pytest
 
 from homeassistant.components.heos.const import DOMAIN
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_SSDP,
+    SOURCE_USER,
+    ConfigEntryState,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -158,6 +163,22 @@ async def test_discovery_aborts_same_system(
     assert result["reason"] == "single_instance_allowed"
     assert controller.get_system_info.call_count == 1
     assert config_entry.data[CONF_HOST] == "127.0.0.1"
+
+
+async def test_discovery_ignored_aborts(
+    hass: HomeAssistant,
+    discovery_data: SsdpServiceInfo,
+) -> None:
+    """Test discovery aborts when ignored."""
+    MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, source=SOURCE_IGNORE).add_to_hass(
+        hass
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_discovery_fails_to_connect_aborts(
