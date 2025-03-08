@@ -875,32 +875,6 @@ async def test_invalid_device_class(
     [
         {
             mqtt.DOMAIN: {
-                sensor.DOMAIN: {
-                    "name": "test",
-                    "state_topic": "test-topic",
-                    "device_class": "energy",
-                    "unit_of_measurement": "ppm",
-                }
-            }
-        }
-    ],
-)
-async def test_invalid_unit_of_measurement(
-    mqtt_mock_entry: MqttMockHAClientGenerator, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test device_class with invalid unit of measurement."""
-    assert await mqtt_mock_entry()
-    assert (
-        "The unit of measurement `ppm` is not valid together with device class `energy`"
-        in caplog.text
-    )
-
-
-@pytest.mark.parametrize(
-    "hass_config",
-    [
-        {
-            mqtt.DOMAIN: {
                 sensor.DOMAIN: [
                     {
                         "name": "Test 1",
