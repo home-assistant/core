@@ -1,7 +1,6 @@
 """Test KNX expose."""
 
 from datetime import timedelta
-import zoneinfo
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
@@ -16,7 +15,6 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
 from .conftest import KNXTestKit
 
@@ -363,7 +361,7 @@ async def test_expose_with_date(
     hass: HomeAssistant, knx: KNXTestKit, time_type: str, raw: tuple[int, ...]
 ) -> None:
     """Test an expose with a date."""
-    dt_util.set_default_time_zone(zoneinfo.ZoneInfo("Europe/Vienna"))
+    await hass.config.async_set_time_zone("Europe/Vienna")
     await knx.setup_integration(
         {
             CONF_KNX_EXPOSE: {
