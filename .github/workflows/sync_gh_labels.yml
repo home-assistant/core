@@ -1,0 +1,42 @@
+name: Sync GitHub integration labels
+run-name: "${{ github.event_name == 'workflow_dispatch' && format('Sync GitHub integration labels: {0}', github.ref_name) || '' }}"
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches: ["dev"]
+    paths: ["homeassistant/components/*/manifest.json"]
+jobs:
+  sync-github-labels:
+    name: Sync GitHub integration labels
+    runs-on: ubuntu-24.04
+    if: github.repository_owner == 'home-assistant'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.2.2
+      - name: Sync integration labels
+        run: |
+          gh_labels=$(gh api /repos/${OWNER}/${REPO}/labels \
+            --paginate \
+            --jq '.[] | select(.name | startswith("integration: ")) | "\(.name)|\(.description);"')
+          for integration_manifest in homeassistant/components/*/manifest.json; do
+            IFS='|' read -ra manifest <<< "$(jq -r '"integration: \(.domain)|\(.name)"' $integration_manifest)"
+            label_name="${manifest[0]}"
+            label_desc="${manifest[1]}"
+            if [[ $gh_labels == *"$label_name|$label_desc;"* ]] ; then
+              # label found and description is correct
+              continue
+            elif [[ $gh_labels == *"$label_name|"* ]] ; then
+              # label found but description is not correct
+              gh api --method PATCH --silent "/repos/${OWNER}/${REPO}/labels/$label_name" -f "description=$label_desc"
+              echo "label '$label_name' updated"
+            else
+              # label not found
+              gh api --silent /repos/${OWNER}/${REPO}/labels -f "name=$label_name" -f "description=$label_desc" -f "color=ededed"
+              echo "label '$label_name' created"
+            fi
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
