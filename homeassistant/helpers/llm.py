@@ -522,6 +522,14 @@ def _get_exposed_entities(
             "state": state.state,
         }
 
+        device_class = state.attributes.get("device_class")
+        # Convert timestamp device_class states from UTC to local time
+        if device_class == "timestamp" and state.state:
+            parsed_utc = dt_util.parse_datetime(state.state)
+            if parsed_utc is not None:
+                local_dt = dt_util.as_local(parsed_utc)
+                info["state"] = local_dt.isoformat()
+
         if description:
             info["description"] = description
 
