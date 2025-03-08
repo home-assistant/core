@@ -62,7 +62,7 @@ class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
             except RequestParametersError:
                 errors["base"] = "invalid_api_key"
             else:
-                await self.async_set_unique_id("NSAPI" + self.api_key[0:2])
+                await self.async_set_unique_id(self.api_key)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title="NS API", data={CONF_API_KEY: self.api_key}
