@@ -88,6 +88,35 @@ async def test_create_entry_when_host_valid(
     assert controller.disconnect.call_count == 1
 
 
+async def test_manual_setup_with_discovery_in_progress(
+    hass: HomeAssistant,
+    discovery_data: SsdpServiceInfo,
+    controller: MockHeos,
+    system: HeosSystem,
+) -> None:
+    """Test user can manually set up when discovery is in progress."""
+    # Single discovered, selects preferred host, shows confirm
+    controller.get_system_info.return_value = system
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_discovery"
+
+    # Setup manually
+    user_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert user_result["type"] is FlowResultType.FORM
+    user_result = await hass.config_entries.flow.async_configure(
+        user_result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
+    )
+    assert user_result["type"] is FlowResultType.CREATE_ENTRY
+
+    # Discovery flow is removed
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
 async def test_discovery(
     hass: HomeAssistant,
     discovery_data: SsdpServiceInfo,
