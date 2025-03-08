@@ -193,7 +193,7 @@ async def test_zeroconf_flow_auth(
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_smlight_client.get_info.mock_calls) == 3
+    assert len(mock_smlight_client.get_info.mock_calls) == 2
 
 
 async def test_zeroconf_unsupported_abort(
@@ -406,7 +406,7 @@ async def test_user_invalid_auth(
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_smlight_client.get_info.mock_calls) == 3
+    assert len(mock_smlight_client.get_info.mock_calls) == 2
 
 
 async def test_user_cannot_connect(
@@ -443,7 +443,7 @@ async def test_user_cannot_connect(
     assert result2["title"] == "SLZB-06p7"
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_smlight_client.get_info.mock_calls) == 3
+    assert len(mock_smlight_client.get_info.mock_calls) == 2
 
 
 async def test_auth_cannot_connect(
