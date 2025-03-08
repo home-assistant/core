@@ -60,11 +60,16 @@ class FibaroEventEntity(FibaroEntity, EventEntity):
         await super().async_added_to_hass()
 
         # Register event callback
-        self.controller.register_event(
-            self.fibaro_device.fibaro_id, self._event_callback
+        self.async_on_remove(
+            self.controller.register_event(
+                self.fibaro_device.fibaro_id, self._event_callback
+            )
         )
 
     def _event_callback(self, event: FibaroEvent) -> None:
-        if event.key_id == self._button:
+        if (
+            event.event_type.lower() == "centralsceneevent"
+            and event.key_id == self._button
+        ):
             self._trigger_event(event.key_event_type)
             self.schedule_update_ha_state()
