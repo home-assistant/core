@@ -22,7 +22,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from . import MockHeos
@@ -114,8 +114,7 @@ async def test_manual_setup_with_discovery_in_progress(
     assert user_result["type"] is FlowResultType.CREATE_ENTRY
 
     # Discovery flow is removed
-    with pytest.raises(UnknownFlow):
-        hass.config_entries.flow.async_get(result["flow_id"])
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
 async def test_discovery(
