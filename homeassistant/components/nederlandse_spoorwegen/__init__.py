@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.runtime_data = NederlandseSpoorwegenData(nsapi)
     except RequestParametersError as ex:
         raise ConfigEntryAuthFailed(
-            "Could not insantiate the Nederlandse Spoorwegen API."
+            "Could not instantiate the Nederlandse Spoorwegen API."
         ) from ex
     else:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -45,6 +45,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def update_listener(hass, entry):
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Handle update."""
     await hass.config_entries.async_reload(entry.entry_id)
