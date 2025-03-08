@@ -788,12 +788,13 @@ async def _async_resolve_domains_and_preload(
         if domain in domains_to_setup
     }
     all_integrations_to_setup = integrations_to_setup.copy()
-    for domain in integrations_to_setup:
-        for dep in integrations_dependencies[domain]:
-            if dep in all_integrations_to_setup:
-                continue
-            dep_itg = loader.async_get_loaded_integration(hass, dep)
-            all_integrations_to_setup[dep] = dep_itg
+    all_integrations_to_setup |= (
+        (dep, loader.async_get_loaded_integration(hass, dep))
+        for domain in integrations_to_setup
+        for dep in integrations_dependencies[domain].difference(
+            all_integrations_to_setup
+        )
+    )
 
     integrations_requirements = {
         domain: itg.requirements for domain, itg in integrations_to_process.items()
@@ -803,12 +804,11 @@ async def _async_resolve_domains_and_preload(
             hass, integrations_to_process.values(), ignore_exceptions=True
         )
     )
-    for deps in integrations_after_dependencies.values():
-        for dep in deps:
-            if dep in integrations_requirements:
-                continue
-            dep_itg = loader.async_get_loaded_integration(hass, dep)
-            integrations_requirements[dep] = dep_itg.requirements
+    integrations_requirements |= (
+        (dep, loader.async_get_loaded_integration(hass, dep).requirements)
+        for deps in integrations_after_dependencies.values()
+        for dep in deps.difference(integrations_requirements)
+    )
     all_requirements = set(chain.from_iterable(integrations_requirements.values()))
 
     # Optimistically check if requirements are already installed
