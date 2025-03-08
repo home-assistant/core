@@ -127,9 +127,7 @@ def mute_volume(
 
 
 async def async_set_volume_level(
-    hass: HomeAssistant,
-    volume: float,
-    entity_id: str = ENTITY_MATCH_ALL,
+    hass: HomeAssistant, volume: float, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Send the media player the command for setting the volume."""
     data = {ATTR_MEDIA_VOLUME_LEVEL: volume}
@@ -142,9 +140,7 @@ async def async_set_volume_level(
 
 @bind_hass
 def set_volume_level(
-    hass: HomeAssistant,
-    volume: float,
-    entity_id: str = ENTITY_MATCH_ALL,
+    hass: HomeAssistant, volume: float, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Send the media player the command for setting the volume."""
     hass.add_job(async_set_volume_level, hass, volume, entity_id)
