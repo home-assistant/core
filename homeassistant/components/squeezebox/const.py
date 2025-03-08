@@ -3,6 +3,7 @@
 CONF_HTTPS = "https"
 DISCOVERY_TASK = "discovery_task"
 DOMAIN = "squeezebox"
+DOMAIN_SERVER = DOMAIN + "_server"
 DEFAULT_PORT = 9000
 KNOWN_PLAYERS = "known_players"
 KNOWN_SERVERS = "known_servers"
