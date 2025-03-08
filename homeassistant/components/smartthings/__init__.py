@@ -18,6 +18,7 @@ from pysmartthings import (
     SmartThingsAuthenticationFailedError,
     Status,
 )
+from pysmartthings.exceptions import SmartThingsSinkError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
@@ -33,6 +34,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from .const import (
     CONF_INSTALLED_APP_ID,
     CONF_LOCATION_ID,
+    CONF_SUBSCRIPTION_URL,
     DOMAIN,
     EVENT_BUTTON,
     MAIN,
@@ -100,6 +102,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     client.refresh_token_function = _refresh_token
 
+    def _handle_new_subscription_url(url: str) -> None:
+        """Handle a new subscription URL."""
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_SUBSCRIPTION_URL: url}
+        )
+
+    client.refresh_subscription_url_function = _handle_new_subscription_url
+
     device_status: dict[str, FullDevice] = {}
     try:
         rooms = {
@@ -107,9 +117,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             for room in await client.get_rooms(location_id=entry.data[CONF_LOCATION_ID])
         }
         devices = await client.get_devices()
+        entry.async_create_background_task(
+            hass,
+            client.subscribe(
+                entry.data[CONF_LOCATION_ID],
+                entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
+                entry.data.get(CONF_SUBSCRIPTION_URL),
+            ),
+            "smartthings_socket",
+        )
         for device in devices:
             status = process_status(await client.get_device_status(device.device_id))
             device_status[device.device_id] = FullDevice(device=device, status=status)
+    except SmartThingsSinkError as err:
+        raise ConfigEntryNotReady from err
     except SmartThingsAuthenticationFailedError as err:
         raise ConfigEntryAuthFailed from err
 
@@ -169,14 +190,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     entry.async_on_unload(
         client.add_unspecified_device_event_listener(handle_button_press)
-    )
-
-    entry.async_create_background_task(
-        hass,
-        client.subscribe(
-            entry.data[CONF_LOCATION_ID], entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID]
-        ),
-        "smartthings_webhook",
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
