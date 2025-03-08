@@ -61,6 +61,8 @@ build.json @home-assistant/supervisor
 /tests/components/air_quality/ @home-assistant/core
 /homeassistant/components/airgradient/ @airgradienthq @joostlek
 /tests/components/airgradient/ @airgradienthq @joostlek
+/homeassistant/components/airios/ @scabrero
+/tests/components/airios/ @scabrero
 /homeassistant/components/airly/ @bieniu
 /tests/components/airly/ @bieniu
 /homeassistant/components/airnow/ @asymworks
