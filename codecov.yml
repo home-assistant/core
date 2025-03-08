@@ -39,7 +39,6 @@ coverage:
           - homeassistant/components/*/media_source.py
           - homeassistant/components/*/recorder.py
           - homeassistant/components/*/scene.py
-comment: false
 
 # To make partial tests possible,
 # we need to carry forward.
