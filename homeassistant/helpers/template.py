@@ -6,7 +6,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Generator, Iterable, MutableSequence
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
 from copy import deepcopy
@@ -2736,6 +2736,54 @@ def iif(
     return if_false
 
 
+def shuffle(*args: Any, seed: Any = None) -> MutableSequence[Any]:
+    """Shuffle a list, either with a seed or without."""
+    if not args:
+        raise TypeError("shuffle expected at least 1 argument, got 0")
+
+    # If first argument is iterable and more than 1 argument provided
+    # but not a named seed, then use 2nd argument as seed.
+    if isinstance(args[0], Iterable):
+        items = list(args[0])
+        if len(args) > 1 and seed is None:
+            seed = args[1]
+    elif len(args) == 1:
+        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
+    else:
+        items = list(args)
+
+    if seed:
+        r = random.Random(seed)
+        r.shuffle(items)
+    else:
+        random.shuffle(items)
+    return items
+
+
+def typeof(value: Any) -> Any:
+    """Return the type of value passed to debug types."""
+    return value.__class__.__name__
+
+
+def flatten(value: Iterable[Any], levels: int | None = None) -> list[Any]:
+    """Flattens list of lists."""
+    if not isinstance(value, Iterable) or isinstance(value, str):
+        raise TypeError(f"flatten expected a list, got {type(value).__name__}")
+
+    flattened: list[Any] = []
+    for item in value:
+        if isinstance(item, Iterable) and not isinstance(item, str):
+            if levels is None:
+                flattened.extend(flatten(item))
+            elif levels >= 1:
+                flattened.extend(flatten(item, levels=(levels - 1)))
+            else:
+                flattened.append(item)
+        else:
+            flattened.append(item)
+    return flattened
+
+
 class TemplateContextManager(AbstractContextManager):
     """Context manager to store template being parsed or rendered in a ContextVar."""
 
@@ -2936,6 +2984,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["bool"] = forgiving_boolean
         self.filters["version"] = version
         self.filters["contains"] = contains
+        self.filters["shuffle"] = shuffle
+        self.filters["typeof"] = typeof
+        self.filters["flatten"] = flatten
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2973,6 +3024,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["bool"] = forgiving_boolean
         self.globals["version"] = version
         self.globals["zip"] = zip
+        self.globals["shuffle"] = shuffle
+        self.globals["typeof"] = typeof
+        self.globals["flatten"] = flatten
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
         self.tests["set"] = _is_set
