@@ -25,7 +25,7 @@ from .coordinator import WallboxCoordinator
 from .entity import WallboxEntity
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class WallboxSelectEntityDescription(SelectEntityDescription):
     """Describes Wallbox select entity."""
 
@@ -37,14 +37,14 @@ SELECT_TYPES: dict[str, WallboxSelectEntityDescription] = {
     CHARGER_SOLAR_CHARGING_MODE: WallboxSelectEntityDescription(
         key=CHARGER_SOLAR_CHARGING_MODE,
         translation_key="eco_smart",
-        select_option_fn=lambda coordinator, mode: coordinator.async_set_eco_smart(
-            mode
-        ),
         options=[
             EcoSmartMode.OFF,
             EcoSmartMode.ECO_MODE,
             EcoSmartMode.FULL_SOLAR,
         ],
+        select_option_fn=lambda coordinator, mode: coordinator.async_set_eco_smart(
+            mode
+        ),
         current_option_fn=lambda coordinator: coordinator.data[
             CHARGER_SOLAR_CHARGING_MODE
         ],
@@ -61,7 +61,7 @@ async def async_setup_entry(
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        WallboxSelect(coordinator, entry, description)
+        WallboxSelect(coordinator, description)
         for ent in coordinator.data
         if (description := SELECT_TYPES.get(ent))
     )
@@ -75,7 +75,6 @@ class WallboxSelect(WallboxEntity, SelectEntity):
     def __init__(
         self,
         coordinator: WallboxCoordinator,
-        entry: ConfigEntry,
         description: WallboxSelectEntityDescription,
     ) -> None:
         """Initialize a Wallbox select entity."""
