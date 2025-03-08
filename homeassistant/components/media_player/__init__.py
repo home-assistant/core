@@ -842,6 +842,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def _async_set_volume_level(
         self, volume: float, step: float | None = None
     ) -> None:
+        """Set volume level, and optionally the step amount."""
         if step:
             self._attr_volume_step = step
         await self.async_set_volume_level(volume)
