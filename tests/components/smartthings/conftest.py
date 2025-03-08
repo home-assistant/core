@@ -123,6 +123,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "generic_fan_3_speed",
         "heatit_ztrm3_thermostat",
         "generic_ef00_v1",
+        "bosch_radiator_thermostat_ii",
     ]
 )
 def device_fixture(
