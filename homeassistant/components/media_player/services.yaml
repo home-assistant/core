@@ -70,7 +70,7 @@ volume_step_set:
     entity:
       domain: media_player
       supported_features:
-        - media_player.MediaPlayerEntityFeature.VOLUME_STEP_SET
+        - media_player.MediaPlayerEntityFeature.VOLUME_SET
   fields:
     volume_step:
       required: true
