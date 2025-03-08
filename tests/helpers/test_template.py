@@ -15,6 +15,7 @@ from unittest.mock import patch
 from freezegun import freeze_time
 import orjson
 import pytest
+from pytest_unordered import unordered
 from syrupy import SnapshotAssertion
 import voluptuous as vol
 
@@ -149,6 +150,7 @@ async def test_template_render_info_collision(hass: HomeAssistant) -> None:
         template_obj.async_render_to_info()
 
 
+@pytest.mark.usefixtures("hass")
 def test_template_equality() -> None:
     """Test template comparison and hashing."""
     template_one = template.Template("{{ template_one }}")
@@ -5166,6 +5168,7 @@ def test_iif(hass: HomeAssistant) -> None:
     assert tpl.async_render() == "no"
 
 
+@pytest.mark.usefixtures("hass")
 async def test_cache_garbage_collection() -> None:
     """Test caching a template."""
     template_string = (
@@ -6670,3 +6673,54 @@ async def test_merge_response_not_mutate_original_object(
 
     tpl = template.Template(_template, hass)
     assert tpl.async_render()
+
+
+def test_shuffle(hass: HomeAssistant) -> None:
+    """Test the shuffle function and filter."""
+    assert list(
+        template.Template("{{ [1, 2, 3] | shuffle }}", hass).async_render()
+    ) == unordered([1, 2, 3])
+
+    assert list(
+        template.Template("{{ shuffle([1, 2, 3]) }}", hass).async_render()
+    ) == unordered([1, 2, 3])
+
+    assert list(
+        template.Template("{{ shuffle(1, 2, 3) }}", hass).async_render()
+    ) == unordered([1, 2, 3])
+
+    assert list(template.Template("{{ shuffle([]) }}", hass).async_render()) == []
+
+    assert list(template.Template("{{ [] | shuffle }}", hass).async_render()) == []
+
+    # Testing using seed
+    assert list(
+        template.Template("{{ shuffle([1, 2, 3], 'seed') }}", hass).async_render()
+    ) == [2, 3, 1]
+
+    assert list(
+        template.Template(
+            "{{ shuffle([1, 2, 3], seed='seed') }}",
+            hass,
+        ).async_render()
+    ) == [2, 3, 1]
+
+    assert list(
+        template.Template(
+            "{{ [1, 2, 3] | shuffle('seed') }}",
+            hass,
+        ).async_render()
+    ) == [2, 3, 1]
+
+    assert list(
+        template.Template(
+            "{{ [1, 2, 3] | shuffle(seed='seed') }}",
+            hass,
+        ).async_render()
+    ) == [2, 3, 1]
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ 1 | shuffle }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ shuffle() }}", hass).async_render()

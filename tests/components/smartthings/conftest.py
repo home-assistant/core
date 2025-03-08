@@ -8,6 +8,7 @@ from pysmartthings.models import (
     DeviceResponse,
     DeviceStatus,
     LocationResponse,
+    RoomResponse,
     SceneResponse,
 )
 import pytest
@@ -78,12 +79,16 @@ def mock_smartthings() -> Generator[AsyncMock]:
         client.get_locations.return_value = LocationResponse.from_json(
             load_fixture("locations.json", DOMAIN)
         ).items
+        client.get_rooms.return_value = RoomResponse.from_json(
+            load_fixture("rooms.json", DOMAIN)
+        ).items
         yield client
 
 
 @pytest.fixture(
     params=[
         "da_ac_rac_000001",
+        "da_ac_rac_100001",
         "da_ac_rac_01001",
         "multipurpose_sensor",
         "contact_sensor",
@@ -100,6 +105,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "da_wm_dw_000001",
         "da_wm_wd_000001",
         "da_wm_wm_000001",
+        "da_wm_wm_000001_1",
         "da_rvc_normal_000001",
         "da_ks_microwave_0101x",
         "hue_color_temperature_bulb",
@@ -114,6 +120,10 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "ecobee_sensor",
         "ecobee_thermostat",
         "fake_fan",
+        "generic_fan_3_speed",
+        "heatit_ztrm3_thermostat",
+        "generic_ef00_v1",
+        "bosch_radiator_thermostat_ii",
     ]
 )
 def device_fixture(

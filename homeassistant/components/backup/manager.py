@@ -30,6 +30,7 @@ from homeassistant.backup_restore import (
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
+    frame,
     instance_id,
     integration_platform,
     issue_registry as ir,
@@ -64,6 +65,7 @@ from .models import (
     AgentBackup,
     BackupError,
     BackupManagerError,
+    BackupNotFound,
     BackupReaderWriterError,
     BaseBackup,
     Folder,
@@ -648,6 +650,8 @@ class BackupManager:
         )
         for idx, result in enumerate(get_backup_results):
             agent_id = agent_ids[idx]
+            if isinstance(result, BackupNotFound):
+                continue
             if isinstance(result, BackupAgentError):
                 agent_errors[agent_id] = result
                 continue
@@ -659,7 +663,14 @@ class BackupManager:
                 continue
             if isinstance(result, BaseException):
                 raise result  # unexpected error
+            # Check for None to be backwards compatible with the old BackupAgent API,
+            # this can be removed in HA Core 2025.10
             if not result:
+                frame.report_usage(
+                    "returns None from BackupAgent.async_get_backup",
+                    breaks_in_ha_version="2025.10",
+                    integration_domain=agent_id.partition(".")[0],
+                )
                 continue
             if backup is None:
                 if known_backup := self.known_backups.get(backup_id):
@@ -723,6 +734,8 @@ class BackupManager:
         )
         for idx, result in enumerate(delete_backup_results):
             agent_id = agent_ids[idx]
+            if isinstance(result, BackupNotFound):
+                continue
             if isinstance(result, BackupAgentError):
                 agent_errors[agent_id] = result
                 continue
@@ -832,7 +845,7 @@ class BackupManager:
         agent_errors = {
             backup_id: error
             for backup_id, error in zip(backup_ids, delete_results, strict=True)
-            if error
+            if error and not isinstance(error, BackupNotFound)
         }
         if agent_errors:
             LOGGER.error(
@@ -1264,7 +1277,20 @@ class BackupManager:
     ) -> None:
         """Initiate restoring a backup."""
         agent = self.backup_agents[agent_id]
-        if not await agent.async_get_backup(backup_id):
+        try:
+            backup = await agent.async_get_backup(backup_id)
+        except BackupNotFound as err:
+            raise BackupManagerError(
+                f"Backup {backup_id} not found in agent {agent_id}"
+            ) from err
+        # Check for None to be backwards compatible with the old BackupAgent API,
+        # this can be removed in HA Core 2025.10
+        if not backup:
+            frame.report_usage(
+                "returns None from BackupAgent.async_get_backup",
+                breaks_in_ha_version="2025.10",
+                integration_domain=agent_id.partition(".")[0],
+            )
             raise BackupManagerError(
                 f"Backup {backup_id} not found in agent {agent_id}"
             )
@@ -1352,7 +1378,20 @@ class BackupManager:
             agent = self.backup_agents[agent_id]
         except KeyError as err:
             raise BackupManagerError(f"Invalid agent selected: {agent_id}") from err
-        if not await agent.async_get_backup(backup_id):
+        try:
+            backup = await agent.async_get_backup(backup_id)
+        except BackupNotFound as err:
+            raise BackupManagerError(
+                f"Backup {backup_id} not found in agent {agent_id}"
+            ) from err
+        # Check for None to be backwards compatible with the old BackupAgent API,
+        # this can be removed in HA Core 2025.10
+        if not backup:
+            frame.report_usage(
+                "returns None from BackupAgent.async_get_backup",
+                breaks_in_ha_version="2025.10",
+                integration_domain=agent_id.partition(".")[0],
+            )
             raise BackupManagerError(
                 f"Backup {backup_id} not found in agent {agent_id}"
             )
