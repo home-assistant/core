@@ -36,6 +36,7 @@ class StatisticMixIn(TypedDict, total=False):
     min: float
     max: float
     mean: float
+    circular_mean: float
 
 
 class StatisticData(StatisticDataBase, StatisticMixIn, total=False):
@@ -59,6 +60,7 @@ class StatisticMetaData(TypedDict):
     source: str
     statistic_id: str
     unit_of_measurement: str | None
+    has_circular_mean: bool
 
 
 class CalendarStatisticPeriod(TypedDict, total=False):

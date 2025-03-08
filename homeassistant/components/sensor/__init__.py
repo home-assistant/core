@@ -44,6 +44,7 @@ from .const import (  # noqa: F401
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     NON_NUMERIC_DEVICE_CLASSES,
+    STATE_CLASS_UNITS,
     STATE_CLASSES,
     STATE_CLASSES_SCHEMA,
     UNIT_CONVERTERS,
@@ -711,6 +712,18 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 device_class,
                 [str(unit) if unit else "no unit of measurement" for unit in units],
                 report_issue,
+            )
+
+        # Validate unit of measurement used for sensors with a state class
+        if (
+            state_class
+            and (units := STATE_CLASS_UNITS.get(state_class)) is not None
+            and native_unit_of_measurement not in units
+        ):
+            raise ValueError(
+                f"Sensor {self.entity_id} ({type(self)}) is using native unit of "
+                f"measurement '{native_unit_of_measurement}' which is not a valid unit "
+                f"for the state class ('{state_class}') it is using; expected one of {units};"
             )
 
         return value
