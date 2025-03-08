@@ -14,8 +14,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_fragment
 
-from .const import CONF_URL_PATH, LOVELACE_DATA, ConfigNotFound
+from .const import CONF_URL_PATH, LOVELACE_DATA
 from .dashboard import LovelaceConfig
+from .exceptions import ConfigNotFound
 
 if TYPE_CHECKING:
     from .resources import ResourceStorageCollection
