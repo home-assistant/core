@@ -217,42 +217,42 @@ BINARY_SMART_SENSORS = (
         ),
     ),
     ReolinkSmartBinarySensorEntityDescription(
-        key="linger",
+        key="loitering",
         ai_type="people",
         cmd_id=33,
         translation_key="linger_person",
         value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_state(ch, "linger", loc, "people")
+            api.baichuan.smart_ai_state(ch, "loitering", loc, "people")
         ),
         supported=lambda api, ch, loc: (
             api.supported(ch, "ai_linger")
-            and "people" in api.baichuan.smart_ai_type_list(ch, "linger", loc)
+            and "people" in api.baichuan.smart_ai_type_list(ch, "loitering", loc)
         ),
     ),
     ReolinkSmartBinarySensorEntityDescription(
-        key="linger",
+        key="loitering",
         ai_type="vehicle",
         cmd_id=33,
         translation_key="linger_vehicle",
         value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_state(ch, "linger", loc, "vehicle")
+            api.baichuan.smart_ai_state(ch, "loitering", loc, "vehicle")
         ),
         supported=lambda api, ch, loc: (
             api.supported(ch, "ai_linger")
-            and "vehicle" in api.baichuan.smart_ai_type_list(ch, "linger", loc)
+            and "vehicle" in api.baichuan.smart_ai_type_list(ch, "loitering", loc)
         ),
     ),
     ReolinkSmartBinarySensorEntityDescription(
-        key="linger",
+        key="loitering",
         ai_type="dog_cat",
         cmd_id=33,
         translation_key="linger_dog_cat",
         value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_state(ch, "linger", loc, "dog_cat")
+            api.baichuan.smart_ai_state(ch, "loitering", loc, "dog_cat")
         ),
         supported=lambda api, ch, loc: (
             api.supported(ch, "ai_linger")
-            and "dog_cat" in api.baichuan.smart_ai_type_list(ch, "linger", loc)
+            and "dog_cat" in api.baichuan.smart_ai_type_list(ch, "loitering", loc)
         ),
     ),
     ReolinkSmartBinarySensorEntityDescription(
@@ -378,8 +378,11 @@ class ReolinkSmartBinarySensorEntity(
         """Initialize Reolink binary sensor."""
         self.entity_description = entity_description
         super().__init__(reolink_data, channel)
+        unique_index = self._host.api.baichuan.smart_ai_index(
+            channel, self.entity_description.key, location
+        )
         self._attr_unique_id = (
-            f"{self._attr_unique_id}_{location}_{self.entity_description.ai_type}"
+            f"{self._attr_unique_id}_{unique_index}_{self.entity_description.ai_type}"
         )
 
         self._location = location

@@ -400,7 +400,7 @@
         }
       },
       "forgotten_item": {
-        "name": "Forgotten item {zone_name}",
+        "name": "Item forgotten {zone_name}",
         "state": {
           "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
