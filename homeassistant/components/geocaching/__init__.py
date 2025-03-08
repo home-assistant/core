@@ -1,7 +1,5 @@
 """The Geocaching integration."""
 
-from dataclasses import dataclass
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -14,14 +12,7 @@ from .coordinator import GeocachingDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
-type GeocachingConfigEntry = ConfigEntry[GeocachingData]
-
-
-@dataclass
-class GeocachingData:
-    """Geocaching data class for passing runtime data along with the ConfigEntry."""
-
-    coordinator: GeocachingDataUpdateCoordinator
+type GeocachingConfigEntry = ConfigEntry[GeocachingDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GeocachingConfigEntry) -> bool:
@@ -35,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeocachingConfigEntry) -
 
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = GeocachingData(coordinator=coordinator)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

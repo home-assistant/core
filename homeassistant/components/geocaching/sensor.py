@@ -69,7 +69,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Geocaching sensor entry."""
-    coordinator: GeocachingDataUpdateCoordinator = entry.runtime_data.coordinator
+    coordinator: GeocachingDataUpdateCoordinator = entry.runtime_data
     async_add_entities(
         GeocachingSensor(coordinator, description) for description in SENSORS
     )
