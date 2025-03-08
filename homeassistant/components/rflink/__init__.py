@@ -287,20 +287,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.async_create_task(connect(), eager_start=False)
     async_dispatcher_connect(hass, SIGNAL_EVENT, event_callback)
 
-    async def handle_logging_changed(_: Event | None = None) -> None:
+    async def handle_logging_changed(_: Event) -> None:
         """Handle logging changed event."""
         if LIB_LOGGER.isEnabledFor(logging.DEBUG):
             await RflinkCommand.send_command("rfdebug", "on")
             _LOGGER.info("RFDEBUG enabled")
-        elif _:
+        else:
             await RflinkCommand.send_command("rfdebug", "off")
             _LOGGER.info("RFDEBUG disabled")
-        else:
-            _LOGGER.info("DEBUG not enabled on startUp --> does nothing")
 
-    # Set up RFDEBUG logging on setup if needed
-    hass.async_create_task(handle_logging_changed(), eager_start=False)
-
+    # Listen to EVENT_LOGGING_CHANGED to manage the RFDEBUG
     hass.bus.async_listen(EVENT_LOGGING_CHANGED, handle_logging_changed)
 
     return True
