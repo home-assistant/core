@@ -115,7 +115,7 @@ async def test_manual_setup_with_discovery_in_progress(
 
     # Discovery flow is removed
     with pytest.raises(UnknownFlow):
-        hass.config_entries.flow.async_get(user_result["flow_id"])
+        hass.config_entries.flow.async_get(result["flow_id"])
 
 
 async def test_discovery(
