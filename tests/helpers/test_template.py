@@ -6751,3 +6751,40 @@ def test_typeof(hass: HomeAssistant) -> None:
         template.Template("{{ typeof('Home Assistant') }}", hass).async_render()
         == "str"
     )
+
+
+def test_flatten(hass: HomeAssistant) -> None:
+    """Test the flatten function and filter."""
+    assert template.Template(
+        "{{ flatten([1, [2, [3]], 4, [5 , 6]]) }}", hass
+    ).async_render() == [1, 2, 3, 4, 5, 6]
+
+    assert template.Template(
+        "{{ [1, [2, [3]], 4, [5 , 6]] | flatten }}", hass
+    ).async_render() == [1, 2, 3, 4, 5, 6]
+
+    assert template.Template(
+        "{{ flatten([1, [2, [3]], 4, [5 , 6]], 1) }}", hass
+    ).async_render() == [1, 2, [3], 4, 5, 6]
+
+    assert template.Template(
+        "{{ flatten([1, [2, [3]], 4, [5 , 6]], levels=1) }}", hass
+    ).async_render() == [1, 2, [3], 4, 5, 6]
+
+    assert template.Template(
+        "{{ [1, [2, [3]], 4, [5 , 6]] | flatten(1) }}", hass
+    ).async_render() == [1, 2, [3], 4, 5, 6]
+
+    assert template.Template(
+        "{{ [1, [2, [3]], 4, [5 , 6]] | flatten(levels=1) }}", hass
+    ).async_render() == [1, 2, [3], 4, 5, 6]
+
+    assert template.Template("{{ flatten([]) }}", hass).async_render() == []
+
+    assert template.Template("{{ [] | flatten }}", hass).async_render() == []
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ 'string' | flatten }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ flatten() }}", hass).async_render()
