@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
-import dataclasses
-from datetime import datetime
-from typing import Final
+import asyncio
+from dataclasses import dataclass, replace
+from datetime import date, datetime
+from decimal import Decimal
+import logging
+from typing import Any, Final
 
-from aioecowitt import EcoWittSensor, EcoWittSensorTypes
+from aioecowitt import EcoWittSensor, EcoWittSensorTypes, EcoWittStation
+from aioecowitt.sensor import SENSOR_MAP
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -32,12 +36,18 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from . import EcowittConfigEntry
 from .entity import EcowittEntity
+
+MAX_AGE = 300
+
+_LOGGER = logging.getLogger(__name__)
 
 _METRIC: Final = (
     EcoWittSensorTypes.TEMPERATURE_C,
@@ -217,6 +227,19 @@ ECOWITT_SENSORS_MAPPING: Final = {
 }
 
 
+@dataclass
+class SensorInfo:
+    """Represents information about an Ecowitt sensor, including its key and type."""
+
+    key: str
+    stype: EcoWittSensorTypes
+
+
+SENSOR_INFO_BY_NAME = {
+    mapping.name: SensorInfo(key, mapping.stype) for key, mapping in SENSOR_MAP.items()
+}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EcowittConfigEntry,
@@ -224,21 +247,12 @@ async def async_setup_entry(
 ) -> None:
     """Add sensors if new."""
     ecowitt = entry.runtime_data
+    entities: list[EcowittSensorEntity] = []
+    added_keys = set()
 
-    def _new_sensor(sensor: EcoWittSensor) -> None:
-        """Add new sensor."""
-        if sensor.stype not in ECOWITT_SENSORS_MAPPING:
-            return
-
-        # Ignore metrics that are not supported by the user's locale
-        if sensor.stype in _METRIC and hass.config.units is not METRIC_SYSTEM:
-            return
-        if sensor.stype in _IMPERIAL and hass.config.units is not US_CUSTOMARY_SYSTEM:
-            return
-        mapping = ECOWITT_SENSORS_MAPPING[sensor.stype]
-
+    def _generate_entity(sensor: EcoWittSensor, mapping: Any) -> EcowittSensorEntity:
         # Setup sensor description
-        description = dataclasses.replace(
+        description = replace(
             mapping,
             key=sensor.key,
             name=sensor.name,
@@ -251,22 +265,79 @@ async def async_setup_entry(
             "hourlyrainmm",
             "hourlyrainin",
         ):
-            description = dataclasses.replace(
+            description = replace(
                 description,
                 state_class=SensorStateClass.MEASUREMENT,
             )
 
-        async_add_entities([EcowittSensorEntity(sensor, description)])
+        return EcowittSensorEntity(sensor, description)
 
+    def _new_sensor(*sensors: EcoWittSensor) -> None:
+        """Add new sensor entities if they don't already exist."""
+        new_sensor_entities: list[EcowittSensorEntity] = []
+        for sensor in sensors:
+            if sensor.key in added_keys:
+                _LOGGER.debug("Sensor already added: %s", sensor.key)
+                continue
+
+            if sensor.stype not in ECOWITT_SENSORS_MAPPING:
+                continue
+
+            # Ignore metrics that are not supported by the user's locale
+            if sensor.stype in _METRIC and hass.config.units is not METRIC_SYSTEM:
+                continue
+            if (
+                sensor.stype in _IMPERIAL
+                and hass.config.units is not US_CUSTOMARY_SYSTEM
+            ):
+                continue
+
+            mapping = ECOWITT_SENSORS_MAPPING[sensor.stype]
+            entity = _generate_entity(sensor, mapping)
+            new_sensor_entities.append(entity)
+            added_keys.add(sensor.key)
+        async_add_entities(new_sensor_entities)
+
+    entity_registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+
+    # Restore entities from the entity registry
+    for config_entry in entries:
+        if config_entry.original_name is not None:
+            config_entry_unique_id = config_entry.unique_id.split("-")[0]
+            config_entry_key = config_entry.unique_id.split("-")[1]
+            sensor_info = SENSOR_INFO_BY_NAME.get(config_entry.original_name)
+            if sensor_info is None:
+                return
+            sensor_key_name = sensor_info.key
+            station = EcoWittStation(
+                **entry.data["station"],
+            )
+            sensor = ecowitt.sensors[f"{config_entry_unique_id}.{sensor_key_name}"] = (
+                EcoWittSensor(
+                    name=config_entry.original_name,
+                    key=config_entry_key,
+                    stype=sensor_key_name,  # type: ignore[arg-type]
+                    station=station,
+                )
+            )
+            stype = sensor_info.stype
+            mapping = ECOWITT_SENSORS_MAPPING[stype]
+            entity = _generate_entity(sensor, mapping)
+            entities.append(entity)
+            added_keys.add(config_entry_key)
+
+    async_add_entities(entities)
+
+    # Add new sensors dynamically from webhook data
     ecowitt.new_sensor_cb.append(_new_sensor)
     entry.async_on_unload(lambda: ecowitt.new_sensor_cb.remove(_new_sensor))
 
     # Add all sensors that are already known
-    for sensor in ecowitt.sensors.values():
-        _new_sensor(sensor)
+    _new_sensor(*ecowitt.sensors.values())
 
 
-class EcowittSensorEntity(EcowittEntity, SensorEntity):
+class EcowittSensorEntity(EcowittEntity, RestoreSensor):
     """Representation of a Ecowitt Sensor."""
 
     def __init__(
@@ -275,8 +346,56 @@ class EcowittSensorEntity(EcowittEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(sensor)
         self.entity_description = description
+        self.restored_value: StateType | datetime | date | Decimal = None
+        self.restored_last_reported: datetime | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        if self._attr_native_value is not None:
+            return
+        if (sensor_last_state := await self.async_get_last_state()) is not None:
+            self.restored_last_reported = sensor_last_state.last_reported
+
+        if (sensor_data := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = sensor_data.native_value
+            self._attr_available = True
+            self.restored_value = sensor_data.native_value
+            self.hass.async_create_background_task(
+                self.check_availability(), self.entity_id
+            )
 
     @property
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> StateType | datetime | date | Decimal:
         """Return the state of the sensor."""
-        return self.ecowitt.value
+        if self.ecowitt.value is not None:
+            return self.ecowitt.value
+        return self.restored_value
+
+    @property
+    def available(self) -> bool:
+        """Return whether the state is based on actual reading from device."""
+        if self.ecowitt.value is not None:
+            return super().available
+        if self.restored_last_reported:
+            age = dt_util.utcnow() - self.restored_last_reported
+            if age.seconds >= MAX_AGE:
+                return False
+            if age.seconds < MAX_AGE:
+                return True
+        return False
+
+    async def check_availability(self) -> None:
+        """Return whether the state is based on actual reading from device."""
+        if not self.restored_last_reported:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
+
+        age = dt_util.utcnow() - self.restored_last_reported
+        _LOGGER.debug("%s was last reported %is ago", self.entity_id, age.seconds)
+        await asyncio.sleep(MAX_AGE - age.seconds)
+        new_age = dt_util.utcnow() - self.restored_last_reported
+        if new_age.seconds >= MAX_AGE:
+            self._attr_available = False
+            self.async_write_ha_state()
