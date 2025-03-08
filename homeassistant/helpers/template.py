@@ -2760,6 +2760,30 @@ def shuffle(*args: Any, seed: Any = None) -> MutableSequence[Any]:
     return items
 
 
+def typeof(value: Any) -> Any:
+    """Return the type of value passed to debug types."""
+    return value.__class__.__name__
+
+
+def flatten(value: Iterable[Any], levels: int | None = None) -> list[Any]:
+    """Flattens list of lists."""
+    if not isinstance(value, Iterable) or isinstance(value, str):
+        raise TypeError(f"flatten expected a list, got {type(value).__name__}")
+
+    flattened: list[Any] = []
+    for item in value:
+        if isinstance(item, Iterable) and not isinstance(item, str):
+            if levels is None:
+                flattened.extend(flatten(item))
+            elif levels >= 1:
+                flattened.extend(flatten(item, levels=(levels - 1)))
+            else:
+                flattened.append(item)
+        else:
+            flattened.append(item)
+    return flattened
+
+
 class TemplateContextManager(AbstractContextManager):
     """Context manager to store template being parsed or rendered in a ContextVar."""
 
@@ -2961,6 +2985,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["version"] = version
         self.filters["contains"] = contains
         self.filters["shuffle"] = shuffle
+        self.filters["typeof"] = typeof
+        self.filters["flatten"] = flatten
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2999,6 +3025,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["version"] = version
         self.globals["zip"] = zip
         self.globals["shuffle"] = shuffle
+        self.globals["typeof"] = typeof
+        self.globals["flatten"] = flatten
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
         self.tests["set"] = _is_set

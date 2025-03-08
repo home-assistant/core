@@ -1710,7 +1710,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Completion time',
     'platform': 'smartthings',
@@ -1724,6 +1724,7 @@
 # name: test_all_entities[da_ks_microwave_0101x][sensor.microwave_completion_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
       'friendly_name': 'Microwave Completion time',
     }),
     'context': <ANY>,
@@ -1731,7 +1732,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-02-08T21:13:36.184Z',
+    'state': '2025-02-08T21:13:36+00:00',
   })
 # ---
 # name: test_all_entities[da_ks_microwave_0101x][sensor.microwave_job_state-entry]
