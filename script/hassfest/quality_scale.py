@@ -377,7 +377,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "feedreader",
     "ffmpeg_motion",
     "ffmpeg_noise",
-    "fibaro",
     "fido",
     "file",
     "filesize",
