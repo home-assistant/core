@@ -76,12 +76,12 @@ class ExtendedMediaPlayer(SimpleMediaPlayer):
     def volume_up(self):
         """Turn volume up for media player."""
         if self.volume_level < 1:
-            self.set_volume_level(min(1, self.volume_level + self.volume_step))
+            self.set_volume_level(min(1, self.volume_level + 0.1))
 
     def volume_down(self):
         """Turn volume down for media player."""
         if self.volume_level > 0:
-            self.set_volume_level(max(0, self.volume_level - self.volume_step))
+            self.set_volume_level(max(0, self.volume_level - 0.1))
 
     def media_play_pause(self):
         """Play or pause the media player."""
