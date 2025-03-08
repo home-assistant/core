@@ -12,7 +12,6 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
-    ATTR_MEDIA_VOLUME_STEP,
     DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
@@ -149,34 +148,6 @@ def set_volume_level(
 ) -> None:
     """Send the media player the command for setting the volume."""
     hass.add_job(async_set_volume_level, hass, volume, entity_id)
-
-
-async def async_set_volume_level_and_step(
-    hass: HomeAssistant,
-    volume: float,
-    step: float | None,
-    entity_id: str = ENTITY_MATCH_ALL,
-) -> None:
-    """Send the media player the command for setting the volume."""
-    data = {ATTR_MEDIA_VOLUME_LEVEL: volume}
-    if step is not None:
-        data[ATTR_MEDIA_VOLUME_STEP] = step
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    await hass.services.async_call(DOMAIN, SERVICE_VOLUME_SET, data, blocking=True)
-
-
-@bind_hass
-def set_volume_level_and_step(
-    hass: HomeAssistant,
-    volume: float,
-    step: float | None = None,
-    entity_id: str = ENTITY_MATCH_ALL,
-) -> None:
-    """Send the media player the command for setting the volume."""
-    hass.add_job(async_set_volume_level_and_step, hass, volume, step, entity_id)
 
 
 async def async_media_play_pause(

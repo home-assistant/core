@@ -65,11 +65,14 @@ volume_set:
           max: 1
           step: 0.01
     volume_step:
+      filter:
+        supported_features:
+          - media_player.MediaPlayerEntityFeature.VOLUME_STEP
       required: false
       selector:
         number:
-          min: 0.001
-          max: 0.1
+          min: 0.01
+          max: 1.0
           step: 0.01
 
 media_play_pause:

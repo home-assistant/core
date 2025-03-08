@@ -204,7 +204,7 @@
         },
         "volume_step": {
           "name": "Step",
-          "description": "The volume step amount between 0.001 and 0.1."
+          "description": "The volume step amount between 0.01 and 1."
         }
       }
     },
