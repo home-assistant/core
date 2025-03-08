@@ -860,6 +860,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[im_speaker_ai_0001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '1.0',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'c9276e43-fe3c-88c3-1dcc-2eb79e292b8c',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'SM-V310',
+    'model_id': None,
+    'name': 'Galaxy Home Mini',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'V310XXU1AWK1',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[iphone]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
