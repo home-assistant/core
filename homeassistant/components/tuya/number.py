@@ -309,20 +309,17 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.BACKLIGHT,
             translation_key="backlight_brightness",
-            native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.CONFIG,
-            name = "Backlight",
-            icon="mdi:knob",
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_CORRECTION,
-            translation_key="temp_correction",
+            translation_key="temperature_correction",
             device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
-            native_min_value=-9,
-            native_max_value=9,
-            name = "Temp correction",
-            icon="mdi:thermometer-lines",
+            # native_min_value=-9,
+            # native_max_value=9,
+            # name = "Temp correction",
+            # icon="mdi:thermometer-lines",
         ),
     )
 }

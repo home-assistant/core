@@ -203,7 +203,7 @@
       "backlight_brightness": {
         "name": "Backlight brightness"
       },
-      "temp_correction": {
+      "temperature_correction": {
         "name": "Temperature correction"
       }
     },

@@ -286,7 +286,6 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             key=DPCode.VALVE_STATE,
             translation_key="valve_state",
             on_value="open",
-            name="Heating",
         ),
     ),
     # Thermostatic Radiator Valve

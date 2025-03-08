@@ -94,6 +94,12 @@
       },
       "temperature": {
         "default": "mdi:thermometer"
+      },
+      "temperature_correction": {
+        "default": "mdi:thermometer-lines"
+      },
+      "backlight_brightness": {
+        "default": "mdi:lightbulb-outline"
       }
     },
     "select": {
@@ -159,6 +165,9 @@
       },
       "target_humidity": {
         "default": "mdi:water-percent"
+      },
+      "sensor_choose": {
+        "default": "mdi:thermostat-cog"
       }
     },
     "sensor": {
