@@ -2,6 +2,7 @@
 
 from functools import partial
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
@@ -172,17 +173,31 @@ async def test_browse_media_library_albums(
             "media_content_type": "album",
         }
     )
-
     response = await client.receive_json()
     assert response["success"]
     assert response["result"]["children"] == snapshot
     assert soco_mock.music_library.browse_by_idstring.call_count == 1
 
 
+@pytest.mark.parametrize(
+    ("media_content_id", "media_content_type"),
+    [
+        (
+            "",
+            "favorites",
+        ),
+        (
+            "object.item.audioItem.audioBook",
+            "favorites_folder",
+        ),
+    ],
+)
 async def test_browse_media_favorites(
     async_autosetup_sonos,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
+    media_content_id,
+    media_content_type,
 ) -> None:
     """Test the async_browse_media method."""
     client = await hass_ws_client()
@@ -191,31 +206,10 @@ async def test_browse_media_favorites(
             "id": 1,
             "type": "media_player/browse_media",
             "entity_id": "media_player.zone_a",
-            "media_content_id": "",
-            "media_content_type": "favorites",
+            "media_content_id": media_content_id,
+            "media_content_type": media_content_type,
         }
     )
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"]["children"] == snapshot
-
-
-async def test_browse_media_favorites_audio_books(
-    async_autosetup_sonos,
-    hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the async_browse_media method."""
-    client = await hass_ws_client()
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "media_player/browse_media",
-            "entity_id": "media_player.zone_a",
-            "media_content_id": "object.item.audioItem.audioBook",
-            "media_content_type": "favorites_folder",
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"]["children"] == snapshot
+    assert response["result"] == snapshot
