@@ -55,10 +55,20 @@ IP_BANS_FILE: Final = "ip_bans.yaml"
 NETWORK_BANS_FILE: Final = "network_bans.yaml"
 
 ATTR_BANNED_AT: Final = "banned_at"
-KEY_BANNED_NETWORKS = "networks"
+KEY_BANNED_NETWORKS: Final = "networks"
+KEY_OPTIONS: Final = "options"
+ATTR_NOTIFY: Final = "notify"
+ATTR_LOG: Final = "log"
+
 
 SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
-    {vol.Optional("banned_at"): vol.Any(None, cv.datetime)}
+    {vol.Optional(ATTR_BANNED_AT): vol.Any(None, cv.datetime)}
+)
+SCHEMA_OPTIONS: Final = vol.Schema(
+    {
+        vol.Optional(ATTR_NOTIFY, default=False): cv.boolean,
+        vol.Optional(ATTR_LOG, default=True): cv.boolean,
+    }
 )
 
 
@@ -95,24 +105,28 @@ async def ban_middleware(
     if banned_networks := ban_manager.banned_networks:
         for banned_network in banned_networks:
             if ip_address_ in banned_network:
-                _LOGGER.warning(
-                    "IP %s is in banned network %s, refused",
-                    ip_address_,
-                    banned_network,
-                )
-                # Circular import with websocket_api
-                # pylint: disable=import-outside-toplevel
-                from homeassistant.components import persistent_notification
+                if ban_manager.notify_bans or ban_manager.log_bans:
+                    hass = ban_manager.hass
+                    remote_host = request.remote
+                    with suppress(herror):
+                        remote_host, _, _ = await hass.async_add_executor_job(
+                            gethostbyaddr, request.remote
+                        )
 
-                base_msg = f"Prevented login attempt from {ip_address_} which is in banned network {banned_network}"
-                hass = request.app[KEY_HASS]
-                persistent_notification.async_create(
-                    hass,
-                    f"{base_msg}, see log for details",
-                    "IP address blocked",
-                    NOTIFICATION_ID_BAN,
-                )
-                _LOGGER.warning(base_msg)
+                    base_msg = f"Prevented access attempt from {remote_host} ({ip_address_}) which is in banned network {banned_network}"
+                    if ban_manager.notify_bans:
+                        # Circular import with websocket_api
+                        # pylint: disable=import-outside-toplevel
+                        from homeassistant.components import persistent_notification
+
+                        persistent_notification.async_create(
+                            hass,
+                            f"{base_msg}, see log for details",
+                            "IP address blocked",
+                            NOTIFICATION_ID_BAN,
+                        )
+                    if ban_manager.log_bans:
+                        _LOGGER.warning(base_msg)
                 raise HTTPForbidden
     try:
         return await handler(request)
@@ -246,16 +260,18 @@ class IpBanManager:
         self.banned_networks_path = hass.config.path(NETWORK_BANS_FILE)
         self.ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] = {}
         self.banned_networks: list[ip_network] = []
+        self.notify_bans: bool = True
+        self.log_bans: bool = True
 
     async def async_load(self) -> None:
         """Load the existing IP bans."""
         self.banned_networks: list[ip_network] = []
         try:
-            networks_ = await self.hass.async_add_executor_job(
+            config = await self.hass.async_add_executor_job(
                 load_yaml_config_file, self.banned_networks_path
             )
-            if "networks" in networks_:
-                for network in networks_[KEY_BANNED_NETWORKS]:
+            if KEY_BANNED_NETWORKS in config:
+                for network in config[KEY_BANNED_NETWORKS]:
                     try:
                         self.banned_networks.append(ip_network(network, strict=False))
                     except (AddressValueError, NetmaskValueError, ValueError) as err:
@@ -265,15 +281,19 @@ class IpBanManager:
                             str(err),
                             self.banned_networks_path,
                         )
+                _LOGGER.info("Banned networks: %s", str(self.banned_networks))
             else:
                 _LOGGER.error(
                     "Unable to find key '%s' in %s",
                     KEY_BANNED_NETWORKS,
                     self.banned_networks_path,
                 )
+            if KEY_OPTIONS in config:
+                options = SCHEMA_OPTIONS(config[KEY_OPTIONS])
+                self.notify_bans = options[ATTR_NOTIFY]
+                self.log_bans = options[ATTR_LOG]
 
         except FileNotFoundError:
-            # _LOGGER.info("No banned networks defined: %s", self.banned_networks_path)
             pass
 
         except HomeAssistantError as err:
