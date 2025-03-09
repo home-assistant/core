@@ -312,9 +312,9 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
         name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         self._template = config.get(CONF_STATE)
         if on_action := config.get(CONF_TURN_ON):
-            self.add_script(CONF_TURN_ON, on_action, f"{name} - Turn On", DOMAIN)
+            self.add_script(CONF_TURN_ON, on_action, name, DOMAIN)
         if off_action := config.get(CONF_TURN_OFF):
-            self.add_script(CONF_TURN_OFF, off_action, f"{name} - Turn Off", DOMAIN)
+            self.add_script(CONF_TURN_OFF, off_action, name, DOMAIN)
         self._state: bool | None = None
         self._attr_assumed_state = self._template is None
         if not self._attr_assumed_state:
