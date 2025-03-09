@@ -116,13 +116,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     client.refresh_subscription_url_function = _handle_new_subscription_url
 
     if (subscription_url := entry.data.get(CONF_SUBSCRIPTION_URL)) is None:
-        _LOGGER.debug("There is no subscription URL, creating a new one")
+        _LOGGER.debug("There is no subscription URL, trying to create a new one")
         try:
             subscription = await client.create_subscription(
                 entry.data[CONF_LOCATION_ID],
                 entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
             )
         except SmartThingsSinkError as err:
+            _LOGGER.debug("Couldn't create a new subscription: %s", err)
             raise ConfigEntryNotReady from err
         subscription_url = subscription.registration_url
         _handle_new_subscription_url(subscription_url)
