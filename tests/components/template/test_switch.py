@@ -22,6 +22,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import (
     MockConfigEntry,
     assert_setup_component,
+    async_capture_events,
     mock_component,
     mock_restore_cache,
     mock_restore_cache_with_extra_data,
@@ -744,6 +745,10 @@ async def test_device_id(
                 {
                     "unique_id": "listening-test-event",
                     "trigger": {"platform": "event", "event_type": "test_event"},
+                    "variables": {"type": "{{ trigger.event.data.type }}"},
+                    "action": [
+                        {"event": "action_event", "event_data": {"type": "{{ type }}"}}
+                    ],
                     "switches": {
                         "hello": {
                             **SWITCH_ACTIONS,
@@ -763,6 +768,27 @@ async def test_device_id(
                             "picture": "{{ '/local/dogs2.png' if trigger.event.data.uno_mas is defined else '/local/dogs.png' }}",
                             "icon": "{{ 'mdi:pirate' }}",
                         },
+                        {
+                            "turn_on": {
+                                "event": "switch_event",
+                                "event_data": {
+                                    "entity_id": "{{ this.entity_id }}",
+                                    "type": "{{ type }}",
+                                },
+                            },
+                            "turn_off": {
+                                "event": "switch_event",
+                                "event_data": {
+                                    "entity_id": "{{ this.entity_id }}",
+                                    "type": "{{ type }}",
+                                },
+                            },
+                            "name": "via action",
+                            "unique_id": "via_action-id",
+                            "state": "{{ type == 'duff' }}",
+                            "picture": "{{ '/local/dogs.png' }}",
+                            "icon": "{{ 'mdi:pirate' }}",
+                        },
                     ],
                 },
                 {
@@ -776,10 +802,12 @@ async def test_device_id(
     ],
 )
 @pytest.mark.usefixtures("start_ha")
-async def test_trigger_entity(
+async def test_trigger_switch(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test trigger entity works."""
+    action_events = async_capture_events(hass, "action_event")
+    switch_events = async_capture_events(hass, "switch_event")
     await hass.async_block_till_done()
     state = hass.states.get("switch.hello_name")
     assert state is not None
@@ -794,7 +822,7 @@ async def test_trigger_entity(
     assert state.state == STATE_UNKNOWN
 
     context = Context()
-    hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+    hass.bus.async_fire("test_event", {"beer": 2, "type": "duff"}, context=context)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.hello_name")
@@ -809,7 +837,13 @@ async def test_trigger_entity(
     assert state.attributes.get("entity_picture") == "/local/dogs.png"
     assert state.context is context
 
-    assert len(entity_registry.entities) == 2
+    state = hass.states.get("switch.via_action")
+    assert state.state == STATE_ON
+    assert state.attributes.get("icon") == "mdi:pirate"
+    assert state.attributes.get("entity_picture") == "/local/dogs.png"
+    assert state.context is context
+
+    assert len(entity_registry.entities) == 3
     assert (
         entity_registry.entities["switch.hello_name"].unique_id
         == "listening-test-event-hello_name-id"
@@ -818,13 +852,43 @@ async def test_trigger_entity(
         entity_registry.entities["switch.via_list"].unique_id
         == "listening-test-event-via_list-id"
     )
+    assert (
+        entity_registry.entities["switch.via_action"].unique_id
+        == "listening-test-event-via_action-id"
+    )
+
+    assert len(action_events) == 1
+    assert action_events[0].event_type == "action_event"
+    beer = action_events[0].data.get("type")
+    assert beer is not None
+    assert beer == "duff"
 
     # Even if state itself didn't change, attributes might have changed
-    hass.bus.async_fire("test_event", {"beer": 2, "uno_mas": "si"})
+    hass.bus.async_fire("test_event", {"beer": 2, "type": "duff", "uno_mas": "si"})
     await hass.async_block_till_done()
     state = hass.states.get("switch.via_list")
     assert state.attributes.get("entity_picture") == "/local/dogs2.png"
     assert state.state == STATE_ON
+
+    # Ensure the actions
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {"entity_id": "switch.via_action"},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {"entity_id": "switch.via_action"},
+        blocking=True,
+    )
+
+    assert len(switch_events) == 2
+    assert switch_events[0].event_type == "switch_event"
+    beer = switch_events[0].data.get("type")
+    assert beer is not None
+    assert beer == "duff"
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
