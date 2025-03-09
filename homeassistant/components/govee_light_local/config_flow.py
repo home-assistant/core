@@ -33,9 +33,11 @@ from .const import (
     CONF_LISTENING_PORT_DEFAULT,
     CONF_MANUAL_DEVICES,
     CONF_MULTICAST_ADDRESS_DEFAULT,
+    CONF_OPTION_MODE,
     CONF_TARGET_PORT_DEFAULT,
     DISCOVERY_TIMEOUT,
     DOMAIN,
+    OptionMode,
 )
 from .coordinator import GoveeLocalApiConfig
 
@@ -89,6 +91,9 @@ class GoveeConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
+        if self._async_in_progress() or self._async_current_entries():
+            return self.async_abort(reason="already_in_progress")
+
         if user_input is not None:
             if user_input.get(CONF_AUTO_DISCOVERY):
                 return await self.async_step_govee_discovery()
@@ -114,21 +119,8 @@ class GoveeConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             self._set_confirm_only()
             return self.async_show_form(step_id="govee_discovery")
 
-        # Get current discovered entries.
-        in_progress = self._async_in_progress()
-
-        if not (has_devices := bool(in_progress)):
-            has_devices = await _async_has_devices(self.hass)
-
-        if not has_devices:
+        if not await _async_has_devices(self.hass):
             return self.async_abort(reason="no_devices_found")
-
-        # Cancel the discovered one.
-        for flow in in_progress:
-            self.hass.config_entries.flow.async_abort(flow["flow_id"])
-
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
 
         return self.async_create_entry(title="", data={CONF_AUTO_DISCOVERY: True})
 
@@ -149,6 +141,15 @@ class GoveeOptionsFlowHandler(OptionsFlow):
         super().__init__()
         self._config_entry = config_entry
 
+        self._options = {
+            CONF_MANUAL_DEVICES: set(config_entry.options.get(CONF_MANUAL_DEVICES, [])),
+            CONF_AUTO_DISCOVERY: config_entry.options.get(
+                CONF_AUTO_DISCOVERY,
+                config_entry.data.get(CONF_AUTO_DISCOVERY, True),
+            ),
+            CONF_IPS_TO_REMOVE: set(config_entry.options.get(CONF_IPS_TO_REMOVE, [])),
+        }
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -167,8 +168,13 @@ class GoveeOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Configure auto discovery."""
         if user_input is not None:
+            self._options[CONF_AUTO_DISCOVERY] = user_input[CONF_AUTO_DISCOVERY]
             return self.async_create_entry(
-                title="", data={CONF_AUTO_DISCOVERY: user_input[CONF_AUTO_DISCOVERY]}
+                title="",
+                data={
+                    **self._options,
+                    CONF_OPTION_MODE: OptionMode.CONFIGURE_AUTO_DISCOVERY,
+                },
             )
 
         config: GoveeLocalApiConfig = GoveeLocalApiConfig.from_config_entry(
@@ -193,8 +199,12 @@ class GoveeOptionsFlowHandler(OptionsFlow):
         """Manage the options."""
 
         if user_input is not None:
+            self._options.setdefault(CONF_MANUAL_DEVICES, set()).add(
+                user_input[CONF_DEVICE_IP]
+            )
             return self.async_create_entry(
-                title="", data={CONF_MANUAL_DEVICES: [user_input[CONF_DEVICE_IP]]}
+                title="",
+                data={**self._options, CONF_OPTION_MODE: OptionMode.ADD_DEVICE},
             )
 
         option_schema = {
@@ -212,12 +222,10 @@ class GoveeOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Remove a device."""
         if user_input is not None:
-            ips_to_remove: list[str] = user_input[CONF_IPS_TO_REMOVE]
-            if CONF_MANUAL_DEVICES in self._config_entry.options:
-                for ip in ips_to_remove:
-                    self.config_entry.options[CONF_MANUAL_DEVICES].remove(ip)
+            self._options[CONF_IPS_TO_REMOVE] = user_input[CONF_IPS_TO_REMOVE]
             return self.async_create_entry(
-                title="", data={CONF_IPS_TO_REMOVE: user_input[CONF_IPS_TO_REMOVE]}
+                title="",
+                data={**self._options, CONF_OPTION_MODE: OptionMode.REMOVE_DEVICE},
             )
 
         coordinator = self.config_entry.runtime_data

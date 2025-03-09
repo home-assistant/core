@@ -25,6 +25,7 @@ from .coordinator import (
     GoveeLocalApiConfig,
     GoveeLocalApiCoordinator,
     GoveeLocalConfigEntry,
+    OptionMode,
 )
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
@@ -79,24 +80,26 @@ async def update_options_listener(
     coordinator: GoveeLocalApiCoordinator = config_entry.runtime_data
     config: GoveeLocalApiConfig = GoveeLocalApiConfig.from_config_entry(config_entry)
 
-    if config.manual_devices:
+    if config.option_mode == OptionMode.ADD_DEVICE and config.manual_devices:
         for ip in config.manual_devices:
             if coordinator.get_device_by_ip(ip) is None:
                 coordinator.add_device_to_discovery_queue(ip)
-        await hass.config_entries.async_reload(config_entry.entry_id)
+        # await hass.config_entries.async_reload(config_entry.entry_id)
 
-    if config.ips_to_remove:
+    if config.option_mode == OptionMode.REMOVE_DEVICE and config.ips_to_remove:
         for ip in config.ips_to_remove:
             if device := coordinator.get_device_by_ip(ip):
                 async_dispatcher_send(
                     hass, SIGNAL_GOVEE_DEVICE_REMOVE, device.fingerprint
                 )
-
             coordinator.remove_device_from_discovery_queue(ip)
             config_entry.options[CONF_IPS_TO_REMOVE].remove(ip)
+            config_entry.options[CONF_MANUAL_DEVICES].remove(ip)
+
         await hass.config_entries.async_reload(config_entry.entry_id)
 
-    coordinator.enable_discovery(config.auto_discovery)
+    if config.option_mode == OptionMode.CONFIGURE_AUTO_DISCOVERY:
+        coordinator.enable_discovery(config.auto_discovery)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> bool:

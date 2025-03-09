@@ -19,8 +19,10 @@ from .const import (
     CONF_LISTENING_PORT_DEFAULT,
     CONF_MANUAL_DEVICES,
     CONF_MULTICAST_ADDRESS_DEFAULT,
+    CONF_OPTION_MODE,
     CONF_TARGET_PORT_DEFAULT,
     SCAN_INTERVAL,
+    OptionMode,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,6 +37,7 @@ class GoveeLocalApiConfig:
     auto_discovery: bool
     manual_devices: set[str]
     ips_to_remove: set[str]
+    option_mode: OptionMode | None
 
     @classmethod
     def from_config_entry(cls, config_entry: GoveeLocalConfigEntry) -> Self:
@@ -43,10 +46,13 @@ class GoveeLocalApiConfig:
         config = config_entry.data
         options = config_entry.options
 
+        option_mode: str | None = options.get(CONF_OPTION_MODE, None)
+
         return cls(
             options.get(CONF_AUTO_DISCOVERY, config.get(CONF_AUTO_DISCOVERY, True)),
             set(options.get(CONF_MANUAL_DEVICES, [])),
             set(options.get(CONF_IPS_TO_REMOVE, [])),
+            OptionMode(option_mode) if option_mode else None,
         )
 
 
@@ -149,6 +155,11 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     def discovery_queue(self) -> set[str]:
         """Return a set of devices in the discovery queue."""
         return self._controller.discovery_queue
+
+    @property
+    def discovery_enabled(self) -> bool:
+        """Return if discovery is enabled."""
+        return self._controller.discovery_enabled
 
     async def _async_update_data(self) -> list[GoveeDevice]:
         self._controller.send_update_message()

@@ -1,7 +1,7 @@
 """Test Govee light local config flow."""
 
 from errno import EADDRINUSE
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from govee_local_api import GoveeDevice
 
@@ -12,9 +12,11 @@ from homeassistant.components.govee_light_local.const import (
     CONF_IPS_TO_REMOVE,
     CONF_MANUAL_DEVICES,
     DOMAIN,
+    SIGNAL_GOVEE_DEVICE_REMOVE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .conftest import DEFAULT_CAPABILITIES, set_mocked_devices
 
@@ -36,6 +38,62 @@ def _get_devices(
     for device in devices:
         device.is_manual = is_manual
     return devices
+
+
+async def test_abort_on_multiple_flow_autodiscovery(hass: HomeAssistant) -> None:
+    """Test user flow is aborted when another discovery has happened."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={CONF_AUTO_DISCOVERY: True},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "govee_discovery"
+
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={},
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_in_progress"
+
+
+async def test_abort_on_multiple_flow_maual(hass: HomeAssistant) -> None:
+    """Test user flow is aborted when another discovery has happened."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={CONF_AUTO_DISCOVERY: True},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "govee_discovery"
+
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={CONF_AUTO_DISCOVERY: False},
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_in_progress"
+
+
+async def test_integration_already_exists(hass: HomeAssistant) -> None:
+    """Test we only allow a single config flow."""
+    MockConfigEntry(domain=DOMAIN, data={CONF_AUTO_DISCOVERY: True}).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={CONF_AUTO_DISCOVERY: True},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_creating_entry_has_no_devices(
@@ -290,3 +348,93 @@ async def test_options_flow_remove_device_no_devices(hass: HomeAssistant) -> Non
 
     assert result["type"] == "abort"
     assert result["reason"] == "no_devices"
+
+
+async def test_update_options(hass: HomeAssistant, mock_govee_api: AsyncMock) -> None:
+    """Test update options triggers reload."""
+
+    manual_device = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.100",
+        fingerprint="asdawdqwdqwd",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    manual_device.is_manual = True
+    set_mocked_devices(
+        mock_govee_api,
+        [manual_device],
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_AUTO_DISCOVERY: False},
+        options={},
+    )
+
+    config_entry.add_to_hass(hass)
+    remove_signal = MagicMock()
+    async_dispatcher_connect(hass, SIGNAL_GOVEE_DEVICE_REMOVE, remove_signal)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+
+    hass.config_entries.async_update_entry(
+        config_entry, options={CONF_IPS_TO_REMOVE: ["192.168.1.100"]}
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+    remove_signal.assert_called_once_with("asdawdqwdqwd")
+
+
+async def test_options_flow_add_device_preserves_existing_devices(
+    hass: HomeAssistant, mock_coordinator: AsyncMock, mock_govee_api: AsyncMock
+) -> None:
+    """Test that adding a new manual device preserves existing devices."""
+    # Create a config entry with an existing manual device
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_AUTO_DISCOVERY: False},
+        options={CONF_MANUAL_DEVICES: ["192.168.1.101"]},
+    )
+    config_entry.add_to_hass(hass)
+
+    # Set up the first device
+    existing_device = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.101",
+        fingerprint="device1-fingerprint",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    existing_device.is_manual = True
+
+    set_mocked_devices(mock_govee_api, [existing_device])
+
+    # Add a new device through options flow
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": "add_device"},
+    )
+
+    # Submit the new device configuration
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_DEVICE_IP: "192.168.1.102"},
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["data"] == {CONF_MANUAL_DEVICES: ["192.168.1.101", "192.168.1.102"]}
+
+    # Verify the add_manual_devices method is called with only the new IP
+    mock_coordinator.add_manual_devices.assert_awaited_once_with(["192.168.1.102"])
+
+    # Verify existing device still exists in coordinator
+    assert len(mock_coordinator.devices) == 1
+    assert mock_coordinator.devices[0].ip == "192.168.1.101"

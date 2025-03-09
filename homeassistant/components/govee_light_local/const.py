@@ -1,6 +1,7 @@
 """Constants for the Govee light local integration."""
 
 from datetime import timedelta
+from enum import StrEnum
 
 DOMAIN = "govee_light_local"
 MANUFACTURER = "Govee"
@@ -17,6 +18,14 @@ CONF_AUTO_DISCOVERY = "auto_discovery"
 CONF_MANUAL_DEVICES = "manual_devices"
 CONF_DEVICE_IP = "device_ip"
 CONF_IPS_TO_REMOVE = "ips_to_remove"
-
+CONF_OPTION_MODE = "option_mode"
 
 SIGNAL_GOVEE_DEVICE_REMOVE = "govee_local_govee_device_remove"
+
+
+class OptionMode(StrEnum):
+    """Option mode."""
+
+    ADD_DEVICE = "add_device"
+    REMOVE_DEVICE = "remove_device"
+    CONFIGURE_AUTO_DISCOVERY = "auto_discovery"

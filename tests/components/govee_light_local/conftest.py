@@ -66,6 +66,7 @@ def fixture_mock_govee_api(event_loop: AbstractEventLoop) -> Generator[AsyncMock
     mock_api.get_device_by_ip = MagicMock()
     mock_api.get_device_by_sku = MagicMock()
     mock_api.get_device_by_fingerprint = MagicMock()
+    mock_api.set_discovery_enabled = MagicMock()
 
     type(mock_api).devices = PropertyMock(return_value=[])
 
