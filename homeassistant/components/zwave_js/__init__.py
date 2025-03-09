@@ -134,7 +134,6 @@ from .migrate import async_migrate_discovered_value
 from .services import ZWaveServices
 
 CONNECT_TIMEOUT = 10
-DATA_CLIENT_LISTEN_TASK = "client_listen_task"
 DATA_DRIVER_EVENTS = "driver_events"
 LISTEN_READY_TIMEOUT = 60
 
@@ -224,10 +223,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_register_api(hass)
 
     driver_ready = asyncio.Event()
-    listen_task = hass.async_create_background_task(
+    listen_task = entry.async_create_background_task(
+        hass,
         client_listen(hass, entry, client, driver_ready),
         f"{DOMAIN}_{entry.title}_client_listen",
     )
+
+    entry.async_on_unload(client.disconnect)
 
     async def handle_ha_shutdown(event: Event) -> None:
         """Handle HA shutdown."""
@@ -237,7 +239,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
     )
 
-    driver_ready_task = hass.async_create_task(driver_ready.wait())
+    driver_ready_task = entry.async_create_task(
+        hass, driver_ready.wait(), f"{DOMAIN}_{entry.title}_driver_ready"
+    )
     done, not_done = await asyncio.wait(
         (driver_ready_task, listen_task),
         return_when=asyncio.FIRST_COMPLETED,
@@ -258,7 +262,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry_runtime_data = entry.runtime_data = {
         DATA_CLIENT: client,
-        DATA_CLIENT_LISTEN_TASK: listen_task,
     }
     entry_runtime_data[DATA_DRIVER_EVENTS] = driver_events = DriverEvents(hass, entry)
 
@@ -276,10 +279,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # If the listen task is already failed, we need to raise ConfigEntryNotReady
     if listen_task.done() and (listen_error := listen_task.exception()) is not None:
         await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-        try:
-            await client.disconnect()
-        finally:
-            raise ConfigEntryNotReady(listen_error) from listen_error
+        raise ConfigEntryNotReady(listen_error) from listen_error
 
     # Re-attach trigger listeners.
     # Schedule this call to make sure the config entry is loaded first.
@@ -979,7 +979,7 @@ async def client_listen(
     # All model instances will be replaced when the new state is acquired.
     if not hass.is_stopping:
         LOGGER.debug("Disconnected from server. Reloading integration")
-        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -991,10 +991,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if client.connected and (driver := client.driver):
         await async_disable_server_logging_if_needed(hass, entry, driver)
-
-    listen_task: asyncio.Task[None] = entry_runtime_data[DATA_CLIENT_LISTEN_TASK]
-    listen_task.cancel()
-    await client.disconnect()
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
         addon_manager: AddonManager = get_addon_manager(hass)
