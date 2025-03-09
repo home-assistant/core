@@ -11,6 +11,7 @@ from aioshelly.exceptions import (
     InvalidAuthError,
     MacAddressMismatchError,
 )
+from aioshelly.rpc_device.utils import bluetooth_mac_from_primary_mac
 import pytest
 
 from homeassistant.components.shelly.const import (
@@ -27,7 +28,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.device_registry import DeviceRegistry, format_mac
 from homeassistant.setup import async_setup_component
 
 from . import init_integration, mutate_rpc_device_status
@@ -545,4 +546,6 @@ async def test_bluetooth_cleanup_on_remove_entry(
         await hass.config_entries.async_remove(entry.entry_id)
         await hass.async_block_till_done()
 
-    remove_mock.assert_called_once_with(hass, entry.unique_id.upper())
+    remove_mock.assert_called_once_with(
+        hass, format_mac(bluetooth_mac_from_primary_mac(entry.unique_id)).upper()
+    )
