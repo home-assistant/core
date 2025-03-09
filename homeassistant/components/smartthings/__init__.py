@@ -103,26 +103,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     client.refresh_token_function = _refresh_token
 
-    def _handle_new_subscription_url(url: str) -> None:
+    def _handle_new_subscription_url(url: str | None) -> None:
         """Handle a new subscription URL."""
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_SUBSCRIPTION_URL: url}
         )
+        if url is None:
+            _LOGGER.debug("Couldn't refresh subscription because we hit the limit")
+            hass.config_entries.async_schedule_reload(entry.entry_id)
+            return
+        _LOGGER.debug("Updating subscription URL to %s", url)
 
     client.refresh_subscription_url_function = _handle_new_subscription_url
 
-    async def subscribe() -> None:
-        """Subscribe to the SmartThings event stream."""
+    if (subscription_url := entry.data.get(CONF_SUBSCRIPTION_URL)) is None:
+        _LOGGER.debug("There is no subscription URL, creating a new one")
         try:
-            await client.subscribe(
+            subscription = await client.create_subscription(
                 entry.data[CONF_LOCATION_ID],
                 entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
-                entry.data.get(CONF_SUBSCRIPTION_URL),
             )
-        except (SmartThingsSinkError, SmartThingsForbiddenError) as err:
-            _LOGGER.error("Error subscribing: %s", err)
-            await asyncio.sleep(300)
-            hass.config_entries.async_schedule_reload(entry.entry_id)
+        except SmartThingsSinkError as err:
+            raise ConfigEntryNotReady from err
+        subscription_url = subscription.registration_url
+        _handle_new_subscription_url(subscription_url)
 
     device_status: dict[str, FullDevice] = {}
     try:
@@ -133,7 +137,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         devices = await client.get_devices()
         entry.async_create_background_task(
             hass,
-            subscribe(),
+            client.subscribe(
+                entry.data[CONF_LOCATION_ID],
+                entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
+                subscription_url,
+            ),
             "smartthings_socket",
         )
         for device in devices:
