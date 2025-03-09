@@ -1029,6 +1029,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the NUT sensors."""
+    valid_sensor_types: dict[str, SensorEntityDescription]
 
     pynut_data = config_entry.runtime_data
     coordinator = pynut_data.coordinator
@@ -1036,7 +1037,59 @@ async def async_setup_entry(
     unique_id = pynut_data.unique_id
     status = coordinator.data
 
-    resources = [sensor_id for sensor_id in SENSOR_TYPES if sensor_id in status]
+    # Dynamically add outlet sensors to valid sensors dictionary
+    valid_sensor_types = SENSOR_TYPES
+    if (num_outlets := status.get("outlet.count")) is not None:
+        for outlet_num in range(1, int(num_outlets) + 1):
+            outlet_num_str = str(outlet_num)
+            valid_sensor_types.update(
+                {
+                    f"outlet.{outlet_num!s}.current": SensorEntityDescription(
+                        key=f"outlet.{outlet_num!s}.current",
+                        translation_key="outlet_number_current",
+                        translation_placeholders={"outlet_num": outlet_num_str},
+                        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+                        device_class=SensorDeviceClass.CURRENT,
+                        state_class=SensorStateClass.MEASUREMENT,
+                    ),
+                    f"outlet.{outlet_num!s}.current_status": SensorEntityDescription(
+                        key=f"outlet.{outlet_num!s}.current_status",
+                        translation_key="outlet_number_current_status",
+                        translation_placeholders={"outlet_num": outlet_num_str},
+                        entity_category=EntityCategory.DIAGNOSTIC,
+                        entity_registry_enabled_default=False,
+                    ),
+                    f"outlet.{outlet_num!s}.desc": SensorEntityDescription(
+                        key=f"outlet.{outlet_num!s}.desc",
+                        translation_key="outlet_number_desc",
+                        translation_placeholders={"outlet_num": outlet_num_str},
+                    ),
+                    f"outlet.{outlet_num!s}.name": SensorEntityDescription(
+                        key=f"outlet.{outlet_num!s}.name",
+                        translation_key="outlet_number_name",
+                        translation_placeholders={"outlet_num": outlet_num_str},
+                    ),
+                    f"outlet.{outlet_num!s}.power": SensorEntityDescription(
+                        key=f"outlet.{outlet_num!s}.power",
+                        translation_key="outlet_number_power",
+                        translation_placeholders={"outlet_num": outlet_num_str},
+                        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+                        device_class=SensorDeviceClass.APPARENT_POWER,
+                        state_class=SensorStateClass.MEASUREMENT,
+                    ),
+                    f"outlet.{outlet_num!s}.realpower": SensorEntityDescription(
+                        key=f"outlet.{outlet_num!s}.realpower",
+                        translation_key="outlet_number_realpower",
+                        translation_placeholders={"outlet_num": outlet_num_str},
+                        native_unit_of_measurement=UnitOfPower.WATT,
+                        device_class=SensorDeviceClass.POWER,
+                        state_class=SensorStateClass.MEASUREMENT,
+                    ),
+                }
+            )
+
+    resources = [sensor_id for sensor_id in valid_sensor_types if sensor_id in status]
+
     # Display status is a special case that falls back to the status value
     # of the UPS instead.
     if KEY_STATUS in resources:
