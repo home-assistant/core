@@ -169,21 +169,38 @@ def _migrate_camera_entities_unique_ids(
     entities: list[er.RegistryEntry] = er.async_entries_for_config_entry(
         entity_reg, config_entry.entry_id
     )
+
     mac_or_serial = device.info.mac or device.info.serial_number
+    old_uid_start = f"{mac_or_serial}_"
+    new_uid_start = f"{mac_or_serial}#"
+
     for entity in entities:
-        if entity.domain == "camera":
-            old_uid_start = f"{mac_or_serial}_"
-            new_uid_start = f"{mac_or_serial}#"
-            if (
-                entity.unique_id.startswith(old_uid_start)
-                or entity.unique_id == mac_or_serial
-            ):
-                index = 0
-                if entity.unique_id.startswith(old_uid_start):
-                    index = int(entity.unique_id[len(old_uid_start) :])
-                token = device.profiles[index].token
-                new_uid = f"{new_uid_start}{token}"
-                LOGGER.debug(
-                    "migrate unique id '%s' to '%s'", entity.unique_id, new_uid
+        if entity.domain != Platform.CAMERA:
+            continue
+
+        if (
+            not entity.unique_id.startswith(old_uid_start)
+            and entity.unique_id != mac_or_serial
+        ):
+            continue
+
+        index = 0
+        if entity.unique_id.startswith(old_uid_start):
+            try:
+                index = int(entity.unique_id[len(old_uid_start) :])
+            except ValueError:
+                LOGGER.error(
+                    "Failed to migrate unique id for '%s' as the ONVIF profile index could not be parsed from '%s'",
+                    entity.entity_id,
+                    entity.unique_id,
                 )
-                entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_uid)
+                continue
+        token = device.profiles[index].token
+        new_uid = f"{new_uid_start}{token}"
+        LOGGER.debug(
+            "Migrating unique id for '%s' from '%s' to '%s'",
+            entity.entity_id,
+            entity.unique_id,
+            new_uid,
+        )
+        entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_uid)
