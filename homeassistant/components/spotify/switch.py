@@ -6,7 +6,7 @@ from spotifyaio import ItemType
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SpotifyConfigEntry, SpotifyCoordinator
 from .entity import SpotifyEntity
@@ -18,7 +18,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SpotifyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AirGradient switch entities based on a config entry."""
     async_add_entities(
@@ -41,7 +41,12 @@ class SpotifyLibrarySwitch(SpotifyEntity, SwitchEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self.coordinator.data.current_playback is not None
+        return (
+            super().available
+            and self.coordinator.data.current_playback is not None
+            and self.coordinator.data.current_playback.item is not None
+            and self.coordinator.data.current_playback.item.type is ItemType.TRACK
+        )
 
     @property
     def is_on(self) -> bool | None:
@@ -51,33 +56,21 @@ class SpotifyLibrarySwitch(SpotifyEntity, SwitchEntity):
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.coordinator.async_refresh()
         assert (
             self.coordinator.data.current_playback is not None
             and self.coordinator.data.current_playback.item is not None
         )
-        if self.coordinator.data.current_playback.item.type is ItemType.TRACK:
-            await self.coordinator.client.save_tracks(
-                [self.coordinator.data.current_playback.item.uri]
-            )
-        else:
-            await self.coordinator.client.save_episodes(
-                [self.coordinator.data.current_playback.item.uri]
-            )
+        await self.coordinator.client.save_tracks(
+            [self.coordinator.data.current_playback.item.uri]
+        )
 
     @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.coordinator.async_refresh()
         assert (
             self.coordinator.data.current_playback is not None
             and self.coordinator.data.current_playback.item is not None
         )
-        if self.coordinator.data.current_playback.item.type is ItemType.TRACK:
-            await self.coordinator.client.remove_saved_tracks(
-                [self.coordinator.data.current_playback.item.uri]
-            )
-        else:
-            await self.coordinator.client.remove_saved_episodes(
-                [self.coordinator.data.current_playback.item.uri]
-            )
+        await self.coordinator.client.remove_saved_tracks(
+            [self.coordinator.data.current_playback.item.uri]
+        )
