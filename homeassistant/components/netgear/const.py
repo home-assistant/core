@@ -62,6 +62,7 @@ MODELS_V2 = [
     "RBR",
     "RBS",
     "RBW",
+    "RS",
     "LBK",
     "LBR",
     "CBK",

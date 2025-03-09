@@ -34,6 +34,7 @@ class SupportedModels(StrEnum):
     RELAY_SWITCH_1PM = "relay_switch_1pm"
     RELAY_SWITCH_1 = "relay_switch_1"
     LEAK = "leak"
+    REMOTE = "remote"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -60,6 +61,7 @@ NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
     SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
     SwitchbotModel.LEAK: SupportedModels.LEAK,
+    SwitchbotModel.REMOTE: SupportedModels.REMOTE,
 }
 
 SUPPORTED_MODEL_TYPES = (

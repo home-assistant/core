@@ -11,10 +11,12 @@ import gc
 import itertools
 import logging
 import os
+import pathlib
 import reprlib
 from shutil import rmtree
 import sqlite3
 import ssl
+import sys
 import threading
 from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
@@ -49,7 +51,7 @@ from . import patch_recorder
 # Setup patching of dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip
 
-from homeassistant import core as ha, loader, runner
+from homeassistant import components, core as ha, loader, runner
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant
@@ -82,9 +84,11 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
+    frame,
     issue_registry as ir,
     label_registry as lr,
     recorder as recorder_helper,
+    translation as translation_helper,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.translation import _TranslationsCacheData
@@ -118,6 +122,7 @@ from .common import (  # noqa: E402, isort:skip
     CLIENT_ID,
     INSTANCES,
     MockConfigEntry,
+    MockMqttReasonCode,
     MockUser,
     async_fire_mqtt_message,
     async_test_home_assistant,
@@ -425,10 +430,16 @@ def verify_cleanup(
 
 
 @pytest.fixture(autouse=True)
-def reset_hass_threading_local_object() -> Generator[None]:
-    """Reset the _Hass threading.local object for every test case."""
+def reset_globals() -> Generator[None]:
+    """Reset global objects for every test case."""
     yield
+
+    # Reset the _Hass threading.local object
     ha._hass.__dict__.clear()
+
+    # Reset the frame helper globals
+    frame.async_setup(None)
+    frame._REPORTED_INTEGRATIONS.clear()
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -595,6 +606,7 @@ async def hass(
     async with async_test_home_assistant(loop, load_registries) as hass:
         orig_exception_handler = loop.get_exception_handler()
         loop.set_exception_handler(exc_handle)
+        frame.async_setup(hass)
 
         yield hass
 
@@ -969,17 +981,23 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
         def _async_fire_mqtt_message(topic, payload, qos, retain):
             async_fire_mqtt_message(hass, topic, payload or b"", qos, retain)
             mid = get_mid()
-            hass.loop.call_soon(mock_client.on_publish, 0, 0, mid)
+            hass.loop.call_soon(
+                mock_client.on_publish, Mock(), 0, mid, MockMqttReasonCode(), None
+            )
             return FakeInfo(mid)
 
         def _subscribe(topic, qos=0):
             mid = get_mid()
-            hass.loop.call_soon(mock_client.on_subscribe, 0, 0, mid)
+            hass.loop.call_soon(
+                mock_client.on_subscribe, Mock(), 0, mid, [MockMqttReasonCode()], None
+            )
             return (0, mid)
 
         def _unsubscribe(topic):
             mid = get_mid()
-            hass.loop.call_soon(mock_client.on_unsubscribe, 0, 0, mid)
+            hass.loop.call_soon(
+                mock_client.on_unsubscribe, Mock(), 0, mid, [MockMqttReasonCode()], None
+            )
             return (0, mid)
 
         def _connect(*args, **kwargs):
@@ -988,7 +1006,7 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
             # the behavior.
             mock_client.reconnect()
             hass.loop.call_soon_threadsafe(
-                mock_client.on_connect, mock_client, None, 0, 0, 0
+                mock_client.on_connect, mock_client, None, 0, MockMqttReasonCode()
             )
             mock_client.on_socket_open(
                 mock_client, None, Mock(fileno=Mock(return_value=-1))
@@ -1065,7 +1083,7 @@ async def _mqtt_mock_entry(
 
         # connected set to True to get a more realistic behavior when subscribing
         mock_mqtt_instance.connected = True
-        mqtt_client_mock.on_connect(mqtt_client_mock, None, 0, 0, 0)
+        mqtt_client_mock.on_connect(mqtt_client_mock, None, 0, MockMqttReasonCode())
 
         async_dispatcher_send(hass, mqtt.MQTT_CONNECTION_STATE, True)
         await hass.async_block_till_done()
@@ -1180,15 +1198,31 @@ async def mqtt_mock_entry(
 @pytest.fixture(autouse=True, scope="session")
 def mock_network() -> Generator[None]:
     """Mock network."""
-    with patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=[
-            Mock(
-                nice_name="eth0",
-                ips=[Mock(is_IPv6=False, ip="10.10.10.10", network_prefix=24)],
-                index=0,
-            )
-        ],
+    with (
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=[
+                Mock(
+                    nice_name="eth0",
+                    ips=[Mock(is_IPv6=False, ip="10.10.10.10", network_prefix=24)],
+                    index=0,
+                )
+            ],
+        ),
+        patch(
+            "homeassistant.components.network.async_get_loaded_adapters",
+            return_value=[
+                {
+                    "auto": True,
+                    "default": True,
+                    "enabled": True,
+                    "index": 0,
+                    "ipv4": [{"address": "10.10.10.10", "network_prefix": 24}],
+                    "ipv6": [],
+                    "name": "eth0",
+                }
+            ],
+        ),
     ):
         yield
 
@@ -1211,9 +1245,8 @@ def mock_get_source_ip() -> Generator[_patch]:
 def translations_once() -> Generator[_patch]:
     """Only load translations once per session.
 
-    Warning: having this as a session fixture can cause issues with tests that
-    create mock integrations, overriding the real integration translations
-    with empty ones. Translations should be reset after such tests (see #131628)
+    Note: To avoid issues with tests that mock integrations, translations for
+    mocked integrations are cleaned up by the evict_faked_translations fixture.
     """
     cache = _TranslationsCacheData({}, {})
     patcher = patch(
@@ -1225,6 +1258,30 @@ def translations_once() -> Generator[_patch]:
         yield patcher
     finally:
         patcher.stop()
+
+
+@pytest.fixture(autouse=True, scope="module")
+def evict_faked_translations(translations_once) -> Generator[_patch]:
+    """Clear translations for mocked integrations from the cache after each module."""
+    real_component_strings = translation_helper._async_get_component_strings
+    with patch(
+        "homeassistant.helpers.translation._async_get_component_strings",
+        wraps=real_component_strings,
+    ) as mock_component_strings:
+        yield
+    cache: _TranslationsCacheData = translations_once.kwargs["return_value"]
+    component_paths = components.__path__
+
+    for call in mock_component_strings.mock_calls:
+        integrations: dict[str, loader.Integration] = call.args[3]
+        for domain, integration in integrations.items():
+            if any(
+                pathlib.Path(f"{component_path}/{domain}") == integration.file_path
+                for component_path in component_paths
+            ):
+                continue
+            for loaded_for_lang in cache.loaded.values():
+                loaded_for_lang.discard(domain)
 
 
 @pytest.fixture
@@ -1509,7 +1566,7 @@ async def _async_init_recorder_component(
             assert (recorder.DOMAIN in hass.config.components) == expected_setup_result
         else:
             # Wait for recorder to connect to the database
-            await recorder_helper.async_wait_recorder(hass)
+            await hass.data[recorder_helper.DATA_RECORDER].db_connected
     _LOGGER.info(
         "Test recorder successfully started, database location: %s",
         config[recorder.CONF_DB_URL],
@@ -1841,12 +1898,15 @@ def mock_integration_frame(integration_frame_path: str) -> Generator[Mock]:
     Defaults to calling from `hue` core integration, and can be parametrized
     with `integration_frame_path`.
     """
+    correct_filename = f"/home/paulus/{integration_frame_path}/light.py"
+    correct_module_name = f"{integration_frame_path.replace('/', '.')}.light"
     correct_frame = Mock(
         filename=f"/home/paulus/{integration_frame_path}/light.py",
         lineno="23",
         line="self.light.is_on",
     )
     with (
+        patch.dict(sys.modules, {correct_module_name: Mock(__file__=correct_filename)}),
         patch(
             "homeassistant.helpers.frame.linecache.getline",
             return_value=correct_frame.line,

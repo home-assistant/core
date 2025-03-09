@@ -65,6 +65,19 @@ MOCK_OWPROXY_DEVICES = {
             },
         },
     },
+    "20.111111111111": {
+        ATTR_INJECT_READS: {
+            "/type": [b"DS2450"],
+            "/volt.A": [b"     1.1"],
+            "/volt.B": [b"     2.2"],
+            "/volt.C": [b"     3.3"],
+            "/volt.D": [b"     4.4"],
+            "/latestvolt.A": [b"     1.11"],
+            "/latestvolt.B": [b"     2.22"],
+            "/latestvolt.C": [b"     3.33"],
+            "/latestvolt.D": [b"     4.44"],
+        }
+    },
     "22.111111111111": {
         ATTR_INJECT_READS: {
             "/type": [b"DS1822"],
