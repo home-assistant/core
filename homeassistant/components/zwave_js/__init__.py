@@ -283,11 +283,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Re-attach trigger listeners.
     # Schedule this call to make sure the config entry is loaded first.
-    hass.loop.call_soon(
-        async_dispatcher_send,
-        hass,
-        f"{DOMAIN}_{driver.controller.home_id}_connected_to_server",
-    )
+
+    @callback
+    def on_config_entry_loaded() -> None:
+        """Signal that server connection and driver are ready."""
+        if entry.state is ConfigEntryState.LOADED:
+            async_dispatcher_send(
+                hass,
+                f"{DOMAIN}_{driver.controller.home_id}_connected_to_server",
+            )
+
+    entry.async_on_unload(entry.async_on_state_change(on_config_entry_loaded))
 
     return True
 
@@ -962,7 +968,7 @@ async def client_listen(
         if entry.state != ConfigEntryState.LOADED:
             raise
         LOGGER.error("Failed to listen: %s", err)
-    except Exception as err:  # noqa: BLE001
+    except Exception as err:
         # We need to guard against unknown exceptions to not crash this task.
         LOGGER.exception("Unexpected exception: %s", err)
         if entry.state != ConfigEntryState.LOADED:
