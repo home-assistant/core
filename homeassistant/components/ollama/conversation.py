@@ -292,7 +292,9 @@ class OllamaConversationEntity(
             )
         intent_response.async_set_speech(chat_log.content[-1].content or "")
         return conversation.ConversationResult(
-            response=intent_response, conversation_id=chat_log.conversation_id
+            response=intent_response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
         )
 
     def _trim_history(self, message_history: MessageHistory, max_messages: int) -> None:

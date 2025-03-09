@@ -305,7 +305,9 @@ class AnthropicConversationEntity(
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(response_content.content or "")
         return conversation.ConversationResult(
-            response=intent_response, conversation_id=chat_log.conversation_id
+            response=intent_response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
         )
 
     async def _async_entry_update_listener(
