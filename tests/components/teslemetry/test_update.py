@@ -112,9 +112,6 @@ async def test_update_streaming(
     )
     await hass.async_block_till_done()
 
-    await reload_platform(hass, entry, [Platform.UPDATE])
-
-    # Assert the entities restored their values
     state = hass.states.get("update.test_update")
     assert state == snapshot(name="downloading")
 
@@ -167,4 +164,9 @@ async def test_update_streaming(
     )
     await hass.async_block_till_done()
     state = hass.states.get("update.test_update")
-    assert state == snapshot(name="installing")
+    assert state == snapshot(name="updated")
+
+    await reload_platform(hass, entry, [Platform.UPDATE])
+
+    state = hass.states.get("update.test_update")
+    assert state == snapshot(name="restored")
