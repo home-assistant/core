@@ -96,49 +96,6 @@ async def test_options(
     assert options["data"][CONF_CHAT_MODEL] == RECOMMENDED_CHAT_MODEL
 
 
-async def test_options_non_thinking_model(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
-) -> None:
-    """Test error about models that don't support extending thinking when it is enabled."""
-    options_flow = await hass.config_entries.options.async_init(
-        mock_config_entry.entry_id
-    )
-    options = await hass.config_entries.options.async_configure(
-        options_flow["flow_id"],
-        {
-            "prompt": "Speak like a pirate",
-            "max_tokens": 8192,
-            "chat_model": "claude-3-opus-20240229",
-            "thinking_budget": 1024,
-        },
-    )
-    await hass.async_block_till_done()
-    assert options["type"] is FlowResultType.FORM
-    assert options["errors"] == {"thinking_budget": "model_does_not_support_thinking"}
-
-
-async def test_options_thinking_with_temperature(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
-) -> None:
-    """Test error about extending thinking not being compatible with temperature."""
-    options_flow = await hass.config_entries.options.async_init(
-        mock_config_entry.entry_id
-    )
-    options = await hass.config_entries.options.async_configure(
-        options_flow["flow_id"],
-        {
-            "prompt": "Speak like a pirate",
-            "max_tokens": 8192,
-            "chat_model": "claude-3-7-sonnet-latest",
-            "temperature": 0.3,
-            "thinking_budget": 1024,
-        },
-    )
-    await hass.async_block_till_done()
-    assert options["type"] is FlowResultType.FORM
-    assert options["errors"] == {"temperature": "thinking_budget_incompatible"}
-
-
 async def test_options_thinking_budget_more_than_max(
     hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
@@ -158,7 +115,7 @@ async def test_options_thinking_budget_more_than_max(
     )
     await hass.async_block_till_done()
     assert options["type"] is FlowResultType.FORM
-    assert options["errors"] == {"max_tokens": "thinking_budget_too_large"}
+    assert options["errors"] == {"thinking_budget": "thinking_budget_too_large"}
 
 
 @pytest.mark.parametrize(

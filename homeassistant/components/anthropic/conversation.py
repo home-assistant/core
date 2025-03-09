@@ -26,7 +26,6 @@ from anthropic.types import (
     ThinkingBlockParam,
     ThinkingConfigDisabledParam,
     ThinkingConfigEnabledParam,
-    ThinkingConfigParam,
     ThinkingDelta,
     ToolParam,
     ToolResultBlockParam,
@@ -57,6 +56,7 @@ from .const import (
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_THINKING_BUDGET,
+    THINKING_MODELS,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -370,27 +370,39 @@ class AnthropicConversationEntity(
 
         client = self.entry.runtime_data
 
-        # To prevent infinite loops, we limit the number of iterations
         thinking_budget = options.get(CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET)
-        if thinking_budget < MIN_THINKING_BUDGET:
-            thinking: ThinkingConfigParam = ThinkingConfigDisabledParam(type="disabled")
-        else:
-            thinking = ThinkingConfigEnabledParam(
-                type="enabled", budget_tokens=thinking_budget
-            )
+        model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
 
+        # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
+            if model in THINKING_MODELS and thinking_budget >= MIN_THINKING_BUDGET:
+                model_args = {
+                    "model": model,
+                    "messages": messages,
+                    "tools": tools or NOT_GIVEN,
+                    "max_tokens": options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+                    "system": system.content,
+                    "stream": True,
+                    "thinking": ThinkingConfigEnabledParam(
+                        type="enabled", budget_tokens=thinking_budget
+                    ),
+                }
+            else:
+                model_args = {
+                    "model": model,
+                    "messages": messages,
+                    "tools": tools or NOT_GIVEN,
+                    "max_tokens": options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+                    "system": system.content,
+                    "stream": True,
+                    "thinking": ThinkingConfigDisabledParam(type="disabled"),
+                    "temperature": options.get(
+                        CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+                    ),
+                }
+
             try:
-                stream = await client.messages.create(
-                    model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
-                    messages=messages,
-                    tools=tools or NOT_GIVEN,
-                    max_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
-                    system=system.content,
-                    temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
-                    thinking=thinking,
-                    stream=True,
-                )
+                stream = await client.messages.create(**model_args)
             except anthropic.AnthropicError as err:
                 raise HomeAssistantError(
                     f"Sorry, I had a problem talking to Anthropic: {err}"

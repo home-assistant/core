@@ -33,8 +33,6 @@
       }
     },
     "error": {
-      "model_does_not_support_thinking": "The selected model does not support extended thinking.",
-      "thinking_budget_incompatible": "Temperature must be 1.0 when extended thinking is enabled.",
       "thinking_budget_too_large": "Maximum tokens must be greater than the thinking budget."
     }
   }

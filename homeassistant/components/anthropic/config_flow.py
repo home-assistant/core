@@ -36,12 +36,10 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     DOMAIN,
-    MIN_THINKING_BUDGET,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_THINKING_BUDGET,
-    THINKING_MODELS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -139,29 +137,10 @@ class AnthropicOptionsFlow(OptionsFlow):
                 if user_input[CONF_LLM_HASS_API] == "none":
                     user_input.pop(CONF_LLM_HASS_API)
 
-                thinking_budget = user_input.get(
+                if user_input.get(
                     CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET
-                )
-
-                extended_thinking_enabled: bool = thinking_budget >= MIN_THINKING_BUDGET
-
-                if (
-                    extended_thinking_enabled
-                    and user_input.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
-                    not in THINKING_MODELS
-                ):
-                    errors[CONF_THINKING_BUDGET] = "model_does_not_support_thinking"
-
-                if (
-                    extended_thinking_enabled
-                    and user_input.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE) != 1.0
-                ):
-                    errors[CONF_TEMPERATURE] = "thinking_budget_incompatible"
-
-                if thinking_budget >= user_input.get(
-                    CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
-                ):
-                    errors[CONF_MAX_TOKENS] = "thinking_budget_too_large"
+                ) >= user_input.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS):
+                    errors[CONF_THINKING_BUDGET] = "thinking_budget_too_large"
 
                 if not errors:
                     return self.async_create_entry(title="", data=user_input)
