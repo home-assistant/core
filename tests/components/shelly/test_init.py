@@ -25,7 +25,13 @@ from homeassistant.components.shelly.const import (
     BLEScannerMode,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_PORT,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceRegistry, format_mac
@@ -245,7 +251,7 @@ async def test_sleeping_block_device_online(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "online, resuming setup" in caplog.text
-    assert entry.data["sleep_period"] == device_sleep
+    assert entry.data[CONF_SLEEP_PERIOD] == device_sleep
 
 
 @pytest.mark.parametrize(("entry_sleep", "device_sleep"), [(None, 0), (1000, 1000)])
@@ -267,7 +273,7 @@ async def test_sleeping_rpc_device_online(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "online, resuming setup" in caplog.text
-    assert entry.data["sleep_period"] == device_sleep
+    assert entry.data[CONF_SLEEP_PERIOD] == device_sleep
 
 
 async def test_sleeping_rpc_device_online_new_firmware(
@@ -286,7 +292,7 @@ async def test_sleeping_rpc_device_online_new_firmware(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "online, resuming setup" in caplog.text
-    assert entry.data["sleep_period"] == 1500
+    assert entry.data[CONF_SLEEP_PERIOD] == 1500
 
 
 async def test_sleeping_rpc_device_online_during_setup(
@@ -474,7 +480,7 @@ async def test_entry_missing_port(hass: HomeAssistant) -> None:
     data = {
         CONF_HOST: "192.168.1.37",
         CONF_SLEEP_PERIOD: 0,
-        "model": MODEL_PLUS_2PM,
+        CONF_MODEL: MODEL_PLUS_2PM,
         CONF_GEN: 2,
     }
     entry = await init_integration(hass, 2, data=data, skip_setup=True)
@@ -497,7 +503,7 @@ async def test_rpc_entry_custom_port(hass: HomeAssistant) -> None:
     data = {
         CONF_HOST: "192.168.1.37",
         CONF_SLEEP_PERIOD: 0,
-        "model": MODEL_PLUS_2PM,
+        CONF_MODEL: MODEL_PLUS_2PM,
         CONF_GEN: 2,
         CONF_PORT: 8001,
     }

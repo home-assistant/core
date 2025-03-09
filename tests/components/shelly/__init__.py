@@ -18,7 +18,7 @@ from homeassistant.components.shelly.const import (
     RPC_SENSORS_POLLING_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
@@ -47,7 +47,7 @@ async def init_integration(
         data = {
             CONF_HOST: "192.168.1.37",
             CONF_SLEEP_PERIOD: sleep_period,
-            "model": model,
+            CONF_MODEL: model,
         }
     if gen is not None:
         data[CONF_GEN] = gen
