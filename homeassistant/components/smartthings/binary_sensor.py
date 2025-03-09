@@ -71,7 +71,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.REMOTE_CONTROL_ENABLED: SmartThingsBinarySensorEntityDescription(
             key=Attribute.REMOTE_CONTROL_ENABLED,
             translation_key="remote_control",
-            is_on_key="enabled",
+            is_on_key="true",
         )
     },
     Capability.SOUND_SENSOR: {
