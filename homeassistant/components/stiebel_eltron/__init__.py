@@ -21,10 +21,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import CONF_HUB, DEFAULT_HUB, DOMAIN
 
-CONF_HUB = "hub"
-DEFAULT_HUB = "modbus_hub"
 MODBUS_DOMAIN = "modbus"
 
 CONFIG_SCHEMA = vol.Schema(
