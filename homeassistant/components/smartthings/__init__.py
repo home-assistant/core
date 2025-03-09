@@ -128,6 +128,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         subscription_url = subscription.registration_url
         _handle_new_subscription_url(subscription_url)
 
+    entry.async_create_background_task(
+        hass,
+        client.subscribe(
+            entry.data[CONF_LOCATION_ID],
+            entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
+            subscription_url,
+        ),
+        "smartthings_socket",
+    )
+
     device_status: dict[str, FullDevice] = {}
     try:
         rooms = {
@@ -135,20 +145,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             for room in await client.get_rooms(location_id=entry.data[CONF_LOCATION_ID])
         }
         devices = await client.get_devices()
-        entry.async_create_background_task(
-            hass,
-            client.subscribe(
-                entry.data[CONF_LOCATION_ID],
-                entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
-                subscription_url,
-            ),
-            "smartthings_socket",
-        )
         for device in devices:
             status = process_status(await client.get_device_status(device.device_id))
             device_status[device.device_id] = FullDevice(device=device, status=status)
-    except SmartThingsSinkError as err:
-        raise ConfigEntryNotReady from err
     except SmartThingsAuthenticationFailedError as err:
         raise ConfigEntryAuthFailed from err
 
