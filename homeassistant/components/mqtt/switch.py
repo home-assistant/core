@@ -130,9 +130,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        if not self.add_subscription(
-            CONF_STATE_TOPIC, self._state_message_received, {"_attr_is_on"}
-        ):
+        if not self.add_subscription(CONF_STATE_TOPIC, self._state_message_received):
             # Force into optimistic mode.
             self._optimistic = True
             return
