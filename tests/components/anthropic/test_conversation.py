@@ -607,7 +607,7 @@ async def test_conversation_id(
 
 async def test_extended_thinking(
     hass: HomeAssistant,
-    mock_config_entry_with_assist: MockConfigEntry,
+    mock_config_entry_with_extended_thinking: MockConfigEntry,
     mock_init_component,
 ) -> None:
     """Test extended thinking support."""
@@ -648,7 +648,7 @@ async def test_extended_thinking(
 
 async def test_redacted_thinking(
     hass: HomeAssistant,
-    mock_config_entry_with_assist: MockConfigEntry,
+    mock_config_entry_with_extended_thinking: MockConfigEntry,
     mock_init_component,
 ) -> None:
     """Test extended thinking with redacted thinking blocks."""
@@ -686,7 +686,7 @@ async def test_redacted_thinking(
 async def test_extended_thinking_tool_call(
     mock_get_tools,
     hass: HomeAssistant,
-    mock_config_entry_with_assist: MockConfigEntry,
+    mock_config_entry_with_extended_thinking: MockConfigEntry,
     mock_init_component,
     snapshot: SnapshotAssertion,
 ) -> None:
