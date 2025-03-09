@@ -49,9 +49,11 @@ async def async_setup_entry(
 
 
 def convert_scale(
-    value: float, value_scale: int, target_scale: int, round_digits: int = 4
+    value: float | None, value_scale: int, target_scale: int, round_digits: int = 4
 ) -> float:
     """Convert a value to a different scale."""
+    if value is None:
+        return 0.0
     return round(value * target_scale / value_scale, round_digits)
 
 
