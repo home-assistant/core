@@ -1,5 +1,6 @@
 """Config flow for Smarty integration."""
 
+import logging
 from typing import Any
 
 from pysmarty2 import Smarty
@@ -9,6 +10,8 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class SmartyConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -20,7 +23,8 @@ class SmartyConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             if smarty.update():
                 return None
-        except Exception:  # noqa: BLE001
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             return "unknown"
         else:
             return "cannot_connect"

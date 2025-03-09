@@ -65,7 +65,7 @@ class WebDavConfigFlow(ConfigFlow, domain=DOMAIN):
                 result = await client.check()
             except UnauthorizedError:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
