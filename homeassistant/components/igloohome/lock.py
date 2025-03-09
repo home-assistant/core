@@ -15,7 +15,7 @@ from igloohome_api import (
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IgloohomeConfigEntry
 from .entity import IgloohomeBaseEntity
@@ -28,20 +28,19 @@ SCAN_INTERVAL = timedelta(hours=1)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IgloohomeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up lock entities."""
     async_add_entities(
         IgloohomeLockEntity(
             api_device_info=device,
             api=entry.runtime_data.api,
-            bridge_id=str(
-                get_linked_bridge(device.deviceId, entry.runtime_data.devices)
-            ),
+            bridge_id=str(bridge),
         )
         for device in entry.runtime_data.devices
         if device.type == DEVICE_TYPE_LOCK
-        and get_linked_bridge(device.deviceId, entry.runtime_data.devices) is not None
+        and (bridge := get_linked_bridge(device.deviceId, entry.runtime_data.devices))
+        is not None
     )
 
 
