@@ -17,6 +17,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
@@ -168,6 +169,9 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
         extension, data = await self.async_get_tts_audio(
             message, request.language, request.options
         )
+
+        if extension is None or data is None:
+            raise HomeAssistantError(f"No TTS from {self.entity_id} for '{message}'")
 
         async def data_gen() -> AsyncGenerator[bytes]:
             yield data

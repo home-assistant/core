@@ -30,4 +30,4 @@ DATA_COMPONENT: HassKey[EntityComponent[TextToSpeechEntity]] = HassKey(DOMAIN)
 
 DATA_TTS_MANAGER: HassKey[SpeechManager] = HassKey("tts_manager")
 
-type TtsAudioType = tuple[str, bytes]
+type TtsAudioType = tuple[str | None, bytes | None]
