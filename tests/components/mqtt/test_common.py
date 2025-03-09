@@ -72,7 +72,7 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
         "name": "Milkman alert",
         "qos": 0,
         "command_topic": "test-topic",
-        "command_template": "{{ value_json.value }}",
+        "command_template": "{{ value }}",
         "entity_picture": "https://example.com/notify_milkman_alert",
         "retain": False,
     },
@@ -91,19 +91,31 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
         "platform": "notify",
         "qos": 0,
         "command_topic": "test-topic",
-        "command_template": "{{ value_json.value }}",
+        "command_template": "{{ value }}",
         "entity_picture": "https://example.com/notify_none",
         "retain": False,
     },
 }
 
 MOCK_SUBENTRY_SENSOR_COMPONENT = {
-    "sensor_bla789": {
+    "sensor_energy": {
         "platform": "sensor",
-        "name": "Test sensor",
+        "name": "Energy",
+        "device_class": "enum",
         "qos": 1,
-        "state_topic": "test-topic3",
-        "entity_picture": "https://example.com/sensor_bla789",
+        "state_topic": "test-topic",
+        "options": ["low", "medium", "high"],
+        "value_template": "{{ value_json.value }}",
+        "entity_picture": "https://example.com/sensor_energy",
+    },
+}
+MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS = {
+    "sensor_energy": {
+        "platform": "sensor",
+        "name": "Energy",
+        "state_class": "measurement",
+        "state_topic": "test-topic",
+        "entity_picture": "https://example.com/sensor_energy",
     },
 }
 
@@ -160,7 +172,7 @@ MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
     },
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1,
 }
-MOCK_SUBENTRY_DATA_NOTIFY_NO_NAME = {
+MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME = {
     "device": {
         "name": "Milk notifier",
         "sw_version": "1.0",
@@ -170,6 +182,28 @@ MOCK_SUBENTRY_DATA_NOTIFY_NO_NAME = {
         "configuration_url": "https://example.com",
     },
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME,
+}
+MOCK_SENSOR_SUBENTRY_DATA_SINGLE = {
+    "device": {
+        "name": "Test sensor",
+        "sw_version": "1.0",
+        "hw_version": "2.1 rev a",
+        "model": "Model XL",
+        "model_id": "mn002",
+        "configuration_url": "https://example.com",
+    },
+    "components": MOCK_SUBENTRY_SENSOR_COMPONENT,
+}
+MOCK_SENSOR_SUBENTRY_DATA_SINGLE_STATE_CLASS = {
+    "device": {
+        "name": "Test sensor",
+        "sw_version": "1.0",
+        "hw_version": "2.1 rev a",
+        "model": "Model XL",
+        "model_id": "mn002",
+        "configuration_url": "https://example.com",
+    },
+    "components": MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS,
 }
 
 MOCK_SUBENTRY_DATA_SET_MIX = {
