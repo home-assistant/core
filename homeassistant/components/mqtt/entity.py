@@ -123,7 +123,7 @@ from .subscription import (
     async_subscribe_topics_internal,
     async_unsubscribe_topics,
 )
-from .util import mqtt_config_entry_enabled
+from .util import learn_more_url, mqtt_config_entry_enabled
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -346,9 +346,6 @@ def async_setup_entity_entry_helper(
                 line = getattr(yaml_config, "__line__", "?")
                 issue_id = hex(hash(frozenset(yaml_config)))
                 yaml_config_str = yaml_dump(yaml_config)
-                learn_more_url = (
-                    f"https://www.home-assistant.io/integrations/{domain}.mqtt/"
-                )
                 async_create_issue(
                     hass,
                     DOMAIN,
@@ -356,7 +353,7 @@ def async_setup_entity_entry_helper(
                     issue_domain=domain,
                     is_fixable=False,
                     severity=IssueSeverity.ERROR,
-                    learn_more_url=learn_more_url,
+                    learn_more_url=learn_more_url(domain),
                     translation_placeholders={
                         "domain": domain,
                         "config_file": config_file,
