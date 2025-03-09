@@ -47,6 +47,7 @@
       'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
       'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
       'wind_bearing': 200,
+      'wind_gust_speed': 64.8,
       'wind_speed': 28.8,
       'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
