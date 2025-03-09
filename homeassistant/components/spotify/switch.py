@@ -20,7 +20,7 @@ async def async_setup_entry(
     entry: SpotifyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up AirGradient switch entities based on a config entry."""
+    """Set up Spotify switch entities based on a config entry."""
     async_add_entities(
         [
             SpotifyLibrarySwitch(entry.runtime_data.coordinator),
