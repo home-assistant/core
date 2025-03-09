@@ -1,0 +1,30 @@
+{
+  "domain": "swidget",
+  "name": "Swidget",
+  "codeowners": ["@michaelkkehoe"],
+  "config_flow": true,
+  "dependencies": ["network"],
+  "dhcp": [
+    {
+      "registered_devices": true
+    },
+    {
+      "hostname": "swidget*",
+      "macaddress": "24A160*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/swidget",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["swidget"],
+  "quality_scale": "bronze",
+  "requirements": ["python-swidget==1.3.1"],
+  "ssdp": [
+    {
+      "nt": "urn:swidget:pico:1"
+    },
+    {
+      "st": "urn:swidget:pico:1"
+    }
+  ]
+}
