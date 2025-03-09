@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from pysmartthings import SmartThings
-from pysmartthings.models import Attribute, Capability, Category, Command
+from pysmartthings import Attribute, Capability, Category, Command, SmartThings
 
 from homeassistant.components.valve import (
     ValveDeviceClass,
@@ -14,7 +13,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
+from .const import MAIN
 from .entity import SmartThingsEntity
+
+DEVICE_CLASS_MAP: dict[Category | str, ValveDeviceClass] = {
+    Category.WATER_VALVE: ValveDeviceClass.WATER,
+    Category.GAS_VALVE: ValveDeviceClass.GAS,
+}
 
 
 async def async_setup_entry(
@@ -25,9 +30,9 @@ async def async_setup_entry(
     """Add valves for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsValve(entry_data.client, device)
+        SmartThingsValve(entry_data.client, entry_data.rooms, device)
         for device in entry_data.devices.values()
-        if Capability.VALVE in device.status["main"]
+        if Capability.VALVE in device.status[MAIN]
     )
 
 
@@ -36,14 +41,14 @@ class SmartThingsValve(SmartThingsEntity, ValveEntity):
 
     _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
     _attr_reports_position = False
+    _attr_name = None
 
-    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+    def __init__(
+        self, client: SmartThings, rooms: dict[str, str], device: FullDevice
+    ) -> None:
         """Init the class."""
-        super().__init__(client, device, [Capability.VALVE])
-        self._attr_device_class = {
-            Category.WATER_VALVE: ValveDeviceClass.WATER,
-            Category.GAS_VALVE: ValveDeviceClass.GAS,
-        }.get(
+        super().__init__(client, device, rooms, {Capability.VALVE})
+        self._attr_device_class = DEVICE_CLASS_MAP.get(
             device.device.components[0].user_category
             or device.device.components[0].manufacturer_category
         )

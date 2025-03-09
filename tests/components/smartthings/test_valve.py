@@ -2,10 +2,11 @@
 
 from unittest.mock import AsyncMock
 
-from pysmartthings.models import Attribute, Capability, Command
+from pysmartthings import Attribute, Capability, Command
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.smartthings import MAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN, ValveState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -34,7 +35,7 @@ async def test_all_entities(
     snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.VALVE)
 
 
-@pytest.mark.parametrize("fixture", ["virtual_valve"])
+@pytest.mark.parametrize("device_fixture", ["virtual_valve"])
 @pytest.mark.parametrize(
     ("action", "command"),
     [
@@ -59,11 +60,11 @@ async def test_valve_open_close(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "612ab3c2-3bb0-48f7-b2c0-15b169cb2fc3", Capability.VALVE, command, "main"
+        "612ab3c2-3bb0-48f7-b2c0-15b169cb2fc3", Capability.VALVE, command, MAIN
     )
 
 
-@pytest.mark.parametrize("fixture", ["virtual_valve"])
+@pytest.mark.parametrize("device_fixture", ["virtual_valve"])
 async def test_state_update(
     hass: HomeAssistant,
     devices: AsyncMock,
