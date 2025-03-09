@@ -2,8 +2,13 @@
 
 from unittest.mock import AsyncMock
 
-from pysmartthings import Attribute, Capability, DeviceResponse, DeviceStatus
-from pysmartthings.exceptions import SmartThingsSinkError
+from pysmartthings import (
+    Attribute,
+    Capability,
+    DeviceResponse,
+    DeviceStatus,
+    SmartThingsSinkError,
+)
 import pytest
 from syrupy import SnapshotAssertion
 
