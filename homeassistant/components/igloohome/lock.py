@@ -50,6 +50,7 @@ class IgloohomeLockEntity(IgloohomeBaseEntity, LockEntity):
     # Operating on assumed state because there is no API to query the state.
     _attr_assumed_state = True
     _attr_supported_features = LockEntityFeature.OPEN
+    _attr_name = None
 
     def __init__(
         self, api_device_info: GetDeviceInfoResponse, api: IgloohomeApi, bridge_id: str
