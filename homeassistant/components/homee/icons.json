@@ -1,0 +1,26 @@
+{
+  "entity": {
+    "sensor": {
+      "brightness": {
+        "default": "mdi:brightness-5"
+      },
+      "brightness_instance": {
+        "default": "mdi:brightness-5"
+      },
+      "link_quality": {
+        "default": "mdi:signal"
+      },
+      "window_position": {
+        "default": "mdi:window-closed"
+      }
+    },
+    "switch": {
+      "watchdog": {
+        "default": "mdi:dog"
+      },
+      "manual_operation": {
+        "default": "mdi:hand-back-left"
+      }
+    }
+  }
+}

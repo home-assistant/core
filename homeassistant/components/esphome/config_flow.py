@@ -20,7 +20,7 @@ from aioesphomeapi import (
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components import dhcp, zeroconf
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -31,14 +31,17 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.json import json_loads_object
 
 from .const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
+    CONF_SUBSCRIBE_LOGS,
     DEFAULT_ALLOW_SERVICE_CALLS,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
@@ -223,7 +226,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         mac_address: str | None = discovery_info.properties.get("mac")
@@ -293,7 +296,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_discovery_confirm()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
         await self.async_set_unique_id(format_mac(discovery_info.macaddress))
@@ -505,6 +508,10 @@ class OptionsFlowHandler(OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS
                     ),
+                ): bool,
+                vol.Required(
+                    CONF_SUBSCRIBE_LOGS,
+                    default=self.config_entry.options.get(CONF_SUBSCRIBE_LOGS, False),
                 ): bool,
             }
         )

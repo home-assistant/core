@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .mocks import (
     _create_yale_with_devices,

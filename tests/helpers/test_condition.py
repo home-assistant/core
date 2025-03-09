@@ -30,7 +30,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.typing import WebSocketGenerator
 
@@ -2080,6 +2080,7 @@ async def test_multiple_zones(hass: HomeAssistant) -> None:
     assert not test(hass)
 
 
+@pytest.mark.usefixtures("hass")
 async def test_extract_entities() -> None:
     """Test extracting entities."""
     assert condition.async_extract_entities(
@@ -2153,6 +2154,7 @@ async def test_extract_entities() -> None:
     }
 
 
+@pytest.mark.usefixtures("hass")
 async def test_extract_devices() -> None:
     """Test extracting devices."""
     assert condition.async_extract_devices(

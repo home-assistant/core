@@ -11,6 +11,7 @@ from bleak_esphome import connect_scanner
 from homeassistant.components.bluetooth import async_register_scanner
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
+from .const import DOMAIN
 from .entry_data import RuntimeEntryData
 
 
@@ -27,6 +28,7 @@ def async_connect_scanner(
     entry_data: RuntimeEntryData,
     cli: APIClient,
     device_info: DeviceInfo,
+    device_id: str,
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     client_data = connect_scanner(cli, device_info, entry_data.available)
@@ -38,7 +40,14 @@ def async_connect_scanner(
     return partial(
         _async_unload,
         [
-            async_register_scanner(hass, scanner),
+            async_register_scanner(
+                hass,
+                scanner,
+                source_domain=DOMAIN,
+                source_model=device_info.model,
+                source_config_entry_id=entry_data.entry_id,
+                source_device_id=device_id,
+            ),
             scanner.async_setup(),
         ],
     )

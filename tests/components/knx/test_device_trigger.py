@@ -28,7 +28,7 @@ async def test_if_fires_on_telegram(
     knx: KNXTestKit,
 ) -> None:
     """Test telegram device triggers firing."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
     )
@@ -124,7 +124,7 @@ async def test_default_if_fires_on_telegram(
     # by default (without a user changing any) extra_fields are not added to the trigger and
     # pre 2024.2 device triggers did only support "destination" field so they didn't have
     # "group_value_write", "group_value_response", "group_value_read", "incoming", "outgoing"
-    await knx.setup_integration({})
+    await knx.setup_integration()
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
     )
@@ -206,7 +206,7 @@ async def test_remove_device_trigger(
 ) -> None:
     """Test for removed callback when device trigger not used."""
     automation_name = "telegram_trigger_automation"
-    await knx.setup_integration({})
+    await knx.setup_integration()
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
     )
@@ -256,7 +256,7 @@ async def test_get_triggers(
     knx: KNXTestKit,
 ) -> None:
     """Test we get the expected device triggers from knx."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
     )
@@ -279,7 +279,7 @@ async def test_get_trigger_capabilities(
     knx: KNXTestKit,
 ) -> None:
     """Test we get the expected capabilities telegram device trigger."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
     )
@@ -361,7 +361,7 @@ async def test_invalid_device_trigger(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test invalid telegram device trigger configuration."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
     )
@@ -404,7 +404,7 @@ async def test_invalid_trigger_configuration(
     knx: KNXTestKit,
 ) -> None:
     """Test invalid telegram device trigger configuration at attach_trigger."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
     )

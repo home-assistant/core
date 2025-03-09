@@ -12,10 +12,17 @@ from aioshelly.exceptions import (
     InvalidAuthError,
     MacAddressMismatchError,
 )
-from aioshelly.rpc_device import RpcDevice
+from aioshelly.rpc_device import RpcDevice, bluetooth_mac_from_primary_mac
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.components.bluetooth import async_remove_scanner
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -158,7 +165,7 @@ async def _async_setup_block_entry(
     # Following code block will force the right value for affected devices
     if (
         sleep_period == BLOCK_WRONG_SLEEP_PERIOD
-        and entry.data["model"] in MODELS_WITH_WRONG_SLEEP_PERIOD
+        and entry.data[CONF_MODEL] in MODELS_WITH_WRONG_SLEEP_PERIOD
     ):
         LOGGER.warning(
             "Updating stored sleep period for %s: from %s to %s",
@@ -331,3 +338,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> b
     return await hass.config_entries.async_unload_platforms(
         entry, runtime_data.platforms
     )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> None:
+    """Remove a config entry."""
+    if get_device_entry_gen(entry) in RPC_GENERATIONS and (
+        mac_address := entry.unique_id
+    ):
+        source = dr.format_mac(bluetooth_mac_from_primary_mac(mac_address)).upper()
+        async_remove_scanner(hass, source)

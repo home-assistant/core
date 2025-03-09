@@ -19,7 +19,7 @@ from homeassistant.components.netatmo.const import (
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .common import (

@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.httpx_client as client
+from homeassistant.helpers import httpx_client as client
 
 from tests.common import MockModule, extract_stack_to_frame, mock_integration
 
@@ -100,7 +100,6 @@ async def test_get_async_client_context_manager(hass: HomeAssistant) -> None:
         assert mock_aclose.call_count == 0
 
 
-@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_integration(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -144,7 +143,6 @@ async def test_warning_close_session_integration(
     ) in caplog.text
 
 
-@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_custom(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

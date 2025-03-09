@@ -147,7 +147,7 @@ class _TranslationsCacheData:
 class _TranslationCache:
     """Cache for flattened translations."""
 
-    __slots__ = ("hass", "cache_data", "lock")
+    __slots__ = ("cache_data", "hass", "lock")
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the cache."""

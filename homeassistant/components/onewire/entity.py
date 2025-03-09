@@ -54,6 +54,7 @@ class OneWireEntity(Entity):
         """Return the state attributes of the entity."""
         return {
             "device_file": self._device_file,
+            # raw_value attribute is deprecated and can be removed in 2025.8
             "raw_value": self._value_raw,
         }
 

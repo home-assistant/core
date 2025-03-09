@@ -29,7 +29,7 @@ from homeassistant.requirements import (
     async_clear_install_history,
     async_get_integration_with_requirements,
 )
-import homeassistant.util.yaml.loader as yaml_loader
+from homeassistant.util.yaml import loader as yaml_loader
 
 from . import config_validation as cv
 from .typing import ConfigType
@@ -220,7 +220,7 @@ async def async_check_ha_config_file(  # noqa: C901
             except (vol.Invalid, HomeAssistantError) as ex:
                 _comp_error(ex, domain, config, config[domain])
                 continue
-            except Exception as err:  # noqa: BLE001
+            except Exception as err:
                 logging.getLogger(__name__).exception(
                     "Unexpected error validating config"
                 )

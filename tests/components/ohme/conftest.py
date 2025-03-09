@@ -54,7 +54,10 @@ def mock_client():
         client.status = ChargerStatus.CHARGING
         client.power = ChargerPower(0, 0, 0, 0)
 
+        client.target_soc = 50
+        client.target_time = (8, 0)
         client.battery = 80
+        client.preconditioning = 15
         client.serial = "chargerid"
         client.ct_connected = True
         client.energy = 1000
@@ -63,4 +66,6 @@ def mock_client():
             "model": "Home Pro",
             "sw_version": "v2.65",
         }
+        client.vehicles = ["Nissan Leaf", "Tesla Model 3"]
+        client.current_vehicle = "Nissan Leaf"
         yield client

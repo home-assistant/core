@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from functools import partial
 import logging
+import re
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from aioesphomeapi import (
@@ -16,6 +17,7 @@ from aioesphomeapi import (
     HomeassistantServiceCall,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
+    LogLevel,
     ReconnectLogic,
     RequiresEncryptionAPIError,
     UserService,
@@ -24,7 +26,7 @@ from aioesphomeapi import (
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
-from homeassistant.components import tag, zeroconf
+from homeassistant.components import bluetooth, tag, zeroconf
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_MODE,
@@ -33,6 +35,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -41,9 +44,11 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
-import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    template,
+)
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.issue_registry import (
@@ -58,7 +63,9 @@ from homeassistant.util.async_ import create_eager_task
 from .bluetooth import async_connect_scanner
 from .const import (
     CONF_ALLOW_SERVICE_CALLS,
+    CONF_BLUETOOTH_MAC_ADDRESS,
     CONF_DEVICE_NAME,
+    CONF_SUBSCRIBE_LOGS,
     DEFAULT_ALLOW_SERVICE_CALLS,
     DEFAULT_URL,
     DOMAIN,
@@ -72,7 +79,37 @@ from .domain_data import DomainData
 # Import config flow so that it's added to the registry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 
+if TYPE_CHECKING:
+    from aioesphomeapi.api_pb2 import (  # type: ignore[attr-defined]
+        SubscribeLogsResponse,
+    )
+
+
 _LOGGER = logging.getLogger(__name__)
+
+LOG_LEVEL_TO_LOGGER = {
+    LogLevel.LOG_LEVEL_NONE: logging.DEBUG,
+    LogLevel.LOG_LEVEL_ERROR: logging.ERROR,
+    LogLevel.LOG_LEVEL_WARN: logging.WARNING,
+    LogLevel.LOG_LEVEL_INFO: logging.INFO,
+    LogLevel.LOG_LEVEL_CONFIG: logging.INFO,
+    LogLevel.LOG_LEVEL_DEBUG: logging.DEBUG,
+    LogLevel.LOG_LEVEL_VERBOSE: logging.DEBUG,
+    LogLevel.LOG_LEVEL_VERY_VERBOSE: logging.DEBUG,
+}
+LOGGER_TO_LOG_LEVEL = {
+    logging.NOTSET: LogLevel.LOG_LEVEL_VERY_VERBOSE,
+    logging.DEBUG: LogLevel.LOG_LEVEL_VERY_VERBOSE,
+    logging.INFO: LogLevel.LOG_LEVEL_CONFIG,
+    logging.WARNING: LogLevel.LOG_LEVEL_WARN,
+    logging.ERROR: LogLevel.LOG_LEVEL_ERROR,
+    logging.CRITICAL: LogLevel.LOG_LEVEL_ERROR,
+}
+# 7-bit and 8-bit C1 ANSI sequences
+# https://stackoverflow.com/questions/14693701/how-can-i-remove-the-ansi-escape-sequences-from-a-string-in-python
+ANSI_ESCAPE_78BIT = re.compile(
+    rb"(?:\x1B[@-Z\\-_]|[\x80-\x9A\x9C-\x9F]|(?:\x1B\[|\x9B)[0-?]*[ -/]*[@-~])"
+)
 
 
 @callback
@@ -134,16 +171,18 @@ class ESPHomeManager:
     """Class to manage an ESPHome connection."""
 
     __slots__ = (
-        "hass",
-        "host",
-        "password",
-        "entry",
+        "_cancel_subscribe_logs",
+        "_log_level",
         "cli",
         "device_id",
         "domain_data",
+        "entry",
+        "entry_data",
+        "hass",
+        "host",
+        "password",
         "reconnect_logic",
         "zeroconf_instance",
-        "entry_data",
     )
 
     def __init__(
@@ -167,6 +206,8 @@ class ESPHomeManager:
         self.reconnect_logic: ReconnectLogic | None = None
         self.zeroconf_instance = zeroconf_instance
         self.entry_data = entry.runtime_data
+        self._cancel_subscribe_logs: CALLBACK_TYPE | None = None
+        self._log_level = LogLevel.LOG_LEVEL_NONE
 
     async def on_stop(self, event: Event) -> None:
         """Cleanup the socket client on HA close."""
@@ -339,6 +380,34 @@ class ESPHomeManager:
             # Re-connection logic will trigger after this
             await self.cli.disconnect()
 
+    def _async_on_log(self, msg: SubscribeLogsResponse) -> None:
+        """Handle a log message from the API."""
+        log: bytes = msg.message
+        _LOGGER.log(
+            LOG_LEVEL_TO_LOGGER.get(msg.level, logging.DEBUG),
+            "%s: %s",
+            self.entry.title,
+            ANSI_ESCAPE_78BIT.sub(b"", log).decode("utf-8", "backslashreplace"),
+        )
+
+    @callback
+    def _async_get_equivalent_log_level(self) -> LogLevel:
+        """Get the equivalent ESPHome log level for the current logger."""
+        return LOGGER_TO_LOG_LEVEL.get(
+            _LOGGER.getEffectiveLevel(), LogLevel.LOG_LEVEL_VERY_VERBOSE
+        )
+
+    @callback
+    def _async_subscribe_logs(self, log_level: LogLevel) -> None:
+        """Subscribe to logs."""
+        if self._cancel_subscribe_logs is not None:
+            self._cancel_subscribe_logs()
+            self._cancel_subscribe_logs = None
+        self._log_level = log_level
+        self._cancel_subscribe_logs = self.cli.subscribe_logs(
+            self._async_on_log, self._log_level
+        )
+
     async def _on_connnect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
         entry = self.entry
@@ -350,6 +419,8 @@ class ESPHomeManager:
         cli = self.cli
         stored_device_name = entry.data.get(CONF_DEVICE_NAME)
         unique_id_is_mac_address = unique_id and ":" in unique_id
+        if entry.options.get(CONF_SUBSCRIBE_LOGS):
+            self._async_subscribe_logs(self._async_get_equivalent_log_level())
         results = await asyncio.gather(
             create_eager_task(cli.device_info()),
             create_eager_task(cli.list_entities_services()),
@@ -361,6 +432,13 @@ class ESPHomeManager:
 
         device_mac = format_mac(device_info.mac_address)
         mac_address_matches = unique_id == device_mac
+        if (
+            bluetooth_mac_address := device_info.bluetooth_mac_address
+        ) and entry.data.get(CONF_BLUETOOTH_MAC_ADDRESS) != bluetooth_mac_address:
+            hass.config_entries.async_update_entry(
+                entry,
+                data={**entry.data, CONF_BLUETOOTH_MAC_ADDRESS: bluetooth_mac_address},
+            )
         #
         # Migrate config entry to new unique ID if the current
         # unique id is not a mac address.
@@ -423,7 +501,13 @@ class ESPHomeManager:
 
         if device_info.bluetooth_proxy_feature_flags_compat(api_version):
             entry_data.disconnect_callbacks.add(
-                async_connect_scanner(hass, entry_data, cli, device_info)
+                async_connect_scanner(
+                    hass, entry_data, cli, device_info, self.device_id
+                )
+            )
+        else:
+            bluetooth.async_remove_scanner(
+                hass, device_info.bluetooth_mac_address or device_info.mac_address
             )
 
         if device_info.voice_assistant_feature_flags_compat(api_version) and (
@@ -497,6 +581,10 @@ class ESPHomeManager:
     def _async_handle_logging_changed(self, _event: Event) -> None:
         """Handle when the logging level changes."""
         self.cli.set_debug(_LOGGER.isEnabledFor(logging.DEBUG))
+        if self.entry.options.get(CONF_SUBSCRIBE_LOGS) and self._log_level != (
+            new_log_level := self._async_get_equivalent_log_level()
+        ):
+            self._async_subscribe_logs(new_log_level)
 
     async def async_start(self) -> None:
         """Start the esphome connection manager."""
@@ -539,11 +627,22 @@ class ESPHomeManager:
             )
         _setup_services(hass, entry_data, services)
 
-        if entry_data.device_info is not None and entry_data.device_info.name:
-            reconnect_logic.name = entry_data.device_info.name
+        if (device_info := entry_data.device_info) is not None:
+            if device_info.name:
+                reconnect_logic.name = device_info.name
+            if (
+                bluetooth_mac_address := device_info.bluetooth_mac_address
+            ) and entry.data.get(CONF_BLUETOOTH_MAC_ADDRESS) != bluetooth_mac_address:
+                hass.config_entries.async_update_entry(
+                    entry,
+                    data={
+                        **entry.data,
+                        CONF_BLUETOOTH_MAC_ADDRESS: bluetooth_mac_address,
+                    },
+                )
             if entry.unique_id is None:
                 hass.config_entries.async_update_entry(
-                    entry, unique_id=format_mac(entry_data.device_info.mac_address)
+                    entry, unique_id=format_mac(device_info.mac_address)
                 )
 
         await reconnect_logic.start()
@@ -567,7 +666,9 @@ def _async_setup_device_registry(
 
     configuration_url = None
     if device_info.webserver_port > 0:
-        configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
+        entry_host = entry.data["host"]
+        host = f"[{entry_host}]" if ":" in entry_host else entry_host
+        configuration_url = f"http://{host}:{device_info.webserver_port}"
     elif (
         (dashboard := async_get_dashboard(hass))
         and dashboard.data

@@ -30,6 +30,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from .schema import ExposeSchema
@@ -88,7 +89,7 @@ class KNXExposeSensor:
         self._remove_listener: Callable[[], None] | None = None
         self.device: ExposeSensor = ExposeSensor(
             xknx=self.xknx,
-            name=f"{self.entity_id}__{self.expose_attribute or "state"}",
+            name=f"{self.entity_id}__{self.expose_attribute or 'state'}",
             group_address=config[KNX_ADDRESS],
             respond_to_read=config[CONF_RESPOND_TO_READ],
             value_type=self.expose_type,
@@ -217,7 +218,7 @@ class KNXExposeTime:
         self.device = xknx_device_cls(
             self.xknx,
             name=expose_type.capitalize(),
-            localtime=True,
+            localtime=dt_util.get_default_time_zone(),
             group_address=config[KNX_ADDRESS],
         )
 

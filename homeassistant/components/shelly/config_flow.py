@@ -7,7 +7,12 @@ from typing import Any, Final
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
-from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATIONS
+from aioshelly.const import (
+    BLOCK_GENERATIONS,
+    DEFAULT_HTTP_PORT,
+    MODEL_WALL_DISPLAY,
+    RPC_GENERATIONS,
+)
 from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
@@ -17,7 +22,6 @@ from aioshelly.exceptions import (
 from aioshelly.rpc_device import RpcDevice
 import voluptuous as vol
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -27,6 +31,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
+    CONF_MODEL,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -34,6 +39,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_BLE_SCANNER_MODE,
@@ -41,7 +47,6 @@ from .const import (
     CONF_SLEEP_PERIOD,
     DOMAIN,
     LOGGER,
-    MODEL_WALL_DISPLAY,
     BLEScannerMode,
 )
 from .coordinator import async_reconnect_soon
@@ -112,7 +117,9 @@ async def validate_input(
         return {
             "title": rpc_device.name,
             CONF_SLEEP_PERIOD: sleep_period,
-            "model": rpc_device.shelly.get("model"),
+            CONF_MODEL: (
+                rpc_device.xmod_info.get("p") or rpc_device.shelly.get(CONF_MODEL)
+            ),
             CONF_GEN: gen,
         }
 
@@ -132,7 +139,7 @@ async def validate_input(
     return {
         "title": block_device.name,
         CONF_SLEEP_PERIOD: sleep_period,
-        "model": block_device.model,
+        CONF_MODEL: block_device.model,
         CONF_GEN: gen,
     }
 
@@ -164,7 +171,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(self.info[CONF_MAC])
+                await self.async_set_unique_id(
+                    self.info[CONF_MAC], raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured({CONF_HOST: host})
                 self.host = host
                 self.port = port
@@ -185,14 +194,14 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
-                    if device_info["model"]:
+                    if device_info[CONF_MODEL]:
                         return self.async_create_entry(
                             title=device_info["title"],
                             data={
                                 CONF_HOST: user_input[CONF_HOST],
                                 CONF_PORT: user_input[CONF_PORT],
                                 CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
-                                "model": device_info["model"],
+                                CONF_MODEL: device_info[CONF_MODEL],
                                 CONF_GEN: device_info[CONF_GEN],
                             },
                         )
@@ -224,7 +233,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if device_info["model"]:
+                if device_info[CONF_MODEL]:
                     return self.async_create_entry(
                         title=device_info["title"],
                         data={
@@ -232,7 +241,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_HOST: self.host,
                             CONF_PORT: self.port,
                             CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
-                            "model": device_info["model"],
+                            CONF_MODEL: device_info[CONF_MODEL],
                             CONF_GEN: device_info[CONF_GEN],
                         },
                     )
@@ -330,7 +339,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle discovery confirm."""
         errors: dict[str, str] = {}
 
-        if not self.device_info["model"]:
+        if not self.device_info[CONF_MODEL]:
             errors["base"] = "firmware_not_fully_provisioned"
             model = "Shelly"
         else:
@@ -339,9 +348,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=self.device_info["title"],
                     data={
-                        "host": self.host,
+                        CONF_HOST: self.host,
                         CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
-                        "model": self.device_info["model"],
+                        CONF_MODEL: self.device_info[CONF_MODEL],
                         CONF_GEN: self.device_info[CONF_GEN],
                     },
                 )
@@ -350,8 +359,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="confirm_discovery",
             description_placeholders={
-                "model": model,
-                "host": self.host,
+                CONF_MODEL: model,
+                CONF_HOST: self.host,
             },
             errors=errors,
         )
@@ -460,7 +469,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         return (
             get_device_entry_gen(config_entry) in RPC_GENERATIONS
             and not config_entry.data.get(CONF_SLEEP_PERIOD)
-            and config_entry.data.get("model") != MODEL_WALL_DISPLAY
+            and config_entry.data.get(CONF_MODEL) != MODEL_WALL_DISPLAY
         )
 
 

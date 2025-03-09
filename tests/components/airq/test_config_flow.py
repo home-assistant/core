@@ -1,5 +1,6 @@
 """Test the air-Q config flow."""
 
+import logging
 from unittest.mock import patch
 
 from aioairq import DeviceInfo, InvalidAuth
@@ -37,8 +38,9 @@ DEFAULT_OPTIONS = {
 }
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test we get the form."""
+    caplog.set_level(logging.DEBUG)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -54,6 +56,7 @@ async def test_form(hass: HomeAssistant) -> None:
             TEST_USER_DATA,
         )
         await hass.async_block_till_done()
+        assert f"Creating an entry for {TEST_DEVICE_INFO['name']}" in caplog.text
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_DEVICE_INFO["name"]
