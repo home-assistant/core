@@ -147,3 +147,47 @@ async def test_optional_sensor_from_featuremap(
     )
     state = hass.states.get(entity_id)
     assert state is None
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_evse_charging"])
+async def test_evse_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test evse sensors."""
+    entity_id = "binary_sensor.evse_charging_status"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "on"
+    # switch to PluggedInDemand state
+    set_node_attribute(matter_node, 1, 153, 0, 2)
+    await trigger_subscription_callback(
+        hass, matter_client, data=(matter_node.node_id, "1/153/0", 2)
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
+    # binary_sensor.evse_plug
+    state = hass.states.get("binary_sensor.evse_plug")
+    assert state
+    assert state.state == "on"
+    # switch to NotPluggedIn state
+    set_node_attribute(matter_node, 1, 153, 0, 0)
+    await trigger_subscription_callback(
+        hass, matter_client, data=(matter_node.node_id, "1/153/0", 0)
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
+    # binary_sensor.evse_supply_charging_state
+    state = hass.states.get("binary_sensor.evse_supply_charging_state")
+    assert state
+    assert state.state == "on"
+    # switch to Disabled state
+    set_node_attribute(matter_node, 1, 153, 0, 0)
+    await trigger_subscription_callback(
+        hass, matter_client, data=(matter_node.node_id, "1/153/1", 0)
+    )
