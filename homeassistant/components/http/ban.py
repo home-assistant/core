@@ -266,6 +266,7 @@ class IpBanManager:
     async def async_load(self) -> None:
         """Load the existing IP bans."""
         self.banned_networks: list[ip_network] = []
+        supervisor_ip = get_supervisor_ip()
         try:
             config = await self.hass.async_add_executor_job(
                 load_yaml_config_file, self.banned_networks_path
@@ -273,7 +274,19 @@ class IpBanManager:
             if KEY_BANNED_NETWORKS in config:
                 for network in config[KEY_BANNED_NETWORKS]:
                     try:
-                        self.banned_networks.append(ip_network(network, strict=False))
+                        network_ip_network = ip_network(network, strict=False)
+                        # Prevent inadvertently banning the supervisor's network
+                        if (
+                            supervisor_ip
+                            and ip_address(supervisor_ip) in network_ip_network
+                        ):
+                            _LOGGER.error(
+                                "Unable to ban network %s as it is used by the supervisor %s",
+                                network,
+                                supervisor_ip,
+                            )
+                        else:
+                            self.banned_networks.append(network_ip_network)
                     except (AddressValueError, NetmaskValueError, ValueError) as err:
                         _LOGGER.error(
                             "Error in banned network %s: %s. Check %s",
