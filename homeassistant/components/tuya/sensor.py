@@ -18,7 +18,6 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
-    UnitOfLength,
     UnitOfPower,
     UnitOfTime,
 )
@@ -774,13 +773,11 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="liquid_depth",
             device_class=SensorDeviceClass.DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfLength.METERS,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.LIQUID_LEVEL_PERCENT,
             translation_key="liquid_level_percent",
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=PERCENTAGE,
         ),
     ),
     # Vibration Sensor

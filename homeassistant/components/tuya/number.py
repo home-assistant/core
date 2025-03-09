@@ -9,7 +9,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -316,28 +316,26 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.INSTALLATION_HEIGHT,
             translation_key="installation_height",
-            entity_category=EntityCategory.CONFIG,
             device_class=NumberDeviceClass.DISTANCE,
-            native_unit_of_measurement=UnitOfLength.METERS,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.SENSOR_DISTANCE_TO_MAX,
             translation_key="sensor_distance_to_max",
-            entity_category=EntityCategory.CONFIG,
             device_class=NumberDeviceClass.DISTANCE,
-            native_unit_of_measurement=UnitOfLength.METERS,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.MAX_SET,
             translation_key="max_set",
-            entity_category=EntityCategory.CONFIG,
             native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.MINI_SET,
             translation_key="mini_set",
-            entity_category=EntityCategory.CONFIG,
             native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
 }
