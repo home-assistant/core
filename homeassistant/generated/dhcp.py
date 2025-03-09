@@ -617,6 +617,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "286D97*",
     },
     {
+        "domain": "smlight",
+        "registered_devices": True,
+    },
+    {
         "domain": "solaredge",
         "hostname": "target",
         "macaddress": "002702*",

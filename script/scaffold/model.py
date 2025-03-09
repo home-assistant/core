@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import attr
+
+from script.util import sort_manifest
 
 from .const import COMPONENT_DIR, TESTS_DIR
 
@@ -44,16 +47,19 @@ class Info:
         """Path to the manifest."""
         return COMPONENT_DIR / self.domain / "manifest.json"
 
-    def manifest(self) -> dict:
+    def manifest(self) -> dict[str, Any]:
         """Return integration manifest."""
         return json.loads(self.manifest_path.read_text())
 
     def update_manifest(self, **kwargs) -> None:
         """Update the integration manifest."""
         print(f"Updating {self.domain} manifest: {kwargs}")
-        self.manifest_path.write_text(
-            json.dumps({**self.manifest(), **kwargs}, indent=2) + "\n"
-        )
+
+        # Sort keys in manifest so we don't trigger hassfest errors.
+        manifest: dict[str, Any] = {**self.manifest(), **kwargs}
+        sort_manifest(manifest)
+
+        self.manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
 
     @property
     def strings_path(self) -> Path:

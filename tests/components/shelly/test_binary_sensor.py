@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
-from aioshelly.const import MODEL_BLU_GATEWAY_GEN3, MODEL_MOTION
+from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_MOTION
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -486,10 +486,29 @@ async def test_blu_trv_binary_sensor_entity(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test BLU TRV binary sensor entity."""
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     for entity in ("calibration",):
         entity_id = f"{BINARY_SENSOR_DOMAIN}.trv_name_{entity}"
+
+        state = hass.states.get(entity_id)
+        assert state == snapshot(name=f"{entity_id}-state")
+
+        entry = entity_registry.async_get(entity_id)
+        assert entry == snapshot(name=f"{entity_id}-entry")
+
+
+async def test_rpc_flood_entities(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test RPC flood sensor entities."""
+    await init_integration(hass, 4)
+
+    for entity in ("flood", "mute"):
+        entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_{entity}"
 
         state = hass.states.get(entity_id)
         assert state == snapshot(name=f"{entity_id}-state")

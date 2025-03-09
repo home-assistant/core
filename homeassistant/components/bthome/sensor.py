@@ -42,7 +42,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .coordinator import BTHomePassiveBluetoothDataProcessor
@@ -66,6 +66,11 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Channel (-)
+    (BTHomeExtendedSensorDeviceClass.CHANNEL, None): SensorEntityDescription(
+        key=str(BTHomeExtendedSensorDeviceClass.CHANNEL),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Conductivity (µS/cm)
     (
@@ -418,7 +423,7 @@ def sensor_update_to_bluetooth_data_update(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BTHomeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the BTHome BLE sensors."""
     coordinator = entry.runtime_data
