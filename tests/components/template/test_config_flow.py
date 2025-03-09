@@ -143,7 +143,7 @@ from tests.typing import WebSocketGenerator
         ),
         (
             "switch",
-            {"value_template": "{{ states('switch.one') }}"},
+            {"state": "{{ states('switch.one') }}"},
             "on",
             {"one": "on", "two": "off"},
             {},
@@ -248,7 +248,7 @@ async def test_config_flow(
         ),
         (
             "switch",
-            {"value_template": "{{ false }}"},
+            {"state": "{{ false }}"},
             {},
             {},
         ),
@@ -524,13 +524,13 @@ def get_suggested(schema, key):
         ),
         (
             "switch",
-            {"value_template": "{{ states('switch.one') }}"},
-            {"value_template": "{{ states('switch.two') }}"},
+            {"state": "{{ states('switch.one') }}"},
+            {"state": "{{ states('switch.two') }}"},
             ["on", "off"],
             {"one": "on", "two": "off"},
             {},
             {},
-            "value_template",
+            "state",
         ),
     ],
 )
@@ -1304,7 +1304,7 @@ async def test_option_flow_sensor_preview_config_entry_removed(
         ),
         (
             "switch",
-            {"value_template": "{{ false }}"},
+            {"state": "{{ false }}"},
             {},
             {},
         ),

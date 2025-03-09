@@ -114,9 +114,6 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
                 cv.ensure_list, [switch_platform.SWITCH_SCHEMA]
             ),
             vol.Optional(CONF_SWITCHES): cv.schema_with_slug_keys(
-                switch_platform.LEGACY_SENSOR_SCHEMA
-            ),
-            vol.Optional(CONF_SWITCHES): cv.schema_with_slug_keys(
                 switch_platform.LEGACY_SWITCH_SCHEMA
             ),
         },

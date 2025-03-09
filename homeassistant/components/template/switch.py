@@ -309,19 +309,17 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
-        friendly_name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
-        self._on_script = Script(hass, config[CONF_TURN_ON], friendly_name, DOMAIN)
-        self._off_script = Script(hass, config[CONF_TURN_OFF], friendly_name, DOMAIN)
-
+        name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
+        self._template = config.get(CONF_STATE)
+        if on_action := config.get(CONF_TURN_ON):
+            self.add_script(CONF_TURN_ON, on_action, f"{name} - Turn On", DOMAIN)
+        if off_action := config.get(CONF_TURN_OFF):
+            self.add_script(CONF_TURN_OFF, off_action, f"{name} - Turn Off", DOMAIN)
         self._state: bool | None = None
-        if (tmpl := config.get(CONF_STATE)) is not None and isinstance(
-            tmpl, template.Template
-        ):
+        self._attr_assumed_state = self._template is None
+        if not self._attr_assumed_state:
             self._to_render_simple.append(CONF_STATE)
             self._parse_result.add(CONF_STATE)
-            self._attr_assumed_state = False
-        else:
-            self._attr_assumed_state = True
 
         self._attr_device_info = async_device_info_to_link_from_device_id(
             hass,
@@ -368,16 +366,16 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Fire the on action."""
-        if self._on_script:
-            await self.async_run_script(self._on_script, context=self._context)
-        if self._attr_assumed_state:
+        if on_script := self._action_scripts.get(CONF_TURN_ON):
+            await self.async_run_script(on_script, context=self._context)
+        if self._template is None:
             self._state = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Fire the off action."""
-        if self._off_script:
-            await self.async_run_script(self._off_script, context=self._context)
-        if self._attr_assumed_state:
+        if off_script := self._action_scripts.get(CONF_TURN_OFF):
+            await self.async_run_script(off_script, context=self._context)
+        if self._template is None:
             self._state = False
             self.async_write_ha_state()
