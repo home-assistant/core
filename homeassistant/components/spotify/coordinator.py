@@ -1,6 +1,5 @@
 """Coordinator for Spotify."""
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -142,14 +141,9 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
             if time_left < UPDATE_INTERVAL:
                 self.update_interval = time_left + timedelta(seconds=1)
         in_library = False
-        if current.item is not None:
-            func: Callable[[list[str]], Awaitable[dict[str, bool]]] = (
-                self.client.are_episodes_saved
-                if current.item.type is ItemType.EPISODE
-                else self.client.are_tracks_saved
-            )
+        if current.item is not None and current.item.type is ItemType.TRACK:
             try:
-                saved_items = await func([current.item.uri])
+                saved_items = await self.client.are_tracks_saved([current.item.uri])
             except SpotifyConnectionError as err:
                 _LOGGER.debug("Error checking if item is saved: %s", err)
             else:

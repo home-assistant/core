@@ -8,8 +8,8 @@ import pytest
 from spotifyaio.models import (
     Album,
     Artist,
-    ArtistResponse,
     Devices,
+    FollowedArtistResponse,
     NewReleasesResponse,
     NewReleasesResponseInner,
     PlaybackState,
@@ -82,9 +82,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 @pytest.fixture(autouse=True)
 async def patch_sleep() -> Generator[AsyncMock]:
     """Fixture to setup credentials."""
-    with patch(
-        "homeassistant.components.spotify.media_player.util.AFTER_REQUEST_SLEEP", 0
-    ):
+    with patch("homeassistant.components.spotify.util.AFTER_REQUEST_SLEEP", 0):
         yield
 
 
@@ -140,7 +138,7 @@ def mock_spotify() -> Generator[AsyncMock]:
             getattr(client, method).return_value = obj.from_json(
                 load_fixture(fixture, DOMAIN)
             )
-        client.get_followed_artists.return_value = ArtistResponse.from_json(
+        client.get_followed_artists.return_value = FollowedArtistResponse.from_json(
             load_fixture("followed_artists.json", DOMAIN)
         ).artists.items
         client.get_new_releases.return_value = NewReleasesResponse.from_json(
@@ -149,4 +147,5 @@ def mock_spotify() -> Generator[AsyncMock]:
         client.get_devices.return_value = Devices.from_json(
             load_fixture("devices.json", DOMAIN)
         ).devices
+        client.are_tracks_saved.return_value = {"4e9hUiLsN4mx61ARosFi7p": True}
         yield spotify_mock
