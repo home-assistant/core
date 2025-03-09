@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_lock[lock.front_door_none-entry]
+# name: test_lock[lock.front_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'lock',
     'entity_category': None,
-    'entity_id': 'lock.front_door_none',
+    'entity_id': 'lock.front_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -33,15 +33,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lock[lock.front_door_none-state]
+# name: test_lock[lock.front_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assumed_state': True,
-      'friendly_name': 'Front Door None',
+      'friendly_name': 'Front Door',
       'supported_features': <LockEntityFeature: 1>,
     }),
     'context': <ANY>,
-    'entity_id': 'lock.front_door_none',
+    'entity_id': 'lock.front_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

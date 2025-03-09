@@ -61,6 +61,7 @@ class IgloohomeLockEntity(IgloohomeBaseEntity, LockEntity):
             unique_key="lock",
         )
         self.bridge_id = bridge_id
+        self._attr_name = None
 
     async def async_lock(self, **kwargs):
         """Lock this lock."""
