@@ -182,10 +182,6 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
             self.gateway.set_child_value(
                 self.node_id, self.child_id, value_type, value, ack=1
             )
-            if self.assumed_state:
-                # Optimistically assume that device has changed state
-                self._values[value_type] = value
-                self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target temperature."""
@@ -193,10 +189,6 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_HVAC_SPEED, fan_mode, ack=1
         )
-        if self.assumed_state:
-            # Optimistically assume that device has changed state
-            self._values[set_req.V_HVAC_SPEED] = fan_mode
-            self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target temperature."""
@@ -207,10 +199,6 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
             DICT_HA_TO_MYS[hvac_mode],
             ack=1,
         )
-        if self.assumed_state:
-            # Optimistically assume that device has changed state
-            self._values[self.value_type] = hvac_mode
-            self.async_write_ha_state()
 
     @callback
     def _async_update(self) -> None:
