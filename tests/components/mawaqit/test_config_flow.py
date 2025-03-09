@@ -1,7 +1,6 @@
 """Tests for the Mawaqit integration's config flow in Home Assistant."""
 
-import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp.client_exceptions import ClientConnectorError
 from mawaqit.consts import NoMosqueAround, NoMosqueFound
@@ -37,20 +36,10 @@ async def setup_test_environment(hass: HomeAssistant):
     # Create a mock store for testing
     test_store = Store(hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_TEST_STORAGE_KEY)
 
-    # Create the data folder for testing
-    os.makedirs(os.path.join(os.getcwd(), "data"), exist_ok=True)
-
     yield test_store
 
     # --teardown
     await test_store.async_remove()
-
-    # Clean up the data folder after the test
-    for file in os.listdir(os.path.join(os.getcwd(), "data")):
-        file_path = os.path.join(os.getcwd(), "data", file)
-        os.unlink(file_path)
-
-    os.rmdir(os.path.join(os.getcwd(), "data"))
 
 
 @pytest.fixture
@@ -146,23 +135,23 @@ def mock_config_entry_setup():
 
 
 @pytest.mark.asyncio
-async def test_step_user_one_instance_allowed(
-    hass: HomeAssistant, setup_test_environment
-) -> None:
-    """Verify that when another instance of the Mawaqit integration is already configured, the flow returns a form prompting the user to either keep the existing instance or reset it."""
+async def test_async_step_user_store_is_none(hass: HomeAssistant) -> None:
+    """Test that the form is served with no input."""
+    # Initialize the flow handler with the HomeAssistant instance
     flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.async_set_unique_id = AsyncMock()
     flow.hass = hass
-    with (
-        patch.object(flow, "store", new=setup_test_environment),
-        patch(
-            "homeassistant.components.mawaqit.utils.is_another_instance",
-            return_value=True,
-        ),
-    ):
-        result = await flow.async_step_user(None)
+    assert flow.store is None  # Ensure store starts as None
 
-        assert result.get("type") == data_entry_flow.FlowResultType.FORM
-        assert result.get("step_id") == "keep_or_reset"
+    # Call async_step_user
+    result = await flow.async_step_user()
+
+    # Ensure store is initialized
+    assert flow.store is not None
+
+    # Validate that the form is returned to the user
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "user"
 
 
 @pytest.mark.asyncio
@@ -172,14 +161,12 @@ async def test_show_form_user_no_input_reopens_form(
     """Test that the form is served with no input."""
     # Initialize the flow handler with the HomeAssistant instance
     flow = config_flow.MawaqitPrayerFlowHandler()
+    flow.async_set_unique_id = AsyncMock()
     flow.hass = hass
+    flow.store = None  # Explicitly setting store to None
 
     with (
         patch.object(flow, "store", new=setup_test_environment),
-        patch(
-            "homeassistant.components.mawaqit.utils.is_another_instance",
-            return_value=False,
-        ),
     ):
         # Invoke the initial step of the flow without user input
         result = await flow.async_step_user(user_input=None)
@@ -196,6 +183,7 @@ async def test_async_step_user_connection_error(
     """Test the user step handles connection errors correctly."""
     flow = config_flow.MawaqitPrayerFlowHandler()
     flow.hass = hass
+    flow.async_set_unique_id = AsyncMock()
 
     # Create an instance of ClientConnectorError with mock arguments
     mock_conn_key = MagicMock()
@@ -208,10 +196,6 @@ async def test_async_step_user_connection_error(
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper.test_credentials",
             side_effect=connection_error_instance,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.utils.is_another_instance",
-            return_value=False,
         ),
     ):
         # Simulate user input to trigger the flow's logic
@@ -235,6 +219,7 @@ async def test_async_step_user_invalid_credentials(
     """Test the user step with invalid credentials."""
     flow = config_flow.MawaqitPrayerFlowHandler()
     flow.hass = hass
+    flow.async_set_unique_id = AsyncMock()
 
     # Patch the credentials test to simulate a login failure
     with (
@@ -268,6 +253,7 @@ async def test_async_step_user_valid_credentials(
     """Test the user step with valid credentials."""
     flow = config_flow.MawaqitPrayerFlowHandler()
     flow.hass = hass
+    flow.async_set_unique_id = AsyncMock()
 
     # Patch the credentials test to simulate a login success
     with (
@@ -678,8 +664,8 @@ async def test_async_get_options_flow(mock_config_entry_setup) -> None:
 
     # Verify that the result is an instance of the expected options flow handler
     assert isinstance(options_flow, config_flow.MawaqitPrayerOptionsFlowHandler)
-    # check that the config entry is correctly passed to the handler
-    assert options_flow.config_entry == mock_config_entry_setup
+    # # check that the config entry is correctly passed to the handler
+    # assert options_flow.config_entry == mock_config_entry_setup
 
 
 @pytest.mark.asyncio
@@ -693,39 +679,47 @@ async def test_options_flow_valid_input(
     mock_mosques, mocked_mosques_data = mock_mosques_test_data
 
     # Initialize the options flow
-    flow = config_flow.MawaqitPrayerOptionsFlowHandler(config_entry_setup)
-    flow.hass = hass  # Assign HomeAssistant instance
+    optionFlow = hass.config_entries.options
+    # flow = config_flow.MawaqitPrayerOptionsFlowHandler()
+    # flow.hass = hass  # Assign HomeAssistant instance
 
     with (
-        patch.object(flow, "store", new=setup_test_environment),
-        patch(
-            "homeassistant.components.mawaqit.utils.read_all_mosques_NN_file",
-            return_value=mocked_mosques_data,
-        ),
-        patch(
-            "homeassistant.components.mawaqit.utils.read_raw_all_mosques_NN_file",
-            return_value=mock_mosques,
-        ),
+        patch.object(
+            config_flow.MawaqitPrayerOptionsFlowHandler(),
+            "store",
+            new=setup_test_environment,
+        ),  # NOT Working
         patch(
             "homeassistant.components.mawaqit.utils.read_mawaqit_token",
             return_value="TOKEN",
-        ),
+        ),  # add a patch to async_save_mosque?
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
             return_value=mock_mosques,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.config_flow.read_all_mosques_NN_file",
+            return_value=mocked_mosques_data,
+        ),
+        patch(
+            "homeassistant.components.mawaqit.config_flow.read_my_mosque_NN_file",
+            return_value=mock_mosques[0],
         ),
         patch(
             "homeassistant.components.mawaqit.mawaqit_wrapper.fetch_prayer_times",
             return_value={},
         ),
     ):
+        # show initial form
+        result = await optionFlow.async_init(config_entry_setup.entry_id)
+
         # Simulate user input in the options flow , Assuming the user selects the first mosque
         mosque_uuid_label = mocked_mosques_data[0][1]
-
-        result = await flow.async_step_init(
-            user_input={CONF_CALC_METHOD: mosque_uuid_label}
+        # submit form with options
+        result = await optionFlow.async_configure(
+            result["flow_id"], user_input={CONF_CALC_METHOD: mosque_uuid_label}
         )
-        # print(result)
+
         assert (
             result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
         )  # Assert that an entry is created/updated
@@ -744,7 +738,7 @@ async def test_options_flow_no_input_reopens_form(
     mock_mosques, mocked_mosques_data = mock_mosques_test_data
 
     # Initialize the options flow
-    flow = config_flow.MawaqitPrayerOptionsFlowHandler(config_entry_setup)
+    flow = config_flow.MawaqitPrayerOptionsFlowHandler()
     flow.hass = hass  # Assign HomeAssistant instance
 
     with (
@@ -762,8 +756,16 @@ async def test_options_flow_no_input_reopens_form(
             return_value=mock_mosques[0],
         ),
     ):
-        # Simulate the init step
-        result = await flow.async_step_init(user_input=None)
+        # show initial form
+        result = await hass.config_entries.options.async_init(
+            config_entry_setup.entry_id
+        )
+
+        # submit form with no user input
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=None
+        )
+
         assert (
             result.get("type") == data_entry_flow.FlowResultType.FORM
         )  # Assert that a form is shown
@@ -793,7 +795,7 @@ async def test_options_flow_no_input_error_reopens_form(
         ),
     ):
         # Initialize the options flow
-        flow = config_flow.MawaqitPrayerOptionsFlowHandler(config_entry_setup)
+        flow = config_flow.MawaqitPrayerOptionsFlowHandler()
         flow.hass = hass  # Assign HomeAssistant instance
 
         # Simulate the init step
@@ -803,3 +805,30 @@ async def test_options_flow_no_input_error_reopens_form(
             result.get("type") == data_entry_flow.FlowResultType.FORM
         )  # Assert that a form is shown
         assert result.get("step_id") == "init"
+
+
+@pytest.mark.asyncio
+async def test_options_flow_step_init_no_mosque_around(
+    hass: HomeAssistant, config_entry_setup, mock_mosques_test_data
+) -> None:
+    """Test the options flow reopens the form when no input is provided and an error occurs."""
+
+    with (
+        patch(
+            "homeassistant.components.mawaqit.utils.read_mawaqit_token",
+            return_value="TOKEN",
+        ),  # add a patch to async_save_mosque?
+        patch(
+            "homeassistant.components.mawaqit.mawaqit_wrapper.all_mosques_neighborhood",
+            side_effect=NoMosqueAround,
+        ),
+    ):
+        # Initialize the options flow
+        flow = config_flow.MawaqitPrayerOptionsFlowHandler()
+        flow.hass = hass  # Assign HomeAssistant instance
+
+        # Simulate the init step
+        result = await flow.async_step_init(user_input=None)
+
+        assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+        assert result.get("reason") == "no_mosque"

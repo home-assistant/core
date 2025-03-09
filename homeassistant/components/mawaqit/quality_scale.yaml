@@ -3,7 +3,7 @@ rules:
     status: exempt
     comment: This integration does not use service actions
   appropriate-polling: done
-  brands: todo
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
@@ -12,8 +12,8 @@ rules:
     status: exempt
     comment: This integration does not use service actions
   docs-high-level-description: done
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: This integration does not use entity events

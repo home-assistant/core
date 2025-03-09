@@ -3,7 +3,7 @@
   "name": "MAWAQIT",
   "codeowners": ["@MAWAQIT", "@moha-tah", "@Yeyvo"],
   "config_flow": true,
-  "documentation": "https://github.com/mawaqit/home-assistant",
+  "documentation": "https://www.home-assistant.io/integrations/mawaqit",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "requirements": ["mawaqit==1.0.0"]

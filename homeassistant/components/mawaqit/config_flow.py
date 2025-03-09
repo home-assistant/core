@@ -1,7 +1,6 @@
 """Adds config flow for Mawaqit."""
 
 import logging
-import os
 
 from aiohttp.client_exceptions import ClientConnectorError
 from mawaqit.consts import NoMosqueAround, NoMosqueFound
@@ -17,10 +16,6 @@ from . import mawaqit_wrapper, utils
 from .const import (
     CANNOT_CONNECT_TO_SERVER,
     CONF_CALC_METHOD,
-    CONF_CHOICE,
-    CONF_CHOICE_TRANSLATION_KEY,
-    CONF_KEEP,
-    CONF_RESET,
     CONF_SEARCH,
     CONF_TYPE_SEARCH,
     CONF_TYPE_SEARCH_COORDINATES,
@@ -40,8 +35,6 @@ from .utils import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -63,13 +56,10 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self.store is None:
             self.store = Store(self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
+
         # Set a unique ID for the whole integration since we do not want the user to have more than one instance of mawaqit
-        await self.async_set_unique_id(DOMAIN)
+        await self.async_set_unique_id(DOMAIN, raise_on_progress=False)
         self._abort_if_unique_id_configured()
-        # if the data folder is empty, we can continue the configuration
-        # otherwise, we abort the configuration because that means that the user has already configured an entry.
-        # if await utils.is_another_instance(self.hass, self.store):
-        #     return await self.async_step_keep_or_reset()
 
         if user_input is None:
             return await self._show_config_form(user_input=None)
@@ -117,23 +107,6 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=title, data=data_entry)
 
         return await self._show_config_form2()
-
-    # async def async_step_keep_or_reset(
-    #     self, user_input=None
-    # ) -> config_entries.ConfigFlowResult:
-    #     """Handle the user's choice to keep current data or reset."""
-    #     if user_input is None:
-    #         return await self._show_keep_or_reset_form()
-
-    #     choice = user_input[CONF_CHOICE]
-
-    #     if choice == CONF_KEEP:
-    #         return self.async_abort(reason="configuration_kept")
-    #     if choice == CONF_RESET:
-    #         # Clear existing data and restart the configuration process
-    #         await utils.async_clear_data(self.hass, self.store, DOMAIN)
-    #         return await self.async_step_user()
-    #     return await self._show_keep_or_reset_form()
 
     async def async_step_search_method(
         self, user_input=None
@@ -302,23 +275,6 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def _show_keep_or_reset_form(self):
-        """Show form to ask the user if they want to keep current data or reset."""
-        options = {
-            vol.Required(CONF_CHOICE, default=CONF_KEEP): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[CONF_KEEP, CONF_RESET],
-                    translation_key=CONF_CHOICE_TRANSLATION_KEY,
-                ),
-            ),
-        }
-
-        return self.async_show_form(
-            step_id="keep_or_reset",
-            data_schema=vol.Schema(options),
-            errors=self._errors,
-        )
-
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -372,6 +328,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             )
 
             current_mosque_data = await read_my_mosque_NN_file(self.store)
+            # print(f"store : {self.store}")
             current_mosque = current_mosque_data["uuid"]
 
             try:

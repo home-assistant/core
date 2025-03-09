@@ -13,14 +13,14 @@
       "keep_or_reset": {
         "title": "Another instance of MAWAQIT is already configured",
         "data": {
-          "choice": "You can eather chose to keep the existing configuration or to reset it :",
+          "choice": "You can eather chose to keep the existing configuration or to reset it:",
           "keep": "Keep the existing configuration",
           "reset": "Reset to configure a new mosque"
         }
       },
       "keyword_search": {
         "title": "Search for your mosque",
-        "description": "Search for a mosque by entering a keyword :",
+        "description": "Search for a mosque by entering a keyword:",
         "data": {
           "Keyword": "Search"
         }
@@ -28,12 +28,12 @@
       "search_method": {
         "title": "Choose the method to find your mosque",
         "data": {
-          "search_method_choice": "chose the search method :"
+          "search_method_choice": "Choose the search method:"
         }
       },
       "mosques_coordinates": {
         "data": {
-          "mosques": "Multiple mosques are available around you, select one :",
+          "mosques": "Multiple mosques are available around you, select one:",
           "uuid": "Mosque"
         },
         "title": "Your favourite mosque"
@@ -42,9 +42,9 @@
         "data": {
           "password": "Password",
           "server": "Server",
-          "username": "Email"
+          "username": "E-mail"
         },
-        "description": "Multiple mosques available, select one :",
+        "description": "Multiple mosques available, select one:",
         "title": "Select your favourite mosque"
       },
       "user": {
@@ -54,7 +54,7 @@
           "username": "E-mail"
         },
         "description": "Register on https://mawaqit.net/ and connect below. The nearest mosques to your location will be suggested and you will choose your favourite one.",
-        "title": "login to MAWAQIT"
+        "title": "Login to MAWAQIT"
       }
     }
   },
@@ -62,7 +62,10 @@
     "step": {
       "init": {
         "data": {
-          "calculation_method": "Change your mosque :"
+          "calculation_method": "Change your mosque:"
+        },
+        "data_description": {
+          "calculation_method": "The mosque you select will determine the prayer times."
         }
       }
     }
@@ -133,5 +136,5 @@
       }
     }
   },
-  "title": "MAWAQIT integration"
+  "title": "MAWAQIT Prayer Times"
 }
