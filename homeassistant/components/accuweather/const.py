@@ -59,7 +59,8 @@ AIR_QUALITY_CATEGORY_MAP = {
     1: "good",
     2: "moderate",
     3: "unhealthy",
-    4: "hazardous",
+    4: "very_unhealthy",
+    5: "hazardous",
 }
 POLLEN_CATEGORY_MAP = {
     1: "low",
