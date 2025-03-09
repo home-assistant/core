@@ -174,6 +174,14 @@ async def test_fetch_image_authenticated(
     """Test fetching an image with an authenticated client."""
     client = await hass_client()
 
+    # Using HEAD
+    resp = await client.head("/api/image_proxy/image.test")
+    assert resp.status == HTTPStatus.OK
+
+    resp = await client.head("/api/image_proxy/image.unknown")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+    # Using GET
     resp = await client.get("/api/image_proxy/image.test")
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
@@ -260,6 +268,11 @@ async def test_fetch_image_url_success(
 
     client = await hass_client()
 
+    # Using HEAD
+    resp = await client.head("/api/image_proxy/image.test")
+    assert resp.status == HTTPStatus.OK
+
+    # Using GET
     resp = await client.get("/api/image_proxy/image.test")
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
