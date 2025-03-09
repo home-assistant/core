@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, cast
@@ -11,6 +12,7 @@ from pysmartthings import (
     Attribute,
     Capability,
     Device,
+    DeviceEvent,
     Scene,
     SmartThings,
     SmartThingsAuthenticationFailedError,
@@ -28,7 +30,14 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 
-from .const import CONF_INSTALLED_APP_ID, CONF_LOCATION_ID, DOMAIN, MAIN, OLD_DATA
+from .const import (
+    CONF_INSTALLED_APP_ID,
+    CONF_LOCATION_ID,
+    DOMAIN,
+    EVENT_BUTTON,
+    MAIN,
+    OLD_DATA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,6 +149,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         rooms=rooms,
     )
 
+    def handle_button_press(event: DeviceEvent) -> None:
+        """Handle a button press."""
+        if (
+            event.capability is Capability.BUTTON
+            and event.attribute is Attribute.BUTTON
+        ):
+            hass.bus.async_fire(
+                EVENT_BUTTON,
+                {
+                    "component_id": event.component_id,
+                    "device_id": event.device_id,
+                    "location_id": event.location_id,
+                    "value": event.value,
+                    "name": entry.runtime_data.devices[event.device_id].device.label,
+                    "data": event.data,
+                },
+            )
+
+    entry.async_on_unload(
+        client.add_unspecified_device_event_listener(handle_button_press)
+    )
+
     entry.async_create_background_task(
         hass,
         client.subscribe(
@@ -185,25 +216,62 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+KEEP_CAPABILITY_QUIRK: dict[
+    Capability | str, Callable[[dict[Attribute | str, Status]], bool]
+] = {
+    Capability.WASHER_OPERATING_STATE: (
+        lambda status: status[Attribute.SUPPORTED_MACHINE_STATES].value is not None
+    ),
+    Capability.DEMAND_RESPONSE_LOAD_CONTROL: lambda _: True,
+}
+
+POWER_CONSUMPTION_FIELDS = {
+    "energy",
+    "power",
+    "deltaEnergy",
+    "powerEnergy",
+    "energySaved",
+}
+
+CAPABILITY_VALIDATION: dict[
+    Capability | str, Callable[[dict[Attribute | str, Status]], bool]
+] = {
+    Capability.POWER_CONSUMPTION_REPORT: (
+        lambda status: (
+            (power_consumption := status[Attribute.POWER_CONSUMPTION].value) is not None
+            and all(
+                field in cast(dict, power_consumption)
+                for field in POWER_CONSUMPTION_FIELDS
+            )
+        )
+    )
+}
+
+
 def process_status(
     status: dict[str, dict[Capability | str, dict[Attribute | str, Status]]],
 ) -> dict[str, dict[Capability | str, dict[Attribute | str, Status]]]:
     """Remove disabled capabilities from status."""
-    if (main_component := status.get("main")) is None or (
+    if (main_component := status.get(MAIN)) is None:
+        return status
+    if (
         disabled_capabilities_capability := main_component.get(
             Capability.CUSTOM_DISABLED_CAPABILITIES
         )
-    ) is None:
-        return status
-    disabled_capabilities = cast(
-        list[Capability | str],
-        disabled_capabilities_capability[Attribute.DISABLED_CAPABILITIES].value,
-    )
-    for capability in disabled_capabilities:
-        # We still need to make sure the climate entity can work without this capability
-        if (
-            capability in main_component
-            and capability != Capability.DEMAND_RESPONSE_LOAD_CONTROL
-        ):
-            del main_component[capability]
+    ) is not None:
+        disabled_capabilities = cast(
+            list[Capability | str],
+            disabled_capabilities_capability[Attribute.DISABLED_CAPABILITIES].value,
+        )
+        if disabled_capabilities is not None:
+            for capability in disabled_capabilities:
+                if capability in main_component and (
+                    capability not in KEEP_CAPABILITY_QUIRK
+                    or not KEEP_CAPABILITY_QUIRK[capability](main_component[capability])
+                ):
+                    del main_component[capability]
+    for capability in list(main_component):
+        if capability in CAPABILITY_VALIDATION:
+            if not CAPABILITY_VALIDATION[capability](main_component[capability]):
+                del main_component[capability]
     return status
