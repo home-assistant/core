@@ -85,6 +85,7 @@ class TeslemetryPollingUpdateEntity(TeslemetryVehicleEntity, TeslemetryUpdateEnt
             AVAILABLE,
             SCHEDULED,
         ):
+            # Only allow install when an update has been fully downloaded
             self._attr_supported_features = (
                 UpdateEntityFeature.PROGRESS | UpdateEntityFeature.INSTALL
             )
