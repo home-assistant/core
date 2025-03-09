@@ -253,6 +253,12 @@
         "duedate_options": "mdi:calendar-blank",
         "reminder_options": "mdi:reminder"
       }
+    },
+    "create_todo": {
+      "service": "mdi:pencil-box-outline",
+      "sections": {
+        "developer_options": "mdi:test-tube"
+      }
     }
   }
 }

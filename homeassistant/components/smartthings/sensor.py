@@ -57,6 +57,7 @@ JOB_STATE_MAP = {
     "freezeProtection": "freeze_protection",
     "preDrain": "pre_drain",
     "preWash": "pre_wash",
+    "prewash": "pre_wash",
     "wrinklePrevent": "wrinkle_prevent",
     "unknown": None,
 }
@@ -560,6 +561,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
+                device_class=SensorDeviceClass.TIMESTAMP,
+                value_fn=dt_util.parse_datetime,
             )
         ],
     },
@@ -1030,8 +1033,11 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     def options(self) -> list[str] | None:
         """Return the options for this sensor."""
         if self.entity_description.options_attribute:
-            options = self.get_attribute_value(
-                self.capability, self.entity_description.options_attribute
-            )
+            if (
+                options := self.get_attribute_value(
+                    self.capability, self.entity_description.options_attribute
+                )
+            ) is None:
+                return []
             return [option.lower() for option in options]
         return super().options
