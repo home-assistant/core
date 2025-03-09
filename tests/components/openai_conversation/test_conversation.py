@@ -140,10 +140,10 @@ async def test_max_token_limit(
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """Test handling early model stop."""
-    # length limit reached after some content is generated
+    # Length limit reached after some content is generated
     mock_create_stream.return_value = [
         (
-            # start message
+            # Start message
             ChatCompletionChunk(
                 id="chatcmpl-B",
                 created=1700000000,
@@ -158,7 +158,7 @@ async def test_max_token_limit(
                     )
                 ],
             ),
-            # length limit
+            # Length limit
             ChatCompletionChunk(
                 id="chatcmpl-B",
                 created=1700000000,
@@ -184,10 +184,10 @@ async def test_max_token_limit(
         result.response.speech["plain"]["speech"] == "Once upon a time, there was ..."
     ), result.response.speech
 
-    # length limit reached before any content is generated
+    # Length limit reached before any content is generated
     mock_create_stream.return_value = [
         (
-            # start message
+            # Start message
             ChatCompletionChunk(
                 id="chatcmpl-B",
                 created=1700000000,
@@ -200,7 +200,7 @@ async def test_max_token_limit(
                     )
                 ],
             ),
-            # length limit
+            # Length limit
             ChatCompletionChunk(
                 id="chatcmpl-B",
                 created=1700000000,
@@ -214,6 +214,80 @@ async def test_max_token_limit(
     result = await conversation.async_converse(
         hass,
         "please tell me a big story",
+        "mock-conversation-id",
+        Context(),
+        agent_id="conversation.openai",
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "OpenAI error: Max completion tokens reached"
+    ), result.response.speech
+
+    # Length limit reached while receiving tool call arguments
+    mock_create_stream.return_value = [
+        (
+            # Tool call
+            ChatCompletionChunk(
+                id="chatcmpl-A",
+                created=1700000000,
+                model="gpt-4-1106-preview",
+                object="chat.completion.chunk",
+                choices=[
+                    Choice(
+                        index=0,
+                        delta=ChoiceDelta(
+                            tool_calls=[
+                                ChoiceDeltaToolCall(
+                                    id="call_call_1",
+                                    index=0,
+                                    function=ChoiceDeltaToolCallFunction(
+                                        name="test_tool",
+                                        arguments=None,
+                                    ),
+                                )
+                            ]
+                        ),
+                    )
+                ],
+            ),
+            ChatCompletionChunk(
+                id="chatcmpl-A",
+                created=1700000000,
+                model="gpt-4-1106-preview",
+                object="chat.completion.chunk",
+                choices=[
+                    Choice(
+                        index=0,
+                        delta=ChoiceDelta(
+                            tool_calls=[
+                                ChoiceDeltaToolCall(
+                                    index=0,
+                                    function=ChoiceDeltaToolCallFunction(
+                                        name=None,
+                                        arguments='{"para',
+                                    ),
+                                )
+                            ]
+                        ),
+                    )
+                ],
+            ),
+            # Length limit
+            ChatCompletionChunk(
+                id="chatcmpl-A",
+                created=1700000000,
+                model="gpt-4-1106-preview",
+                object="chat.completion.chunk",
+                choices=[Choice(index=0, finish_reason="length", delta=ChoiceDelta())],
+            ),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Please call the test function",
         "mock-conversation-id",
         Context(),
         agent_id="conversation.openai",

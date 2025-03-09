@@ -123,6 +123,13 @@ async def _transform_stream(
 
         if choice.finish_reason:
             if current_tool_call:
+                if choice.finish_reason == "length":
+                    LOGGER.error(
+                        "Unable to complete tool call arguments because max tokens reached"
+                    )
+                    raise HomeAssistantError(
+                        "OpenAI error: Max completion tokens reached"
+                    )
                 yield {
                     "tool_calls": [
                         llm.ToolInput(
