@@ -57,6 +57,7 @@ from homeassistant.const import (
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SET_CONVERSATION_RESPONSE,
+    CONF_SET_VARIABLES,
     CONF_STOP,
     CONF_TARGET,
     CONF_THEN,
@@ -285,6 +286,7 @@ STATIC_VALIDATION_ACTION_TYPES = (
     cv.SCRIPT_ACTION_DELAY,
     cv.SCRIPT_ACTION_FIRE_EVENT,
     cv.SCRIPT_ACTION_SET_CONVERSATION_RESPONSE,
+    cv.SCRIPT_ACTION_SET_VARIABLES,
     cv.SCRIPT_ACTION_STOP,
     cv.SCRIPT_ACTION_VARIABLES,
     cv.SCRIPT_ACTION_WAIT_TEMPLATE,
@@ -964,6 +966,16 @@ class _ScriptRun:
         raise _StopScript(stop, response)
 
     ## Variable actions ##
+
+    async def _async_step_set_variables(self) -> None:
+        """Set a variable value."""
+        self._step_log("setting variables")
+        for key, value in (
+            self._action[CONF_SET_VARIABLES]
+            .async_simple_render(self._variables)
+            .items()
+        ):
+            self._variables[key] = value
 
     async def _async_step_variables(self) -> None:
         """Define a local variable."""
