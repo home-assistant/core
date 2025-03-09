@@ -15,6 +15,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import HomeeConfigEntry
 from .entity import HomeeEntity
 
+PARALLEL_UPDATES = 0
+
 BUTTON_DESCRIPTIONS: dict[AttributeType, ButtonEntityDescription] = {
     AttributeType.AUTOMATIC_MODE_IMPULSE: ButtonEntityDescription(key="automatic_mode"),
     AttributeType.BRIEFLY_OPEN_IMPULSE: ButtonEntityDescription(key="briefly_open"),
