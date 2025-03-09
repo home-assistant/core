@@ -31,7 +31,7 @@ from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component
+from tests.common import assert_setup_component, async_capture_events
 
 # Represent for light's availability
 _STATE_AVAILABILITY_BOOLEAN = "availability_boolean.state"
@@ -2331,7 +2331,7 @@ async def test_unique_id(hass: HomeAssistant, setup_light) -> None:
     assert len(hass.states.async_all("light")) == 1
 
 
-@pytest.mark.parametrize(("count", "domain"), [(2, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(3, "template")])
 @pytest.mark.parametrize(
     "config",
     [
@@ -2369,6 +2369,37 @@ async def test_unique_id(hass: HomeAssistant, setup_light) -> None:
                         "bare_minimum": {**OPTIMISTIC_ON_OFF_LIGHT_CONFIG},
                     },
                 },
+                {
+                    "unique_id": "action-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "variables": {"type": "{{ trigger.event.data.type }}"},
+                    "action": [
+                        {"event": "action_event", "event_data": {"type": "{{ type }}"}}
+                    ],
+                    "lights": {
+                        "hello": {
+                            "friendly_name": "action test",
+                            "unique_id": "action_test-id",
+                            "value_template": "{{ trigger.event.data.beer == 2 }}",
+                            "entity_picture_template": "{{ '/local/dogs.png' }}",
+                            "icon_template": "{{ 'mdi:pirate' }}",
+                            "turn_on": {
+                                "event": "light_event",
+                                "event_data": {
+                                    "entity_id": "{{ this.entity_id }}",
+                                    "type": "{{ type }}",
+                                },
+                            },
+                            "turn_off": {
+                                "event": "light_event",
+                                "event_data": {
+                                    "entity_id": "{{ this.entity_id }}",
+                                    "type": "{{ type }}",
+                                },
+                            },
+                        }
+                    },
+                },
             ],
         },
     ],
@@ -2378,6 +2409,8 @@ async def test_trigger_entity(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test trigger entity works."""
+    action_events = async_capture_events(hass, "action_event")
+    light_events = async_capture_events(hass, "light_event")
     await hass.async_block_till_done()
     state = hass.states.get("light.hello_name")
     assert state is not None
@@ -2392,7 +2425,7 @@ async def test_trigger_entity(
     assert state.state == STATE_UNKNOWN
 
     context = Context()
-    hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+    hass.bus.async_fire("test_event", {"beer": 2, "type": "duff"}, context=context)
     await hass.async_block_till_done()
 
     state = hass.states.get("light.hello_name")
@@ -2407,7 +2440,7 @@ async def test_trigger_entity(
     assert state.attributes.get("entity_picture") == "/local/dogs.png"
     assert state.context is context
 
-    assert len(entity_registry.entities) == 2
+    assert len(entity_registry.entities) == 3
     assert (
         entity_registry.entities["light.hello_name"].unique_id
         == "listening-test-event-hello_name-id"
@@ -2416,13 +2449,43 @@ async def test_trigger_entity(
         entity_registry.entities["light.via_list"].unique_id
         == "listening-test-event-via_list-id"
     )
+    assert (
+        entity_registry.entities["light.action_test"].unique_id
+        == "action-test-event-action_test-id"
+    )
+
+    assert len(action_events) == 1
+    assert action_events[0].event_type == "action_event"
+    beer = action_events[0].data.get("type")
+    assert beer is not None
+    assert beer == "duff"
 
     # Even if state itself didn't change, attributes might have changed
-    hass.bus.async_fire("test_event", {"beer": 2, "uno_mas": "si"})
+    hass.bus.async_fire("test_event", {"beer": 2, "type": "duff", "uno_mas": "si"})
     await hass.async_block_till_done()
     state = hass.states.get("light.via_list")
     assert state.attributes.get("entity_picture") == "/local/dogs2.png"
     assert state.state == STATE_ON
+
+    # Ensure the actions
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {"entity_id": "light.action_test"},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {"entity_id": "light.action_test"},
+        blocking=True,
+    )
+
+    assert len(light_events) == 2
+    assert light_events[0].event_type == "light_event"
+    beer = light_events[0].data.get("type")
+    assert beer is not None
+    assert beer == "duff"
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
