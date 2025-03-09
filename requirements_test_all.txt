@@ -1243,7 +1243,7 @@ nessclient==1.1.2
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==4.0.0
+nettigo-air-monitor==4.1.0
 
 # homeassistant.components.nexia
 nexia==2.2.2
