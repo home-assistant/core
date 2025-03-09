@@ -91,6 +91,7 @@ FLOWS = {
         "bluetooth",
         "bmw_connected_drive",
         "bond",
+        "bosch_alarm",
         "bosch_shc",
         "braviatv",
         "bring",

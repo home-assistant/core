@@ -119,6 +119,7 @@ homeassistant.components.bluetooth_adapters.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
 homeassistant.components.bond.*
+homeassistant.components.bosch_alarm.*
 homeassistant.components.braviatv.*
 homeassistant.components.bring.*
 homeassistant.components.brother.*
