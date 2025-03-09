@@ -287,6 +287,9 @@ class OpenAIConversationEntity(
 
             try:
                 result = await client.chat.completions.create(**model_args)
+            except openai.RateLimitError as err:
+                LOGGER.error("Rate limited by OpenAI: %s", err)
+                raise HomeAssistantError("Rate limited or insufficient funds") from err
             except openai.OpenAIError as err:
                 LOGGER.error("Error talking to OpenAI: %s", err)
                 raise HomeAssistantError("Error talking to OpenAI") from err
@@ -307,7 +310,9 @@ class OpenAIConversationEntity(
         assert type(chat_log.content[-1]) is conversation.AssistantContent
         intent_response.async_set_speech(chat_log.content[-1].content or "")
         return conversation.ConversationResult(
-            response=intent_response, conversation_id=chat_log.conversation_id
+            response=intent_response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
         )
 
     async def _async_entry_update_listener(

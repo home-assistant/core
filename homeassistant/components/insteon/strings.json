@@ -111,7 +111,7 @@
   },
   "services": {
     "add_all_link": {
-      "name": "Add all link",
+      "name": "Add All-Link",
       "description": "Tells the Insteon Modem (IM) start All-Linking mode. Once the IM is in All-Linking mode, press the link button on the device to complete All-Linking.",
       "fields": {
         "group": {
@@ -120,13 +120,13 @@
         },
         "mode": {
           "name": "[%key:common::config_flow::data::mode%]",
-          "description": "Linking mode   controller - IM is controller   responder - IM is responder."
+          "description": "Linking mode of the Insteon Modem."
         }
       }
     },
     "delete_all_link": {
-      "name": "Delete all link",
-      "description": "Tells the Insteon Modem (IM) to remove an All-Link record from the All-Link Database of the IM and a device. Once the IM is set to delete the link, press the link button on the corresponding device to complete the process.",
+      "name": "Delete All-Link",
+      "description": "Tells the Insteon Modem (IM) to remove an All-Link record from the All-Link database of the IM and a device. Once the IM is set to delete the link, press the link button on the corresponding device to complete the process.",
       "fields": {
         "group": {
           "name": "Group",
@@ -135,8 +135,8 @@
       }
     },
     "load_all_link_database": {
-      "name": "Load all link database",
-      "description": "Load the All-Link Database for a device. WARNING - Loading a device All-LInk database is very time consuming and inconsistent. This may take a LONG time and may need to be repeated to obtain all records.",
+      "name": "Load All-Link database",
+      "description": "Loads the All-Link database for a device. WARNING - Loading a device All-Link database is very time consuming and inconsistent. This may take a LONG time and may need to be repeated to obtain all records.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -149,8 +149,8 @@
       }
     },
     "print_all_link_database": {
-      "name": "Print all link database",
-      "description": "Prints the All-Link Database for a device. Requires that the All-Link Database is loaded into memory.",
+      "name": "Print All-Link database",
+      "description": "Prints the All-Link database for a device. Requires that the All-Link database is loaded into memory.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -159,8 +159,8 @@
       }
     },
     "print_im_all_link_database": {
-      "name": "Print IM all link database",
-      "description": "Prints the All-Link Database for the INSTEON Modem (IM)."
+      "name": "Print IM All-Link database",
+      "description": "Prints the All-Link database for the INSTEON Modem (IM)."
     },
     "x10_all_units_off": {
       "name": "X10 all units off",

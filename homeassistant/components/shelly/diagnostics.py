@@ -8,7 +8,6 @@ from homeassistant.components.bluetooth import async_scanner_by_source
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import format_mac
 
 from .coordinator import ShellyConfigEntry
 from .utils import get_rpc_ws_url
@@ -86,8 +85,7 @@ async def async_get_config_entry_diagnostics(
                 if k in ["sys", "wifi"]
             }
 
-        source = format_mac(rpc_coordinator.mac).upper()
-        if scanner := async_scanner_by_source(hass, source):
+        if scanner := async_scanner_by_source(hass, rpc_coordinator.bluetooth_source):
             bluetooth = {
                 "scanner": await scanner.async_diagnostics(),
             }

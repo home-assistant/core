@@ -119,5 +119,25 @@
         "name": "Cooker hood mode"
       }
     }
+  },
+  "exceptions": {
+    "set_value_error": {
+      "message": "Failed setting the value {value}."
+    },
+    "switch_turn": {
+      "message": "Failed to turn the switch {state}."
+    },
+    "set_preset_mode": {
+      "message": "Failed to set preset mode {preset}."
+    },
+    "set_temperature": {
+      "message": "Failed to set temperature {temperature}."
+    },
+    "set_hvac_mode": {
+      "message": "Failed to set HVAC mode {mode}."
+    },
+    "not_ready": {
+      "message": "Timeout while connecting to {ip}."
+    }
   }
 }
