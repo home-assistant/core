@@ -1,4 +1,52 @@
 # serializer version: 1
+# name: test_browse_media_favorites
+  list([
+    dict({
+      'can_expand': True,
+      'can_play': False,
+      'children_media_class': None,
+      'media_class': 'album',
+      'media_content_id': 'object.container.album.musicAlbum',
+      'media_content_type': 'favorites_folder',
+      'thumbnail': None,
+      'title': 'Albums',
+    }),
+    dict({
+      'can_expand': True,
+      'can_play': False,
+      'children_media_class': None,
+      'media_class': 'track',
+      'media_content_id': 'object.item.audioItem.audioBook',
+      'media_content_type': 'favorites_folder',
+      'thumbnail': None,
+      'title': 'Audio Book',
+    }),
+    dict({
+      'can_expand': True,
+      'can_play': False,
+      'children_media_class': None,
+      'media_class': 'genre',
+      'media_content_id': 'object.item.audioItem.audioBroadcast',
+      'media_content_type': 'favorites_folder',
+      'thumbnail': None,
+      'title': 'Radio',
+    }),
+  ])
+# ---
+# name: test_browse_media_favorites_audio_books
+  list([
+    dict({
+      'can_expand': False,
+      'can_play': True,
+      'children_media_class': None,
+      'media_class': 'track',
+      'media_content_id': 'FV:3/8',
+      'media_content_type': 'favorite_item_id',
+      'thumbnail': None,
+      'title': 'The Great Gatsby',
+    }),
+  ])
+# ---
 # name: test_browse_media_library
   list([
     dict({

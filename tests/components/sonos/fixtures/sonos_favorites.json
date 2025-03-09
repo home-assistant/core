@@ -34,5 +34,17 @@
         "protocol_info": "a:b:c:d"
       }
     ]
+  },
+  {
+    "title": "The Great Gatsby",
+    "parent_id": "FV:2",
+    "item_id": "FV:3/8",
+    "resource_meta_data": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"SomeID\" parentID=\"SomeParent\" restricted=\"true\"><dc:title>The Great Gatsby</dc:title><upnp:class>object.item.audioItem.audioBook</upnp:class><desc id=\"cdudn\" nameSpace=\"urn:schemas-rinconnetworks-com:metadata-1-0/\">RINCON_AssociatedZPUDN</desc></item></DIDL-Lite>",
+    "resources": [
+      {
+        "uri": "x-rincon-playlist:RINCON_test#A:ALBUMARTIST/Aerosmith/1984",
+        "protocol_info": "a:b:c:d"
+      }
+    ]
   }
 ]

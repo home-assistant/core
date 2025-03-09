@@ -172,7 +172,50 @@ async def test_browse_media_library_albums(
             "media_content_type": "album",
         }
     )
+
     response = await client.receive_json()
     assert response["success"]
     assert response["result"]["children"] == snapshot
     assert soco_mock.music_library.browse_by_idstring.call_count == 1
+
+
+async def test_browse_media_favorites(
+    async_autosetup_sonos,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the async_browse_media method."""
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.zone_a",
+            "media_content_id": "",
+            "media_content_type": "favorites",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["children"] == snapshot
+
+
+async def test_browse_media_favorites_audio_books(
+    async_autosetup_sonos,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the async_browse_media method."""
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.zone_a",
+            "media_content_id": "object.item.audioItem.audioBook",
+            "media_content_type": "favorites_folder",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["children"] == snapshot
