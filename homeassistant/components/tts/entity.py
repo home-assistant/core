@@ -43,7 +43,7 @@ class TTSAudioRequest:
 
 @dataclass
 class TTSAudioResponse:
-    """Request to get TTS audio."""
+    """Response containing TTS audio stream."""
 
     extension: str
     data_gen: AsyncGenerator[bytes]
