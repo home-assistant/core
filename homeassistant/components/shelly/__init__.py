@@ -12,7 +12,7 @@ from aioshelly.exceptions import (
     InvalidAuthError,
     MacAddressMismatchError,
 )
-from aioshelly.rpc_device import RpcDevice
+from aioshelly.rpc_device import RpcDevice, bluetooth_mac_from_primary_mac
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import async_remove_scanner
@@ -339,4 +339,5 @@ async def async_remove_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> N
     if get_device_entry_gen(entry) in RPC_GENERATIONS and (
         mac_address := entry.unique_id
     ):
-        async_remove_scanner(hass, mac_address)
+        source = dr.format_mac(bluetooth_mac_from_primary_mac(mac_address)).upper()
+        async_remove_scanner(hass, source)
