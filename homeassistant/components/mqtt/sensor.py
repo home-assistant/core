@@ -65,7 +65,9 @@ MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
 DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
 
-URL_DOCS_SUPPORTED_SENSOR_UOM = "https://developers.home-assistant.io/docs/core/entity/sensor/#available-device-classes"
+URL_DOCS_SUPPORTED_SENSOR_UOM = (
+    "https://www.home-assistant.io/integrations/sensor/#device-class"
+)
 
 _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
     {
