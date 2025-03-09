@@ -12,6 +12,7 @@ from contextvars import ContextVar
 from copy import deepcopy
 from datetime import date, datetime, time, timedelta
 from functools import cache, lru_cache, partial, wraps
+import hashlib
 import json
 import logging
 import math
@@ -2760,6 +2761,50 @@ def shuffle(*args: Any, seed: Any = None) -> MutableSequence[Any]:
     return items
 
 
+def typeof(value: Any) -> Any:
+    """Return the type of value passed to debug types."""
+    return value.__class__.__name__
+
+
+def flatten(value: Iterable[Any], levels: int | None = None) -> list[Any]:
+    """Flattens list of lists."""
+    if not isinstance(value, Iterable) or isinstance(value, str):
+        raise TypeError(f"flatten expected a list, got {type(value).__name__}")
+
+    flattened: list[Any] = []
+    for item in value:
+        if isinstance(item, Iterable) and not isinstance(item, str):
+            if levels is None:
+                flattened.extend(flatten(item))
+            elif levels >= 1:
+                flattened.extend(flatten(item, levels=(levels - 1)))
+            else:
+                flattened.append(item)
+        else:
+            flattened.append(item)
+    return flattened
+
+
+def md5(value: str) -> str:
+    """Generate md5 hash from a string."""
+    return hashlib.md5(value.encode()).hexdigest()
+
+
+def sha1(value: str) -> str:
+    """Generate sha1 hash from a string."""
+    return hashlib.sha1(value.encode()).hexdigest()
+
+
+def sha256(value: str) -> str:
+    """Generate sha256 hash from a string."""
+    return hashlib.sha256(value.encode()).hexdigest()
+
+
+def sha512(value: str) -> str:
+    """Generate sha512 hash from a string."""
+    return hashlib.sha512(value.encode()).hexdigest()
+
+
 class TemplateContextManager(AbstractContextManager):
     """Context manager to store template being parsed or rendered in a ContextVar."""
 
@@ -2961,6 +3006,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["version"] = version
         self.filters["contains"] = contains
         self.filters["shuffle"] = shuffle
+        self.filters["typeof"] = typeof
+        self.filters["flatten"] = flatten
+        self.filters["md5"] = md5
+        self.filters["sha1"] = sha1
+        self.filters["sha256"] = sha256
+        self.filters["sha512"] = sha512
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2999,6 +3050,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["version"] = version
         self.globals["zip"] = zip
         self.globals["shuffle"] = shuffle
+        self.globals["typeof"] = typeof
+        self.globals["flatten"] = flatten
+        self.globals["md5"] = md5
+        self.globals["sha1"] = sha1
+        self.globals["sha256"] = sha256
+        self.globals["sha512"] = sha512
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
         self.tests["set"] = _is_set
