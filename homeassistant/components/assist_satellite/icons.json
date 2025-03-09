@@ -7,6 +7,9 @@
   "services": {
     "announce": {
       "service": "mdi:bullhorn"
+    },
+    "start_conversation": {
+      "service": "mdi:forum"
     }
   }
 }

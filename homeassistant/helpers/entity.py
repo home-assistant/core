@@ -1085,9 +1085,9 @@ class Entity(
         state = self._stringify_state(available)
         if available:
             if state_attributes := self.state_attributes:
-                attr.update(state_attributes)
+                attr |= state_attributes
             if extra_state_attributes := self.extra_state_attributes:
-                attr.update(extra_state_attributes)
+                attr |= extra_state_attributes
 
         if (unit_of_measurement := self.unit_of_measurement) is not None:
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
@@ -1214,7 +1214,7 @@ class Entity(
         else:
             # Overwrite properties that have been set in the config file.
             if custom := customize.get(entity_id):
-                attr.update(custom)
+                attr |= custom
 
         if (
             self._context_set is not None

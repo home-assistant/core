@@ -58,7 +58,7 @@ rules:
   entity-translations:
     status: exempt
     comment: There are no entities to translate.
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: The only entity can use the device class.

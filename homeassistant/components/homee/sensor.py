@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeeConfigEntry
 from .const import (
@@ -26,6 +26,8 @@ from .const import (
 )
 from .entity import HomeeEntity, HomeeNodeEntity
 from .helpers import get_name_for_enum
+
+PARALLEL_UPDATES = 0
 
 
 def get_open_close_value(attribute: HomeeAttribute) -> str | None:
@@ -40,10 +42,22 @@ def get_window_value(attribute: HomeeAttribute) -> str | None:
     return vals.get(attribute.current_value)
 
 
+def get_brightness_device_class(
+    attribute: HomeeAttribute, device_class: SensorDeviceClass | None
+) -> SensorDeviceClass | None:
+    """Return the device class for a brightness sensor."""
+    if attribute.unit == "%":
+        return None
+    return device_class
+
+
 @dataclass(frozen=True, kw_only=True)
 class HomeeSensorEntityDescription(SensorEntityDescription):
     """A class that describes Homee sensor entities."""
 
+    device_class_fn: Callable[
+        [HomeeAttribute, SensorDeviceClass | None], SensorDeviceClass | None
+    ] = lambda attribute, device_class: device_class
     value_fn: Callable[[HomeeAttribute], str | float | None] = (
         lambda value: value.current_value
     )
@@ -67,6 +81,7 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
     AttributeType.BRIGHTNESS: HomeeSensorEntityDescription(
         key="brightness",
         device_class=SensorDeviceClass.ILLUMINANCE,
+        device_class_fn=get_brightness_device_class,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=(
             lambda attribute: attribute.current_value * 1000
@@ -99,14 +114,50 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    AttributeType.EXHAUST_MOTOR_REVS: HomeeSensorEntityDescription(
+        key="exhaust_motor_revs",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    AttributeType.INDOOR_RELATIVE_HUMIDITY: HomeeSensorEntityDescription(
+        key="indoor_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AttributeType.INDOOR_TEMPERATURE: HomeeSensorEntityDescription(
+        key="indoor_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AttributeType.INTAKE_MOTOR_REVS: HomeeSensorEntityDescription(
+        key="intake_motor_revs",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     AttributeType.LEVEL: HomeeSensorEntityDescription(
         key="level",
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AttributeType.LINK_QUALITY: HomeeSensorEntityDescription(
         key="link_quality",
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AttributeType.OPERATING_HOURS: HomeeSensorEntityDescription(
+        key="operating_hours",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    AttributeType.OUTDOOR_RELATIVE_HUMIDITY: HomeeSensorEntityDescription(
+        key="outdoor_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AttributeType.OUTDOOR_TEMPERATURE: HomeeSensorEntityDescription(
+        key="outdoor_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AttributeType.POSITION: HomeeSensorEntityDescription(
@@ -121,7 +172,7 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
     AttributeType.RAIN_FALL_TODAY: HomeeSensorEntityDescription(
         key="rainfall_day",
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     AttributeType.RELATIVE_HUMIDITY: HomeeSensorEntityDescription(
         key="humidity",
@@ -141,6 +192,7 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
     AttributeType.TOTAL_CURRENT: HomeeSensorEntityDescription(
         key="total_current",
         device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AttributeType.TOTAL_CURRENT_ENERGY_USE: HomeeSensorEntityDescription(
         key="total_power",
@@ -216,6 +268,7 @@ NODE_SENSOR_DESCRIPTIONS: tuple[HomeeNodeSensorEntityDescription, ...] = (
         ],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        translation_key="node_state",
         value_fn=lambda node: get_name_for_enum(NodeState, node.state),
     ),
 )
@@ -224,7 +277,7 @@ NODE_SENSOR_DESCRIPTIONS: tuple[HomeeNodeSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_devices: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add the homee platform for the sensor components."""
 
@@ -265,6 +318,9 @@ class HomeeSensor(HomeeEntity, SensorEntity):
         if attribute.instance > 0:
             self._attr_translation_key = f"{self._attr_translation_key}_instance"
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
+        self._attr_device_class = description.device_class_fn(
+            attribute, description.device_class
+        )
 
     @property
     def native_value(self) -> float | str | None:
@@ -293,7 +349,6 @@ class HomeeNodeSensor(HomeeNodeEntity, SensorEntity):
         """Initialize a homee node sensor entity."""
         super().__init__(node, entry)
         self.entity_description = description
-        self._attr_translation_key = f"node_{description.key}"
         self._node = node
         self._attr_unique_id = f"{self._attr_unique_id}-{description.key}"
 

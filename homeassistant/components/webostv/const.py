@@ -1,4 +1,4 @@
-"""Constants used for LG webOS Smart TV."""
+"""Constants for the LG webOS TV integration."""
 
 import asyncio
 
@@ -31,6 +31,7 @@ WEBOSTV_EXCEPTIONS = (
     WebOsTvCommandError,
     aiohttp.ClientConnectorError,
     aiohttp.ServerDisconnectedError,
+    aiohttp.WSMessageTypeError,
     asyncio.CancelledError,
     asyncio.TimeoutError,
 )

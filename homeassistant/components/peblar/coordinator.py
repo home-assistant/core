@@ -34,6 +34,7 @@ class PeblarRuntimeData:
     """Class to hold runtime data."""
 
     data_coordinator: PeblarDataUpdateCoordinator
+    last_known_charging_limit = 6
     system_information: PeblarSystemInformation
     user_configuration_coordinator: PeblarUserConfigurationDataUpdateCoordinator
     version_coordinator: PeblarVersionDataUpdateCoordinator
@@ -136,6 +137,8 @@ class PeblarVersionDataUpdateCoordinator(
 
 class PeblarDataUpdateCoordinator(DataUpdateCoordinator[PeblarData]):
     """Class to manage fetching Peblar active data."""
+
+    config_entry: PeblarConfigEntry
 
     def __init__(
         self, hass: HomeAssistant, entry: PeblarConfigEntry, api: PeblarApi

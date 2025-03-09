@@ -21,7 +21,7 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTempera
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     DATA_DISCOVERY_SERVICE,
@@ -47,7 +47,7 @@ _HA_FAN_TO_ESCEA = {v: k for k, v in _ESCEA_FAN_TO_HA.items()}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize an Escea Controller."""
     discovery_service = hass.data[DATA_DISCOVERY_SERVICE]

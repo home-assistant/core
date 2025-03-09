@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import mimetypes
+from typing import Any
+
 from mastodon import Mastodon
 
 from .const import ACCOUNT_USERNAME, DEFAULT_NAME, INSTANCE_DOMAIN, INSTANCE_URI
@@ -30,3 +33,11 @@ def construct_mastodon_username(
         )
 
     return DEFAULT_NAME
+
+
+def get_media_type(media_path: Any = None) -> Any:
+    """Get media type."""
+
+    (media_type, _) = mimetypes.guess_type(media_path)
+
+    return media_type

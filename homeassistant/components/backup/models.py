@@ -28,7 +28,7 @@ class Folder(StrEnum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class AgentBackup:
+class BaseBackup:
     """Base backup class."""
 
     addons: list[AddonInfo]
@@ -40,18 +40,18 @@ class AgentBackup:
     homeassistant_included: bool
     homeassistant_version: str | None  # None if homeassistant_included is False
     name: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class AgentBackup(BaseBackup):
+    """Agent backup class."""
+
     protected: bool
     size: int
 
     def as_dict(self) -> dict:
         """Return a dict representation of this backup."""
         return asdict(self)
-
-    def as_frontend_json(self) -> dict:
-        """Return a dict representation of this backup for sending to frontend."""
-        return {
-            key: val for key, val in asdict(self).items() if key != "extra_metadata"
-        }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
@@ -71,5 +71,31 @@ class AgentBackup:
         )
 
 
-class BackupManagerError(HomeAssistantError):
+class BackupError(HomeAssistantError):
+    """Base class for backup errors."""
+
+    error_code = "unknown"
+
+
+class BackupAgentError(BackupError):
+    """Base class for backup agent errors."""
+
+    error_code = "backup_agent_error"
+
+
+class BackupManagerError(BackupError):
     """Backup manager error."""
+
+    error_code = "backup_manager_error"
+
+
+class BackupReaderWriterError(BackupError):
+    """Backup reader/writer error."""
+
+    error_code = "backup_reader_writer_error"
+
+
+class BackupNotFound(BackupAgentError, BackupManagerError):
+    """Raised when a backup is not found."""
+
+    error_code = "backup_not_found"
