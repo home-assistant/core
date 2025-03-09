@@ -1,41 +1,40 @@
 {
   "config": {
     "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
-      "already_configured": "A config entry already exists for that account.",
-      "bad_location": "The location index is not within range.",
-      "cannot_connect": "Unable to connect to the vendor's servers.",
-      "invalid_auth": "Unknown username or incorrect password.",
-      "rate_exceeded": "Vendor's API rate limit has been exceeded."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "rate_exceeded": "API rate limit has been exceeded"
     },
     "step": {
       "user": {
-        "title": "User Credentials",
+        "title": "User credentials",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
-        "description": "user: The Evohome integration"
+        "description": "Provide the logon details of your TCC account"
       },
       "location": {
-        "title": "Location Index",
+        "title": "Location index",
         "data": {
-          "location_idx": "location index"
+          "location_idx": "Location index"
         },
-        "description": "location: The Evohome integration"
+        "description": "Provide the index of the location to use"
       },
       "reauth": {
-        "title": "User Credentials",
+        "title": "[%key:common::config_flow::title::reauth%]",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
-        "description": "reauth: The Evohome integration"
+        "description": "Provide the password of your TCC account"
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Evohome integration needs to re-authenticate your account"
+        "description": "The integration needs to re-authenticate your account"
       }
     }
   },

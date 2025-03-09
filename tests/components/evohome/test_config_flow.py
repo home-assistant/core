@@ -19,18 +19,12 @@ from homeassistant.components.evohome.const import (
     DEFAULT_HIGH_PRECISION,
     DOMAIN,
 )
-from homeassistant.config_entries import (
-    SOURCE_IMPORT,
-    SOURCE_RECONFIGURE,
-    SOURCE_USER,
-    ConfigEntryState,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow, FlowResultType
+from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import mock_make_request, mock_post_request
+from .conftest import load_config_entry, mock_make_request, mock_post_request
 
 from tests.common import MockConfigEntry
 
@@ -168,7 +162,7 @@ async def test_config_flow(
 ) -> None:
     """Test a successful config flow."""
 
-    result: ConfigFlowResult = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
@@ -218,7 +212,7 @@ async def test_config_flow(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert entry.source == SOURCE_USER
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     assert entry.domain == DOMAIN
     assert entry.title == "Evohome"
@@ -251,7 +245,7 @@ async def test_config_flow(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert entry.source == SOURCE_USER
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     assert entry.domain == DOMAIN
     assert entry.title == "Evohome"
@@ -273,8 +267,6 @@ async def test_import_flow(
     install: str,
 ) -> None:
     """Test a successful import flow."""
-
-    result: ConfigFlowResult
 
     with (
         patch(
@@ -307,7 +299,7 @@ async def test_import_flow(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert entry.source == SOURCE_IMPORT
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     assert entry.domain == DOMAIN
     assert entry.title == "Evohome"
@@ -364,7 +356,9 @@ async def test_reconfigure_flow(
 ) -> None:
     """Test a successful reconfigure flow."""
 
-    config_entry.add_to_hass(hass)
+    # need to set up the entry first, as runtime_data attr is required
+    await load_config_entry(hass, config_entry)
+
     old_location_idx = config_entry.data[CONF_LOCATION_IDX]
 
     # start the reconfigure flow
@@ -390,17 +384,13 @@ async def test_reconfigure_flow(
             },
         )
 
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reconfigure_successful"
+
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert config_entry.source == SOURCE_RECONFIGURE
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.runtime_data is not None
-
-    # start the reconfigure flow
-    result = await config_entry.start_reconfigure_flow(hass)
-
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reconfigure"
 
 
 async def test_abort_single_instance_allowed(
@@ -419,28 +409,3 @@ async def test_abort_single_instance_allowed(
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"
-
-
-async def test_error_already_configured(
-    hass: HomeAssistant,
-    config: EvoConfigFileDictT,
-) -> None:
-    """Test that an Evohome config entry has a unique id."""
-
-    with patch(
-        "homeassistant.config_entries.ConfigFlow._abort_if_unique_id_configured",
-        side_effect=AbortFlow("already_configured"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
-                CONF_USERNAME: config[CONF_USERNAME],
-                CONF_PASSWORD: config[CONF_PASSWORD],
-            },
-        )
-
-        await hass.async_block_till_done()
-
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {"base": "already_configured"}

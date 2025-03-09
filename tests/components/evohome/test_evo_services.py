@@ -224,12 +224,12 @@ async def test_load_unload_entry(
 
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
         assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
 
         await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.NOT_LOADED  # type: ignore[comparison-overlap]
+        assert config_entry.state is ConfigEntryState.NOT_LOADED  # type: ignore[comparison-overlap]
 
         assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot

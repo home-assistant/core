@@ -218,7 +218,8 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(self._username.lower())
 
             try:
-                self._abort_if_unique_id_configured()  # to avoid unnecessary I/O
+                # leverage the following method to avoid unnecessary I/O
+                self._abort_if_unique_id_configured(error="already_configured_account")
 
                 self._client = await self._test_credentials(
                     self._username,
@@ -228,7 +229,8 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._num_locations = await self._test_installation(self._client)
 
             except AbortFlow as err:
-                errors["base"] = str(err.reason)  # usually: 'already_configured'
+                # don't abort; just inform the user to use a different account
+                errors["base"] = str(err.reason)
 
             except (ConfigEntryAuthFailed, ConfigEntryNotReady) as err:
                 if str(err) not in ("rate_exceeded", "cannot_connect", "invalid_auth"):
@@ -374,6 +376,8 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         except ec2.ApiRequestFailedError as err:
             _LOGGER.warning("Request failed: %s", err)
+            if err.status == HTTPStatus.TOO_MANY_REQUESTS:
+                raise ConfigEntryNotReady("rate_exceeded") from err
             raise ConfigEntryNotReady("cannot_connect") from err
 
         return len(client.locations)
@@ -414,12 +418,13 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         if config_entry := await self.async_set_unique_id(
             self._username.lower(),
         ):
+            # preserve the existing token cache (if there isn't a new one)
             return self.async_update_reload_and_abort(
                 config_entry,
-                data=config,  # is easier not to use data_updates
+                data_updates={k: v for k, v in config.items() if k != CONF_USERNAME},
             )
 
-        # from step_user or step_import
+        # from step_user or step_import, retain any token cache
         return self.async_create_entry(
             title="Evohome",
             data=config,

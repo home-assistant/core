@@ -58,7 +58,7 @@ async def test_import_and_unload_entry(
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.source == SOURCE_IMPORT
 
     assert config_entry.data == _EXPECTED_CONFIG_ENTRY_DATA
@@ -68,7 +68,7 @@ async def test_import_and_unload_entry(
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED  # type: ignore[comparison-overlap]
+    assert config_entry.state is ConfigEntryState.NOT_LOADED  # type: ignore[comparison-overlap]
 
 
 async def test_load_and_unload_entry(
@@ -99,7 +99,7 @@ async def test_load_and_unload_entry(
     assert result is True
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.source == SOURCE_USER
 
     assert config_entry.data == _EXPECTED_CONFIG_ENTRY_DATA
@@ -109,4 +109,4 @@ async def test_load_and_unload_entry(
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED  # type: ignore[comparison-overlap]
+    assert config_entry.state is ConfigEntryState.NOT_LOADED  # type: ignore[comparison-overlap]

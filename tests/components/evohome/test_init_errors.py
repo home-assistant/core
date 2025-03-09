@@ -113,6 +113,34 @@ CLIENT_REQUEST_TESTS: dict[Exception, list] = {
 
 
 @pytest.mark.parametrize("exception", AUTHENTICATION_TESTS)
+async def test_authentication_failure_config(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    exception: Exception,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test failure to setup an evohome-compatible system.
+
+    In this instance, the failure occurs in the v2 API.
+    """
+
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "evohome.credentials.CredentialsManagerBase._request", side_effect=exception
+        ),
+        caplog.at_level(logging.WARNING),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    assert caplog.record_tuples == AUTHENTICATION_TESTS[exception]
+
+
+@pytest.mark.parametrize("exception", AUTHENTICATION_TESTS)
 async def test_authentication_failure_import(
     hass: HomeAssistant,
     config: dict[str, str],
@@ -136,15 +164,16 @@ async def test_authentication_failure_import(
     assert result is True  # because credentials are not tested during import
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     assert caplog.record_tuples == AUTHENTICATION_TESTS[exception]
 
 
-@pytest.mark.parametrize("exception", AUTHENTICATION_TESTS)
-async def test_authentication_failure_config(
+@pytest.mark.parametrize("exception", CLIENT_REQUEST_TESTS)
+async def test_client_request_failure_config(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    install: str,
     exception: Exception,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -157,16 +186,18 @@ async def test_authentication_failure_config(
 
     with (
         patch(
-            "evohome.credentials.CredentialsManagerBase._request", side_effect=exception
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request(install),
         ),
+        patch("evohome.auth.AbstractAuth._request", side_effect=exception),
         caplog.at_level(logging.WARNING),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
-    assert caplog.record_tuples == AUTHENTICATION_TESTS[exception]
+    assert caplog.record_tuples == CLIENT_REQUEST_TESTS[exception]
 
 
 @pytest.mark.parametrize("exception", CLIENT_REQUEST_TESTS)
@@ -196,37 +227,6 @@ async def test_client_request_failure_import(
     assert result is True  # because credentials are not tested during import
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
-
-    assert caplog.record_tuples == CLIENT_REQUEST_TESTS[exception]
-
-
-@pytest.mark.parametrize("exception", CLIENT_REQUEST_TESTS)
-async def test_client_request_failure_config(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    install: str,
-    exception: Exception,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test failure to setup an evohome-compatible system.
-
-    In this instance, the failure occurs in the v2 API.
-    """
-
-    config_entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "evohomeasync2.auth.CredentialsManagerBase._post_request",
-            mock_post_request(install),
-        ),
-        patch("evohome.auth.AbstractAuth._request", side_effect=exception),
-        caplog.at_level(logging.WARNING),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     assert caplog.record_tuples == CLIENT_REQUEST_TESTS[exception]

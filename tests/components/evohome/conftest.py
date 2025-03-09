@@ -282,3 +282,29 @@ def zone_id(evohome: MagicMock) -> str:
     zone: ec2.Zone = evo.tcs.zones[0]
 
     return f"{Platform.CLIMATE}.{slugify(zone.name)}"
+
+
+async def load_config_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    install: str = _DEFAULT_INSTALL,
+) -> bool:
+    """Load the config entry into the hass instance."""
+
+    config_entry.add_to_hass(hass)
+
+    # need to set up the entry first, as runtime_data attr is required
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request(install),
+        ),
+        patch(
+            "evohome.auth.AbstractAuth._make_request",
+            mock_make_request(install),
+        ),
+    ):
+        result = await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return result
