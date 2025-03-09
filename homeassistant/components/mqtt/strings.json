@@ -6,7 +6,7 @@
     },
     "invalid_unit_of_measurement": {
       "title": "Sensor with invalid unit of measurement",
-      "description": "Manual configured Sensor entity **{entity_id}** has a configured unit of measurement **{uom}** which is not valid with configured device class **{device_class}**. Make sure the a valid unit of measurement is configured or remove the device class, and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
+      "description": "Manual configured Sensor entity **{entity_id}** has a configured unit of measurement **{uom}** which is not valid with configured device class **{device_class}**. Make sure a valid unit of measurement is configured or remove the device class, and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
     }
   },
   "config": {
