@@ -174,6 +174,23 @@ async def test_remote_send_command_with_hold_secs(
     ]
 
 
+async def test_send_text(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test sending text via the `androidtv_remote.send_text` service."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        "androidtv_remote",
+        "send_text",
+        {"entity_id": REMOTE_ENTITY, "text": "hello world"},
+        blocking=True,
+    )
+    assert mock_api.send_text.mock_calls == [call("hello world")]
+
+
 async def test_remote_connection_closed(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
@@ -205,3 +222,13 @@ async def test_remote_connection_closed(
             blocking=True,
         )
     assert mock_api.send_launch_app_command.mock_calls == [call("activity1")]
+
+    mock_api.send_text.side_effect = ConnectionClosed()
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "androidtv_remote",
+            "send_text",
+            {"entity_id": REMOTE_ENTITY, "text": "hello world"},
+            blocking=True,
+        )
+    assert mock_api.send_text.mock_calls == [call("hello world")]
