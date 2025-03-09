@@ -588,7 +588,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             self._attr_volume_level = min(1, volume_level)
         elif command in ["muting", "audio-muting"]:
             self._attr_is_volume_muted = bool(value == "on")
-        elif command in ["selector", "input-selector"]:
+        elif command in ["selector", "input-selector"] and value != "N/A":
             self._parse_source(value)
             self._query_av_info_delayed()
         elif command == "hdmi-output-selector":
