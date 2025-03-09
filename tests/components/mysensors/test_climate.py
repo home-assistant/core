@@ -38,6 +38,8 @@ async def test_hvac_node_auto(
     assert state
     assert state.state == HVACMode.OFF
     assert state.attributes[ATTR_BATTERY_LEVEL] == 0
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20.0
+    assert state.attributes["supported_features"] == 394
 
     # Test set hvac mode auto
     await hass.services.async_call(
@@ -153,6 +155,8 @@ async def test_hvac_node_heat(
     assert state
     assert state.state == HVACMode.OFF
     assert state.attributes[ATTR_BATTERY_LEVEL] == 0
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20.0
+    assert state.attributes["supported_features"] == 393
 
     # Test set hvac mode heat
     await hass.services.async_call(
@@ -263,8 +267,10 @@ async def test_hvac_node_cool(
     assert state
     assert state.state == HVACMode.OFF
     assert state.attributes[ATTR_BATTERY_LEVEL] == 0
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20.0
+    assert state.attributes["supported_features"] == 393
 
-    # Test set hvac mode heat
+    # Test set hvac mode cool
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
