@@ -91,6 +91,12 @@
       },
       "temperature": {
         "default": "mdi:thermometer"
+      },
+      "installation_height": {
+        "default": "mdi:human-male-height"
+      },
+      "sensor_distance_to_max": {
+        "default": "mdi:arrow-collapse-down"
       }
     },
     "select": {
@@ -239,6 +245,15 @@
       },
       "air_quality_index": {
         "default": "mdi:air-filter"
+      },
+      "liquid_level_percent": {
+        "default": "mdi:water-percent"
+      },
+      "liquid_depth": {
+        "default": "mdi:arrow-expand-vertical"
+      },
+      "liquid_state": {
+        "default": "mdi:information-variant-circle"
       }
     },
     "switch": {
