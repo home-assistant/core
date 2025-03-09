@@ -25,13 +25,14 @@ from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
     BackupAgentError,
+    BackupNotFound,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import OneDriveConfigEntry
-from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import CONF_DELETE_PERMANENTLY, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .coordinator import OneDriveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 UPLOAD_CHUNK_SIZE = 16 * 320 * 1024  # 5.2MB
@@ -73,7 +74,7 @@ def async_register_backup_agents_listener(
 def handle_backup_errors[_R, **P](
     func: Callable[Concatenate[OneDriveBackupAgent, P], Coroutine[Any, Any, _R]],
 ) -> Callable[Concatenate[OneDriveBackupAgent, P], Coroutine[Any, Any, _R]]:
-    """Handle backup errors with a specific translation key."""
+    """Handle backup errors."""
 
     @wraps(func)
     async def wrapper(
@@ -137,7 +138,7 @@ class OneDriveBackupAgent(BackupAgent):
         """Download a backup file."""
         backups = await self._list_cached_backups()
         if backup_id not in backups:
-            raise BackupAgentError("Backup not found")
+            raise BackupNotFound(f"Backup {backup_id} not found")
 
         stream = await self._client.download_drive_item(
             backups[backup_id].backup_file_id, timeout=TIMEOUT
@@ -200,12 +201,16 @@ class OneDriveBackupAgent(BackupAgent):
         """Delete a backup file."""
         backups = await self._list_cached_backups()
         if backup_id not in backups:
-            return
+            raise BackupNotFound(f"Backup {backup_id} not found")
 
         backup = backups[backup_id]
 
-        await self._client.delete_drive_item(backup.backup_file_id)
-        await self._client.delete_drive_item(backup.metadata_file_id)
+        delete_permanently = self._entry.options.get(CONF_DELETE_PERMANENTLY, False)
+
+        await self._client.delete_drive_item(backup.backup_file_id, delete_permanently)
+        await self._client.delete_drive_item(
+            backup.metadata_file_id, delete_permanently
+        )
         self._cache_expiration = time()
 
     @handle_backup_errors
@@ -216,12 +221,12 @@ class OneDriveBackupAgent(BackupAgent):
         ]
 
     @handle_backup_errors
-    async def async_get_backup(
-        self, backup_id: str, **kwargs: Any
-    ) -> AgentBackup | None:
+    async def async_get_backup(self, backup_id: str, **kwargs: Any) -> AgentBackup:
         """Return a backup."""
         backups = await self._list_cached_backups()
-        return backups[backup_id].backup if backup_id in backups else None
+        if backup_id not in backups:
+            raise BackupNotFound(f"Backup {backup_id} not found")
+        return backups[backup_id].backup
 
     async def _list_cached_backups(self) -> dict[str, OneDriveBackup]:
         """List backups with a cache."""

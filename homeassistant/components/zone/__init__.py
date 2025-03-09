@@ -363,7 +363,7 @@ class Zone(collection.CollectionEntity):
         """Return entity instance initialized from storage."""
         zone = cls(config)
         zone.editable = True
-        zone._generate_attrs()  # noqa: SLF001
+        zone._generate_attrs()
         return zone
 
     @classmethod
@@ -371,7 +371,7 @@ class Zone(collection.CollectionEntity):
         """Return entity instance initialized from yaml."""
         zone = cls(config)
         zone.editable = False
-        zone._generate_attrs()  # noqa: SLF001
+        zone._generate_attrs()
         return zone
 
     @property

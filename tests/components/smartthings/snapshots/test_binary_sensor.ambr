@@ -13,7 +13,7 @@
     'domain': 'binary_sensor',
     'entity_category': None,
     'entity_id': 'binary_sensor.2nd_floor_hallway_motion',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
-    'original_name': '2nd Floor Hallway motion',
+    'original_name': 'Motion',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -37,7 +37,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'motion',
-      'friendly_name': '2nd Floor Hallway motion',
+      'friendly_name': '2nd Floor Hallway Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.2nd_floor_hallway_motion',
@@ -61,7 +61,7 @@
     'domain': 'binary_sensor',
     'entity_category': None,
     'entity_id': 'binary_sensor.2nd_floor_hallway_sound',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -72,7 +72,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.SOUND: 'sound'>,
     'original_icon': None,
-    'original_name': '2nd Floor Hallway sound',
+    'original_name': 'Sound',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -85,7 +85,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'sound',
-      'friendly_name': '2nd Floor Hallway sound',
+      'friendly_name': '2nd Floor Hallway Sound',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.2nd_floor_hallway_sound',
@@ -95,7 +95,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[contact_sensor][binary_sensor.front_door_open_closed_sensor_contact-entry]
+# name: test_all_entities[contact_sensor][binary_sensor.front_door_open_closed_sensor_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -108,8 +108,8 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.front_door_open_closed_sensor_contact',
-    'has_entity_name': False,
+    'entity_id': 'binary_sensor.front_door_open_closed_sensor_door',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -120,7 +120,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': '.Front Door Open/Closed Sensor contact',
+    'original_name': 'Door',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -129,21 +129,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[contact_sensor][binary_sensor.front_door_open_closed_sensor_contact-state]
+# name: test_all_entities[contact_sensor][binary_sensor.front_door_open_closed_sensor_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': '.Front Door Open/Closed Sensor contact',
+      'friendly_name': '.Front Door Open/Closed Sensor Door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.front_door_open_closed_sensor_contact',
+    'entity_id': 'binary_sensor.front_door_open_closed_sensor_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_contact-entry]
+# name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -156,8 +156,8 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.refrigerator_contact',
-    'has_entity_name': False,
+    'entity_id': 'binary_sensor.refrigerator_door',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -168,7 +168,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': 'Refrigerator contact',
+    'original_name': 'Door',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -177,14 +177,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_contact-state]
+# name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'Refrigerator contact',
+      'friendly_name': 'Refrigerator Door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.refrigerator_contact',
+    'entity_id': 'binary_sensor.refrigerator_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -205,7 +205,7 @@
     'domain': 'binary_sensor',
     'entity_category': None,
     'entity_id': 'binary_sensor.child_bedroom_motion',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -216,7 +216,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
-    'original_name': 'Child Bedroom motion',
+    'original_name': 'Motion',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -229,7 +229,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'motion',
-      'friendly_name': 'Child Bedroom motion',
+      'friendly_name': 'Child Bedroom Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.child_bedroom_motion',
@@ -253,7 +253,7 @@
     'domain': 'binary_sensor',
     'entity_category': None,
     'entity_id': 'binary_sensor.child_bedroom_presence',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -264,7 +264,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PRESENCE: 'presence'>,
     'original_icon': None,
-    'original_name': 'Child Bedroom presence',
+    'original_name': 'Presence',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -277,7 +277,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'presence',
-      'friendly_name': 'Child Bedroom presence',
+      'friendly_name': 'Child Bedroom Presence',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.child_bedroom_presence',
@@ -301,7 +301,7 @@
     'domain': 'binary_sensor',
     'entity_category': None,
     'entity_id': 'binary_sensor.iphone_presence',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -312,7 +312,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PRESENCE: 'presence'>,
     'original_icon': None,
-    'original_name': 'iPhone presence',
+    'original_name': 'Presence',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -325,7 +325,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'presence',
-      'friendly_name': 'iPhone presence',
+      'friendly_name': 'iPhone Presence',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.iphone_presence',
@@ -349,7 +349,7 @@
     'domain': 'binary_sensor',
     'entity_category': None,
     'entity_id': 'binary_sensor.deck_door_acceleration',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -360,11 +360,11 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.MOVING: 'moving'>,
     'original_icon': None,
-    'original_name': 'Deck Door acceleration',
+    'original_name': 'Acceleration',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'acceleration',
     'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c.acceleration',
     'unit_of_measurement': None,
   })
@@ -373,7 +373,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'moving',
-      'friendly_name': 'Deck Door acceleration',
+      'friendly_name': 'Deck Door Acceleration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.deck_door_acceleration',
@@ -383,7 +383,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door_contact-entry]
+# name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -396,8 +396,8 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.deck_door_contact',
-    'has_entity_name': False,
+    'entity_id': 'binary_sensor.deck_door_door',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -408,7 +408,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': 'Deck Door contact',
+    'original_name': 'Door',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -417,14 +417,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door_contact-state]
+# name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'Deck Door contact',
+      'friendly_name': 'Deck Door Door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.deck_door_contact',
+    'entity_id': 'binary_sensor.deck_door_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -445,7 +445,7 @@
     'domain': 'binary_sensor',
     'entity_category': None,
     'entity_id': 'binary_sensor.volvo_valve',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -456,11 +456,11 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
     'original_icon': None,
-    'original_name': 'volvo valve',
+    'original_name': 'Valve',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'valve',
     'unique_id': '612ab3c2-3bb0-48f7-b2c0-15b169cb2fc3.valve',
     'unit_of_measurement': None,
   })
@@ -469,7 +469,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'opening',
-      'friendly_name': 'volvo valve',
+      'friendly_name': 'volvo Valve',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_valve',
@@ -479,7 +479,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[virtual_water_sensor][binary_sensor.asd_water-entry]
+# name: test_all_entities[virtual_water_sensor][binary_sensor.asd_moisture-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -492,8 +492,8 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.asd_water',
-    'has_entity_name': False,
+    'entity_id': 'binary_sensor.asd_moisture',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -504,7 +504,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
-    'original_name': 'asd water',
+    'original_name': 'Moisture',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -513,14 +513,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[virtual_water_sensor][binary_sensor.asd_water-state]
+# name: test_all_entities[virtual_water_sensor][binary_sensor.asd_moisture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'moisture',
-      'friendly_name': 'asd water',
+      'friendly_name': 'asd Moisture',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.asd_water',
+    'entity_id': 'binary_sensor.asd_moisture',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -2,10 +2,11 @@
 
 from unittest.mock import AsyncMock
 
-from pysmartthings.models import Attribute, Capability, Command
+from pysmartthings import Attribute, Capability, Command
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.smartthings.const import MAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -36,7 +37,7 @@ async def test_all_entities(
     snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.SWITCH)
 
 
-@pytest.mark.parametrize("fixture", ["c2c_arlo_pro_3_switch"])
+@pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
 @pytest.mark.parametrize(
     ("action", "command"),
     [
@@ -61,11 +62,11 @@ async def test_switch_turn_on_off(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "10e06a70-ee7d-4832-85e9-a0a06a7a05bd", Capability.SWITCH, command, "main"
+        "10e06a70-ee7d-4832-85e9-a0a06a7a05bd", Capability.SWITCH, command, MAIN
     )
 
 
-@pytest.mark.parametrize("fixture", ["c2c_arlo_pro_3_switch"])
+@pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
 async def test_state_update(
     hass: HomeAssistant,
     devices: AsyncMock,

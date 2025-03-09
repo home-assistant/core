@@ -1,4 +1,61 @@
 # serializer version: 1
+# name: test_numbers[number.ohme_home_pro_preconditioning_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 60,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.ohme_home_pro_preconditioning_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Preconditioning duration',
+    'platform': 'ohme',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'preconditioning_duration',
+    'unique_id': 'chargerid_preconditioning_duration',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_numbers[number.ohme_home_pro_preconditioning_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ohme Home Pro Preconditioning duration',
+      'max': 60,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 5,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.ohme_home_pro_preconditioning_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15',
+  })
+# ---
 # name: test_numbers[number.ohme_home_pro_target_percentage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

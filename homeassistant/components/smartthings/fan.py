@@ -5,8 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from pysmartthings import SmartThings
-from pysmartthings.models import Attribute, Capability, Command
+from pysmartthings import Attribute, Capability, Command, SmartThings
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -18,6 +17,7 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from . import FullDevice, SmartThingsConfigEntry
+from .const import MAIN
 from .entity import SmartThingsEntity
 
 SPEED_RANGE = (1, 3)  # off is not included
@@ -31,35 +31,39 @@ async def async_setup_entry(
     """Add fans for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsFan(entry_data.client, device)
+        SmartThingsFan(entry_data.client, entry_data.rooms, device)
         for device in entry_data.devices.values()
-        if Capability.SWITCH in device.status["main"]
+        if Capability.SWITCH in device.status[MAIN]
         and any(
-            capability in device.status["main"]
+            capability in device.status[MAIN]
             for capability in (
                 Capability.FAN_SPEED,
                 Capability.AIR_CONDITIONER_FAN_MODE,
             )
         )
-        and Capability.THERMOSTAT_COOLING_SETPOINT not in device.status["main"]
+        and Capability.THERMOSTAT_COOLING_SETPOINT not in device.status[MAIN]
     )
 
 
 class SmartThingsFan(SmartThingsEntity, FanEntity):
     """Define a SmartThings Fan."""
 
+    _attr_name = None
     _attr_speed_count = int_states_in_range(SPEED_RANGE)
 
-    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+    def __init__(
+        self, client: SmartThings, rooms: dict[str, str], device: FullDevice
+    ) -> None:
         """Init the class."""
         super().__init__(
             client,
             device,
-            [
+            rooms,
+            {
                 Capability.SWITCH,
                 Capability.FAN_SPEED,
                 Capability.AIR_CONDITIONER_FAN_MODE,
-            ],
+            },
         )
         self._attr_supported_features = self._determine_features()
 
@@ -80,8 +84,8 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         else:
             value = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
             await self.execute_device_command(
-                Capability.SWITCH,
-                Command.OFF,
+                Capability.FAN_SPEED,
+                Command.SET_FAN_SPEED,
                 argument=value,
             )
 
@@ -115,7 +119,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        return self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH)
+        return self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on"
 
     @property
     def percentage(self) -> int | None:
@@ -131,6 +135,8 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
 
         Requires FanEntityFeature.PRESET_MODE.
         """
+        if not self.supports_capability(Capability.AIR_CONDITIONER_FAN_MODE):
+            return None
         return self.get_attribute_value(
             Capability.AIR_CONDITIONER_FAN_MODE, Attribute.FAN_MODE
         )
@@ -141,6 +147,8 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
 
         Requires FanEntityFeature.PRESET_MODE.
         """
+        if not self.supports_capability(Capability.AIR_CONDITIONER_FAN_MODE):
+            return None
         return self.get_attribute_value(
             Capability.AIR_CONDITIONER_FAN_MODE, Attribute.SUPPORTED_AC_FAN_MODES
         )
