@@ -289,6 +289,12 @@ async def test_token_refresh_success(
         ),
         (
             {
+                "status": 500,
+            },
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            {
                 "exc": aiohttp.ClientError,
             },
             ConfigEntryState.SETUP_RETRY,
