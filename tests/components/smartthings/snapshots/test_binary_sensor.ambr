@@ -143,7 +143,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_kids_lock-entry]
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -156,7 +156,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.microwave_kids_lock',
+    'entity_id': 'binary_sensor.microwave_child_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -168,22 +168,22 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Kids lock',
+    'original_name': 'Child lock',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'kids_lock',
+    'translation_key': 'child_lock',
     'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a.lockState',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_kids_lock-state]
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Microwave Kids lock',
+      'friendly_name': 'Microwave Child lock',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.microwave_kids_lock',
+    'entity_id': 'binary_sensor.microwave_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -238,7 +238,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_kids_lock-entry]
+# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -251,7 +251,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.dishwasher_kids_lock',
+    'entity_id': 'binary_sensor.dishwasher_child_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -263,29 +263,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Kids lock',
+    'original_name': 'Child lock',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'kids_lock',
+    'translation_key': 'child_lock',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676.lockState',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_kids_lock-state]
+# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Kids lock',
+      'friendly_name': 'Dishwasher Child lock',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dishwasher_kids_lock',
+    'entity_id': 'binary_sensor.dishwasher_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_kids_lock-entry]
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -298,7 +298,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.dryer_kids_lock',
+    'entity_id': 'binary_sensor.dryer_child_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -310,29 +310,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Kids lock',
+    'original_name': 'Child lock',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'kids_lock',
+    'translation_key': 'child_lock',
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.lockState',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_kids_lock-state]
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dryer Kids lock',
+      'friendly_name': 'Dryer Child lock',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dryer_kids_lock',
+    'entity_id': 'binary_sensor.dryer_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_kids_lock-entry]
+# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -345,7 +345,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.washer_kids_lock',
+    'entity_id': 'binary_sensor.washer_child_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -357,29 +357,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Kids lock',
+    'original_name': 'Child lock',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'kids_lock',
+    'translation_key': 'child_lock',
     'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.lockState',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_kids_lock-state]
+# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer Kids lock',
+      'friendly_name': 'Washer Child lock',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.washer_kids_lock',
+    'entity_id': 'binary_sensor.washer_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_kids_lock-entry]
+# name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -392,7 +392,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.washing_machine_kids_lock',
+    'entity_id': 'binary_sensor.washing_machine_child_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -404,22 +404,22 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Kids lock',
+    'original_name': 'Child lock',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'kids_lock',
+    'translation_key': 'child_lock',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.lockState',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_kids_lock-state]
+# name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing Machine Kids lock',
+      'friendly_name': 'Washing Machine Child lock',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.washing_machine_kids_lock',
+    'entity_id': 'binary_sensor.washing_machine_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

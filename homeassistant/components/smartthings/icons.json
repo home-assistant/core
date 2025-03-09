@@ -1,7 +1,7 @@
 {
   "entity": {
     "binary_sensor": {
-      "kids_lock": {
+      "child_lock": {
         "default": "mdi:lock-open",
         "state": {
           "on": "mdi:lock"
