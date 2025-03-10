@@ -55,6 +55,20 @@ async def test_migrate_camera_entities_unique_ids(hass: HomeAssistant) -> None:
         unique_id="aa:bb:cc:dd:ee:ff#profile_token_2",
         config_entry=config_entry,
     )
+    # Unparsable index
+    entity_unparsable_index = entity_registry.async_get_or_create(
+        domain="camera",
+        platform="onvif",
+        unique_id="aa:bb:cc:dd:ee:ff_a",
+        config_entry=config_entry,
+    )
+    # Unexisting index
+    entity_unexisting_index = entity_registry.async_get_or_create(
+        domain="camera",
+        platform="onvif",
+        unique_id="aa:bb:cc:dd:ee:ff_9",
+        config_entry=config_entry,
+    )
 
     _migrate_camera_entities_unique_ids(hass, config_entry, device)
 
@@ -76,3 +90,11 @@ async def test_migrate_camera_entities_unique_ids(hass: HomeAssistant) -> None:
     # Make sure the already migrated entity is unchanged
     assert entity_migrated is not None
     assert entity_migrated.unique_id == "aa:bb:cc:dd:ee:ff#profile_token_2"
+
+    # Make sure the unparsable index entity is unchanged
+    assert entity_unparsable_index is not None
+    assert entity_unparsable_index.unique_id == "aa:bb:cc:dd:ee:ff_a"
+
+    # Make sure the unexisting index entity is unchanged
+    assert entity_unexisting_index is not None
+    assert entity_unexisting_index.unique_id == "aa:bb:cc:dd:ee:ff_9"
