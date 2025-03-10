@@ -201,6 +201,10 @@
         "volume_level": {
           "name": "Level",
           "description": "The volume. 0 is inaudible, 1 is the maximum volume."
+        },
+        "volume_step": {
+          "name": "Step",
+          "description": "The volume step amount between 0.01 and 1."
         }
       }
     },

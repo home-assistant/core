@@ -119,6 +119,7 @@ from .const import (  # noqa: F401
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_MEDIA_VOLUME_STEP,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     CONTENT_AUTH_EXPIRY_TIME,
@@ -232,6 +233,7 @@ ATTR_TO_PROPERTY = [
     ATTR_SOUND_MODE,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_REPEAT,
+    ATTR_MEDIA_VOLUME_STEP,
 ]
 
 # mypy: disallow-any-generics
@@ -356,11 +358,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_VOLUME_SET,
         vol.All(
             cv.make_entity_service_schema(
-                {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float}
+                {
+                    vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float,
+                    vol.Optional(ATTR_MEDIA_VOLUME_STEP): cv.small_float,
+                }
             ),
-            _rename_keys(volume=ATTR_MEDIA_VOLUME_LEVEL),
+            _rename_keys(volume=ATTR_MEDIA_VOLUME_LEVEL, step=ATTR_MEDIA_VOLUME_STEP),
         ),
-        "async_set_volume_level",
+        "_async_set_volume_level",
         [MediaPlayerEntityFeature.VOLUME_SET],
     )
     component.async_register_entity_service(
@@ -833,6 +838,14 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.hass.async_add_executor_job(self.set_volume_level, volume)
+
+    async def _async_set_volume_level(
+        self, volume: float, step: float | None = None
+    ) -> None:
+        """Set volume level, and optionally the step amount."""
+        if step:
+            self._attr_volume_step = step
+        await self.async_set_volume_level(volume)
 
     def media_play(self) -> None:
         """Send play command."""
