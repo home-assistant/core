@@ -133,10 +133,8 @@ async def test_entity_supported_features_with_controlBus(
     mock_stream_magic_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test entity attributes."""
+    """Test entity attributes with control bus state."""
     await setup_integration(hass, mock_config_entry)
-    await mock_state_update(mock_stream_magic_client)
-    await hass.async_block_till_done()
     
     mock_stream_magic_client.state.pre_amp_mode = False
     mock_stream_magic_client.state.control_bus_mode = ControlBusMode.AMPLIFIER
