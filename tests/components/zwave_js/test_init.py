@@ -22,7 +22,7 @@ from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -183,24 +183,35 @@ async def test_listen_failure_during_setup_after_forward_entry(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("client")
+@pytest.mark.parametrize(
+    ("core_state", "final_config_entry_state"),
+    [
+        (CoreState.running, ConfigEntryState.SETUP_RETRY),
+        (CoreState.stopping, ConfigEntryState.LOADED),
+    ],
+)
 @pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
 async def test_listen_failure_after_setup(
     hass: HomeAssistant,
-    client: MagicMock,
     integration: MockConfigEntry,
     listen_block: asyncio.Event,
     listen_result: asyncio.Future[None],
     error: Exception,
+    core_state: CoreState,
+    final_config_entry_state: ConfigEntryState,
 ) -> None:
     """Test we handle errors after setup for client listen."""
     config_entry = integration
     assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.state is CoreState.running
+    hass.set_state(core_state)
 
     listen_block.set()
     listen_result.set_exception(error)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is final_config_entry_state
 
 
 async def test_new_entity_on_value_added(
