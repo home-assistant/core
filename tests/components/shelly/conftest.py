@@ -59,7 +59,7 @@ def mock_light_set_state(
     effect=0,
     transition=0,
 ):
-    """Mock light block set_entity."""
+    """Mock light block set_state."""
     return {
         "ison": turn == "on",
         "mode": mode,
@@ -82,7 +82,7 @@ def mock_white_light_set_state(
     brightness=128,
     transition=0,
 ):
-    """Mock white light block set_entity."""
+    """Mock white light block set_state."""
     return {
         "ison": turn == "on",
         "mode": "white",

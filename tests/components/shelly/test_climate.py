@@ -403,7 +403,7 @@ async def test_block_restored_climate_unavailable(
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test block restored climate unavailable entity."""
+    """Test block restored climate unavailable state."""
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)

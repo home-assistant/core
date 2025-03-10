@@ -167,7 +167,7 @@ async def test_block_restored_motion_switch_no_last_state(
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test block restored motion active switch missing last entity."""
+    """Test block restored motion active switch missing last state."""
     entry = await init_integration(
         hass, 1, sleep_period=1000, model=model, skip_setup=True
     )

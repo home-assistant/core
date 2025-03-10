@@ -128,7 +128,7 @@ async def test_block_restored_number_no_last_state(
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test block restored number missing last entity."""
+    """Test block restored number missing last state."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
     device = register_device(device_registry, entry)
     capabilities = {

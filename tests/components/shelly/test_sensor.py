@@ -250,7 +250,7 @@ async def test_block_restored_sleeping_sensor_no_last_state(
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test block restored sleeping sensor missing last entity."""
+    """Test block restored sleeping sensor missing last state."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
     device = register_device(device_registry, entry)
     entity_id = register_entity(
@@ -610,7 +610,7 @@ async def test_rpc_restored_sleeping_sensor_no_last_state(
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test RPC restored sensor missing last entity."""
+    """Test RPC restored sensor missing last state."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
     device = register_device(device_registry, entry)
     entity_id = register_entity(
@@ -1526,7 +1526,6 @@ async def test_blu_trv_sensor_entity(
         entity_id = f"{SENSOR_DOMAIN}.trv_name_{entity}"
 
         entity = hass.states.get(entity_id)
-        assert entity
         assert entity == snapshot(name=f"{entity_id}-state")
 
         entry = entity_registry.async_get(entity_id)

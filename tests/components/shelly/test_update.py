@@ -524,7 +524,7 @@ async def test_rpc_restored_sleeping_update_no_last_state(
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test RPC restored update entity missing last entity."""
+    """Test RPC restored update entity missing last state."""
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
     monkeypatch.setitem(
         mock_rpc_device.status["sys"],
