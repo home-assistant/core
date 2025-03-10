@@ -65,7 +65,7 @@ async def all_mosques_neighborhood(
                 latitude, longitude, mosque, username, password, token, session=None
             )
         else:
-            # TODO set pos in client # pylint: disable=fixme
+            # would be better to set pos in client
             pass
         await client.get_api_token()
         nearest_mosques = await client.all_mosques_neighborhood()
@@ -91,7 +91,7 @@ async def all_mosques_by_keyword(
                 username=username, password=password, token=token, session=None
             )
         else:
-            # TODO set pos in client # pylint: disable=fixme
+            # would be better to set pos in client
             pass
         await client.get_api_token()
 
@@ -129,7 +129,7 @@ async def fetch_prayer_times(
                 latitude, longitude, mosque, username, password, token, session=None
             )
         else:
-            # TODO set pos in client # pylint: disable=fixme
+            # would be better to set pos in client
             pass
         await client.get_api_token()
         dict_calendar = await client.fetch_prayer_times()

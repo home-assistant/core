@@ -4,13 +4,12 @@ import logging
 
 from dateutil import parser as date_parser
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
 
 from . import utils
 from .const import (
@@ -37,21 +36,9 @@ def is_date_parsing(date_str) -> bool:
     return True
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Import the Mawaqit Prayer component from config."""
-    if DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
-            )
-        )
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Mawaqit Prayer Component."""
 
-    hass.data.setdefault(DOMAIN, {})
     try:
         await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     except Exception as err:
@@ -63,9 +50,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Mawaqit Prayer entry from config_entry."""
 
-    if hass.data[DOMAIN].event_unsub:
-        hass.data[DOMAIN].event_unsub()
-    hass.data.pop(DOMAIN)
+    if DOMAIN in hass.data:
+        if hass.data[DOMAIN].event_unsub:
+            hass.data[DOMAIN].event_unsub()
+        hass.data.pop(DOMAIN)
 
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 

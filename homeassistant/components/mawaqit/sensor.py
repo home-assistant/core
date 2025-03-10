@@ -30,7 +30,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
@@ -150,7 +150,7 @@ NEXT_SALAT_SENSOR_DESCRIPTION = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Mawaqit sensor platform.
 
@@ -337,9 +337,7 @@ class MawaqitPrayerTimeSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordina
                 )
                 return None
 
-            return localized_prayer_time.astimezone(
-                dt_util.UTC
-            )  # TODO check this # pylint: disable=fixme
+            return localized_prayer_time.astimezone(dt_util.UTC)
         except KeyError as e:
             _LOGGER.error(
                 "Key error retrieving prayer time for %s: %s",

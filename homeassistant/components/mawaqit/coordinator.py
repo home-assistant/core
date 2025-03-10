@@ -34,7 +34,7 @@ class MosqueCoordinator(DataUpdateCoordinator):
         try:
             mosque_data = await utils.read_my_mosque_NN_file(
                 self.store
-            )  # TODO Fetch directly from the API # pylint: disable=fixme
+            )  # would be better to fetch directly from the API
 
         except Exception as err:
             raise UpdateFailed(f"Failed to update mosque data: {err}") from err
