@@ -10,12 +10,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.helpers.config_entry_oauth2_flow import (
-    AbstractOAuth2FlowHandler,
-    async_get_implementations,
-)
+from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
 from .const import DOMAIN
+from .oauth2 import SRPAuthImplementation
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +24,13 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     DOMAIN = DOMAIN
     VERSION = 1
 
-    async def logger(self):
+    def __init__(self) -> None:
+        """Set up the flow handler."""
+        super().__init__()
+        self.flow_impl = SRPAuthImplementation(self.hass, DOMAIN)
+
+    @property
+    def logger(self):
         """Get the logger."""
         return _LOGGER
 
@@ -34,8 +38,6 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Ask for username and password."""
-        implementations = await async_get_implementations(self.hass, DOMAIN)
-        self.flow_impl = list(implementations.values())[0]
         errors: dict[str, str] = {}
         if user_input is not None:
             _LOGGER.info(user_input)
