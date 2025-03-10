@@ -17,13 +17,22 @@ from homeassistant.components.button import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import LOGGER, SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
+from .entity import (
+    RpcEntityDescription,
+    ShellyRpcAttributeEntity,
+    async_setup_entry_rpc,
+)
 from .utils import get_device_entry_gen
 
 
@@ -71,6 +80,31 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
         supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
     ),
 ]
+
+
+@dataclass(frozen=True, kw_only=True)
+class BluTrvButtonDescription(RpcEntityDescription, ButtonEntityDescription):
+    """Class to describe a BluTrv button entity."""
+
+    press_action: str
+    press_params_fn: Callable[[int], dict]
+
+
+BLU_TRV_BUTTONS: Final[dict[str, BluTrvButtonDescription]] = {
+    "calibrate": BluTrvButtonDescription(
+        key="blutrv",
+        sub_key="errors",
+        name="Calibrate",
+        translation_key="calibrate",
+        entity_category=EntityCategory.CONFIG,
+        press_action="BluTRV.Call",
+        press_params_fn=lambda idx: {
+            "id": idx,
+            "method": "Trv.Calibrate",
+            "params": {"id": 0},
+        },
+    ),
+}
 
 
 @callback
@@ -129,6 +163,10 @@ async def async_setup_entry(
         if button.supported(coordinator)
     )
 
+    async_setup_entry_rpc(
+        hass, config_entry, async_add_entities, BLU_TRV_BUTTONS, BluTrvButton
+    )
+
 
 class ShellyButton(
     CoordinatorEntity[ShellyRpcCoordinator | ShellyBlockCoordinator], ButtonEntity
@@ -159,3 +197,34 @@ class ShellyButton(
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
         await self.entity_description.press_action(self.coordinator)
+
+
+class BluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
+    """Represent a RPC BluTrv button."""
+
+    entity_description: BluTrvButtonDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: BluTrvButtonDescription,
+    ) -> None:
+        """Initialize."""
+
+        super().__init__(coordinator, key, attribute, description)
+        ble_addr: str = coordinator.device.config[key]["addr"]
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_BLUETOOTH, ble_addr)}
+        )
+
+    async def async_press(self) -> None:
+        """Triggers the Shelly button press service."""
+        if TYPE_CHECKING:
+            assert isinstance(self._id, int)
+
+        await self.call_rpc(
+            self.entity_description.press_action,
+            self.entity_description.press_params_fn(self._id),
+        )
