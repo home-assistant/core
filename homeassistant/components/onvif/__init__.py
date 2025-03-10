@@ -100,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if device.capabilities.imaging:
         device.platforms += [Platform.SWITCH]
 
-    _migrate_camera_entities_unique_ids(hass, entry, device)
+    _async_migrate_camera_entities_unique_ids(hass, entry, device)
 
     await hass.config_entries.async_forward_entry_setups(entry, device.platforms)
 
@@ -161,7 +161,7 @@ async def async_populate_options(hass: HomeAssistant, entry: ConfigEntry) -> Non
 
 
 @callback
-def _migrate_camera_entities_unique_ids(
+def _async_migrate_camera_entities_unique_ids(
     hass: HomeAssistant, config_entry: ConfigEntry, device: ONVIFDevice
 ) -> None:
     """Migrate unique ids of camera entities from profile index to profile token."""
