@@ -2849,13 +2849,13 @@ async def test_subentry_reconfigure_remove_entity(
         "entity",
         "update_entity",
         "device",
-        "finish_reconfigure",
+        "save_changes",
     ]
 
     # finish reconfigure flow
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {"next_step_id": "finish_reconfigure"},
+        {"next_step_id": "save_changes"},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -2984,7 +2984,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
     # finish reconfigure flow
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {"next_step_id": "finish_reconfigure"},
+        {"next_step_id": "save_changes"},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -3095,7 +3095,7 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     # finish reconfigure flow
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {"next_step_id": "finish_reconfigure"},
+        {"next_step_id": "save_changes"},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -3208,7 +3208,7 @@ async def test_subentry_reconfigure_add_entity(
     # Finish reconfigure flow
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {"next_step_id": "finish_reconfigure"},
+        {"next_step_id": "save_changes"},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -3306,7 +3306,7 @@ async def test_subentry_reconfigure_update_device_properties(
     # finish reconfigure flow
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {"next_step_id": "finish_reconfigure"},
+        {"next_step_id": "save_changes"},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"

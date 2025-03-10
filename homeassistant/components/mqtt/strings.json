@@ -144,7 +144,7 @@
             "update_entity": "Update entity properties",
             "delete_entity": "Delete an entity",
             "device": "Update device properties",
-            "finish_reconfigure": "Save changes"
+            "save_changes": "Save changes"
           }
         },
         "entity": {
