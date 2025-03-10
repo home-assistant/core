@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass
 import datetime
 from functools import partial, wraps
 import inspect
@@ -14,35 +14,37 @@ import traceback
 from typing import Any, cast, overload, override
 
 from homeassistant.core import (
+    HassJob,
     HassJobType,
     HomeAssistant,
     callback,
     get_hassjob_callable_job_type,
 )
+from homeassistant.helpers.event import async_call_later
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class LoggerCount:
-    """Logger count."""
-
-    count: int
-    start_time: datetime.datetime
 
 
 class HomeAssistantQueueListener(logging.handlers.QueueListener):
     """Custom QueueListener to watch for noisy loggers."""
 
-    monitor_time_window = datetime.timedelta(minutes=2)
-    max_logs_per_window = 120
+    LOG_COUNTS_RESET_INTERVAL = datetime.timedelta(minutes=2)
+    MAX_LOGS_COUNT = 120
+
+    _reset_pending: bool
+    _log_counts: dict[str, int]
 
     def __init__(
-        self, queue: SimpleQueue[logging.Handler], *handlers: logging.Handler
+        self,
+        hass: HomeAssistant,
+        queue: SimpleQueue[logging.Handler],
+        *handlers: logging.Handler,
     ) -> None:
         """Initialize the handler."""
         super().__init__(queue, *handlers)
-        self._log_counts: dict[str, LoggerCount] = {}
+        self._hass = hass
+        self._reset_pending = True
+        self._reset_counters()
 
     @override
     def handle(self, record: logging.LogRecord) -> None:
@@ -52,34 +54,42 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
         if record.levelno < logging.INFO:
             return
 
-        now = datetime.datetime.now()
+        if self._reset_pending:
+            self._reset_counters()
+            return
+
         logger_name = record.name
         if logger_name == __name__:
             return
 
-        module_count = self._log_counts.get(logger_name)
-        if module_count is None:
-            self._log_counts[logger_name] = LoggerCount(1, now)
-            return
-
-        elapsed_time = now - module_count.start_time
-        if elapsed_time > self.monitor_time_window:
-            module_count.count = 1
-            module_count.start_time = now
-            return
-
-        module_count.count += 1
-        if module_count.count < self.max_logs_per_window:
+        self._log_counts[logger_name] += 1
+        module_count = self._log_counts[logger_name]
+        if module_count < self.MAX_LOGS_COUNT:
             return
 
         _LOGGER.warning(
-            "Module %s is logging too frequently. %d messages in the last %s seconds",
+            "Module %s is logging too frequently. %d messages since last count",
             logger_name,
-            module_count.count,
-            int(elapsed_time.total_seconds()),
+            module_count,
         )
-        module_count.count = 1
-        module_count.start_time = now
+        self._log_counts[logger_name] = 0
+
+    def _reset_counters(self) -> None:
+        self._reset_pending = False
+        self._log_counts = defaultdict(int)
+        self._schedule_log_counts_reset()
+
+    def _schedule_log_counts_reset(self) -> None:
+        async_call_later(
+            self._hass,
+            self.LOG_COUNTS_RESET_INTERVAL,
+            HassJob(self._set_reset_pending, cancel_on_shutdown=True),
+        )
+
+    def _set_reset_pending(self, now: datetime.datetime) -> None:
+        # Set a boolean instead of directly resetting the counters so that the actual
+        # reset happens on the QueueListener thread.
+        self._reset_pending = True
 
 
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
@@ -134,7 +144,7 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
         logging.root.removeHandler(handler)
         migrated_handlers.append(handler)
 
-    listener = HomeAssistantQueueListener(simple_queue, *migrated_handlers)
+    listener = HomeAssistantQueueListener(hass, simple_queue, *migrated_handlers)
     queue_handler.listener = listener
 
     listener.start()

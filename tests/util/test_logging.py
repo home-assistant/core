@@ -158,7 +158,7 @@ async def test_catch_log_exception_catches_and_logs() -> None:
     assert saved_args == [("failure sync passed",)]
 
 
-@patch("homeassistant.util.logging.HomeAssistantQueueListener.max_logs_per_window", 5)
+@patch("homeassistant.util.logging.HomeAssistantQueueListener.MAX_LOGS_COUNT", 5)
 @pytest.mark.parametrize(
     (
         "logger1_count",
@@ -192,13 +192,13 @@ async def test_noisy_loggers(
 
     assert (
         caplog.text.count(
-            "Module noisy1 is logging too frequently. 5 messages in the last"
+            "Module noisy1 is logging too frequently. 5 messages since last count."
         )
         == logger1_expected_notices
     )
     assert (
         caplog.text.count(
-            "Module noisy2.module is logging too frequently. 5 messages in the last"
+            "Module noisy2.module is logging too frequently. 5 messages since last count."
         )
         == logger2_expected_notices
     )
@@ -207,10 +207,9 @@ async def test_noisy_loggers(
     logging.root.handlers[0].close()
 
 
-@patch("homeassistant.util.logging.HomeAssistantQueueListener.max_logs_per_window", 5)
+@patch("homeassistant.util.logging.HomeAssistantQueueListener.MAX_LOGS_COUNT", 5)
 async def test_noisy_loggers_ignores_lower_than_info(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that noisy loggers all logged as warnings, except for levels lower than INFO."""
 
