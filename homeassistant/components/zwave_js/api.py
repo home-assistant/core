@@ -2803,13 +2803,53 @@ async def websocket_backup_nvm_raw(
     driver: Driver,
 ) -> None:
     """Backup NVM data."""
-    result = await driver.controller.async_backup_nvm_raw()
-    connection.send_result(
-        msg[ID],
-        {
-            "data": base64.b64encode(result).decode(),
-        },
-    )
+    controller = driver.controller
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def forward_progress(event: dict) -> None:
+        """Forward progress events to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "bytesRead": event["bytesRead"],
+                    "total": event["total"],
+                },
+            )
+        )
+
+    # Set up subscription for progress events
+    connection.subscriptions[msg["id"]] = async_cleanup
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
+        controller.on("nvm backup progress", forward_progress),
+    ]
+
+    # Perform the backup
+    try:
+        # Execute the backup
+        result = await controller.async_backup_nvm_raw()
+
+        # Send the finished event with the backup data
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": "finished",
+                    "data": base64.b64encode(result).decode(),
+                },
+            )
+        )
+    except BaseZwaveJSServerError as err:
+        connection.send_error(msg[ID], err.__class__.__name__, str(err))
+    else:
+        connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
@@ -2832,6 +2872,8 @@ async def websocket_restore_nvm(
     driver: Driver,
 ) -> None:
     """Restore NVM data."""
+    controller = driver.controller
+
     try:
         nvm_data = base64.b64decode(msg["data"])
     except binascii.Error:
@@ -2842,14 +2884,49 @@ async def websocket_restore_nvm(
         )
         return
 
-    try:
-        await driver.controller.async_restore_nvm(nvm_data)
-    except BaseZwaveJSServerError as err:
-        connection.send_error(
-            msg[ID],
-            ERR_INVALID_FORMAT,
-            str(err),
-        )
-        return
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
 
-    connection.send_result(msg[ID])
+    @callback
+    def forward_progress(event: dict) -> None:
+        """Forward progress events to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "bytesRead": event.get("bytesRead"),
+                    "bytesWritten": event.get("bytesWritten"),
+                    "total": event["total"],
+                },
+            )
+        )
+
+    # Set up subscription for progress events
+    connection.subscriptions[msg["id"]] = async_cleanup
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
+        controller.on("nvm convert progress", forward_progress),
+        controller.on("nvm restore progress", forward_progress),
+    ]
+
+    # Perform the restore
+    try:
+        # Execute the restore
+        await controller.async_restore_nvm(nvm_data)
+
+        # Send the finished event
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": "finished",
+                },
+            )
+        )
+    except BaseZwaveJSServerError as err:
+        connection.send_error(msg[ID], err.__class__.__name__, str(err))
+    else:
+        connection.send_result(msg[ID])
