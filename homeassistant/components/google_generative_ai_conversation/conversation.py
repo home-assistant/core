@@ -264,6 +264,13 @@ class GoogleGenerativeAIConversationEntity(
         conversation.async_unset_agent(self.hass, self.entry)
         await super().async_will_remove_from_hass()
 
+    def _fix_tool_name(self, tool_name: str) -> str:
+        """Fix tool name if needed."""
+        # The Gemini 2.0+ tokenizer seemingly has a issue with the HassListAddItem tool
+        # name. This makes sure when it incorrectly changes the name, that we change it
+        # back for HA to call.
+        return tool_name if tool_name != "HasListAddItem" else "HassListAddItem"
+
     async def _async_handle_message(
         self,
         user_input: conversation.ConversationInput,
@@ -423,7 +430,10 @@ class GoogleGenerativeAIConversationEntity(
                 tool_name = tool_call.name
                 tool_args = _escape_decode(tool_call.args)
                 tool_calls.append(
-                    llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
+                    llm.ToolInput(
+                        tool_name=self._fix_tool_name(tool_name),
+                        tool_args=tool_args,
+                    )
                 )
 
             chat_request = _create_google_tool_response_content(
