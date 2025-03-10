@@ -2,7 +2,26 @@
 
 from __future__ import annotations
 
+import base64
+from mimetypes import guess_file_type
+from pathlib import Path
+
 import openai
+from openai.types.chat.chat_completion import ChatCompletion
+from openai.types.chat.chat_completion_content_part_image_param import (
+    ChatCompletionContentPartImageParam,
+    ImageURL,
+)
+from openai.types.chat.chat_completion_content_part_param import (
+    ChatCompletionContentPartParam,
+)
+from openai.types.chat.chat_completion_content_part_text_param import (
+    ChatCompletionContentPartTextParam,
+)
+from openai.types.chat.chat_completion_user_message_param import (
+    ChatCompletionUserMessageParam,
+)
+from openai.types.images_response import ImagesResponse
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,13 +41,31 @@ from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER
+from .const import (
+    CONF_CHAT_MODEL,
+    CONF_FILENAMES,
+    CONF_PROMPT,
+    DOMAIN,
+    LOGGER,
+    RECOMMENDED_CHAT_MODEL,
+)
 
 SERVICE_GENERATE_IMAGE = "generate_image"
+SERVICE_GENERATE_CONTENT = "generate_content"
+
 PLATFORMS = (Platform.CONVERSATION,)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type OpenAIConfigEntry = ConfigEntry[openai.AsyncClient]
+
+
+def encode_file(file_path: str) -> tuple[str, str]:
+    """Return base64 version of file contents."""
+    mime_type, _ = guess_file_type(file_path)
+    if mime_type is None:
+        mime_type = "application/octet-stream"
+    with open(file_path, "rb") as image_file:
+        return (mime_type, base64.b64encode(image_file.read()).decode("utf-8"))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -49,9 +86,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         client: openai.AsyncClient = entry.runtime_data
 
         try:
-            response = await client.images.generate(
+            response: ImagesResponse = await client.images.generate(
                 model="dall-e-3",
-                prompt=call.data["prompt"],
+                prompt=call.data[CONF_PROMPT],
                 size=call.data["size"],
                 quality=call.data["quality"],
                 style=call.data["style"],
@@ -62,6 +99,105 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise HomeAssistantError(f"Error generating image: {err}") from err
 
         return response.data[0].model_dump(exclude={"b64_json"})
+
+    async def send_prompt(call: ServiceCall) -> ServiceResponse:
+        """Send a prompt to ChatGPT and return the response."""
+        entry_id = call.data["config_entry"]
+        entry = hass.config_entries.async_get_entry(entry_id)
+
+        if entry is None or entry.domain != DOMAIN:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_config_entry",
+                translation_placeholders={"config_entry": entry_id},
+            )
+
+        model: str = entry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        client: openai.AsyncClient = entry.runtime_data
+
+        prompt_parts: list[ChatCompletionContentPartParam] = [
+            ChatCompletionContentPartTextParam(
+                type="text",
+                text=call.data[CONF_PROMPT],
+            )
+        ]
+
+        def append_files_to_prompt() -> None:
+            for filename in call.data[CONF_FILENAMES]:
+                if not hass.config.is_allowed_path(filename):
+                    raise HomeAssistantError(
+                        f"Cannot read `{filename}`, no access to path; "
+                        "`allowlist_external_dirs` may need to be adjusted in "
+                        "`configuration.yaml`"
+                    )
+                if not Path(filename).exists():
+                    raise HomeAssistantError(f"`{filename}` does not exist")
+                mime_type, base64_file = encode_file(filename)
+                if "image/" not in mime_type:
+                    raise HomeAssistantError(
+                        "Only images are supported by the OpenAI API,"
+                        f"`{filename}` is not an image file"
+                    )
+                prompt_parts.append(
+                    ChatCompletionContentPartImageParam(
+                        type="image_url",
+                        image_url=ImageURL(
+                            url=f"data:{mime_type};base64,{base64_file}"
+                        ),
+                    )
+                )
+
+        if CONF_FILENAMES in call.data:
+            await hass.async_add_executor_job(append_files_to_prompt)
+
+        messages: list[ChatCompletionUserMessageParam] = [
+            ChatCompletionUserMessageParam(
+                role="user",
+                content=prompt_parts,
+            )
+        ]
+
+        try:
+            response: ChatCompletion = await client.chat.completions.create(
+                model=model,
+                messages=messages,
+                n=1,
+                response_format={
+                    "type": "json_object",
+                },
+            )
+
+        except openai.OpenAIError as err:
+            raise HomeAssistantError(f"Error generating content: {err}") from err
+        except FileNotFoundError as err:
+            raise HomeAssistantError(f"Error generating content: {err}") from err
+
+        response_text: str = ""
+        for response_choice in response.choices:
+            if response_choice.message.content is not None:
+                response_text += response_choice.message.content.strip()
+
+        return {"text": response_text}
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GENERATE_CONTENT,
+        send_prompt,
+        schema=vol.Schema(
+            {
+                vol.Required("config_entry"): selector.ConfigEntrySelector(
+                    {
+                        "integration": DOMAIN,
+                    }
+                ),
+                vol.Required(CONF_PROMPT): cv.string,
+                vol.Optional(CONF_FILENAMES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+            }
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
 
     hass.services.async_register(
         DOMAIN,
@@ -74,7 +210,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         "integration": DOMAIN,
                     }
                 ),
-                vol.Required("prompt"): cv.string,
+                vol.Required(CONF_PROMPT): cv.string,
                 vol.Optional("size", default="1024x1024"): vol.In(
                     ("1024x1024", "1024x1792", "1792x1024")
                 ),
@@ -84,6 +220,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ),
         supports_response=SupportsResponse.ONLY,
     )
+
     return True
 
 
