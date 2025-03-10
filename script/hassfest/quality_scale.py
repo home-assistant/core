@@ -1088,7 +1088,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "vizio",
     "vlc",
     "vlc_telnet",
-    "vodafone_station",
     "voicerss",
     "voip",
     "volkszaehler",
