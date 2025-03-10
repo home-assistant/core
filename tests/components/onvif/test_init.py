@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.onvif import _migrate_camera_entities_unique_ids
+from homeassistant.components.onvif import _async_migrate_camera_entities_unique_ids
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -70,7 +70,7 @@ async def test_migrate_camera_entities_unique_ids(hass: HomeAssistant) -> None:
         config_entry=config_entry,
     )
 
-    _migrate_camera_entities_unique_ids(hass, config_entry, device)
+    _async_migrate_camera_entities_unique_ids(hass, config_entry, device)
 
     entity_with_only_mac = entity_registry.async_get(entity_with_only_mac.entity_id)
     entity_with_index = entity_registry.async_get(entity_with_index.entity_id)
