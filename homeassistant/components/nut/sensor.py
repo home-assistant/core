@@ -1087,8 +1087,7 @@ async def async_setup_entry(
                 ),
             }
 
-        valid_sensor_types = copy.deepcopy(SENSOR_TYPES)
-        valid_sensor_types.update(additional_sensor_types)
+        valid_sensor_types = {**SENSOR_TYPES, **additional_sensor_types}
     else:
         valid_sensor_types = SENSOR_TYPES
 
