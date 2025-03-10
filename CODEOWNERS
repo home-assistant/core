@@ -1095,6 +1095,8 @@ build.json @home-assistant/supervisor
 /tests/components/openexchangerates/ @MartinHjelmare
 /homeassistant/components/opengarage/ @danielhiversen
 /tests/components/opengarage/ @danielhiversen
+/homeassistant/components/openhardwaremonitor/ @lazytarget
+/tests/components/openhardwaremonitor/ @lazytarget
 /homeassistant/components/openhome/ @bazwilliams
 /tests/components/openhome/ @bazwilliams
 /homeassistant/components/opensky/ @joostlek

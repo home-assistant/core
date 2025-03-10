@@ -2176,7 +2176,7 @@ pyoctoprintapi==0.1.12
 pyombi==0.1.10
 
 # homeassistant.components.openhardwaremonitor
-pyopenhardwaremonitor==0.1.6
+pyopenhardwaremonitor==0.2.5
 
 # homeassistant.components.openuv
 pyopenuv==2023.02.0

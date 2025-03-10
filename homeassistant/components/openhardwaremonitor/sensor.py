@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from pyopenhardwaremonitor.api import SensorNode
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -11,21 +12,20 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, GROUP_DEVICES_PER_DEPTH_LEVEL
+from .coordinator import (
+    OpenHardwareMonitorConfigEntry,
+    OpenHardwareMonitorDataCoordinator,
+)
 
 STATE_MIN_VALUE = "minimal_value"
 STATE_MAX_VALUE = "maximum_value"
-STATE_VALUE = "value"
-STATE_OBJECT = "object"
-CONF_INTERVAL = "interval"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -34,8 +34,6 @@ RETRY_INTERVAL = timedelta(seconds=30)
 OHM_VALUE = "Value"
 OHM_MIN = "Min"
 OHM_MAX = "Max"
-OHM_CHILDREN = "Children"
-OHM_IMAGEURL = "ImageURL"
 OHM_NAME = "Text"
 OHM_ID = "id"
 
@@ -46,81 +44,67 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: OpenHardwareMonitorConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Open Hardware Monitor platform."""
-    entities = hass.data["entities"]
-    if entities is None:
+    coordinator = config_entry.runtime_data
+    if not coordinator.data:
         raise PlatformNotReady
+
+    sensor_data = coordinator.data
+    entities = [
+        OpenHardwareMonitorSensorDevice(
+            node=sensor_data[k],
+            coordinator=coordinator,
+            # self, fullname, path, unit_of_measurement, id, child_names, json
+        )
+        for k in sensor_data
+    ]
     async_add_entities(entities, True)
 
 
-class OpenHardwareMonitorDevice(SensorEntity):
-    """Device used to display information from OpenHardwareMonitor."""
+class OpenHardwareMonitorSensorDevice(
+    CoordinatorEntity[OpenHardwareMonitorDataCoordinator], SensorEntity
+):
+    """Sensor entity used to display information from OpenHardwareMonitor."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, data, name, path, unit_of_measurement, id, child_names, json):
+    def __init__(
+        self,
+        node: SensorNode,
+        coordinator: OpenHardwareMonitorDataCoordinator,
+    ) -> None:
         """Initialize an OpenHardwareMonitor sensor."""
-        groupDevicesPerDepthLevel = data._config.get(GROUP_DEVICES_PER_DEPTH_LEVEL)
-        host = data._config.get(CONF_HOST)
-        port = data._config.get(CONF_PORT)
-        deviceName = " ".join(child_names[0:groupDevicesPerDepthLevel])
+        super().__init__(coordinator=coordinator)
 
-        self._name = name
-        self._data = data
-        self._json = json
-        self.path = path
-        self.id = id
-        self.value = None
-        self.attributes = {}
-        self._unit_of_measurement = unit_of_measurement
-        self._attr_unique_id = f"ohm-{name}-{id}"
+        self._node = node
+        self._attr_available = bool(node)
+        self._fullname = node["FullName"]
+        self._attr_unique_id = f"ohm-{self._fullname}"
 
-        manufacturer = ""
-        if groupDevicesPerDepthLevel == 1:
-            # Computer device
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, f"{host}:{port}")},
-                name=str(child_names[0]),
-                manufacturer="Computer",
-            )
-            return
-        if groupDevicesPerDepthLevel == 2:
-            manufacturer = "Hardware"
-        else:
-            manufacturer = "Group"
+        value_parts = node.get("Value", "").split(" ")
+        self._unit_of_measurement = value_parts[1] if len(value_parts) > 1 else None
+        self.value = self.parse_number(value_parts[0]) if len(value_parts) > 0 else None
 
-        model = ""
-        if groupDevicesPerDepthLevel == 2:
-            model = child_names[1]
-
-        # Hardware or Group device
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, deviceName)},
-            via_device=(DOMAIN, f"{host}:{port}"),
-            name=str(deviceName),
-            manufacturer=manufacturer,
-            model=model,
-        )
+        self._apply_data(node)
+        self._attr_device_info = coordinator.resolve_device_info_for_node(node)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
-        return self._name
+        return self._fullname
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
     @property
     def native_value(self):
         """Return the state of the device."""
-        if self.value == "-":
-            return None
-        return self.value
+        return None if self.value == "-" else self.value
 
     @property
     def extra_state_attributes(self):
@@ -128,7 +112,7 @@ class OpenHardwareMonitorDevice(SensorEntity):
         return self.attributes
 
     @property
-    def device_info(self):
+    def device_info(self) -> dr.DeviceInfo | None:
         """Information about this entity's device."""
         return self._attr_device_info
 
@@ -137,34 +121,40 @@ class OpenHardwareMonitorDevice(SensorEntity):
         """In some locales a decimal numbers uses ',' instead of '.'."""
         return string.replace(",", ".")
 
-    async def async_update(self) -> None:
-        """Update the device from a new JSON object."""
-        # self._data.update()
-        await self._data.async_update()
+    def _apply_data(self, node: SensorNode) -> None:
+        # Update info
+        self._node = node
+        self._fullname = (
+            node["FullName"]
+            if node.get("FullName")
+            else self._fullname or node[OHM_NAME]
+        )
 
-        array = self._data.data[OHM_CHILDREN]
-        _attributes = {}
+        # Update value
+        value_parts = node.get("Value", "").split(" ")
+        self._unit_of_measurement = (
+            value_parts[1]
+            if len(value_parts) > 1 and not self._unit_of_measurement
+            else self._unit_of_measurement
+        )
+        self.value = (
+            self.parse_number(value_parts[0]) if len(value_parts) > 0 else self.value
+        )
 
-        for path_index, path_number in enumerate(self.path):
-            values = array[path_number]
+        # Update attributes
+        self.attributes = {
+            "computer": node.get("ComputerName"),
+            "parents": str(node.get("ParentNames")),
+            "name": node[OHM_NAME],
+            STATE_MIN_VALUE: self.parse_number(node[OHM_MIN].split(" ")[0]),
+            STATE_MAX_VALUE: self.parse_number(node[OHM_MAX].split(" ")[0]),
+            "id": node.get(OHM_ID),
+            "sensorId": node.get("SensorId"),
+            "type": node.get("Type"),
+        }
 
-            if path_index == len(self.path) - 1:
-                self.value = self.parse_number(values[OHM_VALUE].split(" ")[0])
-                _attributes.update(
-                    {
-                        "name": values[OHM_NAME],
-                        "path": self.path,
-                        "id": self.id,
-                        STATE_MIN_VALUE: self.parse_number(
-                            values[OHM_MIN].split(" ")[0]
-                        ),
-                        STATE_MAX_VALUE: self.parse_number(
-                            values[OHM_MAX].split(" ")[0]
-                        ),
-                    }
-                )
-
-                self.attributes = _attributes
-                return
-            array = array[path_number][OHM_CHILDREN]
-            _attributes.update({f"level_{path_index}": values[OHM_NAME]})
+    def _handle_coordinator_update(self):
+        if node := self.coordinator.get_sensor_node(self._fullname):
+            self._apply_data(node)
+        self._attr_available = bool(node)
+        return super()._handle_coordinator_update()
