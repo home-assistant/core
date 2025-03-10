@@ -346,7 +346,6 @@ async def async_test_home_assistant(
     finally:
         # Restore timezone, it is set when creating the hass object
         dt_util.set_default_time_zone(orig_tz)
-        # Restore temperature_unit back to CELSIUS
         with suppress(AttributeError):
             delattr(hass.loop, _SHUTDOWN_RUN_CALLBACK_THREADSAFE)
 
