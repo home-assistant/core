@@ -248,6 +248,7 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         "homeassistant.components.squeezebox.Player", autospec=True
     ) as mock_player:
         mock_player.async_browse = AsyncMock(side_effect=mock_async_browse)
+        mock_player.async_query = AsyncMock(side_effect=mock_async_query)
         mock_player.generate_image_url_from_track_id = MagicMock(
             return_value="http://lms.internal:9000/html/images/favorites.png"
         )
@@ -271,6 +272,26 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         mock_player.model = "SqueezeLite"
 
         return mock_player
+
+
+async def mock_async_query(*parameters: str) -> dict[str, str | int] | None:
+    """Return a result, currently used by generate _playlist."""
+    command = ("album", "genre", "playlist", "artist", "track", "favorite")
+    loop_name = ""
+    for _cmd in command:
+        for parameter in parameters:
+            if _cmd in parameter:
+                if _cmd == "favorite":
+                    loop_name = "loop_loop"
+                else:
+                    loop_name = _cmd + "s_loop"
+                break
+    return {
+        loop_name: [
+            {"id": FAKE_VALID_ITEM_ID, "title": "Fake Item 1", "name": "Fake Item Name"}
+        ],
+        "count": 1,
+    }
 
 
 @pytest.fixture
