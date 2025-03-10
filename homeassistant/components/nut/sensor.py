@@ -1041,45 +1041,43 @@ async def async_setup_entry(
     if (num_outlets := status.get("outlet.count")) is not None:
         additional_sensor_types: dict[str, SensorEntityDescription] = {}
         for outlet_num in range(1, int(num_outlets) + 1):
-            outlet_num_str = str(outlet_num)
+            outlet_num_str: str = str(outlet_num)
+            outlet_name: str = (
+                status.get(f"outlet.{outlet_num_str}.name") or outlet_num_str
+            )
             additional_sensor_types |= {
-                f"outlet.{outlet_num!s}.current": SensorEntityDescription(
+                f"outlet.{outlet_num_str}.current": SensorEntityDescription(
                     key=f"outlet.{outlet_num_str}.current",
                     translation_key="outlet_number_current",
-                    translation_placeholders={"outlet_num": outlet_num_str},
+                    translation_placeholders={"outlet_name": outlet_name},
                     native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
                     device_class=SensorDeviceClass.CURRENT,
                     state_class=SensorStateClass.MEASUREMENT,
                 ),
-                f"outlet.{outlet_num!s}.current_status": SensorEntityDescription(
+                f"outlet.{outlet_num_str}.current_status": SensorEntityDescription(
                     key=f"outlet.{outlet_num_str}.current_status",
                     translation_key="outlet_number_current_status",
-                    translation_placeholders={"outlet_num": outlet_num_str},
+                    translation_placeholders={"outlet_name": outlet_name},
                     entity_category=EntityCategory.DIAGNOSTIC,
                     entity_registry_enabled_default=False,
                 ),
-                f"outlet.{outlet_num!s}.desc": SensorEntityDescription(
+                f"outlet.{outlet_num_str}.desc": SensorEntityDescription(
                     key=f"outlet.{outlet_num_str}.desc",
                     translation_key="outlet_number_desc",
-                    translation_placeholders={"outlet_num": outlet_num_str},
+                    translation_placeholders={"outlet_name": outlet_name},
                 ),
-                f"outlet.{outlet_num!s}.name": SensorEntityDescription(
-                    key=f"outlet.{outlet_num_str}.name",
-                    translation_key="outlet_number_name",
-                    translation_placeholders={"outlet_num": outlet_num_str},
-                ),
-                f"outlet.{outlet_num!s}.power": SensorEntityDescription(
+                f"outlet.{outlet_num_str}.power": SensorEntityDescription(
                     key=f"outlet.{outlet_num_str}.power",
                     translation_key="outlet_number_power",
-                    translation_placeholders={"outlet_num": outlet_num_str},
+                    translation_placeholders={"outlet_name": outlet_name},
                     native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
                     device_class=SensorDeviceClass.APPARENT_POWER,
                     state_class=SensorStateClass.MEASUREMENT,
                 ),
-                f"outlet.{outlet_num!s}.realpower": SensorEntityDescription(
+                f"outlet.{outlet_num_str}.realpower": SensorEntityDescription(
                     key=f"outlet.{outlet_num_str}.realpower",
                     translation_key="outlet_number_realpower",
-                    translation_placeholders={"outlet_num": outlet_num_str},
+                    translation_placeholders={"outlet_name": outlet_name},
                     native_unit_of_measurement=UnitOfPower.WATT,
                     device_class=SensorDeviceClass.POWER,
                     state_class=SensorStateClass.MEASUREMENT,

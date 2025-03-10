@@ -302,11 +302,11 @@ async def test_pdu_dynamic_outlets(
         entity_registry,
         model,
         unique_id=f"{unique_id_base}_outlet.1.current",
-        device_id="sensor.ups1_outlet_1_current",
+        device_id="sensor.ups1_outlet_a1_current",
         state_value="0",
         expected_attributes={
             "device_class": SensorDeviceClass.CURRENT,
-            "friendly_name": "Ups1 Outlet 1 current",
+            "friendly_name": "Ups1 Outlet A1 current",
             "unit_of_measurement": UnitOfElectricCurrent.AMPERE,
         },
     )
@@ -316,14 +316,17 @@ async def test_pdu_dynamic_outlets(
         entity_registry,
         model,
         unique_id=f"{unique_id_base}_outlet.24.current",
-        device_id="sensor.ups1_outlet_24_current",
+        device_id="sensor.ups1_outlet_a24_current",
         state_value="0.19",
         expected_attributes={
             "device_class": SensorDeviceClass.CURRENT,
-            "friendly_name": "Ups1 Outlet 24 current",
+            "friendly_name": "Ups1 Outlet A24 current",
             "unit_of_measurement": UnitOfElectricCurrent.AMPERE,
         },
     )
 
     entry = entity_registry.async_get("sensor.ups1_outlet_25_current")
+    assert not entry
+
+    entry = entity_registry.async_get("sensor.ups1_outlet_a25_current")
     assert not entry

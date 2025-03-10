@@ -76,9 +76,6 @@
       "outlet_number_desc": {
         "default": "mdi:information-outline"
       },
-      "outlet_number_name": {
-        "default": "mdi:information-outline"
-      },
       "outlet_number_power": {
         "default": "mdi:gauge"
       },
