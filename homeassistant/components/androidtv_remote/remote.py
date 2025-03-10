@@ -6,6 +6,9 @@ import asyncio
 from collections.abc import Iterable
 from typing import Any
 
+from androidtvremote2 import ConnectionClosed
+import voluptuous as vol
+
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
     ATTR_DELAY_SECS,
@@ -18,6 +21,8 @@ from homeassistant.components.remote import (
     RemoteEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AndroidTVRemoteConfigEntry
@@ -25,6 +30,10 @@ from .const import CONF_APP_NAME
 from .entity import AndroidTVRemoteBaseEntity
 
 PARALLEL_UPDATES = 0
+
+
+SERVICE_SEND_TEXT = "send_text"
+ATTR_TEXT = "text"
 
 
 async def async_setup_entry(
@@ -35,6 +44,12 @@ async def async_setup_entry(
     """Set up the Android TV remote entity based on a config entry."""
     api = config_entry.runtime_data
     async_add_entities([AndroidTVRemoteEntity(api, config_entry)])
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SEND_TEXT,
+        {vol.Required(ATTR_TEXT): cv.string},
+        "send_text",
+    )
 
 
 class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
@@ -108,3 +123,12 @@ class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
                 else:
                     self._send_key_command(single_command, "SHORT")
                 await asyncio.sleep(delay_secs)
+
+    async def send_text(self, text: str) -> None:
+        """Send text to Android TV."""
+        try:
+            self._api.send_text(text)
+        except ConnectionClosed as exc:
+            raise HomeAssistantError(
+                "Connection to Android TV device is closed"
+            ) from exc
