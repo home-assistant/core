@@ -158,6 +158,19 @@ async def test_volume_down(
     assert player.volume_level == 0.5 - volume_step
 
 
+async def test_volume_set(hass: HomeAssistant) -> None:
+    """Test the volume_set method."""
+    player = SimpleMediaPlayer(hass)
+    assert player.volume_level == 0
+    await player._async_set_volume_level(0.5, 0.01)
+    assert player.volume_step == 0.01
+    await player.async_volume_up()
+    assert player.volume_level == 0.51
+    await player.async_volume_down()
+    await player.async_volume_down()
+    assert player.volume_level == 0.49
+
+
 async def test_media_play_pause(player) -> None:
     """Test the media_play_pause method."""
     assert player.state == STATE_OFF
