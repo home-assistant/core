@@ -14,6 +14,7 @@ from collections.abc import (
     Sequence,
 )
 from contextlib import asynccontextmanager, contextmanager, suppress
+import copy
 from datetime import UTC, datetime, timedelta
 from enum import Enum, StrEnum
 import functools as ft
@@ -54,7 +55,6 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
-    UnitOfTemperature,
 )
 from homeassistant.core import (
     CoreState,
@@ -263,7 +263,7 @@ async def async_test_home_assistant(
     hass.config.longitude = -117.22743
     hass.config.elevation = 0
     await hass.config.async_set_time_zone("US/Pacific")
-    hass.config.units = METRIC_SYSTEM
+    hass.config.units = copy.deepcopy(METRIC_SYSTEM)
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
     hass.config.skip_pip_packages = []
@@ -347,8 +347,6 @@ async def async_test_home_assistant(
         # Restore timezone, it is set when creating the hass object
         dt_util.set_default_time_zone(orig_tz)
         # Restore temperature_unit back to CELSIUS
-        hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
-        # Remove loop shutdown indicator to not interfere with additional hass objects
         with suppress(AttributeError):
             delattr(hass.loop, _SHUTDOWN_RUN_CALLBACK_THREADSAFE)
 
