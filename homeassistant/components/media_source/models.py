@@ -79,7 +79,7 @@ class MediaSourceItem:
         return await self.async_media_source().async_browse_media(self)
 
     async def async_search(
-        self, query: str | None, allowed_content_types: list[MediaClass] | None = None
+        self, query: str | None, allowed_content_types: set[MediaClass] | None = None
     ) -> BrowseMediaSource | None:
         """Search this item."""
         if self.domain is None:
@@ -134,7 +134,7 @@ class MediaSource:
         self,
         item: MediaSourceItem,
         query: str | None,
-        allowed_content_types: list[MediaClass] | None = None,
+        allowed_content_types: set[MediaClass] | None = None,
     ) -> BrowseMediaSource | None:
         """Search media."""
         raise NotImplementedError

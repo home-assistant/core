@@ -153,11 +153,11 @@ async def async_search_media(
     hass: HomeAssistant,
     media_content_id: str | None,
     query: str | None,
-    allowed_content_types: list[MediaClass] | None = None,
+    allowed_content_types: set[MediaClass] | None = None,
 ) -> BrowseMediaSource | None:
     """Return a list of media sources matching the query."""
     if allowed_content_types is None:
-        allowed_content_types = list(MediaClass)
+        allowed_content_types = set(MediaClass)
     if DOMAIN not in hass.data:
         raise SearchError("Media Source not loaded")
 
