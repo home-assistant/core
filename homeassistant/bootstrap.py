@@ -788,7 +788,7 @@ async def _async_resolve_domains_and_preload(
         if domain in domains_to_setup
     }
     all_integrations_to_setup = integrations_to_setup.copy()
-    all_integrations_to_setup |= (
+    all_integrations_to_setup.update(
         (dep, loader.async_get_loaded_integration(hass, dep))
         for domain in integrations_to_setup
         for dep in integrations_dependencies[domain].difference(
@@ -797,8 +797,8 @@ async def _async_resolve_domains_and_preload(
     )
 
     # Gather requirements for all integrations, their dependencies and after dependencies.
-    # To gather all the requirements we must ignore exceptions here, which will be
-    # handled later.
+    # To gather all the requirements we must ignore exceptions here.
+    # The exceptions will be detected and handled later in the bootstrap process.
     integrations_after_dependencies = (
         await loader.resolve_integrations_after_dependencies(
             hass, integrations_to_process.values(), ignore_exceptions=True
@@ -807,7 +807,7 @@ async def _async_resolve_domains_and_preload(
     integrations_requirements = {
         domain: itg.requirements for domain, itg in integrations_to_process.items()
     }
-    integrations_requirements |= (
+    integrations_requirements.update(
         (dep, loader.async_get_loaded_integration(hass, dep).requirements)
         for deps in integrations_after_dependencies.values()
         for dep in deps.difference(integrations_requirements)
