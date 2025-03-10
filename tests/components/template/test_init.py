@@ -358,10 +358,10 @@ async def async_yaml_patch_helper(hass: HomeAssistant, filename: str) -> None:
             {
                 "template_type": "switch",
                 "name": "My template",
-                "value_template": "{{ true }}",
+                "state": "{{ true }}",
             },
             {
-                "value_template": "{{ true }}",
+                "state": "{{ true }}",
             },
         ),
     ],
