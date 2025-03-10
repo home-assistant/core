@@ -52,7 +52,7 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    client: Mastodon = discovery_info.get("client")
+    client = cast(Mastodon, discovery_info.get("client"))
 
     return MastodonNotificationService(hass, client)
 

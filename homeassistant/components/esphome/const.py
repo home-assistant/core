@@ -14,7 +14,7 @@ DEFAULT_ALLOW_SERVICE_CALLS = True
 DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS = False
 
 
-STABLE_BLE_VERSION_STR = "2025.2.1"
+STABLE_BLE_VERSION_STR = "2025.2.2"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",

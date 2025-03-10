@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock
 
-from aioshelly.const import MODEL_GAS
+from aioshelly.const import MODEL_1PM, MODEL_GAS, MODEL_MOTION
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 
@@ -177,15 +177,37 @@ async def test_block_restored_motion_switch_no_last_state(
     assert get_entity_state(hass, entity_id) == STATE_ON
 
 
+@pytest.mark.parametrize(
+    ("model", "sleep", "entity", "unique_id"),
+    [
+        (MODEL_1PM, 0, "switch.test_name_channel_1", "123456789ABC-relay_0"),
+        (
+            MODEL_MOTION,
+            1000,
+            "switch.test_name_motion_detection",
+            "123456789ABC-sensor_0-motionActive",
+        ),
+    ],
+)
 async def test_block_device_unique_ids(
-    hass: HomeAssistant, entity_registry: EntityRegistry, mock_block_device: Mock
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_block_device: Mock,
+    model: str,
+    sleep: int,
+    entity: str,
+    unique_id: str,
 ) -> None:
     """Test block device unique_ids."""
-    await init_integration(hass, 1)
+    await init_integration(hass, 1, model=model, sleep_period=sleep)
 
-    entry = entity_registry.async_get("switch.test_name_channel_1")
+    if sleep:
+        mock_block_device.mock_online()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    entry = entity_registry.async_get(entity)
     assert entry
-    assert entry.unique_id == "123456789ABC-relay_0"
+    assert entry.unique_id == unique_id
 
 
 async def test_block_set_state_connection_error(

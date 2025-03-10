@@ -980,6 +980,7 @@ def test_datetime_selector_schema(schema, valid_selections, invalid_selections) 
     ("schema", "valid_selections", "invalid_selections"),
     [({}, ("abc123", "{{ now() }}"), (None, "{{ incomplete }", "{% if True %}Hi!"))],
 )
+@pytest.mark.usefixtures("hass")
 def test_template_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test template selector."""
     _test_selector("template", schema, valid_selections, invalid_selections)

@@ -122,6 +122,7 @@ async def test_setup_multiple_states(
         },
     ],
 )
+@pytest.mark.usefixtures("hass")
 def test_setup_invalid_config(config) -> None:
     """Test the history statistics sensor setup with invalid config."""
 

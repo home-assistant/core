@@ -1,6 +1,12 @@
 {
   "entity": {
     "sensor": {
+      "brightness": {
+        "default": "mdi:brightness-5"
+      },
+      "brightness_instance": {
+        "default": "mdi:brightness-5"
+      },
       "link_quality": {
         "default": "mdi:signal"
       },

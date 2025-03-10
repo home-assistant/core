@@ -855,7 +855,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "risco",
     "rituals_perfume_genie",
     "rmvtransport",
-    "roborock",
     "rocketchat",
     "roku",
     "romy",

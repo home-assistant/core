@@ -22,6 +22,7 @@ from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
 from homeassistant.components.voip.voip import PreRecordMessageProtocol, make_protocol
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
@@ -861,6 +862,19 @@ async def test_announce(
         satellite.supported_features
         & assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
     )
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            "assist_satellite",
+            "announce",
+            service_data={"media_id": "http://example.com"},
+            blocking=True,
+            target={
+                "entity_id": satellite.entity_id,
+            },
+        )
+    assert err.value.translation_domain == "voip"
+    assert err.value.translation_key == "non_tts_announcement"
 
     announcement = assist_satellite.AssistSatelliteAnnouncement(
         message="test announcement",

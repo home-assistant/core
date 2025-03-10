@@ -29,8 +29,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    AIR_QUALITY_CATEGORY_MAP,
     API_METRIC,
-    ATTR_CATEGORY,
+    ATTR_CATEGORY_VALUE,
     ATTR_DIRECTION,
     ATTR_ENGLISH,
     ATTR_LEVEL,
@@ -38,6 +39,7 @@ from .const import (
     ATTR_VALUE,
     ATTRIBUTION,
     MAX_FORECAST_DAYS,
+    POLLEN_CATEGORY_MAP,
 )
 from .coordinator import (
     AccuWeatherConfigEntry,
@@ -59,9 +61,9 @@ class AccuWeatherSensorDescription(SensorEntityDescription):
 FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="AirQuality",
-        value_fn=lambda data: cast(str, data[ATTR_CATEGORY]),
+        value_fn=lambda data: AIR_QUALITY_CATEGORY_MAP[data[ATTR_CATEGORY_VALUE]],
         device_class=SensorDeviceClass.ENUM,
-        options=["good", "hazardous", "high", "low", "moderate", "unhealthy"],
+        options=list(AIR_QUALITY_CATEGORY_MAP.values()),
         translation_key="air_quality",
     ),
     AccuWeatherSensorDescription(
@@ -83,7 +85,9 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
-        attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+        attr_fn=lambda data: {
+            ATTR_LEVEL: POLLEN_CATEGORY_MAP[data[ATTR_CATEGORY_VALUE]]
+        },
         translation_key="grass_pollen",
     ),
     AccuWeatherSensorDescription(
@@ -107,7 +111,9 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
-        attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+        attr_fn=lambda data: {
+            ATTR_LEVEL: POLLEN_CATEGORY_MAP[data[ATTR_CATEGORY_VALUE]]
+        },
         translation_key="mold_pollen",
     ),
     AccuWeatherSensorDescription(
@@ -115,7 +121,9 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
         entity_registry_enabled_default=False,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
-        attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+        attr_fn=lambda data: {
+            ATTR_LEVEL: POLLEN_CATEGORY_MAP[data[ATTR_CATEGORY_VALUE]]
+        },
         translation_key="ragweed_pollen",
     ),
     AccuWeatherSensorDescription(
@@ -181,14 +189,18 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_CUBIC_METER,
         entity_registry_enabled_default=False,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
-        attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+        attr_fn=lambda data: {
+            ATTR_LEVEL: POLLEN_CATEGORY_MAP[data[ATTR_CATEGORY_VALUE]]
+        },
         translation_key="tree_pollen",
     ),
     AccuWeatherSensorDescription(
         key="UVIndex",
         native_unit_of_measurement=UV_INDEX,
         value_fn=lambda data: cast(int, data[ATTR_VALUE]),
-        attr_fn=lambda data: {ATTR_LEVEL: data[ATTR_CATEGORY]},
+        attr_fn=lambda data: {
+            ATTR_LEVEL: POLLEN_CATEGORY_MAP[data[ATTR_CATEGORY_VALUE]]
+        },
         translation_key="uv_index_forecast",
     ),
     AccuWeatherSensorDescription(

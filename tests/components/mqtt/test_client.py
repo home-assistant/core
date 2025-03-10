@@ -1557,6 +1557,42 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
 
 
 @pytest.mark.parametrize(
+    ("mqtt_config_entry_data", "client_id"),
+    [
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                "client_id": "random01234random0124",
+            },
+            "random01234random0124",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+            },
+            None,
+        ),
+    ],
+)
+async def test_client_id_is_set(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    client_id: str | None,
+) -> None:
+    """Test setup defaults for tls."""
+    with patch(
+        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
+    ) as async_client_mock:
+        await mqtt_mock_entry()
+        await hass.async_block_till_done()
+    assert async_client_mock.call_count == 1
+    call_params: dict[str, Any] = async_client_mock.call_args[1]
+    assert "client_id" in call_params
+    assert client_id is None or client_id == call_params["client_id"]
+    assert call_params["client_id"] is not None
+
+
+@pytest.mark.parametrize(
     "mqtt_config_entry_data",
     [
         {

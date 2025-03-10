@@ -13,7 +13,7 @@ SCAN_INTERVAL: Final = timedelta(minutes=30)
 DOMAIN: Final = "gios"
 MANUFACTURER: Final = "Główny Inspektorat Ochrony Środowiska"
 
-URL = "http://powietrze.gios.gov.pl/pjp/current/station_details/info/{station_id}"
+URL = "https://powietrze.gios.gov.pl/pjp/current/station_details/info/{station_id}"
 
 API_TIMEOUT: Final = 30
 

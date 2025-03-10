@@ -25,6 +25,7 @@ APPLICATION_CREDENTIALS = [
     "neato",
     "nest",
     "netatmo",
+    "ondilo_ico",
     "onedrive",
     "point",
     "senz",

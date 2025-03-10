@@ -21,6 +21,8 @@ from .entity import HomeeNodeEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 OPEN_CLOSE_ATTRIBUTES = [
     AttributeType.OPEN_CLOSE,
     AttributeType.SLAT_ROTATION_IMPULSE,

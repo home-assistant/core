@@ -43,17 +43,32 @@
       "input_bypass_phases": {
         "default": "mdi:information-outline"
       },
+      "input_current_status": {
+        "default": "mdi:information-outline"
+      },
       "input_frequency_status": {
         "default": "mdi:information-outline"
       },
+      "input_load": {
+        "default": "mdi:gauge"
+      },
       "input_phases": {
         "default": "mdi:information-outline"
+      },
+      "input_power": {
+        "default": "mdi:gauge"
       },
       "input_sensitivity": {
         "default": "mdi:information-outline"
       },
       "input_transfer_reason": {
         "default": "mdi:information-outline"
+      },
+      "input_voltage_status": {
+        "default": "mdi:information-outline"
+      },
+      "outlet_voltage": {
+        "default": "mdi:gauge"
       },
       "output_l1_power_percent": {
         "default": "mdi:gauge"

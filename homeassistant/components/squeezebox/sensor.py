@@ -43,6 +43,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_GENRES,
