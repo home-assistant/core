@@ -1,4 +1,7 @@
-/config
+/config/*
+
+!/config/custom_components
+
 config2/*
 
 tests/testing_config/deps
