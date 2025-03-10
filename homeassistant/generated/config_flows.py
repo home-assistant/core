@@ -446,6 +446,7 @@ FLOWS = {
         "openai_conversation",
         "openexchangerates",
         "opengarage",
+        "openhardwaremonitor",
         "openhome",
         "opensky",
         "opentherm_gw",
