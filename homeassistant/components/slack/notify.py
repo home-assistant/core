@@ -85,27 +85,16 @@ class AuthDictT(TypedDict, total=False):
     auth: BasicAuth
 
 
-class FormDataT(TypedDict, total=False):
-    """Type for form data, file upload."""
-
-    channels: str
-    filename: str
-    initial_comment: str
-    title: str
-    token: str
-    thread_ts: str
-
-
 class MessageT(TypedDict, total=False):
     """Type for message data."""
 
     link_names: bool
     text: str
-    username: str
-    icon_url: str
-    icon_emoji: str
-    blocks: list[Any]
-    thread_ts: str
+    username: str  # Optional key
+    icon_url: str  # Optional key
+    icon_emoji: str  # Optional key
+    blocks: list[Any]  # Optional key
+    thread_ts: str  # Optional key
 
 
 async def async_get_service(
