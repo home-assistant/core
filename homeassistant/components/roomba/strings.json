@@ -90,6 +90,9 @@
       },
       "last_mission": {
         "name": "Last mission start time"
+      },
+      "last_command": {
+        "name": "Last command"
       }
     }
   }
