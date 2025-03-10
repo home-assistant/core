@@ -367,7 +367,7 @@ class BackupInfoView(BackupOnboardingView):
             {
                 "backups": list(backups.values()),
                 "state": manager.state,
-                "last_non_idle_event": manager.last_non_idle_event,
+                "last_action_event": manager.last_action_event,
             }
         )
 
