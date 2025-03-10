@@ -26,6 +26,17 @@
     }
   },
   "entity": {
+    "alarm_control_panel": {
+      "homee_mode": {
+        "name": "Status",
+        "state": {
+          "armed_home": "Home",
+          "armed_night": "Sleeping",
+          "armed_away": "Away",
+          "armed_vacation": "Vacation"
+        }
+      }
+    },
     "button": {
       "automatic_mode": {
         "name": "Automatic mode"
