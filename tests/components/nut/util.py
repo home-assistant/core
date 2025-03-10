@@ -82,7 +82,7 @@ async def async_init_integration(
     return entry
 
 
-async def _test_sensor_and_attributes(
+def _test_sensor_and_attributes(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     model: str,
@@ -91,9 +91,8 @@ async def _test_sensor_and_attributes(
     state_value: str,
     expected_attributes: dict,
 ) -> None:
-    """Test creation of device sensors with unique ids."""
+    """Test all of the sensor entry attributes."""
 
-    await async_init_integration(hass, model)
     entry = entity_registry.async_get(device_id)
     assert entry
     assert entry.unique_id == unique_id
