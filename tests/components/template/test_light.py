@@ -17,6 +17,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntityFeature,
 )
+from homeassistant.components.template.light import rewrite_legacy_to_modern_conf
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -152,6 +153,161 @@ OPTIMISTIC_RGBWW_COLOR_LIGHT_CONFIG = {
         },
     },
 }
+
+
+@pytest.mark.parametrize(
+    ("old_attr", "new_attr", "template", "expected"),
+    [
+        (
+            "value_template",
+            "state",
+            "{{ 1 == 1 }}",
+            "{{ 1 == 1 }}",
+        ),
+        (
+            "rgb_template",
+            "rgb",
+            "{{ (255,255,255) }}",
+            "{{ (255,255,255) }}",
+        ),
+        (
+            "rgbw_template",
+            "rgbw",
+            "{{ (255,255,255,255) }}",
+            "{{ (255,255,255,255) }}",
+        ),
+        (
+            "rgbww_template",
+            "rgbww",
+            "{{ (255,255,255,255,255) }}",
+            "{{ (255,255,255,255,255) }}",
+        ),
+        (
+            "effect_list_template",
+            "effect_list",
+            "{{ ['a', 'b'] }}",
+            "{{ ['a', 'b'] }}",
+        ),
+        (
+            "effect_template",
+            "effect",
+            "{{ 'a' }}",
+            "{{ 'a' }}",
+        ),
+        (
+            "level_template",
+            "level",
+            "{{ 255 }}",
+            "{{ 255 }}",
+        ),
+        (
+            "max_mireds_template",
+            "max_mireds",
+            "{{ 255 }}",
+            "{{ 255 }}",
+        ),
+        (
+            "min_mireds_template",
+            "min_mireds",
+            "{{ 255 }}",
+            "{{ 255 }}",
+        ),
+        (
+            "supports_transition_template",
+            "supports_transition",
+            "{{ True }}",
+            "{{ True }}",
+        ),
+        (
+            "temperature_template",
+            "temperature",
+            "{{ 255 }}",
+            "{{ 255 }}",
+        ),
+        (
+            "white_value_template",
+            "white_value",
+            "{{ 255 }}",
+            "{{ 255 }}",
+        ),
+        (
+            "hs_template",
+            "hs",
+            "{{ (255, 255) }}",
+            "{{ (255, 255) }}",
+        ),
+        (
+            "color_template",
+            "hs",
+            "{{ (255, 255) }}",
+            "{{ (255, 255) }}",
+        ),
+    ],
+)
+async def test_legacy_to_modern_config(
+    hass: HomeAssistant, old_attr: str, new_attr: str, template: str, expected: str
+) -> None:
+    """Test the conversion of legacy template to modern template."""
+    config = {
+        "foo": {
+            "friendly_name": "foo bar",
+            "unique_id": "foo-bar-light",
+            "icon_template": "{{ 'mdi.abc' }}",
+            "entity_picture_template": "{{ 'mypicture.jpg' }}",
+            "availability_template": "{{ 1 == 1 }}",
+            old_attr: template,
+            **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+        }
+    }
+    altered_configs = rewrite_legacy_to_modern_conf(hass, config)
+
+    assert len(altered_configs) == 1
+
+    altered_config = altered_configs[0]
+
+    assert "object_id" in altered_config
+    assert altered_config["object_id"] == "foo"
+
+    assert "friendly_name" not in altered_config
+    assert "name" in altered_config
+    assert altered_config["name"].template == "foo bar"
+
+    assert "icon_template" not in altered_config
+    assert "icon" in altered_config
+    assert altered_config["icon"].template == "{{ 'mdi.abc' }}"
+
+    assert "entity_picture_template" not in altered_config
+    assert "picture" in altered_config
+    assert altered_config["picture"].template == "{{ 'mypicture.jpg' }}"
+
+    assert "availability_template" not in altered_config
+    assert "availability" in altered_config
+    assert altered_config["availability"].template == "{{ 1 == 1 }}"
+
+    assert "unique_id" in altered_config
+    assert altered_config["unique_id"] == "foo-bar-light"
+
+    assert "turn_on" in altered_config
+    assert altered_config["turn_on"] == {
+        "service": "test.automation",
+        "data_template": {
+            "action": "turn_on",
+            "caller": "{{ this.entity_id }}",
+        },
+    }
+
+    assert "turn_off" in altered_config
+    assert altered_config["turn_off"] == {
+        "service": "test.automation",
+        "data_template": {
+            "action": "turn_off",
+            "caller": "{{ this.entity_id }}",
+        },
+    }
+
+    assert old_attr not in altered_config
+    assert new_attr in altered_config
+    assert altered_config[new_attr].template == expected
 
 
 async def async_setup_light(
