@@ -726,9 +726,10 @@ async def _async_resolve_domains_and_preload(
     """Resolve all dependencies and return integrations to set up.
 
     The return value is a tuple of two dictionaries:
-    - The first dictionary contains integrations specified by the configuration (including config entries).
-    - The second dictionary contains the same integrations as the first dictionary together
-      with all their dependencies.
+    - The first dictionary contains integrations
+      specified by the configuration (including config entries).
+    - The second dictionary contains the same integrations as the first dictionary
+      together with all their dependencies.
     """
     domains_to_setup = _get_domains(hass, config)
     platform_integrations = conf_util.extract_platform_integrations(
@@ -757,7 +758,8 @@ async def _async_resolve_domains_and_preload(
     # to list them as dependencies.
     # We want to later avoid lock contention when multiple integrations try to load
     # their manifests at once.
-    # Also process integrations that are defined under base platforms to speed things up.
+    # Also process integrations that are defined under base platforms
+    # to speed things up.
     additional_domains_to_process = {
         *BASE_PLATFORMS,
         *chain.from_iterable(platform_integrations.values()),
@@ -796,7 +798,8 @@ async def _async_resolve_domains_and_preload(
         )
     )
 
-    # Gather requirements for all integrations, their dependencies and after dependencies.
+    # Gather requirements for all integrations,
+    # their dependencies and after dependencies.
     # To gather all the requirements we must ignore exceptions here.
     # The exceptions will be detected and handled later in the bootstrap process.
     integrations_after_dependencies = (

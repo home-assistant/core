@@ -1529,11 +1529,14 @@ async def _do_resolve_dependencies(
 
     Uses `cache` to cache the results.
 
-    If `possible_after_dependencies` is not UNDEFINED, listed after dependencies are also considered.
-    If it is None, all the possible after dependencies are considered.
+    If `possible_after_dependencies` is not UNDEFINED,
+    listed after dependencies are also considered.
+    If `possible_after_dependencies` is None,
+    all the possible after dependencies are considered.
 
-    If `ignore_exceptions` is True, exceptions are caught and ignored and the normal resolution
-    algorithm continues. Otherwise, they are raised.
+    If `ignore_exceptions` is True, exceptions are caught and ignored
+    and the normal resolution algorithm continues.
+    Otherwise, exceptions are raised.
     """
     resolved = cache
     resolving: set[str] = set()
