@@ -34,11 +34,13 @@ from .const import (
     CONF_SERVICE_ACCOUNT_INFO,
     CONF_SPEED,
     CONF_TEXT_TYPE,
+    CONF_TIMEOUT,
     CONF_VOICE,
     DEFAULT_GAIN,
     DEFAULT_LANG,
     DEFAULT_PITCH,
     DEFAULT_SPEED,
+    DEFAULT_TIMEOUT,
     DOMAIN,
 )
 from .helpers import async_tts_voices, tts_options_schema, tts_platform_schema
@@ -215,7 +217,9 @@ class BaseGoogleCloudProvider:
             ),
         )
 
-        response = await self._client.synthesize_speech(request, timeout=10)
+        response = await self._client.synthesize_speech(
+            request, timeout=options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
+        )
 
         if encoding == texttospeech.AudioEncoding.MP3:
             extension = "mp3"
