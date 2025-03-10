@@ -62,6 +62,7 @@ from .const import (
     RPC_INPUTS_EVENTS_TYPES,
     RPC_RECONNECT_INTERVAL,
     RPC_SENSORS_POLLING_INTERVAL,
+    RPC_TEST_EVENTS_TYPES,
     SHBTN_MODELS,
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
@@ -495,6 +496,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._ota_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
+        self._test_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._connect_task: asyncio.Task | None = None
         entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
@@ -569,6 +571,19 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         return _unsubscribe
 
     @callback
+    def async_subscribe_test_events(
+        self, test_event_callback: Callable[[dict[str, Any]], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to test events."""
+
+        def __unsubscribe() -> None:
+            self._test_event_listeners.remove(test_event_callback)
+
+        self._test_event_listeners.append(test_event_callback)
+
+        return __unsubscribe
+
+    @callback
     def async_subscribe_events(
         self, event_callback: Callable[[dict[str, Any]], None]
     ) -> CALLBACK_TYPE:
@@ -610,6 +625,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                     ENTRY_RELOAD_COOLDOWN,
                 )
                 self._debounced_reload.async_schedule_call()
+            elif event_type in RPC_TEST_EVENTS_TYPES:
+                for event_callback in self._test_event_listeners:
+                    event_callback(event)
             elif event_type in RPC_INPUTS_EVENTS_TYPES:
                 for event_callback in self._input_event_listeners:
                     event_callback(event)

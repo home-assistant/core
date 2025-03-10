@@ -66,6 +66,49 @@ async def test_rpc_button(
     assert state.attributes.get(ATTR_EVENT_TYPE) == "single_push"
 
 
+async def test_rpc_test_event(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC device event."""
+    await init_integration(hass, 2)
+    entity_id = "event.test_smoke_0"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(["alarm_test"])
+    assert state.attributes.get(ATTR_EVENT_TYPE) is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-smoke:0"
+
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "smoke:0",
+                    "event": "alarm_test",
+                    "id": 0,
+                    "ts": 1668522399.2,
+                    "state": True,
+                }
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_EVENT_TYPE) == "alarm_test"
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_script_1_event(
     hass: HomeAssistant,
