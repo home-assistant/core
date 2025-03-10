@@ -3,7 +3,7 @@
 import asyncio
 from copy import deepcopy
 import logging
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions
@@ -128,16 +128,9 @@ async def test_noop_statistics(hass: HomeAssistant, client) -> None:
 
 
 @pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
-async def test_listen_failure(hass: HomeAssistant, client, error) -> None:
-    """Test we handle errors during client listen."""
-
-    async def listen(driver_ready):
-        """Mock the client listen method."""
-        # Set the connect side effect to stop an endless loop on reload.
-        client.connect.side_effect = BaseZwaveJSServerError("Boom")
-        raise error
-
-    client.listen.side_effect = listen
+async def test_listen_failure_during_setup(hass: HomeAssistant, client, error) -> None:
+    """Test we handle errors during setup for client listen."""
+    client.listen.side_effect = error
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
@@ -145,6 +138,26 @@ async def test_listen_failure(hass: HomeAssistant, client, error) -> None:
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
+async def test_listen_failure_after_setup(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
+    error: Exception,
+) -> None:
+    """Test we handle errors after setup for client listen."""
+    config_entry = integration
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    listen_block.set()
+    listen_result.set_exception(error)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_new_entity_on_value_added(
