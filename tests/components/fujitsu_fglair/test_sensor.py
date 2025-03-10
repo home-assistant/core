@@ -36,15 +36,15 @@ async def test_entities(
 async def test_no_outside_temperature(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
     mock_ayla_api: AsyncMock,
-    mock_config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
-    """Test that coordinator returns the data we expect after the first refresh."""
-    for d in mock_ayla_api.async_get_devices.return_value:
-        d.outdoor_temperature = None
+    """Test that the outside sensor doesn't get added if the reading is None."""
+    mock_ayla_api.async_get_devices.return_value[0].outdoor_temperature = None
 
     assert await integration_setup()
 
-    assert len(entity_registry.entities) == 0
+    assert (
+        len(entity_registry.entities)
+        == len(mock_ayla_api.async_get_devices.return_value) - 1
+    )
