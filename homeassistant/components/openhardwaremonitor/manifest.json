@@ -6,7 +6,7 @@
   "iot_class": "local_polling",
   "integration_type": "device",
   "quality_scale": "legacy",
-  "requirements": ["pyopenhardwaremonitor==0.1.6"],
+  "requirements": ["pyopenhardwaremonitor==0.2.5"],
   "dependencies": [],
   "config_flow": true
 }

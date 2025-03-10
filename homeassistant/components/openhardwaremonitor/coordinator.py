@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from pyopenhardwaremonitor.api import OpenHardwareMonitorAPI
+from pyopenhardwaremonitor.api import OpenHardwareMonitorAPI, SensorNode
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -15,7 +15,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, GROUP_DEVICES_PER_DEPTH_LEVEL
-from .types import DataNode, SensorNode, SensorType
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -56,33 +55,28 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
         api = OpenHardwareMonitorAPI(
             self._config.get(CONF_HOST), self._config.get(CONF_PORT), session=session
         )
-        data: DataNode = await api.get_data()
+        data = await api.get_sensor_nodes()
 
-        if not self._computers:
+        initial_fetch = not self._computers
+        if initial_fetch and self._grouping > 0:
+            device_registry = dr.async_get(self.hass)
             computers = {}
-            computer_names = OpenHardwareMonitorDataCoordinator._parse_computer_nodes(
-                data
-            )
-            if self._grouping > 0:
+            for computer_name in data:
                 # Create the 'Computer' device here
-                device_registry = dr.async_get(self.hass)
-                for name in computer_names:
-                    de = device_registry.async_get_or_create(
-                        config_entry_id=self._config_entry_id,
-                        name=name,
-                        identifiers={(DOMAIN, f"{self._config_entry_id}__{name}")},
-                        manufacturer="Computer",
-                    )
-                    computers[name] = de
-            _LOGGER.info("Computers: %s", list(computers.keys()))
-            self._computers = computers
+                de = device_registry.async_get_or_create(
+                    config_entry_id=self._config_entry_id,
+                    name=computer_name,
+                    identifiers={(DOMAIN, f"{self._config_entry_id}__{computer_name}")},
+                    manufacturer="Computer",
+                )
+                computers[computer_name] = de
+                _LOGGER.info("Get or Create computer: %s", computer_name)
+            self._computers = (
+                computers if computers and initial_fetch else self._computers
+            )
 
-        sensor_nodes = [
-            n
-            for c in data["Children"]
-            for n in OpenHardwareMonitorDataCoordinator._parse_sensor_nodes(c)
-        ]
-
+        sensor_nodes = [n for c in data for n in data[c]]
+        _LOGGER.info("NODES: %s", sensor_nodes)
         return {n["FullName"]: n for n in sensor_nodes}
 
     def resolve_device_info_for_node(self, node: SensorNode) -> dr.DeviceInfo | None:
@@ -102,53 +96,27 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
                 )
             return None
 
-        paths = node["Paths"]
-        device_name = " ".join(paths[: self._grouping])
+        parents = node["ParentNames"]
+        device_name = " ".join(parents[: self._grouping])
         manufacturer = "Hardware" if self._grouping == 2 else "Group"
-        model = paths[1] if self._grouping == 2 else None
+        model = parents[1] if self._grouping == 2 else None
         via_device = (DOMAIN, dict(computer.identifiers)[DOMAIN]) if computer else None
 
         # Hardware or Group device
+        if via_device:
+            return dr.DeviceInfo(
+                identifiers={(DOMAIN, device_name)},
+                via_device=via_device,
+                name=device_name,
+                manufacturer=manufacturer,
+                model=model,
+            )
         return dr.DeviceInfo(
             identifiers={(DOMAIN, device_name)},
-            via_device=via_device,
             name=device_name,
             manufacturer=manufacturer,
             model=model,
         )
-
-    @staticmethod
-    def _parse_computer_nodes(root_node: DataNode) -> list[str]:
-        """Get the available computer names in the data."""
-        if not root_node or not root_node.get("Children"):
-            return []
-        return [node["Text"] for node in root_node["Children"] if node.get("Text")]
-
-    @staticmethod
-    def _parse_sensor_nodes(
-        node: DataNode, paths: list[str] | None = None
-    ) -> list[SensorNode]:
-        """Recursively loop through child objects, finding the values."""
-        result: list[SensorNode] = []
-        if paths is None:
-            paths = []
-
-        if node.get("Children"):
-            for n in node["Children"]:
-                sub_nodes = OpenHardwareMonitorDataCoordinator._parse_sensor_nodes(
-                    n, [*paths, node["Text"]]
-                )
-                result.extend(sub_nodes)
-        elif node.get("Value"):
-            sensor = SensorNode(
-                **node,
-                Paths=paths,
-                FullName=" ".join([*paths, node["Text"]]),
-                ComputerName=paths[0],
-                Type=SensorType(node.get("Type")) if node.get("Type") else None,
-            )
-            result.append(sensor)
-        return result
 
     def get_sensor_node(self, fullname: str) -> SensorNode | None:
         """Get the data for specific sensor."""
