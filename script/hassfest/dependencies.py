@@ -173,10 +173,11 @@ IGNORE_VIOLATIONS = {
     "logbook",
     # Temporary needed for migration until 2024.10
     ("conversation", "assist_pipeline"),
-    # The onboarding integration provides a limited backup API used during
-    # onboarding. The onboarding integration waits for the backup manager
-    # to be ready before calling any backup functionality.
+    # The onboarding integration provides limited backup and cloud APIs for use
+    # during onboarding. The onboarding integration waits for the backup manager
+    # and cloud to be ready before calling any backup or cloud functionality.
     ("onboarding", "backup"),
+    ("onboarding", "cloud"),
 }
 
 
