@@ -5763,7 +5763,6 @@ async def test_reauth_reconfigure_missing_entry(
 
 
 @pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 @pytest.mark.parametrize(
     "source", [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE]
 )
@@ -5995,7 +5994,7 @@ async def test_async_wait_component_startup(hass: HomeAssistant) -> None:
     "integration_frame_path",
     ["homeassistant/components/my_integration", "homeassistant.core"],
 )
-@pytest.mark.usefixtures("mock_integration_frame")
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
 async def test_options_flow_with_config_entry_core() -> None:
     """Test that OptionsFlowWithConfigEntry cannot be used in core."""
     entry = MockConfigEntry(
@@ -6009,8 +6008,7 @@ async def test_options_flow_with_config_entry_core() -> None:
 
 
 @pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
-@pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
 async def test_options_flow_with_config_entry(caplog: pytest.LogCaptureFixture) -> None:
     """Test that OptionsFlowWithConfigEntry doesn't mutate entry options."""
     entry = MockConfigEntry(
@@ -8789,7 +8787,6 @@ async def test_options_flow_config_entry(
 
 @pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
 @pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_options_flow_deprecated_config_entry_setter(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -8849,7 +8846,8 @@ async def test_options_flow_deprecated_config_entry_setter(
         "config_entry explicitly, which is deprecated at "
         "custom_components/my_integration/light.py, line 23: "
         "self.light.is_on. This will stop working in Home Assistant 2025.12, please "
-        "create a bug report at " in caplog.text
+        "report it to the author of the 'my_integration' custom integration"
+        in caplog.text
     )
 
 
