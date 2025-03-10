@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "user": {
+        "data": {
+          "name": "Tilt Pi friendly name",
+          "host": "Tilt Pi hostname or IP address",
+          "port": "Tilt Pi port"
+        },
+        "data_description": {
+          "host": "The host and port of the Tilt Pi device."
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  }
+}
