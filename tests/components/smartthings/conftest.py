@@ -100,6 +100,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "iphone",
         "da_wm_dw_000001",
         "da_wm_wd_000001",
+        "da_wm_wd_000001_1",
         "da_wm_wm_000001",
         "da_wm_wm_000001_1",
         "da_rvc_normal_000001",

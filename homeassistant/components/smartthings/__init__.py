@@ -194,6 +194,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 KEEP_CAPABILITY_QUIRK: dict[
     Capability | str, Callable[[dict[Attribute | str, Status]], bool]
 ] = {
+    Capability.DRYER_OPERATING_STATE: (
+        lambda status: status[Attribute.SUPPORTED_MACHINE_STATES].value is not None
+    ),
     Capability.WASHER_OPERATING_STATE: (
         lambda status: status[Attribute.SUPPORTED_MACHINE_STATES].value is not None
     ),
