@@ -2,37 +2,41 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import PurpleAirDataUpdateCoordinator
+from .config_schema import ConfigSchema
+from .const import PLATFORMS
+from .coordinator import PurpleAirConfigEntry, PurpleAirDataUpdateCoordinator
 
-PLATFORMS = [Platform.SENSOR]
 
+async def async_setup_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) -> bool:
+    """Set up PurpleAir config entry."""
+    coordinator = PurpleAirDataUpdateCoordinator(
+        hass,
+        entry,
+    )
+    entry.runtime_data = coordinator
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up PurpleAir from a config entry."""
-    coordinator = PurpleAirDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    entry.async_on_unload(entry.add_update_listener(async_handle_entry_update))
+    coordinator.async_delete_orphans_from_device_registry()
 
     return True
 
 
-async def async_handle_entry_update(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle an options update."""
+async def async_migrate_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) -> bool:
+    """Migrate config entry."""
+    return ConfigSchema.async_migrate_entry(hass, entry)
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) -> None:
+    """Reload config entry."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+async def async_unload_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) -> bool:
+    """Unload config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
