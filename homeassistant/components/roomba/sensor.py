@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from roombapy import Roomba
 
@@ -27,6 +28,7 @@ class RoombaSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing Roomba data."""
 
     value_fn: Callable[[IRobotEntity], StateType]
+    attributes_fn: Callable[[IRobotEntity], dict[str, Any]] | None = None
 
 
 SENSORS: list[RoombaSensorEntityDescription] = [
@@ -119,6 +121,14 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         value_fn=lambda self: self.last_mission,
         entity_registry_enabled_default=False,
     ),
+    RoombaSensorEntityDescription(
+        key="last_command",
+        translation_key="last_command",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda self: self.last_command,
+        attributes_fn=lambda self: self.last_command_attrs,
+        entity_registry_enabled_default=False,
+    ),
 ]
 
 
@@ -161,3 +171,12 @@ class RoombaSensor(IRobotEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra attributes of the sensor, if applicable."""
+        return (
+            self.entity_description.attributes_fn(self)
+            if self.entity_description.attributes_fn
+            else {}
+        )
