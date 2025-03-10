@@ -1,6 +1,5 @@
 """Config flow for bluesound."""
 
-from ipaddress import IPv4Address
 import logging
 from typing import Any
 
@@ -76,6 +75,9 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
+        # the player can have an ipv6 address, but the api is only available on ipv4
+        if discovery_info.ip_address.version != 4:
+            return self.async_abort(reason="no_ipv4_address")
         if discovery_info.port is not None:
             self._port = discovery_info.port
 
@@ -90,16 +92,7 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(format_unique_id(sync_status.mac, self._port))
 
-        # the player can have an ipv6 address, but the api is only available on ipv4
-        ipv4_addresses = [
-            addr
-            for addr in discovery_info.ip_addresses
-            if isinstance(addr, IPv4Address)
-        ]
-        if len(ipv4_addresses) < 1:
-            return self.async_abort(reason="no_ipv4_address")
-
-        self._host = str(ipv4_addresses[0])
+        self._host = discovery_info.host
         self._sync_status = sync_status
 
         self._abort_if_unique_id_configured(
