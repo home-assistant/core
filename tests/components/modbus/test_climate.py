@@ -672,7 +672,7 @@ async def test_service_climate_update(
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == result
-    
+
 
 @pytest.mark.parametrize(
     ("do_config", "result", "register_words", "coil_value"),
