@@ -234,7 +234,12 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         return self._zone.get_preset()
 
     async def async_set_humidity(self, humidity: int) -> None:
-        """Set Dehumidify target."""
+        """Set humidity targets.
+
+        HA doesn't support separate humidify and dehumidify targets.
+        Set the target for the current mode if in [heat, cool]
+        otherwise set both targets to the clamped values.
+        """
 
         if self._zone.get_current_mode() == OPERATION_MODE_HEAT:
             if self._thermostat.has_humidify_support():
@@ -246,7 +251,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
             if self._thermostat.has_humidify_support():
                 await self.async_set_humidify_setpoint(humidity)
             if self._thermostat.has_dehumidify_support():
-                await self.async_set_humidify_setpoint(humidity)
+                await self.async_set_dehumidify_setpoint(humidity)
         self._signal_thermostat_update()
 
     @property
@@ -258,18 +263,18 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
         :return: The target humidity setpoint.
         """
-        if self._zone.get_current_mode() == OPERATION_MODE_HEAT:
-            if self._has_humidify_support:
-                return percent_conv(self._thermostat.get_humidify_setpoint())
-        if self._zone.get_current_mode() == OPERATION_MODE_COOL:
-            if self._has_dehumidify_support:
-                return percent_conv(self._thermostat.get_dehumidify_setpoint())
-        else:
-            # Fall back to previous behavior of returning dehumidify value then humidify
-            if self._has_dehumidify_support:
-                return percent_conv(self._thermostat.get_dehumidify_setpoint())
-            if self._has_humidify_support:
-                return percent_conv(self._thermostat.get_humidify_setpoint())
+
+        # If heat is on, always return humidify value first
+        if (
+            self._zone.get_current_mode() == OPERATION_MODE_HEAT
+            and self._has_humidify_support
+        ):
+            return percent_conv(self._thermostat.get_humidify_setpoint())
+        # Fall back to previous behavior of returning dehumidify value then humidify
+        if self._has_dehumidify_support:
+            return percent_conv(self._thermostat.get_dehumidify_setpoint())
+        if self._has_humidify_support:
+            return percent_conv(self._thermostat.get_humidify_setpoint())
 
         return None
 
