@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -69,17 +69,9 @@ class MySensorsSwitch(MySensorsChildEntity, SwitchEntity):
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 1, ack=1
         )
-        if self.assumed_state:
-            # Optimistically assume that switch has changed state
-            self._values[self.value_type] = STATE_ON
-            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 0, ack=1
         )
-        if self.assumed_state:
-            # Optimistically assume that switch has changed state
-            self._values[self.value_type] = STATE_OFF
-            self.async_write_ha_state()

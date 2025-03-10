@@ -68,7 +68,7 @@ class TeslemetryVehicleSensorEntityDescription(SensorEntityDescription):
 
     polling: bool = False
     polling_value_fn: Callable[[StateType], StateType] = lambda x: x
-    polling_available_fn: Callable[[StateType], bool] = lambda x: x is not None
+    nullable: bool = False
     streaming_key: Signal | None = None
     streaming_value_fn: Callable[[str | int | float], StateType] = lambda x: x
     streaming_firmware: str = "2024.26"
@@ -210,7 +210,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="drive_state_shift_state",
         polling=True,
-        polling_available_fn=lambda x: True,
+        nullable=True,
         polling_value_fn=lambda x: SHIFT_STATES.get(str(x), "p"),
         streaming_key=Signal.GEAR,
         streaming_value_fn=lambda x: str(ShiftState.get(x, "P")).lower(),
@@ -622,10 +622,10 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
 
     def _async_value_from_stream(self, value) -> None:
         """Update the value of the entity."""
-        if value is None:
-            self._attr_native_value = None
-        else:
+        if self.entity_description.nullable or value is not None:
             self._attr_native_value = self.entity_description.streaming_value_fn(value)
+        else:
+            self._attr_native_value = None
 
 
 class TeslemetryVehicleSensorEntity(TeslemetryVehicleEntity, SensorEntity):
@@ -644,7 +644,7 @@ class TeslemetryVehicleSensorEntity(TeslemetryVehicleEntity, SensorEntity):
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        if self.entity_description.polling_available_fn(self._value):
+        if self.entity_description.nullable or self._value is not None:
             self._attr_available = True
             self._attr_native_value = self.entity_description.polling_value_fn(
                 self._value
