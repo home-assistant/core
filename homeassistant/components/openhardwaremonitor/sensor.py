@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from pyopenhardwaremonitor.api import SensorNode
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -13,9 +14,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -23,7 +23,6 @@ from .coordinator import (
     OpenHardwareMonitorConfigEntry,
     OpenHardwareMonitorDataCoordinator,
 )
-from .types import SensorNode
 
 STATE_MIN_VALUE = "minimal_value"
 STATE_MAX_VALUE = "maximum_value"
@@ -145,7 +144,7 @@ class OpenHardwareMonitorSensorDevice(
         # Update attributes
         self.attributes = {
             "computer": node.get("ComputerName"),
-            "paths": str(node.get("Paths")),
+            "parents": str(node.get("ParentNames")),
             "name": node[OHM_NAME],
             STATE_MIN_VALUE: self.parse_number(node[OHM_MIN].split(" ")[0]),
             STATE_MAX_VALUE: self.parse_number(node[OHM_MAX].split(" ")[0]),
