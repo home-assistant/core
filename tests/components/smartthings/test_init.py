@@ -9,16 +9,14 @@ from pysmartthings import (
     DeviceStatus,
     SmartThingsSinkError,
 )
+from pysmartthings.models import Subscription
 import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.smartthings import EVENT_BUTTON
-from homeassistant.components.smartthings.const import (
-    CONF_SUBSCRIPTION_ID,
-    CONF_SUBSCRIPTION_URL,
-    DOMAIN,
-)
+from homeassistant.components.smartthings.const import CONF_SUBSCRIPTION_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -75,24 +73,18 @@ async def test_button_event(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
-async def test_create_subscription_url(
+async def test_create_subscription(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test button event."""
-    assert CONF_SUBSCRIPTION_URL not in mock_config_entry.data
+    """Test creating a subscription."""
     assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
     await setup_integration(hass, mock_config_entry)
 
     devices.create_subscription.assert_called_once()
 
-    assert (
-        mock_config_entry.data[CONF_SUBSCRIPTION_URL]
-        == "https://spigot-regional.api.smartthings.com/filters/f5768ce8-c9e5-4507-9020-912c0c60e0ab/activate?filterRegion=eu-west-1"
-    )
     assert (
         mock_config_entry.data[CONF_SUBSCRIPTION_ID]
         == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
@@ -101,8 +93,7 @@ async def test_create_subscription_url(
     devices.subscribe.assert_called_once_with(
         "397678e5-9995-4a39-9d9f-ae6ba310236c",
         "5aaaa925-2be1-4e40-b257-e4ef59083324",
-        "https://spigot-regional.api.smartthings.com/filters/f5768ce8-c9e5-4507-9020-912c0c60e0ab/activate?filterRegion=eu-west-1",
-        "f5768ce8-c9e5-4507-9020-912c0c60e0ab",
+        Subscription.from_json(load_fixture("subscription.json", DOMAIN)),
     )
 
 
@@ -113,8 +104,7 @@ async def test_create_subscription_sink_error(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test button event."""
-    assert CONF_SUBSCRIPTION_URL not in mock_config_entry.data
+    """Test handling an error when creating a subscription."""
     assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
     devices.create_subscription.side_effect = SmartThingsSinkError("Sink error")
@@ -124,75 +114,82 @@ async def test_create_subscription_sink_error(
     devices.subscribe.assert_not_called()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert CONF_SUBSCRIPTION_URL not in mock_config_entry.data
     assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
-async def test_update_subscription_url(
+async def test_update_subscription_identifier(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test updating the subscription URL."""
+    """Test updating the subscription identifier."""
     await setup_integration(hass, mock_config_entry)
 
-    devices.subscribe.assert_called_with(
-        "397678e5-9995-4a39-9d9f-ae6ba310236c",
-        "5aaaa925-2be1-4e40-b257-e4ef59083324",
-        "https://spigot-regional.api.smartthings.com/filters/f5768ce8-c9e5-4507-9020-912c0c60e0ab/activate?filterRegion=eu-west-1",
-        "f5768ce8-c9e5-4507-9020-912c0c60e0ab",
-    )
-
-    assert (
-        mock_config_entry.data[CONF_SUBSCRIPTION_URL]
-        == "https://spigot-regional.api.smartthings.com/filters/f5768ce8-c9e5-4507-9020-912c0c60e0ab/activate?filterRegion=eu-west-1"
-    )
     assert (
         mock_config_entry.data[CONF_SUBSCRIPTION_ID]
         == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
     )
 
-    devices.create_subscription.return_value.registration_url = "https://test.com"
-    devices.create_subscription.return_value.subscription_id = "abc"
-
-    devices.refresh_subscription_url_function(None, None)
+    devices.new_subscription_id_callback("abc")
 
     await hass.async_block_till_done()
 
-    devices.subscribe.assert_called_with(
-        "397678e5-9995-4a39-9d9f-ae6ba310236c",
-        "5aaaa925-2be1-4e40-b257-e4ef59083324",
-        "https://test.com",
-        "abc",
-    )
-
-    assert mock_config_entry.data[CONF_SUBSCRIPTION_URL] == "https://test.com"
     assert mock_config_entry.data[CONF_SUBSCRIPTION_ID] == "abc"
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
-async def test_update_subscription_url_error(
+async def test_stale_subscription_id(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test handling an error when updating the subscription URL."""
-    await setup_integration(hass, mock_config_entry)
+    """Test updating the subscription identifier."""
+    mock_config_entry.add_to_hass(hass)
 
-    devices.subscribe.assert_called_with(
-        "397678e5-9995-4a39-9d9f-ae6ba310236c",
-        "5aaaa925-2be1-4e40-b257-e4ef59083324",
-        "https://spigot-regional.api.smartthings.com/filters/f5768ce8-c9e5-4507-9020-912c0c60e0ab/activate?filterRegion=eu-west-1",
-        "f5768ce8-c9e5-4507-9020-912c0c60e0ab",
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_SUBSCRIPTION_ID: "test"},
     )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert (
-        mock_config_entry.data[CONF_SUBSCRIPTION_URL]
-        == "https://spigot-regional.api.smartthings.com/filters/f5768ce8-c9e5-4507-9020-912c0c60e0ab/activate?filterRegion=eu-west-1"
+        mock_config_entry.data[CONF_SUBSCRIPTION_ID]
+        == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
     )
+    devices.delete_subscription.assert_called_once_with("test")
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_remove_subscription_identifier(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removing the subscription identifier."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        mock_config_entry.data[CONF_SUBSCRIPTION_ID]
+        == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+
+    devices.new_subscription_id_callback(None)
+
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.data[CONF_SUBSCRIPTION_ID] is None
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_max_connections_handling(
+    hass: HomeAssistant, devices: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test handling reaching max connections."""
+    await setup_integration(hass, mock_config_entry)
+
     assert (
         mock_config_entry.data[CONF_SUBSCRIPTION_ID]
         == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
@@ -200,11 +197,51 @@ async def test_update_subscription_url_error(
 
     devices.create_subscription.side_effect = SmartThingsSinkError("Sink error")
 
-    devices.refresh_subscription_url_function(None, None)
+    devices.max_connections_reached_callback()
 
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_unloading(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unloading the integration."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    devices.delete_subscription.assert_called_once_with(
+        "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+    # Deleting the subscription automatically deletes the subscription ID
+    devices.new_subscription_id_callback(None)
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.data[CONF_SUBSCRIPTION_ID] is None
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_shutdown(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test shutting down Home Assistant."""
+    await setup_integration(hass, mock_config_entry)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    devices.delete_subscription.assert_called_once_with(
+        "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+    # Deleting the subscription automatically deletes the subscription ID
+    devices.new_subscription_id_callback(None)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.data[CONF_SUBSCRIPTION_ID] is None
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])

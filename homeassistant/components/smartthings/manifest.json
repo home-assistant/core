@@ -30,6 +30,6 @@
   "iot_class": "cloud_push",
   "loggers": ["pysmartthings"],
   "requirements": [
-    "git+https://github.com/joostlek/pysmartthings.git@see-fix#pysmartthings==2.8.0"
+    "git+https://github.com/joostlek/pysmartthings.git@see-fix2#pysmartthings==2.8.0"
   ]
 }
