@@ -858,7 +858,6 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
 
     _subentry_data: MqttSubentryData
     _component_id: str | None = None
-    _dirty: bool = False
 
     @callback
     def update_component_fields(
@@ -868,7 +867,6 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         if TYPE_CHECKING:
             assert self._component_id is not None
         component_data = self._subentry_data["components"][self._component_id]
-        initial_state: dict[str, Any] = deepcopy(component_data)
         # Remove the fields from the component data if they are not in the user input
         for field in [
             form_field
@@ -877,7 +875,6 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         ]:
             component_data.pop(field)
         component_data.update(user_input)
-        self._dirty |= component_data != initial_state
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -903,10 +900,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
         validate_field("configuration_url", cv.url, user_input, errors, "invalid_url")
         if not errors and user_input is not None:
-            is_dirty = user_input != self._subentry_data.get(CONF_DEVICE)
             self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, user_input)
             if self.source == SOURCE_RECONFIGURE:
-                self._dirty |= is_dirty
                 return await self.async_step_summary_menu()
             return await self.async_step_entity()
 
@@ -992,7 +987,6 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Select the entity to delete."""
         if user_input:
-            self._dirty = True
             del self._subentry_data["components"][user_input["component"]]
             return await self.async_step_summary_menu()
         return self._show_update_or_delete_form("delete_entity")
@@ -1086,7 +1080,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         if len(self._subentry_data["components"]) > 1:
             menu_options.append("delete_entity")
         menu_options.append("device")
-        if self._dirty:
+        if self._subentry_data != self._get_reconfigure_subentry().data:
             menu_options.append("save_changes")
         return self.async_show_menu(
             step_id="summary_menu",
