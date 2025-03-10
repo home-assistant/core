@@ -7,7 +7,12 @@ from typing import Any, Final, NotRequired, TypedDict
 
 import pytest
 
-from homeassistant.components.evohome.const import DOMAIN, STORAGE_KEY, STORAGE_VER
+from homeassistant.components.evohome.const import (
+    DOMAIN,
+    STORAGE_KEY,
+    STORAGE_VER,
+    SZ_TOKEN_DATA,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -20,7 +25,7 @@ class _SessionDataT(TypedDict):
     session_id_expires: NotRequired[str]  # 2024-07-27T23:57:30+01:00
 
 
-class _TokenStoreT(TypedDict):
+class _TokenDataT(TypedDict):
     username: str
     refresh_token: str
     access_token: str
@@ -50,14 +55,14 @@ ACCESS_TOKEN_EXP_DTM, ACCESS_TOKEN_EXP_STR = dt_pair(dt_util.now() + timedelta(h
 USERNAME_DIFF: Final = f"not_{USERNAME}"
 USERNAME_SAME: Final = USERNAME
 
-_TEST_STORAGE_BASE: Final[_TokenStoreT] = {
+_TEST_STORAGE_BASE: Final[_TokenDataT] = {
     SZ_USERNAME: USERNAME_SAME,
     SZ_REFRESH_TOKEN: REFRESH_TOKEN,
     SZ_ACCESS_TOKEN: ACCESS_TOKEN,
     SZ_ACCESS_TOKEN_EXPIRES: ACCESS_TOKEN_EXP_STR,
 }
 
-TEST_STORAGE_DATA: Final[dict[str, _TokenStoreT]] = {
+TEST_STORAGE_DATA: Final[dict[str, _TokenDataT]] = {
     "sans_session_id": _TEST_STORAGE_BASE,
     "null_session_id": _TEST_STORAGE_BASE | {SZ_USER_DATA: None},  # type: ignore[dict-item]
     "with_session_id": _TEST_STORAGE_BASE | {SZ_USER_DATA: {"session_id": SESSION_ID}},
@@ -75,7 +80,6 @@ DOMAIN_STORAGE_BASE: Final = {
 }
 
 
-@pytest.mark.parametrize("install", ["minimal"])
 @pytest.mark.parametrize("idx", TEST_STORAGE_NULL)
 async def test_auth_tokens_null(
     hass: HomeAssistant,
@@ -84,26 +88,28 @@ async def test_auth_tokens_null(
     idx: str,
     install: str,
 ) -> None:
-    """Test credentials manager when cache is empty."""
+    """Test config import the store contains no cached tokens."""
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_NULL[idx]}
 
     async for _ in setup_evohome(hass, config, install=install):
         pass
 
-    # Confirm the expected tokens were cached to storage...
-    data: _TokenStoreT = hass_storage[DOMAIN]["data"]
+    # Confirm the expected tokens were saved in the config entry...
+    assert not hass_storage.get(DOMAIN)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert data[SZ_USERNAME] == USERNAME_SAME
-    assert data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
-    assert data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
+    assert entry.data[SZ_USERNAME] == USERNAME_SAME
+    token_data = entry.data[SZ_TOKEN_DATA]
+
+    assert token_data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
+    assert token_data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
     assert (
-        dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES], raise_on_error=True)
+        dt_util.parse_datetime(token_data[SZ_ACCESS_TOKEN_EXPIRES], raise_on_error=True)
         > dt_util.now()
     )
 
 
-@pytest.mark.parametrize("install", ["minimal"])
 @pytest.mark.parametrize("idx", TEST_STORAGE_DATA)
 async def test_auth_tokens_same(
     hass: HomeAssistant,
@@ -112,23 +118,28 @@ async def test_auth_tokens_same(
     idx: str,
     install: str,
 ) -> None:
-    """Test credentials manager when cache contains valid data for this user."""
+    """Test config import when the store contains valid tokens for the same user."""
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_DATA[idx]}
 
     async for _ in setup_evohome(hass, config, install=install):
         pass
 
-    # Confirm the expected tokens were cached to storage...
-    data: _TokenStoreT = hass_storage[DOMAIN]["data"]
+    # Confirm the expected tokens were saved in the config entry...
+    assert not hass_storage.get(DOMAIN)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert data[SZ_USERNAME] == USERNAME_SAME
-    assert data[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
-    assert data[SZ_ACCESS_TOKEN] == ACCESS_TOKEN
-    assert dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES]) == ACCESS_TOKEN_EXP_DTM
+    assert entry.data[SZ_USERNAME] == USERNAME_SAME
+    token_data = entry.data[SZ_TOKEN_DATA]
+
+    assert token_data[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
+    assert token_data[SZ_ACCESS_TOKEN] == ACCESS_TOKEN
+    assert (
+        dt_util.parse_datetime(token_data[SZ_ACCESS_TOKEN_EXPIRES])
+        == ACCESS_TOKEN_EXP_DTM
+    )
 
 
-@pytest.mark.parametrize("install", ["minimal"])
 @pytest.mark.parametrize("idx", TEST_STORAGE_DATA)
 async def test_auth_tokens_past(
     hass: HomeAssistant,
@@ -137,9 +148,9 @@ async def test_auth_tokens_past(
     idx: str,
     install: str,
 ) -> None:
-    """Test credentials manager when cache contains expired data for this user."""
+    """Test config import when the store contains expired tokens for the same user."""
 
-    dt_dtm, dt_str = dt_pair(dt_util.now() - timedelta(hours=1))
+    _, dt_str = dt_pair(dt_util.now() - timedelta(hours=1))
 
     # make this access token have expired in the past...
     test_data = TEST_STORAGE_DATA[idx].copy()  # shallow copy is OK here
@@ -150,19 +161,21 @@ async def test_auth_tokens_past(
     async for _ in setup_evohome(hass, config, install=install):
         pass
 
-    # Confirm the expected tokens were cached to storage...
-    data: _TokenStoreT = hass_storage[DOMAIN]["data"]
+    # Confirm the expected tokens were saved in the config entry...
+    assert not hass_storage.get(DOMAIN)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert data[SZ_USERNAME] == USERNAME_SAME
-    assert data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
-    assert data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
+    assert entry.data[SZ_USERNAME] == USERNAME_SAME
+    token_data = entry.data[SZ_TOKEN_DATA]
+
+    assert token_data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
+    assert token_data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
     assert (
-        dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES], raise_on_error=True)
+        dt_util.parse_datetime(token_data[SZ_ACCESS_TOKEN_EXPIRES], raise_on_error=True)
         > dt_util.now()
     )
 
 
-@pytest.mark.parametrize("install", ["minimal"])
 @pytest.mark.parametrize("idx", TEST_STORAGE_DATA)
 async def test_auth_tokens_diff(
     hass: HomeAssistant,
@@ -171,7 +184,7 @@ async def test_auth_tokens_diff(
     idx: str,
     install: str,
 ) -> None:
-    """Test credentials manager when cache contains data for a different user."""
+    """Test config import when the store contains tokens for a different user."""
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_DATA[idx]}
     config["username"] = USERNAME_DIFF
@@ -179,13 +192,16 @@ async def test_auth_tokens_diff(
     async for _ in setup_evohome(hass, config, install=install):
         pass
 
-    # Confirm the expected tokens were cached to storage...
-    data: _TokenStoreT = hass_storage[DOMAIN]["data"]
+    # Confirm the expected tokens were saved in the config entry...
+    assert not hass_storage.get(DOMAIN)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert data[SZ_USERNAME] == USERNAME_DIFF
-    assert data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
-    assert data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
+    assert entry.data[SZ_USERNAME] == USERNAME_DIFF
+    token_data = entry.data[SZ_TOKEN_DATA]
+
+    assert token_data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
+    assert token_data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
     assert (
-        dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES], raise_on_error=True)
+        dt_util.parse_datetime(token_data[SZ_ACCESS_TOKEN_EXPIRES], raise_on_error=True)
         > dt_util.now()
     )
