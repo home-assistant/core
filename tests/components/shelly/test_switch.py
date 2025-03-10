@@ -42,22 +42,27 @@ async def test_block_device_services(
 ) -> None:
     """Test block device turn on/off services."""
     await init_integration(hass, 1)
+    entity_id = "switch.test_name_channel_1"
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_name_channel_1"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert hass.states.get("switch.test_name_channel_1").state == STATE_ON
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_ON
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_name_channel_1"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert hass.states.get("switch.test_name_channel_1").state == STATE_OFF
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_OFF
 
 
 @pytest.mark.parametrize("model", MOTION_MODELS)
@@ -286,11 +291,17 @@ async def test_block_device_update(
     """Test block device update."""
     monkeypatch.setattr(mock_block_device.blocks[RELAY_BLOCK_ID], "output", False)
     await init_integration(hass, 1)
-    assert hass.states.get("switch.test_name_channel_1").state == STATE_OFF
+
+    entity_id = "switch.test_name_channel_1"
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_OFF
 
     monkeypatch.setattr(mock_block_device.blocks[RELAY_BLOCK_ID], "output", True)
     mock_block_device.mock_update()
-    assert hass.states.get("switch.test_name_channel_1").state == STATE_ON
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_ON
 
 
 async def test_block_device_no_relay_blocks(
@@ -299,7 +310,8 @@ async def test_block_device_no_relay_blocks(
     """Test block device without relay blocks."""
     monkeypatch.setattr(mock_block_device.blocks[RELAY_BLOCK_ID], "type", "roller")
     await init_integration(hass, 1)
-    assert hass.states.get("switch.test_name_channel_1") is None
+    entity = hass.states.get("switch.test_name_channel_1")
+    assert entity is None
 
 
 async def test_block_device_mode_roller(
@@ -308,7 +320,8 @@ async def test_block_device_mode_roller(
     """Test block device in roller mode."""
     monkeypatch.setitem(mock_block_device.settings, "mode", "roller")
     await init_integration(hass, 1)
-    assert hass.states.get("switch.test_name_channel_1") is None
+    entity = hass.states.get("switch.test_name_channel_1")
+    assert entity is None
 
 
 async def test_block_device_app_type_light(
@@ -319,7 +332,8 @@ async def test_block_device_app_type_light(
         mock_block_device.settings["relays"][RELAY_BLOCK_ID], "appliance_type", "light"
     )
     await init_integration(hass, 1)
-    assert hass.states.get("switch.test_name_channel_1") is None
+    entity = hass.states.get("switch.test_name_channel_1")
+    assert entity is None
 
 
 async def test_rpc_device_services(
@@ -330,23 +344,28 @@ async def test_rpc_device_services(
     monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
+    entity_id = "switch.test_switch_0"
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_switch_0"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert hass.states.get("switch.test_switch_0").state == STATE_ON
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_ON
 
     monkeypatch.setitem(mock_rpc_device.status["switch:0"], "output", False)
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_switch_0"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert hass.states.get("switch.test_switch_0").state == STATE_OFF
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_OFF
 
 
 async def test_rpc_device_unique_ids(
@@ -373,7 +392,9 @@ async def test_rpc_device_switch_type_lights_mode(
         mock_rpc_device.config["sys"]["ui_data"], "consumption_types", ["lights"]
     )
     await init_integration(hass, 2)
-    assert hass.states.get("switch.test_switch_0") is None
+
+    entity = hass.states.get("switch.test_switch_0")
+    assert entity is None
 
 
 @pytest.mark.parametrize("exc", [DeviceConnectionError, RpcCallError(-1, "error")])
@@ -463,7 +484,8 @@ async def test_wall_display_relay_mode(
 
     config_entry = await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
-    assert hass.states.get(climate_entity_id) is not None
+    entity = hass.states.get(climate_entity_id)
+    assert entity
     assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 1
 
     new_status = deepcopy(mock_rpc_device.status)
@@ -476,7 +498,9 @@ async def test_wall_display_relay_mode(
     await hass.async_block_till_done()
 
     # the climate entity should be removed
-    assert hass.states.get(climate_entity_id) is None
+
+    entity = hass.states.get(climate_entity_id)
+    assert entity is None
     assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 0
 
     # the switch entity should be created
@@ -535,7 +559,9 @@ async def test_rpc_device_virtual_switch(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == STATE_OFF
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_OFF
 
     monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", True)
     await hass.services.async_call(
@@ -545,7 +571,9 @@ async def test_rpc_device_virtual_switch(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == STATE_ON
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_ON
 
 
 async def test_rpc_device_virtual_binary_sensor(
