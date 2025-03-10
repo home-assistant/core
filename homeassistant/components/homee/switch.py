@@ -20,6 +20,8 @@ from . import HomeeConfigEntry
 from .const import CLIMATE_PROFILES, LIGHT_PROFILES
 from .entity import HomeeEntity
 
+PARALLEL_UPDATES = 0
+
 
 def get_device_class(
     attribute: HomeeAttribute, config_entry: HomeeConfigEntry
@@ -120,8 +122,8 @@ class HomeeSwitch(HomeeEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.async_set_value(1)
+        await self.async_set_homee_value(1)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.async_set_value(0)
+        await self.async_set_homee_value(0)

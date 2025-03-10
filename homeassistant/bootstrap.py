@@ -74,12 +74,14 @@ from .core_config import async_process_ha_core_config
 from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
+    backup,
     category_registry,
     config_validation as cv,
     device_registry,
     entity,
     entity_registry,
     floor_registry,
+    frame,
     issue_registry,
     label_registry,
     recorder,
@@ -163,16 +165,6 @@ FRONTEND_INTEGRATIONS = {
     # integrations can be removed and database migration status is
     # visible in frontend
     "frontend",
-    # Hassio is an after dependency of backup, after dependencies
-    # are not promoted from stage 2 to earlier stages, so we need to
-    # add it here. Hassio needs to be setup before backup, otherwise
-    # the backup integration will think we are a container/core install
-    # when using HAOS or Supervised install.
-    "hassio",
-    # Backup is an after dependency of frontend, after dependencies
-    # are not promoted from stage 2 to earlier stages, so we need to
-    # add it here.
-    "backup",
 }
 # Stage 0 is divided into substages. Each substage has a name, a set of integrations and a timeout.
 # The substage containing recorder should have no timeout, as it could cancel a database migration.
@@ -206,6 +198,8 @@ STAGE_1_INTEGRATIONS = {
     "mqtt_eventstream",
     # To provide account link implementations
     "cloud",
+    # Ensure supervisor is available
+    "hassio",
 }
 
 DEFAULT_INTEGRATIONS = {
@@ -448,9 +442,10 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
     if DATA_REGISTRIES_LOADED in hass.data:
         return
     hass.data[DATA_REGISTRIES_LOADED] = None
-    translation.async_setup(hass)
     entity.async_setup(hass)
+    frame.async_setup(hass)
     template.async_setup(hass)
+    translation.async_setup(hass)
     await asyncio.gather(
         create_eager_task(get_internal_store_manager(hass).async_initialize()),
         create_eager_task(area_registry.async_load(hass)),
@@ -671,11 +666,10 @@ def _create_log_file(
         err_handler = _RotatingFileHandlerWithoutShouldRollOver(
             err_log_path, backupCount=1
         )
-
-    try:
-        err_handler.doRollover()
-    except OSError as err:
-        _LOGGER.error("Error rolling over log file: %s", err)
+        try:
+            err_handler.doRollover()
+        except OSError as err:
+            _LOGGER.error("Error rolling over log file: %s", err)
 
     return err_handler
 
@@ -904,6 +898,10 @@ async def _async_set_up_integrations(
     # Initialize recorder
     if "recorder" in domains_to_setup:
         recorder.async_initialize_recorder(hass)
+
+    # Initialize backup
+    if "backup" in domains_to_setup:
+        backup.async_initialize_backup(hass)
 
     stage_0_and_1_domains: list[tuple[str, set[str], int | None]] = [
         *(

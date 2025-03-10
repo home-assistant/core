@@ -494,32 +494,78 @@ async def test_escape_decode() -> None:
             {"type": "STRING", "enum": ["a", "b", "c"]},
         ),
         (
+            {"type": "string", "default": "default"},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "string", "pattern": "default"},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "string", "maxLength": 10},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "string", "minLength": 10},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "string", "title": "title"},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "string", "format": "enum", "enum": ["a", "b", "c"]},
+            {"type": "STRING", "format": "enum", "enum": ["a", "b", "c"]},
+        ),
+        (
+            {"type": "string", "format": "date-time"},
+            {"type": "STRING", "format": "date-time"},
+        ),
+        (
+            {"type": "string", "format": "byte"},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "number", "format": "float"},
+            {"type": "NUMBER", "format": "float"},
+        ),
+        (
+            {"type": "number", "format": "double"},
+            {"type": "NUMBER", "format": "double"},
+        ),
+        (
+            {"type": "number", "format": "hex"},
+            {"type": "NUMBER"},
+        ),
+        (
+            {"type": "number", "minimum": 1},
+            {"type": "NUMBER"},
+        ),
+        (
+            {"type": "integer", "format": "int32"},
+            {"type": "INTEGER", "format": "int32"},
+        ),
+        (
+            {"type": "integer", "format": "int64"},
+            {"type": "INTEGER", "format": "int64"},
+        ),
+        (
+            {"type": "integer", "format": "int8"},
+            {"type": "INTEGER"},
+        ),
+        (
             {"type": "integer", "enum": [1, 2, 3]},
             {"type": "STRING", "enum": ["1", "2", "3"]},
         ),
         (
             {"anyOf": [{"type": "integer"}, {"type": "number"}]},
-            {"any_of": [{"type": "INTEGER"}, {"type": "NUMBER"}]},
+            {},
         ),
-        (
-            {
-                "any_of": [
-                    {"any_of": [{"type": "integer"}, {"type": "number"}]},
-                    {"any_of": [{"type": "integer"}, {"type": "number"}]},
-                ]
-            },
-            {
-                "any_of": [
-                    {"any_of": [{"type": "INTEGER"}, {"type": "NUMBER"}]},
-                    {"any_of": [{"type": "INTEGER"}, {"type": "NUMBER"}]},
-                ]
-            },
-        ),
-        ({"type": "string", "format": "lower"}, {"format": "lower", "type": "STRING"}),
-        ({"type": "boolean", "format": "bool"}, {"format": "bool", "type": "BOOLEAN"}),
+        ({"type": "string", "format": "lower"}, {"type": "STRING"}),
+        ({"type": "boolean", "format": "bool"}, {"type": "BOOLEAN"}),
         (
             {"type": "number", "format": "percent"},
-            {"type": "NUMBER", "format": "percent"},
+            {"type": "NUMBER"},
         ),
         (
             {
@@ -534,7 +580,15 @@ async def test_escape_decode() -> None:
             },
         ),
         (
-            {"type": "object", "additionalProperties": True},
+            {"type": "object", "additionalProperties": True, "minProperties": 1},
+            {
+                "type": "OBJECT",
+                "properties": {"json": {"type": "STRING"}},
+                "required": [],
+            },
+        ),
+        (
+            {"type": "object", "additionalProperties": True, "maxProperties": 1},
             {
                 "type": "OBJECT",
                 "properties": {"json": {"type": "STRING"}},
@@ -544,6 +598,20 @@ async def test_escape_decode() -> None:
         (
             {"type": "array", "items": {"type": "string"}},
             {"type": "ARRAY", "items": {"type": "STRING"}},
+        ),
+        (
+            {
+                "type": "array",
+                "items": {"type": "string"},
+                "minItems": 1,
+                "maxItems": 2,
+            },
+            {
+                "type": "ARRAY",
+                "items": {"type": "STRING"},
+                "min_items": 1,
+                "max_items": 2,
+            },
         ),
     ],
 )

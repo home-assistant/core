@@ -16,6 +16,9 @@
     "select": {
       "charge_mode": {
         "default": "mdi:play-box"
+      },
+      "vehicle": {
+        "default": "mdi:car"
       }
     },
     "sensor": {
@@ -31,6 +34,9 @@
       },
       "ct_current": {
         "default": "mdi:gauge"
+      },
+      "slot_list": {
+        "default": "mdi:calendar-clock"
       }
     },
     "switch": {
