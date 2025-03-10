@@ -6,6 +6,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant import setup
 from homeassistant.components import template
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.template.switch import rewrite_legacy_to_modern_conf
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -43,6 +44,70 @@ OPTIMISTIC_SWITCH_CONFIG = {
 }
 
 
+async def test_legacy_to_modern_config(hass: HomeAssistant) -> None:
+    """Test the conversion of legacy template to modern template."""
+    config = {
+        "foo": {
+            "friendly_name": "foo bar",
+            "value_template": "{{ 1 == 1 }}",
+            "unique_id": "foo-bar-switch",
+            "icon_template": "{{ 'mdi.abc' }}",
+            "entity_picture_template": "{{ 'mypicture.jpg' }}",
+            "availability_template": "{{ 1 == 1 }}",
+            **OPTIMISTIC_SWITCH_CONFIG,
+        }
+    }
+    altered_configs = rewrite_legacy_to_modern_conf(hass, config)
+
+    assert len(altered_configs) == 1
+
+    altered_config = altered_configs[0]
+
+    assert "object_id" in altered_config
+    assert altered_config["object_id"] == "foo"
+
+    assert "friendly_name" not in altered_config
+    assert "name" in altered_config
+    assert altered_config["name"].template == "foo bar"
+
+    assert "value_template" not in altered_config
+    assert "state" in altered_config
+    assert altered_config["state"].template == "{{ 1 == 1 }}"
+
+    assert "icon_template" not in altered_config
+    assert "icon" in altered_config
+    assert altered_config["icon"].template == "{{ 'mdi.abc' }}"
+
+    assert "entity_picture_template" not in altered_config
+    assert "picture" in altered_config
+    assert altered_config["picture"].template == "{{ 'mypicture.jpg' }}"
+
+    assert "availability_template" not in altered_config
+    assert "availability" in altered_config
+    assert altered_config["availability"].template == "{{ 1 == 1 }}"
+
+    assert "unique_id" in altered_config
+    assert altered_config["unique_id"] == "foo-bar-switch"
+
+    assert "turn_on" in altered_config
+    assert altered_config["turn_on"] == {
+        "service": "test.automation",
+        "data_template": {
+            "action": "turn_on",
+            "caller": "{{ this.entity_id }}",
+        },
+    }
+
+    assert "turn_off" in altered_config
+    assert altered_config["turn_off"] == {
+        "service": "test.automation",
+        "data_template": {
+            "action": "turn_off",
+            "caller": "{{ this.entity_id }}",
+        },
+    }
+
+
 async def test_setup_config_entry(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -60,7 +125,7 @@ async def test_setup_config_entry(
         domain=template.DOMAIN,
         options={
             "name": "My template",
-            "value_template": "{{ states('switch.one') }}",
+            "state": "{{ states('switch.one') }}",
             "template_type": SWITCH_DOMAIN,
         },
         title="My template",
@@ -720,7 +785,7 @@ async def test_device_id(
         domain=template.DOMAIN,
         options={
             "name": "My template",
-            "value_template": "{{ true }}",
+            "state": "{{ true }}",
             "template_type": "switch",
             "device_id": device_entry.id,
         },
