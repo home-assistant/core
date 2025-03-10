@@ -57,8 +57,8 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
         )
         data = await api.get_sensor_nodes()
 
-        initial_fetch = not self._computers
-        if initial_fetch and self._grouping > 0:
+        # Create "Computer" devices
+        if not self._computers and self._grouping > 0:
             device_registry = dr.async_get(self.hass)
             computers = {}
             for computer_name in data:
@@ -71,12 +71,10 @@ class OpenHardwareMonitorDataCoordinator(DataUpdateCoordinator[dict[str, SensorN
                 )
                 computers[computer_name] = de
                 _LOGGER.info("Get or Create computer: %s", computer_name)
-            self._computers = (
-                computers if computers and initial_fetch else self._computers
-            )
+            self._computers = computers
 
+        # Format Coordinator data
         sensor_nodes = [n for c in data for n in data[c]]
-        _LOGGER.info("NODES: %s", sensor_nodes)
         return {n["FullName"]: n for n in sensor_nodes}
 
     def resolve_device_info_for_node(self, node: SensorNode) -> dr.DeviceInfo | None:
