@@ -363,6 +363,7 @@ class MqttAttributesMixin(Entity):
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
     _attr_tpl: Callable[[ReceivePayloadType], ReceivePayloadType] | None = None
+    update_last_report: bool
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
@@ -439,12 +440,15 @@ class MqttAttributesMixin(Entity):
                     and k not in self._attributes_extra_blocked
                 }
                 self._attr_extra_state_attributes = filtered_dict
+                self.update_last_report = True
             else:
                 _LOGGER.warning("JSON result was not a dictionary")
 
 
 class MqttAvailabilityMixin(Entity):
     """Mixin used for platforms that report availability."""
+
+    update_last_report: bool
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the availability mixin."""
@@ -543,6 +547,7 @@ class MqttAvailabilityMixin(Entity):
         elif payload == avail_topic[CONF_PAYLOAD_NOT_AVAILABLE]:
             self._available[topic] = False
             self._available_latest = False
+        self.update_last_report = True
 
     @callback
     def _availability_subscribe_topics(self) -> None:
@@ -1254,6 +1259,8 @@ class MqttEntity(
     _attr_should_poll = False
     _default_name: str | None
     _entity_id_format: str
+    last_report_enabled: bool = False
+    update_last_report: bool = False
 
     def __init__(
         self,
@@ -1341,6 +1348,7 @@ class MqttEntity(
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
         await self._subscribe_topics()
+        self.update_last_report = False
         self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:
@@ -1439,7 +1447,9 @@ class MqttEntity(
         self, attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...]
     ) -> bool:
         """Return True if attributes on entity changed or if update is forced."""
-        if self._attr_force_update:
+        if self._attr_force_update or (
+            self.last_report_enabled and self.update_last_report
+        ):
             return True
         for attribute, last_value in attrs_snapshot:
             if getattr(self, attribute, UNDEFINED) != last_value:

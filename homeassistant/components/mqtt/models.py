@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
     from .discovery import MQTTDiscoveryPayload
+    from .entity import MqttEntity
     from .tag import MQTTTagScanner
 
 from .const import DOMAIN, TEMPLATE_ERRORS
@@ -355,7 +356,7 @@ class EntityTopicState:
 
     def __init__(self) -> None:
         """Register topic."""
-        self.subscribe_calls: dict[str, Entity] = {}
+        self.subscribe_calls: dict[str, MqttEntity] = {}
 
     @callback
     def process_write_state_requests(self, msg: MQTTMessage) -> None:
@@ -363,6 +364,7 @@ class EntityTopicState:
         while self.subscribe_calls:
             entity_id, entity = self.subscribe_calls.popitem()
             try:
+                entity.update_last_report = False
                 entity.async_write_ha_state()
             except Exception:
                 _LOGGER.exception(
@@ -374,7 +376,7 @@ class EntityTopicState:
                 )
 
     @callback
-    def write_state_request(self, entity: Entity) -> None:
+    def write_state_request(self, entity: MqttEntity) -> None:
         """Register write state request."""
         self.subscribe_calls[entity.entity_id] = entity
 
