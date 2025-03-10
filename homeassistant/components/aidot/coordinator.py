@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -81,7 +82,6 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
 
     config_entry: AidotConfigEntry
     client: AidotClient
-    device_coordinators: dict[str, AidotDeviceUpdateCoordinator]
 
     def __init__(
         self,
@@ -94,7 +94,8 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(hours=6),
+            update_interval=timedelta(minutes=1),
+            # update_interval=timedelta(hours=6),
         )
         self.client = AidotClient(
             session=async_get_clientsession(hass),
@@ -103,7 +104,8 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         self.client.start_discover()
         self.client.set_token_fresh_cb(self.token_fresh_cb)
         self.identifier = config_entry.entry_id
-        self.device_coordinators = {}
+        self.device_coordinators: dict[str, AidotDeviceUpdateCoordinator] = {}
+        self.previous_lists: set[str] = set()
 
     async def _async_setup(self) -> None:
         """Set up the coordinator.
@@ -123,21 +125,39 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         except AidotAuthFailed as error:
             self.token_fresh_cb()
             raise ConfigEntryError from error
-
-        for device in data.get(CONF_DEVICE_LIST):
+        filter_device_list = [
+            device
+            for device in data.get(CONF_DEVICE_LIST)
             if (
                 device[CONF_TYPE] == Platform.LIGHT
                 and CONF_AES_KEY in device
                 and device[CONF_AES_KEY][0] is not None
-            ):
-                dev_id = device.get(CONF_ID)
-                if dev_id not in self.device_coordinators:
-                    device_client = self.client.get_device_client(device)
-                    device_coordinator = AidotDeviceUpdateCoordinator(
-                        self.hass, self.config_entry, device_client
-                    )
-                    await device_coordinator.async_config_entry_first_refresh()
-                    self.device_coordinators[dev_id] = device_coordinator
+            )
+        ]
+
+        delete_lists = self.previous_lists - (
+            current_lists := {device[CONF_TYPE] for device in filter_device_list}
+        )
+
+        if delete_lists:
+            self._purge_deleted_lists()
+
+        self.previous_lists = current_lists
+        for dev_id in delete_lists:
+            if dev_id in self.device_coordinators:
+                device_coordinator = self.device_coordinators[dev_id]
+                await device_coordinator.device_client.close()
+                del self.device_coordinators[dev_id]
+
+        for device in filter_device_list:
+            dev_id = device.get(CONF_ID)
+            if dev_id not in self.device_coordinators:
+                device_client = self.client.get_device_client(device)
+                device_coordinator = AidotDeviceUpdateCoordinator(
+                    self.hass, self.config_entry, device_client
+                )
+                await device_coordinator.async_config_entry_first_refresh()
+                self.device_coordinators[dev_id] = device_coordinator
 
     def cleanup(self) -> None:
         """Perform cleanup actions."""
@@ -156,3 +176,23 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
                 await self.client.async_post_login()
             except AidotUserOrPassIncorrect as error:
                 raise AidotUserOrPassIncorrect from error
+
+    def _purge_deleted_lists(self) -> None:
+        """Purge device entries of deleted lists."""
+
+        device_reg = dr.async_get(self.hass)
+        identifiers = {
+            (
+                DOMAIN,
+                f"{self.config_entry.unique_id}_{device_coordinator.device_client.device_id}",
+            )
+            for device_coordinator in self.device_coordinators.values()
+        }
+        for device in dr.async_entries_for_config_entry(
+            device_reg, self.config_entry.entry_id
+        ):
+            if not set(device.identifiers) & identifiers:
+                _LOGGER.debug("Removing obsolete device entry %s", device.name)
+                device_reg.async_update_device(
+                    device.id, remove_config_entry_id=self.config_entry.entry_id
+                )

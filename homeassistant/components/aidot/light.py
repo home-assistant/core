@@ -9,7 +9,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -28,11 +28,30 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Light."""
-    device_manager_coordinator = entry.runtime_data
-    async_add_entities(
-        AidotLight(hass, update_coordinator)
-        for update_coordinator in device_manager_coordinator.device_coordinators.values()
-    )
+    coordinator = entry.runtime_data
+    lists_added: set[str] = set()
+
+    @callback
+    def add_entities() -> None:
+        """Add sensor entities."""
+        nonlocal lists_added
+        new_lists = {
+            device_coordinator.device_client.device_id
+            for device_coordinator in coordinator.device_coordinators.values()
+        }
+
+        if new_lists - lists_added:
+            async_add_entities(
+                AidotLight(hass, coordinator.device_coordinators[device_id])
+                for device_id in new_lists
+            )
+            lists_added |= new_lists
+        elif lists_added - new_lists:
+            removed_device_ids = lists_added - new_lists
+            lists_added = lists_added - removed_device_ids
+
+    coordinator.async_add_listener(add_entities)
+    add_entities()
 
 
 class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
@@ -50,14 +69,13 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
         self._attr_max_color_temp_kelvin = coordinator.device_client.info.cct_max
         self._attr_min_color_temp_kelvin = coordinator.device_client.info.cct_min
 
-        modelId = coordinator.device_client.info.model_id
-        manufacturer = modelId.split(".")[0]
-        model = modelId[len(manufacturer) + 1 :]
+        model_id = coordinator.device_client.info.model_id
+        manufacturer = model_id.split(".")[0]
+        model = model_id[len(manufacturer) + 1 :]
         mac = format_mac(coordinator.device_client.info.mac)
-        identifiers: set[tuple[str, str]] = set({(DOMAIN, self._attr_unique_id)})
 
         self._attr_device_info = DeviceInfo(
-            identifiers=identifiers,
+            identifiers={(DOMAIN, self._attr_unique_id)},
             connections={(CONNECTION_NETWORK_MAC, mac)},
             manufacturer=manufacturer,
             model=model,
