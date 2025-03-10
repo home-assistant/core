@@ -373,8 +373,11 @@ class AssistAPI(API):
             prompt.append(f"You are in area {area.name} {extra}")
         else:
             prompt.append(
+                "When there is only one device of a specific type, "
+                "you can assume the user is referring to that device."
                 "When a user asks to turn on all devices of a specific type, "
-                "ask user to specify an area, unless there is only one device of that type."
+                "If there is more than one device of that type, "
+                "ask user to specify an area."
             )
 
         if not llm_context.device_id or not async_device_supports_timers(
