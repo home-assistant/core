@@ -589,45 +589,33 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
-        self.add_subscription(
-            CONF_BRIGHTNESS_STATE_TOPIC, self._brightness_received, {"_attr_brightness"}
-        )
+        self.add_subscription(CONF_STATE_TOPIC, self._state_received)
+        self.add_subscription(CONF_BRIGHTNESS_STATE_TOPIC, self._brightness_received)
         self.add_subscription(
             CONF_RGB_STATE_TOPIC,
             self._rgb_received,
-            {"_attr_brightness", "_attr_color_mode", "_attr_rgb_color"},
         )
         self.add_subscription(
             CONF_RGBW_STATE_TOPIC,
             self._rgbw_received,
-            {"_attr_brightness", "_attr_color_mode", "_attr_rgbw_color"},
         )
         self.add_subscription(
             CONF_RGBWW_STATE_TOPIC,
             self._rgbww_received,
-            {"_attr_brightness", "_attr_color_mode", "_attr_rgbww_color"},
         )
-        self.add_subscription(
-            CONF_COLOR_MODE_STATE_TOPIC, self._color_mode_received, {"_attr_color_mode"}
-        )
+        self.add_subscription(CONF_COLOR_MODE_STATE_TOPIC, self._color_mode_received)
         self.add_subscription(
             CONF_COLOR_TEMP_STATE_TOPIC,
             self._color_temp_received,
-            {"_attr_color_mode", "_attr_color_temp_kelvin"},
         )
-        self.add_subscription(
-            CONF_EFFECT_STATE_TOPIC, self._effect_received, {"_attr_effect"}
-        )
+        self.add_subscription(CONF_EFFECT_STATE_TOPIC, self._effect_received)
         self.add_subscription(
             CONF_HS_STATE_TOPIC,
             self._hs_received,
-            {"_attr_color_mode", "_attr_hs_color"},
         )
         self.add_subscription(
             CONF_XY_STATE_TOPIC,
             self._xy_received,
-            {"_attr_color_mode", "_attr_xy_color"},
         )
 
     async def _subscribe_topics(self) -> None:

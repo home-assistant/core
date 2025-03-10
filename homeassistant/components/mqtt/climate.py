@@ -441,7 +441,6 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
                 CONF_CURRENT_TEMP_TEMPLATE,
                 "_attr_current_temperature",
             ),
-            {"_attr_current_temperature"},
         )
         self.add_subscription(
             CONF_TEMP_STATE_TOPIC,
@@ -450,7 +449,6 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
                 CONF_TEMP_STATE_TEMPLATE,
                 "_attr_target_temperature",
             ),
-            {"_attr_target_temperature"},
         )
         self.add_subscription(
             CONF_TEMP_LOW_STATE_TOPIC,
@@ -459,7 +457,6 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
                 CONF_TEMP_LOW_STATE_TEMPLATE,
                 "_attr_target_temperature_low",
             ),
-            {"_attr_target_temperature_low"},
         )
         self.add_subscription(
             CONF_TEMP_HIGH_STATE_TOPIC,
@@ -468,7 +465,6 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
                 CONF_TEMP_HIGH_STATE_TEMPLATE,
                 "_attr_target_temperature_high",
             ),
-            {"_attr_target_temperature_high"},
         )
 
     async def _subscribe_topics(self) -> None:
@@ -737,7 +733,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         self.add_subscription(
             CONF_ACTION_TOPIC,
             self._handle_action_received,
-            {"_attr_hvac_action"},
         )
         self.add_subscription(
             CONF_CURRENT_HUMIDITY_TOPIC,
@@ -746,7 +741,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                 CONF_CURRENT_HUMIDITY_TEMPLATE,
                 "_attr_current_humidity",
             ),
-            {"_attr_current_humidity"},
         )
         self.add_subscription(
             CONF_HUMIDITY_STATE_TOPIC,
@@ -755,7 +749,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                 CONF_HUMIDITY_STATE_TEMPLATE,
                 "_attr_target_humidity",
             ),
-            {"_attr_target_humidity"},
         )
         self.add_subscription(
             CONF_MODE_STATE_TOPIC,
@@ -765,7 +758,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                 "_attr_hvac_mode",
                 CONF_MODE_LIST,
             ),
-            {"_attr_hvac_mode"},
         )
         self.add_subscription(
             CONF_FAN_MODE_STATE_TOPIC,
@@ -775,7 +767,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                 "_attr_fan_mode",
                 CONF_FAN_MODE_LIST,
             ),
-            {"_attr_fan_mode"},
         )
         self.add_subscription(
             CONF_SWING_HORIZONTAL_MODE_STATE_TOPIC,
@@ -785,7 +776,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                 "_attr_swing_horizontal_mode",
                 CONF_SWING_HORIZONTAL_MODE_LIST,
             ),
-            {"_attr_swing_horizontal_mode"},
         )
         self.add_subscription(
             CONF_SWING_MODE_STATE_TOPIC,
@@ -795,12 +785,10 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                 "_attr_swing_mode",
                 CONF_SWING_MODE_LIST,
             ),
-            {"_attr_swing_mode"},
         )
         self.add_subscription(
             CONF_PRESET_MODE_STATE_TOPIC,
             self._handle_preset_mode_received,
-            {"_attr_preset_mode"},
         )
         # add subscriptions for MqttTemperatureControlEntity
         self.prepare_subscribe_topics()

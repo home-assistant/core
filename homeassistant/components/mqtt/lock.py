@@ -208,14 +208,6 @@ class MqttLock(MqttEntity, LockEntity):
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._message_received,
-            {
-                "_attr_is_jammed",
-                "_attr_is_locked",
-                "_attr_is_locking",
-                "_attr_is_open",
-                "_attr_is_opening",
-                "_attr_is_unlocking",
-            },
         )
 
     async def _subscribe_topics(self) -> None:
