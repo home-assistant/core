@@ -5,17 +5,6 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Pytest: 当前文件",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "pytest",
-      "args": ["tests/components/aidot/test_config_flow.py::test_config_flow_login_user_password_incorrect"],
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "envFile": "${workspaceFolder}/.env",
-      "justMyCode": true
-    },
-    {
       "name": "Home Assistant",
       "type": "debugpy",
       "request": "launch",
