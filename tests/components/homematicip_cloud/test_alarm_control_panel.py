@@ -1,6 +1,6 @@
 """Tests for HomematicIP Cloud alarm control panel."""
 
-from homematicip.aio.home import AsyncHome
+from homematicip.async_home import AsyncHome
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
@@ -73,7 +73,7 @@ async def test_hmip_alarm_control_panel(
     await hass.services.async_call(
         "alarm_control_panel", "alarm_arm_away", {"entity_id": entity_id}, blocking=True
     )
-    assert home.mock_calls[-1][0] == "set_security_zones_activation"
+    assert home.mock_calls[-1][0] == "set_security_zones_activation_async"
     assert home.mock_calls[-1][1] == (True, True)
     await _async_manipulate_security_zones(
         hass, home, internal_active=True, external_active=True
@@ -83,7 +83,7 @@ async def test_hmip_alarm_control_panel(
     await hass.services.async_call(
         "alarm_control_panel", "alarm_arm_home", {"entity_id": entity_id}, blocking=True
     )
-    assert home.mock_calls[-1][0] == "set_security_zones_activation"
+    assert home.mock_calls[-1][0] == "set_security_zones_activation_async"
     assert home.mock_calls[-1][1] == (False, True)
     await _async_manipulate_security_zones(hass, home, external_active=True)
     assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_HOME
@@ -91,7 +91,7 @@ async def test_hmip_alarm_control_panel(
     await hass.services.async_call(
         "alarm_control_panel", "alarm_disarm", {"entity_id": entity_id}, blocking=True
     )
-    assert home.mock_calls[-1][0] == "set_security_zones_activation"
+    assert home.mock_calls[-1][0] == "set_security_zones_activation_async"
     assert home.mock_calls[-1][1] == (False, False)
     await _async_manipulate_security_zones(hass, home)
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
@@ -99,7 +99,7 @@ async def test_hmip_alarm_control_panel(
     await hass.services.async_call(
         "alarm_control_panel", "alarm_arm_away", {"entity_id": entity_id}, blocking=True
     )
-    assert home.mock_calls[-1][0] == "set_security_zones_activation"
+    assert home.mock_calls[-1][0] == "set_security_zones_activation_async"
     assert home.mock_calls[-1][1] == (True, True)
     await _async_manipulate_security_zones(
         hass, home, internal_active=True, external_active=True, alarm_triggered=True
@@ -109,7 +109,7 @@ async def test_hmip_alarm_control_panel(
     await hass.services.async_call(
         "alarm_control_panel", "alarm_arm_home", {"entity_id": entity_id}, blocking=True
     )
-    assert home.mock_calls[-1][0] == "set_security_zones_activation"
+    assert home.mock_calls[-1][0] == "set_security_zones_activation_async"
     assert home.mock_calls[-1][1] == (False, True)
     await _async_manipulate_security_zones(
         hass, home, external_active=True, alarm_triggered=True
