@@ -49,6 +49,9 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
         """Handle the record."""
         super().handle(record)
 
+        if record.levelno < logging.INFO:
+            return
+
         now = datetime.datetime.now()
         logger_name = record.name
         if logger_name == __name__:

@@ -17,6 +17,13 @@ from homeassistant.core import (
 from homeassistant.util import logging as logging_util
 
 
+async def empty_log_queue() -> None:
+    """Empty the log queue."""
+    log_queue: queue.SimpleQueue = logging.root.handlers[0].queue
+    while not log_queue.empty():
+        await asyncio.sleep(0)
+
+
 async def test_logging_with_queue_handler() -> None:
     """Test logging with HomeAssistantQueueHandler."""
 
@@ -181,12 +188,7 @@ async def test_noisy_loggers(
     for _ in range(logger2_count):
         logger2.info("This is another log")
 
-    log_queue: queue.SimpleQueue = logging.root.handlers[0].queue
-    while not log_queue.empty():
-        await asyncio.sleep(0)
-
-    # close the handler so the queue thread stops
-    logging.root.handlers[0].close()
+    await empty_log_queue()
 
     assert (
         caplog.text.count(
@@ -200,3 +202,36 @@ async def test_noisy_loggers(
         )
         == logger2_expected_notices
     )
+
+    # close the handler so the queue thread stops
+    logging.root.handlers[0].close()
+
+
+@patch("homeassistant.util.logging.HomeAssistantQueueListener.max_logs_per_window", 5)
+async def test_noisy_loggers_ignores_lower_than_info(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that noisy loggers all logged as warnings, except for levels lower than INFO."""
+
+    logging_util.async_activate_log_queue_handler(hass)
+    logger = logging.getLogger("noisy_module")
+
+    for _ in range(5):
+        logger.debug("This is a log")
+
+    await empty_log_queue()
+    expected_warning = "Module noisy_module is logging too frequently"
+    assert caplog.text.count(expected_warning) == 0
+
+    logger.info("This is a log")
+    logger.info("This is a log")
+    logger.warning("This is a log")
+    logger.error("This is a log")
+    logger.critical("This is a log")
+
+    await empty_log_queue()
+    assert caplog.text.count(expected_warning) == 1
+
+    # close the handler so the queue thread stops
+    logging.root.handlers[0].close()
