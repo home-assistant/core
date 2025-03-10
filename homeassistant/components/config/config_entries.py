@@ -10,7 +10,7 @@ from aiohttp import web
 import aiohttp.web_exceptions
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
@@ -706,9 +706,30 @@ async def config_subentry_delete(
     msg: dict[str, Any],
 ) -> None:
     """Delete a subentry of a config entry."""
+
     entry = get_entry(hass, connection, msg["entry_id"], msg["id"])
     if entry is None:
         return
+
+    if entry.supports_remove_subentry:
+        try:
+            integration = await loader.async_get_integration(hass, entry.domain)
+            component = await integration.async_get_component()
+        except (ImportError, loader.IntegrationNotFound):
+            connection.send_error(
+                msg["id"],
+                websocket_api.const.ERR_NOT_ALLOWED,
+                "Integration not found",
+            )
+            return
+
+        if not await component.async_remove_subentry(hass, entry, msg["subentry_id"]):
+            connection.send_error(
+                msg["id"],
+                websocket_api.const.ERR_NOT_ALLOWED,
+                "Failed to remove device entry, rejected by integration",
+            )
+            return
 
     try:
         hass.config_entries.async_remove_subentry(entry, msg["subentry_id"])
