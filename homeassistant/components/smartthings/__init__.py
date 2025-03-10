@@ -16,6 +16,7 @@ from pysmartthings import (
     Scene,
     SmartThings,
     SmartThingsAuthenticationFailedError,
+    SmartThingsSinkError,
     Status,
 )
 
@@ -33,6 +34,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from .const import (
     CONF_INSTALLED_APP_ID,
     CONF_LOCATION_ID,
+    CONF_SUBSCRIPTION_URL,
     DOMAIN,
     EVENT_BUTTON,
     MAIN,
@@ -99,6 +101,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         return token
 
     client.refresh_token_function = _refresh_token
+
+    def _handle_new_subscription_url(url: str | None) -> None:
+        """Handle a new subscription URL."""
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_SUBSCRIPTION_URL: url}
+        )
+        if url is None:
+            _LOGGER.debug("Couldn't refresh subscription because we hit the limit")
+            hass.config_entries.async_schedule_reload(entry.entry_id)
+            return
+        _LOGGER.debug("Updating subscription URL to %s", url)
+
+    client.refresh_subscription_url_function = _handle_new_subscription_url
+
+    if (subscription_url := entry.data.get(CONF_SUBSCRIPTION_URL)) is None:
+        _LOGGER.debug("There is no subscription URL, trying to create a new one")
+        try:
+            subscription = await client.create_subscription(
+                entry.data[CONF_LOCATION_ID],
+                entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
+            )
+        except SmartThingsSinkError as err:
+            _LOGGER.debug("Couldn't create a new subscription: %s", err)
+            raise ConfigEntryNotReady from err
+        subscription_url = subscription.registration_url
+        _handle_new_subscription_url(subscription_url)
+
+    entry.async_create_background_task(
+        hass,
+        client.subscribe(
+            entry.data[CONF_LOCATION_ID],
+            entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
+            subscription_url,
+        ),
+        "smartthings_socket",
+    )
 
     device_status: dict[str, FullDevice] = {}
     try:
@@ -169,14 +207,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     entry.async_on_unload(
         client.add_unspecified_device_event_listener(handle_button_press)
-    )
-
-    entry.async_create_background_task(
-        hass,
-        client.subscribe(
-            entry.data[CONF_LOCATION_ID], entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID]
-        ),
-        "smartthings_webhook",
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
