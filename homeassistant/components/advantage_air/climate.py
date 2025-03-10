@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from decimal import Decimal
 import logging
 from typing import Any
@@ -157,6 +158,15 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
                 SUPPORTED_FEATURES_MYZONE | self._support_preset
             )
 
+    async def _apply_optimistic_update(
+        self, updates: dict[str, Any], delay: float = 5.0
+    ) -> None:
+        """Optimistically update state."""
+        self._ac.update(updates)
+        self.async_write_ha_state()
+        await asyncio.sleep(delay)
+        self.async_schedule_update_ha_state(True)
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -214,6 +224,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     async def async_turn_on(self) -> None:
         """Set the HVAC State to on."""
         await self.async_update_ac({"state": ADVANTAGE_AIR_STATE_ON})
+        await self._apply_optimistic_update({"state": ADVANTAGE_AIR_STATE_ON})
 
     async def async_turn_off(self) -> None:
         """Set the HVAC State to off."""
@@ -222,6 +233,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
                 "state": ADVANTAGE_AIR_STATE_OFF,
             }
         )
+        await self._apply_optimistic_update({"state": ADVANTAGE_AIR_STATE_OFF})
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC Mode and State."""
@@ -236,6 +248,9 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
                 "mode": HASS_HVAC_MODES.get(hvac_mode),
             }
         )
+        await self._apply_optimistic_update(
+            {"state": ADVANTAGE_AIR_STATE_ON, "mode": HASS_HVAC_MODES.get(hvac_mode)}
+        )
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the Fan Mode."""
@@ -244,16 +259,25 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         else:
             mode = fan_mode
         await self.async_update_ac({"fan": mode})
+        await self._apply_optimistic_update({"fan": mode})
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the Temperature."""
         if ATTR_TEMPERATURE in kwargs:
             await self.async_update_ac({"setTemp": kwargs[ATTR_TEMPERATURE]})
+            await self._apply_optimistic_update({"setTemp": kwargs[ATTR_TEMPERATURE]})
+
         if ATTR_TARGET_TEMP_LOW in kwargs and ATTR_TARGET_TEMP_HIGH in kwargs:
             await self.async_update_ac(
                 {
                     ADVANTAGE_AIR_COOL_TARGET: kwargs[ATTR_TARGET_TEMP_HIGH],
                     ADVANTAGE_AIR_HEAT_TARGET: kwargs[ATTR_TARGET_TEMP_LOW],
+                }
+            )
+            await self._apply_optimistic_update(
+                {
+                    "ADVANTAGE_AIR_COOL_TARGET": kwargs[ATTR_TARGET_TEMP_HIGH],
+                    "ADVANTAGE_AIR_HEAT_TARGET": kwargs[ATTR_TARGET_TEMP_LOW],
                 }
             )
 
@@ -266,6 +290,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
             change[ADVANTAGE_AIR_MYAUTO_ENABLED] = preset_mode == ADVANTAGE_AIR_MYAUTO
         if change:
             await self.async_update_ac(change)
+            await self._apply_optimistic_update(change)
 
 
 class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
@@ -286,6 +311,15 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
         """Initialize an AdvantageAir Zone control."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = self._zone["name"]
+
+    async def _apply_optimistic_update(
+        self, updates: dict[str, Any], delay: float = 5.0
+    ) -> None:
+        """Optimistically update state."""
+        self._ac.update(updates)
+        self.async_write_ha_state()
+        await asyncio.sleep(delay)
+        self.async_schedule_update_ha_state(True)
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -323,10 +357,13 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
     async def async_turn_on(self) -> None:
         """Set the HVAC State to on."""
         await self.async_update_zone({"state": ADVANTAGE_AIR_STATE_OPEN})
+        await self._apply_optimistic_update({"state": ADVANTAGE_AIR_STATE_OPEN})
 
     async def async_turn_off(self) -> None:
         """Set the HVAC State to off."""
-        await self.async_update_zone({"state": ADVANTAGE_AIR_STATE_CLOSE})
+        if self._zone["number"] != self._ac["myZone"]:
+            await self.async_update_zone({"state": ADVANTAGE_AIR_STATE_CLOSE})
+            await self._apply_optimistic_update({"state": ADVANTAGE_AIR_STATE_CLOSE})
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC Mode and State."""
@@ -337,5 +374,7 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the Temperature."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        await self.async_update_zone({"setTemp": temp})
+        if self._ac["mode"] != "myauto":
+            temp = kwargs.get(ATTR_TEMPERATURE)
+            await self.async_update_zone({"setTemp": temp})
+            await self._apply_optimistic_update({"setTemp": temp})
