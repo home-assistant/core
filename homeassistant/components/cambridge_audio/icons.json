@@ -13,11 +13,10 @@
         "default": "mdi:audio-input-stereo-minijack"
       },
       "control_bus_mode": {
-        "default": "mdi:lan-disconnect",
+        "default": "mdi:audio-video-off",
         "state":{
-          "amplifier": "mdi:lan-connect",
-          "receiver": "mdi:lan-connect",
-          "off": "mdi:lan-disconnect"
+          "amplifier": "mdi:speaker",
+          "receiver": "mdi:audio-video"
         }
       }
     },
