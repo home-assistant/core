@@ -1544,6 +1544,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
             "start_ts": one_year_ago.timestamp(),
             "state": 1.0,
             "sum": None,
+            "circular_mean": None,
         },
         {
             "created": None,
@@ -1559,6 +1560,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
             "start_ts": six_months_ago.timestamp(),
             "state": 1.0,
             "sum": None,
+            "circular_mean": None,
         },
         {
             "created": process_timestamp(one_month_ago).replace(tzinfo=None),
@@ -1574,6 +1576,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
             "start_ts": one_month_ago.timestamp(),
             "state": 1.0,
             "sum": None,
+            "circular_mean": None,
         },
     ]
 
@@ -1711,6 +1714,7 @@ async def test_stats_timestamp_with_one_by_one(
             "start_ts": one_year_ago.timestamp(),
             "state": 1.0,
             "sum": None,
+            "circular_mean": None,
         },
         {
             "created": None,
@@ -1726,6 +1730,7 @@ async def test_stats_timestamp_with_one_by_one(
             "start_ts": six_months_ago.timestamp(),
             "state": 1.0,
             "sum": None,
+            "circular_mean": None,
         },
         {
             "created": None,
@@ -1741,6 +1746,7 @@ async def test_stats_timestamp_with_one_by_one(
             "start_ts": one_month_ago.timestamp(),
             "state": 1.0,
             "sum": None,
+            "circular_mean": None,
         },
     ]
 
@@ -1764,6 +1770,7 @@ async def test_stats_timestamp_with_one_by_one(
             "start_ts": one_year_ago.timestamp(),
             "state": 1.0,
             "sum": None,
+            "circular_mean": None,
         },
         {
             "created": None,
@@ -1779,6 +1786,7 @@ async def test_stats_timestamp_with_one_by_one(
             "start_ts": six_months_ago.timestamp(),
             "state": 1.0,
             "sum": None,
+            "circular_mean": None,
         },
         {
             "created": None,
@@ -1794,6 +1802,7 @@ async def test_stats_timestamp_with_one_by_one(
             "start_ts": one_month_ago.timestamp(),
             "state": 1.0,
             "sum": None,
+            "circular_mean": None,
         },
     ]
 
@@ -1938,6 +1947,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
             "start_ts": one_year_ago.timestamp(),
             "state": 1.0,
             "sum": None,
+            "circular_mean": None,
         },
         {
             "created": None,
@@ -1953,6 +1963,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
             "start_ts": six_months_ago.timestamp(),
             "state": 1.0,
             "sum": None,
+            "circular_mean": None,
         },
         {
             "created": None,
@@ -1968,6 +1979,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
             "start_ts": one_month_ago.timestamp(),
             "state": 1.0,
             "sum": None,
+            "circular_mean": None,
         },
     ]
 
@@ -1991,6 +2003,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
             "start_ts": six_months_ago.timestamp(),
             "state": 1.0,
             "sum": None,
+            "circular_mean": None,
         },
     ]
 
