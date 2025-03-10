@@ -47,9 +47,9 @@ async def test_rpc_device_virtual_text(
 
     await init_integration(hass, 3)
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "lorem ipsum"
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == "lorem ipsum"
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -57,7 +57,10 @@ async def test_rpc_device_virtual_text(
 
     monkeypatch.setitem(mock_rpc_device.status["text:203"], "value", "dolor sit amet")
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == "dolor sit amet"
+
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == "dolor sit amet"
 
     monkeypatch.setitem(mock_rpc_device.status["text:203"], "value", "sed do eiusmod")
     await hass.services.async_call(
@@ -67,7 +70,10 @@ async def test_rpc_device_virtual_text(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert hass.states.get(entity_id).state == "sed do eiusmod"
+
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == "sed do eiusmod"
 
 
 async def test_rpc_remove_virtual_text_when_mode_label(
@@ -101,7 +107,7 @@ async def test_rpc_remove_virtual_text_when_mode_label(
     await hass.async_block_till_done()
 
     entry = entity_registry.async_get(entity_id)
-    assert not entry
+    assert entry is None
 
 
 async def test_rpc_remove_virtual_text_when_orphaned(
@@ -126,4 +132,4 @@ async def test_rpc_remove_virtual_text_when_orphaned(
     await hass.async_block_till_done()
 
     entry = entity_registry.async_get(entity_id)
-    assert not entry
+    assert entry is None
