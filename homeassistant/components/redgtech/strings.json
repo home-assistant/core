@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "User configuration",
+        "description": "Please enter your email address.",
+        "data": {
+          "email": {
+            "label": "Email",
+            "description": "Enter your email address for authentication."
+          },
+          "password": {
+            "label": "Password",
+            "description": "Enter your password for authentication."
+          }
+        },
+        "errors": {
+          "invalid_auth": "Invalid authentication.",
+          "invalid_email": "Invalid email address.",
+          "invalid_password": "Invalid password.",
+          "email_required": "Email is required.",
+          "password_required": "Password is required."
+        }
+      }
+    }
+  }
+}
