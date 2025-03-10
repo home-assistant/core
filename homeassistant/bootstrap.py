@@ -796,14 +796,17 @@ async def _async_resolve_domains_and_preload(
         )
     )
 
-    integrations_requirements = {
-        domain: itg.requirements for domain, itg in integrations_to_process.items()
-    }
+    # Gather requirements for all integrations, their dependencies and after dependencies.
+    # To gather all the requirements we must ignore exceptions here, which will be
+    # handled later.
     integrations_after_dependencies = (
         await loader.resolve_integrations_after_dependencies(
             hass, integrations_to_process.values(), ignore_exceptions=True
         )
     )
+    integrations_requirements = {
+        domain: itg.requirements for domain, itg in integrations_to_process.items()
+    }
     integrations_requirements |= (
         (dep, loader.async_get_loaded_integration(hass, dep).requirements)
         for deps in integrations_after_dependencies.values()
