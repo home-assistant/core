@@ -54,6 +54,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
+    UnitOfTemperature,
 )
 from homeassistant.core import (
     CoreState,
@@ -345,6 +346,8 @@ async def async_test_home_assistant(
     finally:
         # Restore timezone, it is set when creating the hass object
         dt_util.set_default_time_zone(orig_tz)
+        # Restore temperature_unit back to CELSIUS
+        hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
         # Remove loop shutdown indicator to not interfere with additional hass objects
         with suppress(AttributeError):
             delattr(hass.loop, _SHUTDOWN_RUN_CALLBACK_THREADSAFE)
