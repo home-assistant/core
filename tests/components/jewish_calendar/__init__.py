@@ -3,8 +3,6 @@
 from collections import namedtuple
 from datetime import datetime
 
-from freezegun import freeze_time as alter_time  # noqa: F401
-
 from homeassistant.components import jewish_calendar
 from homeassistant.util import dt as dt_util
 
@@ -49,7 +47,7 @@ def make_jerusalem_test_params(dtime, results, havdalah_offset=0):
         }
     return (
         dtime,
-        jewish_calendar.DEFAULT_CANDLE_LIGHT,
+        40,
         havdalah_offset,
         False,
         "Asia/Jerusalem",
