@@ -114,7 +114,7 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
             ),
             vol.Optional(CONF_RESET_AFTER): selector.NumberSelector(
                 selector.NumberSelectorConfig(
-                    min=0, max=10, step=0.1, unit_of_measurement="s"
+                    min=0, max=600, step=0.1, unit_of_measurement="s"
                 )
             ),
         },
