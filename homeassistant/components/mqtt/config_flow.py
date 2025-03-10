@@ -868,6 +868,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         if TYPE_CHECKING:
             assert self._component_id is not None
         component_data = self._subentry_data["components"][self._component_id]
+        initial_state: dict[str, Any] = deepcopy(component_data)
         # Remove the fields from the component data if they are not in the user input
         for field in [
             form_field
@@ -876,6 +877,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         ]:
             component_data.pop(field)
         component_data.update(user_input)
+        self._dirty |= component_data != initial_state
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -901,9 +903,10 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
         validate_field("configuration_url", cv.url, user_input, errors, "invalid_url")
         if not errors and user_input is not None:
+            is_dirty = user_input != self._subentry_data.get(CONF_DEVICE)
             self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, user_input)
             if self.source == SOURCE_RECONFIGURE:
-                self._dirty = True
+                self._dirty |= is_dirty
                 return await self.async_step_summary_menu()
             return await self.async_step_entity()
 
@@ -936,11 +939,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 return await self.async_step_mqtt_platform_config()
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
         elif self.source == SOURCE_RECONFIGURE and self._component_id is not None:
-            suggested_values = deepcopy(
-                self._subentry_data["components"][self._component_id]
-            )
             data_schema = self.add_suggested_values_to_schema(
-                data_schema, suggested_values
+                data_schema, self._subentry_data["components"][self._component_id]
             )
 
         return self.async_show_form(
@@ -951,13 +951,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             last_step=False,
         )
 
-    async def async_step_update_entity(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Select the entity to update."""
-        if user_input:
-            self._component_id = user_input["component"]
-            return await self.async_step_entity()
+    def _show_update_or_delete_form(self, step_id: str) -> SubentryFlowResult:
+        """Help selecting an entity to update or delete."""
         device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
         entities = [
             SelectOptionDict(
@@ -965,9 +960,6 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             )
             for key, component in self._subentry_data["components"].items()
         ]
-        if len(entities) == 1:
-            self._component_id = entities[0]["value"]
-            return await self.async_step_entity()
         data_schema = vol.Schema(
             {
                 vol.Required("component"): SelectSelector(
@@ -979,8 +971,21 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             }
         )
         return self.async_show_form(
-            step_id="update_entity", data_schema=data_schema, last_step=False
+            step_id=step_id, data_schema=data_schema, last_step=False
         )
+
+    async def async_step_update_entity(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Select the entity to update."""
+        if user_input:
+            self._component_id = user_input["component"]
+            return await self.async_step_entity()
+        if len(self._subentry_data["components"]) == 1:
+            # Return first key
+            self._component_id = next(iter(self._subentry_data["components"]))
+            return await self.async_step_entity()
+        return self._show_update_or_delete_form("update_entity")
 
     async def async_step_delete_entity(
         self, user_input: dict[str, Any] | None = None
@@ -990,27 +995,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             self._dirty = True
             del self._subentry_data["components"][user_input["component"]]
             return await self.async_step_summary_menu()
-
-        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
-        entities = [
-            SelectOptionDict(
-                value=key, label=f"{device_name} {component.get(CONF_NAME, '-')}"
-            )
-            for key, component in self._subentry_data["components"].items()
-        ]
-        data_schema = vol.Schema(
-            {
-                vol.Required("component"): SelectSelector(
-                    SelectSelectorConfig(
-                        options=entities,
-                        mode=SelectSelectorMode.LIST,
-                    )
-                )
-            }
-        )
-        return self.async_show_form(
-            step_id="delete_entity", data_schema=data_schema, last_step=False
-        )
+        return self._show_update_or_delete_form("delete_entity")
 
     async def async_step_mqtt_platform_config(
         self, user_input: dict[str, Any] | None = None
@@ -1038,9 +1023,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 self.update_component_fields(data_schema, user_input)
                 self._component_id = None
                 if self.source == SOURCE_RECONFIGURE:
-                    self._dirty = True
                     return await self.async_step_summary_menu()
-                return self._async_create_entry()
+                return self._async_create_subentry()
 
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
         else:
@@ -1061,10 +1045,10 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         )
 
     @callback
-    def _async_create_entry(
+    def _async_create_subentry(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Confirm creating a new MQTT device."""
+        """Create a subentry for a new MQTT device."""
         device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
         component: dict[str, Any] = next(
             iter(self._subentry_data["components"].values())
@@ -1103,7 +1087,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             menu_options.append("delete_entity")
         menu_options.append("device")
         if self._dirty:
-            menu_options.append("finish_reconfigure")
+            menu_options.append("save_changes")
         return self.async_show_menu(
             step_id="summary_menu",
             menu_options=menu_options,
@@ -1113,13 +1097,18 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             },
         )
 
-    async def async_step_finish_reconfigure(
+    async def async_step_save_changes(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Update subentry."""
+        """Save the changes made to the subentry."""
         entry = self._get_reconfigure_entry()
         subentry = self._get_reconfigure_subentry()
         entity_registry = er.async_get(self.hass)
+
+        # When a component is removed from the MQTT device,
+        # And we save the changes to the subentry,
+        # we need to clean up stale entity registry entries.
+        # The component id is used as a part of the unique id of the entity.
         for unique_id, platform in [
             (
                 f"{subentry.subentry_id}_{component_id}",
