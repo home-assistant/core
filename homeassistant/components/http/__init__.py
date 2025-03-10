@@ -88,6 +88,9 @@ CONF_TRUSTED_PROXIES: Final = "trusted_proxies"
 CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
 CONF_SSL_PROFILE: Final = "ssl_profile"
+CONF_BANNED_NETWORKS: Final = "banned_networks"
+CONF_LOG_BANNED_NETWORKS: Final = "log_banned_networks"
+CONF_NOTIFY_BANNED_NETWORKS: Final = "notify_banned_networks"
 
 SSL_MODERN: Final = "modern"
 SSL_INTERMEDIATE: Final = "intermediate"
@@ -137,6 +140,11 @@ HTTP_SCHEMA: Final = vol.All(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
             vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
+            vol.Optional(CONF_BANNED_NETWORKS, default=[]): vol.All(
+                cv.ensure_list, [ip_network]
+            ),
+            vol.Optional(CONF_LOG_BANNED_NETWORKS, default=True): cv.boolean,
+            vol.Optional(CONF_NOTIFY_BANNED_NETWORKS, default=True): cv.boolean,
         }
     ),
 )
@@ -175,6 +183,9 @@ class ConfData(TypedDict, total=False):
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
+    banned_networks: list[IPv4Network | IPv6Network]
+    log_banned_networks: bool
+    notify_banned_networks: bool
 
 
 @bind_hass
@@ -224,6 +235,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
+    banned_networks = conf[CONF_BANNED_NETWORKS]
+    log_banned_networks = conf[CONF_LOG_BANNED_NETWORKS]
+    notify_banned_networks = conf[CONF_NOTIFY_BANNED_NETWORKS]
 
     source_ip_task = create_eager_task(async_get_source_ip(hass))
 
@@ -243,6 +257,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
         use_x_frame_options=use_x_frame_options,
+        banned_networks=banned_networks,
+        log_banned_networks=log_banned_networks,
+        notify_banned_networks=notify_banned_networks,
     )
 
     async def stop_server(event: Event) -> None:
@@ -389,6 +406,9 @@ class HomeAssistantHTTP:
         login_threshold: int,
         is_ban_enabled: bool,
         use_x_frame_options: bool,
+        banned_networks: list,
+        log_banned_networks: bool,
+        notify_banned_networks: bool,
     ) -> None:
         """Initialize the server."""
         self.app[KEY_HASS] = self.hass
@@ -403,7 +423,14 @@ class HomeAssistantHTTP:
         setup_request_context(self.app, current_request)
 
         if is_ban_enabled:
-            setup_bans(self.hass, self.app, login_threshold)
+            setup_bans(
+                self.hass,
+                self.app,
+                login_threshold,
+                banned_networks,
+                log_banned_networks,
+                notify_banned_networks,
+            )
 
         await async_setup_auth(self.hass, self.app)
 
@@ -669,5 +696,9 @@ async def start_http_server_and_save_config(
             str(cast(IPv4Network | IPv6Network, ip).network_address)
             for ip in conf[CONF_TRUSTED_PROXIES]
         ]
-
+    if CONF_BANNED_NETWORKS in conf:
+        conf[CONF_BANNED_NETWORKS] = [
+            str(cast(IPv4Network | IPv6Network, ip))
+            for ip in conf[CONF_BANNED_NETWORKS]
+        ]
     store.async_delay_save(lambda: conf, SAVE_DELAY)
