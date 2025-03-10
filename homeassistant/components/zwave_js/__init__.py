@@ -135,7 +135,7 @@ from .services import ZWaveServices
 
 CONNECT_TIMEOUT = 10
 DATA_DRIVER_EVENTS = "driver_events"
-LISTEN_READY_TIMEOUT = 60
+DRIVER_READY_TIMEOUT = 60
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -240,17 +240,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     driver_ready_task = entry.async_create_task(
-        hass, driver_ready.wait(), f"{DOMAIN}_{entry.title}_driver_ready"
+        hass,
+        driver_ready.wait(),
+        f"{DOMAIN}_{entry.title}_driver_ready",
     )
-    done, not_done = await asyncio.wait(
+    done, pending = await asyncio.wait(
         (driver_ready_task, listen_task),
         return_when=asyncio.FIRST_COMPLETED,
-        timeout=LISTEN_READY_TIMEOUT,
+        timeout=DRIVER_READY_TIMEOUT,
     )
-    if driver_ready_task in not_done:
+
+    if driver_ready_task in pending:
         error_message = (
             "Client listen failed"
-            if listen_task.exception()
+            if listen_task.done() and listen_task.exception()
             else "Driver ready timed out"
         )
         driver_ready_task.cancel()

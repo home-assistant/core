@@ -132,6 +132,34 @@ async def test_noop_statistics(hass: HomeAssistant, client) -> None:
         assert not mock_cmd2.called
 
 
+async def test_driver_ready_timeout_during_setup(
+    hass: HomeAssistant,
+    client: MagicMock,
+    listen_block: asyncio.Event,
+) -> None:
+    """Test we handle driver ready timeout during setup."""
+
+    async def listen(driver_ready: asyncio.Event) -> None:
+        """Mock listen."""
+        await listen_block.wait()
+
+    client.listen.side_effect = listen
+
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": True},
+    )
+    entry.add_to_hass(hass)
+    assert client.disconnect.call_count == 0
+
+    with patch("homeassistant.components.zwave_js.DRIVER_READY_TIMEOUT", new=0):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert client.disconnect.call_count == 1
+
+
 @pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
 async def test_listen_failure_during_setup_before_forward_entry(
     hass: HomeAssistant,
