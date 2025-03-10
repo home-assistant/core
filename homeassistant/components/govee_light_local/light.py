@@ -17,6 +17,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
     filter_supported_color_modes,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -137,8 +138,10 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         """Handle device removal."""
         if self._device.fingerprint == fingerprint:
             ent_registry = er.async_get(self.hass)
-            if self.entity_id in ent_registry.entities:
-                ent_registry.async_remove(self.entity_id)
+            if entity_id := ent_registry.async_get_entity_id(
+                Platform.LIGHT, DOMAIN, self._device.fingerprint
+            ):
+                ent_registry.async_remove(entity_id)
 
             if dev_registry := dr.async_get(self.hass):
                 device_identifiers = {(DOMAIN, self._device.fingerprint)}
@@ -147,7 +150,6 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
                         device.id,
                         remove_config_entry_id=self.coordinator.config_entry.entry_id,
                     )
-
             await self.async_remove(force_remove=True)
 
     @property

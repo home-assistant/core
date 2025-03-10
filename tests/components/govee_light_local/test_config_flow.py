@@ -208,7 +208,6 @@ async def test_creating_entry_no_discovery(
     )
     assert result["type"] is FlowResultType.FORM
 
-    # Auto Discovery selection
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_AUTO_DISCOVERY: False}
     )
@@ -218,6 +217,8 @@ async def test_creating_entry_no_discovery(
 
     mock_govee_api.start.assert_not_awaited()
     mock_setup_entry.assert_awaited_once()
+
+    assert len(hass.states.async_all()) == 0
 
 
 async def test_options_flow_init_menu(hass: HomeAssistant) -> None:
