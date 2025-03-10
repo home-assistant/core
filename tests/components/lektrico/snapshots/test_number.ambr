@@ -98,7 +98,7 @@
 # name: test_all_entities[number.1p7k_500006_led_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1p7k_500006 Led brightness',
+      'friendly_name': '1p7k_500006 LED brightness',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
