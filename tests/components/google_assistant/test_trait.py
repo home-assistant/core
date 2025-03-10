@@ -1117,6 +1117,10 @@ async def test_temperature_setting_climate_onoff(hass: HomeAssistant) -> None:
     )
     assert len(calls) == 1
 
+    # Reset config temperature_unit back to CELSIUS, required for
+    # additional tests outside this component.
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
+
 
 async def test_temperature_setting_climate_no_modes(hass: HomeAssistant) -> None:
     """Test TemperatureSetting trait support for climate domain not supporting any modes."""
@@ -1261,6 +1265,9 @@ async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
         ATTR_ENTITY_ID: "climate.bla",
         climate.ATTR_TEMPERATURE: 75,
     }
+
+    # Reset config temperature_unit back to CELSIUS, required for
+    # additional tests outside this component.
     hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
@@ -1485,6 +1492,10 @@ async def test_temperature_control_water_heater(
         "temperatureAmbientCelsius": current_out,
     }
 
+    # Reset config temperature_unit back to CELSIUS, required for
+    # additional tests outside this component.
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
+
 
 @pytest.mark.parametrize(
     ("unit", "temp_init", "temp_in", "temp_out", "current_init"),
@@ -1555,6 +1566,10 @@ async def test_temperature_control_water_heater_set_temperature(
         ATTR_ENTITY_ID: "water_heater.bla",
         ATTR_TEMPERATURE: temp_out,
     }
+
+    # Reset config temperature_unit back to CELSIUS, required for
+    # additional tests outside this component.
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
 async def test_humidity_setting_humidifier_setpoint(hass: HomeAssistant) -> None:
@@ -3668,6 +3683,9 @@ async def test_temperature_control_sensor_data(
         }
     else:
         assert trt.query_attributes() == {}
+
+    # Reset config temperature_unit back to CELSIUS, required for
+    # additional tests outside this component.
     hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
