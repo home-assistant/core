@@ -13,7 +13,11 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.smartthings import EVENT_BUTTON
-from homeassistant.components.smartthings.const import CONF_SUBSCRIPTION_URL, DOMAIN
+from homeassistant.components.smartthings.const import (
+    CONF_SUBSCRIPTION_ID,
+    CONF_SUBSCRIPTION_URL,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -79,6 +83,7 @@ async def test_create_subscription_url(
 ) -> None:
     """Test button event."""
     assert CONF_SUBSCRIPTION_URL not in mock_config_entry.data
+    assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
     await setup_integration(hass, mock_config_entry)
 
@@ -88,11 +93,16 @@ async def test_create_subscription_url(
         mock_config_entry.data[CONF_SUBSCRIPTION_URL]
         == "https://spigot-regional.api.smartthings.com/filters/f5768ce8-c9e5-4507-9020-912c0c60e0ab/activate?filterRegion=eu-west-1"
     )
+    assert (
+        mock_config_entry.data[CONF_SUBSCRIPTION_ID]
+        == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
 
     devices.subscribe.assert_called_once_with(
         "397678e5-9995-4a39-9d9f-ae6ba310236c",
         "5aaaa925-2be1-4e40-b257-e4ef59083324",
         "https://spigot-regional.api.smartthings.com/filters/f5768ce8-c9e5-4507-9020-912c0c60e0ab/activate?filterRegion=eu-west-1",
+        "f5768ce8-c9e5-4507-9020-912c0c60e0ab",
     )
 
 
@@ -105,6 +115,7 @@ async def test_create_subscription_sink_error(
 ) -> None:
     """Test button event."""
     assert CONF_SUBSCRIPTION_URL not in mock_config_entry.data
+    assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
     devices.create_subscription.side_effect = SmartThingsSinkError("Sink error")
 
@@ -114,6 +125,7 @@ async def test_create_subscription_sink_error(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert CONF_SUBSCRIPTION_URL not in mock_config_entry.data
+    assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
@@ -123,23 +135,29 @@ async def test_update_subscription_url(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test button event."""
+    """Test updating the subscription URL."""
     await setup_integration(hass, mock_config_entry)
 
     devices.subscribe.assert_called_with(
         "397678e5-9995-4a39-9d9f-ae6ba310236c",
         "5aaaa925-2be1-4e40-b257-e4ef59083324",
         "https://spigot-regional.api.smartthings.com/filters/f5768ce8-c9e5-4507-9020-912c0c60e0ab/activate?filterRegion=eu-west-1",
+        "f5768ce8-c9e5-4507-9020-912c0c60e0ab",
     )
 
     assert (
         mock_config_entry.data[CONF_SUBSCRIPTION_URL]
         == "https://spigot-regional.api.smartthings.com/filters/f5768ce8-c9e5-4507-9020-912c0c60e0ab/activate?filterRegion=eu-west-1"
     )
+    assert (
+        mock_config_entry.data[CONF_SUBSCRIPTION_ID]
+        == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
 
     devices.create_subscription.return_value.registration_url = "https://test.com"
+    devices.create_subscription.return_value.subscription_id = "abc"
 
-    devices.refresh_subscription_url_function(None)
+    devices.refresh_subscription_url_function(None, None)
 
     await hass.async_block_till_done()
 
@@ -147,9 +165,46 @@ async def test_update_subscription_url(
         "397678e5-9995-4a39-9d9f-ae6ba310236c",
         "5aaaa925-2be1-4e40-b257-e4ef59083324",
         "https://test.com",
+        "abc",
     )
 
     assert mock_config_entry.data[CONF_SUBSCRIPTION_URL] == "https://test.com"
+    assert mock_config_entry.data[CONF_SUBSCRIPTION_ID] == "abc"
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_update_subscription_url_error(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test handling an error when updating the subscription URL."""
+    await setup_integration(hass, mock_config_entry)
+
+    devices.subscribe.assert_called_with(
+        "397678e5-9995-4a39-9d9f-ae6ba310236c",
+        "5aaaa925-2be1-4e40-b257-e4ef59083324",
+        "https://spigot-regional.api.smartthings.com/filters/f5768ce8-c9e5-4507-9020-912c0c60e0ab/activate?filterRegion=eu-west-1",
+        "f5768ce8-c9e5-4507-9020-912c0c60e0ab",
+    )
+
+    assert (
+        mock_config_entry.data[CONF_SUBSCRIPTION_URL]
+        == "https://spigot-regional.api.smartthings.com/filters/f5768ce8-c9e5-4507-9020-912c0c60e0ab/activate?filterRegion=eu-west-1"
+    )
+    assert (
+        mock_config_entry.data[CONF_SUBSCRIPTION_ID]
+        == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+
+    devices.create_subscription.side_effect = SmartThingsSinkError("Sink error")
+
+    devices.refresh_subscription_url_function(None, None)
+
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])

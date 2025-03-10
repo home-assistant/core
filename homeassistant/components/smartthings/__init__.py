@@ -34,6 +34,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from .const import (
     CONF_INSTALLED_APP_ID,
     CONF_LOCATION_ID,
+    CONF_SUBSCRIPTION_ID,
     CONF_SUBSCRIPTION_URL,
     DOMAIN,
     EVENT_BUTTON,
@@ -102,10 +103,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     client.refresh_token_function = _refresh_token
 
-    def _handle_new_subscription_url(url: str | None) -> None:
+    def _handle_new_subscription_url(url: str | None, identifier: str | None) -> None:
         """Handle a new subscription URL."""
         hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_SUBSCRIPTION_URL: url}
+            entry,
+            data={
+                **entry.data,
+                CONF_SUBSCRIPTION_URL: url,
+                CONF_SUBSCRIPTION_ID: identifier,
+            },
         )
         if url is None:
             _LOGGER.debug("Couldn't refresh subscription because we hit the limit")
@@ -113,9 +119,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             return
         _LOGGER.debug("Updating subscription URL to %s", url)
 
-    client.refresh_subscription_url_function = _handle_new_subscription_url
+    client.refresh_subscription = _handle_new_subscription_url
 
-    if (subscription_url := entry.data.get(CONF_SUBSCRIPTION_URL)) is None:
+    subscription_id = entry.data.get(CONF_SUBSCRIPTION_ID)
+    if (
+        subscription_url := entry.data.get(CONF_SUBSCRIPTION_URL)
+    ) is None or subscription_id is None:
         _LOGGER.debug("There is no subscription URL, trying to create a new one")
         try:
             subscription = await client.create_subscription(
@@ -126,7 +135,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             _LOGGER.debug("Couldn't create a new subscription: %s", err)
             raise ConfigEntryNotReady from err
         subscription_url = subscription.registration_url
-        _handle_new_subscription_url(subscription_url)
+        subscription_id = subscription.subscription_id
+        _handle_new_subscription_url(subscription_url, subscription_id)
 
     entry.async_create_background_task(
         hass,
@@ -134,6 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             entry.data[CONF_LOCATION_ID],
             entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
             subscription_url,
+            subscription_id,
         ),
         "smartthings_socket",
     )
