@@ -13,8 +13,20 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    DEVICE_CLASS_UNITS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import MAX_LENGTH_STATE_STATE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_UNIT_OF_MEASUREMENT,
+    MAX_LENGTH_STATE_STATE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, template
@@ -29,6 +41,8 @@ from .const import (
     CONF_CERTIFICATE,
     CONF_CLIENT_CERT,
     CONF_CLIENT_KEY,
+    CONF_LAST_RESET_VALUE_TEMPLATE,
+    CONF_OPTIONS,
     DEFAULT_ENCODING,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
@@ -411,3 +425,70 @@ def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:
             return certificate_file.read()
     except OSError:
         return None
+
+
+@callback
+def learn_more_url(platform: str) -> str:
+    """Return the URL for the platform specific MQTT documentation."""
+    return f"https://www.home-assistant.io/integrations/{platform}.mqtt/"
+
+
+@callback
+def validate_sensor_state_and_device_class_config(
+    config: ConfigType, errors: dict[str, str] | None = None
+) -> ConfigType:
+    """Validate the sensor options, state and device class config."""
+    if (
+        CONF_LAST_RESET_VALUE_TEMPLATE in config
+        and (state_class := config.get(CONF_STATE_CLASS)) != SensorStateClass.TOTAL
+    ):
+        if errors is None:
+            raise vol.Invalid(
+                f"The option `{CONF_LAST_RESET_VALUE_TEMPLATE}` cannot be used "
+                f"together with state class `{state_class}`"
+            )
+        errors[CONF_LAST_RESET_VALUE_TEMPLATE] = "last_reset_not_with_state_class_total"
+
+    # Only allow `options` to be set for `enum` sensors
+    # to limit the possible sensor values
+    if (options := config.get(CONF_OPTIONS)) is not None:
+        if not options:
+            raise vol.Invalid("An empty options list is not allowed")
+        if config.get(CONF_STATE_CLASS) or config.get(CONF_UNIT_OF_MEASUREMENT):
+            if errors is None:
+                raise vol.Invalid(
+                    f"Specifying `{CONF_OPTIONS}` is not allowed together with "
+                    f"the `{CONF_STATE_CLASS}` or `{CONF_UNIT_OF_MEASUREMENT}` option"
+                )
+            errors[CONF_OPTIONS] = "options_not_allowed_with_state_class_or_uom"
+
+        if (device_class := config.get(CONF_DEVICE_CLASS)) != SensorDeviceClass.ENUM:
+            if errors is None:
+                raise vol.Invalid(
+                    f"The option `{CONF_OPTIONS}` must be used "
+                    f"together with device class `{SensorDeviceClass.ENUM}`, "
+                    f"got `{CONF_DEVICE_CLASS}` '{device_class}'"
+                )
+            errors[CONF_OPTIONS] = "options_device_class_enum"
+
+    if (device_class := config.get(CONF_DEVICE_CLASS)) is None or (
+        unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)
+    ) is None:
+        return config
+
+    if (
+        device_class in DEVICE_CLASS_UNITS
+        and unit_of_measurement not in DEVICE_CLASS_UNITS[device_class]
+    ):
+        if errors is None:
+            _LOGGER.warning(
+                "The unit of measurement `%s` is not valid "
+                "together with device class `%s`. "
+                "this will stop working in HA Core 2025.7.0",
+                unit_of_measurement,
+                device_class,
+            )
+            return config
+        errors[CONF_UNIT_OF_MEASUREMENT] = "invalid_uom"
+
+    return config
