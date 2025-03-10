@@ -1933,7 +1933,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "rmvtransport",
     "roborock",
     "rocketchat",
-    "roku",
     "romy",
     "roomba",
     "roon",
