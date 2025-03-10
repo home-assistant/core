@@ -84,7 +84,6 @@ async def update_options_listener(
         for ip in config.manual_devices:
             if coordinator.get_device_by_ip(ip) is None:
                 coordinator.add_device_to_discovery_queue(ip)
-        # await hass.config_entries.async_reload(config_entry.entry_id)
 
     if config.option_mode == OptionMode.REMOVE_DEVICE and config.ips_to_remove:
         for ip in config.ips_to_remove:
@@ -98,7 +97,10 @@ async def update_options_listener(
 
         await hass.config_entries.async_reload(config_entry.entry_id)
 
-    if config.option_mode == OptionMode.CONFIGURE_AUTO_DISCOVERY:
+    if (
+        config.option_mode == OptionMode.CONFIGURE_AUTO_DISCOVERY
+        and coordinator.discovery_enabled != config.auto_discovery
+    ):
         coordinator.enable_discovery(config.auto_discovery)
 
 

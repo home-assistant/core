@@ -9,7 +9,10 @@ from govee_local_api.device_registry import DeviceRegistry
 from govee_local_api.light_capabilities import COMMON_FEATURES, SCENE_CODES
 import pytest
 
-from homeassistant.components.govee_light_local.coordinator import GoveeController
+from homeassistant.components.govee_light_local.coordinator import (
+    GoveeController,
+    GoveeLocalApiCoordinator,
+)
 
 
 def set_mocked_devices(mock_govee_api: AsyncMock, devices: list[GoveeDevice]) -> None:
@@ -19,6 +22,37 @@ def set_mocked_devices(mock_govee_api: AsyncMock, devices: list[GoveeDevice]) ->
     mock_govee_api._registry._discovered_devices = devices_dict
 
     type(mock_govee_api).devices = PropertyMock(return_value=devices_list)
+
+    mock_govee_api.get_device_by_ip.side_effect = lambda ip: next(
+        (device for device in mock_govee_api.devices if device.ip == ip), None
+    )
+
+    mock_govee_api.get_device_by_sku.side_effect = lambda sku: next(
+        (device for device in mock_govee_api.devices if device.sku == sku), None
+    )
+
+    mock_govee_api.get_device_by_fingerprint.side_effect = lambda fingerprint: next(
+        (
+            device
+            for device in mock_govee_api.devices
+            if device.fingerprint == fingerprint
+        ),
+        None,
+    )
+
+
+def set_mocked_devices_side_effect(
+    mock_govee_api: AsyncMock, devices: list[GoveeDevice]
+) -> None:
+    """Update a mocked device."""
+    devices_dict = {device.fingerprint: device for device in devices}
+    devices_list = list(devices_dict.values())
+
+    type(mock_govee_api._registry)._discovered_devices = PropertyMock(
+        side_effect=[[], devices_dict]
+    )
+
+    type(mock_govee_api).devices = PropertyMock(side_effect=[[], devices_list])
 
     mock_govee_api.get_device_by_ip.side_effect = lambda ip: next(
         (device for device in devices_list if device.ip == ip), None
@@ -36,10 +70,7 @@ def set_mocked_devices(mock_govee_api: AsyncMock, devices: list[GoveeDevice]) ->
 @pytest.fixture(name="mock_coordinator")
 def fixture_mock_coordinator() -> Generator[AsyncMock]:
     """Set up Govee Local API coordinator fixture."""
-    mock_coordinator = AsyncMock()
-    mock_coordinator.devices = []
-    mock_coordinator.discovery_queue = []
-    return mock_coordinator
+    return AsyncMock(spec=GoveeLocalApiCoordinator, wraps=GoveeLocalApiCoordinator)
 
 
 @pytest.fixture(name="mock_govee_api")

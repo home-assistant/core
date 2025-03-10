@@ -1,7 +1,7 @@
 """Test Govee light local config flow."""
 
 from errno import EADDRINUSE
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from govee_local_api import GoveeDevice
 
@@ -11,12 +11,12 @@ from homeassistant.components.govee_light_local.const import (
     CONF_DEVICE_IP,
     CONF_IPS_TO_REMOVE,
     CONF_MANUAL_DEVICES,
+    CONF_OPTION_MODE,
     DOMAIN,
-    SIGNAL_GOVEE_DEVICE_REMOVE,
+    OptionMode,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .conftest import DEFAULT_CAPABILITIES, set_mocked_devices
 
@@ -97,11 +97,15 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
 
 
 async def test_creating_entry_has_no_devices(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_govee_api: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_govee_api: AsyncMock,
+    mock_coordinator: AsyncMock,
 ) -> None:
     """Test setting up Govee with no devices."""
 
     set_mocked_devices(mock_govee_api, [])
+    mock_coordinator._controller = mock_govee_api
 
     with patch(
         "homeassistant.components.govee_light_local.config_flow.DISCOVERY_TIMEOUT",
@@ -127,7 +131,7 @@ async def test_creating_entry_has_no_devices(
         mock_setup_entry.assert_not_called()
 
 
-async def test_creating_entry_has_with_devices(
+async def test_creating_entry_with_devices(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_govee_api: AsyncMock,
@@ -258,7 +262,12 @@ async def test_options_flow_auto_discovery(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == "create_entry"
-    assert result["data"] == {CONF_AUTO_DISCOVERY: False}
+    assert result["data"] == {
+        CONF_OPTION_MODE: OptionMode.CONFIGURE_AUTO_DISCOVERY,
+        CONF_AUTO_DISCOVERY: False,
+        CONF_MANUAL_DEVICES: set(),
+        CONF_IPS_TO_REMOVE: set(),
+    }
 
 
 async def test_options_flow_add_device(hass: HomeAssistant) -> None:
@@ -283,12 +292,19 @@ async def test_options_flow_add_device(hass: HomeAssistant) -> None:
         user_input={CONF_DEVICE_IP: "192.168.1.100"},
     )
 
+    expected_options = {
+        CONF_OPTION_MODE: OptionMode.ADD_DEVICE,
+        CONF_MANUAL_DEVICES: {"192.168.1.100"},
+        CONF_IPS_TO_REMOVE: set(),
+        CONF_AUTO_DISCOVERY: False,
+    }
     assert result["type"] == "create_entry"
-    assert result["data"] == {CONF_MANUAL_DEVICES: ["192.168.1.100"]}
+    assert result["data"] == expected_options
+    assert config_entry.options == expected_options
 
 
 async def test_options_flow_remove_device_with_devices(
-    hass: HomeAssistant, mock_coordinator: AsyncMock
+    hass: HomeAssistant, mock_govee_api: AsyncMock, mock_coordinator: AsyncMock
 ) -> None:
     """Test removing a manual device through options flow."""
     config_entry = MockConfigEntry(
@@ -297,16 +313,12 @@ async def test_options_flow_remove_device_with_devices(
         options={CONF_MANUAL_DEVICES: ["192.168.1.100", "192.168.1.101"]},
     )
 
-    config_entry.add_to_hass(hass)
-
-    # Mock coordinator with devices
-    mock_device = AsyncMock()
-    mock_device.ip = "192.168.1.100"
-    mock_device.is_manual = True
-
-    mock_coordinator.devices = [mock_device]
-    mock_coordinator.discovery_queue = []
+    devices = _get_devices(mock_govee_api, True)
+    set_mocked_devices(mock_govee_api, devices)
+    mock_coordinator.devices = devices
     config_entry.runtime_data = mock_coordinator
+
+    config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
@@ -322,8 +334,16 @@ async def test_options_flow_remove_device_with_devices(
         user_input={CONF_IPS_TO_REMOVE: ["192.168.1.100"]},
     )
 
+    expected_options = {
+        CONF_OPTION_MODE: OptionMode.REMOVE_DEVICE,
+        CONF_AUTO_DISCOVERY: False,
+        CONF_MANUAL_DEVICES: {"192.168.1.100", "192.168.1.101"},
+        CONF_IPS_TO_REMOVE: ["192.168.1.100"],
+    }
+
     assert result["type"] == "create_entry"
-    assert result["data"] == {CONF_IPS_TO_REMOVE: ["192.168.1.100"]}
+    assert result["data"] == expected_options
+    assert config_entry.options == expected_options
 
 
 async def test_options_flow_remove_device_no_devices(hass: HomeAssistant) -> None:
@@ -348,48 +368,6 @@ async def test_options_flow_remove_device_no_devices(hass: HomeAssistant) -> Non
 
     assert result["type"] == "abort"
     assert result["reason"] == "no_devices"
-
-
-async def test_update_options(hass: HomeAssistant, mock_govee_api: AsyncMock) -> None:
-    """Test update options triggers reload."""
-
-    manual_device = GoveeDevice(
-        controller=mock_govee_api,
-        ip="192.168.1.100",
-        fingerprint="asdawdqwdqwd",
-        sku="H615A",
-        capabilities=DEFAULT_CAPABILITIES,
-    )
-    manual_device.is_manual = True
-    set_mocked_devices(
-        mock_govee_api,
-        [manual_device],
-    )
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_AUTO_DISCOVERY: False},
-        options={},
-    )
-
-    config_entry.add_to_hass(hass)
-    remove_signal = MagicMock()
-    async_dispatcher_connect(hass, SIGNAL_GOVEE_DEVICE_REMOVE, remove_signal)
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert config_entry.state is config_entries.ConfigEntryState.LOADED
-
-    hass.config_entries.async_update_entry(
-        config_entry, options={CONF_IPS_TO_REMOVE: ["192.168.1.100"]}
-    )
-    await hass.async_block_till_done()
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert config_entry.state is config_entries.ConfigEntryState.LOADED
-    remove_signal.assert_called_once_with("asdawdqwdqwd")
 
 
 async def test_options_flow_add_device_preserves_existing_devices(
@@ -423,18 +401,17 @@ async def test_options_flow_add_device_preserves_existing_devices(
         user_input={"next_step_id": "add_device"},
     )
 
-    # Submit the new device configuration
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={CONF_DEVICE_IP: "192.168.1.102"},
     )
 
+    expected_options = {
+        CONF_OPTION_MODE: OptionMode.ADD_DEVICE,
+        CONF_AUTO_DISCOVERY: False,
+        CONF_IPS_TO_REMOVE: set(),
+        CONF_MANUAL_DEVICES: {"192.168.1.101", "192.168.1.102"},
+    }
     assert result["type"] == "create_entry"
-    assert result["data"] == {CONF_MANUAL_DEVICES: ["192.168.1.101", "192.168.1.102"]}
-
-    # Verify the add_manual_devices method is called with only the new IP
-    mock_coordinator.add_manual_devices.assert_awaited_once_with(["192.168.1.102"])
-
-    # Verify existing device still exists in coordinator
-    assert len(mock_coordinator.devices) == 1
-    assert mock_coordinator.devices[0].ip == "192.168.1.101"
+    assert result["data"] == expected_options
+    assert config_entry.options == expected_options

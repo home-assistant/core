@@ -159,7 +159,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     @property
     def discovery_enabled(self) -> bool:
         """Return if discovery is enabled."""
-        return self._controller.discovery_enabled
+        return self._controller.discovery
 
     async def _async_update_data(self) -> list[GoveeDevice]:
         self._controller.send_update_message()

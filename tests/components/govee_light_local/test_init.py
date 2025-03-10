@@ -9,10 +9,13 @@ from homeassistant.components.govee_light_local.const import (
     CONF_AUTO_DISCOVERY,
     CONF_IPS_TO_REMOVE,
     CONF_MANUAL_DEVICES,
+    CONF_OPTION_MODE,
     DOMAIN,
     SIGNAL_GOVEE_DEVICE_REMOVE,
+    OptionMode,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .conftest import DEFAULT_CAPABILITIES, set_mocked_devices
@@ -20,22 +23,30 @@ from .conftest import DEFAULT_CAPABILITIES, set_mocked_devices
 from tests.common import MockConfigEntry
 
 
-async def test_update_options_remove_device(
-    hass: HomeAssistant, mock_govee_api: AsyncMock
+async def test_update_options_remove_device_discovered(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_govee_api: AsyncMock
 ) -> None:
     """Test update options triggers reload."""
 
-    manual_device = GoveeDevice(
+    manual_device1 = GoveeDevice(
         controller=mock_govee_api,
         ip="192.168.1.100",
-        fingerprint="asdawdqwdqwd",
+        fingerprint="manual_device1-fingerprint",
         sku="H615A",
         capabilities=DEFAULT_CAPABILITIES,
     )
-    manual_device.is_manual = True
+    manual_device1.is_manual = True
+    manual_device2 = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.101",
+        fingerprint="manual_device2-fingerprint",
+        sku="H615B",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    manual_device2.is_manual = True
     set_mocked_devices(
         mock_govee_api,
-        [manual_device],
+        [manual_device1, manual_device2],
     )
 
     config_entry = MockConfigEntry(
@@ -54,14 +65,99 @@ async def test_update_options_remove_device(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
 
+    assert entity_registry.async_get("light.h615a") is not None
+    assert entity_registry.async_get("light.h615b") is not None
+
     hass.config_entries.async_update_entry(
-        config_entry, options={CONF_IPS_TO_REMOVE: ["192.168.1.100"]}
+        config_entry,
+        options={
+            CONF_OPTION_MODE: OptionMode.REMOVE_DEVICE,
+            CONF_MANUAL_DEVICES: {"192.168.1.100", "192.168.1.101"},
+            CONF_IPS_TO_REMOVE: {"192.168.1.100"},
+        },
     )
     await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
-    remove_signal.assert_called_once_with("asdawdqwdqwd")
+    remove_signal.assert_called_once_with(f"{manual_device1.fingerprint}")
+
+    assert config_entry.options == {
+        CONF_IPS_TO_REMOVE: set(),
+        CONF_MANUAL_DEVICES: {f"{manual_device2.ip}"},
+        CONF_OPTION_MODE: OptionMode.REMOVE_DEVICE,
+    }
+
+    assert entity_registry.async_get("light.h615b") is not None
+    assert entity_registry.async_get("light.h615a") is None
+
+
+async def test_update_options_remove_device_in_queue(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test update options triggers reload."""
+
+    manual_device1 = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.100",
+        fingerprint="manual_device1-fingerprint",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    manual_device1.is_manual = True
+
+    set_mocked_devices(
+        mock_govee_api,
+        [manual_device1],
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_AUTO_DISCOVERY: False},
+        options={},
+    )
+
+    config_entry.add_to_hass(hass)
+    remove_signal = MagicMock()
+    async_dispatcher_connect(hass, SIGNAL_GOVEE_DEVICE_REMOVE, remove_signal)
+
+    # Add device to queue
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            CONF_OPTION_MODE: OptionMode.ADD_DEVICE,
+            CONF_MANUAL_DEVICES: {"192.168.1.101"},
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            CONF_OPTION_MODE: OptionMode.REMOVE_DEVICE,
+            CONF_MANUAL_DEVICES: {"192.168.1.101"},
+            CONF_IPS_TO_REMOVE: {"192.168.1.101"},
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+    remove_signal.assert_not_called()
+
+    assert config_entry.options == {
+        CONF_IPS_TO_REMOVE: set(),
+        CONF_MANUAL_DEVICES: set(),
+        CONF_OPTION_MODE: OptionMode.REMOVE_DEVICE,
+    }
+
+    assert len(hass.states.async_all()) == 1
 
 
 async def test_update_options_enable_discovery(
@@ -84,7 +180,11 @@ async def test_update_options_enable_discovery(
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
 
     hass.config_entries.async_update_entry(
-        config_entry, options={CONF_AUTO_DISCOVERY: True}
+        config_entry,
+        options={
+            CONF_OPTION_MODE: OptionMode.CONFIGURE_AUTO_DISCOVERY,
+            CONF_AUTO_DISCOVERY: True,
+        },
     )
     await hass.async_block_till_done()
 
@@ -128,46 +228,23 @@ async def test_update_options_add_devices(
 
     config_entry.add_to_hass(hass)
 
-    # Setup initial integration
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    set_mocked_devices(mock_govee_api, [device1])
+    mock_govee_api.get_device_by_ip.side_effect = [None, device1]
+
     # Update options to add first device
     hass.config_entries.async_update_entry(
-        config_entry, options={CONF_MANUAL_DEVICES: ["192.168.1.100"]}
+        config_entry,
+        options={
+            CONF_OPTION_MODE: OptionMode.ADD_DEVICE,
+            CONF_MANUAL_DEVICES: [device1.ip],
+        },
     )
+
+    await config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     # Verify first device is added
-    mock_govee_api.add_manual_device.assert_called_once_with("192.168.1.100")
-    assert len(mock_govee_api.devices) == 1
-    assert mock_govee_api.devices[0].ip == "192.168.1.100"
-
-    # Check entity is created for first device
-    entity_registry = hass.helpers.entity_registry.async_get(hass)
-    entity_id1 = entity_registry.async_get_entity_id(
-        "light", DOMAIN, "device1-fingerprint"
-    )
-    assert entity_id1 == f"light.{device1.sku}"
-    assert hass.states.get(entity_id1) is not None
-
-    # Update options to add second device
-    hass.config_entries.async_update_entry(
-        config_entry, options={CONF_MANUAL_DEVICES: ["192.168.1.101"]}
-    )
-    await hass.async_block_till_done()
-
-    # Verify second device is added
-    mock_govee_api.add_manual_device.assert_called_with("192.168.1.101")
-    assert len(mock_govee_api.devices) == 2
-    assert {device.ip for device in mock_govee_api.devices} == {
-        "192.168.1.100",
-        "192.168.1.101",
-    }
-
-    # Check entity is created for second device
-    entity_id2 = entity_registry.async_get_entity_id(
-        "light", DOMAIN, "device2-fingerprint"
-    )
-    assert entity_id2 == f"light.{device2.sku}"
-    assert hass.states.get(entity_id2) is not None
+    mock_govee_api.add_device_to_discovery_queue.assert_called_once_with(device1.ip)
