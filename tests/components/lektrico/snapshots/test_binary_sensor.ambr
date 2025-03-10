@@ -37,7 +37,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Ev diode short',
+      'friendly_name': '1p7k_500006 EV diode short',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_ev_diode_short',
@@ -85,7 +85,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Ev error',
+      'friendly_name': '1p7k_500006 EV error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_ev_error',
@@ -325,7 +325,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': '1p7k_500006 Rcd error',
+      'friendly_name': '1p7k_500006 RCD error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.1p7k_500006_rcd_error',
