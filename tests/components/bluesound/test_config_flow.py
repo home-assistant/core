@@ -1,5 +1,6 @@
 """Test the Bluesound config flow."""
 
+from ipaddress import IPv4Address
 from unittest.mock import AsyncMock
 
 from pyblu.errors import PlayerUnreachableError
@@ -121,8 +122,8 @@ async def test_zeroconf_flow_success(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
-            ip_address="1.1.1.1",
-            ip_addresses=["1.1.1.1"],
+            ip_address=IPv4Address("1.1.1.1"),
+            ip_addresses=[IPv4Address("1.1.1.1")],
             port=11000,
             hostname="player-name1111",
             type="_musc._tcp.local.",
@@ -160,8 +161,8 @@ async def test_zeroconf_flow_cannot_connect(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
-            ip_address="1.1.1.1",
-            ip_addresses=["1.1.1.1"],
+            ip_address=IPv4Address("1.1.1.1"),
+            ip_addresses=[IPv4Address("1.1.1.1")],
             port=11000,
             hostname="player-name1111",
             type="_musc._tcp.local.",
@@ -187,8 +188,8 @@ async def test_zeroconf_flow_already_configured(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
-            ip_address="1.1.1.2",
-            ip_addresses=["1.1.1.2"],
+            ip_address=IPv4Address("1.1.1.2"),
+            ip_addresses=[IPv4Address("1.1.1.2")],
             port=11000,
             hostname="player-name1112",
             type="_musc._tcp.local.",
