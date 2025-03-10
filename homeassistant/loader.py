@@ -1495,7 +1495,9 @@ async def resolve_integrations_after_dependencies(
                 ignore_exceptions=ignore_exceptions,
             )
         except Exception as exc:  # noqa: BLE001
-            _LOGGER.error("Unable to resolve dependencies for %s: %s", itg.domain, exc)
+            _LOGGER.error(
+                "Unable to resolve (after) dependencies for %s: %s", itg.domain, exc
+            )
             return None
 
     resolve_dependencies_tasks = {
