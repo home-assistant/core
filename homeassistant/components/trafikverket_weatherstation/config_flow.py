@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from pytrafikverket.exceptions import (
@@ -24,6 +25,8 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_STATION, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -56,7 +59,8 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_station"
             except MultipleWeatherStationsFound:
                 errors["base"] = "more_stations"
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception("Unexpected error")
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
@@ -102,7 +106,8 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_station"
             except MultipleWeatherStationsFound:
                 errors["base"] = "more_stations"
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(
@@ -132,7 +137,8 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_station"
             except MultipleWeatherStationsFound:
                 errors["base"] = "more_stations"
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(

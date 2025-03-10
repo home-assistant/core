@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 import aiohttp
@@ -15,6 +16,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_KAMEREON_ACCOUNT_ID, CONF_LOCALE, DOMAIN
 from .renault_hub import RenaultHub
+
+_LOGGER = logging.getLogger(__name__)
 
 USER_SCHEMA = vol.Schema(
     {
@@ -54,7 +57,8 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             except (aiohttp.ClientConnectionError, GigyaException):
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 if login_success:
