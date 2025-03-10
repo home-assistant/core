@@ -248,9 +248,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         timeout=LISTEN_READY_TIMEOUT,
     )
     if driver_ready_task in not_done:
+        error_message = (
+            "Client listen failed"
+            if listen_task.exception()
+            else "Driver ready timed out"
+        )
         driver_ready_task.cancel()
         listen_task.cancel()
-        raise ConfigEntryNotReady("Driver ready timed out")
+        raise ConfigEntryNotReady(error_message)
 
     if listen_task in done:
         # If the listen task is already done, we need to raise ConfigEntryNotReady
@@ -967,7 +972,7 @@ async def client_listen(
     except BaseZwaveJSServerError as err:
         if entry.state != ConfigEntryState.LOADED:
             raise
-        LOGGER.error("Failed to listen: %s", err)
+        LOGGER.error("Client listen failed: %s", err)
     except Exception as err:
         # We need to guard against unknown exceptions to not crash this task.
         LOGGER.exception("Unexpected exception: %s", err)
