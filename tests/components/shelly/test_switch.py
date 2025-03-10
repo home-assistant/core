@@ -28,7 +28,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import get_entity_state, init_integration, register_device, register_entity
+from . import init_integration, register_device, register_entity
 
 from tests.common import mock_restore_cache
 
@@ -75,7 +75,9 @@ async def test_block_motion_switch(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert get_entity_state(hass, entity_id) == STATE_ON
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_ON
 
     # turn off
     await hass.services.async_call(
@@ -88,7 +90,10 @@ async def test_block_motion_switch(
     mock_block_device.mock_update()
 
     mock_block_device.set_shelly_motion_detection.assert_called_once_with(False)
-    assert get_entity_state(hass, entity_id) == STATE_OFF
+
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_OFF
 
     # turn on
     mock_block_device.set_shelly_motion_detection.reset_mock()
@@ -102,7 +107,10 @@ async def test_block_motion_switch(
     mock_block_device.mock_update()
 
     mock_block_device.set_shelly_motion_detection.assert_called_once_with(True)
-    assert get_entity_state(hass, entity_id) == STATE_ON
+
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_ON
 
 
 @pytest.mark.parametrize("model", MOTION_MODELS)
@@ -132,14 +140,18 @@ async def test_block_restored_motion_switch(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert get_entity_state(hass, entity_id) == STATE_OFF
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_OFF
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert get_entity_state(hass, entity_id) == STATE_ON
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_ON
 
 
 @pytest.mark.parametrize("model", MOTION_MODELS)
@@ -150,7 +162,7 @@ async def test_block_restored_motion_switch_no_last_state(
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test block restored motion active switch missing last state."""
+    """Test block restored motion active switch missing last entity."""
     entry = await init_integration(
         hass, 1, sleep_period=1000, model=model, skip_setup=True
     )
@@ -167,14 +179,18 @@ async def test_block_restored_motion_switch_no_last_state(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert get_entity_state(hass, entity_id) == STATE_UNKNOWN
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_UNKNOWN
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert get_entity_state(hass, entity_id) == STATE_ON
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_ON
 
 
 @pytest.mark.parametrize(
@@ -464,9 +480,9 @@ async def test_wall_display_relay_mode(
     assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 0
 
     # the switch entity should be created
-    state = hass.states.get(switch_entity_id)
-    assert state
-    assert state.state == STATE_ON
+    entity = hass.states.get(switch_entity_id)
+    assert entity
+    assert entity.state == STATE_ON
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
     entry = entity_registry.async_get(switch_entity_id)
@@ -503,9 +519,9 @@ async def test_rpc_device_virtual_switch(
 
     await init_integration(hass, 3)
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_ON
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_ON
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -519,7 +535,7 @@ async def test_rpc_device_virtual_switch(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert get_entity_state(hass, entity_id) == STATE_OFF
+    assert hass.states.get(entity_id).state == STATE_OFF
 
     monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", True)
     await hass.services.async_call(
@@ -529,7 +545,7 @@ async def test_rpc_device_virtual_switch(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert get_entity_state(hass, entity_id) == STATE_ON
+    assert hass.states.get(entity_id).state == STATE_ON
 
 
 async def test_rpc_device_virtual_binary_sensor(
@@ -550,8 +566,8 @@ async def test_rpc_device_virtual_binary_sensor(
 
     await init_integration(hass, 3)
 
-    state = hass.states.get(entity_id)
-    assert not state
+    entity = hass.states.get(entity_id)
+    assert entity is None
 
 
 async def test_rpc_remove_virtual_switch_when_mode_label(
@@ -585,7 +601,7 @@ async def test_rpc_remove_virtual_switch_when_mode_label(
     await hass.async_block_till_done()
 
     entry = entity_registry.async_get(entity_id)
-    assert not entry
+    assert entry is None
 
 
 async def test_rpc_remove_virtual_switch_when_orphaned(
@@ -610,7 +626,7 @@ async def test_rpc_remove_virtual_switch_when_orphaned(
     await hass.async_block_till_done()
 
     entry = entity_registry.async_get(entity_id)
-    assert not entry
+    assert entry is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -640,9 +656,10 @@ async def test_rpc_device_script_switch(
 
     await init_integration(hass, 3)
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_ON
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_ON
+
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == f"123456789ABC-{key}-script"
@@ -655,9 +672,10 @@ async def test_rpc_device_script_switch(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
+
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_OFF
 
     monkeypatch.setitem(mock_rpc_device.status[key], "running", True)
     await hass.services.async_call(
@@ -667,6 +685,7 @@ async def test_rpc_device_script_switch(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_ON
+
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_ON

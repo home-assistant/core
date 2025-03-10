@@ -25,7 +25,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import get_entity_state, init_integration, mutate_rpc_device_status
+from . import init_integration, mutate_rpc_device_status
 
 ROLLER_BLOCK_ID = 1
 
@@ -47,8 +47,9 @@ async def test_block_device_services(
         {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 50},
         blocking=True,
     )
-    state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_CURRENT_POSITION] == 50
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.attributes[ATTR_CURRENT_POSITION] == 50
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -56,7 +57,9 @@ async def test_block_device_services(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert get_entity_state(hass, entity_id) == CoverState.OPENING
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == CoverState.OPENING
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -64,7 +67,9 @@ async def test_block_device_services(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert get_entity_state(hass, entity_id) == CoverState.CLOSING
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == CoverState.CLOSING
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -72,7 +77,9 @@ async def test_block_device_services(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert get_entity_state(hass, entity_id) == CoverState.CLOSED
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == CoverState.CLOSED
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -86,11 +93,15 @@ async def test_block_device_update(
     monkeypatch.setattr(mock_block_device.blocks[ROLLER_BLOCK_ID], "rollerPos", 0)
     await init_integration(hass, 1)
 
-    assert hass.states.get("cover.test_name").state == CoverState.CLOSED
+    entity = hass.states.get("cover.test_name")
+    assert entity
+    assert entity.state == CoverState.CLOSED
 
     monkeypatch.setattr(mock_block_device.blocks[ROLLER_BLOCK_ID], "rollerPos", 100)
     mock_block_device.mock_update()
-    assert hass.states.get("cover.test_name").state == CoverState.OPEN
+    entity = hass.states.get("cover.test_name")
+    assert entity
+    assert entity.state == CoverState.OPEN
 
 
 async def test_block_device_no_roller_blocks(
@@ -99,7 +110,8 @@ async def test_block_device_no_roller_blocks(
     """Test block device without roller blocks."""
     monkeypatch.setattr(mock_block_device.blocks[ROLLER_BLOCK_ID], "type", None)
     await init_integration(hass, 1)
-    assert hass.states.get("cover.test_name") is None
+    entity = hass.states.get("cover.test_name")
+    assert entity is None
 
 
 async def test_rpc_device_services(
@@ -118,8 +130,9 @@ async def test_rpc_device_services(
         {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 50},
         blocking=True,
     )
-    state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_CURRENT_POSITION] == 50
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.attributes[ATTR_CURRENT_POSITION] == 50
 
     mutate_rpc_device_status(
         monkeypatch, mock_rpc_device, "cover:0", "state", "opening"
@@ -131,7 +144,10 @@ async def test_rpc_device_services(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert get_entity_state(hass, entity_id) == CoverState.OPENING
+
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == CoverState.OPENING
 
     mutate_rpc_device_status(
         monkeypatch, mock_rpc_device, "cover:0", "state", "closing"
@@ -143,7 +159,10 @@ async def test_rpc_device_services(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert get_entity_state(hass, entity_id) == CoverState.CLOSING
+
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == CoverState.CLOSING
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
     await hass.services.async_call(
@@ -153,7 +172,9 @@ async def test_rpc_device_services(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    assert get_entity_state(hass, entity_id) == CoverState.CLOSED
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == CoverState.CLOSED
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -166,7 +187,8 @@ async def test_rpc_device_no_cover_keys(
     """Test RPC device without cover keys."""
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
     await init_integration(hass, 2)
-    assert hass.states.get("cover.test_cover_0") is None
+    entity = hass.states.get("cover.test_cover_0")
+    assert entity is None
 
 
 async def test_rpc_device_update(
@@ -175,11 +197,16 @@ async def test_rpc_device_update(
     """Test RPC device update."""
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
     await init_integration(hass, 2)
-    assert hass.states.get("cover.test_cover_0").state == CoverState.CLOSED
+
+    entity = hass.states.get("cover.test_cover_0")
+    assert entity
+    assert entity.state == CoverState.CLOSED
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "open")
     mock_rpc_device.mock_update()
-    assert hass.states.get("cover.test_cover_0").state == CoverState.OPEN
+    entity = hass.states.get("cover.test_cover_0")
+    assert entity
+    assert entity.state == CoverState.OPEN
 
 
 async def test_rpc_device_no_position_control(
@@ -190,7 +217,10 @@ async def test_rpc_device_no_position_control(
         monkeypatch, mock_rpc_device, "cover:0", "pos_control", False
     )
     await init_integration(hass, 2)
-    assert hass.states.get("cover.test_cover_0").state == CoverState.OPEN
+
+    entity = hass.states.get("cover.test_cover_0")
+    assert entity
+    assert entity.state == CoverState.OPEN
 
 
 async def test_rpc_cover_tilt(
@@ -212,8 +242,9 @@ async def test_rpc_cover_tilt(
 
     await init_integration(hass, 3)
 
-    state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -228,8 +259,9 @@ async def test_rpc_cover_tilt(
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "slat_pos", 50)
     mock_rpc_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 50
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 50
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -240,8 +272,9 @@ async def test_rpc_cover_tilt(
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "slat_pos", 100)
     mock_rpc_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 100
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -258,5 +291,6 @@ async def test_rpc_cover_tilt(
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "slat_pos", 10)
     mock_rpc_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 10
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 10

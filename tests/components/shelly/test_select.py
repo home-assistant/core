@@ -16,13 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import (
-    get_entity_attribute,
-    get_entity_state,
-    init_integration,
-    register_device,
-    register_entity,
-)
+from . import init_integration, register_device, register_entity
 
 
 @pytest.mark.parametrize(
@@ -62,8 +56,10 @@ async def test_rpc_device_virtual_enum(
 
     await init_integration(hass, 3)
 
-    assert get_entity_state(hass, entity_id) == expected_state
-    assert get_entity_attribute(hass, entity_id, ATTR_OPTIONS) == [
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == expected_state
+    assert entity.attributes.get(ATTR_OPTIONS) == [
         "Title 1",
         "option 2",
         "option 3",
@@ -75,7 +71,10 @@ async def test_rpc_device_virtual_enum(
 
     monkeypatch.setitem(mock_rpc_device.status["enum:203"], "value", "option 2")
     mock_rpc_device.mock_update()
-    assert get_entity_state(hass, entity_id) == "option 2"
+
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == "option 2"
 
     monkeypatch.setitem(mock_rpc_device.status["enum:203"], "value", "option 1")
     await hass.services.async_call(
@@ -87,7 +86,10 @@ async def test_rpc_device_virtual_enum(
     # 'Title 1' corresponds to 'option 1'
     assert mock_rpc_device.call_rpc.call_args[0][1] == {"id": 203, "value": "option 1"}
     mock_rpc_device.mock_update()
-    assert get_entity_state(hass, entity_id) == "Title 1"
+
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == "Title 1"
 
 
 async def test_rpc_remove_virtual_enum_when_mode_label(
@@ -127,7 +129,7 @@ async def test_rpc_remove_virtual_enum_when_mode_label(
     await hass.async_block_till_done()
 
     entry = entity_registry.async_get(entity_id)
-    assert not entry
+    assert entry is None
 
 
 async def test_rpc_remove_virtual_enum_when_orphaned(
@@ -152,4 +154,4 @@ async def test_rpc_remove_virtual_enum_when_orphaned(
     await hass.async_block_till_done()
 
     entry = entity_registry.async_get(entity_id)
-    assert not entry
+    assert entry is None

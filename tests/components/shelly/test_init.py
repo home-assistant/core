@@ -37,10 +37,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceRegistry, format_mac
 from homeassistant.setup import async_setup_component
 
-
-from . import MOCK_MAC, get_entity_state, init_integration, mutate_rpc_device_status
-
-from tests.common import MockConfigEntry
+from . import init_integration, mutate_rpc_device_status
 
 
 async def test_custom_coap_port(
@@ -309,7 +306,9 @@ async def test_sleeping_rpc_device_online_during_setup(
 
     assert "will resume when device is online" in caplog.text
     assert "is online (source: setup)" in caplog.text
-    assert hass.states.get("sensor.test_name_temperature") is not None
+
+    entity = hass.states.get("sensor.test_name_temperature")
+    assert entity
 
 
 async def test_sleeping_rpc_device_offline_during_setup(
@@ -331,14 +330,16 @@ async def test_sleeping_rpc_device_offline_during_setup(
 
     assert "will resume when device is online" in caplog.text
     assert "is online (source: setup)" in caplog.text
-    assert hass.states.get("sensor.test_name_temperature") is None
+    entity = hass.states.get("sensor.test_name_temperature")
+    assert entity is None
 
     # Create an online event and verify that device is init successfully
     monkeypatch.setattr(mock_rpc_device, "initialize", AsyncMock())
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get("sensor.test_name_temperature") is not None
+    entity = hass.states.get("sensor.test_name_temperature")
+    assert entity
 
 
 @pytest.mark.parametrize(
@@ -362,13 +363,17 @@ async def test_entry_unload(
     entry = await init_integration(hass, gen)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert get_entity_state(hass, entity_id) is STATE_ON
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_ON
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
-    assert get_entity_state(hass, entity_id) is STATE_UNAVAILABLE
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -387,9 +392,11 @@ async def test_entry_unload_device_not_ready(
 ) -> None:
     """Test entry unload when device is not ready."""
     entry = await init_integration(hass, gen, sleep_period=1000)
-
+    assert entry
     assert entry.state is ConfigEntryState.LOADED
-    assert hass.states.get(entity_id) is None
+
+    entity = hass.states.get(entity_id)
+    assert entity is None
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -410,10 +417,12 @@ async def test_entry_unload_not_connected(
         entry = await init_integration(
             hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
         )
-        entity_id = "switch.test_switch_0"
-
+        assert entry
         assert entry.state is ConfigEntryState.LOADED
-        assert get_entity_state(hass, entity_id) is STATE_ON
+
+        entity = hass.states.get("switch.test_switch_0")
+        assert entity
+        assert entity.state == STATE_ON
         assert not mock_stop_scanner.call_count
 
         monkeypatch.setattr(mock_rpc_device, "connected", False)
@@ -439,10 +448,12 @@ async def test_entry_unload_not_connected_but_we_think_we_are(
         entry = await init_integration(
             hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
         )
-        entity_id = "switch.test_switch_0"
-
+        assert entry
         assert entry.state is ConfigEntryState.LOADED
-        assert get_entity_state(hass, entity_id) is STATE_ON
+
+        entity = hass.states.get("switch.test_switch_0")
+        assert entity
+        assert entity.state == STATE_ON
         assert not mock_stop_scanner.call_count
 
         monkeypatch.setattr(mock_rpc_device, "connected", False)
@@ -475,7 +486,10 @@ async def test_entry_missing_gen(hass: HomeAssistant, mock_block_device: Mock) -
     entry = await init_integration(hass, None)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert hass.states.get("switch.test_name_channel_1").state is STATE_ON
+
+    entity = hass.states.get("switch.test_name_channel_1")
+    assert entity
+    assert entity.state == STATE_ON
 
 
 async def test_entry_missing_port(hass: HomeAssistant) -> None:

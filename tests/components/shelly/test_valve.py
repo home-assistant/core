@@ -10,7 +10,7 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_CLOSE_VALVE, SERVICE_OPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import get_entity_state, init_integration
+from . import init_integration
 
 GAS_VALVE_BLOCK_ID = 6
 
@@ -29,7 +29,9 @@ async def test_block_device_gas_valve(
     assert entry
     assert entry.unique_id == "123456789ABC-valve_0-valve"
 
-    assert get_entity_state(hass, entity_id) == ValveState.CLOSED
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == ValveState.CLOSED
 
     await hass.services.async_call(
         VALVE_DOMAIN,
@@ -38,13 +40,17 @@ async def test_block_device_gas_valve(
         blocking=True,
     )
 
-    assert get_entity_state(hass, entity_id) == ValveState.OPENING
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == ValveState.OPENING
 
     monkeypatch.setattr(mock_block_device.blocks[GAS_VALVE_BLOCK_ID], "valve", "opened")
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert get_entity_state(hass, entity_id) == ValveState.OPEN
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == ValveState.OPEN
 
     await hass.services.async_call(
         VALVE_DOMAIN,
@@ -53,10 +59,14 @@ async def test_block_device_gas_valve(
         blocking=True,
     )
 
-    assert get_entity_state(hass, entity_id) == ValveState.CLOSING
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == ValveState.CLOSING
 
     monkeypatch.setattr(mock_block_device.blocks[GAS_VALVE_BLOCK_ID], "valve", "closed")
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert get_entity_state(hass, entity_id) == ValveState.CLOSED
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == ValveState.CLOSED
