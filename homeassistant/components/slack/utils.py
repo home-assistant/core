@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def upload_file_to_slack(
     client: AsyncWebClient,
-    channel_ids: list[str | None],
+    channel_ids: list[str],
     file_content: bytes | str | None,
     filename: str,
     title: str | None,
@@ -23,7 +23,7 @@ async def upload_file_to_slack(
 
     Args:
         client (AsyncWebClient): The Slack WebClient instance.
-        channel_ids (list[str | None]): List of channel IDs to upload the file to.
+        channel_ids (list[str]): List of channel IDs to upload the file to.
         file_content (Union[bytes, str, None]): Content of the file (local or remote). If None, file_path is used.
         filename (str): The file's name.
         title (str | None): Title of the file in Slack.
