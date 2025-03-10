@@ -708,6 +708,7 @@ class SqueezeBoxMediaPlayerEntity(
             )
 
         result: ServiceResponse = await self._player.async_query(*parameter)
+        _LOGGER.critical("Search Result : %s", result)
         if result:
             return result
         raise ServiceValidationError("Action returned no result")

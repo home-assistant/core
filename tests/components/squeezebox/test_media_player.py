@@ -984,6 +984,7 @@ async def test_squeezebox_search_albums(
             ATTR_SEARCH_STRING: "searchstring",
         },
         blocking=True,
+        return_response=True,
     )
     configured_player.async_query.assert_called_once_with(
         "albums", "0", "1", "tags:laay", "search:searchstring"
@@ -1005,6 +1006,7 @@ async def test_squeezebox_search_favorites(
             ATTR_SEARCH_STRING: "searchstring",
         },
         blocking=True,
+        return_response=True,
     )
     configured_player.async_query.assert_called_once_with(
         "favorites", "items", "0", "1", "search:searchstring"
@@ -1026,6 +1028,7 @@ async def test_squeezebox_search_artists(
             ATTR_SEARCH_STRING: "searchstring",
         },
         blocking=True,
+        return_response=True,
     )
     configured_player.async_query.assert_called_once_with(
         "artists", "0", "1", "", "search:searchstring"
@@ -1047,6 +1050,7 @@ async def test_squeezebox_search_genres(
             ATTR_SEARCH_STRING: "searchstring",
         },
         blocking=True,
+        return_response=True,
     )
     configured_player.async_query.assert_called_once_with(
         "genres", "0", "1", "", "search:searchstring"
@@ -1068,6 +1072,7 @@ async def test_squeezebox_search_tracks(
             ATTR_SEARCH_STRING: "searchstring",
         },
         blocking=True,
+        return_response=True,
     )
     configured_player.async_query.assert_called_once_with(
         "tracks", "0", "1", "tags:aglQrTy", "search:searchstring"
@@ -1089,6 +1094,7 @@ async def test_squeezebox_search_playlists(
             ATTR_SEARCH_STRING: "searchstring",
         },
         blocking=True,
+        return_response=True,
     )
     configured_player.async_query.assert_called_once_with(
         "playlists", "0", "1", "", "search:searchstring"
@@ -1110,6 +1116,7 @@ async def test_squeezebox_search_players(
             ATTR_SEARCH_STRING: "searchstring",
         },
         blocking=True,
+        return_response=True,
     )
     configured_player.async_query.assert_called_once_with("players", "0", "1")
 
