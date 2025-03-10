@@ -50,9 +50,9 @@ class TypeHintMatch:
     kwargs_type: str | None = None
     """kwargs_type is for the special case `**kwargs`"""
     has_async_counterpart: bool = False
-    """Used to check both `function_name` and `async_function_name` functions"""
+    """`function_name` and `async_function_name` share arguments and return type"""
     compulsory: bool = False
-    """Used to bypass ignore_missing_annotations"""
+    """bypass ignore_missing_annotations"""
 
     def need_to_check_function(self, node: nodes.FunctionDef) -> bool:
         """Confirm if function should be checked."""
