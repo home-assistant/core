@@ -2006,25 +2006,34 @@ async def help_test_discovery_setup(
 
 
 async def help_test_skipped_async_ha_write_state(
-    hass: HomeAssistant, topic: str, payload1: str, payload2: str
+    hass: HomeAssistant,
+    topic: str,
+    payload1: str,
+    payload2: str,
+    last_report: bool = False,
 ) -> None:
     """Test entity.async_ha_write_state is only called on changes."""
     with patch(
         "homeassistant.components.mqtt.entity.MqttEntity.async_write_ha_state"
     ) as mock_async_ha_write_state:
-        assert len(mock_async_ha_write_state.mock_calls) == 0
+        expected_count: int = 0
+        assert len(mock_async_ha_write_state.mock_calls) == expected_count
         async_fire_mqtt_message(hass, topic, payload1)
         await hass.async_block_till_done()
-        assert len(mock_async_ha_write_state.mock_calls) == 1
+        expected_count += 1
+        assert len(mock_async_ha_write_state.mock_calls) == expected_count
 
         async_fire_mqtt_message(hass, topic, payload1)
         await hass.async_block_till_done()
-        assert len(mock_async_ha_write_state.mock_calls) == 1
+        expected_count += 1 if last_report else 0
+        assert len(mock_async_ha_write_state.mock_calls) == expected_count
 
         async_fire_mqtt_message(hass, topic, payload2)
+        expected_count += 1
         await hass.async_block_till_done()
-        assert len(mock_async_ha_write_state.mock_calls) == 2
+        assert len(mock_async_ha_write_state.mock_calls) == expected_count
 
         async_fire_mqtt_message(hass, topic, payload2)
+        expected_count += 1 if last_report else 0
         await hass.async_block_till_done()
-        assert len(mock_async_ha_write_state.mock_calls) == 2
+        assert len(mock_async_ha_write_state.mock_calls) == expected_count
