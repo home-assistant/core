@@ -96,11 +96,15 @@ async def async_migrate_entities(hass: HomeAssistant, entry: FoscamConfigEntry) 
         entity_entry: RegistryEntry,
     ) -> dict[str, str] | None:
         """Update unique ID of entity entry."""
-        if (
-            entity_entry.domain == Platform.SWITCH
-            and entity_entry.unique_id == "sleep_switch"
-        ):
-            entity_new_unique_id = f"{entity_entry.config_entry_id}_sleep_switch"
+        if entity_entry.domain == Platform.SWITCH and entity_entry.unique_id in [
+            "sleep_switch",
+            "Ir_switch",
+            "Flip_switch",
+            "Mirror_switch",
+        ]:
+            entity_new_unique_id = (
+                f"{entity_entry.config_entry_id}_f{entity_entry.unique_id}"
+            )
             return {"new_unique_id": entity_new_unique_id}
 
         return None

@@ -22,11 +22,14 @@ async def async_setup_entry(
     """Set up foscam switch from a config entry."""
 
     coordinator = config_entry.runtime_data
-
     await coordinator.async_config_entry_first_refresh()
 
     if coordinator.data["is_asleep"]["supported"]:
         async_add_entities([FoscamSleepSwitch(coordinator, config_entry)])
+    async_add_entities([IRSwitch(coordinator, config_entry)])
+    async_add_entities(
+        [FlipSwitch(coordinator, config_entry), MirrorSwitch(coordinator, config_entry)]
+    )
 
 
 class FoscamSleepSwitch(FoscamEntity, SwitchEntity):
@@ -78,7 +81,182 @@ class FoscamSleepSwitch(FoscamEntity, SwitchEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-
         self.is_asleep = self.coordinator.data["is_asleep"]["status"]
 
+        self.async_write_ha_state()
+
+
+class IRSwitch(FoscamEntity, SwitchEntity):
+    """Implementation of infrared switch."""
+
+    def __init__(
+        self, coordinator: FoscamCoordinator, config_entry: FoscamConfigEntry
+    ) -> None:
+        """Initialize Foscam infrared switch."""
+        super().__init__(coordinator, config_entry.entry_id)
+        self._attr_unique_id = f"{config_entry.entry_id}_Ir_switch"
+        self._attr_translation_key = "Ir_switch"
+        self._attr_has_entity_name = True
+        self.is_IrStatu = self.coordinator.data["is_openIr"]
+
+    @property
+    def is_on(self) -> bool:
+        """Return of infrared light status."""
+        if int(self.is_IrStatu) == 0:
+            return False
+        return True
+
+    @property
+    def name(self) -> str:
+        """Return entity name."""
+        return "Irswitch"
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Open camera Ir."""
+        LOGGER.debug("open camera Ir")
+        ret, _ = await self.hass.async_add_executor_job(
+            self.coordinator.session.set_infra_led_config, 0
+        )
+        ret, _ = await self.hass.async_add_executor_job(
+            self.coordinator.session.open_infra_led
+        )
+
+        if ret != 0:
+            raise HomeAssistantError(f"Error open: {ret}")
+
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Close camera Ir."""
+        LOGGER.debug("close camera Ir")
+        ret, _ = await self.hass.async_add_executor_job(
+            self.coordinator.session.set_infra_led_config, 1
+        )
+        ret, _ = await self.hass.async_add_executor_job(
+            self.coordinator.session.open_infra_led
+        )
+
+        if ret != 0:
+            raise HomeAssistantError(f"Error closing: {ret}")
+
+        await self.coordinator.async_request_refresh()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.is_IrStatu = self.coordinator.data["is_openIr"]
+        self.async_write_ha_state()
+
+
+class FlipSwitch(FoscamEntity, SwitchEntity):
+    """Implementation of vertical and horizontal flip switch."""
+
+    def __init__(
+        self, coordinator: FoscamCoordinator, config_entry: FoscamConfigEntry
+    ) -> None:
+        """Initialize the Foscam vertical and horizontal flip switch."""
+        super().__init__(coordinator, config_entry.entry_id)
+        self._attr_unique_id = f"{config_entry.entry_id}_Flip_switch"
+        self._attr_translation_key = "Flip_switch"
+        self._attr_has_entity_name = True
+        self.is_Flip = self.coordinator.data["is_Flip"]
+
+    @property
+    def is_on(self) -> bool:
+        """Vertical and horizontal flipping status return."""
+        if int(self.is_Flip) == 0:
+            return False
+        return True
+
+    @property
+    def name(self) -> str:
+        """Return entity name."""
+        return "Flipswitch"
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Open camera Flip."""
+        LOGGER.debug("open camera Flip")
+
+        ret, _ = await self.hass.async_add_executor_job(
+            self.coordinator.session.flip_video, 0
+        )
+
+        if ret != 0:
+            raise HomeAssistantError(f"Error open: {ret}")
+
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Close camera Flip."""
+        LOGGER.debug("close camera Flip")
+        ret, _ = await self.hass.async_add_executor_job(
+            self.coordinator.session.flip_video, 1
+        )
+
+        if ret != 0:
+            raise HomeAssistantError(f"Error closing: {ret}")
+
+        await self.coordinator.async_request_refresh()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.is_Flip = self.coordinator.data["is_Flip"]
+        self.async_write_ha_state()
+
+
+class MirrorSwitch(FoscamEntity, SwitchEntity):
+    """Implementation of vertical and horizontal flip switch."""
+
+    def __init__(
+        self, coordinator: FoscamCoordinator, config_entry: FoscamConfigEntry
+    ) -> None:
+        """Initialize the Foscam vertical and horizontal flip switch."""
+        super().__init__(coordinator, config_entry.entry_id)
+        self._attr_unique_id = f"{config_entry.entry_id}_Mirror_switch"
+        self._attr_translation_key = "Mirror_switch"
+        self._attr_has_entity_name = True
+        self.is_Mirror = self.coordinator.data["is_Mirror"]
+
+    @property
+    def is_on(self) -> bool:
+        """Vertical and horizontal flipping status return."""
+        if int(self.is_Mirror) == 0:
+            return False
+        return True
+
+    @property
+    def name(self) -> str:
+        """Return entity name."""
+        return "Mirrorswitch"
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Open camera Mirror."""
+        LOGGER.debug("open camera Mirror")
+
+        ret, _ = await self.hass.async_add_executor_job(
+            self.coordinator.session.mirror_video, 0
+        )
+
+        if ret != 0:
+            raise HomeAssistantError(f"Error open: {ret}")
+
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Close camera Mirror."""
+        LOGGER.debug("close camera Mirror")
+        ret, _ = await self.hass.async_add_executor_job(
+            self.coordinator.session.mirror_video, 1
+        )
+
+        if ret != 0:
+            raise HomeAssistantError(f"Error closing: {ret}")
+
+        await self.coordinator.async_request_refresh()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.is_Mirror = self.coordinator.data["is_Mirror"]
         self.async_write_ha_state()
