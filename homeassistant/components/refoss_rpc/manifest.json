@@ -1,0 +1,18 @@
+{
+  "domain": "refoss_rpc",
+  "name": "Refoss RPC",
+  "codeowners": ["@ashionky"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/refoss_rpc",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["aiorefoss"],
+  "quality_scale": "bronze",
+  "requirements": ["aiorefoss==1.0.1"],
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "refoss*"
+    }
+  ]
+}
