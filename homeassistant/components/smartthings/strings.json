@@ -36,6 +36,9 @@
       "filter_status": {
         "name": "Filter status"
       },
+      "child_lock": {
+        "name": "Child lock"
+      },
       "valve": {
         "name": "Valve"
       }
