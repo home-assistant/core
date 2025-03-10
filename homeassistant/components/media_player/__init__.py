@@ -137,7 +137,7 @@ from .const import (  # noqa: F401
     MediaType,
     RepeatMode,
 )
-from .errors import BrowseError
+from .errors import BrowseError, SearchError  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 

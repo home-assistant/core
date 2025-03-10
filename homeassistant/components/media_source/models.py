@@ -78,6 +78,16 @@ class MediaSourceItem:
 
         return await self.async_media_source().async_browse_media(self)
 
+    async def async_search(
+        self, query: str | None, allowed_content_types: list[MediaClass] | None = None
+    ) -> BrowseMediaSource | None:
+        """Search this item."""
+        if self.domain is None:
+            return None
+        return await self.async_media_source().async_search_media(
+            self, query, allowed_content_types
+        )
+
     async def async_resolve(self) -> PlayMedia:
         """Resolve to playable item."""
         return await self.async_media_source().async_resolve_media(self)
@@ -118,4 +128,13 @@ class MediaSource:
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Browse media."""
+        raise NotImplementedError
+
+    async def async_search_media(
+        self,
+        item: MediaSourceItem,
+        query: str | None,
+        allowed_content_types: list[MediaClass] | None = None,
+    ) -> BrowseMediaSource | None:
+        """Search media."""
         raise NotImplementedError

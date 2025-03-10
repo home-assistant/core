@@ -13,6 +13,8 @@ from homeassistant.components.media_player import (
     CONTENT_AUTH_EXPIRY_TIME,
     BrowseError,
     BrowseMedia,
+    MediaClass,
+    SearchError,
     async_process_play_media_url,
 )
 from homeassistant.components.websocket_api import ActiveConnection
@@ -81,6 +83,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {}
     websocket_api.async_register_command(hass, websocket_browse_media)
     websocket_api.async_register_command(hass, websocket_resolve_media)
+    websocket_api.async_register_command(hass, websocket_search_media)
     frontend.async_register_built_in_panel(
         hass, "media-browser", "media_browser", "hass:play-box-multiple"
     )
@@ -146,6 +149,29 @@ async def async_browse_media(
 
 
 @bind_hass
+async def async_search_media(
+    hass: HomeAssistant,
+    media_content_id: str | None,
+    query: str | None,
+    allowed_content_types: list[MediaClass] | None = None,
+) -> BrowseMediaSource | None:
+    """Return a list of media sources matching the query."""
+    if allowed_content_types is None:
+        allowed_content_types = list(MediaClass)
+    if DOMAIN not in hass.data:
+        raise SearchError("Media Source not loaded")
+
+    try:
+        item = await _get_media_item(hass, media_content_id, None).async_search(
+            query, allowed_content_types
+        )
+    except ValueError as err:
+        raise SearchError(str(err)) from err
+
+    return item
+
+
+@bind_hass
 async def async_resolve_media(
     hass: HomeAssistant,
     media_content_id: str,
@@ -189,6 +215,36 @@ async def websocket_browse_media(
         )
     except BrowseError as err:
         connection.send_error(msg["id"], "browse_media_failed", str(err))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "media_source/search_media",
+        vol.Optional(ATTR_MEDIA_CONTENT_ID, default=""): str,
+        vol.Optional("query", default=""): str,
+        vol.Optional("allowed_content_types"): vol.All(
+            cv.ensure_list, [vol.In(MediaClass)]
+        ),
+    }
+)
+@websocket_api.async_response
+async def websocket_search_media(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Search available media."""
+    try:
+        media = await async_search_media(
+            hass,
+            msg.get("media_content_id", ""),
+            msg.get("query", ""),
+            msg.get("allowed_content_types"),
+        )
+        connection.send_result(
+            msg["id"],
+            media.as_dict() if media else {},
+        )
+    except SearchError as err:
+        connection.send_error(msg["id"], "search_media_failed", str(err))
 
 
 @websocket_api.websocket_command(
