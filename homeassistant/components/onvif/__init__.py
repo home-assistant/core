@@ -190,12 +190,21 @@ def _migrate_camera_entities_unique_ids(
                 index = int(entity.unique_id[len(old_uid_start) :])
             except ValueError:
                 LOGGER.error(
-                    "Failed to migrate unique id for '%s' as the ONVIF profile index could not be parsed from '%s'",
+                    "Failed to migrate unique id for '%s' as the ONVIF profile index could not be parsed from unique id '%s'",
                     entity.entity_id,
                     entity.unique_id,
                 )
                 continue
-        token = device.profiles[index].token
+        try:
+            token = device.profiles[index].token
+        except IndexError:
+            LOGGER.error(
+                "Failed to migrate unique id for '%s' as the ONVIF profile index '%d' parsed from unique id '%s' could not be found",
+                entity.entity_id,
+                index,
+                entity.unique_id,
+            )
+            continue
         new_uid = f"{new_uid_start}{token}"
         LOGGER.debug(
             "Migrating unique id for '%s' from '%s' to '%s'",
