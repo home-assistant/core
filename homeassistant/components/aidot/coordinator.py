@@ -94,8 +94,7 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(minutes=1),
-            # update_interval=timedelta(hours=6),
+            update_interval=timedelta(hours=6),
         )
         self.client = AidotClient(
             session=async_get_clientsession(hass),
