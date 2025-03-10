@@ -17,6 +17,7 @@ from .helpers import (
     SIGNAL_ADD_ENTITIES,
     async_add_entities as zha_async_add_entities,
     get_zha_data,
+    migrate_entities_unique_ids,
 )
 
 
@@ -28,6 +29,8 @@ async def async_setup_entry(
     """Set up the Zigbee Home Automation device tracker from config entry."""
     zha_data = get_zha_data(hass)
     entities_to_create = zha_data.platforms[Platform.DEVICE_TRACKER]
+
+    await migrate_entities_unique_ids(hass, Platform.DEVICE_TRACKER, entities_to_create)
 
     unsub = async_dispatcher_connect(
         hass,
