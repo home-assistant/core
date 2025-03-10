@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "remote_control": {
+        "default": "mdi:remote-off",
+        "state": {
+          "on": "mdi:remote"
+        }
+      }
+    }
+  }
+}
