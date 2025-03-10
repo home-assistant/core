@@ -149,7 +149,7 @@ def _format_tool(
     return Tool(
         function_declarations=[
             FunctionDeclaration(
-                name=tool.name,
+                name=tool.name if tool.name != "HassListAddItem" else "ListAddItem",
                 description=tool.description,
                 parameters=parameters,
             )
@@ -433,9 +433,12 @@ class GoogleGenerativeAIConversationEntity(
                     continue
                 tool_call = part.function_call
                 tool_name = tool_call.name
+                ha_tool_name = (
+                    tool_name if tool_name != "ListAddItem" else "HassListAddItem"
+                )
                 tool_args = _escape_decode(tool_call.args)
                 tool_calls.append(
-                    llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
+                    llm.ToolInput(tool_name=ha_tool_name, tool_args=tool_args)
                 )
 
             chat_request = _create_google_tool_response_content(
