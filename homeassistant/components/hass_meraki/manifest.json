@@ -1,0 +1,12 @@
+{
+  "domain": "hass_meraki",
+  "name": "Meraki Network",
+  "codeowners": ["@felixblang"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/hass_meraki",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["meraki==1.54.0"],
+  "version": "0.1.0"
+}
