@@ -138,11 +138,13 @@ async def test_listen_failure_during_setup_before_forward_entry(
     client.listen.side_effect = error
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
+    assert client.disconnect.call_count == 0
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert client.disconnect.call_count == 1
 
 
 @pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
@@ -176,42 +178,55 @@ async def test_listen_failure_during_setup_after_forward_entry(
         data={"url": "ws://test.org", "data_collection_opted_in": True},
     )
     entry.add_to_hass(hass)
+    assert client.disconnect.call_count == 0
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert client.disconnect.call_count == 1
 
 
-@pytest.mark.usefixtures("client")
 @pytest.mark.parametrize(
-    ("core_state", "final_config_entry_state"),
+    ("core_state", "final_config_entry_state", "disconnect_call_count"),
     [
-        (CoreState.running, ConfigEntryState.SETUP_RETRY),
-        (CoreState.stopping, ConfigEntryState.LOADED),
+        (
+            CoreState.running,
+            ConfigEntryState.SETUP_RETRY,
+            2,
+        ),  # the reload will cause a disconnect call too
+        (
+            CoreState.stopping,
+            ConfigEntryState.LOADED,
+            0,
+        ),  # the home assistant stop event will handle the disconnect
     ],
 )
 @pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
 async def test_listen_failure_after_setup(
     hass: HomeAssistant,
+    client: MagicMock,
     integration: MockConfigEntry,
     listen_block: asyncio.Event,
     listen_result: asyncio.Future[None],
     error: Exception,
     core_state: CoreState,
     final_config_entry_state: ConfigEntryState,
+    disconnect_call_count: int,
 ) -> None:
     """Test we handle errors after setup for client listen."""
     config_entry = integration
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.state is CoreState.running
-    hass.set_state(core_state)
+    assert client.disconnect.call_count == 0
 
+    hass.set_state(core_state)
     listen_block.set()
     listen_result.set_exception(error)
     await hass.async_block_till_done()
 
     assert config_entry.state is final_config_entry_state
+    assert client.disconnect.call_count == disconnect_call_count
 
 
 async def test_new_entity_on_value_added(
