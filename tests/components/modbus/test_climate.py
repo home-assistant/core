@@ -871,7 +871,7 @@ async def test_hvac_onoff_coil_update(
 async def test_service_climate_action_update(
     hass: HomeAssistant, mock_modbus_ha, result, register_words
 ) -> None:
-    """Run test for service homeassistant.update_entity."""
+    """Test HVAC action updates."""
     mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
