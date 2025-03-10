@@ -27,6 +27,12 @@
     },
     "call_query": {
       "service": "mdi:database"
+    },
+    "search": {
+      "service": "mdi:folder-search-outline"
+    },
+    "play": {
+      "service": "mdi:folder-play-outline"
     }
   }
 }

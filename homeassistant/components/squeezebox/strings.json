@@ -60,6 +60,50 @@
           "description": "[%key:component::squeezebox::services::call_method::fields::parameters::description%]"
         }
       }
+    },
+    "search": {
+      "name": "Search music library & players",
+      "description": "Searches for items in the music library & players",
+      "fields": {
+        "command": {
+          "name": "Items",
+          "description": "The items to search for on LMS."
+        },
+        "return_items": {
+          "name": "Number of items",
+          "description": "The number of items to return."
+        },
+        "search_string": {
+          "name": "Search string",
+          "description": "Limit the search to items matching the search string."
+        },
+        "tags": {
+          "name": "Tags",
+          "description": "Override default tags for search"
+        }
+      }
+    },
+    "play": {
+      "name": "Play music",
+      "description": "Plays an item in the music library",
+      "fields": {
+        "command": {
+          "name": "Items",
+          "description": "The items to play on LMS."
+        },
+        "search_type": {
+          "name": "Search type",
+          "description": "Full text search for a string, or directly provide an item_id."
+        },
+        "search_string": {
+          "name": "Search string",
+          "description": "Search for items matching the search string or item_id."
+        },
+        "playlist_action": {
+          "name": "Playlist action",
+          "description": "Define how the item should be added to the playlist."
+        }
+      }
     }
   },
   "entity": {
@@ -116,6 +160,42 @@
           "browse_limit": "Maximum number of items when browsing or in a playlist.",
           "volume_step": "Amount to adjust the volume when turning volume up or down."
         }
+      }
+    }
+  },
+  "selector": {
+    "search_command_selector": {
+      "options": {
+        "albums": "Albums",
+        "artists": "Artists",
+        "tracks": "Tracks",
+        "playlists": "Playlists",
+        "genres": "Genres",
+        "favorites": "Favorites",
+        "players": "Players"
+      }
+    },
+    "play_command_selector": {
+      "options": {
+        "album": "Album",
+        "artist": "Artist",
+        "track": "Track",
+        "playlist": "Playlist",
+        "genre": "Genre",
+        "favorite": "Favorite"
+      }
+    },
+    "search_type_selector": {
+      "options": {
+        "text": "Full text",
+        "item": "Item ID"
+      }
+    },
+    "playlist_type_selector": {
+      "options": {
+        "play": "Replace the current playlist and play the item",
+        "add": "Add the item to the end of the current playlist",
+        "next": "Play the item next, after the current item on the playlist"
       }
     }
   }

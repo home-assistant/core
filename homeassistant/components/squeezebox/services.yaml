@@ -30,3 +30,82 @@ call_query:
       advanced: true
       selector:
         object:
+search:
+  target:
+    entity:
+      integration: squeezebox
+      domain: media_player
+  fields:
+    command:
+      required: true
+      selector:
+        select:
+          translation_key: "search_command_selector"
+          multiple: false
+          options:
+            - albums
+            - artists
+            - tracks
+            - playlists
+            - genres
+            - favorites
+            - players
+    return_items:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 10000
+          mode: box
+    search_string:
+      required: false
+      example: Revolver
+      selector:
+        text:
+    tags:
+      required: false
+      selector:
+        text:
+play:
+  target:
+    entity:
+      integration: squeezebox
+      domain: media_player
+  fields:
+    command:
+      required: true
+      selector:
+        select:
+          translation_key: "play_command_selector"
+          multiple: false
+          options:
+            - album
+            - artist
+            - track
+            - playlist
+            - genre
+            - favorite
+    search_type:
+      required: true
+      selector:
+        select:
+          translation_key: "search_type_selector"
+          multiple: false
+          options:
+            - text
+            - item
+    search_string:
+      required: true
+      example: Revolver
+      selector:
+        text:
+    playlist_action:
+      required: true
+      selector:
+        select:
+          translation_key: "playlist_type_selector"
+          multiple: false
+          options:
+            - play
+            - add
+            - next
