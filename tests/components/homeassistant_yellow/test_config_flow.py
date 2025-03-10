@@ -350,7 +350,7 @@ async def test_firmware_options_flow(hass: HomeAssistant) -> None:
             return_value=FirmwareInfo(
                 device=RADIO_DEVICE,
                 firmware_type=ApplicationType.EZSP,
-                firmware_version=None,
+                firmware_version="7.4.4.0 build 0",
                 owners=[],
                 source="probe",
             ),
@@ -366,6 +366,7 @@ async def test_firmware_options_flow(hass: HomeAssistant) -> None:
 
     assert config_entry.data == {
         "firmware": "ezsp",
+        "firmware_version": "7.4.4.0 build 0",
     }
 
 
