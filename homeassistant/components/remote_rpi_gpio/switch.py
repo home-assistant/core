@@ -71,7 +71,7 @@ class RemoteRPiGPIOSwitch(SwitchEntity):
         return self._name
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """If unable to access real state of the entity."""
         return True
 
