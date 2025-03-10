@@ -40,7 +40,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -983,6 +983,8 @@ async def client_listen(
     # will be acquired on reconnect.
     # All model instances will be replaced when the new state is acquired.
     if not hass.is_stopping:
+        if entry.state != ConfigEntryState.LOADED:
+            raise HomeAssistantError("Listen task ended unexpectedly")
         LOGGER.debug("Disconnected from server. Reloading integration")
         hass.config_entries.async_schedule_reload(entry.entry_id)
 
