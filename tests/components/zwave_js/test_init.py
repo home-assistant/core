@@ -3,6 +3,7 @@
 import asyncio
 from copy import deepcopy
 import logging
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohasupervisor import SupervisorError
@@ -128,10 +129,52 @@ async def test_noop_statistics(hass: HomeAssistant, client) -> None:
 
 
 @pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
-async def test_listen_failure_during_setup(hass: HomeAssistant, client, error) -> None:
-    """Test we handle errors during setup for client listen."""
+async def test_listen_failure_during_setup_before_forward_entry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    error: Exception,
+) -> None:
+    """Test we handle errors during setup before forward entry for client listen."""
     client.listen.side_effect = error
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
+async def test_listen_failure_during_setup_after_forward_entry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    error: Exception,
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
+) -> None:
+    """Test we handle errors during setup after forward entry for client listen."""
+
+    async def send_command_side_effect(*args: Any, **kwargs: Any) -> None:
+        """Mock send command."""
+        listen_block.set()
+        listen_result.set_exception(error)
+        # Yield to allow the listen task to run
+        await asyncio.sleep(0)
+
+    async def listen(driver_ready: asyncio.Event) -> None:
+        """Mock listen."""
+        driver_ready.set()
+        client.async_send_command.side_effect = send_command_side_effect
+        await listen_block.wait()
+        await listen_result
+
+    client.listen.side_effect = listen
+
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": True},
+    )
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
