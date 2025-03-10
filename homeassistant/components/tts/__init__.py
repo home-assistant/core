@@ -62,7 +62,7 @@ from .const import (
     DOMAIN,
     TtsAudioType,
 )
-from .entity import TextToSpeechEntity
+from .entity import TextToSpeechEntity, TTSAudioRequest
 from .helper import get_engine_instance
 from .legacy import PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, Provider, async_setup_legacy
 from .media_source import generate_media_source_id, media_source_id_to_kwargs
@@ -795,9 +795,15 @@ class SpeechManager:
                 message, language, options
             )
         else:
-            extension, data = await engine_instance.internal_async_get_tts_audio(
-                message, language, options
+
+            async def message_gen() -> AsyncGenerator[str]:
+                yield message
+
+            tts_result = await engine_instance.internal_async_stream_tts_audio(
+                TTSAudioRequest(language, options, message_gen())
             )
+            extension = tts_result.extension
+            data = b"".join([chunk async for chunk in tts_result.data_gen])
 
         if data is None or extension is None:
             raise HomeAssistantError(
