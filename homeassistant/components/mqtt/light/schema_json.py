@@ -31,7 +31,6 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
     brightness_supported,
-    color_supported,
     valid_supported_color_modes,
 )
 from homeassistant.const import (
@@ -293,7 +292,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         elif values["state"] is None:
             self._attr_is_on = None
 
-        if color_supported(self.supported_color_modes) and "color_mode" in values:
+        if "color_mode" in values:
             self._update_color(values)
 
         if brightness_supported(self.supported_color_modes):
