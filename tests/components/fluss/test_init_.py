@@ -10,7 +10,7 @@ from fluss_api import (
 )
 import pytest
 
-from homeassistant.components.fluss import DOMAIN, PLATFORMS, async_setup_entry
+from homeassistant.components.fluss import PLATFORMS, async_setup_entry
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -87,16 +87,15 @@ async def test_async_setup_entry_success(mock_hass, mock_entry) -> None:
     ) as mock_api_client_class:
         result = await async_setup_entry(mock_hass, mock_entry)
 
-        # Verify FlussApiClient was initialized with correct parameters
+        # Verify FlussApiClient was initialized with the correct API key and URL
         mock_api_client_class.assert_called_once_with(
             mock_entry.data["api_key"],
             "https://zgekzokxrl.execute-api.eu-west-1.amazonaws.com/v1/api/",
         )
 
         assert result is True
+        # Verify that the API client is stored in the entry's runtime data
         assert mock_entry.runtime_data == mock_api_client
         mock_hass.config_entries.async_forward_entry_setups.assert_called_once_with(
             mock_entry, PLATFORMS
         )
-        # Verify that the API client is stored in hass.data
-        assert mock_hass.data[DOMAIN][mock_entry.entry_id] == mock_api_client
