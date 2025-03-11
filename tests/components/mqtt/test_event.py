@@ -45,7 +45,6 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
-    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -716,76 +715,6 @@ async def test_entity_icon_and_entity_picture(
     await help_test_entity_icon_and_entity_picture(
         hass, mqtt_mock_entry, domain, config
     )
-
-
-@pytest.mark.parametrize(
-    "hass_config",
-    [
-        help_custom_config(
-            event.DOMAIN,
-            DEFAULT_CONFIG,
-            (
-                {
-                    "availability_topic": "availability-topic",
-                    "json_attributes_topic": "json-attributes-topic",
-                },
-            ),
-        )
-    ],
-)
-@pytest.mark.parametrize(
-    ("topic", "payload1", "payload2"),
-    [
-        ("availability-topic", "online", "offline"),
-        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
-    ],
-)
-async def test_skipped_async_ha_write_state(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    topic: str,
-    payload1: str,
-    payload2: str,
-) -> None:
-    """Test a write state command is only called when there is change."""
-    await mqtt_mock_entry()
-    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
-
-
-@pytest.mark.freeze_time("2023-09-01 00:00:00+00:00")
-@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
-async def test_skipped_async_ha_write_state2(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test a write state command is only called when there is a valid event."""
-    await mqtt_mock_entry()
-    topic = "test-topic"
-    payload1 = '{"event_type": "press"}'
-    payload2 = '{"event_type": "unknown"}'
-    with patch(
-        "homeassistant.components.mqtt.entity.MqttEntity.async_write_ha_state"
-    ) as mock_async_ha_write_state:
-        assert len(mock_async_ha_write_state.mock_calls) == 0
-        async_fire_mqtt_message(hass, topic, payload1)
-        await hass.async_block_till_done()
-        assert len(mock_async_ha_write_state.mock_calls) == 1
-
-        freezer.move_to("2023-09-01 00:00:10+00:00")
-        async_fire_mqtt_message(hass, topic, payload1)
-        await hass.async_block_till_done()
-        assert len(mock_async_ha_write_state.mock_calls) == 2
-
-        freezer.move_to("2023-09-01 00:00:20+00:00")
-        async_fire_mqtt_message(hass, topic, payload2)
-        await hass.async_block_till_done()
-        assert len(mock_async_ha_write_state.mock_calls) == 2
-
-        freezer.move_to("2023-09-01 00:00:30+00:00")
-        async_fire_mqtt_message(hass, topic, payload2)
-        await hass.async_block_till_done()
-        assert len(mock_async_ha_write_state.mock_calls) == 2
 
 
 @pytest.mark.parametrize(

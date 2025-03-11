@@ -195,9 +195,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        if not self.add_subscription(
-            CONF_STATE_TOPIC, self._message_received, {"_attr_native_value"}
-        ):
+        if not self.add_subscription(CONF_STATE_TOPIC, self._message_received):
             # Force into optimistic mode.
             self._attr_assumed_state = True
             return

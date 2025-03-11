@@ -399,7 +399,6 @@ class MqttAttributesMixin(Entity):
                     "msg_callback": partial(
                         self._message_callback,  # type: ignore[attr-defined]
                         self._attributes_message_received,
-                        {"_attr_extra_state_attributes"},
                     ),
                     "entity_id": self.entity_id,
                     "qos": self._attributes_config.get(CONF_QOS),
@@ -513,7 +512,6 @@ class MqttAvailabilityMixin(Entity):
                 "msg_callback": partial(
                     self._message_callback,  # type: ignore[attr-defined]
                     self._availability_message_received,
-                    {"available"},
                 ),
                 "entity_id": self.entity_id,
                 "qos": self._avail_config[CONF_QOS],
@@ -1450,15 +1448,11 @@ class MqttEntity(
     def _message_callback(
         self,
         msg_callback: MessageCallbackType,
-        attributes: set[str] | None,
         msg: ReceiveMessage,
+        *,
+        disable_write_state: bool = False,
     ) -> None:
         """Process the message callback."""
-        if attributes is not None:
-            attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...] = tuple(
-                (attribute, getattr(self, attribute, UNDEFINED))
-                for attribute in attributes
-            )
         mqtt_data = self.hass.data[DATA_MQTT]
         messages = mqtt_data.debug_info_entities[self.entity_id]["subscriptions"][
             msg.subscribed_topic
@@ -1472,14 +1466,14 @@ class MqttEntity(
             _LOGGER.warning(exc)
             return
 
-        if attributes is not None and self._attrs_have_changed(attrs_snapshot):
+        if not disable_write_state:
             mqtt_data.state_write_requests.write_state_request(self)
 
     def add_subscription(
         self,
         state_topic_config_key: str,
         msg_callback: Callable[[ReceiveMessage], None],
-        tracked_attributes: set[str] | None,
+        disable_write_state: bool = False,
         disable_encoding: bool = False,
     ) -> bool:
         """Add a subscription."""
@@ -1494,7 +1488,9 @@ class MqttEntity(
             self._subscriptions[state_topic_config_key] = {
                 "topic": self._config[state_topic_config_key],
                 "msg_callback": partial(
-                    self._message_callback, msg_callback, tracked_attributes
+                    self._message_callback,
+                    msg_callback,
+                    disable_write_state=disable_write_state,
                 ),
                 "entity_id": self.entity_id,
                 "qos": qos,

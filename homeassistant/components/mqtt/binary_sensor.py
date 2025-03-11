@@ -234,9 +234,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        self.add_subscription(
-            CONF_STATE_TOPIC, self._state_message_received, {"_attr_is_on", "_expired"}
-        )
+        self.add_subscription(CONF_STATE_TOPIC, self._state_message_received)
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""

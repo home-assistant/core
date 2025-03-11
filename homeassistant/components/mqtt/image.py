@@ -185,11 +185,9 @@ class MqttImage(MqttEntity, ImageEntity):
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
-            CONF_IMAGE_TOPIC, self._image_data_received, None, disable_encoding=True
+            CONF_IMAGE_TOPIC, self._image_data_received, disable_encoding=True
         )
-        self.add_subscription(
-            CONF_URL_TOPIC, self._image_from_url_request_received, None
-        )
+        self.add_subscription(CONF_URL_TOPIC, self._image_from_url_request_received)
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
