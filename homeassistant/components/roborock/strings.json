@@ -355,7 +355,7 @@
         "name": "Selected map"
       },
       "dust_collection_mode": {
-        "name": "Dust collection mode",
+        "name": "Empty mode",
         "state": {
           "smart": "Smart",
           "light": "Light",
