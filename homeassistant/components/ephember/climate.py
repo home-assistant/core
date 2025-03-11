@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import datetime
 from datetime import timedelta
 import logging
 from typing import Any
@@ -38,6 +37,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
+
+# Hot water devices - no temperature control
+HotWaterDevices = [4, 514]
 
 # Return cached results if last scan was less then this time ago
 SCAN_INTERVAL = timedelta(seconds=120)
@@ -104,8 +106,8 @@ class EphEmberThermostat(ClimateEntity):
         self._zone = zone
         self.unique_id = zone["zoneid"]
 
-        # hot water = true, is immersive device without target temperature.
-        if zone["deviceType"] == 514:
+        # hot water = true, is immersive device without target temperature control.
+        if zone["deviceType"] in HotWaterDevices:
             self._hot_water = True
         else:
             self._hot_water = False
@@ -216,16 +218,8 @@ class EphEmberThermostat(ClimateEntity):
 
     def update(self) -> None:
         """Get the latest data."""
-        zone = self._ember.get_zone(self._zone["zoneid"])
-        targetDateTime = datetime.datetime.fromtimestamp(
-            zone["timestamp"] / 1e3
-        ) + datetime.timedelta(seconds=10)
-
-        if targetDateTime < datetime.datetime.now():
-            self._ember.get_zones(True)
-            zone = self._ember.get_zone(self._zone["zoneid"])
-
-        self._zone = zone
+        self._ember.get_zones()
+        self._zone = self._ember.get_zone(self._zone["zoneid"])
 
     @staticmethod
     def map_mode_hass_eph(operation_mode):
