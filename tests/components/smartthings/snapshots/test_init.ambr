@@ -1124,6 +1124,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[tplink_p110]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '1.0',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '6602696a-1e48-49e4-919f-69406f5b5da1',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'TP-Link',
+    'model': 'P110',
+    'model_id': None,
+    'name': 'Spülmaschine',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '1.3.1 Build 240621 Rel.162048',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[vd_network_audio_002s]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
