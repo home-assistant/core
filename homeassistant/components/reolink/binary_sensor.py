@@ -46,11 +46,11 @@ class ReolinkBinarySensorEntityDescription(
 
 
 @dataclass(frozen=True, kw_only=True)
-class ReolinkSmartBinarySensorEntityDescription(
+class ReolinkSmartAIBinarySensorEntityDescription(
     BinarySensorEntityDescription,
     ReolinkEntityDescription,
 ):
-    """A class that describes smart binary sensor entities."""
+    """A class that describes Smart AI binary sensor entities."""
 
     ai_type: str = ""
     value: Callable[[Host, int, int], bool]
@@ -137,7 +137,7 @@ BINARY_SENSORS = (
     ),
 )
 
-BINARY_SMART_SENSORS = (
+BINARY_SMART_AI_SENSORS = (
     ReolinkSmartBinarySensorEntityDescription(
         key="crossline",
         ai_type="people",
