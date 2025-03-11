@@ -662,6 +662,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[ecobee_thermostat_offline]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '250308073247',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '1888b38f-6246-4f1e-911b-bfcfb66999db',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'ecobee',
+    'model': 'nikeSmart-thermostat',
+    'model_id': None,
+    'name': 'Downstairs',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '250308073247',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[fake_fan]
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
