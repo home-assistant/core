@@ -8,6 +8,7 @@ on:
       - dev
       - rc
       - master
+      - some-feature
   pull_request: ~
   workflow_dispatch:
     inputs:

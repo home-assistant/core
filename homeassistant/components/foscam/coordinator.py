@@ -54,4 +54,20 @@ class FoscamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.session.is_asleep
             )
             data["is_asleep"] = {"supported": ret == 0, "status": is_asleep}
+
+            ret, is_openIr = await self.hass.async_add_executor_job(
+                self.session.get_infra_led_config
+            )
+            data["is_openIr"] = is_openIr["mode"]
+
+            ret, is_Flip = await self.hass.async_add_executor_job(
+                self.session.get_mirror_and_flip_setting
+            )
+            data["is_Flip"] = is_Flip["isFlip"]
+
+            ret, is_Flip = await self.hass.async_add_executor_job(
+                self.session.get_mirror_and_flip_setting
+            )
+            data["is_Mirror"] = is_Flip["isMirror"]
+
             return data
