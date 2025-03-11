@@ -1,6 +1,6 @@
 """Test init for Snoo."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from python_snoo.exceptions import SnooAuthException
 
@@ -9,10 +9,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import async_init_integration
-from .conftest import MockedSnoo
 
 
-async def test_async_setup_entry(hass: HomeAssistant, bypass_api: MockedSnoo) -> None:
+async def test_async_setup_entry(hass: HomeAssistant, bypass_api: AsyncMock) -> None:
     """Test a successful setup entry."""
     entry = await async_init_integration(hass)
     assert len(hass.states.async_all("sensor")) == 2

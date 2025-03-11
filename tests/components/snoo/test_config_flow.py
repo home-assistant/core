@@ -1,6 +1,6 @@
 """Test the Happiest Baby Snoo config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from python_snoo.exceptions import InvalidSnooAuth, SnooAuthException
@@ -13,11 +13,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import create_entry
-from .conftest import MockedSnoo
+from .const import MOCKED_AUTH
 
 
 async def test_config_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, bypass_api: MockedSnoo
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, bypass_api: AsyncMock
 ) -> None:
     """Test we create the entry successfully."""
     result = await hass.config_entries.flow.async_init(
@@ -55,7 +55,6 @@ async def test_config_flow_success(
 async def test_form_auth_issues(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    bypass_api: MockedSnoo,
     exception,
     error_msg,
 ) -> None:
@@ -64,27 +63,32 @@ async def test_form_auth_issues(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     # Set Authorize to fail.
-    bypass_api.set_auth_error(exception)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-        },
-    )
+    with patch(
+        "homeassistant.components.snoo.config_flow.Snoo.authorize",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
     # Reset auth back to the original
-    bypass_api.set_auth_error(None)
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": error_msg}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-        },
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.snoo.config_flow.Snoo.authorize",
+        return_value=MOCKED_AUTH,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
@@ -96,7 +100,7 @@ async def test_form_auth_issues(
 
 
 async def test_account_already_configured(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, bypass_api
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, bypass_api: AsyncMock
 ) -> None:
     """Ensure we abort if the config flow already exists."""
     create_entry(hass)
