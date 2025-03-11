@@ -422,7 +422,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.4.0
+aiowebdav2==0.4.1
 
 # homeassistant.components.webostv
 aiowebostv==0.7.3
@@ -2881,7 +2881,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.6.10
+teslemetry-stream==0.6.12
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
