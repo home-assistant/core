@@ -277,32 +277,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 KEEP_CAPABILITY_QUIRK: dict[
     Capability | str, Callable[[dict[Attribute | str, Status]], bool]
 ] = {
+    Capability.DRYER_OPERATING_STATE: (
+        lambda status: status[Attribute.SUPPORTED_MACHINE_STATES].value is not None
+    ),
     Capability.WASHER_OPERATING_STATE: (
         lambda status: status[Attribute.SUPPORTED_MACHINE_STATES].value is not None
     ),
     Capability.DEMAND_RESPONSE_LOAD_CONTROL: lambda _: True,
-}
-
-POWER_CONSUMPTION_FIELDS = {
-    "energy",
-    "power",
-    "deltaEnergy",
-    "powerEnergy",
-    "energySaved",
-}
-
-CAPABILITY_VALIDATION: dict[
-    Capability | str, Callable[[dict[Attribute | str, Status]], bool]
-] = {
-    Capability.POWER_CONSUMPTION_REPORT: (
-        lambda status: (
-            (power_consumption := status[Attribute.POWER_CONSUMPTION].value) is not None
-            and all(
-                field in cast(dict, power_consumption)
-                for field in POWER_CONSUMPTION_FIELDS
-            )
-        )
-    )
 }
 
 
@@ -328,8 +309,4 @@ def process_status(
                     or not KEEP_CAPABILITY_QUIRK[capability](main_component[capability])
                 ):
                     del main_component[capability]
-    for capability in list(main_component):
-        if capability in CAPABILITY_VALIDATION:
-            if not CAPABILITY_VALIDATION[capability](main_component[capability]):
-                del main_component[capability]
     return status
