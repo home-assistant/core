@@ -36,7 +36,6 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.IMAGE,
     Platform.NUMBER,
-    Platform.SCENE,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
