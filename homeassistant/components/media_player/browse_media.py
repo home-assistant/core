@@ -105,6 +105,7 @@ class BrowseMedia:
         children_media_class: MediaClass | str | None = None,
         thumbnail: str | None = None,
         not_shown: int = 0,
+        can_search: bool = False,
     ) -> None:
         """Initialize browse media item."""
         self.media_class = media_class
@@ -117,6 +118,7 @@ class BrowseMedia:
         self.children_media_class = children_media_class
         self.thumbnail = thumbnail
         self.not_shown = not_shown
+        self.can_search = can_search
 
     def as_dict(self, *, parent: bool = True) -> dict[str, Any]:
         """Convert Media class to browse media dictionary."""
@@ -131,6 +133,7 @@ class BrowseMedia:
             "children_media_class": self.children_media_class,
             "can_play": self.can_play,
             "can_expand": self.can_expand,
+            "can_search": self.can_search,
             "thumbnail": self.thumbnail,
         }
 
