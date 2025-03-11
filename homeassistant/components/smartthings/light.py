@@ -147,14 +147,21 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
         """Update entity attributes when the device status has changed."""
         # Brightness and transition
         if brightness_supported(self._attr_supported_color_modes):
-            self._attr_brightness = int(
-                convert_scale(
-                    self.get_attribute_value(Capability.SWITCH_LEVEL, Attribute.LEVEL),
-                    100,
-                    255,
-                    0,
+            if (
+                brightness := self.get_attribute_value(
+                    Capability.SWITCH_LEVEL, Attribute.LEVEL
                 )
-            )
+            ) is None:
+                self._attr_brightness = None
+            else:
+                self._attr_brightness = int(
+                    convert_scale(
+                        brightness,
+                        100,
+                        255,
+                        0,
+                    )
+                )
         # Color Temperature
         if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
             self._attr_color_temp_kelvin = self.get_attribute_value(
@@ -162,16 +169,21 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
             )
         # Color
         if ColorMode.HS in self._attr_supported_color_modes:
-            self._attr_hs_color = (
-                convert_scale(
-                    self.get_attribute_value(Capability.COLOR_CONTROL, Attribute.HUE),
-                    100,
-                    360,
-                ),
-                self.get_attribute_value(
-                    Capability.COLOR_CONTROL, Attribute.SATURATION
-                ),
-            )
+            if (
+                hue := self.get_attribute_value(Capability.COLOR_CONTROL, Attribute.HUE)
+            ) is None:
+                self._attr_hs_color = None
+            else:
+                self._attr_hs_color = (
+                    convert_scale(
+                        hue,
+                        100,
+                        360,
+                    ),
+                    self.get_attribute_value(
+                        Capability.COLOR_CONTROL, Attribute.SATURATION
+                    ),
+                )
 
     async def async_set_color(self, hs_color):
         """Set the color of the device."""
@@ -217,6 +229,10 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
         super()._update_handler(event)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if light is on."""
-        return self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on"
+        if (
+            state := self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH)
+        ) is None:
+            return None
+        return state == "on"
