@@ -26,6 +26,7 @@ from .const import (
     DRAWABLES,
     IMAGE_CACHE_INTERVAL,
     MAP_FILE_FORMAT,
+    MAP_SCALE,
     MAP_SLEEP,
 )
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
@@ -47,7 +48,11 @@ async def async_setup_entry(
         if config_entry.options.get(DRAWABLES, {}).get(drawable, default_value)
     ]
     parser = RoborockMapDataParser(
-        ColorsPalette(), Sizes(), drawables, ImageConfig(), []
+        ColorsPalette(),
+        Sizes({k: v * MAP_SCALE for k, v in Sizes.SIZES.items()}),
+        drawables,
+        ImageConfig(scale=MAP_SCALE),
+        [],
     )
 
     def parse_image(map_bytes: bytes) -> bytes | None:
