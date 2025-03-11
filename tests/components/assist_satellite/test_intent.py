@@ -4,28 +4,28 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
+from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_DOMAIN, MockAssistSatellite
 
+from tests.components.tts.common import MockResultStream
+
 
 @pytest.fixture
-def mock_tts():
+async def mock_tts(hass: HomeAssistant):
     """Mock TTS service."""
+    assert await async_setup_component(hass, "tts", {})
     with (
         patch(
-            "homeassistant.components.assist_satellite.entity.tts_generate_media_source_id",
+            "homeassistant.components.tts.generate_media_source_id",
             return_value="media-source://bla",
         ),
         patch(
-            "homeassistant.components.media_source.async_resolve_media",
-            return_value=PlayMedia(
-                url="https://www.home-assistant.io/resolved.mp3",
-                mime_type="audio/mp3",
-            ),
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
         ),
     ):
         yield
