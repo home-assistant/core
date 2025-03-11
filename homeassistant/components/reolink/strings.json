@@ -480,7 +480,19 @@
         "name": "AI animal sensitivity"
       },
       "crossline_sensitivity": {
-        "name": "AI Crossline {zone_name} sensitivity"
+        "name": "AI crossline {zone_name} sensitivity"
+      },
+      "intrusion_sensitivity": {
+        "name": "AI intrusion {zone_name} sensitivity"
+      },
+      "linger_sensitivity": {
+        "name": "AI linger {zone_name} sensitivity"
+      },
+      "forgotten_item_sensitivity": {
+        "name": "AI item forgotten {zone_name} sensitivity"
+      },
+      "taken_item_sensitivity": {
+        "name": "AI item taken {zone_name} sensitivity"
       },
       "ai_face_delay": {
         "name": "AI face delay"
@@ -499,6 +511,18 @@
       },
       "ai_animal_delay": {
         "name": "AI animal delay"
+      },
+      "intrusion_delay": {
+        "name": "AI intrusion {zone_name} delay"
+      },
+      "linger_delay": {
+        "name": "AI linger {zone_name} delay"
+      },
+      "forgotten_item_delay": {
+        "name": "AI item forgotten {zone_name} delay"
+      },
+      "taken_item_delay": {
+        "name": "AI item taken {zone_name} delay"
       },
       "auto_quick_reply_time": {
         "name": "Auto quick reply time"
