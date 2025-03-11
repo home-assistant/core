@@ -226,6 +226,63 @@
     'state': '7',
   })
 # ---
+# name: test_state[number.pinecil_hall_sensor_sleep_timeout-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 60,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_hall_sensor_sleep_timeout',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hall sensor sleep timeout',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.HALL_EFFECT_SLEEP_TIME: 'hall_effect_sleep_time'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_hall_effect_sleep_time',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_state[number.pinecil_hall_sensor_sleep_timeout-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Hall sensor sleep timeout',
+      'max': 60,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 5,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_hall_sensor_sleep_timeout',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
 # name: test_state[number.pinecil_keep_awake_pulse_delay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

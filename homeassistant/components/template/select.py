@@ -28,7 +28,6 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
@@ -198,12 +197,13 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
-        self._command_select_option = Script(
-            hass,
-            config[CONF_SELECT_OPTION],
-            self._rendered.get(CONF_NAME, DEFAULT_NAME),
-            DOMAIN,
-        )
+        if select_option := config.get(CONF_SELECT_OPTION):
+            self.add_script(
+                CONF_SELECT_OPTION,
+                select_option,
+                self._rendered.get(CONF_NAME, DEFAULT_NAME),
+                DOMAIN,
+            )
 
     @property
     def current_option(self) -> str | None:
@@ -220,6 +220,9 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
         if self._config[CONF_OPTIMISTIC]:
             self._attr_current_option = option
             self.async_write_ha_state()
-        await self._command_select_option.async_run(
-            {ATTR_OPTION: option}, context=self._context
-        )
+        if select_option := self._action_scripts.get(CONF_SELECT_OPTION):
+            await self.async_run_script(
+                select_option,
+                run_variables={ATTR_OPTION: option},
+                context=self._context,
+            )

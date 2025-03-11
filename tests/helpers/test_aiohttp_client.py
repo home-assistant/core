@@ -249,7 +249,6 @@ async def test_get_clientsession_patched_close(hass: HomeAssistant) -> None:
         assert mock_close.call_count == 0
 
 
-@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_integration(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -292,7 +291,6 @@ async def test_warning_close_session_integration(
     ) in caplog.text
 
 
-@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_custom(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

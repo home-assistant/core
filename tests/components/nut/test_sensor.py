@@ -241,3 +241,35 @@ async def test_stale_options(
 
         state = hass.states.get("sensor.ups1_battery_charge")
         assert state.state == "10"
+
+
+@pytest.mark.parametrize(
+    ("model", "unique_id_base"),
+    [
+        (
+            "EATON-EPDU-G3-AMBIENT-NOT-PRESENT",
+            "EATON_ePDU MA 00U-C IN: TYPE 00A 0P OUT: 00xTYPE_A000A00000_",
+        ),
+    ],
+)
+async def test_pdu_devices_ambient_not_present(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    model: str,
+    unique_id_base: str,
+) -> None:
+    """Test that ambient sensors not created."""
+
+    await async_init_integration(hass, model)
+
+    entry = entity_registry.async_get("sensor.ups1_ambient_humidity")
+    assert not entry
+
+    entry = entity_registry.async_get("sensor.ups1_ambient_humidity_status")
+    assert not entry
+
+    entry = entity_registry.async_get("sensor.ups1_ambient_temperature")
+    assert not entry
+
+    entry = entity_registry.async_get("sensor.ups1_ambient_temperature_status")
+    assert not entry

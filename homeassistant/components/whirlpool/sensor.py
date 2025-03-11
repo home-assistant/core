@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -134,37 +133,16 @@ async def async_setup_entry(
     config_entry: WhirlpoolConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Config flow entry for Whrilpool Laundry."""
+    """Config flow entry for Whirlpool sensors."""
     entities: list = []
-    whirlpool_data = config_entry.runtime_data
-    for appliance in whirlpool_data.appliances_manager.washer_dryers:
-        _wd = WasherDryer(
-            whirlpool_data.backend_selector,
-            whirlpool_data.auth,
-            appliance["SAID"],
-            async_get_clientsession(hass),
-        )
-        await _wd.connect()
-
+    appliances_manager = config_entry.runtime_data
+    for washer_dryer in appliances_manager.washer_dryers:
         entities.extend(
-            [
-                WasherDryerClass(
-                    appliance["SAID"],
-                    appliance["NAME"],
-                    description,
-                    _wd,
-                )
-                for description in SENSORS
-            ]
+            [WasherDryerClass(washer_dryer, description) for description in SENSORS]
         )
         entities.extend(
             [
-                WasherDryerTimeClass(
-                    appliance["SAID"],
-                    appliance["NAME"],
-                    description,
-                    _wd,
-                )
+                WasherDryerTimeClass(washer_dryer, description)
                 for description in SENSOR_TIMER
             ]
         )
@@ -178,34 +156,30 @@ class WasherDryerClass(SensorEntity):
     _attr_has_entity_name = True
 
     def __init__(
-        self,
-        said: str,
-        name: str,
-        description: WhirlpoolSensorEntityDescription,
-        washdry: WasherDryer,
+        self, washer_dryer: WasherDryer, description: WhirlpoolSensorEntityDescription
     ) -> None:
         """Initialize the washer sensor."""
-        self._wd: WasherDryer = washdry
+        self._wd: WasherDryer = washer_dryer
 
-        if name == "dryer":
+        if washer_dryer.name == "dryer":
             self._attr_icon = ICON_D
         else:
             self._attr_icon = ICON_W
 
         self.entity_description: WhirlpoolSensorEntityDescription = description
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, said)},
-            name=name.capitalize(),
+            identifiers={(DOMAIN, washer_dryer.said)},
+            name=washer_dryer.name.capitalize(),
             manufacturer="Whirlpool",
         )
-        self._attr_unique_id = f"{said}-{description.key}"
+        self._attr_unique_id = f"{washer_dryer.said}-{description.key}"
 
     async def async_added_to_hass(self) -> None:
-        """Connect washer/dryer to the cloud."""
+        """Register updates callback."""
         self._wd.register_attr_callback(self.async_write_ha_state)
 
     async def async_will_remove_from_hass(self) -> None:
-        """Close Whirlpool Appliance sockets before removing."""
+        """Unregister updates callback."""
         self._wd.unregister_attr_callback(self.async_write_ha_state)
 
     @property
@@ -226,16 +200,12 @@ class WasherDryerTimeClass(RestoreSensor):
     _attr_has_entity_name = True
 
     def __init__(
-        self,
-        said: str,
-        name: str,
-        description: SensorEntityDescription,
-        washdry: WasherDryer,
+        self, washer_dryer: WasherDryer, description: SensorEntityDescription
     ) -> None:
         """Initialize the washer sensor."""
-        self._wd: WasherDryer = washdry
+        self._wd: WasherDryer = washer_dryer
 
-        if name == "dryer":
+        if washer_dryer.name == "dryer":
             self._attr_icon = ICON_D
         else:
             self._attr_icon = ICON_W
@@ -243,11 +213,11 @@ class WasherDryerTimeClass(RestoreSensor):
         self.entity_description: SensorEntityDescription = description
         self._running: bool | None = None
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, said)},
-            name=name.capitalize(),
+            identifiers={(DOMAIN, washer_dryer.said)},
+            name=washer_dryer.name.capitalize(),
             manufacturer="Whirlpool",
         )
-        self._attr_unique_id = f"{said}-{description.key}"
+        self._attr_unique_id = f"{washer_dryer.said}-{description.key}"
 
     async def async_added_to_hass(self) -> None:
         """Connect washer/dryer to the cloud."""
@@ -259,7 +229,6 @@ class WasherDryerTimeClass(RestoreSensor):
     async def async_will_remove_from_hass(self) -> None:
         """Close Whrilpool Appliance sockets before removing."""
         self._wd.unregister_attr_callback(self.update_from_latest_data)
-        await self._wd.disconnect()
 
     @property
     def available(self) -> bool:
