@@ -1,6 +1,6 @@
 """Test the Bluesound config flow."""
 
-from ipaddress import IPv4Address
+from ipaddress import IPv4Address, IPv6Address
 from unittest.mock import AsyncMock
 
 from pyblu.errors import PlayerUnreachableError
@@ -204,3 +204,28 @@ async def test_zeroconf_flow_already_configured(
     assert config_entry.data[CONF_HOST] == "1.1.1.2"
 
     player_mocks.player_data_for_already_configured.player.sync_status.assert_called_once()
+
+
+async def test_zeroconf_flow_no_ipv4_address(
+    hass: HomeAssistant,
+    player_mocks: PlayerMocks,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test abort flow when no ipv4 address is found in zeroconf data."""
+    config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=IPv6Address("2001:db8::1"),
+            ip_addresses=[IPv6Address("2001:db8::1")],
+            port=11000,
+            hostname="player-name1112",
+            type="_musc._tcp.local.",
+            name="player-name._musc._tcp.local.",
+            properties={},
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_ipv4_address"
