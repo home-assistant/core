@@ -4,7 +4,7 @@
   "codeowners": ["@ttroy50"],
   "documentation": "https://www.home-assistant.io/integrations/ephember",
   "iot_class": "local_polling",
-  "loggers": ["pyephember"],
+  "loggers": ["pyephember2"],
   "quality_scale": "legacy",
-  "requirements": ["pyephember==0.3.1"]
+  "requirements": ["pyephember2==0.4.3"]
 }
