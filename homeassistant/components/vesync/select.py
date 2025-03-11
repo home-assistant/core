@@ -15,6 +15,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .common import rgetattr
 from .const import (
     DOMAIN,
+    FAN_NIGHT_LIGHT_LEVEL_DIM,
+    FAN_NIGHT_LIGHT_LEVEL_OFF,
+    FAN_NIGHT_LIGHT_LEVEL_ON,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
@@ -48,12 +51,13 @@ class VeSyncSelectEntityDescription(SelectEntityDescription):
 
 
 SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
+    # night_light for humidifier
     VeSyncSelectEntityDescription(
         key="night_light_level",
         translation_key="night_light_level",
         options=list(VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.values()),
         icon="mdi:brightness-6",
-        exists_fn=lambda device: rgetattr(device, "night_light"),
+        exists_fn=lambda device: rgetattr(device, "set_night_light_brightness"),
         # The select_option service framework ensures that only options specified are
         # accepted. ServiceValidationError gets raised for invalid value.
         select_option_fn=lambda device, value: device.set_night_light_brightness(
@@ -63,6 +67,23 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
         current_option_fn=lambda device: VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(
             device.details.get("night_light_brightness"),
             HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
+        ),
+    ),
+    # night_light for fan devices based on pyvesync.VeSyncAirBypass
+    VeSyncSelectEntityDescription(
+        key="night_light_level",
+        translation_key="night_light_level",
+        options=[
+            FAN_NIGHT_LIGHT_LEVEL_OFF,
+            FAN_NIGHT_LIGHT_LEVEL_DIM,
+            FAN_NIGHT_LIGHT_LEVEL_ON,
+        ],
+        icon="mdi:brightness-6",
+        exists_fn=lambda device: rgetattr(device, "set_night_light"),
+        select_option_fn=lambda device, value: device.set_night_light(value),
+        current_option_fn=lambda device: VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(
+            device.details.get("night_light"),
+            FAN_NIGHT_LIGHT_LEVEL_OFF,
         ),
     ),
 ]
