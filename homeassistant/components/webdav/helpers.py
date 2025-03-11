@@ -49,7 +49,8 @@ async def async_ensure_path_exists(client: Client, path: str) -> bool:
 async def async_migrate_wrong_folder_path(client: Client, path: str) -> None:
     """Migrate the wrong encoded folder path to the correct one."""
     wrong_path = path.replace(" ", "%20")
-    if await client.check(wrong_path):
+    # migrate folder when the old folder exists
+    if wrong_path != path and await client.check(wrong_path):
         try:
             await client.move(wrong_path, path)
         except WebDavError as err:
