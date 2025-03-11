@@ -15,6 +15,7 @@ from qbittorrentapi import (
 )
 from qbittorrentapi.torrents import TorrentStatusesT
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -27,7 +28,11 @@ _LOGGER = logging.getLogger(__name__)
 class QBittorrentDataCoordinator(DataUpdateCoordinator[SyncMainDataDictionary]):
     """Coordinator for updating QBittorrent data."""
 
-    def __init__(self, hass: HomeAssistant, client: Client) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, client: Client
+    ) -> None:
         """Initialize coordinator."""
         self.client = client
         self._is_alternative_mode_enabled = False
@@ -42,6 +47,7 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[SyncMainDataDictionary]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )

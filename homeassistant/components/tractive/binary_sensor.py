@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import ATTR_BATTERY_CHARGING, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import Trackables, TractiveClient, TractiveConfigEntry
 from .const import TRACKER_HARDWARE_STATUS_UPDATED
@@ -58,7 +58,7 @@ SENSOR_TYPE = BinarySensorEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TractiveConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tractive device trackers."""
     client = entry.runtime_data.client

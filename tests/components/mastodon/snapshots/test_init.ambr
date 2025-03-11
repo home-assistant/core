@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -27,7 +28,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '4.0.0rc1',
+    'sw_version': '4.4.0-nightly.2025-02-07',
     'via_device_id': None,
   })
 # ---

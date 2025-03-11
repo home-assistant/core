@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
+from contextlib import suppress
 import logging
 import os
 from pathlib import Path, PurePath
@@ -20,17 +21,20 @@ from aiohasupervisor.models import (
     backups as supervisor_backups,
     mounts as supervisor_mounts,
 )
+from aiohasupervisor.models.backups import LOCATION_CLOUD_BACKUP, LOCATION_LOCAL_STORAGE
 
 from homeassistant.components.backup import (
     DATA_MANAGER,
     AddonInfo,
     AgentBackup,
     BackupAgent,
+    BackupConfig,
     BackupManagerError,
     BackupNotFound,
     BackupReaderWriter,
     BackupReaderWriterError,
     CreateBackupEvent,
+    CreateBackupParametersDict,
     CreateBackupStage,
     CreateBackupState,
     Folder,
@@ -42,13 +46,13 @@ from homeassistant.components.backup import (
     RestoreBackupStage,
     RestoreBackupState,
     WrittenBackup,
-    async_get_manager as async_get_backup_manager,
     suggested_filename as suggested_backup_filename,
     suggested_filename_from_name_date,
 )
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.backup import async_get_manager as async_get_backup_manager
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
@@ -56,8 +60,6 @@ from homeassistant.util.enum import try_parse_enum
 from .const import DOMAIN, EVENT_SUPERVISOR_EVENT
 from .handler import get_supervisor_client
 
-LOCATION_CLOUD_BACKUP = ".cloud_backup"
-LOCATION_LOCAL = ".local"
 MOUNT_JOBS = ("mount_manager_create_mount", "mount_manager_remove_mount")
 RESTORE_JOB_ID_ENV = "SUPERVISOR_RESTORE_JOB_ID"
 # Set on backups automatically created when updating an addon
@@ -72,7 +74,9 @@ async def async_get_backup_agents(
     """Return the hassio backup agents."""
     client = get_supervisor_client(hass)
     mounts = await client.mounts.info()
-    agents: list[BackupAgent] = [SupervisorBackupAgent(hass, "local", None)]
+    agents: list[BackupAgent] = [
+        SupervisorBackupAgent(hass, "local", LOCATION_LOCAL_STORAGE)
+    ]
     for mount in mounts.mounts:
         if mount.usage is not supervisor_mounts.MountUsage.BACKUP:
             continue
@@ -112,7 +116,7 @@ def async_register_backup_agents_listener(
 
 
 def _backup_details_to_agent_backup(
-    details: supervisor_backups.BackupComplete, location: str | None
+    details: supervisor_backups.BackupComplete, location: str
 ) -> AgentBackup:
     """Convert a supervisor backup details object to an agent backup."""
     homeassistant_included = details.homeassistant is not None
@@ -125,7 +129,6 @@ def _backup_details_to_agent_backup(
         for addon in details.addons
     ]
     extra_metadata = details.extra or {}
-    location = location or LOCATION_LOCAL
     return AgentBackup(
         addons=addons,
         backup_id=details.slug,
@@ -148,7 +151,7 @@ class SupervisorBackupAgent(BackupAgent):
 
     domain = DOMAIN
 
-    def __init__(self, hass: HomeAssistant, name: str, location: str | None) -> None:
+    def __init__(self, hass: HomeAssistant, name: str, location: str) -> None:
         """Initialize the backup agent."""
         super().__init__()
         self._hass = hass
@@ -171,7 +174,7 @@ class SupervisorBackupAgent(BackupAgent):
                 ),
             )
         except SupervisorNotFoundError as err:
-            raise BackupNotFound from err
+            raise BackupNotFound(f"Backup {backup_id} not found") from err
 
     async def async_upload_backup(
         self,
@@ -184,13 +187,14 @@ class SupervisorBackupAgent(BackupAgent):
 
         The upload will be skipped if the backup already exists in the agent's location.
         """
-        if await self.async_get_backup(backup.backup_id):
-            _LOGGER.debug(
-                "Backup %s already exists in location %s",
-                backup.backup_id,
-                self.location,
-            )
-            return
+        with suppress(BackupNotFound):
+            if await self.async_get_backup(backup.backup_id):
+                _LOGGER.debug(
+                    "Backup %s already exists in location %s",
+                    backup.backup_id,
+                    self.location,
+                )
+                return
         stream = await open_stream()
         upload_options = supervisor_backups.UploadBackupOptions(
             location={self.location},
@@ -206,7 +210,7 @@ class SupervisorBackupAgent(BackupAgent):
         backup_list = await self._client.backups.list()
         result = []
         for backup in backup_list:
-            if not backup.locations or self.location not in backup.locations:
+            if self.location not in backup.location_attributes:
                 continue
             details = await self._client.backups.backup_info(backup.slug)
             result.append(_backup_details_to_agent_backup(details, self.location))
@@ -216,14 +220,14 @@ class SupervisorBackupAgent(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup | None:
+    ) -> AgentBackup:
         """Return a backup."""
         try:
             details = await self._client.backups.backup_info(backup_id)
-        except SupervisorNotFoundError:
-            return None
-        if self.location not in details.locations:
-            return None
+        except SupervisorNotFoundError as err:
+            raise BackupNotFound(f"Backup {backup_id} not found") from err
+        if self.location not in details.location_attributes:
+            raise BackupNotFound(f"Backup {backup_id} not found")
         return _backup_details_to_agent_backup(details, self.location)
 
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
@@ -235,8 +239,8 @@ class SupervisorBackupAgent(BackupAgent):
                     location={self.location}
                 ),
             )
-        except SupervisorNotFoundError:
-            _LOGGER.debug("Backup %s does not exist", backup_id)
+        except SupervisorNotFoundError as err:
+            raise BackupNotFound(f"Backup {backup_id} not found") from err
 
 
 class SupervisorBackupReaderWriter(BackupReaderWriter):
@@ -295,8 +299,8 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         # will be handled by async_upload_backup.
         # If the lists are the same length, it does not matter which one we send,
         # we send the encrypted list to have a well defined behavior.
-        encrypted_locations: list[str | None] = []
-        decrypted_locations: list[str | None] = []
+        encrypted_locations: list[str] = []
+        decrypted_locations: list[str] = []
         agents_settings = manager.config.data.agents
         for hassio_agent in hassio_agents:
             if password is not None:
@@ -353,12 +357,12 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             eager_start=False,  # To ensure the task is not started before we return
         )
 
-        return (NewBackup(backup_job_id=backup.job_id), backup_task)
+        return (NewBackup(backup_job_id=backup.job_id.hex), backup_task)
 
     async def _async_wait_for_backup(
         self,
         backup: supervisor_backups.NewBackup,
-        locations: list[str | None],
+        locations: list[str],
         *,
         on_progress: Callable[[CreateBackupEvent], None],
         remove_after_upload: bool,
@@ -490,10 +494,12 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
     ) -> None:
         """Restore a backup."""
         manager = self._hass.data[DATA_MANAGER]
-        # The backup manager has already checked that the backup exists so we don't need to
-        # check that here.
+        # The backup manager has already checked that the backup exists so we don't
+        # need to catch BackupNotFound here.
         backup = await manager.backup_agents[agent_id].async_get_backup(backup_id)
         if (
+            # Check for None to be backwards compatible with the old BackupAgent API,
+            # this can be removed in HA Core 2025.10
             backup
             and restore_homeassistant
             and restore_database != backup.database_included
@@ -508,7 +514,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             else None
         )
 
-        restore_location: str | None
+        restore_location: str
         if manager.backup_agents[agent_id].domain != DOMAIN:
             # Download the backup to the supervisor. Supervisor will clean up the backup
             # two days after the restore is done.
@@ -577,10 +583,11 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         on_progress: Callable[[RestoreBackupEvent | IdleEvent], None],
     ) -> None:
         """Check restore status after core restart."""
-        if not (restore_job_id := os.environ.get(RESTORE_JOB_ID_ENV)):
+        if not (restore_job_str := os.environ.get(RESTORE_JOB_ID_ENV)):
             _LOGGER.debug("No restore job ID found in environment")
             return
 
+        restore_job_id = UUID(restore_job_str)
         _LOGGER.debug("Found restore job ID %s in environment", restore_job_id)
 
         sent_event = False
@@ -632,9 +639,30 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             _LOGGER.debug("Could not get restore job %s: %s", restore_job_id, err)
             unsub()
 
+    async def async_validate_config(self, *, config: BackupConfig) -> None:
+        """Validate backup config.
+
+        Replace the core backup agent with the hassio default agent.
+        """
+        core_agent_id = "backup.local"
+        create_backup = config.data.create_backup
+        if core_agent_id not in create_backup.agent_ids:
+            _LOGGER.debug("Backup settings don't need to be adjusted")
+            return
+
+        default_agent = await _default_agent(self._client)
+        _LOGGER.info("Adjusting backup settings to not include core backup location")
+        automatic_agents = [
+            agent_id if agent_id != core_agent_id else default_agent
+            for agent_id in create_backup.agent_ids
+        ]
+        config.update(
+            create_backup=CreateBackupParametersDict(agent_ids=automatic_agents)
+        )
+
     @callback
     def _async_listen_job_events(
-        self, job_id: str, on_event: Callable[[Mapping[str, Any]], None]
+        self, job_id: UUID, on_event: Callable[[Mapping[str, Any]], None]
     ) -> Callable[[], None]:
         """Listen for job events."""
 
@@ -649,7 +677,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             if (
                 data.get("event") != "job"
                 or not (event_data := data.get("data"))
-                or event_data.get("uuid") != job_id
+                or event_data.get("uuid") != job_id.hex
             ):
                 return
             on_event(event_data)
@@ -660,10 +688,10 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         return unsub
 
     async def _get_job_state(
-        self, job_id: str, on_event: Callable[[Mapping[str, Any]], None]
+        self, job_id: UUID, on_event: Callable[[Mapping[str, Any]], None]
     ) -> None:
         """Poll a job for its state."""
-        job = await self._client.jobs.get_job(UUID(job_id))
+        job = await self._client.jobs.get_job(job_id)
         _LOGGER.debug("Job state: %s", job)
         on_event(job.to_dict())
 
@@ -727,7 +755,7 @@ async def backup_addon_before_update(
 
 async def backup_core_before_update(hass: HomeAssistant) -> None:
     """Prepare for updating core."""
-    backup_manager = async_get_backup_manager(hass)
+    backup_manager = await async_get_backup_manager(hass)
     client = get_supervisor_client(hass)
 
     try:

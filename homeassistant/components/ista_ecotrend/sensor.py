@@ -30,13 +30,12 @@ from homeassistant.helpers.device_registry import (
     DeviceEntryType,
     DeviceInfo,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import IstaConfigEntry
 from .const import DOMAIN
-from .coordinator import IstaCoordinator
+from .coordinator import IstaConfigEntry, IstaCoordinator
 from .util import IstaConsumptionType, IstaValueType, get_native_value, get_statistics
 
 _LOGGER = logging.getLogger(__name__)
@@ -153,7 +152,7 @@ SENSOR_DESCRIPTIONS: tuple[IstaSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: IstaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ista EcoTrend sensors."""
 

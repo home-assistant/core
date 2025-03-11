@@ -104,12 +104,15 @@ def read_backup(backup_path: Path) -> AgentBackup:
                 bool, homeassistant.get("exclude_database", False)
             )
 
+        extra_metadata = cast(dict[str, bool | str], data.get("extra", {}))
+        date = extra_metadata.get("supervisor.backup_request_date", data["date"])
+
         return AgentBackup(
             addons=addons,
             backup_id=cast(str, data["slug"]),
             database_included=database_included,
-            date=cast(str, data["date"]),
-            extra_metadata=cast(dict[str, bool | str], data.get("extra", {})),
+            date=cast(str, date),
+            extra_metadata=extra_metadata,
             folders=folders,
             homeassistant_included=homeassistant_included,
             homeassistant_version=homeassistant_version,
@@ -122,7 +125,7 @@ def read_backup(backup_path: Path) -> AgentBackup:
 def suggested_filename_from_name_date(name: str, date_str: str) -> str:
     """Suggest a filename for the backup."""
     date = dt_util.parse_datetime(date_str, raise_on_error=True)
-    return "_".join(f"{name} - {date.strftime('%Y-%m-%d %H.%M %S%f')}.tar".split())
+    return "_".join(f"{name} {date.strftime('%Y-%m-%d %H.%M %S%f')}.tar".split())
 
 
 def suggested_filename(backup: AgentBackup) -> str:

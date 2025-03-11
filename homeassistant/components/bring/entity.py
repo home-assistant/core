@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from bring_api.types import BringList
+from bring_api import BringList
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
