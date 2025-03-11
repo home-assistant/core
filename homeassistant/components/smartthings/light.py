@@ -49,14 +49,9 @@ async def async_setup_entry(
 
 
 def convert_scale(
-    value: float | None, value_scale: int, target_scale: int, round_digits: int = 4
+    value: float, value_scale: int, target_scale: int, round_digits: int = 4
 ) -> float:
     """Convert a value to a different scale."""
-    # There are stateless lights out there that return None.
-    # If the value is None, we return 0.0, as it can still be
-    # available and working, but just without state.
-    if value is None:
-        return 0.0
     return round(value * target_scale / value_scale, round_digits)
 
 
@@ -155,14 +150,21 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
         """Update entity attributes when the device status has changed."""
         # Brightness and transition
         if brightness_supported(self._attr_supported_color_modes):
-            self._attr_brightness = int(
-                convert_scale(
-                    self.get_attribute_value(Capability.SWITCH_LEVEL, Attribute.LEVEL),
-                    100,
-                    255,
-                    0,
+            if (
+                brightness := self.get_attribute_value(
+                    Capability.SWITCH_LEVEL, Attribute.LEVEL
                 )
-            )
+            ) is None:
+                self._attr_brightness = None
+            else:
+                self._attr_brightness = int(
+                    convert_scale(
+                        brightness,
+                        100,
+                        255,
+                        0,
+                    )
+                )
         # Color Temperature
         if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
             self._attr_color_temp_kelvin = self.get_attribute_value(
@@ -170,16 +172,24 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
             )
         # Color
         if ColorMode.HS in self._attr_supported_color_modes:
-            self._attr_hs_color = (
-                convert_scale(
-                    self.get_attribute_value(Capability.COLOR_CONTROL, Attribute.HUE),
-                    100,
-                    360,
-                ),
-                self.get_attribute_value(
-                    Capability.COLOR_CONTROL, Attribute.SATURATION
-                ),
-            )
+            if (
+                self.get_attribute_value(Capability.COLOR_CONTROL, Attribute.HUE)
+                is None
+            ):
+                self._attr_hs_color = None
+            else:
+                self._attr_hs_color = (
+                    convert_scale(
+                        self.get_attribute_value(
+                            Capability.COLOR_CONTROL, Attribute.HUE
+                        ),
+                        100,
+                        360,
+                    ),
+                    self.get_attribute_value(
+                        Capability.COLOR_CONTROL, Attribute.SATURATION
+                    ),
+                )
 
     async def async_set_color(self, hs_color):
         """Set the color of the device."""
@@ -225,6 +235,10 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
         super()._update_handler(event)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if light is on."""
-        return self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on"
+        if (
+            state := self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH)
+        ) is None:
+            return None
+        return state == "on"
