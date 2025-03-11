@@ -1551,6 +1551,15 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
     the recorder to be loaded. We need to ensure that no stage 0 integration
     has a base platform in its dependencies that loads before the recorder.
     """
+    IGNORE_BASE_PLATFORM_FILES = {
+        # config/scene.py is not a platform
+        "config": {"scene.py"},
+        # websocket_api/sensor.py is using the platform YAML schema
+        # we must not migrate it to an integration key until
+        # we remove the platform YAML schema support for sensors
+        "websocket_api": {"sensor.py"},
+    }
+
     integrations_before_recorder: set[str] = set()
     for _, integrations, _ in bootstrap.STAGE_0_INTEGRATIONS:
         integrations_before_recorder |= integrations
@@ -1577,30 +1586,23 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
 
     problems: dict[str, set[str]] = {}
     for domain in integrations:
-        domain_with_base_platforms_deps = BASE_PLATFORMS.intersection(
-            integrations_all_dependencies[domain]
+        domain_with_base_platforms_deps = (
+            integrations_all_dependencies[domain] & BASE_PLATFORMS
         )
         if domain_with_base_platforms_deps:
             problems[domain] = domain_with_base_platforms_deps
     assert not problems, f"Integrations have base platforms in dependencies: {problems}"
 
     base_platform_py_files = {f"{base_platform}.py" for base_platform in BASE_PLATFORMS}
-    exceptions = {
-        # config/scene.py is not a platform
-        "config": {"scene.py"},
-        # websocket_api/sensor.py is using the platform YAML schema
-        # we must not migrate it to an integration key until
-        # we remove the platform YAML schema support for sensors
-        "websocket_api": {"sensor.py"},
-    }
 
     for domain, integration in all_integrations.items():
-        integration_top_level_files = base_platform_py_files.intersection(
-            integration._top_level_files
+        integration_base_platforms_files = (
+            integration._top_level_files & base_platform_py_files
         )
-        integration_top_level_files -= exceptions.get(domain, set())
-        if integration_top_level_files:
-            problems[domain] = integration_top_level_files
+        if ignore := IGNORE_BASE_PLATFORM_FILES.get(domain):
+            integration_base_platforms_files -= ignore
+        if integration_base_platforms_files:
+            problems[domain] = integration_base_platforms_files
     assert not problems, (
         f"Integrations have base platform files in top level files: {problems}"
     )
