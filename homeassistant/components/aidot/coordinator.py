@@ -29,6 +29,8 @@ from .const import DOMAIN
 type AidotConfigEntry = ConfigEntry[AidotDeviceManagerCoordinator]
 _LOGGER = logging.getLogger(__name__)
 
+UPDATE_DEVICE_LIST_INTERVAL = timedelta(hours=6)
+
 
 class AidotDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceStatusData]):
     """Class to manage Aidot data."""
@@ -94,7 +96,7 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(hours=6),
+            update_interval=UPDATE_DEVICE_LIST_INTERVAL,
         )
         self.client = AidotClient(
             session=async_get_clientsession(hass),
@@ -135,18 +137,15 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         ]
 
         delete_lists = self.previous_lists - (
-            current_lists := {device[CONF_TYPE] for device in filter_device_list}
+            current_lists := {device[CONF_ID] for device in filter_device_list}
         )
 
-        if delete_lists:
-            self._purge_deleted_lists()
-
-        self.previous_lists = current_lists
         for dev_id in delete_lists:
             if dev_id in self.device_coordinators:
-                device_coordinator = self.device_coordinators[dev_id]
-                await device_coordinator.device_client.close()
                 del self.device_coordinators[dev_id]
+        if delete_lists:
+            self._purge_deleted_lists()
+        self.previous_lists = current_lists
 
         for device in filter_device_list:
             dev_id = device.get(CONF_ID)
@@ -183,7 +182,7 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         identifiers = {
             (
                 DOMAIN,
-                f"{self.config_entry.unique_id}_{device_coordinator.device_client.device_id}",
+                f"{device_coordinator.device_client.info.dev_id}",
             )
             for device_coordinator in self.device_coordinators.values()
         }

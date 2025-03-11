@@ -1,17 +1,15 @@
 """Common fixtures for the aidot tests."""
 
 from collections.abc import Generator
-from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aidot.client import AidotClient
-from aidot.const import CONF_ACCESS_TOKEN, CONF_ID, CONF_LOGIN_INFO
+from aidot.const import CONF_ACCESS_TOKEN, CONF_DEVICE_LIST, CONF_ID, CONF_LOGIN_INFO
 from aidot.device_client import DeviceClient, DeviceInformation, DeviceStatusData
 import pytest
 
 from homeassistant.components.aidot.const import DOMAIN
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -28,34 +26,51 @@ TEST_LOGIN_RESP = {
     "username": TEST_EMAIL,
 }
 
+ENTITY_LIGHT = "light.test_light"
+LIGHT_DOMAIN = "light"
 
-def mock_device_list() -> list[dict[str, Any]]:
-    """Fixture for a mock device."""
-    return {
-        "device_list": [
+TEST_DEVICE1 = {
+    "id": "device_id",
+    "name": "Test Light",
+    "modelId": "aidot.light.rgbw",
+    "mac": "AA:BB:CC:DD:EE:FF",
+    "hardwareVersion": "1.0",
+    "type": "light",
+    "aesKey": ["mock_aes_key"],
+    "product": {
+        "id": "test_product",
+        "serviceModules": [
+            {"identity": "control.light.rgbw"},
             {
-                "id": "device_id",
-                "name": "Test Light",
-                "modelId": "aidot.light.rgbw",
-                "mac": "AA:BB:CC:DD:EE:FF",
-                "hardwareVersion": "1.0",
-                "type": "light",
-                "aesKey": ["mock_aes_key"],
-                "product": {
-                    "id": "test_product",
-                    "serviceModules": [
-                        {"identity": "control.light.rgbw"},
-                        {
-                            "identity": "control.light.cct",
-                            "properties": [
-                                {"identity": "CCT", "maxValue": 6500, "minValue": 2700}
-                            ],
-                        },
-                    ],
-                },
-            }
-        ]
-    }
+                "identity": "control.light.cct",
+                "properties": [{"identity": "CCT", "maxValue": 6500, "minValue": 2700}],
+            },
+        ],
+    },
+}
+
+TEST_DEVICE2 = {
+    "id": "device_id2",
+    "name": "Test Light2",
+    "modelId": "aidot.light.rgbw",
+    "mac": "AA:BB:CC:DD:EE:EE",
+    "hardwareVersion": "1.0",
+    "type": "light",
+    "aesKey": ["mock_aes_key"],
+    "product": {
+        "id": "test_product",
+        "serviceModules": [
+            {"identity": "control.light.rgbw"},
+            {
+                "identity": "control.light.cct",
+                "properties": [{"identity": "CCT", "maxValue": 6500, "minValue": 2700}],
+            },
+        ],
+    },
+}
+
+TEST_DEVICE_LIST = {CONF_DEVICE_LIST: [TEST_DEVICE1]}
+TEST_MULTI_DEVICE_LIST = {CONF_DEVICE_LIST: [TEST_DEVICE1, TEST_DEVICE2]}
 
 
 @pytest.fixture
@@ -68,21 +83,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Create and add a config entry."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        email=TEST_EMAIL,
-        password=TEST_PASSWORD,
-    )
-    config_entry.add_to_hass(hass)
-    return config_entry
-
-
-@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
-    config_entry = MockConfigEntry(
+    return MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_EMAIL,
         title=TEST_EMAIL,
@@ -97,21 +100,13 @@ def mock_config_entry() -> MockConfigEntry:
             }
         },
     )
-    config_entry.runtime_data = Mock()
-    return config_entry
 
 
 @pytest.fixture
-def mocked_device_client() -> Mock:
+def mocked_device_client() -> MagicMock:
     """Fixture DeviceClient."""
-    mock_device_client = Mock(spec=DeviceClient)
-    mock_device_client.async_turn_on = AsyncMock(return_value=None)
-    mock_device_client.async_turn_off = AsyncMock(return_value=None)
-    mock_device_client.async_set_brightness = AsyncMock(return_value=None)
-    mock_device_client.async_set_cct = AsyncMock(return_value=None)
-    mock_device_client.async_set_rgbw = AsyncMock(return_value=None)
-    mock_device_client.close = AsyncMock(return_value=None)
-    mock_device_client.async_login = AsyncMock(return_value=None)
+    mock_device_client = MagicMock(spec=DeviceClient)
+    mock_device_client.device_id = "device_id"
 
     mock_info = Mock(spec=DeviceInformation)
     mock_info.enable_rgbw = True
@@ -139,12 +134,12 @@ def mocked_device_client() -> Mock:
 
 
 @pytest.fixture
-def mocked_aidot_client(mocked_device_client) -> Mock:
+def mocked_aidot_client(mocked_device_client) -> MagicMock:
     """Fixture AidotClient."""
-    mock_aidot_client = Mock(spec=AidotClient)
-    mock_aidot_client.get_device_client = Mock(return_value=mocked_device_client)
-    mock_aidot_client.async_get_all_device = AsyncMock(return_value=mock_device_list())
-    mock_aidot_client.async_post_login = AsyncMock(return_value=TEST_LOGIN_RESP)
+    mock_aidot_client = MagicMock(spec=AidotClient)
+    mock_aidot_client.get_device_client.return_value = mocked_device_client
+    mock_aidot_client.async_get_all_device.return_value = TEST_DEVICE_LIST
+    mock_aidot_client.async_post_login.return_value = TEST_LOGIN_RESP
     return mock_aidot_client
 
 

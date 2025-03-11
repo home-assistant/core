@@ -26,9 +26,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: This integration does not provide additional actions.
+  action-exceptions: todo
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -37,12 +35,8 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: exempt
-    comment: This integration polls data using a coordinator, there is no need for parallel updates.
-  reauthentication-flow:
-    status: exempt
-    comment: This integration requires no authentication.
+  parallel-updates: todo
+  reauthentication-flow: todo
   test-coverage: todo
 
   # Gold
@@ -58,16 +52,15 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category: done
+  entity-category: todo
   entity-device-class: done
-  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: todo
-
+  entity-disabled-by-default: todo
   # Platinum
   async-dependency: done
   inject-websession: done

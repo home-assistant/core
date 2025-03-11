@@ -47,7 +47,7 @@ async def test_async_setup_entry_returns_true(
 
 async def test_async_unload_entry(hass: HomeAssistant, mock_config_entry) -> None:
     """Test that async_unload_entry unloads the component correctly."""
-
+    mock_config_entry.runtime_data = MagicMock()
     hass.data = MagicMock()
     with patch.object(
         hass.config_entries, "async_unload_platforms", new_callable=AsyncMock
@@ -58,6 +58,7 @@ async def test_async_unload_entry(hass: HomeAssistant, mock_config_entry) -> Non
 
 async def test_async_unload_entry_fails(hass: HomeAssistant, mock_config_entry) -> None:
     """Test that async_unload_entry handles failure correctly."""
+    mock_config_entry.runtime_data = MagicMock()
     mock_data = {}
     hass.data = MagicMock()
     hass.data.setdefault = MagicMock(side_effect=mock_data.setdefault)
