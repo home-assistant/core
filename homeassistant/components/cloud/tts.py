@@ -289,7 +289,7 @@ class CloudTTSEntity(TextToSpeechEntity):
     def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {
-            ATTR_AUDIO_OUTPUT: AudioOutput.MP3.value,
+            ATTR_AUDIO_OUTPUT: AudioOutput.MP3,
         }
 
     @property
@@ -407,7 +407,7 @@ class CloudProvider(Provider):
     def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {
-            ATTR_AUDIO_OUTPUT: AudioOutput.MP3.value,
+            ATTR_AUDIO_OUTPUT: AudioOutput.MP3,
         }
 
     async def async_get_tts_audio(
