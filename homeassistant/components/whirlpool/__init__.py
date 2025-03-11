@@ -1,6 +1,5 @@
 """The Whirlpool Appliances integration."""
 
-from dataclasses import dataclass
 import logging
 
 from aiohttp import ClientError
@@ -20,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
-type WhirlpoolConfigEntry = ConfigEntry[WhirlpoolData]
+type WhirlpoolConfigEntry = ConfigEntry[AppliancesManager]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) -> bool:
@@ -52,8 +51,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) ->
     if not await appliances_manager.fetch_appliances():
         _LOGGER.error("Cannot fetch appliances")
         return False
+    await appliances_manager.connect()
 
-    entry.runtime_data = WhirlpoolData(appliances_manager, auth, backend_selector)
+    entry.runtime_data = appliances_manager
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -61,13 +61,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) -> bool:
     """Unload a config entry."""
+    await entry.runtime_data.disconnect()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-@dataclass
-class WhirlpoolData:
-    """Whirlpool integaration shared data."""
-
-    appliances_manager: AppliancesManager
-    auth: Auth
-    backend_selector: BackendSelector

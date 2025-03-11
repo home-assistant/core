@@ -386,6 +386,13 @@ class HomeConnectProgramSensor(HomeConnectSensor):
 
     def update_native_value(self) -> None:
         """Update the program sensor's status."""
+        self.program_running = (
+            status := self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
+        ) is not None and status.value in [
+            BSH_OPERATION_STATE_RUN,
+            BSH_OPERATION_STATE_PAUSE,
+            BSH_OPERATION_STATE_FINISHED,
+        ]
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
         if event:
             self._update_native_value(event.value)

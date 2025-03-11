@@ -18,6 +18,7 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
+from aioshelly.rpc_device.utils import bluetooth_mac_from_primary_mac
 from propcache.api import cached_property
 
 from homeassistant.components.bluetooth import async_remove_scanner
@@ -25,6 +26,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_HOST,
+    CONF_MODEL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -138,7 +140,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
     @cached_property
     def model(self) -> str:
         """Model of the device."""
-        return cast(str, self.config_entry.data["model"])
+        return cast(str, self.config_entry.data[CONF_MODEL])
 
     @cached_property
     def mac(self) -> str:
@@ -496,6 +498,15 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._connect_task: asyncio.Task | None = None
         entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
+    @cached_property
+    def bluetooth_source(self) -> str:
+        """Return the Bluetooth source address.
+
+        This is the Bluetooth MAC address of the device that is used
+        for the Bluetooth scanner.
+        """
+        return format_mac(bluetooth_mac_from_primary_mac(self.mac)).upper()
+
     async def async_device_online(self, source: str) -> None:
         """Handle device going online."""
         if not self.sleep_period:
@@ -706,7 +717,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         )
         if ble_scanner_mode == BLEScannerMode.DISABLED and self.connected:
             await async_stop_scanner(self.device)
-            async_remove_scanner(self.hass, format_mac(self.mac).upper())
+            async_remove_scanner(self.hass, self.bluetooth_source)
             return
         if await async_ensure_ble_enabled(self.device):
             # BLE enable required a reboot, don't bother connecting

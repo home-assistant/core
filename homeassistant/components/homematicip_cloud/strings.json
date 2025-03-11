@@ -3,6 +3,7 @@
     "step": {
       "init": {
         "title": "Pick Homematic IP access point",
+        "description": "If you are about to register a **Homematic IP HCU1**, please press the button on top of the device before you continue.\n\nThe registration process must be completed within 5 minutes.",
         "data": {
           "hapid": "Access point ID (SGTIN)",
           "pin": "[%key:common::config_flow::data::pin%]",

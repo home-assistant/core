@@ -42,7 +42,6 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     OWM_MODE_FREE_FORECAST,
-    OWM_MODE_V25,
     OWM_MODE_V30,
 )
 from .coordinator import WeatherUpdateCoordinator
@@ -106,7 +105,7 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
         )
         self.mode = mode
 
-        if mode in (OWM_MODE_V30, OWM_MODE_V25):
+        if mode == OWM_MODE_V30:
             self._attr_supported_features = (
                 WeatherEntityFeature.FORECAST_DAILY
                 | WeatherEntityFeature.FORECAST_HOURLY

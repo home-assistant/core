@@ -31,3 +31,18 @@
     ),
   ])
 # ---
+# name: test_load_entry_with_unloaded_entries
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'contents': list([
+          'Write an opening speech for a Home Assistant release party',
+        ]),
+        'model': 'models/gemini-2.0-flash',
+      }),
+    ),
+  ])
+# ---

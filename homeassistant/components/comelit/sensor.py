@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Final, cast
 
 from aiocomelit import ComelitSerialBridgeObject, ComelitVedoZoneObject
-from aiocomelit.const import ALARM_ZONES, BRIDGE, OTHER, AlarmZoneState
+from aiocomelit.const import BRIDGE, OTHER, AlarmZoneState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -82,7 +82,7 @@ async def async_setup_vedo_entry(
     coordinator = cast(ComelitVedoSystem, config_entry.runtime_data)
 
     entities: list[ComelitVedoSensorEntity] = []
-    for device in coordinator.data[ALARM_ZONES].values():
+    for device in coordinator.data["alarm_zones"].values():
         entities.extend(
             ComelitVedoSensorEntity(
                 coordinator, device, config_entry.entry_id, sensor_desc
@@ -119,9 +119,12 @@ class ComelitBridgeSensorEntity(CoordinatorEntity[ComelitSerialBridge], SensorEn
     @property
     def native_value(self) -> StateType:
         """Sensor value."""
-        return getattr(
-            self.coordinator.data[OTHER][self._device.index],
-            self.entity_description.key,
+        return cast(
+            StateType,
+            getattr(
+                self.coordinator.data[OTHER][self._device.index],
+                self.entity_description.key,
+            ),
         )
 
 
@@ -139,7 +142,7 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
     ) -> None:
         """Init sensor entity."""
         self._api = coordinator.api
-        self._zone = zone
+        self._zone_index = zone.index
         super().__init__(coordinator)
         # Use config_entry.entry_id as base for unique_id
         # because no serial number or mac is available
@@ -151,7 +154,7 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
     @property
     def _zone_object(self) -> ComelitVedoZoneObject:
         """Zone object."""
-        return self.coordinator.data[ALARM_ZONES][self._zone.index]
+        return self.coordinator.data["alarm_zones"][self._zone_index]
 
     @property
     def available(self) -> bool:
@@ -164,4 +167,4 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
         if (status := self._zone_object.human_status) == AlarmZoneState.UNKNOWN:
             return None
 
-        return status.value
+        return cast(str, status.value)

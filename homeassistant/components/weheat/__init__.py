@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from http import HTTPStatus
 
 import aiohttp
@@ -18,7 +19,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .const import API_URL, LOGGER
-from .coordinator import WeheatConfigEntry, WeheatDataUpdateCoordinator
+from .coordinator import (
+    HeatPumpInfo,
+    WeheatConfigEntry,
+    WeheatData,
+    WeheatDataUpdateCoordinator,
+    WeheatEnergyUpdateCoordinator,
+)
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -52,14 +59,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
     except UnauthorizedException as error:
         raise ConfigEntryAuthFailed from error
 
+    nr_of_pumps = len(discovered_heat_pumps)
+
     for pump_info in discovered_heat_pumps:
         LOGGER.debug("Adding %s", pump_info)
-        # for each pump, add a coordinator
-        new_coordinator = WeheatDataUpdateCoordinator(hass, entry, session, pump_info)
+        # for each pump, add the coordinators
 
-        await new_coordinator.async_config_entry_first_refresh()
+        new_heat_pump = HeatPumpInfo(pump_info)
+        new_data_coordinator = WeheatDataUpdateCoordinator(
+            hass, entry, session, pump_info, nr_of_pumps
+        )
+        new_energy_coordinator = WeheatEnergyUpdateCoordinator(
+            hass, entry, session, pump_info
+        )
 
-        entry.runtime_data.append(new_coordinator)
+        entry.runtime_data.append(
+            WeheatData(
+                heat_pump_info=new_heat_pump,
+                data_coordinator=new_data_coordinator,
+                energy_coordinator=new_energy_coordinator,
+            )
+        )
+
+    await asyncio.gather(
+        *[
+            data.data_coordinator.async_config_entry_first_refresh()
+            for data in entry.runtime_data
+        ],
+        *[
+            data.energy_coordinator.async_config_entry_first_refresh()
+            for data in entry.runtime_data
+        ],
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

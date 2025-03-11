@@ -247,9 +247,9 @@ async def test_agents_download_file_not_found(
     resp = await client.get(
         f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id={TEST_AGENT_ID}"
     )
-    assert resp.status == 500
+    assert resp.status == 404
     content = await resp.content.read()
-    assert "Backup not found" in content.decode()
+    assert content == b""
 
 
 async def test_agents_download_metadata_not_found(

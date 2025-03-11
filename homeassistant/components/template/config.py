@@ -1,5 +1,6 @@
 """Template config validator."""
 
+from collections.abc import Callable
 from contextlib import suppress
 import logging
 
@@ -49,6 +50,24 @@ from .helpers import async_get_blueprints
 
 PACKAGE_MERGE_HINT = "list"
 
+def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict], dict]:
+    """Validate that config does not contain trigger and action."""
+    domains = set(keys)
+
+    def validate(obj: dict):
+        options = set(obj.keys())
+        if found_domains := domains.intersection(options):
+            invalid = {CONF_TRIGGER, CONF_ACTION}
+            if found_invalid := invalid.intersection(set(obj.keys())):
+                raise vol.Invalid(
+                    f"Unsupported option(s) found for domain {found_domains.pop()}, please remove ({', '.join(found_invalid)}) from your configuration",
+                )
+
+        return obj
+
+    return validate
+  
+
 CONFIG_SECTION_SCHEMA = vol.All(
     backward_compatibility_schema,
     vol.Schema(
@@ -87,6 +106,7 @@ CONFIG_SECTION_SCHEMA = vol.All(
             ),
         }
     ),
+    ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN),
 )
 
 TEMPLATE_BLUEPRINT_INSTANCE_SCHEMA = vol.Schema(
@@ -122,9 +142,15 @@ async def _async_resolve_blueprints(
             raise vol.Invalid("more than one platform defined per blueprint")
         if len(platforms) == 1:
             platform = platforms.pop()
-            for prop in (CONF_NAME, CONF_UNIQUE_ID, CONF_VARIABLES):
+            for prop in (CONF_NAME, CONF_UNIQUE_ID):
                 if prop in config:
                     config[platform][prop] = config.pop(prop)
+            # For regular template entities, CONF_VARIABLES should be removed because they just
+            # house input results for template entities.  For Trigger based template entities
+            # CONF_VARIABLES should not be removed because the variables are always
+            # executed between the trigger and action.
+            if CONF_TRIGGER not in config and CONF_VARIABLES in config:
+                config[platform][CONF_VARIABLES] = config.pop(CONF_VARIABLES)
         raw_config = dict(config)
 
     template_config = TemplateConfig(CONFIG_SECTION_SCHEMA(config))

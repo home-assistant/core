@@ -11,6 +11,6 @@
   "documentation": "https://www.home-assistant.io/integrations/fronius",
   "iot_class": "local_polling",
   "loggers": ["pyfronius"],
-  "quality_scale": "gold",
-  "requirements": ["PyFronius==0.7.3"]
+  "quality_scale": "platinum",
+  "requirements": ["PyFronius==0.7.7"]
 }

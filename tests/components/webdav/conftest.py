@@ -62,4 +62,5 @@ def mock_webdav_client() -> Generator[AsyncMock]:
         mock.download_iter.side_effect = _download_mock
         mock.upload_iter.return_value = None
         mock.clean.return_value = None
+        mock.move.return_value = None
         yield mock

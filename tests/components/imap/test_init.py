@@ -726,9 +726,10 @@ async def test_message_data(
     [
         ("{{ subject }}", "Test subject", None),
         ('{{ "@example.com" in sender }}', True, None),
+        ('{{ "body" in text }}', True, None),
         ("{% bad template }}", None, "Error rendering IMAP custom template"),
     ],
-    ids=["subject_test", "sender_filter", "template_error"],
+    ids=["subject_test", "sender_filter", "body_filter", "template_error"],
 )
 async def test_custom_template(
     hass: HomeAssistant,

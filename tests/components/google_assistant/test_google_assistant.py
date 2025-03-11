@@ -16,13 +16,9 @@ from homeassistant.components import (
     light,
     media_player,
 )
-from homeassistant.const import (
-    CLOUD_NEVER_EXPOSED_ENTITIES,
-    EntityCategory,
-    Platform,
-    UnitOfTemperature,
-)
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, EntityCategory, Platform
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import DEMO_DEVICES
 
@@ -275,7 +271,7 @@ async def test_query_climate_request_f(
 ) -> None:
     """Test a query request."""
     # Mock demo devices as fahrenheit to see if we convert to celsius
-    hass_fixture.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
+    hass_fixture.config.units = US_CUSTOMARY_SYSTEM
     for entity_id in ("climate.hvac", "climate.heatpump", "climate.ecobee"):
         state = hass_fixture.states.get(entity_id)
         attr = dict(state.attributes)
@@ -332,7 +328,6 @@ async def test_query_climate_request_f(
         "thermostatHumidityAmbient": 54.2,
         "currentFanSpeedSetting": "on_high",
     }
-    hass_fixture.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
 async def test_query_humidifier_request(
