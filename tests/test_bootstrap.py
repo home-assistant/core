@@ -1186,6 +1186,18 @@ async def test_bootstrap_empty_integrations(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize("load_registries", [False])
+async def test_bootstrap_log_already_setup_stage(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test logging when all integrations in a stage were already setup."""
+    with patch.object(bootstrap, "STAGE_1_INTEGRATIONS", {"frontend"}):
+        await bootstrap._async_set_up_integrations(hass, {})
+        await hass.async_block_till_done()
+
+    assert "Already set up stage 1: {'frontend'}" in caplog.text
+
+
 @pytest.fixture(name="mock_mqtt_config_flow")
 def mock_mqtt_config_flow_fixture() -> Generator[None]:
     """Mock MQTT config flow."""
