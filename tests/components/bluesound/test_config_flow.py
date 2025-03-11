@@ -206,13 +206,8 @@ async def test_zeroconf_flow_already_configured(
     player_mocks.player_data_for_already_configured.player.sync_status.assert_called_once()
 
 
-async def test_zeroconf_flow_no_ipv4_address(
-    hass: HomeAssistant,
-    player_mocks: PlayerMocks,
-    config_entry: MockConfigEntry,
-) -> None:
+async def test_zeroconf_flow_no_ipv4_address(hass: HomeAssistant) -> None:
     """Test abort flow when no ipv4 address is found in zeroconf data."""
-    config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
