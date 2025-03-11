@@ -1,0 +1,16 @@
+{
+  "subscriptionId": "f5768ce8-c9e5-4507-9020-912c0c60e0ab",
+  "registrationUrl": "https://spigot-regional.api.smartthings.com/filters/f5768ce8-c9e5-4507-9020-912c0c60e0ab/activate?filterRegion=eu-west-1",
+  "name": "My Home Assistant sub",
+  "version": 20250122,
+  "subscriptionFilters": [
+    {
+      "type": "LOCATIONIDS",
+      "value": ["88a3a314-f0c8-40b4-bb44-44ba06c9c42e"],
+      "eventType": ["DEVICE_EVENT"],
+      "attribute": null,
+      "capability": null,
+      "component": null
+    }
+  ]
+}

@@ -285,11 +285,11 @@ async def test_reconnected_new_entities_created(
     players = controller.players.copy()
     players[3] = player_factory(3, "Test Player 3", "HEOS Link")
     controller.mock_set_players(players)
-    controller.load_players.return_value = PlayerUpdateResult([3], [], {})
+    update = PlayerUpdateResult([3], [], {})
 
     # Simulate reconnection
     await controller.dispatcher.wait_send(
-        SignalType.HEOS_EVENT, SignalHeosEvent.CONNECTED
+        SignalType.CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED, update
     )
     await hass.async_block_till_done()
 
