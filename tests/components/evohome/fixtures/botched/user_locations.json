@@ -8,14 +8,14 @@
       "country": "UnitedKingdom",
       "postcode": "E1 1AA",
       "locationType": "Residential",
-      "useDaylightSaveSwitching": true,
       "timeZone": {
-        "timeZoneId": "GMTStandardTime",
-        "displayName": "(UTC+00:00) Dublin, Edinburgh, Lisbon, London",
-        "offsetMinutes": 0,
-        "currentOffsetMinutes": 60,
+        "timeZoneId": "PacificSAStandardTime",
+        "displayName": "(UTC-04:00) Santiago",
+        "offsetMinutes": -240,
+        "currentOffsetMinutes": -180,
         "supportsDaylightSaving": true
       },
+      "useDaylightSaveSwitching": true,
       "locationOwner": {
         "userId": "2263181",
         "username": "user_2263181@gmail.com",

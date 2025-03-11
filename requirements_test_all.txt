@@ -231,7 +231,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.4.1
+aioesphomeapi==29.5.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -506,7 +506,7 @@ av==13.1.0
 axis==64
 
 # homeassistant.components.fujitsu_fglair
-ayla-iot-unofficial==1.4.5
+ayla-iot-unofficial==1.4.7
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -564,7 +564,7 @@ bluetooth-auto-recovery==1.4.4
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.25.0
+bluetooth-data-tools==1.26.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -765,7 +765,7 @@ eternalegypt==0.0.16
 eufylife-ble-client==0.1.8
 
 # homeassistant.components.evohome
-evohome-async==1.0.3
+evohome-async==1.0.4
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.18
@@ -1040,7 +1040,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.7.1
+inkbird-ble==0.8.0
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.5.0
@@ -1243,7 +1243,7 @@ nessclient==1.1.2
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==4.0.0
+nettigo-air-monitor==4.1.0
 
 # homeassistant.components.nexia
 nexia==2.2.2
@@ -2396,7 +2396,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.upb
-upb-lib==0.6.0
+upb-lib==0.6.1
 
 # homeassistant.components.upcloud
 upcloud-api==2.6.0
@@ -2419,7 +2419,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2025.1.1
+velbus-aio==2025.3.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2544,7 +2544,7 @@ zeversolar==0.3.2
 zha==0.0.51
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.60.1
+zwave-js-server-python==0.61.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
