@@ -207,12 +207,12 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             for room in room_mapping or ()
         }
 
-    async def get_scenes(self) -> list[HomeDataScene]:
-        """Get scenes."""
+    async def get_routines(self) -> list[HomeDataScene]:
+        """Get routines."""
         try:
             return await self._api_client.get_scenes(self._user_data, self.duid)
         except RoborockException as err:
-            _LOGGER.error("Failed to get scenes %s", err)
+            _LOGGER.error("Failed to get routines %s", err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
@@ -221,12 +221,12 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 },
             ) from err
 
-    async def execute_scene(self, scene_id: int) -> None:
-        """Execute scene."""
+    async def execute_routines(self, routine_id: int) -> None:
+        """Execute routines."""
         try:
-            await self._api_client.execute_scene(self._user_data, scene_id)
+            await self._api_client.execute_scene(self._user_data, routine_id)
         except RoborockException as err:
-            _LOGGER.error("Failed to execute scene %s %s", scene_id, err)
+            _LOGGER.error("Failed to execute routines %s %s", routine_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
