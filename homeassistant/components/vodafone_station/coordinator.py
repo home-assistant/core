@@ -127,7 +127,11 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 exceptions.GenericLoginError,
                 JSONDecodeError,
             ) as err:
-                raise UpdateFailed(f"Error fetching data: {err!r}") from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_failed",
+                    translation_placeholders={"error": repr(err)},
+                ) from err
         except (ConfigEntryAuthFailed, UpdateFailed):
             await self.api.close()
             raise
