@@ -56,7 +56,7 @@ EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = Event
 )
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 9
+STORAGE_VERSION_MINOR = 10
 
 CLEANUP_DELAY = 10
 
@@ -471,7 +471,7 @@ def format_mac(mac: str) -> str:
 class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
-    async def _async_migrate_func(
+    async def _async_migrate_func(  # noqa: C901
         self,
         old_major_version: int,
         old_minor_version: int,
@@ -540,6 +540,16 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         config_entry_id: {None}
                         for config_entry_id in device["config_entries"]
                     }
+            if old_minor_version < 10:
+                # Introduced in 2025.4
+                for device in old_data["devices"]:
+                    device["connections"] = _normalize_connections(
+                        device["connections"]
+                    )
+                for device in old_data["deleted_devices"]:
+                    device["connections"] = _normalize_connections(
+                        device["connections"]
+                    )
 
         if old_major_version > 2:
             raise NotImplementedError
@@ -1666,7 +1676,9 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_homeassistant_stop)
 
 
-def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, str]]:
+def _normalize_connections(
+    connections: Iterable[tuple[str, str]],
+) -> set[tuple[str, str]]:
     """Normalize connections to ensure we can match mac addresses."""
     return {
         (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
