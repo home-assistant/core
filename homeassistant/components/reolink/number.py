@@ -509,7 +509,7 @@ NUMBER_ENTITIES = (
 SMART_NUMBER_ENTITIES = (
     ReolinkSmartNumberEntityDescription(
         key="crossline_sensitivity",
-        smart_type = "crossline",
+        smart_type="crossline",
         cmd_id=527,
         translation_key="crossline_sensitivity",
         entity_category=EntityCategory.CONFIG,
@@ -521,7 +521,7 @@ SMART_NUMBER_ENTITIES = (
             api.baichuan.smart_ai_sensitivity(ch, "crossline", loc)
         ),
         method=lambda api, ch, loc, value: (
-            api.set_smart_ai(ch, "crossline", loc, sensitivity = int(value)),
+            api.baichuan.set_smart_ai(ch, "crossline", loc, sensitivity=int(value)),
         ),
     ),
 )
@@ -584,15 +584,13 @@ async def async_setup_entry(
         if entity_description.supported(api, channel)
     ]
     entities.extend(
-        ReolinkSmartNumberEntity(
-            reolink_data, channel, location, entity_description
-        )
+        ReolinkSmartNumberEntity(reolink_data, channel, location, entity_description)
         for entity_description in SMART_NUMBER_ENTITIES
         for channel in api.channels
         for location in api.baichuan.smart_location_list(
             channel, entity_description.smart_type
         )
-        if entity_description.supported(api, channel, location)
+        if entity_description.supported(api, channel)
     )
     entities.extend(
         ReolinkHostNumberEntity(reolink_data, entity_description)
@@ -654,7 +652,7 @@ class ReolinkSmartNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
         reolink_data: ReolinkData,
         channel: int,
         location: int,
-        entity_description: ReolinkNumberEntityDescription,
+        entity_description: ReolinkSmartNumberEntityDescription,
     ) -> None:
         """Initialize Reolink number entity."""
         self.entity_description = entity_description
@@ -663,9 +661,7 @@ class ReolinkSmartNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
         unique_index = self._host.api.baichuan.smart_ai_index(
             channel, entity_description.smart_type, location
         )
-        self._attr_unique_id = (
-            f"{self._attr_unique_id}_{unique_index}"
-        )
+        self._attr_unique_id = f"{self._attr_unique_id}_{unique_index}"
 
         self._location = location
         self._attr_mode = entity_description.mode
@@ -678,12 +674,16 @@ class ReolinkSmartNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """State of the number entity."""
-        return self.entity_description.value(self._host.api, self._channel, self._location)
+        return self.entity_description.value(
+            self._host.api, self._channel, self._location
+        )
 
     @raise_translated_error
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await self.entity_description.method(self._host.api, self._channel, self._location, value)
+        await self.entity_description.method(
+            self._host.api, self._channel, self._location, value
+        )
         self.async_write_ha_state()
 
 
