@@ -31,7 +31,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
-from .test_common import (
+from .common import (
     MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
     MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
     MOCK_SUBENTRY_DATA_NOTIFY_NO_NAME,

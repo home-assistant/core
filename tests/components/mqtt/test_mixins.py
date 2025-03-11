@@ -21,10 +21,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.util import slugify
 
-from .test_common import (
-    MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA,
-    MOCK_SUBENTRY_DATA_SET_MIX,
-)
+from .common import MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA, MOCK_SUBENTRY_DATA_SET_MIX
 
 from tests.common import MockConfigEntry, async_capture_events, async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator
