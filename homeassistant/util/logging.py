@@ -14,13 +14,12 @@ import traceback
 from typing import Any, cast, overload, override
 
 from homeassistant.core import (
-    HassJob,
     HassJobType,
     HomeAssistant,
     callback,
     get_hassjob_callable_job_type,
 )
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,8 +42,21 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
         """Initialize the handler."""
         super().__init__(queue, *handlers)
         self._hass = hass
-        self._reset_pending = True
         self._reset_counters()
+
+        @callback
+        def _set_reset_pending_flag(_: datetime.datetime) -> None:
+            _LOGGER.debug("Setting reset pending")
+            # Set a boolean instead of directly resetting the counters so that the actual
+            # reset happens on the QueueListener thread without the need for a Lock.
+            self._reset_pending = True
+
+        async_track_time_interval(
+            self._hass,
+            _set_reset_pending_flag,
+            self.LOG_COUNTS_RESET_INTERVAL,
+            cancel_on_shutdown=True,
+        )
 
     @override
     def handle(self, record: logging.LogRecord) -> None:
@@ -56,7 +68,6 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
 
         if self._reset_pending:
             self._reset_counters()
-            return
 
         logger_name = record.name
         if logger_name == __name__:
@@ -75,21 +86,9 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
         self._log_counts[logger_name] = 0
 
     def _reset_counters(self) -> None:
+        _LOGGER.debug("Resetting log counters")
         self._reset_pending = False
         self._log_counts = defaultdict(int)
-        self._schedule_log_counts_reset()
-
-    def _schedule_log_counts_reset(self) -> None:
-        async_call_later(
-            self._hass,
-            self.LOG_COUNTS_RESET_INTERVAL,
-            HassJob(self._set_reset_pending, cancel_on_shutdown=True),
-        )
-
-    def _set_reset_pending(self, now: datetime.datetime) -> None:
-        # Set a boolean instead of directly resetting the counters so that the actual
-        # reset happens on the QueueListener thread.
-        self._reset_pending = True
 
 
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
