@@ -1,16 +1,25 @@
 """Base class for LetPot entities."""
 
 from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 from typing import Any, Concatenate
 
 from letpot.exceptions import LetPotConnectionException, LetPotException
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import LetPotDeviceCoordinator
+
+
+@dataclass(frozen=True, kw_only=True)
+class LetPotEntityDescription(EntityDescription):
+    """Description for all LetPot entities."""
+
+    supported_fn: Callable[[LetPotDeviceCoordinator], bool] = lambda _: True
 
 
 class LetPotEntity(CoordinatorEntity[LetPotDeviceCoordinator]):
