@@ -60,7 +60,7 @@
       "message": "Cannot change humidity while off"
     },
     "invalid_clima_data": {
-      "message": "Invalid clima data"
+      "message": "Invalid 'clima' data"
     }
   }
 }
