@@ -43,8 +43,6 @@ class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
 
         self.api_key: str
-        self._stations: None
-        self._stations_short: None
 
     @classmethod
     @callback
@@ -84,7 +82,7 @@ class NederlandseSpoorwegenSubentryFlowHandler(ConfigSubentryFlow):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._stations = None
+        self._stations = dict[str, str]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
