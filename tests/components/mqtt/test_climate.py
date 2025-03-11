@@ -1828,7 +1828,7 @@ async def test_temperature_unit(
 
 
 @pytest.mark.parametrize(
-    ("hass_config", "temperature_unit", "initial", "min", "max", "current"),
+    ("hass_config", "units", "initial", "min", "max", "current"),
     [
         (
             help_custom_config(
