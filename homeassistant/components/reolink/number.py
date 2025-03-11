@@ -47,7 +47,7 @@ class ReolinkNumberEntityDescription(
 @dataclass(frozen=True, kw_only=True)
 class ReolinkSmartNumberEntityDescription(
     NumberEntityDescription,
-    ReolinkEntityDescription,
+    ReolinkChannelEntityDescription,
 ):
     """A class that describes smart number entities."""
 
@@ -55,7 +55,6 @@ class ReolinkSmartNumberEntityDescription(
     method: Callable[[Host, int, int, float], Any]
     mode: NumberMode = NumberMode.AUTO
     value: Callable[[Host, int, int], float | None]
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -585,7 +584,7 @@ async def async_setup_entry(
         if entity_description.supported(api, channel)
     ]
     entities.extend(
-        ReolinkSmartBinarySensorEntity(
+        ReolinkSmartNumberEntity(
             reolink_data, channel, location, entity_description
         )
         for entity_description in SMART_NUMBER_ENTITIES
