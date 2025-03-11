@@ -79,7 +79,6 @@ async def test_form_cannot_connect(
 async def test_form_unknown_exception(
     hass: HomeAssistant,
     mock_stiebel_eltron_client: MagicMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -157,7 +156,6 @@ async def test_import(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 async def test_import_cannot_connect(
     hass: HomeAssistant,
     mock_stiebel_eltron_client: MagicMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we handle cannot connect error."""
     mock_stiebel_eltron_client.update.return_value = False
@@ -178,7 +176,6 @@ async def test_import_cannot_connect(
 async def test_import_unknown_exception(
     hass: HomeAssistant,
     mock_stiebel_eltron_client: MagicMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we handle cannot connect error."""
     mock_stiebel_eltron_client.update.side_effect = Exception
