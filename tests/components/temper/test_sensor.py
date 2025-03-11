@@ -3,8 +3,6 @@
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
-from freezegun.api import FrozenDateTimeFactory
-
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -13,9 +11,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from tests.common import async_fire_time_changed
 
 
-async def test_temperature_readback(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
+async def test_temperature_readback(hass: HomeAssistant) -> None:
     """Test for reading sensors."""
     hass.config.units = METRIC_SYSTEM
     mock_temper_device = Mock()
