@@ -7,6 +7,13 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
+      "add_options": {
+        "description": "Add PurpleAir sensor from map or by index",
+        "menu_options": {
+          "map_location": "Add sensor from map location",
+          "add_sensor": "Add sensor by index and optional read key"
+        }
+      },
       "map_location": {
         "description": "Search for sensors in the circle on the map",
         "data": {
@@ -21,7 +28,21 @@
           "sensor_index": "Sensor"
         }
       },
+      "add_sensor": {
+        "description": "Enter sensor identification details",
+        "data": {
+          "sensor_index": "Sensor Index",
+          "sensor_read_key": "Sensor Read Key"
+        }
+      },
       "reauth_confirm": {
+        "title": "Change PurpleAir API read key",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "reconfigure": {
+        "title": "Change PurpleAir API read key",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
@@ -34,15 +55,16 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {
     "step": {
       "init": {
         "menu_options": {
-          "map_location": "Add sensor from map location",
-          "add_sensor": "Add sensor by index and optional read key",
+          "map_location": "[%key:component::purpleair::config::step::add_options::menu_options::map_location%]",
+          "add_sensor": "[%key:component::purpleair::config::step::add_options::menu_options::add_sensor%]",
           "remove_sensor": "Remove registered sensor",
           "settings": "Settings and options"
         }
@@ -56,10 +78,10 @@
         }
       },
       "add_sensor": {
-        "description": "Enter sensor identification details",
+        "description": "[%key:component::purpleair::config::step::add_sensor::description%]",
         "data": {
-          "sensor_index": "Sensor Index",
-          "sensor_read_key": "Sensor Read Key"
+          "sensor_index": "[%key:component::purpleair::config::step::add_sensor::data::sensor_index%]",
+          "sensor_read_key": "[%key:component::purpleair::config::step::add_sensor::data::sensor_read_key%]"
         }
       },
       "select_sensor": {

@@ -6,7 +6,13 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from aiopurpleair.endpoints.sensors import NearbySensorResult
-from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
+from aiopurpleair.errors import (
+    InvalidApiKeyError,
+    InvalidRequestError,
+    NotFoundError,
+    PurpleAirError,
+    RequestError,
+)
 from aiopurpleair.models.sensors import GetSensorsResponse
 
 from homeassistant.core import HomeAssistant
@@ -41,13 +47,21 @@ class ConfigValidation:
 
         try:
             await api.async_check_api_key()
-        except InvalidApiKeyError:
+        except InvalidApiKeyError as err:
+            LOGGER.error(
+                "PurpleAir:async_check_api_key():InvalidApiKeyErrorPurpleAir: %s", err
+            )
             errors[CONF_BASE] = CONF_INVALID_API_KEY
-        except PurpleAirError as err:
-            LOGGER.error("PurpleAir error while checking API key: %s", err)
+        except (
+            RequestError,
+            InvalidRequestError,
+            NotFoundError,
+            PurpleAirError,
+        ) as err:
+            LOGGER.error("PurpleAir:async_check_api_key():PurpleAirError : %s", err)
             errors[CONF_BASE] = CONF_UNKNOWN
         except Exception as err:  # noqa: BLE001
-            LOGGER.exception("Unexpected exception while checking API key: %s", err)
+            LOGGER.exception("PurpleAir:async_check_api_key():Exception: %s", err)
             errors[CONF_BASE] = CONF_UNKNOWN
 
         if errors:
@@ -77,13 +91,23 @@ class ConfigValidation:
                 distance,
                 limit_results=LIMIT_RESULTS,
             )
-        except PurpleAirError as err:
-            LOGGER.error("PurpleAir error while getting nearby sensors: %s", err)
+        except InvalidApiKeyError as err:
+            LOGGER.error(
+                "PurpleAir:async_get_nearby_sensors():InvalidApiKeyError : %s", err
+            )
+            errors[CONF_BASE] = CONF_INVALID_API_KEY
+        except (
+            RequestError,
+            InvalidRequestError,
+            NotFoundError,
+            PurpleAirError,
+        ) as err:
+            LOGGER.error(
+                "PurpleAir:async_get_nearby_sensors():PurpleAirError : %s", err
+            )
             errors[CONF_BASE] = CONF_UNKNOWN
         except Exception as err:  # noqa: BLE001
-            LOGGER.exception(
-                "Unexpected exception while getting nearby sensors: %s", err
-            )
+            LOGGER.exception("PurpleAir:async_get_nearby_sensors():Exception: %s", err)
             errors[CONF_BASE] = CONF_UNKNOWN
         else:
             if not nearby_sensor_list or len(nearby_sensor_list) == 0:
@@ -113,11 +137,21 @@ class ConfigValidation:
                 sensor_indices=index_list,
                 read_keys=read_key_list,
             )
-        except PurpleAirError as err:
-            LOGGER.error("PurpleAir error while getting sensor data: %s", err)
+        except InvalidApiKeyError as err:
+            LOGGER.error(
+                "PurpleAir:async_get_sensors():InvalidApiKeyErrorPurpleAir: %s", err
+            )
+            errors[CONF_BASE] = CONF_INVALID_API_KEY
+        except (
+            RequestError,
+            InvalidRequestError,
+            NotFoundError,
+            PurpleAirError,
+        ) as err:
+            LOGGER.error("PurpleAir:async_get_sensors():PurpleAirError : %s", err)
             errors[CONF_BASE] = CONF_UNKNOWN
         except Exception as err:  # noqa: BLE001
-            LOGGER.exception("Unexpected exception while getting sensor data: %s", err)
+            LOGGER.exception("PurpleAir:async_get_sensors():Exception: %s", err)
             errors[CONF_BASE] = CONF_UNKNOWN
         else:
             if (

@@ -35,6 +35,10 @@ CONF_BASE: Final = "base"
 CONF_INVALID_API_KEY: Final = "invalid_api_key"
 CONF_NO_SENSORS_FOUND: Final = "no_sensors_found"
 CONF_NO_SENSOR_FOUND: Final = "no_sensor_found"
+CONF_ADD_OPTIONS: Final = "add_options"
+CONF_RECONFIGURE: Final = "reconfigure"
+CONF_RECONFIGURE_SUCCESSFUL: Final = "reconfigure_successful"
+CONF_REAUTH_SUCCESSFUL: Final = "reauth_successful"
 
 SENSOR_FIELDS_TO_RETRIEVE: Final = [
     "0.3_um_count",

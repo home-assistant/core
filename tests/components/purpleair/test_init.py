@@ -31,8 +31,10 @@ async def test_migrate_entry(
         title=TITLE,
     )
     entry.add_to_hass(hass)
+    await hass.async_block_till_done()
 
     assert await async_migrate_entry(hass, entry) is True
+    await hass.async_block_till_done()
 
     assert entry.version == SCHEMA_VERSION
     assert entry.data == {CONF_API_KEY: TEST_API_KEY}
