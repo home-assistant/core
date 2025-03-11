@@ -9,6 +9,7 @@ import functools
 import os
 from typing import TYPE_CHECKING, Any, Concatenate
 
+from music_assistant_models.constants import PLAYER_CONTROL_NONE
 from music_assistant_models.enums import (
     EventType,
     MediaType,
@@ -20,6 +21,7 @@ from music_assistant_models.enums import (
 from music_assistant_models.errors import MediaNotFoundError, MusicAssistantError
 from music_assistant_models.event import MassEvent
 from music_assistant_models.media_items import ItemMapping, MediaItemType, Track
+from music_assistant_models.player_queue import PlayerQueue
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -78,21 +80,15 @@ from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
     from music_assistant_models.player import Player
-    from music_assistant_models.player_queue import PlayerQueue
 
-SUPPORTED_FEATURES = (
-    MediaPlayerEntityFeature.PAUSE
-    | MediaPlayerEntityFeature.VOLUME_SET
-    | MediaPlayerEntityFeature.STOP
+SUPPORTED_FEATURES_BASE = (
+    MediaPlayerEntityFeature.STOP
     | MediaPlayerEntityFeature.PREVIOUS_TRACK
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.SHUFFLE_SET
     | MediaPlayerEntityFeature.REPEAT_SET
-    | MediaPlayerEntityFeature.TURN_ON
-    | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.PLAY_MEDIA
-    | MediaPlayerEntityFeature.VOLUME_STEP
     | MediaPlayerEntityFeature.CLEAR_PLAYLIST
     | MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.MEDIA_ENQUEUE
@@ -212,11 +208,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         """Initialize MediaPlayer entity."""
         super().__init__(mass, player_id)
         self._attr_icon = self.player.icon.replace("mdi-", "mdi:")
-        self._attr_supported_features = SUPPORTED_FEATURES
-        if PlayerFeature.SET_MEMBERS in self.player.supported_features:
-            self._attr_supported_features |= MediaPlayerEntityFeature.GROUPING
-        if PlayerFeature.VOLUME_MUTE in self.player.supported_features:
-            self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_MUTE
+        self._set_supported_features()
         self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
         self._prev_time: float = 0
 
@@ -238,6 +230,19 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             self.mass.subscribe(
                 queue_time_updated,
                 EventType.QUEUE_TIME_UPDATED,
+            )
+        )
+
+        # we subscribe to the player config changed event to update
+        # the supported features of the player
+        async def player_config_changed(event: MassEvent) -> None:
+            self._set_supported_features()
+            await self.async_on_update()
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            self.mass.subscribe(
+                player_config_changed, EventType.PLAYER_CONFIG_UPDATED, self.player_id
             )
         )
 
@@ -271,22 +276,26 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             self._attr_state = MediaPlayerState(player.state.value)
         else:
             self._attr_state = MediaPlayerState(STATE_OFF)
-        group_members_entity_ids: list[str] = []
+
+        group_members: list[str] = []
         if player.group_childs:
-            # translate MA group_childs to HA group_members as entity id's
-            entity_registry = er.async_get(self.hass)
-            group_members_entity_ids = [
-                entity_id
-                for child_id in player.group_childs
-                if (
-                    entity_id := entity_registry.async_get_entity_id(
-                        self.platform.domain, DOMAIN, child_id
-                    )
+            group_members = player.group_childs
+        elif player.synced_to and (parent := self.mass.players.get(player.synced_to)):
+            group_members = parent.group_childs
+
+        # translate MA group_childs to HA group_members as entity id's
+        entity_registry = er.async_get(self.hass)
+        group_members_entity_ids: list[str] = [
+            entity_id
+            for child_id in group_members
+            if (
+                entity_id := entity_registry.async_get_entity_id(
+                    self.platform.domain, DOMAIN, child_id
                 )
-            ]
-        # NOTE: we sort the group_members for now,
-        # until the MA API returns them sorted (group_childs is now a set)
-        self._attr_group_members = sorted(group_members_entity_ids)
+            )
+        ]
+
+        self._attr_group_members = group_members_entity_ids
         self._attr_volume_level = (
             player.volume_level / 100 if player.volume_level is not None else None
         )
@@ -473,6 +482,8 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 album=album,
                 media_type=MediaType(media_type) if media_type else None,
             ):
+                if TYPE_CHECKING:
+                    assert item.uri is not None
                 media_uris.append(item.uri)
 
         if not media_uris:
@@ -680,3 +691,20 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         if isinstance(queue_option, MediaPlayerEnqueue):
             queue_option = QUEUE_OPTION_MAP.get(queue_option)
         return queue_option
+
+    def _set_supported_features(self) -> None:
+        """Set supported features based on player capabilities."""
+        supported_features = SUPPORTED_FEATURES_BASE
+        if PlayerFeature.SET_MEMBERS in self.player.supported_features:
+            supported_features |= MediaPlayerEntityFeature.GROUPING
+        if PlayerFeature.PAUSE in self.player.supported_features:
+            supported_features |= MediaPlayerEntityFeature.PAUSE
+        if self.player.mute_control != PLAYER_CONTROL_NONE:
+            supported_features |= MediaPlayerEntityFeature.VOLUME_MUTE
+        if self.player.volume_control != PLAYER_CONTROL_NONE:
+            supported_features |= MediaPlayerEntityFeature.VOLUME_STEP
+            supported_features |= MediaPlayerEntityFeature.VOLUME_SET
+        if self.player.power_control != PLAYER_CONTROL_NONE:
+            supported_features |= MediaPlayerEntityFeature.TURN_ON
+            supported_features |= MediaPlayerEntityFeature.TURN_OFF
+        self._attr_supported_features = supported_features

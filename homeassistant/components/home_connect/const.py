@@ -4,6 +4,8 @@ from typing import cast
 
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey, StatusKey
 
+from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolume
+
 from .utils import bsh_key_to_translation_key
 
 DOMAIN = "home_connect"
@@ -20,6 +22,13 @@ APPLIANCES_WITH_PROGRAMS = (
     "Washer",
     "WasherDryer",
 )
+
+UNIT_MAP = {
+    "seconds": UnitOfTime.SECONDS,
+    "ml": UnitOfVolume.MILLILITERS,
+    "°C": UnitOfTemperature.CELSIUS,
+    "°F": UnitOfTemperature.FAHRENHEIT,
+}
 
 
 BSH_POWER_ON = "BSH.Common.EnumType.PowerState.On"
@@ -87,7 +96,7 @@ PROGRAMS_TRANSLATION_KEYS_MAP = {
     value: key for key, value in TRANSLATION_KEYS_PROGRAMS_MAP.items()
 }
 
-REFERENCE_MAP_ID_OPTIONS = {
+AVAILABLE_MAPS_ENUM = {
     bsh_key_to_translation_key(option): option
     for option in (
         "ConsumerProducts.CleaningRobot.EnumType.AvailableMaps.TempMap",
@@ -276,6 +285,7 @@ SPIN_SPEED_OPTIONS = {
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM400",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM600",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM800",
+        "LaundryCare.Washer.EnumType.SpinSpeed.RPM900",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM1000",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM1200",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM1400",
@@ -305,7 +315,7 @@ PROGRAM_ENUM_OPTIONS = {
     for option_key, options in (
         (
             OptionKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_REFERENCE_MAP_ID,
-            REFERENCE_MAP_ID_OPTIONS,
+            AVAILABLE_MAPS_ENUM,
         ),
         (
             OptionKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_CLEANING_MODE,
