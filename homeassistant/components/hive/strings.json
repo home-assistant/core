@@ -11,18 +11,18 @@
         }
       },
       "2fa": {
-        "title": "Hive two-factor authentication.",
+        "title": "Hive two-factor authentication",
         "description": "Enter your Hive authentication code.\n\nPlease enter code 0000 to request another code.",
         "data": {
           "2fa": "Two-factor code"
         }
       },
       "configuration": {
+        "title": "Hive configuration",
+        "description": "Enter your Hive configuration.",
         "data": {
           "device_name": "Device name"
-        },
-        "description": "Enter your Hive configuration",
-        "title": "Hive configuration."
+        }
       },
       "reauth": {
         "title": "[%key:component::hive::config::step::user::title%]",
