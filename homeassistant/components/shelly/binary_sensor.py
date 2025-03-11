@@ -130,7 +130,6 @@ SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
         device_class=BinarySensorDeviceClass.GAS,
         translation_key="gas",
         value=lambda value: value in ["mild", "heavy"],
-        extra_state_attributes=lambda block: {"detected": block.gas},
     ),
     ("sensor", "smoke"): BlockBinarySensorDescription(
         key="sensor|smoke", name="Smoke", device_class=BinarySensorDeviceClass.SMOKE
