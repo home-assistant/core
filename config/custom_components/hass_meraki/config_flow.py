@@ -1,10 +1,15 @@
+"""Add Config Flow."""
+
 import logging
-from homeassistant import config_entries
-import voluptuous as vol
-from homeassistant.const import CONF_API_KEY
-import homeassistant.helpers.config_validation as cv
-from . import DOMAIN
+
 import meraki
+import voluptuous as vol
+
+from homeassistant import config_entries
+from homeassistant.const import CONF_API_KEY  # noqa: F401
+import homeassistant.helpers.config_validation as cv
+
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +47,7 @@ class MerakiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         errors["base"] = "no_organizations"
 
             except meraki.APIError as e:
-                _LOGGER.error(f"Meraki API Error: {e}")
+                _LOGGER.error(f"Meraki API Error: {e}")  # noqa: G004
                 errors["base"] = "invalid_api_key"
 
             if not errors:
@@ -60,7 +65,7 @@ class MerakiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     "api_key", default=default_data.get("api_key", "")
                 ): cv.string,
-                vol.Optional(
+                vol.Required(
                     "org_id", default=default_data.get("org_id", "")
                 ): cv.string,
                 vol.Optional(
@@ -78,7 +83,7 @@ class MerakiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class MerakiOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for Meraki integration."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry) -> None:
         """Initialize options flow."""
 
     async def async_step_init(self, user_input=None):
@@ -113,7 +118,7 @@ class MerakiOptionsFlowHandler(config_entries.OptionsFlow):
                         errors["base"] = "no_organizations"
 
             except meraki.APIError as e:
-                _LOGGER.error(f"Meraki API Error: {e}")
+                _LOGGER.error(f"Meraki API Error: {e}")  # noqa: G004
                 errors["base"] = "invalid_api_key"
 
             if not errors:
@@ -140,7 +145,7 @@ class MerakiOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required(
                     "api_key"
                 ): cv.string,  # Passwort-Feld, nicht vorausgefüllt
-                vol.Optional(
+                vol.Required(
                     "org_id", default=default_data.get("org_id", "")
                 ): cv.string,
                 vol.Optional(

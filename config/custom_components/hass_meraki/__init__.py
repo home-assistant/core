@@ -1,10 +1,14 @@
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-import logging
-import meraki
+"""The Cisco Meraki Integration."""
+
 from datetime import timedelta
 import functools
+import logging
+
+import meraki
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 DOMAIN = "hass_meraki"
 _LOGGER = logging.getLogger(__name__)
@@ -23,6 +27,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     dashboard = meraki.DashboardAPI(api_key=api_key, suppress_logging=True)
 
+    async def _get_neighbors(serial):
+        """Call the Meraki API to change the PoE state for this port."""
+        try:
+            return await hass.async_add_executor_job(
+                dashboard.devices.getDeviceLldpCdp, serial
+            )
+        except meraki.APIError as err:
+            _LOGGER.error("Failed to get neighbors for serial %s: %s", serial, err)
+            return False
+
     async def async_update_data():
         """Fetch latest device data and (optionally) active client counts for supported devices."""
         data = {}
@@ -30,46 +44,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             # Bestimme, welche Netzwerke abgefragt werden
             if network_id:
                 networks = [{"id": network_id}]
-            elif org_id:
+            else:
                 networks = await hass.async_add_executor_job(
                     dashboard.organizations.getOrganizationNetworks, org_id
                 )
-            else:
-                orgs = await hass.async_add_executor_job(
-                    dashboard.organizations.getOrganizations
-                )
-                networks = []
-                for org in orgs:
-                    org_networks = await hass.async_add_executor_job(
-                        dashboard.organizations.getOrganizationNetworks, org["id"]
-                    )
-                    networks.extend(org_networks)
 
-            # Hole alle Geräte aus der Organisation(en)
-            if org_id:
-                all_devices = await hass.async_add_executor_job(
-                    dashboard.organizations.getOrganizationDevices, org_id
-                )
+            # Hole alle Geräte aus der Organisation
+            all_devices = await hass.async_add_executor_job(
+                dashboard.organizations.getOrganizationDevices, org_id
+            )
 
-                # Verfügbarkeitsinformationen für diese Org
-                devices_availabilities = await hass.async_add_executor_job(
-                    dashboard.organizations.getOrganizationDevicesAvailabilities,
+            # Verfügbarkeitsinformationen für diese Org
+            devices_availabilities = await hass.async_add_executor_job(
+                dashboard.organizations.getOrganizationDevicesAvailabilities,
+                org_id,
+            )
+
+            # Port Informationen für diese Org
+            port_usage = await hass.async_add_executor_job(
+                functools.partial(
+                    dashboard.switch.getOrganizationSwitchPortsUsageHistoryByDeviceByInterval,
                     org_id,
+                    timespan=900,
                 )
-            else:
-                all_devices = []
-                devices_availabilities = []
-                for org in orgs:
-                    org_devices = await hass.async_add_executor_job(
-                        dashboard.organizations.getOrganizationDevices, org["id"]
-                    )
-                    all_devices.extend(org_devices)
-
-                    org_devices_avail = await hass.async_add_executor_job(
-                        dashboard.organizations.getOrganizationDevicesAvailabilities,
-                        org["id"],
-                    )
-                    devices_availabilities.extend(org_devices_avail)
+            )
 
             # Falls eine Network ID angegeben wurde, filtern wir die Geräte nach Netzwerk
             if network_id:
@@ -102,10 +100,46 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     "networkId": device.get("networkId"),
                     "serial": serial,
                     "productType": device.get("productType", None),  # falls vorhanden
-                    "client_count": 0,  # Standardwert
                     "state": status,  # Verknüpfter Status aus getOrganizationDevicesAvailabilities
+                    "client_count": 0,
+                    "clients": {},
+                    "active_poe_ports": [],
                 }
 
+            port_usage = port_usage.get("items")
+
+            if network_id:
+                port_usage = [
+                    switch
+                    for switch in port_usage
+                    if switch.get("networkId") == network_id
+                ]
+
+            for switch in port_usage:
+                serial = switch.get("serial")
+                if not serial:
+                    continue
+
+                active_poe_ports = {}
+
+                ports = switch.get("ports")
+                for port in ports:
+                    port_id = port.get("portId")
+
+                    if port.get("intervals")[0]["energy"]["usage"]:
+                        poe = port.get("intervals")[0]["energy"]["usage"]["total"]
+                        if poe > 0.0:
+                            poe_port = {}
+                            active_poe_ports[port_id] = poe_port
+
+                if serial in data:
+                    data[serial]["active_poe_ports"] = active_poe_ports
+
+                neighbors = await _get_neighbors(serial)
+                ports = neighbors.get("ports")
+                for port in ports:
+                    if port in active_poe_ports:
+                        active_poe_ports[port] = neighbors["ports"][port]["lldp"]
             # Optionale Abfrage: Hole aktive Clients und ordne diese Geräten zu,
             # aber nur für Geräte, die auch Clients unterstützen (z.B. Switches, APs, Appliances)
             for network in networks:
@@ -114,28 +148,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     functools.partial(
                         dashboard.networks.getNetworkClients,
                         network["id"],
-                        total_pages="all",
+                        perPage=5000,
                     )
                 )
-                # Gruppiere Clients nach recentDeviceSerial
-                device_client_counts = {}
+
                 for client in clients:
                     if client.get("status") != "Online":
                         continue
                     serial = client.get("recentDeviceSerial")
-                    if serial:
-                        device_client_counts[serial] = (
-                            device_client_counts.get(serial, 0) + 1
-                        )
-                # Aktualisiere für Geräte, die Client-Daten unterstützen (z. B. anhand des productType)
-                for serial, count in device_client_counts.items():
-                    # Hier könntest du zusätzlich filtern, z.B.:
-                    # if data[serial]["productType"] in ["switch", "access point", "appliance"]:
+                    client_id = client.get("id")
                     if serial in data:
-                        data[serial]["client_count"] = count
+                        data[serial]["client_count"] += 1
+                        data[serial]["clients"][client_id] = client
+                        port = client.get("switchport")
+                        if port in active_poe_ports:
+                            active_poe_ports[port] = client
 
-        except Exception as e:
-            _LOGGER.error(f"Error updating Meraki data: {e}")
+        except Exception as e:  # noqa: BLE001
+            _LOGGER.error(f"Error updating Meraki data: {e}")  # noqa: G004
         return data
 
     coordinator = DataUpdateCoordinator(
@@ -143,7 +173,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER,
         name="meraki_coordinator",
         update_method=async_update_data,
-        update_interval=timedelta(minutes=5),
+        update_interval=timedelta(seconds=15),
     )
 
     await coordinator.async_config_entry_first_refresh()
@@ -154,5 +184,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Starte die Sensor-Plattform (die Sensoren für z. B. Client Counts erzeugt)
     await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
+    await hass.config_entries.async_forward_entry_setups(entry, ["switch"])
 
     return True

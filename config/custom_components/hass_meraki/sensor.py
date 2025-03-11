@@ -1,8 +1,12 @@
+"""The Sensor Component."""
+
+import logging
+
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.device_registry import async_get as async_get_device_registry
+
 from . import DOMAIN
-import logging
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -10,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Meraki sensors via config entry."""
     coordinator = hass.data[DOMAIN]["coordinator"]
-    device_registry = async_get_device_registry(hass)
+    device_registry = dr.async_get(hass)
     config_entry = hass.data[DOMAIN].get("config_entry")
     if not config_entry:
         _LOGGER.error("Config entry not found!")
@@ -41,7 +45,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class MerakiClientSensor(CoordinatorEntity, Entity):
     """Sensor to track active clients for a Meraki device."""
 
-    def __init__(self, coordinator, serial):
+    def __init__(self, coordinator, serial) -> None:  # noqa: D107
         super().__init__(coordinator)
         self._serial = serial
         # Gib der Entität nur den „reinen“ Namen
@@ -71,7 +75,7 @@ class MerakiClientSensor(CoordinatorEntity, Entity):
 class MerakiStatusSensor(CoordinatorEntity, Entity):
     """Sensor to track device status for a Meraki device."""
 
-    def __init__(self, coordinator, serial):
+    def __init__(self, coordinator, serial) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._serial = serial
@@ -79,8 +83,6 @@ class MerakiStatusSensor(CoordinatorEntity, Entity):
         # im Device Registry hinterlegt wird)
         self._attr_name = "Status"
         self._attr_unique_id = f"{serial}_state"
-        # Da es sich um einen Textwert handelt, gibt es keine Einheit und keinen measurement state
-        self._attr_unit_of_measurement = ""
         # Kein state_class, da es sich nicht um einen numerischen Messwert handelt
         self._attr_has_entity_name = True
 
@@ -105,9 +107,8 @@ class MerakiStatusSensor(CoordinatorEntity, Entity):
         status = self.state.lower()
         if status == "online":
             return "mdi:ethernet"
-        elif status in ["offline", "dormant"]:
+        if status in ["offline", "dormant"]:
             return "mdi:ethernet-off"
-        elif status == "alerting":
+        if status == "alerting":
             return "mdi:alert"
-        else:
-            return "mdi:help-circle"
+        return "mdi:help-circle"

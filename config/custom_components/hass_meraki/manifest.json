@@ -1,6 +1,6 @@
 {
   "domain": "hass_meraki",
-  "name": "Meraki Network",
+  "name": "Cisco Meraki",
   "codeowners": ["@felixblang"],
   "config_flow": true,
   "dependencies": [],

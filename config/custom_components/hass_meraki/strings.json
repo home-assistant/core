@@ -1,0 +1,28 @@
+{
+    "config": {
+      "step": {
+        "user": {
+          "title": "Meraki Network Setup",
+          "description": "Enter your Meraki API key and optionally provide an Organization ID or Network ID. If you leave both optional fields blank, the integration will try to list available organizations.",
+          "data": {
+            "api_key": "API Key",
+            "org_id": "Organization ID",
+            "network_id": "Network ID (Optional)"
+          }
+        },
+        "init": {
+          "title": "Meraki Options",
+          "description": "Update your Meraki configuration options below.",
+          "data": {
+            "api_key": "API Key",
+            "org_id": "Organization ID",
+            "network_id": "Network ID (Optional)"
+          }
+        }
+      },
+      "error": {
+        "invalid_api_key": "The API key provided is invalid. Please check your key and try again.",
+        "no_organizations": "No organizations found with the provided credentials. Ensure that your account has access to an organization."
+      }
+    }
+  }
