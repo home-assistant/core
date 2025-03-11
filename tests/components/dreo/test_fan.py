@@ -119,7 +119,6 @@ def test_set_preset_mode(fan: DreoFanHA) -> None:
             HsCloudBusinessException(message="Invalid credentials"),
             type(ConfigEntryNotReady()),
         ),
-        (Exception("Unexpected error"), type(ConfigEntryNotReady())),
     ],
 )
 def test_update_errors(

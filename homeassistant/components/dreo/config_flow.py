@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
 
 from .const import DOMAIN
 
@@ -24,7 +23,7 @@ DATA_SCHEMA = vol.Schema(
 class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Dreo config flow."""
 
-    VERSION = 1  # 添加版本号
+    VERSION = 1  # add version
 
     def __init__(self) -> None:
         """Initialize the Dreo flow."""
@@ -54,33 +53,25 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
             return False, "unknown"
         return True, None
 
-    @callback
-    def _show_form(self, errors=None):
-        """Show form to the user."""
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors if errors else {}
-        )
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
 
         await self.async_set_unique_id(DOMAIN)
         self._abort_if_unique_id_configured()
 
-        if not user_input:
-            return self._show_form()
-
-        username = user_input[CONF_USERNAME]
-        hashed_password = self._hash_password(user_input[CONF_PASSWORD])
-        is_valid, error = await self._validate_login(username, hashed_password)
-        if not is_valid:
-            return self._show_form(errors={"base": error})
-
-        return self.async_create_entry(
-            title=username,
-            data={CONF_USERNAME: username, CONF_PASSWORD: hashed_password},
+        errors = {}
+        if user_input:
+            username = user_input[CONF_USERNAME]
+            hashed_password = self._hash_password(user_input[CONF_PASSWORD])
+            is_valid, error = await self._validate_login(username, hashed_password)
+            if is_valid:
+                return self.async_create_entry(
+                    title=username,
+                    data={CONF_USERNAME: username, CONF_PASSWORD: hashed_password},
+                )
+            errors["base"] = error if error is not None else "unknown_error"
+        return self.async_show_form(
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )

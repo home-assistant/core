@@ -144,10 +144,6 @@ class DreoFanHA(DreoEntity, FanEntity):
             _LOGGER.exception("Invalid username or password")
             raise ConfigEntryNotReady("invalid username or password") from ex
 
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            raise ConfigEntryNotReady("Unexpected exception") from ex
-
         if status is None:
             self._attr_available = False
         else:

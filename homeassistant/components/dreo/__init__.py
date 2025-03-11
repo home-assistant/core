@@ -33,10 +33,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) 
 
     manager = HsCloud(username, password)
     try:
-        await hass.async_add_executor_job(manager.login)
-        config_entry.runtime_data = DreoData(
-            manager, await hass.async_add_executor_job(manager.get_devices)
-        )
+
+        def setup_manager():
+            manager.login()
+            return manager.get_devices()
+
+        devices = await hass.async_add_executor_job(setup_manager)
+        config_entry.runtime_data = DreoData(manager, devices)
 
     except HsCloudException as ex:
         _LOGGER.exception("Unable to connect")
@@ -45,10 +48,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) 
     except HsCloudBusinessException as ex:
         _LOGGER.exception("Invalid username or password")
         raise ConfigEntryNotReady("invalid username or password") from ex
-
-    except Exception as ex:  # pylint: disable=broad-except
-        _LOGGER.exception("Unexpected exception")
-        raise ConfigEntryNotReady("Unexpected exception") from ex
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
