@@ -39,7 +39,7 @@ class DreoEntity(Entity):
             hw_version=device.get("mcuFirmwareVersion"),
         )
 
-    def _try_command(self, mask_error, **kwargs) -> bool:
+    def _try_command(self, mask_error, **kwargs) -> None:
         """Call a hscluod device command handling error messages."""
 
         try:
@@ -62,10 +62,3 @@ class DreoEntity(Entity):
         except HsCloudFlowControlException as ex:
             _LOGGER.error(mask_error)
             raise HomeAssistantError(mask_error) from ex
-
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.error(mask_error)
-            raise HomeAssistantError(mask_error) from ex
-
-        else:
-            return True

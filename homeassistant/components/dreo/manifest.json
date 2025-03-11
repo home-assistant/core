@@ -1,12 +1,13 @@
 {
   "domain": "dreo",
   "name": "Dreo",
-  "codeowners": ["@dreo-team"],
+  "codeowners": ["@w-xtao"],
   "config_flow": true,
   "dependencies": ["logger"],
   "documentation": "https://www.home-assistant.io/integrations/dreo",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["hscloud==1.0.3"]
+  "requirements": ["hscloud==1.0.3"],
+  "single_config_entry": true
 }
