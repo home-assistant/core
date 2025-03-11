@@ -52,6 +52,9 @@ def convert_scale(
     value: float | None, value_scale: int, target_scale: int, round_digits: int = 4
 ) -> float:
     """Convert a value to a different scale."""
+    # There are stateless lights out there that return None.
+    # If the value is None, we return 0.0, as it can still be
+    # available and working, but just without state.
     if value is None:
         return 0.0
     return round(value * target_scale / value_scale, round_digits)
