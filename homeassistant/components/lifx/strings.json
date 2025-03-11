@@ -201,7 +201,7 @@
     },
     "effect_morph": {
       "name": "Morph effect",
-      "description": "Starts the firmware-based Morph effect on LIFX Tiles on Candle.",
+      "description": "Starts the firmware-based Morph effect on LIFX Tiles or Candle.",
       "fields": {
         "speed": {
           "name": "Speed",
