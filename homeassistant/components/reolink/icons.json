@@ -169,6 +169,9 @@
       "ai_animal_delay": {
         "default": "mdi:paw"
       },
+      "crossline_sensitivity": {
+        "default": "mdi:fence"
+      },
       "auto_quick_reply_time": {
         "default": "mdi:message-reply-text-outline"
       },
