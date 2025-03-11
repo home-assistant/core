@@ -104,7 +104,9 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "iphone",
         "da_wm_dw_000001",
         "da_wm_wd_000001",
+        "da_wm_wd_000001_1",
         "da_wm_wm_000001",
+        "da_wm_wm_000001_1",
         "da_rvc_normal_000001",
         "da_ks_microwave_0101x",
         "hue_color_temperature_bulb",
@@ -120,6 +122,10 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "ecobee_thermostat",
         "fake_fan",
         "generic_fan_3_speed",
+        "heatit_ztrm3_thermostat",
+        "generic_ef00_v1",
+        "bosch_radiator_thermostat_ii",
+        "im_speaker_ai_0001",
     ]
 )
 def device_fixture(
