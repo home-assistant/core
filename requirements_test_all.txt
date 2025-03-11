@@ -962,7 +962,7 @@ hass-nabucasa==0.94.0
 hassil==2.2.3
 
 # homeassistant.components.jewish_calendar
-hdate==0.11.1
+hdate[astral]==1.0.3
 
 # homeassistant.components.here_travel_time
 here-routing==1.0.1
