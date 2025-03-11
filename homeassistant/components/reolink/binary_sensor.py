@@ -138,7 +138,7 @@ BINARY_SENSORS = (
 )
 
 BINARY_SMART_AI_SENSORS = (
-    ReolinkSmartBinarySensorEntityDescription(
+    ReolinkSmartAIBinarySensorEntityDescription(
         key="crossline",
         ai_type="people",
         cmd_id=33,
@@ -151,7 +151,7 @@ BINARY_SMART_AI_SENSORS = (
             and "people" in api.baichuan.smart_ai_type_list(ch, "crossline", loc)
         ),
     ),
-    ReolinkSmartBinarySensorEntityDescription(
+    ReolinkSmartAIBinarySensorEntityDescription(
         key="crossline",
         ai_type="vehicle",
         cmd_id=33,
@@ -164,7 +164,7 @@ BINARY_SMART_AI_SENSORS = (
             and "vehicle" in api.baichuan.smart_ai_type_list(ch, "crossline", loc)
         ),
     ),
-    ReolinkSmartBinarySensorEntityDescription(
+    ReolinkSmartAIBinarySensorEntityDescription(
         key="crossline",
         ai_type="dog_cat",
         cmd_id=33,
@@ -177,7 +177,7 @@ BINARY_SMART_AI_SENSORS = (
             and "dog_cat" in api.baichuan.smart_ai_type_list(ch, "crossline", loc)
         ),
     ),
-    ReolinkSmartBinarySensorEntityDescription(
+    ReolinkSmartAIBinarySensorEntityDescription(
         key="intrusion",
         ai_type="people",
         cmd_id=33,
@@ -190,7 +190,7 @@ BINARY_SMART_AI_SENSORS = (
             and "people" in api.baichuan.smart_ai_type_list(ch, "intrusion", loc)
         ),
     ),
-    ReolinkSmartBinarySensorEntityDescription(
+    ReolinkSmartAIBinarySensorEntityDescription(
         key="intrusion",
         ai_type="vehicle",
         cmd_id=33,
@@ -203,7 +203,7 @@ BINARY_SMART_AI_SENSORS = (
             and "vehicle" in api.baichuan.smart_ai_type_list(ch, "intrusion", loc)
         ),
     ),
-    ReolinkSmartBinarySensorEntityDescription(
+    ReolinkSmartAIBinarySensorEntityDescription(
         key="intrusion",
         ai_type="dog_cat",
         cmd_id=33,
@@ -216,7 +216,7 @@ BINARY_SMART_AI_SENSORS = (
             and "dog_cat" in api.baichuan.smart_ai_type_list(ch, "intrusion", loc)
         ),
     ),
-    ReolinkSmartBinarySensorEntityDescription(
+    ReolinkSmartAIBinarySensorEntityDescription(
         key="loitering",
         ai_type="people",
         cmd_id=33,
@@ -229,7 +229,7 @@ BINARY_SMART_AI_SENSORS = (
             and "people" in api.baichuan.smart_ai_type_list(ch, "loitering", loc)
         ),
     ),
-    ReolinkSmartBinarySensorEntityDescription(
+    ReolinkSmartAIBinarySensorEntityDescription(
         key="loitering",
         ai_type="vehicle",
         cmd_id=33,
@@ -242,7 +242,7 @@ BINARY_SMART_AI_SENSORS = (
             and "vehicle" in api.baichuan.smart_ai_type_list(ch, "loitering", loc)
         ),
     ),
-    ReolinkSmartBinarySensorEntityDescription(
+    ReolinkSmartAIBinarySensorEntityDescription(
         key="loitering",
         ai_type="dog_cat",
         cmd_id=33,
@@ -255,14 +255,14 @@ BINARY_SMART_AI_SENSORS = (
             and "dog_cat" in api.baichuan.smart_ai_type_list(ch, "loitering", loc)
         ),
     ),
-    ReolinkSmartBinarySensorEntityDescription(
+    ReolinkSmartAIBinarySensorEntityDescription(
         key="legacy",
         cmd_id=33,
         translation_key="forgotten_item",
         value=lambda api, ch, loc: (api.baichuan.smart_ai_state(ch, "legacy", loc)),
         supported=lambda api, ch, loc: api.supported(ch, "ai_forgotten_item"),
     ),
-    ReolinkSmartBinarySensorEntityDescription(
+    ReolinkSmartAIBinarySensorEntityDescription(
         key="loss",
         cmd_id=33,
         translation_key="taken_item",
@@ -281,7 +281,7 @@ async def async_setup_entry(
     reolink_data: ReolinkData = config_entry.runtime_data
     api = reolink_data.host.api
 
-    entities: list[ReolinkBinarySensorEntity | ReolinkSmartBinarySensorEntity] = []
+    entities: list[ReolinkBinarySensorEntity | ReolinkSmartAIBinarySensorEntity] = []
     for channel in api.channels:
         entities.extend(
             ReolinkPushBinarySensorEntity(reolink_data, channel, entity_description)
@@ -294,10 +294,10 @@ async def async_setup_entry(
             if entity_description.supported(api, channel)
         )
         entities.extend(
-            ReolinkSmartBinarySensorEntity(
+            ReolinkSmartAIBinarySensorEntity(
                 reolink_data, channel, location, entity_description
             )
-            for entity_description in BINARY_SMART_SENSORS
+            for entity_description in BINARY_SMART_AI_SENSORS
             for location in api.baichuan.smart_location_list(
                 channel, entity_description.key
             )
@@ -361,19 +361,19 @@ class ReolinkPushBinarySensorEntity(ReolinkBinarySensorEntity):
         self.async_write_ha_state()
 
 
-class ReolinkSmartBinarySensorEntity(
+class ReolinkSmartAIBinarySensorEntity(
     ReolinkChannelCoordinatorEntity, BinarySensorEntity
 ):
     """Binary-sensor class for Reolink IP camera smart AI sensors."""
 
-    entity_description: ReolinkSmartBinarySensorEntityDescription
+    entity_description: ReolinkSmartAIBinarySensorEntityDescription
 
     def __init__(
         self,
         reolink_data: ReolinkData,
         channel: int,
         location: int,
-        entity_description: ReolinkSmartBinarySensorEntityDescription,
+        entity_description: ReolinkSmartAIBinarySensorEntityDescription,
     ) -> None:
         """Initialize Reolink binary sensor."""
         self.entity_description = entity_description
