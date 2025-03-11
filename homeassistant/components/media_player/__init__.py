@@ -98,7 +98,6 @@ from .const import (  # noqa: F401
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_ARTIST,
     ATTR_MEDIA_ALBUM_NAME,
-    ATTR_MEDIA_ALLOWED_CLASSES,
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CHANNEL,
@@ -117,6 +116,7 @@ from .const import (  # noqa: F401
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SERIES_TITLE,
     ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_TARGET_CLASSES,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -457,8 +457,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Optional(ATTR_MEDIA_CONTENT_TYPE): cv.string,
             vol.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
             vol.Optional(ATTR_MEDIA_SEARCH_QUERY): cv.string,
-            vol.Optional(ATTR_MEDIA_ALLOWED_CLASSES): vol.All(
-                cv.ensure_list, [vol.In(MediaClass)]
+            vol.Optional(ATTR_MEDIA_TARGET_CLASSES): vol.All(
+                cv.ensure_list, [vol.In([m.value for m in MediaClass])]
             ),
         },
         "async_search_media",
@@ -1180,7 +1180,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
         query: str | None = None,
-        allowed_media_classes: set[MediaClass] | None = None,
+        target_media_classes: set[MediaClass] | None = None,
     ) -> list[BrowseMedia]:
         """Return a list of BrowseMedia instances.
 
@@ -1407,8 +1407,8 @@ async def websocket_browse_media(
             "media_content_type and media_content_id must be provided together",
         ): str,
         vol.Optional(ATTR_MEDIA_SEARCH_QUERY): str,
-        vol.Optional(ATTR_MEDIA_ALLOWED_CLASSES): vol.In(
-            *[media_class.value for media_class in MediaClass]
+        vol.Optional(ATTR_MEDIA_TARGET_CLASSES): vol.All(
+            cv.ensure_list, [vol.In([m.value for m in MediaClass])]
         ),
     }
 )
@@ -1440,11 +1440,11 @@ async def websocket_search_media(
     media_content_type = msg.get(ATTR_MEDIA_CONTENT_TYPE)
     media_content_id = msg.get(ATTR_MEDIA_CONTENT_ID)
     query = msg.get(ATTR_MEDIA_SEARCH_QUERY)
-    allowed_media_classes = msg.get(ATTR_MEDIA_ALLOWED_CLASSES)
+    target_media_classes = msg.get(ATTR_MEDIA_TARGET_CLASSES)
 
     try:
         payload = await player.async_search_media(
-            media_content_type, media_content_id, query, allowed_media_classes
+            media_content_type, media_content_id, query, target_media_classes
         )
     except NotImplementedError:
         assert player.platform
