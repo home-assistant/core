@@ -44,10 +44,11 @@ _PLATFORMS: list[Platform] = [Platform.CLIMATE]
 async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
     """Set up the STIEBEL ELTRON component."""
     hub_config: dict[str, Any] | None = None
-    for hub in config[MODBUS_DOMAIN]:
-        if hub[CONF_NAME] == config[DOMAIN][CONF_HUB]:
-            hub_config = hub
-            break
+    if MODBUS_DOMAIN in config:
+        for hub in config[MODBUS_DOMAIN]:
+            if hub[CONF_NAME] == config[DOMAIN][CONF_HUB]:
+                hub_config = hub
+                break
     if hub_config is None:
         ir.async_create_issue(
             hass,
