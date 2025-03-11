@@ -81,6 +81,7 @@ from .helpers import (
     entity,
     entity_registry,
     floor_registry,
+    frame,
     issue_registry,
     label_registry,
     recorder,
@@ -298,14 +299,6 @@ async def async_setup_hass(
 
         return hass
 
-    async def stop_hass(hass: core.HomeAssistant) -> None:
-        """Stop hass."""
-        # Ask integrations to shut down. It's messy but we can't
-        # do a clean stop without knowing what is broken
-        with contextlib.suppress(TimeoutError):
-            async with hass.timeout.async_timeout(10):
-                await hass.async_stop()
-
     hass = await create_hass()
 
     if runtime_config.skip_pip or runtime_config.skip_pip_packages:
@@ -344,7 +337,7 @@ async def async_setup_hass(
 
         if config_dict is None:
             recovery_mode = True
-            await stop_hass(hass)
+            await hass.async_stop(force=True)
             hass = await create_hass()
 
         elif not basic_setup_success:
@@ -352,7 +345,7 @@ async def async_setup_hass(
                 "Unable to set up core integrations. Activating recovery mode"
             )
             recovery_mode = True
-            await stop_hass(hass)
+            await hass.async_stop(force=True)
             hass = await create_hass()
 
         elif any(
@@ -367,7 +360,7 @@ async def async_setup_hass(
             old_logging = hass.data.get(DATA_LOGGING)
 
             recovery_mode = True
-            await stop_hass(hass)
+            await hass.async_stop(force=True)
             hass = await create_hass()
 
             if old_logging:
@@ -441,9 +434,10 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
     if DATA_REGISTRIES_LOADED in hass.data:
         return
     hass.data[DATA_REGISTRIES_LOADED] = None
-    translation.async_setup(hass)
     entity.async_setup(hass)
+    frame.async_setup(hass)
     template.async_setup(hass)
+    translation.async_setup(hass)
     await asyncio.gather(
         create_eager_task(get_internal_store_manager(hass).async_initialize()),
         create_eager_task(area_registry.async_load(hass)),

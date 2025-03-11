@@ -265,18 +265,18 @@ def _trigger_action_wrapper(
     while isinstance(check_func, functools.partial):
         check_func = check_func.func
 
-    wrapper_func: Callable[..., None] | Callable[..., Coroutine[Any, Any, None]]
+    wrapper_func: Callable[..., Any] | Callable[..., Coroutine[Any, Any, Any]]
     if asyncio.iscoroutinefunction(check_func):
-        async_action = cast(Callable[..., Coroutine[Any, Any, None]], action)
+        async_action = cast(Callable[..., Coroutine[Any, Any, Any]], action)
 
         @functools.wraps(async_action)
         async def async_with_vars(
             run_variables: dict[str, Any], context: Context | None = None
-        ) -> None:
+        ) -> Any:
             """Wrap action with extra vars."""
             trigger_variables = conf[CONF_VARIABLES]
             run_variables.update(trigger_variables.async_render(hass, run_variables))
-            await action(run_variables, context)
+            return await action(run_variables, context)
 
         wrapper_func = async_with_vars
 
@@ -285,11 +285,11 @@ def _trigger_action_wrapper(
         @functools.wraps(action)
         async def with_vars(
             run_variables: dict[str, Any], context: Context | None = None
-        ) -> None:
+        ) -> Any:
             """Wrap action with extra vars."""
             trigger_variables = conf[CONF_VARIABLES]
             run_variables.update(trigger_variables.async_render(hass, run_variables))
-            action(run_variables, context)
+            return action(run_variables, context)
 
         if is_callback(check_func):
             with_vars = callback(with_vars)
