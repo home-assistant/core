@@ -16,6 +16,8 @@ from . import HomeeConfigEntry
 from .const import HOMEE_UNIT_TO_HA_UNIT
 from .entity import HomeeEntity
 
+PARALLEL_UPDATES = 0
+
 NUMBER_DESCRIPTIONS = {
     AttributeType.DOWN_POSITION: NumberEntityDescription(
         key="down_position",
