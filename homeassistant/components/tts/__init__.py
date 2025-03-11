@@ -182,6 +182,12 @@ def async_create_stream(
     )
 
 
+@callback
+def async_get_stream(hass: HomeAssistant, token: str) -> ResultStream | None:
+    """Return a result stream given a token."""
+    return hass.data[DATA_TTS_MANAGER].token_to_stream.get(token)
+
+
 async def async_get_media_source_audio(
     hass: HomeAssistant,
     media_source_id: str,
