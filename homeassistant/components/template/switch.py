@@ -204,13 +204,11 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the Template switch."""
+        super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
-        super().__init__(
-            hass, config=config, fallback_name=object_id, unique_id=unique_id
-        )
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
