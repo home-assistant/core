@@ -39,14 +39,30 @@ async def test_migrate_wrong_path(
     webdav_client.move.assert_called_once_with("/wrong%20path", "/wrong path")
 
 
+@pytest.mark.parametrize(
+    ("expected_path", "remote_path_check"),
+    [
+        (
+            "/correct path",
+            False,
+        ),  # remote_path_check is False as /correct%20path is not there
+        ("/", True),
+        ("/folder_with_underscores", True),
+    ],
+)
 async def test_migrate_non_wrong_path(
-    hass: HomeAssistant, webdav_client: AsyncMock
+    hass: HomeAssistant,
+    webdav_client: AsyncMock,
+    expected_path: str,
+    remote_path_check: bool,
 ) -> None:
     """Test no migration of correct folder path."""
     webdav_client.list_with_properties.return_value = [
-        {"/correct path": []},
+        {expected_path: []},
     ]
-    webdav_client.check.side_effect = lambda path: path == "/correct path"
+    # first return is used to check the connectivity
+    # second is used in the migration to determine if wrong quoted path is there
+    webdav_client.check.side_effect = [True, remote_path_check]
 
     config_entry = MockConfigEntry(
         title="user@webdav.demo",
@@ -55,7 +71,7 @@ async def test_migrate_non_wrong_path(
             CONF_URL: "https://webdav.demo",
             CONF_USERNAME: "user",
             CONF_PASSWORD: "supersecretpassword",
-            CONF_BACKUP_PATH: "/correct path",
+            CONF_BACKUP_PATH: expected_path,
         },
         entry_id="01JKXV07ASC62D620DGYNG2R8H",
     )
