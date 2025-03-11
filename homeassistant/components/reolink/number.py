@@ -45,11 +45,11 @@ class ReolinkNumberEntityDescription(
 
 
 @dataclass(frozen=True, kw_only=True)
-class ReolinkSmartNumberEntityDescription(
+class ReolinkSmartAINumberEntityDescription(
     NumberEntityDescription,
     ReolinkChannelEntityDescription,
 ):
-    """A class that describes smart number entities."""
+    """A class that describes smart AI number entities."""
 
     smart_type: str
     method: Callable[[Host, int, int, float], Any]
@@ -506,8 +506,8 @@ NUMBER_ENTITIES = (
     ),
 )
 
-SMART_NUMBER_ENTITIES = (
-    ReolinkSmartNumberEntityDescription(
+SMART_AI_NUMBER_ENTITIES = (
+    ReolinkSmartAINumberEntityDescription(
         key="crossline_sensitivity",
         smart_type="crossline",
         cmd_id=527,
@@ -524,7 +524,7 @@ SMART_NUMBER_ENTITIES = (
             ch, "crossline", loc, sensitivity=int(value)
         ),
     ),
-    ReolinkSmartNumberEntityDescription(
+    ReolinkSmartAINumberEntityDescription(
         key="intrusion_sensitivity",
         smart_type="intrusion",
         cmd_id=529,
@@ -541,7 +541,7 @@ SMART_NUMBER_ENTITIES = (
             ch, "intrusion", loc, sensitivity=int(value)
         ),
     ),
-    ReolinkSmartNumberEntityDescription(
+    ReolinkSmartAINumberEntityDescription(
         key="linger_sensitivity",
         smart_type="loitering",
         cmd_id=531,
@@ -558,7 +558,7 @@ SMART_NUMBER_ENTITIES = (
             ch, "loitering", loc, sensitivity=int(value)
         ),
     ),
-    ReolinkSmartNumberEntityDescription(
+    ReolinkSmartAINumberEntityDescription(
         key="forgotten_item_sensitivity",
         smart_type="legacy",
         cmd_id=549,
@@ -575,7 +575,7 @@ SMART_NUMBER_ENTITIES = (
             ch, "legacy", loc, sensitivity=int(value)
         ),
     ),
-    ReolinkSmartNumberEntityDescription(
+    ReolinkSmartAINumberEntityDescription(
         key="taken_item_sensitivity",
         smart_type="loss",
         cmd_id=551,
@@ -590,7 +590,7 @@ SMART_NUMBER_ENTITIES = (
             ch, "loss", loc, sensitivity=int(value)
         ),
     ),
-    ReolinkSmartNumberEntityDescription(
+    ReolinkSmartAINumberEntityDescription(
         key="intrusion_delay",
         smart_type="intrusion",
         cmd_id=529,
@@ -606,7 +606,7 @@ SMART_NUMBER_ENTITIES = (
             ch, "intrusion", loc, delay=int(value)
         ),
     ),
-    ReolinkSmartNumberEntityDescription(
+    ReolinkSmartAINumberEntityDescription(
         key="linger_delay",
         smart_type="loitering",
         cmd_id=531,
@@ -622,7 +622,7 @@ SMART_NUMBER_ENTITIES = (
             ch, "loitering", loc, delay=int(value)
         ),
     ),
-    ReolinkSmartNumberEntityDescription(
+    ReolinkSmartAINumberEntityDescription(
         key="forgotten_item_delay",
         smart_type="legacy",
         cmd_id=549,
@@ -638,7 +638,7 @@ SMART_NUMBER_ENTITIES = (
             ch, "legacy", loc, delay=int(value)
         ),
     ),
-    ReolinkSmartNumberEntityDescription(
+    ReolinkSmartAINumberEntityDescription(
         key="taken_item_delay",
         smart_type="loss",
         cmd_id=551,
@@ -714,8 +714,8 @@ async def async_setup_entry(
         if entity_description.supported(api, channel)
     ]
     entities.extend(
-        ReolinkSmartNumberEntity(reolink_data, channel, location, entity_description)
-        for entity_description in SMART_NUMBER_ENTITIES
+        ReolinkSmartAINumberEntity(reolink_data, channel, location, entity_description)
+        for entity_description in SMART_AI_NUMBER_ENTITIES
         for channel in api.channels
         for location in api.baichuan.smart_location_list(
             channel, entity_description.smart_type
@@ -772,17 +772,17 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
         self.async_write_ha_state()
 
 
-class ReolinkSmartNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
+class ReolinkSmartAINumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
     """Base smart AI number entity class for Reolink IP cameras."""
 
-    entity_description: ReolinkSmartNumberEntityDescription
+    entity_description: ReolinkSmartAINumberEntityDescription
 
     def __init__(
         self,
         reolink_data: ReolinkData,
         channel: int,
         location: int,
-        entity_description: ReolinkSmartNumberEntityDescription,
+        entity_description: ReolinkSmartAINumberEntityDescription,
     ) -> None:
         """Initialize Reolink number entity."""
         self.entity_description = entity_description
