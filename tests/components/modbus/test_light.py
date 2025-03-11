@@ -21,6 +21,8 @@ from homeassistant.components.modbus.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ADDRESS,
+    CONF_BRIGHTNESS,
+    CONF_COLOR_TEMP,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_LIGHTS,
@@ -352,3 +354,58 @@ async def test_no_discovery_info_light(
     )
     await hass.async_block_till_done()
     assert LIGHT_DOMAIN in hass.config.components
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_LIGHTS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_BRIGHTNESS: 1235,
+                }
+            ]
+        },
+    ],
+)
+async def test_brightness_control(hass: HomeAssistant, mock_modbus) -> None:
+    """Test setting brightness."""
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID, "brightness": 128}
+    )
+    await hass.async_block_till_done()
+    assert mock_modbus.write_register.called
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_LIGHTS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_BRIGHTNESS: 1235,
+                    CONF_COLOR_TEMP: 1236,
+                }
+            ]
+        },
+    ],
+)
+async def test_brightness_color_temp_control(hass: HomeAssistant, mock_modbus) -> None:
+    """Test setting brightness and color temperature."""
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: ENTITY_ID, "brightness": 128, "color_temp": 300}
+    )
+    await hass.async_block_till_done()
+    assert mock_modbus.write_register.call_count == 2
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+
