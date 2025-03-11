@@ -1199,13 +1199,13 @@
     },
     "repeat": {
       "options": {
-        "m": "Monday",
-        "t": "Tuesday",
-        "w": "Wednesday",
-        "th": "Thursday",
-        "f": "Friday",
-        "s": "Saturday",
-        "su": "Sunday"
+        "m": "[%key:common::time::monday%]",
+        "t": "[%key:common::time::tuesday%]",
+        "w": "[%key:common::time::wednesday%]",
+        "th": "[%key:common::time::thursday%]",
+        "f": "[%key:common::time::friday%]",
+        "s": "[%key:common::time::saturday%]",
+        "su": "[%key:common::time::sunday%]"
       }
     },
     "repeat_monthly": {
