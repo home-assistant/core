@@ -601,7 +601,7 @@ SMART_NUMBER_ENTITIES = (
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_min_value=0,
-        native_max_value=100,
+        native_max_value=10,
         supported=lambda api, ch: api.supported(ch, "ai_intrusion"),
         value=lambda api, ch, loc: (
             api.baichuan.smart_ai_delay(ch, "intrusion", loc)
@@ -618,8 +618,8 @@ SMART_NUMBER_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        native_min_value=0,
-        native_max_value=100,
+        native_min_value=1,
+        native_max_value=10,
         supported=lambda api, ch: api.supported(ch, "ai_linger"),
         value=lambda api, ch, loc: (
             api.baichuan.smart_ai_delay(ch, "loitering", loc)
@@ -636,8 +636,8 @@ SMART_NUMBER_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        native_min_value=0,
-        native_max_value=100,
+        native_min_value=1,
+        native_max_value=30,
         supported=lambda api, ch: api.supported(ch, "ai_forgotten_item"),
         value=lambda api, ch, loc: (
             api.baichuan.smart_ai_delay(ch, "legacy", loc)
@@ -654,8 +654,8 @@ SMART_NUMBER_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        native_min_value=0,
-        native_max_value=100,
+        native_min_value=1,
+        native_max_value=30,
         supported=lambda api, ch: api.supported(ch, "ai_taken_item"),
         value=lambda api, ch, loc: (
             api.baichuan.smart_ai_delay(ch, "loss", loc)
