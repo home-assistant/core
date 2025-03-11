@@ -1306,21 +1306,40 @@ def async_discover_single_value(
 
         # check device_class_generic
         if schema.device_class_generic and (
-            (endpoint := value.endpoint) is None
-            or (device_class := value.node.endpoints[endpoint].device_class) is None
-            or not any(
-                device_class.generic.label == val for val in schema.device_class_generic
+            (
+                (endpoint := value.endpoint) is None
+                or (device_class := value.node.endpoints[endpoint].device_class) is None
+                or not any(
+                    device_class.generic.label == val
+                    for val in schema.device_class_generic
+                )
+            )
+            and (
+                (device_class := value.node.device_class) is None
+                or not any(
+                    device_class.generic.label == val
+                    for val in schema.device_class_generic
+                )
             )
         ):
             continue
 
         # check device_class_specific
         if schema.device_class_specific and (
-            (endpoint := value.endpoint) is None
-            or (device_class := value.node.endpoints[endpoint].device_class) is None
-            or not any(
-                device_class.specific.label == val
-                for val in schema.device_class_specific
+            (
+                (endpoint := value.endpoint) is None
+                or (device_class := value.node.endpoints[endpoint].device_class) is None
+                or not any(
+                    device_class.specific.label == val
+                    for val in schema.device_class_specific
+                )
+            )
+            and (
+                (device_class := value.node.device_class) is None
+                or not any(
+                    device_class.specific.label == val
+                    for val in schema.device_class_specific
+                )
             )
         ):
             continue
