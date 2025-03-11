@@ -479,6 +479,9 @@
       "ai_animal_sensitivity": {
         "name": "AI animal sensitivity"
       },
+      "crossline_sensitivity": {
+        "name": "AI Crossline {zone_name} sensitivity"
+      },
       "ai_face_delay": {
         "name": "AI face delay"
       },
@@ -496,9 +499,6 @@
       },
       "ai_animal_delay": {
         "name": "AI animal delay"
-      },
-      "crossline_sensitivity": {
-        "name": "Crossline {zone_name} sensitivity"
       },
       "auto_quick_reply_time": {
         "name": "Auto quick reply time"

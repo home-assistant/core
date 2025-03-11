@@ -520,8 +520,8 @@ SMART_NUMBER_ENTITIES = (
         value=lambda api, ch, loc: (
             api.baichuan.smart_ai_sensitivity(ch, "crossline", loc)
         ),
-        method=lambda api, ch, loc, value: (
-            api.baichuan.set_smart_ai(ch, "crossline", loc, sensitivity=int(value)),
+        method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
+            ch, "crossline", loc, sensitivity=int(value)
         ),
     ),
 )
