@@ -223,7 +223,7 @@
     },
     "effect_sky": {
       "name": "Sky effect",
-      "description": "Starts the firmware-based Sky effect on LIFX Ceiling.",
+      "description": "Starts a firmware-based effect on LIFX Ceiling lights that animates a sky scene across the device.",
       "fields": {
         "speed": {
           "name": "Speed",
