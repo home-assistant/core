@@ -159,13 +159,12 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_on_reconnected(self) -> None:
         """Handle when reconnected so resources are updated and entities marked available."""
-        await self._async_update_players()
         await self._async_update_sources()
         _LOGGER.warning("Successfully reconnected to HEOS host %s", self.host)
         self.async_update_listeners()
 
     async def _async_on_controller_event(
-        self, event: str, data: PlayerUpdateResult | None
+        self, event: str, data: PlayerUpdateResult | None = None
     ) -> None:
         """Handle a controller event, such as players or groups changed."""
         if event == const.EVENT_PLAYERS_CHANGED:
