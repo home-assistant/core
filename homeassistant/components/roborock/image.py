@@ -46,6 +46,7 @@ async def async_setup_entry(
         for drawable, default_value in DEFAULT_DRAWABLES.items()
         if config_entry.options.get(DRAWABLES, {}).get(drawable, default_value)
     ]
+    _LOGGER.info("Drawables: %s", drawables)
     parser = RoborockMapDataParser(
         ColorsPalette(), Sizes(), drawables, ImageConfig(), []
     )
