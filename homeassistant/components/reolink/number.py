@@ -585,9 +585,7 @@ SMART_NUMBER_ENTITIES = (
         native_min_value=0,
         native_max_value=100,
         supported=lambda api, ch: api.supported(ch, "ai_taken_item"),
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_sensitivity(ch, "loss", loc)
-        ),
+        value=lambda api, ch, loc: api.baichuan.smart_ai_sensitivity(ch, "loss", loc),
         method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
             ch, "loss", loc, sensitivity=int(value)
         ),
@@ -603,9 +601,7 @@ SMART_NUMBER_ENTITIES = (
         native_min_value=0,
         native_max_value=10,
         supported=lambda api, ch: api.supported(ch, "ai_intrusion"),
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_delay(ch, "intrusion", loc)
-        ),
+        value=lambda api, ch, loc: api.baichuan.smart_ai_delay(ch, "intrusion", loc),
         method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
             ch, "intrusion", loc, delay=int(value)
         ),
@@ -621,9 +617,7 @@ SMART_NUMBER_ENTITIES = (
         native_min_value=1,
         native_max_value=10,
         supported=lambda api, ch: api.supported(ch, "ai_linger"),
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_delay(ch, "loitering", loc)
-        ),
+        value=lambda api, ch, loc: api.baichuan.smart_ai_delay(ch, "loitering", loc),
         method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
             ch, "loitering", loc, delay=int(value)
         ),
@@ -639,9 +633,7 @@ SMART_NUMBER_ENTITIES = (
         native_min_value=1,
         native_max_value=30,
         supported=lambda api, ch: api.supported(ch, "ai_forgotten_item"),
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_delay(ch, "legacy", loc)
-        ),
+        value=lambda api, ch, loc: api.baichuan.smart_ai_delay(ch, "legacy", loc),
         method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
             ch, "legacy", loc, delay=int(value)
         ),
@@ -657,9 +649,7 @@ SMART_NUMBER_ENTITIES = (
         native_min_value=1,
         native_max_value=30,
         supported=lambda api, ch: api.supported(ch, "ai_taken_item"),
-        value=lambda api, ch, loc: (
-            api.baichuan.smart_ai_delay(ch, "loss", loc)
-        ),
+        value=lambda api, ch, loc: api.baichuan.smart_ai_delay(ch, "loss", loc),
         method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
             ch, "loss", loc, delay=int(value)
         ),
