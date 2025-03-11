@@ -173,16 +173,13 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
         # Color
         if ColorMode.HS in self._attr_supported_color_modes:
             if (
-                self.get_attribute_value(Capability.COLOR_CONTROL, Attribute.HUE)
-                is None
-            ):
+                hue := self.get_attribute_value(Capability.COLOR_CONTROL, Attribute.HUE)
+            ) is None:
                 self._attr_hs_color = None
             else:
                 self._attr_hs_color = (
                     convert_scale(
-                        self.get_attribute_value(
-                            Capability.COLOR_CONTROL, Attribute.HUE
-                        ),
+                        hue,
                         100,
                         360,
                     ),
