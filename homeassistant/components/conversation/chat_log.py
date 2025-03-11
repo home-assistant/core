@@ -49,7 +49,11 @@ def async_get_chat_log(
             raise RuntimeError(
                 "Cannot attach chat log delta listener unless initial caller"
             )
-        if user_input is not None:
+        if user_input is not None and (
+            (content := chat_log.content[-1]).role != "user"
+            # MyPy doesn't understand that content is a UserContent here
+            or content.content != user_input.text  # type: ignore[union-attr]
+        ):
             chat_log.async_add_user_content(UserContent(content=user_input.text))
 
         yield chat_log
@@ -178,6 +182,25 @@ class ChatLog:
     extra_system_prompt: str | None = None
     llm_api: llm.APIInstance | None = None
     delta_listener: Callable[[ChatLog, dict], None] | None = None
+
+    @property
+    def continue_conversation(self) -> bool:
+        """Return whether the conversation should continue."""
+        if not self.content:
+            return False
+
+        last_msg = self.content[-1]
+
+        return (
+            last_msg.role == "assistant"
+            and last_msg.content is not None  # type: ignore[union-attr]
+            and last_msg.content.strip().endswith(  # type: ignore[union-attr]
+                (
+                    "?",
+                    ";",  # Greek question mark
+                )
+            )
+        )
 
     @property
     def unresponded_tool_results(self) -> bool:

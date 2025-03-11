@@ -110,7 +110,20 @@
         "name": "Wake-up interval"
       }
     },
+    "select": {
+      "repeater_mode": {
+        "name": "Repeater mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "level1": "Level 1",
+          "level2": "Level 2"
+        }
+      }
+    },
     "sensor": {
+      "brightness": {
+        "name": "Illuminance"
+      },
       "brightness_instance": {
         "name": "Illuminance {instance}"
       },
