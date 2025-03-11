@@ -42,7 +42,7 @@ from homeassistant.util import dt as dt_util
 from . import subscription
 from .config import MQTT_RO_SCHEMA
 from .const import (
-    CONF_LAST_REPORT,
+    CONF_ENABLE_STATE_WRITE_SUPPRESSION,
     CONF_OPTIONS,
     CONF_STATE_TOPIC,
     DOMAIN,
@@ -86,7 +86,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_SUGGESTED_DISPLAY_PRECISION): cv.positive_int,
         vol.Optional(CONF_STATE_CLASS): vol.Any(STATE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.Any(cv.string, None),
-        vol.Optional(CONF_LAST_REPORT, default=False): cv.boolean,
+        vol.Optional(CONF_ENABLE_STATE_WRITE_SUPPRESSION, default=True): cv.boolean,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -293,7 +293,9 @@ class MqttSensor(MqttEntity, RestoreSensor):
             self._last_reset_template = MqttValueTemplate(
                 last_reset_template, entity=self
             ).async_render_with_possible_json_value
-        self.last_report_enabled = config[CONF_LAST_REPORT]
+        self.enable_state_write_suppression = config[
+            CONF_ENABLE_STATE_WRITE_SUPPRESSION
+        ]
 
     @callback
     def _update_state(self, msg: ReceiveMessage) -> None:
@@ -328,7 +330,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
 
         if payload == PAYLOAD_NONE:
             self._attr_native_value = None
-            self.update_last_report = True
+            self.flag_state_write = True
             return
 
         if self._numeric_state_expected:
@@ -336,7 +338,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 _LOGGER.debug("Ignore empty state from '%s'", msg.topic)
             else:
                 self._attr_native_value = payload
-                self.update_last_report = True
+                self.flag_state_write = True
             return
 
         if self.options and payload not in self.options:
@@ -353,7 +355,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             SensorDeviceClass.ENUM,
         } and not check_state_too_long(_LOGGER, payload, self.entity_id, msg):
             self._attr_native_value = payload
-            self.update_last_report = True
+            self.flag_state_write = True
             return
         try:
             if (payload_datetime := dt_util.parse_datetime(payload)) is None:
@@ -361,13 +363,13 @@ class MqttSensor(MqttEntity, RestoreSensor):
         except ValueError:
             _LOGGER.warning("Invalid state message '%s' from '%s'", payload, msg.topic)
             self._attr_native_value = None
-            self.update_last_report = True
+            self.flag_state_write = True
             return
         if self.device_class == SensorDeviceClass.DATE:
             self._attr_native_value = payload_datetime.date()
             return
         self._attr_native_value = payload_datetime
-        self.update_last_report = True
+        self.flag_state_write = True
 
     @callback
     def _update_last_reset(self, msg: ReceiveMessage) -> None:
@@ -381,7 +383,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             if last_reset is None:
                 raise ValueError  # noqa: TRY301
             self._attr_last_reset = last_reset
-            self.update_last_report = True
+            self.flag_state_write = True
         except ValueError:
             _LOGGER.warning(
                 "Invalid last_reset message '%s' from '%s'", msg.payload, msg.topic

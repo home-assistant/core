@@ -35,7 +35,7 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import CONF_LAST_REPORT, CONF_STATE_TOPIC, PAYLOAD_NONE
+from .const import CONF_ENABLE_STATE_WRITE_SUPPRESSION, CONF_STATE_TOPIC, PAYLOAD_NONE
 from .entity import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
@@ -60,7 +60,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_OFF_DELAY): cv.positive_int,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-        vol.Optional(CONF_LAST_REPORT, default=False): cv.boolean,
+        vol.Optional(CONF_ENABLE_STATE_WRITE_SUPPRESSION, default=True): cv.boolean,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -157,7 +157,9 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             self._config.get(CONF_VALUE_TEMPLATE),
             entity=self,
         ).async_render_with_possible_json_value
-        self.last_report_enabled = config[CONF_LAST_REPORT]
+        self.enable_state_write_suppression = config[
+            CONF_ENABLE_STATE_WRITE_SUPPRESSION
+        ]
 
     @callback
     def _off_delay_listener(self, now: datetime) -> None:
@@ -200,13 +202,13 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
 
         if payload == self._config[CONF_PAYLOAD_ON]:
             self._attr_is_on = True
-            self.update_last_report = True
+            self.flag_state_write = True
         elif payload == self._config[CONF_PAYLOAD_OFF]:
             self._attr_is_on = False
-            self.update_last_report = True
+            self.flag_state_write = True
         elif payload == PAYLOAD_NONE:
             self._attr_is_on = None
-            self.update_last_report = True
+            self.flag_state_write = True
         else:  # Payload is not for this entity
             template_info = ""
             if self._config.get(CONF_VALUE_TEMPLATE) is not None:

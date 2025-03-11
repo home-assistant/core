@@ -364,7 +364,7 @@ class EntityTopicState:
         while self.subscribe_calls:
             entity_id, entity = self.subscribe_calls.popitem()
             try:
-                entity.update_last_report = False
+                entity.flag_state_write = False
                 entity.async_write_ha_state()
             except Exception:
                 _LOGGER.exception(

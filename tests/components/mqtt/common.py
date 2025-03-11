@@ -2010,7 +2010,7 @@ async def help_test_skipped_async_ha_write_state(
     topic: str,
     payload1: str,
     payload2: str,
-    last_report: bool = False,
+    enable_state_write_suppression: bool = True,
 ) -> None:
     """Test entity.async_ha_write_state is only called on changes."""
     with patch(
@@ -2025,7 +2025,7 @@ async def help_test_skipped_async_ha_write_state(
 
         async_fire_mqtt_message(hass, topic, payload1)
         await hass.async_block_till_done()
-        expected_count += 1 if last_report else 0
+        expected_count += 0 if enable_state_write_suppression else 1
         assert len(mock_async_ha_write_state.mock_calls) == expected_count
 
         async_fire_mqtt_message(hass, topic, payload2)
@@ -2034,6 +2034,6 @@ async def help_test_skipped_async_ha_write_state(
         assert len(mock_async_ha_write_state.mock_calls) == expected_count
 
         async_fire_mqtt_message(hass, topic, payload2)
-        expected_count += 1 if last_report else 0
+        expected_count += 0 if enable_state_write_suppression else 1
         await hass.async_block_till_done()
         assert len(mock_async_ha_write_state.mock_calls) == expected_count
