@@ -286,7 +286,7 @@ class CloudTTSEntity(TextToSpeechEntity):
         return self._language
 
     @property
-    def default_options(self) -> dict[str, Any]:
+    def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {
             ATTR_AUDIO_OUTPUT: AudioOutput.MP3.value,
