@@ -18,8 +18,11 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.COVER,
     Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.VALVE,
 ]
 
 type HomeeConfigEntry = ConfigEntry[Homee]

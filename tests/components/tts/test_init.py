@@ -20,15 +20,15 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import (
     DEFAULT_LANG,
-    SUPPORT_LANGUAGES,
     TEST_DOMAIN,
+    MockResultStream,
     MockTTS,
     MockTTSEntity,
     MockTTSProvider,
@@ -38,35 +38,10 @@ from .common import (
     retrieve_media,
 )
 
-from tests.common import (
-    MockModule,
-    async_mock_service,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache,
-)
+from tests.common import MockModule, async_mock_service, mock_integration, mock_platform
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
-
-
-class DefaultEntity(tts.TextToSpeechEntity):
-    """Test entity."""
-
-    _attr_supported_languages = SUPPORT_LANGUAGES
-    _attr_default_language = DEFAULT_LANG
-
-
-async def test_default_entity_attributes() -> None:
-    """Test default entity attributes."""
-    entity = DefaultEntity()
-
-    assert entity.hass is None
-    assert entity.default_language == DEFAULT_LANG
-    assert entity.supported_languages == SUPPORT_LANGUAGES
-    assert entity.supported_options is None
-    assert entity.default_options is None
-    assert entity.async_get_supported_voices("test") is None
 
 
 async def test_config_entry_unload(
@@ -118,24 +93,6 @@ async def test_config_entry_unload(
 
     state = hass.states.get(entity_id)
     assert state is None
-
-
-async def test_restore_state(
-    hass: HomeAssistant,
-    mock_tts_entity: MockTTSEntity,
-) -> None:
-    """Test we restore state in the integration."""
-    entity_id = f"{tts.DOMAIN}.{TEST_DOMAIN}"
-    timestamp = "2023-01-01T23:59:59+00:00"
-    mock_restore_cache(hass, (State(entity_id, timestamp),))
-
-    config_entry = await mock_config_entry_setup(hass, mock_tts_entity)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.LOADED
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == timestamp
 
 
 @pytest.mark.parametrize(
@@ -1197,7 +1154,7 @@ async def test_service_get_tts_error(
     assert len(calls) == 1
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.NOT_FOUND
+        == HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
 
@@ -1418,29 +1375,6 @@ def test_resolve_engine(hass: HomeAssistant, setup: str, engine_id: str) -> None
         patch.dict(hass.data[tts.DOMAIN]._entities, {}, clear=True),
     ):
         assert tts.async_resolve_engine(hass, None) is None
-
-
-@pytest.mark.parametrize(
-    ("setup", "engine_id"),
-    [
-        ("mock_setup", "test"),
-        ("mock_config_entry_setup", "tts.test"),
-    ],
-    indirect=["setup"],
-)
-async def test_support_options(hass: HomeAssistant, setup: str, engine_id: str) -> None:
-    """Test supporting options."""
-    assert await tts.async_support_options(hass, engine_id, "en_US") is True
-    assert await tts.async_support_options(hass, engine_id, "nl") is False
-    assert (
-        await tts.async_support_options(
-            hass, engine_id, "en_US", {"invalid_option": "yo"}
-        )
-        is False
-    )
-
-    with pytest.raises(HomeAssistantError):
-        await tts.async_support_options(hass, "non-existing")
 
 
 async def test_legacy_fetching_in_async(
@@ -1840,96 +1774,6 @@ async def test_async_convert_audio_error(hass: HomeAssistant) -> None:
         await tts.async_convert_audio(hass, "wav", bytes(0), "mp3")
 
 
-async def test_ttsentity_subclass_properties(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test for errors when subclasses of the TextToSpeechEntity are missing required properties."""
-
-    class TestClass1(tts.TextToSpeechEntity):
-        _attr_default_language = DEFAULT_LANG
-        _attr_supported_languages = SUPPORT_LANGUAGES
-
-    await mock_config_entry_setup(hass, TestClass1())
-
-    class TestClass2(tts.TextToSpeechEntity):
-        @property
-        def default_language(self) -> str:
-            return DEFAULT_LANG
-
-        @property
-        def supported_languages(self) -> list[str]:
-            return SUPPORT_LANGUAGES
-
-    await mock_config_entry_setup(hass, TestClass2())
-
-    assert all(record.exc_info is None for record in caplog.records)
-
-    caplog.clear()
-
-    class TestClass3(tts.TextToSpeechEntity):
-        _attr_default_language = DEFAULT_LANG
-
-    await mock_config_entry_setup(hass, TestClass3())
-
-    assert (
-        "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
-        in [
-            str(record.exc_info[1])
-            for record in caplog.records
-            if record.exc_info is not None
-        ]
-    )
-    caplog.clear()
-
-    class TestClass4(tts.TextToSpeechEntity):
-        _attr_supported_languages = SUPPORT_LANGUAGES
-
-    await mock_config_entry_setup(hass, TestClass4())
-
-    assert (
-        "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
-        in [
-            str(record.exc_info[1])
-            for record in caplog.records
-            if record.exc_info is not None
-        ]
-    )
-    caplog.clear()
-
-    class TestClass5(tts.TextToSpeechEntity):
-        @property
-        def default_language(self) -> str:
-            return DEFAULT_LANG
-
-    await mock_config_entry_setup(hass, TestClass5())
-
-    assert (
-        "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
-        in [
-            str(record.exc_info[1])
-            for record in caplog.records
-            if record.exc_info is not None
-        ]
-    )
-    caplog.clear()
-
-    class TestClass6(tts.TextToSpeechEntity):
-        @property
-        def supported_languages(self) -> list[str]:
-            return SUPPORT_LANGUAGES
-
-    await mock_config_entry_setup(hass, TestClass6())
-
-    assert (
-        "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
-        in [
-            str(record.exc_info[1])
-            for record in caplog.records
-            if record.exc_info is not None
-        ]
-    )
-
-
 async def test_default_engine_prefer_entity(
     hass: HomeAssistant,
     mock_tts_entity: MockTTSEntity,
@@ -1986,3 +1830,19 @@ async def test_default_engine_prefer_cloud_entity(
     provider_engine = tts.async_resolve_engine(hass, "test")
     assert provider_engine == "test"
     assert tts.async_default_engine(hass) == "tts.cloud_tts_entity"
+
+
+async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> None:
+    """Test creating streams."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    assert stream.language == mock_tts_entity.default_language
+    assert stream.options == (mock_tts_entity.default_options or {})
+    assert tts.async_get_stream(hass, stream.token) is stream
+
+    data = b"beer"
+    stream2 = MockResultStream(hass, "wav", data)
+    assert tts.async_get_stream(hass, stream2.token) is stream2
+    assert stream2.extension == "wav"
+    result_data = b"".join([chunk async for chunk in stream2.async_stream_result()])
+    assert result_data == data

@@ -16,11 +16,17 @@ from aiohomeconnect.model import (
     SettingKey,
 )
 from aiohomeconnect.model.error import HomeConnectError
+import aiohttp
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
@@ -203,7 +209,13 @@ async def _get_client_and_ha_id(
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(device_id)
     if device_entry is None:
-        raise ServiceValidationError("Device entry not found for device id")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_entry_not_found",
+            translation_placeholders={
+                "device_id": device_id,
+            },
+        )
     entry: HomeConnectConfigEntry | None = None
     for entry_id in device_entry.config_entries:
         _entry = hass.config_entries.async_get_entry(entry_id)
@@ -213,7 +225,11 @@ async def _get_client_and_ha_id(
             break
     if entry is None:
         raise ServiceValidationError(
-            "Home Connect config entry not found for that device id"
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_found",
+            translation_placeholders={
+                "device_id": device_id,
+            },
         )
 
     ha_id = next(
@@ -601,6 +617,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
     config_entry_auth = AsyncConfigEntryAuth(hass, session)
+    try:
+        await config_entry_auth.async_get_access_token()
+    except aiohttp.ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed from err
+        raise ConfigEntryNotReady from err
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady from err
 
     home_connect_client = HomeConnectClient(config_entry_auth)
 

@@ -1,568 +1,295 @@
 """Tests for the SmartThings component init module."""
 
-from collections.abc import Callable, Coroutine
-from datetime import datetime, timedelta
-from http import HTTPStatus
-from typing import Any
-from unittest.mock import Mock, patch
-from uuid import uuid4
+from unittest.mock import AsyncMock
 
-from aiohttp import ClientConnectionError, ClientResponseError
-from pysmartthings import InstalledAppStatus, OAuthToken
-import pytest
-
-from homeassistant import config_entries
-from homeassistant.components import cloud, smartthings
-from homeassistant.components.smartthings.const import (
-    CONF_CLOUDHOOK_URL,
-    CONF_INSTALLED_APP_ID,
-    CONF_REFRESH_TOKEN,
-    DATA_BROKERS,
-    DOMAIN,
-    EVENT_BUTTON,
-    PLATFORMS,
-    SIGNAL_SMARTTHINGS_UPDATE,
+from pysmartthings import (
+    Attribute,
+    Capability,
+    DeviceResponse,
+    DeviceStatus,
+    SmartThingsSinkError,
 )
+from pysmartthings.models import Subscription
+import pytest
+from syrupy import SnapshotAssertion
+
+from homeassistant.components.smartthings import EVENT_BUTTON
+from homeassistant.components.smartthings.const import CONF_SUBSCRIPTION_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
-from homeassistant.core_config import async_process_ha_core_config
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
+from . import setup_integration, trigger_update
+
+from tests.common import MockConfigEntry, load_fixture
 
 
-async def test_migration_creates_new_flow(
-    hass: HomeAssistant, smartthings_mock, config_entry
+async def test_devices(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test migration deletes app and creates new flow."""
+    """Test all entities."""
+    await setup_integration(hass, mock_config_entry)
 
-    config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(config_entry, version=1)
+    device_id = devices.get_devices.return_value[0].device_id
 
-    await smartthings.async_migrate_entry(hass, config_entry)
-    await hass.async_block_till_done()
+    device = device_registry.async_get_device({(DOMAIN, device_id)})
 
-    assert smartthings_mock.delete_installed_app.call_count == 1
-    assert smartthings_mock.delete_app.call_count == 1
-    assert not hass.config_entries.async_entries(DOMAIN)
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["handler"] == "smartthings"
-    assert flows[0]["context"] == {"source": config_entries.SOURCE_IMPORT}
+    assert device is not None
+    assert device == snapshot
 
 
-async def test_unrecoverable_api_errors_create_new_flow(
-    hass: HomeAssistant, config_entry, smartthings_mock
+@pytest.mark.parametrize("device_fixture", ["button"])
+async def test_button_event(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test a new config flow is initiated when there are API errors.
+    """Test button event."""
+    await setup_integration(hass, mock_config_entry)
+    events = []
 
-    401 (unauthorized): Occurs when the access token is no longer valid.
-    403 (forbidden/not found): Occurs when the app or installed app could
-        not be retrieved/found (likely deleted?)
-    """
+    def capture_event(event: Event) -> None:
+        events.append(event)
 
-    config_entry.add_to_hass(hass)
-    request_info = Mock(real_url="http://example.com")
-    smartthings_mock.app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=HTTPStatus.UNAUTHORIZED
-    )
+    hass.bus.async_listen_once(EVENT_BUTTON, capture_event)
 
-    # Assert setup returns false
-    result = await hass.config_entries.async_setup(config_entry.entry_id)
-    assert not result
-
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
-
-
-async def test_recoverable_api_errors_raise_not_ready(
-    hass: HomeAssistant, config_entry, smartthings_mock
-) -> None:
-    """Test config entry not ready raised for recoverable API errors."""
-    config_entry.add_to_hass(hass)
-    request_info = Mock(real_url="http://example.com")
-    smartthings_mock.app.side_effect = ClientResponseError(
-        request_info=request_info,
-        history=None,
-        status=HTTPStatus.INTERNAL_SERVER_ERROR,
-    )
-
-    with pytest.raises(ConfigEntryNotReady):
-        await smartthings.async_setup_entry(hass, config_entry)
-
-
-async def test_scenes_api_errors_raise_not_ready(
-    hass: HomeAssistant, config_entry, app, installed_app, smartthings_mock
-) -> None:
-    """Test if scenes are unauthorized we continue to load platforms."""
-    config_entry.add_to_hass(hass)
-    request_info = Mock(real_url="http://example.com")
-    smartthings_mock.app.return_value = app
-    smartthings_mock.installed_app.return_value = installed_app
-    smartthings_mock.scenes.side_effect = ClientResponseError(
-        request_info=request_info,
-        history=None,
-        status=HTTPStatus.INTERNAL_SERVER_ERROR,
-    )
-    with pytest.raises(ConfigEntryNotReady):
-        await smartthings.async_setup_entry(hass, config_entry)
-
-
-async def test_connection_errors_raise_not_ready(
-    hass: HomeAssistant, config_entry, smartthings_mock
-) -> None:
-    """Test config entry not ready raised for connection errors."""
-    config_entry.add_to_hass(hass)
-    smartthings_mock.app.side_effect = ClientConnectionError()
-
-    with pytest.raises(ConfigEntryNotReady):
-        await smartthings.async_setup_entry(hass, config_entry)
-
-
-async def test_base_url_no_longer_https_does_not_load(
-    hass: HomeAssistant, config_entry, app, smartthings_mock
-) -> None:
-    """Test base_url no longer valid creates a new flow."""
-    await async_process_ha_core_config(
+    await trigger_update(
         hass,
-        {"external_url": "http://example.local:8123"},
+        devices,
+        "c4bdd19f-85d1-4d58-8f9c-e75ac3cf113b",
+        Capability.BUTTON,
+        Attribute.BUTTON,
+        "pushed",
     )
-    config_entry.add_to_hass(hass)
-    smartthings_mock.app.return_value = app
 
-    # Assert setup returns false
-    result = await smartthings.async_setup_entry(hass, config_entry)
-    assert not result
+    assert len(events) == 1
+    assert events[0] == snapshot
 
 
-async def test_unauthorized_installed_app_raises_not_ready(
-    hass: HomeAssistant, config_entry, app, installed_app, smartthings_mock
-) -> None:
-    """Test config entry not ready raised when the app isn't authorized."""
-    config_entry.add_to_hass(hass)
-    installed_app.installed_app_status = InstalledAppStatus.PENDING
-
-    smartthings_mock.app.return_value = app
-    smartthings_mock.installed_app.return_value = installed_app
-
-    with pytest.raises(ConfigEntryNotReady):
-        await smartthings.async_setup_entry(hass, config_entry)
-
-
-async def test_scenes_unauthorized_loads_platforms(
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_create_subscription(
     hass: HomeAssistant,
-    config_entry,
-    app,
-    installed_app,
-    device,
-    smartthings_mock,
-    subscription_factory,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test if scenes are unauthorized we continue to load platforms."""
-    config_entry.add_to_hass(hass)
-    request_info = Mock(real_url="http://example.com")
-    smartthings_mock.app.return_value = app
-    smartthings_mock.installed_app.return_value = installed_app
-    smartthings_mock.devices.return_value = [device]
-    smartthings_mock.scenes.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=HTTPStatus.FORBIDDEN
+    """Test creating a subscription."""
+    assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
+
+    await setup_integration(hass, mock_config_entry)
+
+    devices.create_subscription.assert_called_once()
+
+    assert (
+        mock_config_entry.data[CONF_SUBSCRIPTION_ID]
+        == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
     )
-    mock_token = Mock()
-    mock_token.access_token = str(uuid4())
-    mock_token.refresh_token = str(uuid4())
-    smartthings_mock.generate_tokens.return_value = mock_token
-    subscriptions = [
-        subscription_factory(capability) for capability in device.capabilities
-    ]
-    smartthings_mock.subscriptions.return_value = subscriptions
 
-    with patch.object(
-        hass.config_entries, "async_forward_entry_setups"
-    ) as forward_mock:
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        # Assert platforms loaded
-        await hass.async_block_till_done()
-        forward_mock.assert_called_once_with(config_entry, PLATFORMS)
+    devices.subscribe.assert_called_once_with(
+        "397678e5-9995-4a39-9d9f-ae6ba310236c",
+        "5aaaa925-2be1-4e40-b257-e4ef59083324",
+        Subscription.from_json(load_fixture("subscription.json", DOMAIN)),
+    )
 
 
-async def test_config_entry_loads_platforms(
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_create_subscription_sink_error(
     hass: HomeAssistant,
-    config_entry,
-    app,
-    installed_app,
-    device,
-    smartthings_mock,
-    subscription_factory,
-    scene,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test config entry loads properly and proxies to platforms."""
-    config_entry.add_to_hass(hass)
-    smartthings_mock.app.return_value = app
-    smartthings_mock.installed_app.return_value = installed_app
-    smartthings_mock.devices.return_value = [device]
-    smartthings_mock.scenes.return_value = [scene]
-    mock_token = Mock()
-    mock_token.access_token = str(uuid4())
-    mock_token.refresh_token = str(uuid4())
-    smartthings_mock.generate_tokens.return_value = mock_token
-    subscriptions = [
-        subscription_factory(capability) for capability in device.capabilities
-    ]
-    smartthings_mock.subscriptions.return_value = subscriptions
+    """Test handling an error when creating a subscription."""
+    assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
-    with patch.object(
-        hass.config_entries, "async_forward_entry_setups"
-    ) as forward_mock:
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        # Assert platforms loaded
-        await hass.async_block_till_done()
-        forward_mock.assert_called_once_with(config_entry, PLATFORMS)
+    devices.create_subscription.side_effect = SmartThingsSinkError("Sink error")
+
+    await setup_integration(hass, mock_config_entry)
+
+    devices.subscribe.assert_not_called()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
 
-async def test_config_entry_loads_unconnected_cloud(
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_update_subscription_identifier(
     hass: HomeAssistant,
-    config_entry,
-    app,
-    installed_app,
-    device,
-    smartthings_mock,
-    subscription_factory,
-    scene,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test entry loads during startup when cloud isn't connected."""
-    config_entry.add_to_hass(hass)
-    hass.data[DOMAIN][CONF_CLOUDHOOK_URL] = "https://test.cloud"
-    smartthings_mock.app.return_value = app
-    smartthings_mock.installed_app.return_value = installed_app
-    smartthings_mock.devices.return_value = [device]
-    smartthings_mock.scenes.return_value = [scene]
-    mock_token = Mock()
-    mock_token.access_token = str(uuid4())
-    mock_token.refresh_token = str(uuid4())
-    smartthings_mock.generate_tokens.return_value = mock_token
-    subscriptions = [
-        subscription_factory(capability) for capability in device.capabilities
-    ]
-    smartthings_mock.subscriptions.return_value = subscriptions
-    with patch.object(
-        hass.config_entries, "async_forward_entry_setups"
-    ) as forward_mock:
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        forward_mock.assert_called_once_with(config_entry, PLATFORMS)
+    """Test updating the subscription identifier."""
+    await setup_integration(hass, mock_config_entry)
 
-
-async def test_unload_entry(hass: HomeAssistant, config_entry) -> None:
-    """Test entries are unloaded correctly."""
-    connect_disconnect = Mock()
-    smart_app = Mock()
-    smart_app.connect_event.return_value = connect_disconnect
-    broker = smartthings.DeviceBroker(hass, config_entry, Mock(), smart_app, [], [])
-    broker.connect()
-    hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id] = broker
-
-    with patch.object(
-        hass.config_entries, "async_forward_entry_unload", return_value=True
-    ) as forward_mock:
-        assert await smartthings.async_unload_entry(hass, config_entry)
-
-        assert connect_disconnect.call_count == 1
-        assert config_entry.entry_id not in hass.data[DOMAIN][DATA_BROKERS]
-        # Assert platforms unloaded
-        await hass.async_block_till_done()
-        assert forward_mock.call_count == len(PLATFORMS)
-
-
-async def test_remove_entry(
-    hass: HomeAssistant, config_entry, smartthings_mock
-) -> None:
-    """Test that the installed app and app are removed up."""
-    # Act
-    await smartthings.async_remove_entry(hass, config_entry)
-    # Assert
-    assert smartthings_mock.delete_installed_app.call_count == 1
-    assert smartthings_mock.delete_app.call_count == 1
-
-
-async def test_remove_entry_cloudhook(
-    hass: HomeAssistant, config_entry, smartthings_mock
-) -> None:
-    """Test that the installed app, app, and cloudhook are removed up."""
-    hass.config.components.add("cloud")
-    # Arrange
-    config_entry.add_to_hass(hass)
-    hass.data[DOMAIN][CONF_CLOUDHOOK_URL] = "https://test.cloud"
-    # Act
-    with (
-        patch.object(
-            cloud, "async_is_logged_in", return_value=True
-        ) as mock_async_is_logged_in,
-        patch.object(cloud, "async_delete_cloudhook") as mock_async_delete_cloudhook,
-    ):
-        await smartthings.async_remove_entry(hass, config_entry)
-    # Assert
-    assert smartthings_mock.delete_installed_app.call_count == 1
-    assert smartthings_mock.delete_app.call_count == 1
-    assert mock_async_is_logged_in.call_count == 1
-    assert mock_async_delete_cloudhook.call_count == 1
-
-
-async def test_remove_entry_app_in_use(
-    hass: HomeAssistant, config_entry, smartthings_mock
-) -> None:
-    """Test app is not removed if in use by another config entry."""
-    # Arrange
-    config_entry.add_to_hass(hass)
-    data = config_entry.data.copy()
-    data[CONF_INSTALLED_APP_ID] = str(uuid4())
-    entry2 = MockConfigEntry(version=2, domain=DOMAIN, data=data)
-    entry2.add_to_hass(hass)
-    # Act
-    await smartthings.async_remove_entry(hass, config_entry)
-    # Assert
-    assert smartthings_mock.delete_installed_app.call_count == 1
-    assert smartthings_mock.delete_app.call_count == 0
-
-
-async def test_remove_entry_already_deleted(
-    hass: HomeAssistant, config_entry, smartthings_mock
-) -> None:
-    """Test handles when the apps have already been removed."""
-    request_info = Mock(real_url="http://example.com")
-    # Arrange
-    smartthings_mock.delete_installed_app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=HTTPStatus.FORBIDDEN
+    assert (
+        mock_config_entry.data[CONF_SUBSCRIPTION_ID]
+        == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
     )
-    smartthings_mock.delete_app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=HTTPStatus.FORBIDDEN
-    )
-    # Act
-    await smartthings.async_remove_entry(hass, config_entry)
-    # Assert
-    assert smartthings_mock.delete_installed_app.call_count == 1
-    assert smartthings_mock.delete_app.call_count == 1
+
+    devices.new_subscription_id_callback("abc")
+
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.data[CONF_SUBSCRIPTION_ID] == "abc"
 
 
-async def test_remove_entry_installedapp_api_error(
-    hass: HomeAssistant, config_entry, smartthings_mock
-) -> None:
-    """Test raises exceptions removing the installed app."""
-    request_info = Mock(real_url="http://example.com")
-    # Arrange
-    smartthings_mock.delete_installed_app.side_effect = ClientResponseError(
-        request_info=request_info,
-        history=None,
-        status=HTTPStatus.INTERNAL_SERVER_ERROR,
-    )
-    # Act
-    with pytest.raises(ClientResponseError):
-        await smartthings.async_remove_entry(hass, config_entry)
-    # Assert
-    assert smartthings_mock.delete_installed_app.call_count == 1
-    assert smartthings_mock.delete_app.call_count == 0
-
-
-async def test_remove_entry_installedapp_unknown_error(
-    hass: HomeAssistant, config_entry, smartthings_mock
-) -> None:
-    """Test raises exceptions removing the installed app."""
-    # Arrange
-    smartthings_mock.delete_installed_app.side_effect = ValueError
-    # Act
-    with pytest.raises(ValueError):
-        await smartthings.async_remove_entry(hass, config_entry)
-    # Assert
-    assert smartthings_mock.delete_installed_app.call_count == 1
-    assert smartthings_mock.delete_app.call_count == 0
-
-
-async def test_remove_entry_app_api_error(
-    hass: HomeAssistant, config_entry, smartthings_mock
-) -> None:
-    """Test raises exceptions removing the app."""
-    # Arrange
-    request_info = Mock(real_url="http://example.com")
-    smartthings_mock.delete_app.side_effect = ClientResponseError(
-        request_info=request_info,
-        history=None,
-        status=HTTPStatus.INTERNAL_SERVER_ERROR,
-    )
-    # Act
-    with pytest.raises(ClientResponseError):
-        await smartthings.async_remove_entry(hass, config_entry)
-    # Assert
-    assert smartthings_mock.delete_installed_app.call_count == 1
-    assert smartthings_mock.delete_app.call_count == 1
-
-
-async def test_remove_entry_app_unknown_error(
-    hass: HomeAssistant, config_entry, smartthings_mock
-) -> None:
-    """Test raises exceptions removing the app."""
-    # Arrange
-    smartthings_mock.delete_app.side_effect = ValueError
-    # Act
-    with pytest.raises(ValueError):
-        await smartthings.async_remove_entry(hass, config_entry)
-    # Assert
-    assert smartthings_mock.delete_installed_app.call_count == 1
-    assert smartthings_mock.delete_app.call_count == 1
-
-
-async def test_broker_regenerates_token(hass: HomeAssistant, config_entry) -> None:
-    """Test the device broker regenerates the refresh token."""
-    token = Mock(OAuthToken)
-    token.refresh_token = str(uuid4())
-    stored_action = None
-    config_entry.add_to_hass(hass)
-
-    def async_track_time_interval(
-        hass: HomeAssistant,
-        action: Callable[[datetime], Coroutine[Any, Any, None] | None],
-        interval: timedelta,
-    ) -> None:
-        nonlocal stored_action
-        stored_action = action
-
-    with patch(
-        "homeassistant.components.smartthings.async_track_time_interval",
-        new=async_track_time_interval,
-    ):
-        broker = smartthings.DeviceBroker(hass, config_entry, token, Mock(), [], [])
-        broker.connect()
-
-    assert stored_action
-    await stored_action(None)
-    assert token.refresh.call_count == 1
-    assert config_entry.data[CONF_REFRESH_TOKEN] == token.refresh_token
-
-
-async def test_event_handler_dispatches_updated_devices(
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_stale_subscription_id(
     hass: HomeAssistant,
-    config_entry,
-    device_factory,
-    event_request_factory,
-    event_factory,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the event handler dispatches updated devices."""
-    devices = [
-        device_factory("Bedroom 1 Switch", ["switch"]),
-        device_factory("Bathroom 1", ["switch"]),
-        device_factory("Sensor", ["motionSensor"]),
-        device_factory("Lock", ["lock"]),
-    ]
-    device_ids = [
-        devices[0].device_id,
-        devices[1].device_id,
-        devices[2].device_id,
-        devices[3].device_id,
-    ]
-    event = event_factory(
-        devices[3].device_id,
-        capability="lock",
-        attribute="lock",
-        value="locked",
-        data={"codeId": "1"},
-    )
-    request = event_request_factory(device_ids=device_ids, events=[event])
-    config_entry.add_to_hass(hass)
+    """Test updating the subscription identifier."""
+    mock_config_entry.add_to_hass(hass)
+
     hass.config_entries.async_update_entry(
-        config_entry,
-        data={
-            **config_entry.data,
-            CONF_INSTALLED_APP_ID: request.installed_app_id,
-        },
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_SUBSCRIPTION_ID: "test"},
     )
-    called = False
 
-    def signal(ids):
-        nonlocal called
-        called = True
-        assert device_ids == ids
-
-    async_dispatcher_connect(hass, SIGNAL_SMARTTHINGS_UPDATE, signal)
-
-    broker = smartthings.DeviceBroker(hass, config_entry, Mock(), Mock(), devices, [])
-    broker.connect()
-
-    await broker._event_handler(request, None, None)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert called
-    for device in devices:
-        assert device.status.values["Updated"] == "Value"
-    assert devices[3].status.attributes["lock"].value == "locked"
-    assert devices[3].status.attributes["lock"].data == {"codeId": "1"}
-
-    broker.disconnect()
+    assert (
+        mock_config_entry.data[CONF_SUBSCRIPTION_ID]
+        == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+    devices.delete_subscription.assert_called_once_with("test")
 
 
-async def test_event_handler_ignores_other_installed_app(
-    hass: HomeAssistant, config_entry, device_factory, event_request_factory
-) -> None:
-    """Test the event handler dispatches updated devices."""
-    device = device_factory("Bedroom 1 Switch", ["switch"])
-    request = event_request_factory([device.device_id])
-    called = False
-
-    def signal(ids):
-        nonlocal called
-        called = True
-
-    async_dispatcher_connect(hass, SIGNAL_SMARTTHINGS_UPDATE, signal)
-    broker = smartthings.DeviceBroker(hass, config_entry, Mock(), Mock(), [device], [])
-    broker.connect()
-
-    await broker._event_handler(request, None, None)
-    await hass.async_block_till_done()
-
-    assert not called
-
-    broker.disconnect()
-
-
-async def test_event_handler_fires_button_events(
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_remove_subscription_identifier(
     hass: HomeAssistant,
-    config_entry,
-    device_factory,
-    event_factory,
-    event_request_factory,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the event handler fires button events."""
-    device = device_factory("Button 1", ["button"])
-    event = event_factory(
-        device.device_id, capability="button", attribute="button", value="pushed"
+    """Test removing the subscription identifier."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        mock_config_entry.data[CONF_SUBSCRIPTION_ID]
+        == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
     )
-    request = event_request_factory(events=[event])
-    config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        config_entry,
-        data={
-            **config_entry.data,
-            CONF_INSTALLED_APP_ID: request.installed_app_id,
-        },
-    )
-    called = False
 
-    def handler(evt):
-        nonlocal called
-        called = True
-        assert evt.data == {
-            "component_id": "main",
-            "device_id": device.device_id,
-            "location_id": event.location_id,
-            "value": "pushed",
-            "name": device.label,
-            "data": None,
-        }
+    devices.new_subscription_id_callback(None)
 
-    hass.bus.async_listen(EVENT_BUTTON, handler)
-    broker = smartthings.DeviceBroker(hass, config_entry, Mock(), Mock(), [device], [])
-    broker.connect()
-
-    await broker._event_handler(request, None, None)
     await hass.async_block_till_done()
 
-    assert called
+    assert mock_config_entry.data[CONF_SUBSCRIPTION_ID] is None
 
-    broker.disconnect()
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_max_connections_handling(
+    hass: HomeAssistant, devices: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test handling reaching max connections."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        mock_config_entry.data[CONF_SUBSCRIPTION_ID]
+        == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+
+    devices.create_subscription.side_effect = SmartThingsSinkError("Sink error")
+
+    devices.max_connections_reached_callback()
+
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_unloading(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unloading the integration."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    devices.delete_subscription.assert_called_once_with(
+        "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+    # Deleting the subscription automatically deletes the subscription ID
+    devices.new_subscription_id_callback(None)
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.data[CONF_SUBSCRIPTION_ID] is None
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_shutdown(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test shutting down Home Assistant."""
+    await setup_integration(hass, mock_config_entry)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    devices.delete_subscription.assert_called_once_with(
+        "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
+    )
+    # Deleting the subscription automatically deletes the subscription ID
+    devices.new_subscription_id_callback(None)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.data[CONF_SUBSCRIPTION_ID] is None
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_removing_stale_devices(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing stale devices."""
+    mock_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "aaa-bbb-ccc")},
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not device_registry.async_get_device({(DOMAIN, "aaa-bbb-ccc")})
+
+
+async def test_hub_via_device(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    mock_smartthings: AsyncMock,
+) -> None:
+    """Test hub with child devices."""
+    mock_smartthings.get_devices.return_value = DeviceResponse.from_json(
+        load_fixture("devices/hub.json", DOMAIN)
+    ).items
+    mock_smartthings.get_device_status.side_effect = [
+        DeviceStatus.from_json(
+            load_fixture(f"device_status/{fixture}.json", DOMAIN)
+        ).components
+        for fixture in ("hub", "multipurpose_sensor")
+    ]
+    await setup_integration(hass, mock_config_entry)
+
+    hub_device = device_registry.async_get_device(
+        {(DOMAIN, "074fa784-8be8-4c70-8e22-6f5ed6f81b7e")}
+    )
+    assert hub_device == snapshot
+    assert (
+        device_registry.async_get_device(
+            {(DOMAIN, "374ba6fa-5a08-4ea2-969c-1fa43d86e21f")}
+        ).via_device_id
+        == hub_device.id
+    )
