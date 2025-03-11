@@ -289,7 +289,7 @@ class CloudTTSEntity(TextToSpeechEntity):
     def default_options(self) -> dict[str, Any]:
         """Return a dict include default options."""
         return {
-            ATTR_AUDIO_OUTPUT: AudioOutput.MP3,
+            ATTR_AUDIO_OUTPUT: AudioOutput.MP3.value,
         }
 
     @property
@@ -363,7 +363,7 @@ class CloudTTSEntity(TextToSpeechEntity):
             _LOGGER.error("Voice error: %s", err)
             return (None, None)
 
-        return (str(options[ATTR_AUDIO_OUTPUT].value), data)
+        return (options[ATTR_AUDIO_OUTPUT], data)
 
 
 class CloudProvider(Provider):
@@ -404,10 +404,10 @@ class CloudProvider(Provider):
         return [Voice(voice, voice) for voice in voices]
 
     @property
-    def default_options(self) -> dict[str, Any]:
+    def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {
-            ATTR_AUDIO_OUTPUT: AudioOutput.MP3,
+            ATTR_AUDIO_OUTPUT: AudioOutput.MP3.value,
         }
 
     async def async_get_tts_audio(
@@ -444,7 +444,7 @@ class CloudProvider(Provider):
             _LOGGER.error("Voice error: %s", err)
             return (None, None)
 
-        return (str(options[ATTR_AUDIO_OUTPUT].value), data)
+        return options[ATTR_AUDIO_OUTPUT], data
 
 
 @callback
