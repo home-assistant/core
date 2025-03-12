@@ -32,7 +32,7 @@
           "timestamp": "2025-02-09T14:35:56.800Z"
         },
         "supportedAcModes": {
-          "value": ["auto", "cool", "dry", "wind", "heat"],
+          "value": ["auto", "cool", "dry", "wind", "heat", "dryClean"],
           "timestamp": "2025-02-09T15:42:13.444Z"
         },
         "airConditionerMode": {

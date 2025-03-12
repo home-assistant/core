@@ -11,12 +11,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import (
-    RESPONSE_ZONE_BYPASS_FAILURE,
-    RESPONSE_ZONE_BYPASS_SUCCESS,
-    TOTALCONNECT_REQUEST,
-    setup_platform,
-)
+from .common import setup_platform
 
 from tests.common import snapshot_platform
 
@@ -34,12 +29,23 @@ async def test_entity_registry(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
-@pytest.mark.parametrize("entity_id", [ZONE_BYPASS_ID, PANEL_BYPASS_ID])
-async def test_bypass_button(hass: HomeAssistant, entity_id: str) -> None:
+@pytest.mark.parametrize(
+    ("entity_id", "tcc_request"),
+    [
+        (ZONE_BYPASS_ID, "total_connect_client.zone.TotalConnectZone.bypass"),
+        (
+            PANEL_BYPASS_ID,
+            "total_connect_client.location.TotalConnectLocation.zone_bypass_all",
+        ),
+    ],
+)
+async def test_bypass_button(
+    hass: HomeAssistant, entity_id: str, tcc_request: str
+) -> None:
     """Test pushing a bypass button."""
-    responses = [RESPONSE_ZONE_BYPASS_FAILURE, RESPONSE_ZONE_BYPASS_SUCCESS]
+    responses = [FailedToBypassZone, None]
     await setup_platform(hass, BUTTON)
-    with patch(TOTALCONNECT_REQUEST, side_effect=responses) as mock_request:
+    with patch(tcc_request, side_effect=responses) as mock_request:
         # try to bypass, but fails
         with pytest.raises(FailedToBypassZone):
             await hass.services.async_call(
