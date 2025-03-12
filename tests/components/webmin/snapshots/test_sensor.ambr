@@ -1478,7 +1478,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Load (15m)',
+    'original_name': 'Load (15 min)',
     'platform': 'webmin',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1490,7 +1490,7 @@
 # name: test_sensor[sensor.192_168_1_1_load_15m-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 Load (15m)',
+      'friendly_name': '192.168.1.1 Load (15 min)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1528,7 +1528,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Load (1m)',
+    'original_name': 'Load (1 min)',
     'platform': 'webmin',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1540,7 +1540,7 @@
 # name: test_sensor[sensor.192_168_1_1_load_1m-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 Load (1m)',
+      'friendly_name': '192.168.1.1 Load (1 min)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1578,7 +1578,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Load (5m)',
+    'original_name': 'Load (5 min)',
     'platform': 'webmin',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1590,7 +1590,7 @@
 # name: test_sensor[sensor.192_168_1_1_load_5m-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 Load (5m)',
+      'friendly_name': '192.168.1.1 Load (5 min)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
