@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from propcache.api import cached_property
@@ -25,6 +25,8 @@ from roborock.version_1_apis.roborock_local_client_v1 import RoborockLocalClient
 from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
 from roborock.version_a01_apis import RoborockClientA01
 from roborock.web_api import RoborockApiClient
+from vacuum_map_parser_base.map_data import MapData
+from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS
@@ -34,9 +36,9 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 
-from .const import DOMAIN
+from .const import DOMAIN, IMAGE_CACHE_INTERVAL
 from .models import RoborockA01HassDeviceInfo, RoborockHassDeviceInfo, RoborockMapInfo
 from .roborock_storage import RoborockMapStorage
 
@@ -78,6 +80,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         home_data_rooms: list[HomeDataRoom],
         api_client: RoborockApiClient,
         user_data: UserData,
+        parser: RoborockMapDataParser,
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -118,6 +121,40 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         )
         self._user_data = user_data
         self._api_client = api_client
+        self.map_data: dict[int, MapData] = {}
+        self.map_updates: dict[int, datetime] = {}
+        self._map_last_status: dict[int, int] = {}
+        self._parser = parser
+
+    async def update_map(self, bump_time: bool = True) -> None:
+        # The current map was set in the props update, so these can be done without worry of applying them to the wrong map.
+        _LOGGER.info("Updating map! %s", self.current_map)
+        response = await asyncio.gather(
+            *(
+                self.cloud_api.get_map_v1(),
+                self.set_current_map_rooms(),
+            ),
+            return_exceptions=True,
+        )
+        try:
+            if not isinstance(response[0], bytes):
+                _LOGGER.debug("Failed to parse map contents: %s", response[0])
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="map_failure",
+                )
+            parsed_map = self._parser.parse(response[0])
+        except (IndexError, ValueError) as err:
+            _LOGGER.debug("Exception when parsing map contents: %s", err)
+            return
+        if parsed_map.image is None:
+            return
+        self.map_data[self.current_map] = parsed_map
+        if bump_time:
+            self.map_updates[self.current_map] = dt_util.utcnow()
+        self._map_last_status[self.current_map] = (
+            self.roborock_device_info.props.status.state
+        )
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -176,8 +213,24 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             await self._update_device_prop()
             # Set the new map id from the updated device props
             self._set_current_map()
-            # Get the rooms for that map id.
-            await self.set_current_map_rooms()
+            # If the vacuum is currently cleaning and it has been IMAGE_CACHE_INTERVAL
+            # since the last map update, you can update the map.
+            if (
+                self.roborock_device_info.props.status.in_cleaning
+                and (
+                    (
+                        dt_util.utcnow()
+                        - self.map_updates.get(self.current_map, dt_util.utcnow())
+                    ).total_seconds()
+                )
+                > IMAGE_CACHE_INTERVAL
+                # Or, if the vacuums status has changed since the last map update, update the map.
+            ) or self._map_last_status.get(
+                self.current_map
+            ) != self.roborock_device_info.props.status.state:
+                await self.update_map()
+            else:
+                await self.set_current_map_rooms()
         except RoborockException as ex:
             _LOGGER.debug("Failed to update data: %s", ex)
             raise UpdateFailed(ex) from ex

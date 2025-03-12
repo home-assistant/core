@@ -10,6 +10,7 @@ from typing import Any
 
 from roborock import (
     HomeDataRoom,
+    RoborockCommand,
     RoborockException,
     RoborockInvalidCredentials,
     RoborockInvalidUserAgreement,
@@ -19,12 +20,27 @@ from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, Use
 from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
 from roborock.version_a01_apis import RoborockMqttClientA01
 from roborock.web_api import RoborockApiClient
+from vacuum_map_parser_base.config.color import ColorsPalette
+from vacuum_map_parser_base.config.image_config import ImageConfig
+from vacuum_map_parser_base.config.size import Sizes
+from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
 from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
+from .const import (
+    CONF_BASE_URL,
+    CONF_USER_DATA,
+    DEFAULT_DRAWABLES,
+    DOMAIN,
+    DRAWABLES,
+    IMAGE_CACHE_INTERVAL,
+    MAP_FILE_FORMAT,
+    MAP_SCALE,
+    MAP_SLEEP,
+    PLATFORMS,
+)
 from .coordinator import (
     RoborockConfigEntry,
     RoborockCoordinators,
@@ -80,6 +96,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     product_info: dict[str, HomeDataProduct] = {
         product.id: product for product in home_data.products
     }
+    drawables = [
+        drawable
+        for drawable, default_value in DEFAULT_DRAWABLES.items()
+        if entry.options.get(DRAWABLES, {}).get(drawable, default_value)
+    ]
+    parser = RoborockMapDataParser(
+        ColorsPalette(),
+        Sizes({k: v * MAP_SCALE for k, v in Sizes.SIZES.items()}),
+        drawables,
+        ImageConfig(scale=MAP_SCALE),
+        [],
+    )
+
     # Get a Coordinator if the device is available or if we have connected to the device before
     coordinators = await asyncio.gather(
         *build_setup_functions(
@@ -90,6 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             product_info,
             home_data.rooms,
             api_client,
+            parser,
         ),
         return_exceptions=True,
     )
@@ -111,6 +141,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_key="no_coordinators",
         )
     valid_coordinators = RoborockCoordinators(v1_coords, a01_coords)
+    await asyncio.gather(
+        *(refresh_coordinators(hass, coord) for coord in valid_coordinators.v1)
+    )
 
     async def on_stop(_: Any) -> None:
         _LOGGER.debug("Shutting down roborock")
@@ -142,6 +175,7 @@ def build_setup_functions(
     product_info: dict[str, HomeDataProduct],
     home_data_rooms: list[HomeDataRoom],
     api_client: RoborockApiClient,
+    parser: RoborockMapDataParser,
 ) -> list[
     Coroutine[
         Any,
@@ -159,6 +193,7 @@ def build_setup_functions(
             product_info[device.product_id],
             home_data_rooms,
             api_client,
+            parser,
         )
         for device in device_map.values()
     ]
@@ -172,11 +207,19 @@ async def setup_device(
     product_info: HomeDataProduct,
     home_data_rooms: list[HomeDataRoom],
     api_client: RoborockApiClient,
+    parser: RoborockMapDataParser,
 ) -> RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01 | None:
     """Set up a coordinator for a given device."""
     if device.pv == "1.0":
         return await setup_device_v1(
-            hass, entry, user_data, device, product_info, home_data_rooms, api_client
+            hass,
+            entry,
+            user_data,
+            device,
+            product_info,
+            home_data_rooms,
+            api_client,
+            parser,
         )
     if device.pv == "A01":
         return await setup_device_a01(hass, entry, user_data, device, product_info)
@@ -197,6 +240,7 @@ async def setup_device_v1(
     product_info: HomeDataProduct,
     home_data_rooms: list[HomeDataRoom],
     api_client: RoborockApiClient,
+    parser: RoborockMapDataParser,
 ) -> RoborockDataUpdateCoordinator | None:
     """Set up a device Coordinator."""
     mqtt_client = await hass.async_add_executor_job(
@@ -217,6 +261,7 @@ async def setup_device_v1(
         _LOGGER.debug(err)
         await mqtt_client.async_release()
         raise
+
     coordinator = RoborockDataUpdateCoordinator(
         hass,
         entry,
@@ -227,6 +272,7 @@ async def setup_device_v1(
         home_data_rooms,
         api_client,
         user_data,
+        parser,
     )
     try:
         await coordinator.async_config_entry_first_refresh()
@@ -290,3 +336,33 @@ async def update_listener(hass: HomeAssistant, entry: RoborockConfigEntry) -> No
 async def async_remove_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
     """Handle removal of an entry."""
     await async_remove_map_storage(hass, entry.entry_id)
+
+
+async def refresh_coordinators(
+    hass: HomeAssistant, coord: RoborockDataUpdateCoordinator
+) -> None:
+    """Get the starting map information for all maps for this device.
+
+    The following steps must be done synchronously.
+    Only one map can be loaded at a time per device.
+    """
+    cur_map = coord.current_map
+    # This won't be None at this point as the coordinator will have run first.
+    assert cur_map is not None
+    map_flags = sorted(coord.maps, key=lambda data: data == cur_map, reverse=True)
+    for map_flag in map_flags:
+        if map_flag != cur_map:
+            # Only change the map and sleep if we have multiple maps.
+            await coord.api.send_command(RoborockCommand.LOAD_MULTI_MAP, [map_flag])
+            coord.current_map = map_flag
+            # We cannot get the map until the roborock servers fully process the
+            # map change.
+            await asyncio.sleep(MAP_SLEEP)
+        await coord.update_map()
+
+    if len(coord.maps) != 1:
+        # Set the map back to the map the user previously had selected so that it
+        # does not change the end user's app.
+        # Only needs to happen when we changed maps above.
+        await coord.cloud_api.send_command(RoborockCommand.LOAD_MULTI_MAP, [cur_map])
+        coord.current_map = cur_map
