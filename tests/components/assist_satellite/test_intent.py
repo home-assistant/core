@@ -41,9 +41,13 @@ async def test_broadcast_intent(
 ) -> None:
     """Test we can invoke a broadcast intent."""
 
-    result = await intent.async_handle(
-        hass, "test", intent.INTENT_BROADCAST, {"message": {"value": "Hello"}}
-    )
+    with patch(
+        "homeassistant.components.tts.async_resolve_engine",
+        return_value="tts.cloud",
+    ):
+        result = await intent.async_handle(
+            hass, "test", intent.INTENT_BROADCAST, {"message": {"value": "Hello"}}
+        )
 
     assert result.as_dict() == {
         "card": {},
@@ -71,13 +75,17 @@ async def test_broadcast_intent(
     assert len(entity2.announcements) == 1
     assert len(entity_no_features.announcements) == 0
 
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_BROADCAST,
-        {"message": {"value": "Hello"}},
-        device_id=entity.device_entry.id,
-    )
+    with patch(
+        "homeassistant.components.tts.async_resolve_engine",
+        return_value="tts.cloud",
+    ):
+        result = await intent.async_handle(
+            hass,
+            "test",
+            intent.INTENT_BROADCAST,
+            {"message": {"value": "Hello"}},
+            device_id=entity.device_entry.id,
+        )
     # Broadcast doesn't targets device that triggered it.
     assert result.as_dict() == {
         "card": {},

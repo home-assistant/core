@@ -252,6 +252,10 @@ async def test_announce(
             new=tts_generate_media_source_id,
         ),
         patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud",
+        ),
+        patch(
             "homeassistant.components.tts.async_create_stream",
             return_value=MockResultStream(hass, "wav", b""),
         ),
@@ -568,6 +572,10 @@ async def test_start_conversation(
         patch(
             "homeassistant.components.tts.generate_media_source_id",
             return_value="media-source://generated",
+        ),
+        patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud",
         ),
         patch(
             "homeassistant.components.tts.async_create_stream",
