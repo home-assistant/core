@@ -1,7 +1,4 @@
 {
-  "common": {
-    "temperature": "Temperature"
-  },
   "config": {
     "flow_title": "Homee {name} ({host})",
     "abort": {
@@ -30,9 +27,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "battery_low": {
-        "name": "[%key:component::binary_sensor::entity_component::battery::name%]"
-      },
       "blackout_alarm": {
         "name": "Blackout"
       },
@@ -65,31 +59,19 @@
         "name": "Malfunction"
       },
       "maximum": {
-        "name": "Level",
-        "state": {
-          "on": "Above maximum"
-        }
+        "name": "Maximumn level"
       },
       "minimum": {
-        "name": "Level",
-        "state": {
-          "on": "Below minimum"
-        }
+        "name": "Minumum level"
       },
       "motor_blocked": {
         "name": "Motor blocked"
-      },
-      "opening": {
-        "name": "[%key:component::binary_sensor::entity_component::opening::name%]"
       },
       "overcurrent": {
         "name": "Overcurrent"
       },
       "overload": {
         "name": "Overload"
-      },
-      "power_supply": {
-        "name": "[%key:component::binary_sensor::entity_component::power::name%]"
       },
       "rain": {
         "name": "Rain"
@@ -99,9 +81,6 @@
         "state": {
           "on": "Replace"
         }
-      },
-      "smoke": {
-        "name": "Smoke"
       },
       "storage": {
         "name": "Storage",
@@ -113,14 +92,8 @@
       "surge": {
         "name": "Surge"
       },
-      "tamper": {
-        "name": "[%key:component::binary_sensor::entity_component::tamper::name%]"
-      },
       "voltage_drop": {
         "name": "Voltage drop"
-      },
-      "window": {
-        "name": "[%key:component::binary_sensor::entity_component::window::name%]"
       },
       "water": {
         "name": "[%key:component::binary_sensor::entity_component::moisture::name%]"

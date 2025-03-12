@@ -19,7 +19,7 @@ PARALLEL_UPDATES = 0
 
 BINARY_SENSOR_DESCRIPTIONS: dict[AttributeType, BinarySensorEntityDescription] = {
     AttributeType.BATTERY_LOW_ALARM: BinarySensorEntityDescription(
-        key="battery_low",
+        key="battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -32,7 +32,7 @@ BINARY_SENSOR_DESCRIPTIONS: dict[AttributeType, BinarySensorEntityDescription] =
         key="carbon_monoxide", device_class=BinarySensorDeviceClass.CO
     ),
     AttributeType.CO2ALARM: BinarySensorEntityDescription(
-        key="carbon_dioxide", device_class=BinarySensorDeviceClass.GAS
+        key="carbon_dioxide", device_class=BinarySensorDeviceClass.PROBLEM
     ),
     AttributeType.FLOOD_ALARM: BinarySensorEntityDescription(
         key="flood",
@@ -45,7 +45,7 @@ BINARY_SENSOR_DESCRIPTIONS: dict[AttributeType, BinarySensorEntityDescription] =
     ),
     AttributeType.LEAK_ALARM: BinarySensorEntityDescription(
         key="leak_alarm",
-        device_class=BinarySensorDeviceClass.MOISTURE,
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     AttributeType.LOAD_ALARM: BinarySensorEntityDescription(
         key="load_alarm",
@@ -103,11 +103,11 @@ BINARY_SENSOR_DESCRIPTIONS: dict[AttributeType, BinarySensorEntityDescription] =
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     AttributeType.PRESENCE_ALARM: BinarySensorEntityDescription(
-        key="motion",
+        key="presence",
         device_class=BinarySensorDeviceClass.PRESENCE,
     ),
     AttributeType.POWER_SUPPLY_ALARM: BinarySensorEntityDescription(
-        key="power_supply",
+        key="power",
         device_class=BinarySensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

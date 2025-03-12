@@ -28,7 +28,7 @@
     'platform': 'homee',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'battery_low',
+    'translation_key': 'battery',
     'unique_id': '00055511EECC-1-1',
     'unit_of_measurement': None,
   })
@@ -118,7 +118,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.GAS: 'gas'>,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Carbon dioxide',
     'platform': 'homee',
@@ -132,7 +132,7 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gas',
+      'device_class': 'problem',
       'friendly_name': 'Test Binary Sensor Carbon dioxide',
     }),
     'context': <ANY>,
@@ -310,7 +310,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
     'original_name': 'Leak',
     'platform': 'homee',
@@ -324,107 +324,11 @@
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_leak-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
+      'device_class': 'problem',
       'friendly_name': 'Test Binary Sensor Leak',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_leak',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_binary_sensor_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Level',
-    'platform': 'homee',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'maximum',
-    'unique_id': '00055511EECC-1-12',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Level',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_binary_sensor_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_level_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_binary_sensor_level_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Level',
-    'platform': 'homee',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'minimum',
-    'unique_id': '00055511EECC-1-13',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_level_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Level',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_binary_sensor_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -616,6 +520,102 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_malfunction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_maximumn_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_binary_sensor_maximumn_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Maximumn level',
+    'platform': 'homee',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'maximum',
+    'unique_id': '00055511EECC-1-12',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_maximumn_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Test Binary Sensor Maximumn level',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_binary_sensor_maximumn_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_minumum_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_binary_sensor_minumum_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Minumum level',
+    'platform': 'homee',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'minimum',
+    'unique_id': '00055511EECC-1-13',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_minumum_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Test Binary Sensor Minumum level',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_binary_sensor_minumum_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -987,7 +987,7 @@
     'platform': 'homee',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'power_supply',
+    'translation_key': 'power',
     'unique_id': '00055511EECC-1-21',
     'unit_of_measurement': None,
   })
@@ -1035,7 +1035,7 @@
     'platform': 'homee',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'motion',
+    'translation_key': 'presence',
     'unique_id': '00055511EECC-1-20',
     'unit_of_measurement': None,
   })
