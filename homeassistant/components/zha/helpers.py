@@ -115,10 +115,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.logging import (
-    HomeAssistantQueueHandler,
-    HomeAssistantQueueListener,
-)
+from homeassistant.util.logging import HomeAssistantQueueHandler
 
 from .const import (
     ATTR_ACTIVE_COORDINATOR,
@@ -514,7 +511,7 @@ class ZHAGatewayProxy(EventBase):
         log_relay_handler: LogRelayHandler = LogRelayHandler(hass, self)
         log_simple_queue: queue.SimpleQueue[logging.Handler] = queue.SimpleQueue()
         self._log_queue_handler = HomeAssistantQueueHandler(log_simple_queue)
-        self._log_queue_handler.listener = HomeAssistantQueueListener(
+        self._log_queue_handler.listener = logging.handlers.QueueListener(
             log_simple_queue, log_relay_handler
         )
 

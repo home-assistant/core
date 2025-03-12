@@ -94,7 +94,7 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
     """Process the log in another thread."""
 
-    listener: HomeAssistantQueueListener | None = None
+    listener: logging.handlers.QueueListener | None = None
 
     def handle(self, record: logging.LogRecord) -> Any:
         """Conditionally emit the specified logging record.
