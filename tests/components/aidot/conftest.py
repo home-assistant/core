@@ -1,15 +1,26 @@
 """Common fixtures for the aidot tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aidot.client import AidotClient
-from aidot.const import CONF_ACCESS_TOKEN, CONF_DEVICE_LIST, CONF_ID, CONF_LOGIN_INFO
+from aidot.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_DEVICE_LIST,
+    CONF_HARDWARE_VERSION,
+    CONF_ID,
+    CONF_LOGIN_INFO,
+    CONF_MAC,
+    CONF_MODEL_ID,
+    CONF_NAME,
+)
 from aidot.device_client import DeviceClient, DeviceInformation, DeviceStatusData
 import pytest
 
 from homeassistant.components.aidot.const import DOMAIN
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 
 from tests.common import MockConfigEntry
 
@@ -102,11 +113,10 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-@pytest.fixture
-def mocked_device_client() -> MagicMock:
-    """Fixture DeviceClient."""
+def create_device_client(device: dict[str, Any]) -> MagicMock:
+    """Create DeviceClient."""
     mock_device_client = MagicMock(spec=DeviceClient)
-    mock_device_client.device_id = "device_id"
+    mock_device_client.device_id = device.get(CONF_ID)
 
     mock_info = Mock(spec=DeviceInformation)
     mock_info.enable_rgbw = True
@@ -114,11 +124,11 @@ def mocked_device_client() -> MagicMock:
     mock_info.enable_cct = True
     mock_info.cct_min = 2700
     mock_info.cct_max = 6500
-    mock_info.dev_id = "device_id"
-    mock_info.mac = "AA:BB:CC:DD:EE:FF"
-    mock_info.model_id = "aidot.light.rgbw"
-    mock_info.name = "Test Light"
-    mock_info.hw_version = "1.0"
+    mock_info.dev_id = device.get(CONF_ID)
+    mock_info.mac = device.get(CONF_MAC)
+    mock_info.model_id = device.get(CONF_MODEL_ID)
+    mock_info.name = device.get(CONF_NAME)
+    mock_info.hw_version = device.get(CONF_HARDWARE_VERSION)
     mock_device_client.info = mock_info
 
     status = Mock(spec=DeviceStatusData)
@@ -134,10 +144,23 @@ def mocked_device_client() -> MagicMock:
 
 
 @pytest.fixture
+def mocked_device_client() -> MagicMock:
+    """Fixture DeviceClient."""
+    return create_device_client(TEST_DEVICE1)
+
+
+@pytest.fixture
 def mocked_aidot_client(mocked_device_client) -> MagicMock:
     """Fixture AidotClient."""
+
+    @callback
+    def get_device_client(device: dict[str, Any]):
+        if device.get(CONF_ID) == "device_id":
+            return mocked_device_client
+        return create_device_client(device)
+
     mock_aidot_client = MagicMock(spec=AidotClient)
-    mock_aidot_client.get_device_client.return_value = mocked_device_client
+    mock_aidot_client.get_device_client = get_device_client
     mock_aidot_client.async_get_all_device.return_value = TEST_DEVICE_LIST
     mock_aidot_client.async_post_login.return_value = TEST_LOGIN_RESP
     return mock_aidot_client

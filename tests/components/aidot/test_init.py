@@ -1,75 +1,34 @@
 """Test aidot."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
-
-from homeassistant.components.aidot.__init__ import (
-    async_setup_entry,
-    async_unload_entry,
-)
 from homeassistant.components.aidot.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from . import async_init_integration
 
-async def test_async_setup_entry_calls_async_forward_entry_setups(
-    hass: HomeAssistant, mock_config_entry
-) -> None:
-    """Test that async_setup_entry calls async_forward_entry_setups correctly."""
-    mock_data = {}
-    hass.data = MagicMock()
-    hass.data.setdefault = MagicMock(side_effect=mock_data.setdefault)
-    with (
-        patch.object(
-            hass.config_entries, "async_forward_entry_setups", new=AsyncMock()
-        ),
-    ):
-        await async_setup_entry(hass, mock_config_entry)
-        hass.config_entries.async_forward_entry_setups.assert_called_once_with(
-            mock_config_entry, ["light"]
-        )
+from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry_returns_true(
-    hass: HomeAssistant, mock_config_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that async_setup_entry returns True."""
 
-    mock_data = {}
-    hass.data = MagicMock()
-    hass.data.setdefault = MagicMock(side_effect=mock_data.setdefault)
-    with (
-        patch.object(
-            hass.config_entries, "async_forward_entry_setups", new=AsyncMock()
-        ),
-    ):
-        result = await async_setup_entry(hass, mock_config_entry)
-    assert result is True
+    await async_init_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_async_unload_entry(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_async_unload_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test that async_unload_entry unloads the component correctly."""
-    mock_config_entry.runtime_data = MagicMock()
-    hass.data = MagicMock()
-    with patch.object(
-        hass.config_entries, "async_unload_platforms", new_callable=AsyncMock
-    ) as mock_unload:
-        await async_unload_entry(hass, mock_config_entry)
-        mock_unload.assert_called_once_with(mock_config_entry, ["light"])
+    await async_init_integration(hass, mock_config_entry)
 
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-async def test_async_unload_entry_fails(hass: HomeAssistant, mock_config_entry) -> None:
-    """Test that async_unload_entry handles failure correctly."""
-    mock_config_entry.runtime_data = MagicMock()
-    mock_data = {}
-    hass.data = MagicMock()
-    hass.data.setdefault = MagicMock(side_effect=mock_data.setdefault)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch.object(
-        hass.config_entries,
-        "async_unload_platforms",
-        new_callable=AsyncMock,
-        return_value=False,
-    ) as mock_unload:
-        result = await async_unload_entry(hass, mock_config_entry)
-        mock_unload.assert_called_once_with(mock_config_entry, ["light"])
-        assert result is False
-        assert hass.data.get(DOMAIN) is not None
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert not hass.data.get(DOMAIN)
