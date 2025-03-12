@@ -454,7 +454,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_node_capabilities)
     websocket_api.async_register_command(hass, websocket_invoke_cc_api)
     websocket_api.async_register_command(hass, websocket_get_integration_settings)
-    websocket_api.async_register_command(hass, websocket_backup_nvm_raw)
+    websocket_api.async_register_command(hass, websocket_backup_nvm)
     websocket_api.async_register_command(hass, websocket_restore_nvm)
     hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
 
@@ -2786,14 +2786,14 @@ def websocket_get_integration_settings(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/backup_nvm_raw",
+        vol.Required(TYPE): "zwave_js/backup_nvm",
         vol.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
 @async_handle_failed_command
 @async_get_entry
-async def websocket_backup_nvm_raw(
+async def websocket_backup_nvm(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
