@@ -536,3 +536,25 @@ async def test_ws_hass_agent_debug_sentence_trigger(
 
     # Trigger should not have been executed
     assert len(calls) == 0
+
+
+async def test_ws_hass_language_scores(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test getting language support scores."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/homeassistant/language_scores"}
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    # Sanity check
+    assert msg["result"]["en_US"] == {"cloud": 3, "focused_local": 2, "full_local": 3}
