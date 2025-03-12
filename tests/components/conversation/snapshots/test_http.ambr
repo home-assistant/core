@@ -729,3 +729,302 @@
     ]),
   })
 # ---
+# name: test_ws_hass_language_scores
+  dict({
+    'af_ZA': dict({
+      'cloud': 0,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'ar_JO': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'bg_BG': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'bn_BD': dict({
+      'cloud': 0,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'bn_IN': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'ca_ES': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'cs_CZ': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'da_DK': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'de_CH': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'de_DE': dict({
+      'cloud': 3,
+      'focused_local': 2,
+      'full_local': 3,
+    }),
+    'el_GR': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'en_US': dict({
+      'cloud': 3,
+      'focused_local': 2,
+      'full_local': 3,
+    }),
+    'es_MX': dict({
+      'cloud': 3,
+      'focused_local': 2,
+      'full_local': 3,
+    }),
+    'et_EE': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'eu_ES': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'fa_IR': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'fi_FI': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'fr_FR': dict({
+      'cloud': 3,
+      'focused_local': 2,
+      'full_local': 0,
+    }),
+    'gl_ES': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'gu_IN': dict({
+      'cloud': 0,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'he_IL': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'hi_IN': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'hr_HR': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'hu_HU': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'id_ID': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'is_IS': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'it_IT': dict({
+      'cloud': 3,
+      'focused_local': 2,
+      'full_local': 3,
+    }),
+    'ka_GE': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'kn_IN': dict({
+      'cloud': 0,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'ko_KR': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'lb_LU': dict({
+      'cloud': 0,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'lt_LT': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'lv_LV': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'ml_IN': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'mn_MN': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'mr_IN': dict({
+      'cloud': 0,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'ms_MY': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'nb_NO': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'ne_NP': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'nl_BE': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'nl_NL': dict({
+      'cloud': 3,
+      'focused_local': 2,
+      'full_local': 0,
+    }),
+    'pl_PL': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'pt_BR': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 3,
+    }),
+    'pt_PT': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 3,
+    }),
+    'ro_RO': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'ru_RU': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'sk_SK': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'sl_SI': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'sr_RS': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'sv_SE': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'sw_KE': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'te_IN': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'th_TH': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'tr_TR': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'uk_UA': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'ur_IN': dict({
+      'cloud': 0,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'vi_VN': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'zh_CN': dict({
+      'cloud': 1,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+    'zh_HK': dict({
+      'cloud': 3,
+      'focused_local': 0,
+      'full_local': 0,
+    }),
+  })
+# ---
