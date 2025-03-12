@@ -15,6 +15,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import HomeeConfigEntry
 from .entity import HomeeEntity
 
+PARALLEL_UPDATES = 0
+
 VALVE_DESCRIPTIONS = {
     AttributeType.CURRENT_VALVE_POSITION: ValveEntityDescription(
         key="valve_position",

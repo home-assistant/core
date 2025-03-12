@@ -184,6 +184,25 @@ class ChatLog:
     delta_listener: Callable[[ChatLog, dict], None] | None = None
 
     @property
+    def continue_conversation(self) -> bool:
+        """Return whether the conversation should continue."""
+        if not self.content:
+            return False
+
+        last_msg = self.content[-1]
+
+        return (
+            last_msg.role == "assistant"
+            and last_msg.content is not None  # type: ignore[union-attr]
+            and last_msg.content.strip().endswith(  # type: ignore[union-attr]
+                (
+                    "?",
+                    ";",  # Greek question mark
+                )
+            )
+        )
+
+    @property
     def unresponded_tool_results(self) -> bool:
         """Return if there are unresponded tool results."""
         return self.content[-1].role == "tool_result"
