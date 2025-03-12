@@ -59,13 +59,12 @@ class VegeHubSensor(CoordinatorEntity[VegeHubCoordinator], SensorEntity):
         self._attr_unique_id = (
             f"{self._mac_address}_{index}".lower()
         )  # Generate a unique_id using mac and slot
-        identifier = "hub_" + self._mac_address
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, identifier)},
+            identifiers={(DOMAIN, self._mac_address)},
             name=config_entry.data[CONF_HOST],
             manufacturer=MANUFACTURER,
             model=MODEL,
-            via_device=(DOMAIN, identifier),
+            via_device=(DOMAIN, self._mac_address),
         )
 
     @callback
