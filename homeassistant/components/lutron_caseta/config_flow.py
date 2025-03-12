@@ -20,10 +20,11 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .const import (
     ABORT_REASON_CANNOT_CONNECT,
     BRIDGE_DEVICE_ID,
-    BRIDGE_TIMEOUT,
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
+    CONFIGURE_TIMEOUT,
+    CONNECT_TIMEOUT,
     DOMAIN,
     ERROR_CANNOT_CONNECT,
     STEP_IMPORT_FAILED,
@@ -232,7 +233,7 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
             return None
 
         try:
-            async with asyncio.timeout(BRIDGE_TIMEOUT):
+            async with asyncio.timeout(CONNECT_TIMEOUT + CONFIGURE_TIMEOUT):
                 await bridge.connect()
         except TimeoutError:
             _LOGGER.error(

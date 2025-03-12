@@ -111,5 +111,10 @@
         "name": "Reboot cause"
       }
     }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Error fetching data: {error}"
+    }
   }
 }
