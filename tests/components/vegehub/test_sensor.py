@@ -42,22 +42,18 @@ async def test_sensor_entities(
     with patch("homeassistant.components.vegehub.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, mocked_config_entry)
 
-        await hass.async_block_till_done()
-        await hass.async_start()
-        await hass.async_block_till_done()
+    assert TEST_WEBHOOK_ID in hass.data["webhook"], "Webhook was not registered"
 
-        assert TEST_WEBHOOK_ID in hass.data["webhook"], "Webhook was not registered"
+    # Verify the webhook handler
+    webhook_info = hass.data["webhook"][TEST_WEBHOOK_ID]
+    assert webhook_info["handler"], "Webhook handler is not set"
 
-        # Verify the webhook handler
-        webhook_info = hass.data["webhook"][TEST_WEBHOOK_ID]
-        assert webhook_info["handler"], "Webhook handler is not set"
+    client = await hass_client_no_auth()
+    resp = await client.post(f"/api/webhook/{TEST_WEBHOOK_ID}", json=UPDATE_DATA)
 
-        client = await hass_client_no_auth()
-        resp = await client.post(f"/api/webhook/{TEST_WEBHOOK_ID}", json=UPDATE_DATA)
-
-        # Wait for remaining tasks to complete.
-        await hass.async_block_till_done()
-        assert resp.status == 200, f"Unexpected status code: {resp.status}"
-        await snapshot_platform(
-            hass, entity_registry, snapshot, mocked_config_entry.entry_id
-        )
+    # Wait for remaining tasks to complete.
+    await hass.async_block_till_done()
+    assert resp.status == 200, f"Unexpected status code: {resp.status}"
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mocked_config_entry.entry_id
+    )
