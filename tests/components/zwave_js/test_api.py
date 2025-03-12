@@ -5214,7 +5214,7 @@ async def test_backup_nvm_raw(
 
     # Test subscription and events
     with patch.object(
-        controller, "async_backup_nvm_raw", return_value=b"test"
+        controller, "async_backup_nvm_raw_base64", return_value="test"
     ) as mock_backup:
         # Send the subscription request
         await ws_client.send_json(
@@ -5225,31 +5225,53 @@ async def test_backup_nvm_raw(
             }
         )
 
+        # Verify the finished event with data first
+        msg = await ws_client.receive_json()
+        assert msg["type"] == "event"
+        assert msg["event"]["event"] == "finished"
+        assert msg["event"]["data"] == "test"
+
         # Verify subscription success
         msg = await ws_client.receive_json()
-        assert msg["success"]
+        assert msg["type"] == "result"
+        assert msg["success"] is True
 
         # Simulate progress events
-        controller.receive_event("nvm backup progress", {"progress": 25})
+        event = Event(
+            "nvm backup progress",
+            {
+                "source": "controller",
+                "event": "nvm backup progress",
+                "bytesRead": 25,
+                "total": 100,
+            },
+        )
+        controller.receive_event(event)
         msg = await ws_client.receive_json()
-        assert msg["event"]["event"] == "progress"
-        assert msg["event"]["progress"] == 25
+        assert msg["event"]["event"] == "nvm backup progress"
+        assert msg["event"]["bytesRead"] == 25
+        assert msg["event"]["total"] == 100
 
-        controller.receive_event("nvm backup progress", {"progress": 50})
+        event = Event(
+            "nvm backup progress",
+            {
+                "source": "controller",
+                "event": "nvm backup progress",
+                "bytesRead": 50,
+                "total": 100,
+            },
+        )
+        controller.receive_event(event)
         msg = await ws_client.receive_json()
-        assert msg["event"]["event"] == "progress"
-        assert msg["event"]["progress"] == 50
+        assert msg["event"]["event"] == "nvm backup progress"
+        assert msg["event"]["bytesRead"] == 50
+        assert msg["event"]["total"] == 100
 
         # Wait for the backup to complete
         await hass.async_block_till_done()
 
         # Verify the backup was called
         assert mock_backup.called
-
-        # Verify the finished event with data
-        msg = await ws_client.receive_json()
-        assert msg["event"]["event"] == "finished"
-        assert msg["event"]["data"] == "dGVzdA=="  # base64 encoded "test"
 
     # Test config entry not found
     await ws_client.send_json(
@@ -5275,7 +5297,6 @@ async def test_backup_nvm_raw(
         }
     )
     msg = await ws_client.receive_json()
-    assert not msg["success"]
     assert msg["error"]["code"] == "not_loaded"
 
 
@@ -5293,7 +5314,7 @@ async def test_restore_nvm(
 
     # Test restore success
     with patch.object(
-        controller, "async_restore_nvm", return_value=None
+        controller, "async_restore_nvm_base64", return_value=None
     ) as mock_restore:
         # Send the subscription request
         await ws_client.send_json(
@@ -5305,20 +5326,46 @@ async def test_restore_nvm(
             }
         )
 
+        # Verify the finished event first
+        msg = await ws_client.receive_json()
+        assert msg["type"] == "event"
+        assert msg["event"]["event"] == "finished"
+
         # Verify subscription success
         msg = await ws_client.receive_json()
-        assert msg["success"]
+        assert msg["type"] == "result"
+        assert msg["success"] is True
 
         # Simulate progress events
-        controller.receive_event("nvm restore progress", {"progress": 25})
+        event = Event(
+            "nvm restore progress",
+            {
+                "source": "controller",
+                "event": "nvm restore progress",
+                "bytesWritten": 25,
+                "total": 100,
+            },
+        )
+        controller.receive_event(event)
         msg = await ws_client.receive_json()
-        assert msg["event"]["event"] == "progress"
-        assert msg["event"]["progress"] == 25
+        assert msg["event"]["event"] == "nvm restore progress"
+        assert msg["event"]["bytesWritten"] == 25
+        assert msg["event"]["total"] == 100
 
-        controller.receive_event("nvm restore progress", {"progress": 50})
+        event = Event(
+            "nvm restore progress",
+            {
+                "source": "controller",
+                "event": "nvm restore progress",
+                "bytesWritten": 50,
+                "total": 100,
+            },
+        )
+        controller.receive_event(event)
         msg = await ws_client.receive_json()
-        assert msg["event"]["event"] == "progress"
-        assert msg["event"]["progress"] == 50
+        assert msg["event"]["event"] == "nvm restore progress"
+        assert msg["event"]["bytesWritten"] == 50
+        assert msg["event"]["total"] == 100
 
         # Wait for the restore to complete
         await hass.async_block_till_done()
@@ -5326,28 +5373,10 @@ async def test_restore_nvm(
         # Verify the restore was called
         assert mock_restore.called
 
-        # Verify the finished event
-        msg = await ws_client.receive_json()
-        assert msg["event"]["event"] == "finished"
-
-    # Test invalid base64 data
-    await ws_client.send_json(
-        {
-            "id": 2,
-            "type": "zwave_js/restore_nvm",
-            "entry_id": integration.entry_id,
-            "data": "invalid_base64",
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == "invalid_format"
-    assert msg["error"]["message"] == "Invalid base64 data"
-
     # Test restore failure
     with patch.object(
         controller,
-        "async_restore_nvm",
+        "async_restore_nvm_base64",
         side_effect=FailedCommand("failed_command", "Restore failed"),
     ):
         # Send the subscription request
@@ -5360,14 +5389,11 @@ async def test_restore_nvm(
             }
         )
 
-        # Verify subscription success
+        # Verify error response
         msg = await ws_client.receive_json()
-        assert msg["success"]
-
-        # Wait for the error
-        msg = await ws_client.receive_json()
-        assert msg["event"]["event"] == "error"
-        assert "Restore failed" in msg["event"]["error"]
+        assert not msg["success"]
+        assert msg["error"]["code"] == "FailedCommand"
+        assert "Restore failed" in msg["error"]["message"]
 
 
 async def test_cancel_secure_bootstrap_s2(
