@@ -275,6 +275,13 @@
       "refrigeration_setpoint": {
         "name": "[%key:component::smartthings::entity::sensor::oven_setpoint::name%]"
       },
+      "remote_control_status": {
+        "name": "Remote Control Status",
+        "state": {
+          "false": "[%key:common::state::off%]",
+          "true": "[%key:common::state::on%]"
+        }
+      },
       "robot_cleaner_cleaning_mode": {
         "name": "Cleaning mode",
         "state": {
@@ -388,6 +395,26 @@
           "wrinkle_prevent": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wrinkle_prevent%]",
           "freeze_protection": "Freeze protection"
         }
+      },
+      "washer_operating_state": {
+        "name": "Operating state",
+        "state": {
+          "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
+          "running": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
+          "paused": "[%key:common::state::paused%]"
+        }
+      },
+      "washer_operating_progress": {
+        "name": "Progress"
+      },
+      "washer_operation_time": {
+        "name": "Operation time"
+      },
+      "washer_remaining_time": {
+        "name": "Remaining time"
+      },
+      "water_consumption": {
+        "name": "Water consumption"
       }
     }
   }
