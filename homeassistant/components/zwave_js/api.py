@@ -456,6 +456,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_get_integration_settings)
     websocket_api.async_register_command(hass, websocket_backup_nvm_raw)
     websocket_api.async_register_command(hass, websocket_restore_nvm)
+    hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
 
 
 @websocket_api.require_admin
