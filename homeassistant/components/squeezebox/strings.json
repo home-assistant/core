@@ -63,7 +63,7 @@
     },
     "search": {
       "name": "Search music library & players",
-      "description": "Searches for items in the music library & players",
+      "description": "Searches for items in the music library & players.",
       "fields": {
         "command": {
           "name": "Items",
@@ -79,13 +79,13 @@
         },
         "tags": {
           "name": "Tags",
-          "description": "Override default tags for search"
+          "description": "Override default tags for search."
         }
       }
     },
     "play": {
       "name": "Play music",
-      "description": "Plays an item in the music library",
+      "description": "Plays an item in the music library.",
       "fields": {
         "command": {
           "name": "Items",
@@ -93,7 +93,7 @@
         },
         "search_type": {
           "name": "Search type",
-          "description": "Full text search for a string, or directly provide an item_id."
+          "description": "Full text search for a string, or directly provide an item_id or URL."
         },
         "search_string": {
           "name": "Search string",
@@ -182,7 +182,8 @@
         "track": "Track",
         "playlist": "Playlist",
         "genre": "Genre",
-        "favorite": "Favorite"
+        "favorite": "Favorite",
+        "url": "URL"
       }
     },
     "search_type_selector": {

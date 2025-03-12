@@ -719,6 +719,10 @@ class SqueezeBoxMediaPlayerEntity(
         """Call Squeezebox JSON/RPC method to search media library."""
         media_id = ""
         if search_type == "text":
+            if command == "url":
+                raise ServiceValidationError(
+                    "When selecting URL, you must choose to play by Item Id, rather than by Full text"
+                )
             if command == "favorite":
                 parameter = [
                     "favorites",
@@ -783,6 +787,8 @@ class SqueezeBoxMediaPlayerEntity(
 
             if command == "favorite":
                 media_type = "Favorites"
+            elif command == "url":
+                media_type = MediaType.MUSIC
             else:
                 media_type = command
 
