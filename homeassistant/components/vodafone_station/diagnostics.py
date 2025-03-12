@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
 from .coordinator import VodafoneStationRouter
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
@@ -20,7 +19,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    coordinator: VodafoneStationRouter = hass.data[DOMAIN][entry.entry_id]
+    coordinator = cast(VodafoneStationRouter, entry.runtime_data)
 
     sensors_data = coordinator.data.sensors
     return {

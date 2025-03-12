@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final
+from typing import Final, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DOMAIN, LINE_TYPES
+from .const import _LOGGER, LINE_TYPES
 from .coordinator import VodafoneStationRouter
 
 NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
@@ -172,7 +172,7 @@ async def async_setup_entry(
     """Set up entry."""
     _LOGGER.debug("Setting up Vodafone Station sensors")
 
-    coordinator: VodafoneStationRouter = hass.data[DOMAIN][entry.entry_id]
+    coordinator = cast(VodafoneStationRouter, entry.runtime_data)
 
     sensors_data = coordinator.data.sensors
 

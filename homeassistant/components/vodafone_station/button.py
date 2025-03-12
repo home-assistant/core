@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER
 from .coordinator import VodafoneStationRouter
 
 
@@ -74,7 +74,7 @@ async def async_setup_entry(
     """Set up entry."""
     _LOGGER.debug("Setting up Vodafone Station buttons")
 
-    coordinator: VodafoneStationRouter = hass.data[DOMAIN][entry.entry_id]
+    coordinator = cast(VodafoneStationRouter, entry.runtime_data)
 
     sensors_data = coordinator.data.sensors
 

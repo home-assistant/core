@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -9,7 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER
 from .coordinator import VodafoneStationDeviceInfo, VodafoneStationRouter
 
 
@@ -21,7 +23,7 @@ async def async_setup_entry(
     """Set up device tracker for Vodafone Station component."""
 
     _LOGGER.debug("Start device trackers setup")
-    coordinator: VodafoneStationRouter = hass.data[DOMAIN][entry.entry_id]
+    coordinator = cast(VodafoneStationRouter, entry.runtime_data)
 
     tracked: set = set()
 
