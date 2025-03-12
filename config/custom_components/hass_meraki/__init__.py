@@ -27,14 +27,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     dashboard = meraki.DashboardAPI(api_key=api_key, suppress_logging=True)
 
-    async def _get_neighbors(serial):
+    async def _get_ports(serial):
         """Call the Meraki API to change the PoE state for this port."""
         try:
             return await hass.async_add_executor_job(
-                dashboard.devices.getDeviceLldpCdp, serial
+                functools.partial(
+                    dashboard.switch.getDeviceSwitchPortsStatuses,
+                    serial,
+                    timespan=300,
+                )
             )
         except meraki.APIError as err:
-            _LOGGER.error("Failed to get neighbors for serial %s: %s", serial, err)
+            _LOGGER.error("Failed to get ports for serial %s: %s", serial, err)
             return False
 
     async def async_update_data():
@@ -49,7 +53,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     dashboard.organizations.getOrganizationNetworks, org_id
                 )
 
-            # Hole alle Geräte aus der Organisation
             all_devices = await hass.async_add_executor_job(
                 dashboard.organizations.getOrganizationDevices, org_id
             )
@@ -58,15 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             devices_availabilities = await hass.async_add_executor_job(
                 dashboard.organizations.getOrganizationDevicesAvailabilities,
                 org_id,
-            )
-
-            # Port Informationen für diese Org
-            port_usage = await hass.async_add_executor_job(
-                functools.partial(
-                    dashboard.switch.getOrganizationSwitchPortsUsageHistoryByDeviceByInterval,
-                    org_id,
-                    timespan=900,
-                )
             )
 
             # Falls eine Network ID angegeben wurde, filtern wir die Geräte nach Netzwerk
@@ -103,45 +97,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     "state": status,  # Verknüpfter Status aus getOrganizationDevicesAvailabilities
                     "client_count": 0,
                     "clients": {},
-                    "active_poe_ports": [],
+                    "ports": {},
                 }
 
-            port_usage = port_usage.get("items")
+                if device.get("productType") == "switch":
+                    ports = await _get_ports(serial)
+                    data[serial]["ports"] = ports
 
-            if network_id:
-                port_usage = [
-                    switch
-                    for switch in port_usage
-                    if switch.get("networkId") == network_id
-                ]
-
-            for switch in port_usage:
-                serial = switch.get("serial")
-                if not serial:
-                    continue
-
-                active_poe_ports = {}
-
-                ports = switch.get("ports")
-                for port in ports:
-                    port_id = port.get("portId")
-
-                    if port.get("intervals")[0]["energy"]["usage"]:
-                        poe = port.get("intervals")[0]["energy"]["usage"]["total"]
-                        if poe > 0.0:
-                            poe_port = {}
-                            active_poe_ports[port_id] = poe_port
-
-                if serial in data:
-                    data[serial]["active_poe_ports"] = active_poe_ports
-
-                neighbors = await _get_neighbors(serial)
-                ports = neighbors.get("ports")
-                for port in ports:
-                    if port in active_poe_ports:
-                        active_poe_ports[port] = neighbors["ports"][port]["lldp"]
-            # Optionale Abfrage: Hole aktive Clients und ordne diese Geräten zu,
-            # aber nur für Geräte, die auch Clients unterstützen (z.B. Switches, APs, Appliances)
             for network in networks:
                 # total_pages='all' überschreibt das Default-Limit
                 clients = await hass.async_add_executor_job(
@@ -160,9 +122,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     if serial in data:
                         data[serial]["client_count"] += 1
                         data[serial]["clients"][client_id] = client
-                        port = client.get("switchport")
-                        if port in active_poe_ports:
-                            active_poe_ports[port] = client
 
         except Exception as e:  # noqa: BLE001
             _LOGGER.error(f"Error updating Meraki data: {e}")  # noqa: G004

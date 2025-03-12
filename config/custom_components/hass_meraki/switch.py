@@ -36,8 +36,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             connections={("mac", device_data.get("mac", "Unknown"))},
         )
 
-        if device_data.get("active_poe_ports"):
-            for port in device_data.get("active_poe_ports"):
+        for port in device_data.get("ports"):
+            if port["poe"]["isAllocated"]:
                 entities.append(MerakiPoeSwitch(coordinator, serial, port))  # noqa: PERF401
     async_add_entities(entities)
 
@@ -51,16 +51,14 @@ class MerakiPoeSwitch(CoordinatorEntity, SwitchEntity):  # noqa: D101
         device_data = coordinator.data.get(serial, {})
         super().__init__(coordinator)
         self._serial = serial
-        if "systemName" in device_data["active_poe_ports"][port]:
-            self._attr_name = (
-                f"Port {port} {device_data['active_poe_ports'][port]['systemName']}"
-            )
+        if "lldp" in port:
+            self._attr_name = f"Port {port['portId']} {port['lldp']['systemName']}"
         else:
-            self._attr_name = f"Port {port}"
-        self._attr_unique_id = f"{serial}_poe_port_{port}"
+            self._attr_name = f"Port {port['portId']}"
+        self._attr_unique_id = f"{serial}_poe_port_{port['portId']}"
         self._attr_has_entity_name = True
-        self._port = port
-        self._poe_enabled = True
+        self._port_id = port["portId"]
+        self._enabled = port["enabled"]
 
         # Gerätedaten, damit die Entität dem Gerät zugeordnet wird
         self._attr_device_info = {
@@ -74,39 +72,37 @@ class MerakiPoeSwitch(CoordinatorEntity, SwitchEntity):  # noqa: D101
 
     @property
     def is_on(self):
-        """Return True if PoE is enabled on this port."""
-        # Assume the API returns a boolean 'poeEnabled' flag
-        return self._poe_enabled
-        # return True
+        """Return True if this port is enabled."""
+        # Assume the API returns a boolean 'enabled' flag
+        return self._enabled
 
     async def async_turn_on(self, **kwargs):
-        """Enable PoE power on this port."""
+        """Enable this port."""
         result = await self.hass.async_add_executor_job(self._set_poe, True)
         if result:
-            self._poe_enabled = result.get("poeEnabled")
+            self._enabled = result.get("enabled")
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        """Disable PoE power on this port."""
+        """Disable this port."""
         result = await self.hass.async_add_executor_job(self._set_poe, False)
         if result:
-            self._poe_enabled = result.get("poeEnabled")
+            self._enabled = result.get("enabled")
             self.async_write_ha_state()
 
     def _set_poe(self, enable):
-        """Call the Meraki API to change the PoE state for this port."""
+        """Call the Meraki API to change the state for this port."""
         # Adjust the API call to match your needs. This is an example.
 
         api_key = self.coordinator.config_entry.data["api_key"]
         dashboard = meraki.DashboardAPI(api_key=api_key, suppress_logging=True)
         try:
             # This is a placeholder; replace with the actual API method and parameters.
-            response = dashboard.switch.updateDeviceSwitchPort(
-                self._serial, self._port, poeEnabled=enable
+            return dashboard.switch.updateDeviceSwitchPort(
+                self._serial, self._port_id, enabled=enable
             )
-            return response
         except meraki.APIError as err:
-            _LOGGER.error("Failed to set PoE state on port %s: %s", self._port, err)
+            _LOGGER.error("Failed to set state on port %s: %s", self._port_id, err)
             return False
 
     # @property
