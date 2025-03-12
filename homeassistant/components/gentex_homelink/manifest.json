@@ -3,7 +3,6 @@
   "name": "HomeLink",
   "codeowners": ["@niaexa", "@ryanjones-gentex"],
   "config_flow": true,
-  "dependencies": ["auth"],
   "documentation": "https://www.home-assistant.io/integrations/gentex_homelink",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",

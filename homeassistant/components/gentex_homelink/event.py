@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     # Import keeps mypy happy but is a circular reference otherwise
     from .coordinator import HomeLinkCoordinator  # noqa: F401
 
-from homeassistant.components.event import EventEntity
+from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -39,6 +39,7 @@ class HomeLinkEventEntity(CoordinatorEntity["HomeLinkCoordinator"], EventEntity)
         EVENT_PRESSED,
         EVENT_OFF,
     ]
+    _attr_device_class = EventDeviceClass.BUTTON
 
     def __init__(self, id, param_name, device_id, device_name, coordinator) -> None:
         """Initialize the event entity."""
