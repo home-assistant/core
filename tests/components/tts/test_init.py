@@ -168,7 +168,7 @@ async def test_service(
         assert await get_media_source_url(
             hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
         ) == ("/api/tts_proxy/test_token.mp3")
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             mock_tts_cache_dir
             / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
@@ -230,7 +230,7 @@ async def test_service_default_language(
         assert await get_media_source_url(
             hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
         ) == ("/api/tts_proxy/test_token.mp3")
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             mock_tts_cache_dir
             / (
@@ -294,7 +294,7 @@ async def test_service_default_special_language(
         assert await get_media_source_url(
             hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
         ) == ("/api/tts_proxy/test_token.mp3")
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             mock_tts_cache_dir
             / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
@@ -354,7 +354,7 @@ async def test_service_language(
         assert await get_media_source_url(
             hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
         ) == ("/api/tts_proxy/test_token.mp3")
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             mock_tts_cache_dir
             / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_{expected_url_suffix}.mp3"
@@ -470,7 +470,7 @@ async def test_service_options(
         assert await get_media_source_url(
             hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
         ) == ("/api/tts_proxy/test_token.mp3")
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             mock_tts_cache_dir
             / (
@@ -554,7 +554,7 @@ async def test_service_default_options(
         assert await get_media_source_url(
             hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
         ) == ("/api/tts_proxy/test_token.mp3")
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             mock_tts_cache_dir
             / (
@@ -628,7 +628,7 @@ async def test_merge_default_service_options(
         assert await get_media_source_url(
             hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
         ) == ("/api/tts_proxy/test_token.mp3")
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             mock_tts_cache_dir
             / (
@@ -743,7 +743,7 @@ async def test_service_clear_cache(
     # To make sure the file is persisted
     assert len(calls) == 1
     await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert (
         mock_tts_cache_dir
         / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
@@ -1769,9 +1769,15 @@ async def test_async_convert_audio_error(hass: HomeAssistant) -> None:
     """Test that ffmpeg failing during audio conversion will raise an error."""
     assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
 
-    with pytest.raises(RuntimeError):
+    async def bad_data_gen():
+        yield bytes(0)
+
+    with pytest.raises(RuntimeError):  # noqa: PT012
         # Simulate a bad WAV file
-        await tts.async_convert_audio(hass, "wav", bytes(0), "mp3")
+        async for _chunk in tts._async_convert_audio(
+            hass, "wav", bad_data_gen(), "mp3"
+        ):
+            pass
 
 
 async def test_default_engine_prefer_entity(
