@@ -598,13 +598,14 @@ class SqueezeBoxMediaPlayerEntity(
             all_params.extend(parameters)
         await self._player.async_query(*all_params)
 
-    async def async_button_service(self, command: str | None = None) -> None:
+    async def async_button_service(self, button: str) -> None:
         """Call Squeezebox JSON/RPC method.
 
         Additional parameters are added to the command to form the list of
         positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
         """
-        all_params = [command]
+        all_params = ["button"]
+        all_params.extend([button])
         await self._player.async_query(*all_params)
 
     async def async_call_query(

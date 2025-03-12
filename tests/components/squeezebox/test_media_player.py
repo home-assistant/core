@@ -41,7 +41,9 @@ from homeassistant.components.squeezebox.const import (
     SENSOR_UPDATE_INTERVAL,
 )
 from homeassistant.components.squeezebox.media_player import (
+    ATTR_BUTTON,
     ATTR_PARAMETERS,
+    SERVICE_BUTTON,
     SERVICE_CALL_METHOD,
     SERVICE_CALL_QUERY,
 )
@@ -774,6 +776,22 @@ async def test_squeezebox_call_method(
     configured_player.async_query.assert_called_once_with(
         "test_command", "param1", "param2"
     )
+
+
+async def test_squeezebox_button(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test method call service call."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_BUTTON,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_BUTTON: "test_button",
+        },
+        blocking=True,
+    )
+    configured_player.async_query.assert_called_once_with("button", "test_button")
 
 
 async def test_squeezebox_invalid_state(
