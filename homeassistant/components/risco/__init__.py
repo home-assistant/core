@@ -26,6 +26,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    CONF_COMMUNICATION_DELAY,
     CONF_CONCURRENCY,
     DATA_COORDINATOR,
     DEFAULT_CONCURRENCY,
@@ -74,8 +75,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = entry.data
     concurrency = entry.options.get(CONF_CONCURRENCY, DEFAULT_CONCURRENCY)
+    comm_delay = data.get(CONF_COMMUNICATION_DELAY, 0)
     risco = RiscoLocal(
-        data[CONF_HOST], data[CONF_PORT], data[CONF_PIN], concurrency=concurrency
+        data[CONF_HOST],
+        data[CONF_PORT],
+        data[CONF_PIN],
+        concurrency=concurrency,
+        communication_delay=comm_delay,
     )
 
     try:

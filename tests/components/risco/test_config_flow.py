@@ -277,6 +277,40 @@ async def test_local_form(hass: HomeAssistant) -> None:
     mock_close.assert_awaited_once()
 
 
+async def test_local_form_with_one_error(hass: HomeAssistant) -> None:
+    """Test if the communication delay is set to 1 on one connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "local"}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.risco.config_flow.RiscoLocal.connect",
+            side_effect=[CannotConnectError, None],
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.risco.config_flow.RiscoLocal.id",
+            new_callable=PropertyMock(return_value=TEST_SITE_NAME),
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], TEST_LOCAL_DATA
+        )
+        await hass.async_block_till_done()
+
+    expected_data = {
+        **TEST_LOCAL_DATA,
+        "type": "local",
+        CONF_COMMUNICATION_DELAY: 1,
+    }
+    assert result3["data"] == expected_data
+
+
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
