@@ -1221,6 +1221,10 @@ async def test_announce_message(
             return_value="media-source://bla",
         ),
         patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud_tts",
+        ),
+        patch(
             "homeassistant.components.tts.async_create_stream",
             return_value=MockResultStream(hass, "wav", b""),
         ),
