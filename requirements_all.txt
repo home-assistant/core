@@ -959,7 +959,7 @@ freesms==0.2.0
 fritzconnection[qr]==1.14.0
 
 # homeassistant.components.fyta
-fyta_cli==0.7.0
+fyta_cli==0.7.1
 
 # homeassistant.components.google_translate
 gTTS==2.5.3
