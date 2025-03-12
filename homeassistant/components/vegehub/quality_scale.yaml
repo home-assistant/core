@@ -28,7 +28,10 @@ rules:
   has-entity-name: done
   runtime-data: done
   test-before-configure: done
-  test-before-setup: done
+  test-before-setup:
+    status: exempt
+    comment: |
+      It is possible for this device to be offline at setup time and still be functioning correctly. It can not be tested at setup.
   unique-config-entry: done
   # Silver
   action-exceptions: todo
