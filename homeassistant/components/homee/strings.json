@@ -65,15 +65,15 @@
         "name": "Malfunction"
       },
       "maximum": {
-        "name": "Maximum level",
+        "name": "Level",
         "state": {
-          "on": "Level high"
+          "on": "Above maximum"
         }
       },
       "minimum": {
-        "name": "Minimum level",
+        "name": "Level",
         "state": {
-          "on": "Level low"
+          "on": "Below minimum"
         }
       },
       "motor_blocked": {
