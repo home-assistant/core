@@ -54,6 +54,7 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
+from homeassistant.components.media_source import DOMAIN as MS_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -76,6 +77,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import MockHeos
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.conftest import async_setup_component
 from tests.typing import WebSocketGenerator
 
 
@@ -1294,7 +1296,58 @@ async def test_play_media_media_uri_invalid(
     controller.play_media.assert_not_called()
 
 
+async def test_play_media_music_source_url(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+) -> None:
+    """Test the play media service with a music source url."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await async_setup_component(hass, MS_DOMAIN, {MS_DOMAIN: {}})
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/test.mp3",
+            ATTR_MEDIA_CONTENT_TYPE: "",
+        },
+        blocking=True,
+    )
+    controller.play_url.assert_called_once()
+
+
 async def test_browse_media_root(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    music_sources: dict[int, MediaMusicSource],
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test browsing the root."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await async_setup_component(hass, MS_DOMAIN, {MS_DOMAIN: {}})
+
+    controller.mock_set_music_sources(music_sources)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.test_player",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == snapshot
+
+
+async def test_browse_media_root_no_media_source(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     controller: MockHeos,
@@ -1402,6 +1455,32 @@ async def test_browse_media_heos_media_error_returns_empty(
     assert response["success"]
     assert response["result"] == snapshot
     assert "Unable to browse media" in caplog.text
+
+
+async def test_browse_media_media_source(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test browsing a media source."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await async_setup_component(hass, MS_DOMAIN, {MS_DOMAIN: {}})
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.test_player",
+            "media_content_id": "media-source://media_source/local/.",
+            "media_content_type": "",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == snapshot
 
 
 async def test_browse_media_invalid_content_id(
