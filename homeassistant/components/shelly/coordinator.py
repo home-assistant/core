@@ -26,6 +26,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_HOST,
+    CONF_MODEL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -139,7 +140,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
     @cached_property
     def model(self) -> str:
         """Model of the device."""
-        return cast(str, self.config_entry.data["model"])
+        return cast(str, self.config_entry.data[CONF_MODEL])
 
     @cached_property
     def mac(self) -> str:
