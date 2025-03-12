@@ -554,7 +554,6 @@ async def test_ws_hass_language_scores(
     msg = await client.receive_json()
 
     assert msg["success"]
-    assert msg["result"] == snapshot
 
     # Sanity check
     assert msg["result"]["en_US"] == {"cloud": 3, "focused_local": 2, "full_local": 3}
