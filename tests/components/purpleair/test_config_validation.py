@@ -23,9 +23,6 @@ from .const import (
     TEST_SENSOR_INDEX1,
 )
 
-# Combine fail and success parametrize tests into one test
-# https://stackoverflow.com/questions/79496846/how-to-use-pytest-mark-parametrize-and-include-an-item-for-the-default-mock-b
-
 
 @pytest.mark.parametrize(
     ("check_api_key_mock", "check_api_key_errors"),
@@ -33,6 +30,7 @@ from .const import (
         (AsyncMock(side_effect=Exception), {CONF_BASE: CONF_UNKNOWN}),
         (AsyncMock(side_effect=PurpleAirError), {CONF_BASE: CONF_UNKNOWN}),
         (AsyncMock(side_effect=InvalidApiKeyError), {CONF_BASE: CONF_INVALID_API_KEY}),
+        (None, {}),
     ],
 )
 async def test_validate_api_key(
@@ -44,7 +42,11 @@ async def test_validate_api_key(
 ) -> None:
     """Test validate_api_key errors."""
 
-    with patch.object(api, "async_check_api_key", check_api_key_mock):
+    with (
+        patch.object(api, "async_check_api_key", check_api_key_mock)
+        if check_api_key_mock
+        else patch.object(api, "async_check_api_key")
+    ):
         result: ConfigValidation = await ConfigValidation.async_validate_api_key(
             hass, TEST_API_KEY
         )
@@ -58,9 +60,9 @@ async def test_validate_api_key(
         (AsyncMock(side_effect=PurpleAirError), {CONF_BASE: CONF_UNKNOWN}),
         (AsyncMock(side_effect=InvalidApiKeyError), {CONF_BASE: CONF_INVALID_API_KEY}),
         (AsyncMock(return_value=[]), {CONF_BASE: CONF_NO_SENSORS_FOUND}),
+        (None, {}),
     ],
 )
-# @patch.object(api, "async_check_api_key")
 async def test_validate_coordinates(
     hass: HomeAssistant,
     mock_aiopurpleair,
@@ -72,7 +74,9 @@ async def test_validate_coordinates(
 
     with (
         patch.object(api, "async_check_api_key"),
-        patch.object(api.sensors, "async_get_nearby_sensors", get_nearby_sensors_mock),
+        patch.object(api, "sensor.async_get_nearby_sensors", get_nearby_sensors_mock)
+        if get_nearby_sensors_mock
+        else patch.object(api, "sensor.async_get_nearby_sensors"),
     ):
         result: ConfigValidation = await ConfigValidation.async_validate_coordinates(
             hass, TEST_API_KEY, TEST_LATITUDE, TEST_LONGITUDE, TEST_RADIUS
@@ -91,6 +95,7 @@ async def test_validate_coordinates(
         (AsyncMock(side_effect=PurpleAirError), {CONF_BASE: CONF_UNKNOWN}),
         (AsyncMock(side_effect=InvalidApiKeyError), {CONF_BASE: CONF_INVALID_API_KEY}),
         (AsyncMock(return_value=[]), {CONF_BASE: CONF_NO_SENSOR_FOUND}),
+        (None, {}),
     ],
 )
 async def test_validate_sensor(
@@ -104,7 +109,9 @@ async def test_validate_sensor(
 
     with (
         patch.object(api, "async_check_api_key"),
-        patch.object(api.sensors, "async_get_sensors", get_sensors_mock),
+        patch.object(api, "sensors.async_get_sensors", get_sensors_mock)
+        if get_sensors_mock
+        else patch.object(api, "sensors.async_get_sensors"),
     ):
         result: ConfigValidation = await ConfigValidation.async_validate_sensor(
             hass, TEST_API_KEY, TEST_SENSOR_INDEX1, None

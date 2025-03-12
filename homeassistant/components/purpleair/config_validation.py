@@ -158,6 +158,8 @@ class ConfigValidation:
                 not sensors_response
                 or not sensors_response.data
                 or sensors_response.data.get(sensor_index) is None
+                or sensors_response.data[sensor_index] is None
+                or sensors_response.data[sensor_index].sensor_index != sensor_index
             ):
                 errors[CONF_BASE] = CONF_NO_SENSOR_FOUND
 
