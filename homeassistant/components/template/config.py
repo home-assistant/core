@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_CONDITIONS,
     CONF_NAME,
     CONF_SENSORS,
+    CONF_TRIGGER,
     CONF_TRIGGERS,
     CONF_UNIQUE_ID,
     CONF_VARIABLES,
@@ -167,7 +168,10 @@ async def _async_resolve_blueprints(
             # house input results for template entities.  For Trigger based template entities
             # CONF_VARIABLES should not be removed because the variables are always
             # executed between the trigger and action.
-            if CONF_TRIGGERS not in config and CONF_VARIABLES in config:
+            if (
+                not _is_trigger_based_template_entity(config)
+                and CONF_VARIABLES in config
+            ):
                 config[platform][CONF_VARIABLES] = config.pop(CONF_VARIABLES)
         raw_config = dict(config)
 
@@ -255,3 +259,11 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
     config[DOMAIN] = config_sections
 
     return config
+
+
+def _is_trigger_based_template_entity(config):
+    """Check if this is a trigger based template entity.
+
+    Takes into account backwards compatible definition.
+    """
+    return CONF_TRIGGERS in config or CONF_TRIGGER in config
