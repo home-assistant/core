@@ -43,7 +43,7 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 OPERATION_LIST = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
 )
 
@@ -91,7 +91,7 @@ class EphEmberThermostat(ClimateEntity):
         self._zone_name = zone_name(zone)
         self._zone = zone
         self._hot_water = zone["deviceType"] == 4
-        """4 is a specific device type for immersions returned by EPH. Hot Water temp cannot be changed"""
+        """4 is a specific device type Hot Water"""
 
         self._attr_name = self._zone_name
 
