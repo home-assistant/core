@@ -21,3 +21,27 @@ send_message:
       required: false
       selector:
         text:
+send_reaction:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          filter:
+            - integration: bring
+              domain: event
+    reaction:
+      required: true
+      selector:
+        select:
+          options:
+            - label: 👍🏼
+              value: THUMBS_UP
+            - label: 🧐
+              value: MONOCLE
+            - label: 🤤
+              value: DROOLING
+            - label: ❤️
+              value: HEART
+          mode: dropdown
+      example: THUMBS_UP
