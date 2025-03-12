@@ -31,7 +31,7 @@
         "name": "Status",
         "state": {
           "armed_home": "Home",
-          "armed_night": "Sleeping",
+          "armed_night": "Night",
           "armed_away": "Away",
           "armed_vacation": "Vacation"
         }
