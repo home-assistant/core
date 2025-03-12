@@ -32,7 +32,7 @@ from homeassistant.setup import async_setup_component
 
 from . import WOBLINDTILT_SERVICE_INFO, WOCURTAIN3_SERVICE_INFO
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
@@ -51,21 +51,25 @@ async def test_curtain3_setup(hass: HomeAssistant) -> None:
         },
         unique_id="aabbccddeeff",
     )
+
+    entity_id = "cover.test_name"
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                entity_id,
+                CoverState.OPEN,
+                {ATTR_CURRENT_POSITION: 50},
+            )
+        ],
+    )
+
     entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-    mock_data = State("cover.test_name", "open", {ATTR_CURRENT_POSITION: 50})
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        new=AsyncMock(return_value=mock_data),
-    ) as mock_async_get_last_state:
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        mock_async_get_last_state.assert_awaited_once()
-        entity_id = "cover.test_name"
-
-        assert hass.states.get(entity_id).state == CoverState.OPEN
-        assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 50
+    assert hass.states.get(entity_id).state == CoverState.OPEN
+    assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 50
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -167,21 +171,24 @@ async def test_blindtilt_setup(hass: HomeAssistant) -> None:
         },
         unique_id="aabbccddeeff",
     )
-    entry.add_to_hass(hass)
 
-    mock_data = State("cover.test_name", "open", {ATTR_CURRENT_TILT_POSITION: 40})
-    with (
-        patch("switchbot.SwitchbotDevice.update", new=Mock(return_value=True)),
-        patch(
-            "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-            new=AsyncMock(return_value=mock_data),
-        ) as mock_async_get_last_state,
-    ):
+    entity_id = "cover.test_name"
+
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                entity_id,
+                CoverState.OPEN,
+                {ATTR_CURRENT_TILT_POSITION: 40},
+            )
+        ],
+    )
+
+    entry.add_to_hass(hass)
+    with patch("switchbot.SwitchbotDevice.update", new=Mock(return_value=True)):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-
-        mock_async_get_last_state.assert_awaited_once()
-        entity_id = "cover.test_name"
 
         assert hass.states.get(entity_id).state == CoverState.OPEN
         assert hass.states.get(entity_id).attributes[ATTR_CURRENT_TILT_POSITION] == 40
