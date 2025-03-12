@@ -30,8 +30,8 @@ _TRUSTED_NETWORKS_CONFIG = {
     [
         ("192.168.1.10", True),
         ("::ffff:192.168.0.10", True),
-        ("1.2.3.4", False),
-        ("2001:db8::1", False),
+        ("192.175.48.1", False),
+        ("2620:4f:8000::1", False),
     ],
 )
 @pytest.mark.parametrize(
@@ -81,8 +81,8 @@ async def test_fetch_auth_providers(
             [{"name": "Trusted Networks", "type": "trusted_networks", "id": None}],
         ),
         ("::ffff:192.168.0.10", []),
-        ("1.2.3.4", []),
-        ("2001:db8::1", []),
+        ("192.175.48.1", []),
+        ("2620:4f:8000::1", []),
     ],
 )
 async def test_fetch_auth_providers_trusted_network(
