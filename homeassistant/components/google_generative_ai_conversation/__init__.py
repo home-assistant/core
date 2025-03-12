@@ -65,9 +65,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         prompt_parts = [call.data[CONF_PROMPT]]
 
-        config_entry: GoogleGenerativeAIConfigEntry = hass.config_entries.async_entries(
-            DOMAIN
-        )[0]
+        config_entry: GoogleGenerativeAIConfigEntry = (
+            hass.config_entries.async_loaded_entries(DOMAIN)[0]
+        )
 
         client = config_entry.runtime_data
 
