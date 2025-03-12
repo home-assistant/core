@@ -17,7 +17,7 @@ def config_flow():
     return FlussConfigFlow()
 
 
-async def test_step_user_success(config_flow):
+async def test_step_user_success(config_flow: FlussConfigFlow) -> None:
     """Test successful user step."""
     user_input = {"api_key": "valid_api_key"}
 
@@ -33,17 +33,15 @@ async def test_step_user_success(config_flow):
     assert result["data"] == user_input
 
 
-async def test_step_user_invalid_auth(config_flow):
+async def test_step_user_invalid_auth(config_flow: FlussConfigFlow) -> None:
     """Test invalid authentication."""
     user_input = {"api_key": "invalid_api_key"}
-
     with patch(
         "homeassistant.components.fluss.config_flow.FlussApiClient"
     ) as mock_client:
         mock_client.side_effect = (
             FlussApiClientAuthenticationError  # Simulate invalid authentication
         )
-
         result = await config_flow.async_step_user(user_input)
 
     assert result["type"] == "form"
@@ -51,17 +49,15 @@ async def test_step_user_invalid_auth(config_flow):
 
 
 @pytest.mark.asyncio
-async def test_step_user_cannot_connect(config_flow):
+async def test_step_user_cannot_connect(config_flow: FlussConfigFlow) -> None:
     """Test connection failure."""
     user_input = {"api_key": "some_api_key"}
-
     with patch(
         "homeassistant.components.fluss.config_flow.FlussApiClient"
     ) as mock_client:
         mock_client.side_effect = (
             FlussApiClientCommunicationError  # Simulate communication error
         )
-
         result = await config_flow.async_step_user(user_input)
 
     assert result["type"] == "form"

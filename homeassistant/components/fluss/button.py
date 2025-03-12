@@ -7,14 +7,16 @@ from fluss_api.main import FlussApiClient
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 LOGGER = logging.getLogger(__package__)
 DEFAULT_NAME = "Fluss +"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fluss Devices."""
 
@@ -23,7 +25,9 @@ async def async_setup_entry(
     devices_data = await api.async_get_devices()
     devices = devices_data["devices"]
 
-    async_add_entities(FlussButton(api, device) for device in devices if isinstance(device, dict))
+    async_add_entities(
+        FlussButton(api, device) for device in devices if isinstance(device, dict)
+    )
 
 
 class FlussButton(ButtonEntity):
@@ -37,7 +41,7 @@ class FlussButton(ButtonEntity):
         self.api = api
         self.device = device
         self._name = device.get("deviceName", "Unknown Device")
-        self._attr_unique_id = f"fluss_{device["deviceId"]}"
+        self._attr_unique_id = f"fluss_{device['deviceId']}"
 
     @property
     def name(self) -> str:
