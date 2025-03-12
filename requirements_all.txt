@@ -422,7 +422,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.4.1
+aiowebdav2==0.4.2
 
 # homeassistant.components.webostv
 aiowebostv==0.7.3
@@ -1882,7 +1882,7 @@ pycsspeechtts==1.0.8
 # pycups==2.0.4
 
 # homeassistant.components.daikin
-pydaikin==2.13.8
+pydaikin==2.14.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2310,7 +2310,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.7.0
+pysmartthings==2.7.2
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2461,7 +2461,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.11.1
+python-roborock==2.12.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.39
@@ -2618,7 +2618,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.12.1
+reolink-aio==0.12.2
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1

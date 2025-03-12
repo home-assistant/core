@@ -516,6 +516,53 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[tplink_p110][switch.spulmaschine-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.spulmaschine',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '6602696a-1e48-49e4-919f-69406f5b5da1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[tplink_p110][switch.spulmaschine-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Spülmaschine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.spulmaschine',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[vd_network_audio_002s][switch.soundbar_living-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
