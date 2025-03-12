@@ -114,17 +114,18 @@ class EphEmberThermostat(ClimateEntity):
 
         self._attr_name = self._zone_name
 
-        self._attr_target_temperature_step = 0.5
         if self._hot_water:
-            self._attr_supported_features = ClimateEntityFeature.AUX_HEAT
+            self._attr_supported_features = (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
             self._attr_target_temperature_step = None
             self._is_aux_heat = True
         else:
+            self._attr_target_temperature_step = 0.5
             self._attr_supported_features = (
                 ClimateEntityFeature.TURN_OFF
                 | ClimateEntityFeature.TURN_ON
                 | ClimateEntityFeature.TARGET_TEMPERATURE
-                | ClimateEntityFeature.AUX_HEAT
             )
 
     @property
