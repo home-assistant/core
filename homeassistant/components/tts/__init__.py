@@ -711,6 +711,8 @@ class SpeechManager:
         if message is None:
             return result_stream
 
+        # We added this method as an alternative to stream.async_set_message
+        # to avoid the options being processed twice
         result_stream.async_set_message_cache(
             self._async_ensure_cached_in_memory(
                 engine=engine,
