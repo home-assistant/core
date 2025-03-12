@@ -1,14 +1,11 @@
 """Fixtures and test data for VegeHub test methods."""
 
 from collections.abc import Generator
-from dataclasses import dataclass
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from vegehub import VegeHub
 
-from homeassistant.components.vegehub.coordinator import VegeHubCoordinator
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -43,15 +40,7 @@ HUB_DATA = {
 }
 
 
-@dataclass
-class VegeHubData:
-    """Define a data class."""
-
-    coordinator: VegeHubCoordinator
-    hub: VegeHub
-
-
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_vegehub() -> Generator[Any, Any, Any]:
     """Mock the VegeHub library."""
     with patch(
@@ -63,26 +52,16 @@ def mock_vegehub() -> Generator[Any, Any, Any]:
         mock_instance.setup = AsyncMock(return_value=True)
 
         # Mock properties
-        type(mock_instance).ip_address = PropertyMock(return_value=TEST_IP)
-        type(mock_instance).mac_address = PropertyMock(return_value=TEST_SIMPLE_MAC)
-        type(mock_instance).unique_id = PropertyMock(return_value=TEST_UNIQUE_ID)
-        type(mock_instance).url = PropertyMock(return_value=f"http://{TEST_IP}")
-        type(mock_instance).info = PropertyMock(
-            return_value=load_fixture("vegehub/info_hub.json")
-        )
-        type(mock_instance).num_sensors = PropertyMock(return_value=2)
-        type(mock_instance).num_actuators = PropertyMock(return_value=2)
-        type(mock_instance).sw_version = PropertyMock(return_value="3.4.5")
+        mock_instance.ip_address = TEST_IP
+        mock_instance.mac_address = TEST_SIMPLE_MAC
+        mock_instance.unique_id = TEST_UNIQUE_ID
+        mock_instance.url = f"http://{TEST_IP}"
+        mock_instance.info = load_fixture("vegehub/info_hub.json")
+        mock_instance.num_sensors = 2
+        mock_instance.num_actuators = 2
+        mock_instance.sw_version = "3.4.5"
 
-        # Assign the instance to the mocked class
-        mock_vegehub_class.return_value = mock_instance
         yield mock_instance
-
-
-@pytest.fixture(name="mocked_hub")
-def fixture_mocked_hub(mock_vegehub: MagicMock) -> MagicMock:
-    """Fixture for creating a mocked VegeHub instance."""
-    return mock_vegehub
 
 
 @pytest.fixture(name="mocked_config_entry")

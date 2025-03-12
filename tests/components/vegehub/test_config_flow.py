@@ -36,7 +36,7 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
 )
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def setup_mock_config_flow() -> Generator[Any, Any, Any]:
     """Fixture to set up the mock config flow."""
     with (
@@ -48,7 +48,7 @@ def setup_mock_config_flow() -> Generator[Any, Any, Any]:
         yield
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_setup_entry() -> Generator[Any, Any, Any]:
     """Prevent the actual integration from being set up."""
     with (
@@ -61,9 +61,6 @@ def mock_setup_entry() -> Generator[Any, Any, Any]:
 # Tests for flows where the user manually inputs an IP address
 async def test_user_flow_success(
     hass: HomeAssistant,
-    setup_mock_config_flow: None,
-    mock_vegehub: MagicMock,
-    mock_setup_entry: None,
 ) -> None:
     """Test the user flow with successful configuration."""
 
@@ -95,9 +92,7 @@ async def test_user_flow_success(
 
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant,
-    setup_mock_config_flow: None,
     mock_vegehub: MagicMock,
-    mock_setup_entry: None,
 ) -> None:
     """Test the user flow with bad data."""
 
@@ -138,9 +133,7 @@ async def test_user_flow_cannot_connect(
 )
 async def test_user_flow_device_bad_connection_then_success(
     hass: HomeAssistant,
-    setup_mock_config_flow: None,
     mock_vegehub: MagicMock,
-    mock_setup_entry: None,
     side_effect: Exception,
     expected_error: str,
 ) -> None:
@@ -178,9 +171,6 @@ async def test_user_flow_device_bad_connection_then_success(
 
 async def test_user_flow_no_ip_entered(
     hass: HomeAssistant,
-    setup_mock_config_flow: None,
-    mock_vegehub: MagicMock,
-    mock_setup_entry: None,
 ) -> None:
     """Test the user flow with blank IP."""
 
@@ -207,9 +197,6 @@ async def test_user_flow_no_ip_entered(
 
 async def test_user_flow_bad_ip_entered(
     hass: HomeAssistant,
-    setup_mock_config_flow: None,
-    mock_vegehub: MagicMock,
-    mock_setup_entry: None,
 ) -> None:
     """Test the user flow with badly formed IP."""
 
@@ -236,9 +223,6 @@ async def test_user_flow_bad_ip_entered(
 
 async def test_user_flow_duplicate_device(
     hass: HomeAssistant,
-    setup_mock_config_flow: None,
-    mock_vegehub: MagicMock,
-    mock_setup_entry: None,
 ) -> None:
     """Test when user flow gets the same device twice."""
 
@@ -269,9 +253,6 @@ async def test_user_flow_duplicate_device(
 # Tests for flows that start in zeroconf
 async def test_zeroconf_flow_success(
     hass: HomeAssistant,
-    setup_mock_config_flow: None,
-    mock_vegehub: MagicMock,
-    mock_setup_entry: None,
 ) -> None:
     """Test the zeroconf discovery flow with successful configuration."""
 
@@ -299,9 +280,7 @@ async def test_zeroconf_flow_success(
 
 async def test_zeroconf_flow_abort_device_asleep(
     hass: HomeAssistant,
-    setup_mock_config_flow: None,
     mock_vegehub: MagicMock,
-    mock_setup_entry: None,
 ) -> None:
     """Test when zeroconf tries to contact a device that is asleep."""
 
@@ -317,9 +296,6 @@ async def test_zeroconf_flow_abort_device_asleep(
 
 async def test_zeroconf_flow_abort_same_id(
     hass: HomeAssistant,
-    setup_mock_config_flow: None,
-    mock_vegehub: MagicMock,
-    mock_setup_entry: None,
 ) -> None:
     """Test when zeroconf gets the same device twice."""
 
@@ -339,9 +315,7 @@ async def test_zeroconf_flow_abort_same_id(
 
 async def test_zeroconf_flow_abort_cannot_connect(
     hass: HomeAssistant,
-    setup_mock_config_flow: None,
     mock_vegehub: MagicMock,
-    mock_setup_entry: None,
 ) -> None:
     """Test when zeroconf gets bad data."""
 
@@ -357,9 +331,7 @@ async def test_zeroconf_flow_abort_cannot_connect(
 
 async def test_zeroconf_flow_abort_cannot_connect_404(
     hass: HomeAssistant,
-    setup_mock_config_flow: None,
     mock_vegehub: MagicMock,
-    mock_setup_entry: None,
 ) -> None:
     """Test when zeroconf gets bad responses."""
 
@@ -382,9 +354,7 @@ async def test_zeroconf_flow_abort_cannot_connect_404(
 )
 async def test_zeroconf_flow_device_error_response(
     hass: HomeAssistant,
-    setup_mock_config_flow: None,
     mock_vegehub: MagicMock,
-    mock_setup_entry: None,
     side_effect: Exception,
     expected_error: str,
 ) -> None:
