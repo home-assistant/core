@@ -1,10 +1,9 @@
 """Test the aidot config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aidot.const import CONF_LOGIN_INFO, SUPPORTED_COUNTRY_NAMES
 from aidot.exceptions import AidotUserOrPassIncorrect
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.aidot.const import DOMAIN
@@ -13,20 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_COUNTRY, TEST_EMAIL, TEST_LOGIN_RESP, TEST_PASSWORD
-
-
-@pytest.fixture(name="aidot_login", autouse=True)
-def aidot_login_fixture(mocked_aidot_client):
-    """Aidot and entry setup."""
-    with (
-        patch(
-            "homeassistant.components.aidot.config_flow.AidotClient",
-            return_value=mocked_aidot_client,
-        ),
-        patch("homeassistant.components.aidot.async_setup_entry", return_value=True),
-        patch("homeassistant.components.aidot.async_unload_entry", return_value=True),
-    ):
-        yield
 
 
 async def test_config_flow_cloud_login_success(hass: HomeAssistant) -> None:

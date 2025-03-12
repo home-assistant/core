@@ -18,11 +18,12 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from . import async_init_integration
 from .conftest import (
     ENTITY_LIGHT,
+    ENTITY_LIGHT2,
     LIGHT_DOMAIN,
     TEST_DEVICE_LIST,
     TEST_MULTI_DEVICE_LIST,
@@ -136,14 +137,17 @@ async def test_dynamic_device_add(
     """Test if adding a new device dynamically creates the corresponding light entity."""
     await async_init_integration(hass, mock_config_entry)
 
-    assert len(dr.async_get(hass).devices) == 1
+    state = hass.states.get(ENTITY_LIGHT2)
+    assert state is None
+
     mocked_aidot_client.async_get_all_device = AsyncMock(
         return_value=TEST_MULTI_DEVICE_LIST
     )
     freezer.tick(UPDATE_DEVICE_LIST_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert len(dr.async_get(hass).devices) == 2
+    state = hass.states.get(ENTITY_LIGHT2)
+    assert state
 
 
 async def test_dynamic_device_remove(
@@ -158,9 +162,11 @@ async def test_dynamic_device_remove(
     )
     await async_init_integration(hass, mock_config_entry)
 
-    assert len(dr.async_get(hass).devices) == 2
+    state = hass.states.get(ENTITY_LIGHT2)
+    assert state
     mocked_aidot_client.async_get_all_device = AsyncMock(return_value=TEST_DEVICE_LIST)
     freezer.tick(UPDATE_DEVICE_LIST_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert len(dr.async_get(hass).devices) == 1
+    state = hass.states.get(ENTITY_LIGHT2)
+    assert state is None

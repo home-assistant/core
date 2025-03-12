@@ -1,6 +1,5 @@
 """Common fixtures for the aidot tests."""
 
-from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -38,6 +37,7 @@ TEST_LOGIN_RESP = {
 }
 
 ENTITY_LIGHT = "light.test_light"
+ENTITY_LIGHT2 = "light.test_light2"
 LIGHT_DOMAIN = "light"
 
 TEST_DEVICE1 = {
@@ -82,15 +82,6 @@ TEST_DEVICE2 = {
 
 TEST_DEVICE_LIST = {CONF_DEVICE_LIST: [TEST_DEVICE1]}
 TEST_MULTI_DEVICE_LIST = {CONF_DEVICE_LIST: [TEST_DEVICE1, TEST_DEVICE2]}
-
-
-@pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.aidot.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
 
 
 @pytest.fixture
@@ -169,8 +160,14 @@ def mocked_aidot_client(mocked_device_client) -> MagicMock:
 @pytest.fixture(autouse=True)
 def patch_aidot_client(mocked_aidot_client):
     """Patch DeviceClient."""
-    with patch(
-        "homeassistant.components.aidot.coordinator.AidotClient",
-        return_value=mocked_aidot_client,
+    with (
+        patch(
+            "homeassistant.components.aidot.config_flow.AidotClient",
+            return_value=mocked_aidot_client,
+        ),
+        patch(
+            "homeassistant.components.aidot.coordinator.AidotClient",
+            return_value=mocked_aidot_client,
+        ),
     ):
         yield
