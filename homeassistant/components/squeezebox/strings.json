@@ -60,6 +60,16 @@
           "description": "[%key:component::squeezebox::services::call_method::fields::parameters::description%]"
         }
       }
+    },
+    "button": {
+      "name": "Button",
+      "description": "Mimic pressing a button on a Squeezebox device.",
+      "fields": {
+        "button": {
+          "name": "Button",
+          "description": "Which button to mimic pressing."
+        }
+      }
     }
   },
   "entity": {
@@ -116,6 +126,22 @@
           "browse_limit": "Maximum number of items when browsing or in a playlist.",
           "volume_step": "Amount to adjust the volume when turning volume up or down."
         }
+      }
+    }
+  },
+  "selector": {
+    "button_selector": {
+      "options": {
+        "preset_0.single": "Play Preset 0",
+        "preset_1.single": "Play Preset 1",
+        "preset_2.single": "Play Preset 2",
+        "preset_3.single": "Play Preset 3",
+        "preset_4.single": "Play Preset 4",
+        "preset_5.single": "Play Preset 5",
+        "preset_6.single": "Play Preset 6",
+        "preset_7.single": "Play Preset 7",
+        "preset_8.single": "Play Preset 8",
+        "preset_9.single": "Play Preset 9"
       }
     }
   }
