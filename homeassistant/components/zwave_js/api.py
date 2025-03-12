@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import base64
-import binascii
 from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import partial, wraps
@@ -2834,7 +2832,7 @@ async def websocket_backup_nvm_raw(
     # Perform the backup
     try:
         # Execute the backup
-        result = await controller.async_backup_nvm_raw()
+        result = await controller.async_backup_nvm_raw_base64()
 
         # Send the finished event with the backup data
         connection.send_message(
@@ -2842,7 +2840,7 @@ async def websocket_backup_nvm_raw(
                 msg[ID],
                 {
                     "event": "finished",
-                    "data": base64.b64encode(result).decode(),
+                    "data": result,
                 },
             )
         )
@@ -2873,16 +2871,6 @@ async def websocket_restore_nvm(
 ) -> None:
     """Restore NVM data."""
     controller = driver.controller
-
-    try:
-        nvm_data = base64.b64decode(msg["data"])
-    except binascii.Error:
-        connection.send_error(
-            msg[ID],
-            ERR_INVALID_FORMAT,
-            "Invalid base64 data",
-        )
-        return
 
     @callback
     def async_cleanup() -> None:
@@ -2915,7 +2903,7 @@ async def websocket_restore_nvm(
     # Perform the restore
     try:
         # Execute the restore
-        await controller.async_restore_nvm(nvm_data)
+        await controller.async_restore_nvm_base64(msg["data"])
 
         # Send the finished event
         connection.send_message(
