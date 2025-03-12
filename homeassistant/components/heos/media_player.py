@@ -311,7 +311,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         if heos_source.is_media_uri(media_id):
             media, data = heos_source.from_media_uri(media_id)
             if not isinstance(media, MediaItem):
-                raise ValueError(f"Invalid media_id '{media_id}'")
+                raise ValueError(f"Invalid media id '{media_id}'")
             await self._player.play_media(
                 media,
                 HA_HEOS_ENQUEUE_MAP[kwargs.get(ATTR_MEDIA_ENQUEUE)],
@@ -604,19 +604,19 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
     async def _async_browse_heos_media(self, media_content_id: str) -> BrowseMedia:
         """Browse a HEOS media item."""
-        source, data = heos_source.from_media_uri(media_content_id)
-        media = _media_to_browse_media(source)
+        media, data = heos_source.from_media_uri(media_content_id)
+        browse_media = _media_to_browse_media(media)
         try:
-            browse_result = await self.coordinator.heos.browse_media(source)
+            browse_result = await self.coordinator.heos.browse_media(media)
         except HeosError as error:
-            _LOGGER.debug("Unable to browse source %s: %s", source, error)
+            _LOGGER.debug("Unable to browse media %s: %s", media, error)
         else:
-            media.children = [
+            browse_media.children = [
                 _media_to_browse_media(item)
                 for item in browse_result.items
                 if item.browsable or item.playable
             ]
-        return media
+        return browse_media
 
     async def _async_browse_media_source(
         self, media_content_id: str | None = None
