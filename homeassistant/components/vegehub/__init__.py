@@ -24,6 +24,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
@@ -49,7 +50,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
     device_registry = dr.async_get(hass)
     device_mac = entry.data[CONF_MAC]
 
-    assert entry.unique_id
+    if not entry.unique_id:
+        raise ConfigEntryError("Error: unable to set up device")
 
     hub = VegeHub(
         entry.data[CONF_IP_ADDRESS],

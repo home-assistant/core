@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_entities[sensor.vegehub_vegehub_sensor_1-entry]
+# name: test_sensor_entities[sensor.vegehub_input_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.vegehub_vegehub_sensor_1',
+    'entity_id': 'sensor.vegehub_input_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -27,7 +27,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'VegeHub Sensor 1',
+    'original_name': 'Input 1',
     'platform': 'vegehub',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -36,22 +36,22 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor_entities[sensor.vegehub_vegehub_sensor_1-state]
+# name: test_sensor_entities[sensor.vegehub_input_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'VegeHub VegeHub Sensor 1',
+      'friendly_name': 'VegeHub Input 1',
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.vegehub_vegehub_sensor_1',
+    'entity_id': 'sensor.vegehub_input_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.5',
   })
 # ---
-# name: test_sensor_entities[sensor.vegehub_vegehub_sensor_2-entry]
+# name: test_sensor_entities[sensor.vegehub_input_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.vegehub_vegehub_sensor_2',
+    'entity_id': 'sensor.vegehub_input_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -79,7 +79,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'VegeHub Sensor 2',
+    'original_name': 'Input 2',
     'platform': 'vegehub',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -88,22 +88,22 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor_entities[sensor.vegehub_vegehub_sensor_2-state]
+# name: test_sensor_entities[sensor.vegehub_input_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'VegeHub VegeHub Sensor 2',
+      'friendly_name': 'VegeHub Input 2',
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.vegehub_vegehub_sensor_2',
+    'entity_id': 'sensor.vegehub_input_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.45599997',
   })
 # ---
-# name: test_sensor_entities[sensor.vegehub_vegehub_sensor_3-entry]
+# name: test_sensor_entities[sensor.vegehub_input_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -116,7 +116,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.vegehub_vegehub_sensor_3',
+    'entity_id': 'sensor.vegehub_input_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -131,7 +131,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'VegeHub Sensor 3',
+    'original_name': 'Input 3',
     'platform': 'vegehub',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -140,22 +140,22 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor_entities[sensor.vegehub_vegehub_sensor_3-state]
+# name: test_sensor_entities[sensor.vegehub_input_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'VegeHub VegeHub Sensor 3',
+      'friendly_name': 'VegeHub Input 3',
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.vegehub_vegehub_sensor_3',
+    'entity_id': 'sensor.vegehub_input_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.330000043',
   })
 # ---
-# name: test_sensor_entities[sensor.vegehub_vegehub_sensor_4-entry]
+# name: test_sensor_entities[sensor.vegehub_input_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -168,7 +168,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.vegehub_vegehub_sensor_4',
+    'entity_id': 'sensor.vegehub_input_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -183,7 +183,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'VegeHub Sensor 4',
+    'original_name': 'Input 4',
     'platform': 'vegehub',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -192,22 +192,22 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor_entities[sensor.vegehub_vegehub_sensor_4-state]
+# name: test_sensor_entities[sensor.vegehub_input_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'VegeHub VegeHub Sensor 4',
+      'friendly_name': 'VegeHub Input 4',
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.vegehub_vegehub_sensor_4',
+    'entity_id': 'sensor.vegehub_input_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.075999998',
   })
 # ---
-# name: test_sensor_entities[sensor.vegehub_vegehub_sensor_5-entry]
+# name: test_sensor_entities[sensor.vegehub_input_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -220,7 +220,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.vegehub_vegehub_sensor_5',
+    'entity_id': 'sensor.vegehub_input_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -235,7 +235,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'VegeHub Sensor 5',
+    'original_name': 'Input 5',
     'platform': 'vegehub',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -244,15 +244,15 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensor_entities[sensor.vegehub_vegehub_sensor_5-state]
+# name: test_sensor_entities[sensor.vegehub_input_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'VegeHub VegeHub Sensor 5',
+      'friendly_name': 'VegeHub Input 5',
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.vegehub_vegehub_sensor_5',
+    'entity_id': 'sensor.vegehub_input_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
