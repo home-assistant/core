@@ -27,8 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 class HomeAssistantQueueListener(logging.handlers.QueueListener):
     """Custom QueueListener to watch for noisy loggers."""
 
-    LOG_COUNTS_RESET_INTERVAL = datetime.timedelta(minutes=2)
-    MAX_LOGS_COUNT = 120
+    LOG_COUNTS_RESET_INTERVAL = datetime.timedelta(minutes=5)
+    MAX_LOGS_COUNT = 200
 
     _reset_pending: bool
     _log_counts: dict[str, int]
@@ -69,21 +69,21 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
         if self._reset_pending:
             self._reset_counters()
 
-        logger_name = record.name
-        if logger_name == __name__:
+        module_name = record.name
+        if module_name == __name__:
             return
 
-        self._log_counts[logger_name] += 1
-        module_count = self._log_counts[logger_name]
+        self._log_counts[module_name] += 1
+        module_count = self._log_counts[module_name]
         if module_count < self.MAX_LOGS_COUNT:
             return
 
         _LOGGER.warning(
             "Module %s is logging too frequently. %d messages since last count",
-            logger_name,
+            module_name,
             module_count,
         )
-        self._log_counts[logger_name] = 0
+        self._log_counts[module_name] = 0
 
     def _reset_counters(self) -> None:
         _LOGGER.debug("Resetting log counters")
