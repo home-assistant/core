@@ -28,6 +28,7 @@ from homeassistant.util import dt as dt_util
 from .common import (
     DEFAULT_LANG,
     TEST_DOMAIN,
+    MockResultStream,
     MockTTS,
     MockTTSEntity,
     MockTTSProvider,
@@ -1829,3 +1830,19 @@ async def test_default_engine_prefer_cloud_entity(
     provider_engine = tts.async_resolve_engine(hass, "test")
     assert provider_engine == "test"
     assert tts.async_default_engine(hass) == "tts.cloud_tts_entity"
+
+
+async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> None:
+    """Test creating streams."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    assert stream.language == mock_tts_entity.default_language
+    assert stream.options == (mock_tts_entity.default_options or {})
+    assert tts.async_get_stream(hass, stream.token) is stream
+
+    data = b"beer"
+    stream2 = MockResultStream(hass, "wav", data)
+    assert tts.async_get_stream(hass, stream2.token) is stream2
+    assert stream2.extension == "wav"
+    result_data = b"".join([chunk async for chunk in stream2.async_stream_result()])
+    assert result_data == data
