@@ -181,21 +181,23 @@ class TTSCache:
         if self._partial_data is None:
             raise ValueError("Data not being loaded")
 
-        for chunk in self._partial_data:
+        queue: asyncio.Queue[bytes] | None = None
+        if self._listeners is not None:  # Generator done while we were yielding
+            queue = asyncio.Queue()
+            self._listeners.append(queue)
+
+        for chunk in list(self._partial_data):
             yield chunk
+
         if self._error:
             raise self._error
-        if self._listeners is None:  # Generator done while we were yielding
-            return
 
-        # Generator not done yet, wait for more data
-        queue: asyncio.Queue[bytes] = asyncio.Queue()
-        self._listeners.append(queue)
+        if queue is not None:
+            # While there is data in the queue or we are still loading (self._listeners exists)
+            while not queue.empty() or self._listeners is not None:
+                yield await queue.get()
 
-        while not queue.empty() or self._listeners is not None:
-            yield await queue.get()
-
-        if self._error:  # type: ignore[unreachable]
+        if self._error:
             raise self._error
 
         self.last_used = monotonic()
