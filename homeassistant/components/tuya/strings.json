@@ -499,6 +499,9 @@
       "gas": {
         "name": "Gas"
       },
+      "fault": {
+        "name": "Fault"
+      },
       "formaldehyde": {
         "name": "[%key:component::tuya::entity::binary_sensor::formaldehyde::name%]"
       },

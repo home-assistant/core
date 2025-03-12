@@ -1207,6 +1207,13 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.FAULT,
+            translation_key="fault",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            icon="mdi:alert",
+        ),
     ),
     # Soil sensor (Plant monitor)
     "zwjcy": (
@@ -1402,6 +1409,10 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
                 return None
             values = ElectricityTypeData.from_json(value)
             return getattr(values, self.entity_description.subkey)
+
+        # Fault codes writes as Bitmap and can not be handle in default way
+        if self.entity_description.key == DPCode.FAULT:
+            return value
 
         if self._type is DPType.RAW:
             if self.entity_description.subkey is None:
