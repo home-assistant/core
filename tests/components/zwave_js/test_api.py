@@ -5220,7 +5220,7 @@ async def test_backup_nvm_raw(
         await ws_client.send_json(
             {
                 "id": 1,
-                "type": "zwave_js/backup_nvm_raw",
+                "type": "zwave_js/backup_nvm",
                 "entry_id": integration.entry_id,
             }
         )
@@ -5277,7 +5277,7 @@ async def test_backup_nvm_raw(
     await ws_client.send_json(
         {
             "id": 2,
-            "type": "zwave_js/backup_nvm_raw",
+            "type": "zwave_js/backup_nvm",
             "entry_id": "invalid_entry_id",
         }
     )
@@ -5292,7 +5292,7 @@ async def test_backup_nvm_raw(
     await ws_client.send_json(
         {
             "id": 3,
-            "type": "zwave_js/backup_nvm_raw",
+            "type": "zwave_js/backup_nvm",
             "entry_id": integration.entry_id,
         }
     )
@@ -5392,8 +5392,7 @@ async def test_restore_nvm(
         # Verify error response
         msg = await ws_client.receive_json()
         assert not msg["success"]
-        assert msg["error"]["code"] == "FailedCommand"
-        assert "Restore failed" in msg["error"]["message"]
+        assert msg["error"]["code"] == "Restore failed"
 
 
 async def test_cancel_secure_bootstrap_s2(

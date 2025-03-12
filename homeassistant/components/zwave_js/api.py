@@ -2831,7 +2831,6 @@ async def websocket_backup_nvm(
     ]
 
     result = await controller.async_backup_nvm_raw_base64()
-    connection.send_result(msg[ID])
     # Send the finished event with the backup data
     connection.send_message(
         websocket_api.event_message(
@@ -2842,6 +2841,7 @@ async def websocket_backup_nvm(
             },
         )
     )
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
@@ -2895,7 +2895,6 @@ async def websocket_restore_nvm(
     ]
 
     await controller.async_restore_nvm_base64(msg["data"])
-    connection.send_result(msg[ID])
     connection.send_message(
         websocket_api.event_message(
             msg[ID],
@@ -2904,3 +2903,4 @@ async def websocket_restore_nvm(
             },
         )
     )
+    connection.send_result(msg[ID])
