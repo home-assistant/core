@@ -104,6 +104,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_hvac_mode: HVACMode | None = None
 
     def __init__(
         self,
