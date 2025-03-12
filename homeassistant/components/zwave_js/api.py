@@ -2830,25 +2830,18 @@ async def websocket_backup_nvm(
         controller.on("nvm backup progress", forward_progress),
     ]
 
-    # Perform the backup
-    try:
-        # Execute the backup
-        result = await controller.async_backup_nvm_raw_base64()
-
-        # Send the finished event with the backup data
-        connection.send_message(
-            websocket_api.event_message(
-                msg[ID],
-                {
-                    "event": "finished",
-                    "data": result,
-                },
-            )
+    result = await controller.async_backup_nvm_raw_base64()
+    connection.send_result(msg[ID])
+    # Send the finished event with the backup data
+    connection.send_message(
+        websocket_api.event_message(
+            msg[ID],
+            {
+                "event": "finished",
+                "data": result,
+            },
         )
-    except BaseZwaveJSServerError as err:
-        connection.send_error(msg[ID], err.__class__.__name__, str(err))
-    else:
-        connection.send_result(msg[ID])
+    )
 
 
 @websocket_api.require_admin
@@ -2901,21 +2894,13 @@ async def websocket_restore_nvm(
         controller.on("nvm restore progress", forward_progress),
     ]
 
-    # Perform the restore
-    try:
-        # Execute the restore
-        await controller.async_restore_nvm_base64(msg["data"])
-
-        # Send the finished event
-        connection.send_message(
-            websocket_api.event_message(
-                msg[ID],
-                {
-                    "event": "finished",
-                },
-            )
+    await controller.async_restore_nvm_base64(msg["data"])
+    connection.send_result(msg[ID])
+    connection.send_message(
+        websocket_api.event_message(
+            msg[ID],
+            {
+                "event": "finished",
+            },
         )
-    except BaseZwaveJSServerError as err:
-        connection.send_error(msg[ID], err.__class__.__name__, str(err))
-    else:
-        connection.send_result(msg[ID])
+    )
