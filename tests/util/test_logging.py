@@ -1,7 +1,6 @@
 """Test Home Assistant logging util methods."""
 
 import asyncio
-import datetime
 from functools import partial
 import logging
 import queue
@@ -246,34 +245,27 @@ async def test_noisy_loggers_counters_reset(
 ) -> None:
     """Test that noisy logger counters reset periodically."""
 
-    start_time = datetime.datetime.now()
-
     logging_util.async_activate_log_queue_handler(hass)
     logger = logging.getLogger("noisy_module")
 
-    # Do multiple iterations to ensure the timer is periodic
-    for it in range(1, 4):
+    expected_warning = "Module noisy_module is logging too frequently"
+
+    # Do multiple iterations to ensure the reset is periodic
+    for _ in range(logging_util.HomeAssistantQueueListener.MAX_LOGS_COUNT * 2):
         logger.info("This is log 0")
         await empty_log_queue()
 
-        it_time_delta = datetime.timedelta(
-            seconds=(
-                it * logging_util.HomeAssistantQueueListener.LOG_COUNTS_RESET_INTERVAL
-            )
+        freezer.tick(
+            logging_util.HomeAssistantQueueListener.LOG_COUNTS_RESET_INTERVAL + 1
         )
-        freezer.move_to(start_time + it_time_delta)
 
         logger.info("This is log 1")
-
-        expected_warning = "Module noisy_module is logging too frequently"
         await empty_log_queue()
         assert caplog.text.count(expected_warning) == 0
 
-        logger.info("This is log 2")
-        logger.info("This is log 3")
-        await empty_log_queue()
-        assert caplog.text.count(expected_warning) == 1
-        caplog.clear()
-
+    logger.info("This is log 2")
+    logger.info("This is log 3")
+    await empty_log_queue()
+    assert caplog.text.count(expected_warning) == 1
     # close the handler so the queue thread stops
     logging.root.handlers[0].close()
