@@ -1,9 +1,10 @@
 """The tests for the  Template switch platform."""
 
+from typing import Any
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant import setup
 from homeassistant.components import switch, template
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.template.switch import rewrite_legacy_to_modern_conf
@@ -17,7 +18,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
+
+from .conftest import ConfigurationStyle
 
 from tests.common import (
     MockConfigEntry,
@@ -28,56 +32,174 @@ from tests.common import (
 
 TEST_OBJECT_ID = "test_template_switch"
 TEST_ENTITY_ID = f"switch.{TEST_OBJECT_ID}"
+TEST_STATE_ENTITY_ID = "switch.test_state"
+
+SWITCH_TURN_ON = {
+    "service": "test.automation",
+    "data_template": {
+        "action": "turn_on",
+        "caller": "{{ this.entity_id }}",
+    },
+}
+SWITCH_TURN_OFF = {
+    "service": "test.automation",
+    "data_template": {
+        "action": "turn_off",
+        "caller": "{{ this.entity_id }}",
+    },
+}
 SWITCH_ACTIONS = {
-    "turn_on": {
-        "service": "test.automation",
-        "data_template": {
-            "action": "turn_on",
-            "caller": "{{ this.entity_id }}",
-        },
-    },
-    "turn_off": {
-        "service": "test.automation",
-        "data_template": {
-            "action": "turn_off",
-            "caller": "{{ this.entity_id }}",
-        },
-    },
+    "turn_on": SWITCH_TURN_ON,
+    "turn_off": SWITCH_TURN_OFF,
 }
 NAMED_SWITCH_ACTIONS = {
     **SWITCH_ACTIONS,
     "name": TEST_OBJECT_ID,
 }
+UNIQUE_ID_CONFIG = {
+    **SWITCH_ACTIONS,
+    "unique_id": "not-so-unique-anymore",
+}
 
 
-def _create_template_config(state_template: str) -> list[tuple[dict, str]]:
-    return [
-        (
-            {
-                "template": {
-                    "switch": {
-                        **NAMED_SWITCH_ACTIONS,
-                        "state": state_template,
-                    }
-                },
-            },
+async def async_setup_legacy_format(
+    hass: HomeAssistant, count: int, switch_config: dict[str, Any]
+) -> None:
+    """Do setup of switch integration via legacy format."""
+    config = {"switch": {"platform": "template", "switches": switch_config}}
+
+    with assert_setup_component(count, switch.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            switch.DOMAIN,
+            config,
+        )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
+async def async_setup_modern_format(
+    hass: HomeAssistant, count: int, switch_config: dict[str, Any]
+) -> None:
+    """Do setup of switch integration via modern format."""
+    config = {"template": {"switch": switch_config}}
+
+    with assert_setup_component(count, template.DOMAIN):
+        assert await async_setup_component(
+            hass,
             template.DOMAIN,
-        ),
-        (
+            config,
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def setup_switch(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    switch_config: dict[str, Any],
+) -> None:
+    """Do setup of switch integration."""
+    if style == ConfigurationStyle.LEGACY:
+        await async_setup_legacy_format(hass, count, switch_config)
+    elif style == ConfigurationStyle.MODERN:
+        await async_setup_modern_format(hass, count, switch_config)
+
+
+@pytest.fixture
+async def setup_state_switch(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    state_template: str,
+):
+    """Do setup of switch integration using a state template."""
+    if style == ConfigurationStyle.LEGACY:
+        await async_setup_legacy_format(
+            hass,
+            count,
             {
-                "switch": {
-                    "platform": "template",
-                    "switches": {
-                        TEST_OBJECT_ID: {
-                            **SWITCH_ACTIONS,
-                            "value_template": state_template,
-                        }
-                    },
+                TEST_OBJECT_ID: {
+                    **SWITCH_ACTIONS,
+                    "value_template": state_template,
                 }
             },
-            switch.DOMAIN,
-        ),
-    ]
+        )
+    elif style == ConfigurationStyle.MODERN:
+        await async_setup_modern_format(
+            hass,
+            count,
+            {
+                **NAMED_SWITCH_ACTIONS,
+                "state": state_template,
+            },
+        )
+
+
+@pytest.fixture
+async def setup_single_attribute_switch(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    attribute: str,
+    attribute_template: str,
+) -> None:
+    """Do setup of switch integration testing a single attribute."""
+    extra = {attribute: attribute_template} if attribute and attribute_template else {}
+    if style == ConfigurationStyle.LEGACY:
+        await async_setup_legacy_format(
+            hass,
+            count,
+            {
+                TEST_OBJECT_ID: {
+                    **SWITCH_ACTIONS,
+                    "value_template": "{{ 1 == 1 }}",
+                    **extra,
+                }
+            },
+        )
+    elif style == ConfigurationStyle.MODERN:
+        await async_setup_modern_format(
+            hass,
+            count,
+            {
+                **NAMED_SWITCH_ACTIONS,
+                "state": "{{ 1 == 1 }}",
+                **extra,
+            },
+        )
+
+
+@pytest.fixture
+async def setup_optimistic_switch(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+) -> None:
+    """Do setup of an optimistic switch."""
+    if style == ConfigurationStyle.LEGACY:
+        await async_setup_legacy_format(
+            hass,
+            count,
+            {
+                TEST_OBJECT_ID: {
+                    **SWITCH_ACTIONS,
+                }
+            },
+        )
+    elif style == ConfigurationStyle.MODERN:
+        await async_setup_modern_format(
+            hass,
+            count,
+            {
+                **NAMED_SWITCH_ACTIONS,
+            },
+        )
 
 
 async def test_legacy_to_modern_config(hass: HomeAssistant) -> None:
@@ -96,58 +218,26 @@ async def test_legacy_to_modern_config(hass: HomeAssistant) -> None:
     altered_configs = rewrite_legacy_to_modern_conf(hass, config)
 
     assert len(altered_configs) == 1
-
-    altered_config = altered_configs[0]
-
-    assert "object_id" in altered_config
-    assert altered_config["object_id"] == "foo"
-
-    assert "friendly_name" not in altered_config
-    assert "name" in altered_config
-    assert altered_config["name"].template == "foo bar"
-
-    assert "value_template" not in altered_config
-    assert "state" in altered_config
-    assert altered_config["state"].template == "{{ 1 == 1 }}"
-
-    assert "icon_template" not in altered_config
-    assert "icon" in altered_config
-    assert altered_config["icon"].template == "{{ 'mdi.abc' }}"
-
-    assert "entity_picture_template" not in altered_config
-    assert "picture" in altered_config
-    assert altered_config["picture"].template == "{{ 'mypicture.jpg' }}"
-
-    assert "availability_template" not in altered_config
-    assert "availability" in altered_config
-    assert altered_config["availability"].template == "{{ 1 == 1 }}"
-
-    assert "unique_id" in altered_config
-    assert altered_config["unique_id"] == "foo-bar-switch"
-
-    assert "turn_on" in altered_config
-    assert altered_config["turn_on"] == {
-        "service": "test.automation",
-        "data_template": {
-            "action": "turn_on",
-            "caller": "{{ this.entity_id }}",
-        },
-    }
-
-    assert "turn_off" in altered_config
-    assert altered_config["turn_off"] == {
-        "service": "test.automation",
-        "data_template": {
-            "action": "turn_off",
-            "caller": "{{ this.entity_id }}",
-        },
-    }
+    assert [
+        {
+            "availability": Template("{{ 1 == 1 }}", hass),
+            "icon": Template("{{ 'mdi.abc' }}", hass),
+            "name": Template("foo bar", hass),
+            "object_id": "foo",
+            "picture": Template("{{ 'mypicture.jpg' }}", hass),
+            "turn_off": SWITCH_TURN_OFF,
+            "turn_on": SWITCH_TURN_ON,
+            "unique_id": "foo-bar-switch",
+            "state": Template("{{ 1 == 1 }}", hass),
+        }
+    ] == altered_configs
 
 
-@pytest.mark.parametrize("count", [1])
-@pytest.mark.parametrize(("config", "domain"), _create_template_config("{{ True }}"))
-@pytest.mark.usefixtures("start_ha")
-async def test_setup(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(("count", "state_template"), [(1, "{{ True }}")])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+)
+async def test_setup(hass: HomeAssistant, setup_state_switch) -> None:
     """Test template."""
     state = hass.states.get(TEST_ENTITY_ID)
     assert state is not None
@@ -188,205 +278,102 @@ async def test_setup_config_entry(
 
 
 @pytest.mark.parametrize(
-    ("config", "domain"),
-    _create_template_config("{{ states.switch.test_state.state }}"),
+    ("count", "state_template"), [(1, "{{ states.switch.test_state.state }}")]
 )
-async def test_template_state_text(
-    hass: HomeAssistant, config: dict, domain: str
-) -> None:
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+)
+async def test_template_state_text(hass: HomeAssistant, setup_state_switch) -> None:
     """Test the state text of a template."""
-    with assert_setup_component(1, domain):
-        assert await async_setup_component(hass, domain, config)
-
-    await hass.async_block_till_done()
-    await hass.async_start()
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
     await hass.async_block_till_done()
 
-    hass.states.async_set("switch.test_state", STATE_ON)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.test_template_switch")
+    state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_ON
 
-    hass.states.async_set("switch.test_state", STATE_OFF)
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test_template_switch")
+    state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_OFF
 
 
+@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("config", "domain"),
-    _create_template_config("{{ 1 == 1 }}"),
-)
-async def test_template_state_boolean_on(
-    hass: HomeAssistant, config: dict, domain: str
-) -> None:
-    """Test the setting of the state with boolean on."""
-    with assert_setup_component(1, domain):
-        assert await async_setup_component(hass, domain, config)
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.test_template_switch")
-    assert state.state == STATE_ON
-
-
-@pytest.mark.parametrize(
-    ("config", "domain"),
-    _create_template_config("{{ 1 == 2 }}"),
-)
-async def test_template_state_boolean_off(
-    hass: HomeAssistant, config: dict, domain: str
-) -> None:
-    """Test the setting of the state with off."""
-    with assert_setup_component(1, domain):
-        assert await async_setup_component(hass, domain, config)
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.test_template_switch")
-    assert state.state == STATE_OFF
-
-
-@pytest.mark.parametrize(
-    ("config", "domain"),
+    ("expected", "state_template"),
     [
-        (
-            {
-                "template": {
-                    "switch": {
-                        **NAMED_SWITCH_ACTIONS,
-                        "state": "{{ states.switch.test_state.state }}",
-                        "icon": (
-                            "{% if states.switch.test_state.state %}"
-                            "mdi:check"
-                            "{% endif %}"
-                        ),
-                    }
-                },
-            },
-            template.DOMAIN,
-        ),
-        (
-            {
-                "switch": {
-                    "platform": "template",
-                    "switches": {
-                        TEST_OBJECT_ID: {
-                            **SWITCH_ACTIONS,
-                            "value_template": "{{ states.switch.test_state.state }}",
-                            "icon_template": (
-                                "{% if states.switch.test_state.state %}"
-                                "mdi:check"
-                                "{% endif %}"
-                            ),
-                        }
-                    },
-                }
-            },
-            switch.DOMAIN,
-        ),
+        (STATE_ON, "{{ 1 == 1 }}"),
+        (STATE_OFF, "{{ 1 == 2 }}"),
     ],
 )
-async def test_icon_template(hass: HomeAssistant, config: dict, domain: str) -> None:
-    """Test the state text of a template."""
-    with assert_setup_component(1, domain):
-        assert await async_setup_component(hass, domain, config)
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+)
+async def test_template_state_boolean(
+    hass: HomeAssistant, expected: str, setup_state_switch
+) -> None:
+    """Test the setting of the state with boolean template."""
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == expected
 
-    state = hass.states.get("switch.test_template_switch")
+
+@pytest.mark.parametrize(
+    ("count", "attribute_template"),
+    [(1, "{% if states.switch.test_state.state %}mdi:check{% endif %}")],
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.LEGACY, "icon_template"),
+        (ConfigurationStyle.MODERN, "icon"),
+    ],
+)
+async def test_icon_template(
+    hass: HomeAssistant, setup_single_attribute_switch
+) -> None:
+    """Test the state text of a template."""
+    state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes.get("icon") == ""
 
-    hass.states.async_set("switch.test_state", STATE_ON)
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test_template_switch")
+    state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes["icon"] == "mdi:check"
 
 
 @pytest.mark.parametrize(
-    ("config", "domain"),
+    ("count", "attribute_template"),
+    [(1, "{% if states.switch.test_state.state %}/local/switch.png{% endif %}")],
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
     [
-        (
-            {
-                "template": {
-                    "switch": {
-                        **NAMED_SWITCH_ACTIONS,
-                        "state": "{{ states.switch.test_state.state }}",
-                        "picture": (
-                            "{% if states.switch.test_state.state %}"
-                            "/local/switch.png"
-                            "{% endif %}"
-                        ),
-                    }
-                },
-            },
-            template.DOMAIN,
-        ),
-        (
-            {
-                "switch": {
-                    "platform": "template",
-                    "switches": {
-                        TEST_OBJECT_ID: {
-                            **SWITCH_ACTIONS,
-                            "value_template": "{{ states.switch.test_state.state }}",
-                            "entity_picture_template": (
-                                "{% if states.switch.test_state.state %}"
-                                "/local/switch.png"
-                                "{% endif %}"
-                            ),
-                        }
-                    },
-                }
-            },
-            switch.DOMAIN,
-        ),
+        (ConfigurationStyle.LEGACY, "entity_picture_template"),
+        (ConfigurationStyle.MODERN, "picture"),
     ],
 )
 async def test_entity_picture_template(
-    hass: HomeAssistant, config: dict, domain: str
+    hass: HomeAssistant, setup_single_attribute_switch
 ) -> None:
     """Test entity_picture template."""
-    with assert_setup_component(1, domain):
-        assert await async_setup_component(hass, domain, config)
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.test_template_switch")
+    state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes.get("entity_picture") == ""
 
-    hass.states.async_set("switch.test_state", STATE_ON)
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test_template_switch")
+    state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes["entity_picture"] == "/local/switch.png"
 
 
+@pytest.mark.parametrize(("count", "state_template"), [(0, "{% if rubbish %}")])
 @pytest.mark.parametrize(
-    ("config", "domain"),
-    _create_template_config("{% if rubbish %}"),
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN],
 )
-async def test_template_syntax_error(
-    hass: HomeAssistant, config: dict, domain: str
-) -> None:
+async def test_template_syntax_error(hass: HomeAssistant, setup_state_switch) -> None:
     """Test templating syntax error."""
-    with assert_setup_component(0, domain):
-        assert await async_setup_component(hass, domain, config)
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
     assert hass.states.async_all("switch") == []
 
 
@@ -492,14 +479,8 @@ async def test_no_switches_does_not_create(
             {
                 "template": {
                     "switch": {
-                        "not_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
-                        "turn_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
+                        "not_on": SWITCH_TURN_ON,
+                        "turn_off": SWITCH_TURN_OFF,
                         "state": "{{ states.switch.test_state.state }}",
                     }
                 },
@@ -512,14 +493,8 @@ async def test_no_switches_does_not_create(
                     "platform": "template",
                     "switches": {
                         TEST_OBJECT_ID: {
-                            "not_on": {
-                                "service": "switch.turn_on",
-                                "entity_id": "switch.test_state",
-                            },
-                            "turn_off": {
-                                "service": "switch.turn_off",
-                                "entity_id": "switch.test_state",
-                            },
+                            "not_on": SWITCH_TURN_ON,
+                            "turn_off": SWITCH_TURN_OFF,
                             "value_template": "{{ states.switch.test_state.state }}",
                         }
                     },
@@ -550,14 +525,8 @@ async def test_missing_on_does_not_create(
             {
                 "template": {
                     "switch": {
-                        "turn_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
-                        "not_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
+                        "turn_on": SWITCH_TURN_ON,
+                        "not_off": SWITCH_TURN_OFF,
                         "state": "{{ states.switch.test_state.state }}",
                     }
                 },
@@ -570,14 +539,8 @@ async def test_missing_on_does_not_create(
                     "platform": "template",
                     "switches": {
                         TEST_OBJECT_ID: {
-                            "turn_on": {
-                                "service": "switch.turn_on",
-                                "entity_id": "switch.test_state",
-                            },
-                            "not_off": {
-                                "service": "switch.turn_off",
-                                "entity_id": "switch.test_state",
-                            },
+                            "turn_on": SWITCH_TURN_ON,
+                            "not_off": SWITCH_TURN_OFF,
                             "value_template": "{{ states.switch.test_state.state }}",
                         }
                     },
@@ -602,186 +565,161 @@ async def test_missing_off_does_not_create(
 
 
 @pytest.mark.parametrize(
-    ("config", "domain"),
-    _create_template_config("{{ states.switch.test_state.state }}"),
+    ("count", "state_template"), [(1, "{{ states('switch.test_state') }}")]
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
 )
 async def test_on_action(
-    hass: HomeAssistant, config: dict, domain: str, calls: list[ServiceCall]
+    hass: HomeAssistant, setup_state_switch, calls: list[ServiceCall]
 ) -> None:
     """Test on action."""
-    assert await async_setup_component(hass, domain, config)
-
-    await hass.async_block_till_done()
-    await hass.async_start()
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
     await hass.async_block_till_done()
 
-    hass.states.async_set("switch.test_state", STATE_OFF)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.test_template_switch")
+    state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_OFF
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_template_switch"},
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
 
     assert len(calls) == 1
     assert calls[-1].data["action"] == "turn_on"
-    assert calls[-1].data["caller"] == "switch.test_template_switch"
+    assert calls[-1].data["caller"] == TEST_ENTITY_ID
 
 
+@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("config", "domain"),
-    [
-        (
-            {
-                "template": {
-                    "switch": {
-                        **NAMED_SWITCH_ACTIONS,
-                    }
-                },
-            },
-            template.DOMAIN,
-        ),
-        (
-            {
-                "switch": {
-                    "platform": "template",
-                    "switches": {
-                        TEST_OBJECT_ID: {
-                            **SWITCH_ACTIONS,
-                        }
-                    },
-                }
-            },
-            switch.DOMAIN,
-        ),
-    ],
+    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
 )
 async def test_on_action_optimistic(
-    hass: HomeAssistant, config: dict, domain: str, calls: list[ServiceCall]
+    hass: HomeAssistant, setup_optimistic_switch, calls: list[ServiceCall]
 ) -> None:
     """Test on action in optimistic mode."""
-    assert await async_setup_component(hass, domain, config)
-
-    await hass.async_start()
+    hass.states.async_set(TEST_ENTITY_ID, STATE_OFF)
     await hass.async_block_till_done()
 
-    hass.states.async_set("switch.test_template_switch", STATE_OFF)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.test_template_switch")
+    state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_OFF
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_template_switch"},
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
 
-    state = hass.states.get("switch.test_template_switch")
+    state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_ON
 
     assert len(calls) == 1
     assert calls[-1].data["action"] == "turn_on"
-    assert calls[-1].data["caller"] == "switch.test_template_switch"
+    assert calls[-1].data["caller"] == TEST_ENTITY_ID
 
 
 @pytest.mark.parametrize(
-    ("config", "domain"),
-    _create_template_config("{{ states.switch.test_state.state }}"),
+    ("count", "state_template"), [(1, "{{ states.switch.test_state.state }}")]
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
 )
 async def test_off_action(
-    hass: HomeAssistant, config: dict, domain: str, calls: list[ServiceCall]
+    hass: HomeAssistant, setup_state_switch, calls: list[ServiceCall]
 ) -> None:
     """Test off action."""
-    assert await async_setup_component(hass, domain, config)
-
-    await hass.async_block_till_done()
-    await hass.async_start()
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
     await hass.async_block_till_done()
 
-    hass.states.async_set("switch.test_state", STATE_ON)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.test_template_switch")
+    state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_template_switch"},
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
 
     assert len(calls) == 1
     assert calls[-1].data["action"] == "turn_off"
-    assert calls[-1].data["caller"] == "switch.test_template_switch"
+    assert calls[-1].data["caller"] == TEST_ENTITY_ID
 
 
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+)
+async def test_off_action_optimistic(
+    hass: HomeAssistant, setup_optimistic_switch, calls: list[ServiceCall]
+) -> None:
+    """Test off action in optimistic mode."""
+    hass.states.async_set(TEST_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "turn_off"
+    assert calls[-1].data["caller"] == TEST_ENTITY_ID
+
+
+@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     ("config", "domain"),
     [
         (
             {
-                "template": {
-                    "switch": {
-                        **NAMED_SWITCH_ACTIONS,
-                    }
-                },
-            },
-            template.DOMAIN,
-        ),
-        (
-            {
                 "switch": {
                     "platform": "template",
                     "switches": {
-                        TEST_OBJECT_ID: {
+                        "s1": {
                             **SWITCH_ACTIONS,
-                        }
+                        },
+                        "s2": {
+                            **SWITCH_ACTIONS,
+                        },
                     },
                 }
             },
             switch.DOMAIN,
         ),
+        (
+            {
+                "template": {
+                    "switch": [
+                        {
+                            "name": "s1",
+                            **SWITCH_ACTIONS,
+                        },
+                        {
+                            "name": "s2",
+                            **SWITCH_ACTIONS,
+                        },
+                    ],
+                }
+            },
+            template.DOMAIN,
+        ),
     ],
 )
-async def test_off_action_optimistic(
-    hass: HomeAssistant, config: dict, domain: str, calls: list[ServiceCall]
+async def test_restore_state(
+    hass: HomeAssistant, count: int, domain: str, config: dict[str, Any]
 ) -> None:
-    """Test off action in optimistic mode."""
-    assert await async_setup_component(hass, domain, config)
-
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    hass.states.async_set("switch.test_template_switch", STATE_ON)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.test_template_switch")
-    assert state.state == STATE_ON
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_template_switch"},
-        blocking=True,
-    )
-
-    state = hass.states.get("switch.test_template_switch")
-    assert state.state == STATE_OFF
-
-    assert len(calls) == 1
-    assert calls[-1].data["action"] == "turn_off"
-    assert calls[-1].data["caller"] == "switch.test_template_switch"
-
-
-async def test_restore_state(hass: HomeAssistant) -> None:
     """Test state restoration."""
     mock_restore_cache(
         hass,
@@ -794,23 +732,9 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
-    await async_setup_component(
-        hass,
-        "switch",
-        {
-            "switch": {
-                "platform": "template",
-                "switches": {
-                    "s1": {
-                        **SWITCH_ACTIONS,
-                    },
-                    "s2": {
-                        **SWITCH_ACTIONS,
-                    },
-                },
-            }
-        },
-    )
+    with assert_setup_component(count, domain):
+        await async_setup_component(hass, domain, config)
+
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.s1")
@@ -823,22 +747,35 @@ async def test_restore_state(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
+    ("count", "attribute_template"),
+    [(1, "{{ is_state('switch.test_state', 'on') }}")],
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.LEGACY, "availability_template"),
+        (ConfigurationStyle.MODERN, "availability"),
+    ],
+)
+async def test_available_template_with_entities(
+    hass: HomeAssistant, setup_single_attribute_switch
+) -> None:
+    """Test availability templates with values from other entities."""
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(TEST_ENTITY_ID).state != STATE_UNAVAILABLE
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(TEST_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
     ("config", "domain"),
     [
-        (
-            {
-                "template": {
-                    "switch": {
-                        **NAMED_SWITCH_ACTIONS,
-                        "state": "{{ 1 == 1 }}",
-                        "availability": (
-                            "{{ is_state('availability_state.state', 'on') }}"
-                        ),
-                    }
-                },
-            },
-            template.DOMAIN,
-        ),
         (
             {
                 "switch": {
@@ -846,135 +783,86 @@ async def test_restore_state(hass: HomeAssistant) -> None:
                     "switches": {
                         TEST_OBJECT_ID: {
                             **SWITCH_ACTIONS,
-                            "value_template": "{{ 1 == 1 }}",
-                            "availability_template": (
-                                "{{ is_state('availability_state.state', 'on') }}"
-                            ),
+                            "value_template": "{{ true }}",
+                            "availability_template": "{{ x - 12 }}",
                         }
                     },
                 }
             },
             switch.DOMAIN,
         ),
-    ],
-)
-async def test_available_template_with_entities(
-    hass: HomeAssistant, config: dict, domain: str
-) -> None:
-    """Test availability templates with values from other entities."""
-    with assert_setup_component(1, domain):
-        assert await async_setup_component(hass, domain, config)
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    hass.states.async_set("availability_state.state", STATE_ON)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("switch.test_template_switch").state != STATE_UNAVAILABLE
-
-    hass.states.async_set("availability_state.state", STATE_OFF)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("switch.test_template_switch").state == STATE_UNAVAILABLE
-
-
-async def test_invalid_availability_template_keeps_component_available(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test that an invalid availability keeps the device available."""
-    await setup.async_setup_component(
-        hass,
-        "switch",
-        {
-            "switch": {
-                "platform": "template",
-                "switches": {
-                    "test_template_switch": {
-                        **SWITCH_ACTIONS,
-                        "value_template": "{{ true }}",
-                        "availability_template": "{{ x - 12 }}",
-                    }
-                },
-            }
-        },
-    )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    assert hass.states.get("switch.test_template_switch").state != STATE_UNAVAILABLE
-    assert "UndefinedError: 'x' is undefined" in caplog.text
-
-
-@pytest.mark.parametrize(
-    ("config", "domain"),
-    [
         (
             {
                 "template": {
-                    "switch": [
-                        {
-                            **SWITCH_ACTIONS,
-                            "name": "test_template_switch_01",
-                            "unique_id": "not-so-unique-anymore",
-                            "state": "{{ true }}",
-                        },
-                        {
-                            **SWITCH_ACTIONS,
-                            "name": "test_template_switch_02",
-                            "unique_id": "not-so-unique-anymore",
-                            "state": "{{ true }}",
-                        },
-                    ]
-                },
-            },
-            template.DOMAIN,
-        ),
-        (
-            {
-                "switch": {
-                    "platform": "template",
-                    "switches": {
-                        "test_template_switch_01": {
-                            **SWITCH_ACTIONS,
-                            "unique_id": "not-so-unique-anymore",
-                            "value_template": "{{ true }}",
-                        },
-                        "test_template_switch_02": {
-                            **SWITCH_ACTIONS,
-                            "unique_id": "not-so-unique-anymore",
-                            "value_template": "{{ false }}",
-                        },
+                    "switch": {
+                        **NAMED_SWITCH_ACTIONS,
+                        "state": "{{ true }}",
+                        "availability": "{{ x - 12 }}",
                     },
                 }
             },
-            switch.DOMAIN,
+            template.DOMAIN,
         ),
     ],
 )
-async def test_unique_id(hass: HomeAssistant, config: dict, domain: str) -> None:
-    """Test unique_id option only creates one switch per id."""
-    with assert_setup_component(1, domain):
-        assert await async_setup_component(hass, domain, config)
+async def test_invalid_availability_template_keeps_component_available(
+    hass: HomeAssistant,
+    count: int,
+    config: dict[str, Any],
+    domain: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that an invalid availability keeps the device available."""
+    with assert_setup_component(count, domain):
+        await async_setup_component(hass, domain, config)
 
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
+    assert hass.states.get(TEST_ENTITY_ID).state != STATE_UNAVAILABLE
+    assert "UndefinedError: 'x' is undefined" in caplog.text
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    ("switch_config", "style"),
+    [
+        (
+            {
+                "test_template_switch_01": UNIQUE_ID_CONFIG,
+                "test_template_switch_02": UNIQUE_ID_CONFIG,
+            },
+            ConfigurationStyle.LEGACY,
+        ),
+        (
+            [
+                {
+                    "name": "test_template_switch_01",
+                    **UNIQUE_ID_CONFIG,
+                },
+                {
+                    "name": "test_template_switch_02",
+                    **UNIQUE_ID_CONFIG,
+                },
+            ],
+            ConfigurationStyle.MODERN,
+        ),
+    ],
+)
+async def test_unique_id(hass: HomeAssistant, setup_switch) -> None:
+    """Test unique_id option only creates one switch per id."""
     assert len(hass.states.async_all("switch")) == 1
 
 
-async def test_template_unique_id(
+async def test_nested_unique_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test a template unique_id propagates to switch unique_ids."""
-    with assert_setup_component(1, "template"):
+    with assert_setup_component(1, template.DOMAIN):
         assert await async_setup_component(
             hass,
-            "template",
+            template.DOMAIN,
             {
                 "template": {
                     "unique_id": "x",
