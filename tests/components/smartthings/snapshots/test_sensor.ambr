@@ -5506,6 +5506,55 @@
     'state': '19.0',
   })
 # ---
+# name: test_all_entities[ikea_kadrilj][sensor.kitchen_ikea_kadrilj_window_blind_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.kitchen_ikea_kadrilj_window_blind_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '71afed1c-006d-4e48-b16e-e7f88f9fd638.battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[ikea_kadrilj][sensor.kitchen_ikea_kadrilj_window_blind_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Kitchen IKEA KADRILJ Window blind Battery',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kitchen_ikea_kadrilj_window_blind_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '37',
+  })
+# ---
 # name: test_all_entities[im_speaker_ai_0001][sensor.galaxy_home_mini_media_input_source-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
