@@ -297,7 +297,7 @@
         },
         "rgbw_color": {
           "name": "[%key:component::light::common::field_rgbw_color_name%]",
-          "description": "[%key:component::light::common::field_rgbw_color_description%]"
+          "description": ""
         },
         "rgbww_color": {
           "name": "[%key:component::light::common::field_rgbww_color_name%]",
