@@ -937,76 +937,40 @@ class StartStopTrait(_Trait):
     async def _execute_vacuum(self, command, data, params, challenge):
         """Execute a StartStop command."""
         if command == COMMAND_START_STOP:
-            if params["start"]:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    vacuum.SERVICE_START,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
-            else:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    vacuum.SERVICE_STOP,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
+            service = vacuum.SERVICE_START if params["start"] else vacuum.SERVICE_STOP
         elif command == COMMAND_PAUSE_UNPAUSE:
-            if params["pause"]:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    vacuum.SERVICE_PAUSE,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
-            else:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    vacuum.SERVICE_START,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
+            service = vacuum.SERVICE_PAUSE if params["pause"] else vacuum.SERVICE_START
+        if service:
+            await self.hass.services.async_call(
+                self.state.domain,
+                service,
+                {ATTR_ENTITY_ID: self.state.entity_id},
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
 
     async def _execute_lawn_mower(self, command, data, params, challenge):
         """Execute a StartStop command."""
         if command == COMMAND_START_STOP:
-            if params["start"]:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    lawn_mower.SERVICE_START_MOWING,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
-            else:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    lawn_mower.SERVICE_DOCK,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
+            service = (
+                lawn_mower.SERVICE_START_MOWING
+                if params["start"]
+                else lawn_mower.SERVICE_DOCK
+            )
         elif command == COMMAND_PAUSE_UNPAUSE:
-            if params["pause"]:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    lawn_mower.SERVICE_PAUSE,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
-            else:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    lawn_mower.SERVICE_START_MOWING,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
+            service = (
+                lawn_mower.SERVICE_PAUSE
+                if params["pause"]
+                else lawn_mower.SERVICE_START_MOWING
+            )
+        if service:
+            await self.hass.services.async_call(
+                self.state.domain,
+                service,
+                {ATTR_ENTITY_ID: self.state.entity_id},
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
 
     async def _execute_cover_or_valve(self, command, data, params, challenge):
         """Execute a StartStop command."""
