@@ -272,7 +272,7 @@ class Panel:
         self.config_panel_domain = config_panel_domain
 
     @callback
-    def to_response(self) -> PanelRespons:
+    def to_response(self) -> PanelResponse:
         """Panel as dictionary."""
         return {
             "component_name": self.component_name,
@@ -841,7 +841,7 @@ def websocket_subscribe_extra_js(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
-class PanelRespons(TypedDict):
+class PanelResponse(TypedDict):
     """Represent the panel response type."""
 
     component_name: str
