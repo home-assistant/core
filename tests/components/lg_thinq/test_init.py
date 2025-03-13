@@ -10,7 +10,7 @@ from tests.common import MockConfigEntry
 
 async def test_load_unload_entry(
     hass: HomeAssistant,
-    mock_thinq_api: AsyncMock,
+    mock_thinq_mqtt_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test load and unload entry."""

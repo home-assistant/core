@@ -137,7 +137,13 @@ async def async_setup_mqtt(
     entry.runtime_data.mqtt_client = mqtt_client
 
     # Try to connect.
-    result = await mqtt_client.async_connect()
+    try:
+        result = await mqtt_client.async_connect()
+    except ThinQAPIException as exc:
+        raise ConfigEntryNotReady(exc.message) from exc
+    except (AttributeError, TypeError, ValueError) as exc:
+        raise ConfigEntryNotReady("Failed to connect MQTT") from exc
+
     if not result:
         _LOGGER.error("Failed to set up mqtt connection")
         return
