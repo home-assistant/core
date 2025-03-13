@@ -28,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 
 from .conftest import ConfigurationStyle
@@ -158,97 +159,197 @@ OPTIMISTIC_RGBWW_COLOR_LIGHT_CONFIG = {
 }
 
 
+TEST_MISSING_KEY_CONFIG = {
+    "turn_on": {
+        "service": "light.turn_on",
+        "entity_id": "light.test_state",
+    },
+    "set_level": {
+        "service": "light.turn_on",
+        "data_template": {
+            "entity_id": "light.test_state",
+            "brightness": "{{brightness}}",
+        },
+    },
+}
+
+
+TEST_ON_ACTION_WITH_TRANSITION_CONFIG = {
+    "turn_on": {
+        "service": "test.automation",
+        "data_template": {
+            "transition": "{{transition}}",
+        },
+    },
+    "turn_off": {
+        "service": "light.turn_off",
+        "entity_id": "light.test_state",
+    },
+    "set_level": {
+        "service": "light.turn_on",
+        "data_template": {
+            "entity_id": "light.test_state",
+            "brightness": "{{brightness}}",
+            "transition": "{{transition}}",
+        },
+    },
+}
+
+
+TEST_OFF_ACTION_WITH_TRANSITION_CONFIG = {
+    "turn_on": {
+        "service": "light.turn_on",
+        "entity_id": "light.test_state",
+    },
+    "turn_off": {
+        "service": "test.automation",
+        "data_template": {
+            "transition": "{{transition}}",
+        },
+    },
+    "set_level": {
+        "service": "light.turn_on",
+        "data_template": {
+            "entity_id": "light.test_state",
+            "brightness": "{{brightness}}",
+            "transition": "{{transition}}",
+        },
+    },
+}
+
+
+TEST_ALL_COLORS_NO_TEMPLATE_CONFIG = {
+    "set_hs": {
+        "service": "test.automation",
+        "data_template": {
+            "entity_id": "test.test_state",
+            "h": "{{h}}",
+            "s": "{{s}}",
+        },
+    },
+    "set_temperature": {
+        "service": "test.automation",
+        "data_template": {
+            "entity_id": "test.test_state",
+            "color_temp": "{{color_temp}}",
+        },
+    },
+    "set_rgb": {
+        "service": "test.automation",
+        "data_template": {
+            "entity_id": "test.test_state",
+            "r": "{{r}}",
+            "g": "{{g}}",
+            "b": "{{b}}",
+        },
+    },
+    "set_rgbw": {
+        "service": "test.automation",
+        "data_template": {
+            "entity_id": "test.test_state",
+            "r": "{{r}}",
+            "g": "{{g}}",
+            "b": "{{b}}",
+            "w": "{{w}}",
+        },
+    },
+    "set_rgbww": {
+        "service": "test.automation",
+        "data_template": {
+            "entity_id": "test.test_state",
+            "r": "{{r}}",
+            "g": "{{g}}",
+            "b": "{{b}}",
+            "cw": "{{cw}}",
+            "ww": "{{ww}}",
+        },
+    },
+}
+
+
+TEST_UNIQUE_ID_CONFIG = {
+    **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+    "unique_id": "not-so-unique-anymore",
+}
+
+
 @pytest.mark.parametrize(
-    ("old_attr", "new_attr", "template", "expected"),
+    ("old_attr", "new_attr", "attr_template"),
     [
         (
             "value_template",
             "state",
-            "{{ 1 == 1 }}",
             "{{ 1 == 1 }}",
         ),
         (
             "rgb_template",
             "rgb",
             "{{ (255,255,255) }}",
-            "{{ (255,255,255) }}",
         ),
         (
             "rgbw_template",
             "rgbw",
-            "{{ (255,255,255,255) }}",
             "{{ (255,255,255,255) }}",
         ),
         (
             "rgbww_template",
             "rgbww",
             "{{ (255,255,255,255,255) }}",
-            "{{ (255,255,255,255,255) }}",
         ),
         (
             "effect_list_template",
             "effect_list",
-            "{{ ['a', 'b'] }}",
             "{{ ['a', 'b'] }}",
         ),
         (
             "effect_template",
             "effect",
             "{{ 'a' }}",
-            "{{ 'a' }}",
         ),
         (
             "level_template",
             "level",
-            "{{ 255 }}",
             "{{ 255 }}",
         ),
         (
             "max_mireds_template",
             "max_mireds",
             "{{ 255 }}",
-            "{{ 255 }}",
         ),
         (
             "min_mireds_template",
             "min_mireds",
-            "{{ 255 }}",
             "{{ 255 }}",
         ),
         (
             "supports_transition_template",
             "supports_transition",
             "{{ True }}",
-            "{{ True }}",
         ),
         (
             "temperature_template",
             "temperature",
-            "{{ 255 }}",
             "{{ 255 }}",
         ),
         (
             "white_value_template",
             "white_value",
             "{{ 255 }}",
-            "{{ 255 }}",
         ),
         (
             "hs_template",
             "hs",
-            "{{ (255, 255) }}",
             "{{ (255, 255) }}",
         ),
         (
             "color_template",
             "hs",
             "{{ (255, 255) }}",
-            "{{ (255, 255) }}",
         ),
     ],
 )
 async def test_legacy_to_modern_config(
-    hass: HomeAssistant, old_attr: str, new_attr: str, template: str, expected: str
+    hass: HomeAssistant, old_attr: str, new_attr: str, attr_template: str
 ) -> None:
     """Test the conversion of legacy template to modern template."""
     config = {
@@ -258,7 +359,7 @@ async def test_legacy_to_modern_config(
             "icon_template": "{{ 'mdi.abc' }}",
             "entity_picture_template": "{{ 'mypicture.jpg' }}",
             "availability_template": "{{ 1 == 1 }}",
-            old_attr: template,
+            old_attr: attr_template,
             **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
         }
     }
@@ -266,51 +367,31 @@ async def test_legacy_to_modern_config(
 
     assert len(altered_configs) == 1
 
-    altered_config = altered_configs[0]
-
-    assert "object_id" in altered_config
-    assert altered_config["object_id"] == "foo"
-
-    assert "friendly_name" not in altered_config
-    assert "name" in altered_config
-    assert altered_config["name"].template == "foo bar"
-
-    assert "icon_template" not in altered_config
-    assert "icon" in altered_config
-    assert altered_config["icon"].template == "{{ 'mdi.abc' }}"
-
-    assert "entity_picture_template" not in altered_config
-    assert "picture" in altered_config
-    assert altered_config["picture"].template == "{{ 'mypicture.jpg' }}"
-
-    assert "availability_template" not in altered_config
-    assert "availability" in altered_config
-    assert altered_config["availability"].template == "{{ 1 == 1 }}"
-
-    assert "unique_id" in altered_config
-    assert altered_config["unique_id"] == "foo-bar-light"
-
-    assert "turn_on" in altered_config
-    assert altered_config["turn_on"] == {
-        "service": "test.automation",
-        "data_template": {
-            "action": "turn_on",
-            "caller": "{{ this.entity_id }}",
-        },
-    }
-
-    assert "turn_off" in altered_config
-    assert altered_config["turn_off"] == {
-        "service": "test.automation",
-        "data_template": {
-            "action": "turn_off",
-            "caller": "{{ this.entity_id }}",
-        },
-    }
-
-    assert old_attr not in altered_config
-    assert new_attr in altered_config
-    assert altered_config[new_attr].template == expected
+    assert [
+        {
+            "availability": Template("{{ 1 == 1 }}", hass),
+            "icon": Template("{{ 'mdi.abc' }}", hass),
+            "name": Template("foo bar", hass),
+            "object_id": "foo",
+            "picture": Template("{{ 'mypicture.jpg' }}", hass),
+            "turn_off": {
+                "data_template": {
+                    "action": "turn_off",
+                    "caller": "{{ this.entity_id }}",
+                },
+                "service": "test.automation",
+            },
+            "turn_on": {
+                "data_template": {
+                    "action": "turn_on",
+                    "caller": "{{ this.entity_id }}",
+                },
+                "service": "test.automation",
+            },
+            "unique_id": "foo-bar-light",
+            new_attr: Template(attr_template, hass),
+        }
+    ] == altered_configs
 
 
 async def async_setup_legacy_format(
@@ -336,7 +417,7 @@ async def async_setup_legacy_format_with_attribute(
     count: int,
     attribute: str,
     attribute_template: str,
-    optimistic_config: dict,
+    extra_config: dict,
 ) -> None:
     """Do setup of a legacy light that has a single templated attribute."""
     extra = {attribute: attribute_template} if attribute and attribute_template else {}
@@ -345,7 +426,7 @@ async def async_setup_legacy_format_with_attribute(
         count,
         {
             "test_template_light": {
-                **optimistic_config,
+                **extra_config,
                 "value_template": "{{ 1 == 1 }}",
                 **extra,
             }
@@ -376,7 +457,7 @@ async def async_setup_modern_format_with_attribute(
     count: int,
     attribute: str,
     attribute_template: str,
-    optimistic_config: dict,
+    extra_config: dict,
 ) -> None:
     """Do setup of a legacy light that has a single templated attribute."""
     extra = {attribute: attribute_template} if attribute and attribute_template else {}
@@ -385,7 +466,7 @@ async def async_setup_modern_format_with_attribute(
         count,
         {
             "name": "test_template_light",
-            **optimistic_config,
+            **extra_config,
             "state": "{{ 1 == 1 }}",
             **extra,
         },
@@ -402,7 +483,7 @@ async def setup_light(
     """Do setup of light integration."""
     if style == ConfigurationStyle.LEGACY:
         await async_setup_legacy_format(hass, count, light_config)
-    if style == ConfigurationStyle.MODERN:
+    elif style == ConfigurationStyle.MODERN:
         await async_setup_new_format(hass, count, light_config)
 
 
@@ -425,7 +506,7 @@ async def setup_state_light(
                 }
             },
         )
-    if style == ConfigurationStyle.MODERN:
+    elif style == ConfigurationStyle.MODERN:
         await async_setup_new_format(
             hass,
             count,
@@ -444,16 +525,16 @@ async def setup_single_attribute_light(
     style: ConfigurationStyle,
     attribute: str,
     attribute_template: str,
-    optimistic_config: dict,
+    extra_config: dict,
 ) -> None:
     """Do setup of light integration."""
     if style == ConfigurationStyle.LEGACY:
         await async_setup_legacy_format_with_attribute(
-            hass, count, attribute, attribute_template, optimistic_config
+            hass, count, attribute, attribute_template, extra_config
         )
-    if style == ConfigurationStyle.MODERN:
+    elif style == ConfigurationStyle.MODERN:
         await async_setup_modern_format_with_attribute(
-            hass, count, attribute, attribute_template, optimistic_config
+            hass, count, attribute, attribute_template, extra_config
         )
 
 
@@ -462,16 +543,16 @@ async def setup_single_action_light(
     hass: HomeAssistant,
     count: int,
     style: ConfigurationStyle,
-    optimistic_config: dict,
+    extra_config: dict,
 ) -> None:
     """Do setup of light integration."""
     if style == ConfigurationStyle.LEGACY:
         await async_setup_legacy_format_with_attribute(
-            hass, count, "", "", optimistic_config
+            hass, count, "", "", extra_config
         )
-    if style == ConfigurationStyle.MODERN:
+    elif style == ConfigurationStyle.MODERN:
         await async_setup_modern_format_with_attribute(
-            hass, count, "", "", optimistic_config
+            hass, count, "", "", extra_config
         )
 
 
@@ -509,7 +590,7 @@ async def setup_light_with_effects(
                 }
             },
         )
-    if style == ConfigurationStyle.MODERN:
+    elif style == ConfigurationStyle.MODERN:
         await async_setup_new_format(
             hass,
             count,
@@ -556,7 +637,7 @@ async def setup_light_with_mireds(
                 }
             },
         )
-    if style == ConfigurationStyle.MODERN:
+    elif style == ConfigurationStyle.MODERN:
         await async_setup_new_format(
             hass,
             count,
@@ -602,7 +683,7 @@ async def setup_light_with_transition_template(
                 }
             },
         )
-    if style == ConfigurationStyle.MODERN:
+    elif style == ConfigurationStyle.MODERN:
         await async_setup_new_format(
             hass,
             count,
@@ -745,8 +826,8 @@ async def test_legacy_template_state_boolean(
         ),
     ],
 )
-async def test_template_syntax_error(hass: HomeAssistant, setup_light) -> None:
-    """Test templating syntax error."""
+async def test_template_config_errors(hass: HomeAssistant, setup_light) -> None:
+    """Test template light configuration errors."""
     assert hass.states.async_all("light") == []
 
 
@@ -754,41 +835,12 @@ async def test_template_syntax_error(hass: HomeAssistant, setup_light) -> None:
     ("light_config", "style", "count"),
     [
         (
-            {
-                "light_one": {
-                    "value_template": "{{ 1== 1}}",
-                    "turn_on": {
-                        "service": "light.turn_on",
-                        "entity_id": "light.test_state",
-                    },
-                    "set_level": {
-                        "service": "light.turn_on",
-                        "data_template": {
-                            "entity_id": "light.test_state",
-                            "brightness": "{{brightness}}",
-                        },
-                    },
-                }
-            },
+            {"light_one": {"value_template": "{{ 1== 1}}", **TEST_MISSING_KEY_CONFIG}},
             ConfigurationStyle.LEGACY,
             0,
         ),
         (
-            {
-                "name": "light_one",
-                "state": "{{ 1== 1}}",
-                "turn_on": {
-                    "service": "light.turn_on",
-                    "entity_id": "light.test_state",
-                },
-                "set_level": {
-                    "service": "light.turn_on",
-                    "data_template": {
-                        "entity_id": "light.test_state",
-                        "brightness": "{{brightness}}",
-                    },
-                },
-            },
+            {"name": "light_one", "state": "{{ 1== 1}}", **TEST_MISSING_KEY_CONFIG},
             ConfigurationStyle.MODERN,
             0,
         ),
@@ -849,25 +901,8 @@ async def test_on_action(
             {
                 "test_template_light": {
                     "value_template": "{{states.light.test_state.state}}",
-                    "turn_on": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "transition": "{{transition}}",
-                        },
-                    },
-                    "turn_off": {
-                        "service": "light.turn_off",
-                        "entity_id": "light.test_state",
-                    },
+                    **TEST_ON_ACTION_WITH_TRANSITION_CONFIG,
                     "supports_transition_template": "{{true}}",
-                    "set_level": {
-                        "service": "light.turn_on",
-                        "data_template": {
-                            "entity_id": "light.test_state",
-                            "brightness": "{{brightness}}",
-                            "transition": "{{transition}}",
-                        },
-                    },
                 }
             },
             ConfigurationStyle.LEGACY,
@@ -875,26 +910,8 @@ async def test_on_action(
         (
             {
                 "name": "test_template_light",
-                "state": "{{states.light.test_state.state}}",
-                "turn_on": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "transition": "{{transition}}",
-                    },
-                },
-                "turn_off": {
-                    "service": "light.turn_off",
-                    "entity_id": "light.test_state",
-                },
+                **TEST_ON_ACTION_WITH_TRANSITION_CONFIG,
                 "supports_transition": "{{true}}",
-                "set_level": {
-                    "service": "light.turn_on",
-                    "data_template": {
-                        "entity_id": "light.test_state",
-                        "brightness": "{{brightness}}",
-                        "transition": "{{transition}}",
-                    },
-                },
             },
             ConfigurationStyle.MODERN,
         ),
@@ -1045,25 +1062,8 @@ async def test_off_action(
             {
                 "test_template_light": {
                     "value_template": "{{states.light.test_state.state}}",
-                    "turn_on": {
-                        "service": "light.turn_on",
-                        "entity_id": "light.test_state",
-                    },
-                    "turn_off": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "transition": "{{transition}}",
-                        },
-                    },
+                    **TEST_OFF_ACTION_WITH_TRANSITION_CONFIG,
                     "supports_transition_template": "{{true}}",
-                    "set_level": {
-                        "service": "light.turn_on",
-                        "data_template": {
-                            "entity_id": "light.test_state",
-                            "brightness": "{{brightness}}",
-                            "transition": "{{transition}}",
-                        },
-                    },
                 }
             },
             ConfigurationStyle.LEGACY,
@@ -1072,25 +1072,8 @@ async def test_off_action(
             {
                 "name": "test_template_light",
                 "state": "{{states.light.test_state.state}}",
-                "turn_on": {
-                    "service": "light.turn_on",
-                    "entity_id": "light.test_state",
-                },
-                "turn_off": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "transition": "{{transition}}",
-                    },
-                },
+                **TEST_OFF_ACTION_WITH_TRANSITION_CONFIG,
                 "supports_transition": "{{true}}",
-                "set_level": {
-                    "service": "light.turn_on",
-                    "data_template": {
-                        "entity_id": "light.test_state",
-                        "brightness": "{{brightness}}",
-                        "transition": "{{transition}}",
-                    },
-                },
             },
             ConfigurationStyle.MODERN,
         ),
@@ -1209,7 +1192,7 @@ async def test_level_action_no_template(
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config"), [(1, OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG)]
+    ("count", "extra_config"), [(1, OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG)]
 )
 @pytest.mark.parametrize(
     ("style", "attribute"),
@@ -1250,7 +1233,7 @@ async def test_level_template(
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config"), [(1, OPTIMISTIC_COLOR_TEMP_LIGHT_CONFIG)]
+    ("count", "extra_config"), [(1, OPTIMISTIC_COLOR_TEMP_LIGHT_CONFIG)]
 )
 @pytest.mark.parametrize(
     ("style", "attribute"),
@@ -1287,7 +1270,7 @@ async def test_temperature_template(
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config"), [(1, OPTIMISTIC_COLOR_TEMP_LIGHT_CONFIG)]
+    ("count", "extra_config"), [(1, OPTIMISTIC_COLOR_TEMP_LIGHT_CONFIG)]
 )
 @pytest.mark.parametrize(
     "style",
@@ -1362,7 +1345,7 @@ async def test_friendly_name(hass: HomeAssistant, entity_id: str, setup_light) -
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config"), [(1, OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG)]
+    ("count", "extra_config"), [(1, OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG)]
 )
 @pytest.mark.parametrize(
     ("style", "attribute"),
@@ -1388,7 +1371,7 @@ async def test_icon_template(hass: HomeAssistant, setup_single_attribute_light) 
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config"), [(1, OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG)]
+    ("count", "extra_config"), [(1, OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG)]
 )
 @pytest.mark.parametrize(
     ("style", "attribute"),
@@ -1417,7 +1400,7 @@ async def test_entity_picture_template(
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config"),
+    ("count", "extra_config"),
     [
         (1, OPTIMISTIC_LEGACY_COLOR_LIGHT_CONFIG),
     ],
@@ -1459,7 +1442,7 @@ async def test_legacy_color_action_no_template(
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config"),
+    ("count", "extra_config"),
     [
         (1, OPTIMISTIC_HS_COLOR_LIGHT_CONFIG),
     ],
@@ -1502,7 +1485,7 @@ async def test_hs_color_action_no_template(
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config"),
+    ("count", "extra_config"),
     [(1, OPTIMISTIC_RGB_COLOR_LIGHT_CONFIG)],
 )
 @pytest.mark.parametrize(
@@ -1544,7 +1527,7 @@ async def test_rgb_color_action_no_template(
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config"),
+    ("count", "extra_config"),
     [(1, OPTIMISTIC_RGBW_COLOR_LIGHT_CONFIG)],
 )
 @pytest.mark.parametrize(
@@ -1590,7 +1573,7 @@ async def test_rgbw_color_action_no_template(
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config"),
+    ("count", "extra_config"),
     [(1, OPTIMISTIC_RGBWW_COLOR_LIGHT_CONFIG)],
 )
 @pytest.mark.parametrize(
@@ -1676,7 +1659,7 @@ async def test_legacy_color_template(
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config"), [(1, OPTIMISTIC_HS_COLOR_LIGHT_CONFIG)]
+    ("count", "extra_config"), [(1, OPTIMISTIC_HS_COLOR_LIGHT_CONFIG)]
 )
 @pytest.mark.parametrize(
     ("style", "attribute"),
@@ -1716,7 +1699,7 @@ async def test_hs_template(
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config"), [(1, OPTIMISTIC_RGB_COLOR_LIGHT_CONFIG)]
+    ("count", "extra_config"), [(1, OPTIMISTIC_RGB_COLOR_LIGHT_CONFIG)]
 )
 @pytest.mark.parametrize(
     ("style", "attribute"),
@@ -1757,7 +1740,7 @@ async def test_rgb_template(
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config"), [(1, OPTIMISTIC_RGBW_COLOR_LIGHT_CONFIG)]
+    ("count", "extra_config"), [(1, OPTIMISTIC_RGBW_COLOR_LIGHT_CONFIG)]
 )
 @pytest.mark.parametrize(
     ("style", "attribute"),
@@ -1799,7 +1782,7 @@ async def test_rgbw_template(
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config"), [(1, OPTIMISTIC_RGBWW_COLOR_LIGHT_CONFIG)]
+    ("count", "extra_config"), [(1, OPTIMISTIC_RGBWW_COLOR_LIGHT_CONFIG)]
 )
 @pytest.mark.parametrize(
     ("style", "attribute"),
@@ -1854,51 +1837,7 @@ async def test_rgbww_template(
                 "test_template_light": {
                     **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
                     "value_template": "{{1 == 1}}",
-                    "set_hs": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "entity_id": "test.test_state",
-                            "h": "{{h}}",
-                            "s": "{{s}}",
-                        },
-                    },
-                    "set_temperature": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "entity_id": "test.test_state",
-                            "color_temp": "{{color_temp}}",
-                        },
-                    },
-                    "set_rgb": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "entity_id": "test.test_state",
-                            "r": "{{r}}",
-                            "g": "{{g}}",
-                            "b": "{{b}}",
-                        },
-                    },
-                    "set_rgbw": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "entity_id": "test.test_state",
-                            "r": "{{r}}",
-                            "g": "{{g}}",
-                            "b": "{{b}}",
-                            "w": "{{w}}",
-                        },
-                    },
-                    "set_rgbww": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "entity_id": "test.test_state",
-                            "r": "{{r}}",
-                            "g": "{{g}}",
-                            "b": "{{b}}",
-                            "cw": "{{cw}}",
-                            "ww": "{{ww}}",
-                        },
-                    },
+                    **TEST_ALL_COLORS_NO_TEMPLATE_CONFIG,
                 }
             },
             ConfigurationStyle.LEGACY,
@@ -1908,51 +1847,7 @@ async def test_rgbww_template(
                 "name": "test_template_light",
                 **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
                 "state": "{{1 == 1}}",
-                "set_hs": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "entity_id": "test.test_state",
-                        "h": "{{h}}",
-                        "s": "{{s}}",
-                    },
-                },
-                "set_temperature": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "entity_id": "test.test_state",
-                        "color_temp": "{{color_temp}}",
-                    },
-                },
-                "set_rgb": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "entity_id": "test.test_state",
-                        "r": "{{r}}",
-                        "g": "{{g}}",
-                        "b": "{{b}}",
-                    },
-                },
-                "set_rgbw": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "entity_id": "test.test_state",
-                        "r": "{{r}}",
-                        "g": "{{g}}",
-                        "b": "{{b}}",
-                        "w": "{{w}}",
-                    },
-                },
-                "set_rgbww": {
-                    "service": "test.automation",
-                    "data_template": {
-                        "entity_id": "test.test_state",
-                        "r": "{{r}}",
-                        "g": "{{g}}",
-                        "b": "{{b}}",
-                        "cw": "{{cw}}",
-                        "ww": "{{ww}}",
-                    },
-                },
+                **TEST_ALL_COLORS_NO_TEMPLATE_CONFIG,
             },
             ConfigurationStyle.MODERN,
         ),
@@ -2305,7 +2200,7 @@ async def test_max_mireds_template(
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config"), [(1, OPTIMISTIC_COLOR_TEMP_LIGHT_CONFIG)]
+    ("count", "extra_config"), [(1, OPTIMISTIC_COLOR_TEMP_LIGHT_CONFIG)]
 )
 @pytest.mark.parametrize(
     ("style", "attribute"),
@@ -2377,7 +2272,7 @@ async def test_supports_transition_template_updates(
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config", "attribute_template"),
+    ("count", "extra_config", "attribute_template"),
     [
         (
             1,
@@ -2413,7 +2308,7 @@ async def test_available_template_with_entities(
 
 
 @pytest.mark.parametrize(
-    ("count", "optimistic_config", "attribute_template"),
+    ("count", "extra_config", "attribute_template"),
     [
         (
             1,
@@ -2443,14 +2338,8 @@ async def test_invalid_availability_template_keeps_component_available(
     [
         (
             {
-                "test_template_light_01": {
-                    **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-                    "unique_id": "not-so-unique-anymore",
-                },
-                "test_template_light_02": {
-                    **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-                    "unique_id": "not-so-unique-anymore",
-                },
+                "test_template_light_01": TEST_UNIQUE_ID_CONFIG,
+                "test_template_light_02": TEST_UNIQUE_ID_CONFIG,
             },
             ConfigurationStyle.LEGACY,
         ),
@@ -2458,13 +2347,11 @@ async def test_invalid_availability_template_keeps_component_available(
             [
                 {
                     "name": "test_template_light_01",
-                    **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-                    "unique_id": "not-so-unique-anymore",
+                    **TEST_UNIQUE_ID_CONFIG,
                 },
                 {
                     "name": "test_template_light_02",
-                    **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-                    "unique_id": "not-so-unique-anymore",
+                    **TEST_UNIQUE_ID_CONFIG,
                 },
             ],
             ConfigurationStyle.MODERN,

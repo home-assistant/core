@@ -16,7 +16,6 @@ class ConfigurationStyle(Enum):
 
     LEGACY = "Legacy"
     MODERN = "Modern"
-    TRIGGER = "Trigger"
 
 
 @pytest.fixture
