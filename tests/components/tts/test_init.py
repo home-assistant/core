@@ -1772,7 +1772,7 @@ async def test_async_convert_audio_error(hass: HomeAssistant) -> None:
     async def bad_data_gen():
         yield bytes(0)
 
-    with pytest.raises(RuntimeError):  # noqa: PT012
+    with pytest.raises(RuntimeError):
         # Simulate a bad WAV file
         async for _chunk in tts._async_convert_audio(
             hass, "wav", bad_data_gen(), "mp3"
