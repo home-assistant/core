@@ -184,7 +184,8 @@ class TTSCache:
             raise RuntimeError("Data not being loaded")
 
         queue: asyncio.Queue[bytes | None] | None = None
-        if self._listeners is not None:  # Generator done while we were yielding
+        # Check if generator is still feeding data
+        if self._listeners is not None:
             queue = asyncio.Queue()
             self._listeners.append(queue)
 
@@ -195,7 +196,7 @@ class TTSCache:
             raise self._error
 
         if queue is not None:
-            while chunk2 := await queue.get():
+            while (chunk2 := await queue.get()) is not None:
                 yield chunk2
 
         if self._error:
