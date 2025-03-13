@@ -84,7 +84,7 @@ BLU_TRV_BUTTONS: Final[list[ShellyButtonDescription]] = [
         name="Calibrate",
         translation_key="calibrate",
         entity_category=EntityCategory.CONFIG,
-        press_action="trigger_calibration",
+        press_action="trigger_blu_trv_calibration",
         supported=lambda coordinator: coordinator.device.model == MODEL_BLU_GATEWAY,
     ),
 ]
