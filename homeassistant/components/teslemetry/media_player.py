@@ -197,6 +197,8 @@ class TeslemetryStreamingMediaEntity(
             self._attr_media_artist = state.attributes.get("media_artist")
             self._attr_media_album_name = state.attributes.get("media_album_name")
             self._attr_media_playlist = state.attributes.get("media_playlist")
+            self._attr_media_duration = state.attributes.get("media_duration")
+            self._attr_media_position = state.attributes.get("media_position")
             self._attr_source = state.attributes.get("source")
 
             self.async_write_ha_state()
