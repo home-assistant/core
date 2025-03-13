@@ -8,6 +8,7 @@ from iometer import IOmeterClient, IOmeterConnectionError, Reading, Status
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -31,6 +32,7 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
 
     config_entry: IOmeterConfigEntry
     client: IOmeterClient
+    _current_fw_version: str
 
     def __init__(
         self,
@@ -50,6 +52,13 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
         self.client = client
         self.identifier = config_entry.entry_id
 
+    async def _async_setup(self) -> None:
+        """Set up the device sw_version."""
+        status = await self.client.get_current_status()
+        self._current_fw_version = (
+            f"{status.device.core.version}/{status.device.bridge.version}"
+        )
+
     async def _async_update_data(self) -> IOmeterData:
         """Update data async."""
         try:
@@ -57,5 +66,19 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
             status = await self.client.get_current_status()
         except IOmeterConnectionError as error:
             raise UpdateFailed(f"Error communicating with IOmeter: {error}") from error
+
+        fw_version = f"{status.device.core.version}/{status.device.bridge.version}"
+
+        if fw_version != self._current_fw_version:
+            device_registry = dr.async_get(self.hass)
+            device_entry = device_registry.async_get_device(
+                identifiers={(DOMAIN, status.device.id)}
+            )
+            assert device_entry
+            device_registry.async_update_device(
+                device_entry.id,
+                sw_version=fw_version,
+            )
+            self._current_fw_version = fw_version
 
         return IOmeterData(reading=reading, status=status)
