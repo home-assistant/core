@@ -155,7 +155,6 @@ async def async_setup_entry(
             BluTrvButton(coordinator, button, id_)
             for id_ in blutrv_key_ids
             for button in BLU_TRV_BUTTONS
-            if button.supported(coordinator)
         )
 
     async_add_entities(entities)
