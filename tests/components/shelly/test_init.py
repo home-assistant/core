@@ -307,8 +307,8 @@ async def test_sleeping_rpc_device_online_during_setup(
     assert "will resume when device is online" in caplog.text
     assert "is online (source: setup)" in caplog.text
 
-    entity = hass.states.get("sensor.test_name_temperature")
-    assert entity
+    state = hass.states.get("sensor.test_name_temperature")
+    assert state
 
 
 async def test_sleeping_rpc_device_offline_during_setup(
@@ -330,16 +330,16 @@ async def test_sleeping_rpc_device_offline_during_setup(
 
     assert "will resume when device is online" in caplog.text
     assert "is online (source: setup)" in caplog.text
-    entity = hass.states.get("sensor.test_name_temperature")
-    assert entity is None
+    state = hass.states.get("sensor.test_name_temperature")
+    assert state is None
 
     # Create an online event and verify that device is init successfully
     monkeypatch.setattr(mock_rpc_device, "initialize", AsyncMock())
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    entity = hass.states.get("sensor.test_name_temperature")
-    assert entity
+    state = hass.states.get("sensor.test_name_temperature")
+    assert state
 
 
 @pytest.mark.parametrize(
@@ -363,17 +363,17 @@ async def test_entry_unload(
     entry = await init_integration(hass, gen)
 
     assert entry.state is ConfigEntryState.LOADED
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_UNAVAILABLE
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -395,8 +395,8 @@ async def test_entry_unload_device_not_ready(
     assert entry
     assert entry.state is ConfigEntryState.LOADED
 
-    entity = hass.states.get(entity_id)
-    assert entity is None
+    state = hass.states.get(entity_id)
+    assert state is None
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -420,9 +420,9 @@ async def test_entry_unload_not_connected(
         assert entry
         assert entry.state is ConfigEntryState.LOADED
 
-        entity = hass.states.get("switch.test_switch_0")
-        assert entity
-        assert entity.state == STATE_ON
+        state = hass.states.get("switch.test_switch_0")
+        assert state
+        assert state.state == STATE_ON
         assert not mock_stop_scanner.call_count
 
         monkeypatch.setattr(mock_rpc_device, "connected", False)
@@ -451,9 +451,9 @@ async def test_entry_unload_not_connected_but_we_think_we_are(
         assert entry
         assert entry.state is ConfigEntryState.LOADED
 
-        entity = hass.states.get("switch.test_switch_0")
-        assert entity
-        assert entity.state == STATE_ON
+        state = hass.states.get("switch.test_switch_0")
+        assert state
+        assert state.state == STATE_ON
         assert not mock_stop_scanner.call_count
 
         monkeypatch.setattr(mock_rpc_device, "connected", False)
@@ -487,9 +487,9 @@ async def test_entry_missing_gen(hass: HomeAssistant, mock_block_device: Mock) -
 
     assert entry.state is ConfigEntryState.LOADED
 
-    entity = hass.states.get("switch.test_name_channel_1")
-    assert entity
-    assert entity.state == STATE_ON
+    state = hass.states.get("switch.test_name_channel_1")
+    assert state
+    assert state.state == STATE_ON
 
 
 async def test_entry_missing_port(hass: HomeAssistant) -> None:

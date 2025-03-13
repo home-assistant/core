@@ -33,14 +33,14 @@ async def test_rpc_button(
     await init_integration(hass, 2)
     entity_id = "event.test_name_input_0"
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_UNKNOWN
-    assert entity.attributes.get(ATTR_EVENT_TYPES) == unordered(
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
         ["btn_down", "btn_up", "double_push", "long_push", "single_push", "triple_push"]
     )
-    assert entity.attributes.get(ATTR_EVENT_TYPE) is None
-    assert entity.attributes.get(ATTR_DEVICE_CLASS) == EventDeviceClass.BUTTON
+    assert state.attributes.get(ATTR_EVENT_TYPE) is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == EventDeviceClass.BUTTON
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -62,9 +62,9 @@ async def test_rpc_button(
     )
     await hass.async_block_till_done()
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.attributes.get(ATTR_EVENT_TYPE) == "single_push"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes.get(ATTR_EVENT_TYPE) == "single_push"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -79,8 +79,8 @@ async def test_rpc_script_1_event(
     await init_integration(hass, 2)
     entity_id = "event.test_name_test_script_js"
 
-    entity = hass.states.get(entity_id)
-    assert entity == snapshot(name=f"{entity_id}-state")
+    state = hass.states.get(entity_id)
+    assert state == snapshot(name=f"{entity_id}-state")
 
     entry = entity_registry.async_get(entity_id)
     assert entry == snapshot(name=f"{entity_id}-entry")
@@ -102,9 +102,9 @@ async def test_rpc_script_1_event(
     )
     await hass.async_block_till_done()
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.attributes.get(ATTR_EVENT_TYPE) == "script_start"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes.get(ATTR_EVENT_TYPE) == "script_start"
 
     inject_rpc_device_event(
         monkeypatch,
@@ -123,9 +123,9 @@ async def test_rpc_script_1_event(
     )
     await hass.async_block_till_done()
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.attributes.get(ATTR_EVENT_TYPE) != "unknown_event"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes.get(ATTR_EVENT_TYPE) != "unknown_event"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -138,8 +138,8 @@ async def test_rpc_script_2_event(
     await init_integration(hass, 2)
     entity_id = "event.test_name_test_script_2_js"
 
-    entity = hass.states.get(entity_id)
-    assert entity == snapshot(name=f"{entity_id}-state")
+    state = hass.states.get(entity_id)
+    assert state == snapshot(name=f"{entity_id}-state")
 
     entry = entity_registry.async_get(entity_id)
     assert entry == snapshot(name=f"{entity_id}-entry")
@@ -155,8 +155,8 @@ async def test_rpc_script_ble_event(
     await init_integration(hass, 2)
     entity_id = f"event.test_name_{BLE_SCRIPT_NAME}"
 
-    entity = hass.states.get(entity_id)
-    assert entity == snapshot(name=f"{entity_id}-state")
+    state = hass.states.get(entity_id)
+    assert state == snapshot(name=f"{entity_id}-state")
 
     entry = entity_registry.async_get(entity_id)
     assert entry == snapshot(name=f"{entity_id}-entry")
@@ -189,12 +189,12 @@ async def test_block_event(
     await init_integration(hass, 1)
     entity_id = "event.test_name_channel_1"
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_UNKNOWN
-    assert entity.attributes.get(ATTR_EVENT_TYPES) == unordered(["single", "long"])
-    assert entity.attributes.get(ATTR_EVENT_TYPE) is None
-    assert entity.attributes.get(ATTR_DEVICE_CLASS) == EventDeviceClass.BUTTON
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(["single", "long"])
+    assert state.attributes.get(ATTR_EVENT_TYPE) is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == EventDeviceClass.BUTTON
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -209,9 +209,9 @@ async def test_block_event(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.attributes.get(ATTR_EVENT_TYPE) == "long"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes.get(ATTR_EVENT_TYPE) == "long"
 
 
 async def test_block_event_shix3_1(
@@ -221,8 +221,8 @@ async def test_block_event_shix3_1(
     await init_integration(hass, 1, model=MODEL_I3)
     entity_id = "event.test_name_channel_1"
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.attributes.get(ATTR_EVENT_TYPES) == unordered(
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
         ["double", "long", "long_single", "single", "single_long", "triple"]
     )

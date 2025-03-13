@@ -65,18 +65,18 @@ async def test_block_device_rgbw_bulb(
     await init_integration(hass, 1, model=MODEL_BULB)
 
     # Test initial
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_RGBW_COLOR] == (45, 55, 65, 70)
-    assert entity.attributes[ATTR_BRIGHTNESS] == 48
-    assert entity.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_RGBW_COLOR] == (45, 55, 65, 70)
+    assert state.attributes[ATTR_BRIGHTNESS] == 48
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
         ColorMode.COLOR_TEMP,
         ColorMode.RGBW,
     ]
-    assert entity.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.EFFECT
-    assert len(entity.attributes[ATTR_EFFECT_LIST]) == 7
-    assert entity.attributes[ATTR_EFFECT] == "Off"
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.EFFECT
+    assert len(state.attributes[ATTR_EFFECT_LIST]) == 7
+    assert state.attributes[ATTR_EFFECT] == "Off"
 
     # Turn off
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.reset_mock()
@@ -89,9 +89,9 @@ async def test_block_device_rgbw_bulb(
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.assert_called_once_with(
         turn="off"
     )
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_OFF
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
 
     # Turn on, RGBW = [70, 80, 90, 20], brightness = 33, effect = Flash
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.reset_mock()
@@ -109,13 +109,13 @@ async def test_block_device_rgbw_bulb(
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.assert_called_once_with(
         turn="on", gain=13, brightness=13, red=70, green=80, blue=90, white=30, effect=3
     )
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_COLOR_MODE] == ColorMode.RGBW
-    assert entity.attributes[ATTR_RGBW_COLOR] == (70, 80, 90, 30)
-    assert entity.attributes[ATTR_BRIGHTNESS] == 33
-    assert entity.attributes[ATTR_EFFECT] == "Flash"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGBW
+    assert state.attributes[ATTR_RGBW_COLOR] == (70, 80, 90, 30)
+    assert state.attributes[ATTR_BRIGHTNESS] == 33
+    assert state.attributes[ATTR_EFFECT] == "Flash"
 
     # Turn on, COLOR_TEMP_KELVIN = 3500
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.reset_mock()
@@ -128,11 +128,11 @@ async def test_block_device_rgbw_bulb(
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.assert_called_once_with(
         turn="on", temp=3500, mode="white"
     )
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
-    assert entity.attributes[ATTR_COLOR_TEMP_KELVIN] == 3500
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 3500
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -155,21 +155,21 @@ async def test_block_device_rgb_bulb(
     await init_integration(hass, 1, model=MODEL_BULB_RGBW)
 
     # Test initial
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_RGB_COLOR] == (45, 55, 65)
-    assert entity.attributes[ATTR_BRIGHTNESS] == 48
-    assert entity.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_RGB_COLOR] == (45, 55, 65)
+    assert state.attributes[ATTR_BRIGHTNESS] == 48
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
         ColorMode.COLOR_TEMP,
         ColorMode.RGB,
     ]
     assert (
-        entity.attributes[ATTR_SUPPORTED_FEATURES]
+        state.attributes[ATTR_SUPPORTED_FEATURES]
         == LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
     )
-    assert len(entity.attributes[ATTR_EFFECT_LIST]) == 4
-    assert entity.attributes[ATTR_EFFECT] == "Off"
+    assert len(state.attributes[ATTR_EFFECT_LIST]) == 4
+    assert state.attributes[ATTR_EFFECT] == "Off"
 
     # Turn off
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.reset_mock()
@@ -182,9 +182,9 @@ async def test_block_device_rgb_bulb(
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.assert_called_once_with(
         turn="off"
     )
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_OFF
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
 
     # Turn on, RGB = [70, 80, 90], brightness = 33, effect = Flash
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.reset_mock()
@@ -202,13 +202,13 @@ async def test_block_device_rgb_bulb(
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.assert_called_once_with(
         turn="on", gain=13, brightness=13, red=70, green=80, blue=90, effect=3
     )
-    entity = hass.states.get(entity_id)
-    assert entity_id
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_COLOR_MODE] == ColorMode.RGB
-    assert entity.attributes[ATTR_RGB_COLOR] == (70, 80, 90)
-    assert entity.attributes[ATTR_BRIGHTNESS] == 33
-    assert entity.attributes[ATTR_EFFECT] == "Flash"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGB
+    assert state.attributes[ATTR_RGB_COLOR] == (70, 80, 90)
+    assert state.attributes[ATTR_BRIGHTNESS] == 33
+    assert state.attributes[ATTR_EFFECT] == "Flash"
 
     # Turn on, COLOR_TEMP_KELVIN = 3500
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.reset_mock()
@@ -221,11 +221,11 @@ async def test_block_device_rgb_bulb(
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.assert_called_once_with(
         turn="on", temp=3500, mode="white"
     )
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
-    assert entity.attributes[ATTR_COLOR_TEMP_KELVIN] == 3500
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 3500
 
     # Turn on with unsupported effect
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.reset_mock()
@@ -239,10 +239,10 @@ async def test_block_device_rgb_bulb(
         turn="on", mode="color"
     )
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_EFFECT] == "Off"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_EFFECT] == "Off"
     assert "Effect 'Breath' not supported" in caplog.text
 
     entry = entity_registry.async_get(entity_id)
@@ -275,12 +275,12 @@ async def test_block_device_white_bulb(
     await init_integration(hass, 1, model=MODEL_VINTAGE_V2)
 
     # Test initial
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_BRIGHTNESS] == 128
-    assert entity.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
-    assert entity.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 128
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
 
     # Turn off
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.reset_mock()
@@ -293,9 +293,9 @@ async def test_block_device_white_bulb(
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.assert_called_once_with(
         turn="off"
     )
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_OFF
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
 
     # Turn on, brightness = 33
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.reset_mock()
@@ -308,10 +308,10 @@ async def test_block_device_white_bulb(
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.assert_called_once_with(
         turn="on", gain=13, brightness=13
     )
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_BRIGHTNESS] == 33
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 33
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -347,9 +347,9 @@ async def test_block_device_support_transition(
     await init_integration(hass, 1, model=model)
 
     # Test initial
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.attributes[ATTR_SUPPORTED_FEATURES] & LightEntityFeature.TRANSITION
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & LightEntityFeature.TRANSITION
 
     # Turn on, TRANSITION = 4
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.reset_mock()
@@ -362,9 +362,9 @@ async def test_block_device_support_transition(
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.assert_called_once_with(
         turn="on", transition=4000
     )
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
 
     # Turn off, TRANSITION = 6, limit to 5000ms
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.reset_mock()
@@ -377,9 +377,9 @@ async def test_block_device_support_transition(
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.assert_called_once_with(
         turn="off", transition=5000
     )
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_OFF
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -410,15 +410,15 @@ async def test_block_device_relay_app_type_light(
     )
     await init_integration(hass, 1)
 
-    entity = hass.states.get("switch.test_name_channel_1")
-    assert entity is None
+    state = hass.states.get("switch.test_name_channel_1")
+    assert state is None
 
     # Test initial
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
-    assert entity.attributes[ATTR_SUPPORTED_FEATURES] == 0
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     # Turn off
     mock_block_device.blocks[RELAY_BLOCK_ID].set_state.reset_mock()
@@ -431,9 +431,9 @@ async def test_block_device_relay_app_type_light(
     mock_block_device.blocks[RELAY_BLOCK_ID].set_state.assert_called_once_with(
         turn="off"
     )
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_OFF
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
 
     # Turn on
     mock_block_device.blocks[RELAY_BLOCK_ID].set_state.reset_mock()
@@ -446,9 +446,9 @@ async def test_block_device_relay_app_type_light(
     mock_block_device.blocks[RELAY_BLOCK_ID].set_state.assert_called_once_with(
         turn="on"
     )
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -462,8 +462,8 @@ async def test_block_device_no_light_blocks(
     monkeypatch.setattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "type", "roller")
     await init_integration(hass, 1)
 
-    entity = hass.states.get("light.test_name_channel_1")
-    assert entity is None
+    state = hass.states.get("light.test_name_channel_1")
+    assert state is None
 
 
 async def test_rpc_device_switch_type_lights_mode(
@@ -486,9 +486,9 @@ async def test_rpc_device_switch_type_lights_mode(
         blocking=True,
     )
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "switch:0", "output", False)
     await hass.services.async_call(
@@ -499,9 +499,9 @@ async def test_rpc_device_switch_type_lights_mode(
     )
     mock_rpc_device.mock_update()
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_OFF
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -529,10 +529,10 @@ async def test_rpc_light(
 
     mock_rpc_device.call_rpc.assert_called_once_with("Light.Set", {"id": 0, "on": True})
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_BRIGHTNESS] == 135
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 135
 
     # Turn off
     mock_rpc_device.call_rpc.reset_mock()
@@ -549,9 +549,9 @@ async def test_rpc_light(
         "Light.Set", {"id": 0, "on": False}
     )
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_OFF
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
 
     # Turn on, brightness = 33
     mock_rpc_device.call_rpc.reset_mock()
@@ -570,10 +570,10 @@ async def test_rpc_light(
         "Light.Set", {"id": 0, "on": True, "brightness": 13}
     )
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_BRIGHTNESS] == 33
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 33
 
     # Turn on, transition = 10.1
     mock_rpc_device.call_rpc.reset_mock()
@@ -590,9 +590,9 @@ async def test_rpc_light(
         "Light.Set", {"id": 0, "on": True, "transition_duration": 10.1}
     )
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
 
     # Turn off, transition = 0.4, should be limited to 0.5
     mock_rpc_device.call_rpc.reset_mock()
@@ -610,9 +610,9 @@ async def test_rpc_light(
         "Light.Set", {"id": 0, "on": False, "transition_duration": 0.5}
     )
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_OFF
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -633,12 +633,12 @@ async def test_rpc_device_rgb_profile(
     await init_integration(hass, 2)
 
     # Test initial
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_RGB_COLOR] == (45, 55, 65)
-    assert entity.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGB]
-    assert entity.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_RGB_COLOR] == (45, 55, 65)
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGB]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
 
     # Turn on, RGB = [70, 80, 90]
     await hass.services.async_call(
@@ -655,11 +655,11 @@ async def test_rpc_device_rgb_profile(
         "RGB.Set", {"id": 0, "on": True, "rgb": [70, 80, 90]}
     )
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_COLOR_MODE] == ColorMode.RGB
-    assert entity.attributes[ATTR_RGB_COLOR] == (70, 80, 90)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGB
+    assert state.attributes[ATTR_RGB_COLOR] == (70, 80, 90)
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -680,12 +680,12 @@ async def test_rpc_device_rgbw_profile(
     await init_integration(hass, 2)
 
     # Test initial
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_RGBW_COLOR] == (21, 22, 23, 120)
-    assert entity.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBW]
-    assert entity.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_RGBW_COLOR] == (21, 22, 23, 120)
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBW]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
 
     # Turn on, RGBW = [72, 82, 92, 128]
     await hass.services.async_call(
@@ -705,11 +705,11 @@ async def test_rpc_device_rgbw_profile(
         "RGBW.Set", {"id": 0, "on": True, "rgb": [72, 82, 92], "white": 128}
     )
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_COLOR_MODE] == ColorMode.RGBW
-    assert entity.attributes[ATTR_RGBW_COLOR] == (72, 82, 92, 128)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGBW
+    assert state.attributes[ATTR_RGBW_COLOR] == (72, 82, 92, 128)
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -758,9 +758,9 @@ async def test_rpc_rgbw_device_light_mode_remove_others(
     for i in range(SHELLY_PLUS_RGBW_CHANNELS):
         entity_id = f"light.test_light_{i}"
 
-        entity = hass.states.get(entity_id)
-        assert entity
-        assert entity.state == STATE_ON
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_ON
 
         entry = entity_registry.async_get(entity_id)
         assert entry
@@ -825,9 +825,9 @@ async def test_rpc_rgbw_device_rgb_w_modes_remove_others(
     # verify we have RGB/w light
     entity_id = f"light.test_{active_mode}_0"
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -872,9 +872,9 @@ async def test_rpc_cct_light(
 
     mock_rpc_device.call_rpc.assert_called_once_with("CCT.Set", {"id": 0, "on": False})
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_OFF
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
 
     # Turn on
     mock_rpc_device.call_rpc.reset_mock()
@@ -889,14 +889,14 @@ async def test_rpc_cct_light(
     mock_rpc_device.mock_update()
     mock_rpc_device.call_rpc.assert_called_once_with("CCT.Set", {"id": 0, "on": True})
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
-    assert entity.attributes[ATTR_BRIGHTNESS] == 196  # 77% of 255
-    assert entity.attributes[ATTR_COLOR_TEMP_KELVIN] == 3666
-    assert entity.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 3333
-    assert entity.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 5555
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+    assert state.attributes[ATTR_BRIGHTNESS] == 196  # 77% of 255
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 3666
+    assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 3333
+    assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 5555
 
     # Turn on, brightness = 88
     mock_rpc_device.call_rpc.reset_mock()
@@ -914,10 +914,10 @@ async def test_rpc_cct_light(
         "CCT.Set", {"id": 0, "on": True, "brightness": 88}
     )
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_BRIGHTNESS] == 224  # 88% of 255
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 224  # 88% of 255
 
     # Turn on, color temp = 4444 K
     mock_rpc_device.call_rpc.reset_mock()
@@ -936,10 +936,10 @@ async def test_rpc_cct_light(
         "CCT.Set", {"id": 0, "on": True, "ct": 4444}
     )
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == STATE_ON
-    assert entity.attributes[ATTR_COLOR_TEMP_KELVIN] == 4444
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 4444
 
 
 async def test_rpc_remove_cct_light(

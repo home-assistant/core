@@ -47,9 +47,9 @@ async def test_rpc_device_virtual_text(
 
     await init_integration(hass, 3)
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == "lorem ipsum"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "lorem ipsum"
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -58,9 +58,9 @@ async def test_rpc_device_virtual_text(
     monkeypatch.setitem(mock_rpc_device.status["text:203"], "value", "dolor sit amet")
     mock_rpc_device.mock_update()
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == "dolor sit amet"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "dolor sit amet"
 
     monkeypatch.setitem(mock_rpc_device.status["text:203"], "value", "sed do eiusmod")
     await hass.services.async_call(
@@ -71,9 +71,9 @@ async def test_rpc_device_virtual_text(
     )
     mock_rpc_device.mock_update()
 
-    entity = hass.states.get(entity_id)
-    assert entity
-    assert entity.state == "sed do eiusmod"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "sed do eiusmod"
 
 
 async def test_rpc_remove_virtual_text_when_mode_label(
