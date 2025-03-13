@@ -27,6 +27,7 @@
     "title": "1984",
     "parent_id": "FV:2",
     "item_id": "FV:2/8",
+    "album_art_uri": "http://192.168.42.2:1400/getaa?u=x-file-cifs%3a%2f%2f192.168.42.2%2fmusic%2fiTunes%2520Music%2fAerosmith%2f1984&v=742",
     "resource_meta_data": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"A:ALBUMARTIST/Aerosmith/1984\" parentID=\"A:ALBUMARTIST/Aerosmith\" restricted=\"true\"><dc:title>1984</dc:title><upnp:class>object.container.album.musicAlbum</upnp:class><desc id=\"cdudn\" nameSpace=\"urn:schemas-rinconnetworks-com:metadata-1-0/\">RINCON_AssociatedZPUDN</desc></item></DIDL-Lite>",
     "resources": [
       {
