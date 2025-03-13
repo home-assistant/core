@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Final
 
 from aiopurpleair.models.sensors import SensorModel
 
@@ -13,6 +13,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import PurpleAirConfigEntry, PurpleAirDataUpdateCoordinator
+
+MANUFACTURER: Final[str] = "PurpleAir, Inc."
+
+CONF_LATI: Final[str] = "lati"
+CONF_LONG: Final[str] = "long"
 
 
 class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
@@ -34,7 +39,7 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
             configuration_url=self.coordinator.async_get_map_url(sensor_index),
             hw_version=self.sensor_data.hardware,
             identifiers={(DOMAIN, str(sensor_index))},
-            manufacturer="PurpleAir, Inc.",
+            manufacturer=MANUFACTURER,
             model=self.sensor_data.model,
             name=self.sensor_data.name,
             sw_version=self.sensor_data.firmware_version,
@@ -54,8 +59,8 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
             attrs[ATTR_LATITUDE] = self.sensor_data.latitude
             attrs[ATTR_LONGITUDE] = self.sensor_data.longitude
         else:
-            attrs["lati"] = self.sensor_data.latitude
-            attrs["long"] = self.sensor_data.longitude
+            attrs[CONF_LATI] = self.sensor_data.latitude
+            attrs[CONF_LONG] = self.sensor_data.longitude
         return attrs
 
     @property

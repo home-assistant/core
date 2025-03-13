@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Final
 
 from aiopurpleair import API
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
@@ -15,35 +16,9 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SENSOR_INDICES, LOGGER
+from .const import CONF_SENSOR_INDICES, LOGGER, SENSOR_FIELDS_TO_RETRIEVE
 
-SENSOR_FIELDS_TO_RETRIEVE = [
-    "0.3_um_count",
-    "0.5_um_count",
-    "1.0_um_count",
-    "10.0_um_count",
-    "2.5_um_count",
-    "5.0_um_count",
-    "altitude",
-    "firmware_version",
-    "hardware",
-    "humidity",
-    "latitude",
-    "location_type",
-    "longitude",
-    "model",
-    "name",
-    "pm1.0",
-    "pm10.0",
-    "pm2.5",
-    "pressure",
-    "rssi",
-    "temperature",
-    "uptime",
-    "voc",
-]
-
-UPDATE_INTERVAL = timedelta(minutes=2)
+UPDATE_INTERVAL: Final[timedelta] = timedelta(minutes=2)
 
 
 type PurpleAirConfigEntry = ConfigEntry[PurpleAirDataUpdateCoordinator]
