@@ -9,7 +9,6 @@ from aioshelly.ble.const import BLE_SCAN_RESULT_EVENT, BLE_SCAN_RESULT_VERSION
 
 from homeassistant.components.bluetooth import async_register_scanner
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
-from homeassistant.helpers.device_registry import format_mac
 
 from ..const import BLEScannerMode
 
@@ -25,9 +24,8 @@ async def async_connect_scanner(
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     device = coordinator.device
-    entry = coordinator.entry
-    source = format_mac(coordinator.mac).upper()
-    scanner = create_scanner(source, entry.title)
+    entry = coordinator.config_entry
+    scanner = create_scanner(coordinator.bluetooth_source, entry.title)
     unload_callbacks = [
         async_register_scanner(
             hass,

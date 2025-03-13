@@ -39,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL: Final = timedelta(seconds=10)
 
-type BraviaTVConfigEntry = ConfigEntry["BraviaTVCoordinator"]
+type BraviaTVConfigEntry = ConfigEntry[BraviaTVCoordinator]
 
 
 def catch_braviatv_errors[_BraviaTVCoordinatorT: BraviaTVCoordinator, **_P](

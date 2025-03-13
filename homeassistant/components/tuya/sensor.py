@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import TuyaConfigEntry
@@ -715,6 +715,47 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Temperature and Humidity Sensor with External Probe
+    # New undocumented category qxj, see https://github.com/home-assistant/core/issues/136472
+    "qxj": (
+        TuyaSensorEntityDescription(
+            key=DPCode.VA_TEMPERATURE,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT_EXTERNAL,
+            translation_key="temperature_external",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.VA_HUMIDITY,
+            translation_key="humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.HUMIDITY_VALUE,
+            translation_key="humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.BRIGHT_VALUE,
+            translation_key="illuminance",
+            device_class=SensorDeviceClass.ILLUMINANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
     # Pressure Sensor
     # https://developer.tuya.com/en/docs/iot/categoryylcg?id=Kaiuz3kc2e4gm
     "ylcg": (
@@ -1220,9 +1261,15 @@ SENSORS["cz"] = SENSORS["kg"]
 # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
 SENSORS["pc"] = SENSORS["kg"]
 
+# Smart Camera - Low power consumption camera (duplicate of `sp`)
+# Undocumented, see https://github.com/home-assistant/core/issues/132844
+SENSORS["dghsxj"] = SENSORS["sp"]
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya sensor dynamically through Tuya discovery."""
     hass_data = entry.runtime_data
