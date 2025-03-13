@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock
 
+from aioshelly.const import MODEL_BLU_GATEWAY_G3
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -104,3 +105,33 @@ async def test_migrate_unique_id(
         bool("Migrating unique_id for button.test_name_reboot" in caplog.text)
         == migration
     )
+
+
+async def test_rpc_blu_trv_button(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test rpc device OTA button."""
+    monkeypatch.delitem(mock_blu_trv.status, "script:1")
+    monkeypatch.delitem(mock_blu_trv.status, "script:2")
+    monkeypatch.delitem(mock_blu_trv.status, "script:3")
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    entity_id = "button.none_calibrate"
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "f8:44:77:25:f0:dd_calibrate"
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert mock_blu_trv.trigger_calibration.call_count == 1
