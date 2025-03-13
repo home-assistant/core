@@ -28,7 +28,7 @@
         },
         "data_description": {
           "prompt": "Instruct how the LLM should respond. This can be a template.",
-          "thinking_budget_tokens": "The number of tokens the model can use to think about the response out of the total maximum number of tokens. Set to 1024 or greater to enable extended thinking feature."
+          "thinking_budget_tokens": "The number of tokens the model can use to think about the response out of the total maximum number of tokens. Set to 1024 or greater to enable extended thinking."
         }
       }
     },
