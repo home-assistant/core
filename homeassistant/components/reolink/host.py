@@ -150,9 +150,10 @@ class ReolinkHost:
         """Connect to Reolink host."""
         if not self._api.valid_password():
             raise PasswordIncompatible(
-                "Reolink password contains incompatible special character, "
-                "please change the password to only contain characters: "
-                f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS}"
+                "Reolink password contains incompatible special character or "
+                "is too long, please change the password to only contain characters: "
+                f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS} "
+                "and not be longer than 31 characters"
             )
 
         store: Store[str] | None = None
