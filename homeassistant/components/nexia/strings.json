@@ -61,6 +61,9 @@
       },
       "emergency_heat": {
         "name": "Emergency heat"
+      },
+      "log_response": {
+        "name": "Log responses"
       }
     }
   },

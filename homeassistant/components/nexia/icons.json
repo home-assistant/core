@@ -16,6 +16,12 @@
         "state": {
           "on": "mdi:timer-off"
         }
+      },
+      "log_response": {
+        "default": "mdi:bug-outline",
+        "state": {
+          "on": "mdi:bug-check-outline"
+        }
       }
     }
   },

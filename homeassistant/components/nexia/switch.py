@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import NexiaDataUpdateCoordinator
-from .entity import NexiaThermostatEntity, NexiaThermostatZoneEntity
+from .entity import NexiaEntity, NexiaThermostatEntity, NexiaThermostatZoneEntity
 from .types import NexiaConfigEntry
 
 
@@ -25,7 +25,7 @@ async def async_setup_entry(
     """Set up switches for a Nexia device."""
     coordinator = config_entry.runtime_data
     nexia_home = coordinator.nexia_home
-    entities: list[NexiaHoldSwitch | NexiaEmergencyHeatSwitch] = []
+    entities: list[SwitchEntity] = [NexiaLogResponseSwitch(coordinator)]
     for thermostat_id in nexia_home.get_thermostat_ids():
         thermostat: NexiaThermostat = nexia_home.get_thermostat_by_id(thermostat_id)
         if thermostat.has_emergency_heat():
@@ -97,3 +97,34 @@ class NexiaEmergencyHeatSwitch(NexiaThermostatEntity, SwitchEntity):
         """Disable permanent hold."""
         await self._thermostat.set_emergency_heat(False)
         self._signal_thermostat_update()
+
+
+class NexiaLogResponseSwitch(NexiaEntity, SwitchEntity):
+    """Provides log response control.
+
+    This log response control won't appear on automatically generated dashboards.
+    """
+
+    _attr_entity_registry_visible_default = False
+    _attr_has_entity_name = True
+    _attr_translation_key = "log_response"
+
+    def __init__(self, coordinator: NexiaDataUpdateCoordinator) -> None:
+        """Initialize the log response switch."""
+        self._nexia_home = coordinator.nexia_home
+        super().__init__(coordinator, f"{self._nexia_home.house_id}_log_response")
+
+    @property
+    def is_on(self) -> bool:
+        """Return if the log response is enabled."""
+        return self._nexia_home.log_response
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable response logging."""
+        self._nexia_home.log_response = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable response logging."""
+        self._nexia_home.log_response = False
+        self.async_write_ha_state()
