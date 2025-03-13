@@ -9,6 +9,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_SEEK_POSITION,
@@ -19,6 +20,7 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
+    SERVICE_SELECT_SOURCE,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -71,6 +73,7 @@ KEY_SHUFFLE = "shuffle"
 KEY_SEEK = "seek"
 KEY_TRACKS = "tracks"
 KEY_VOLUME = "volume"
+KEY_SELECT_SOURCE = "source_select"
 
 DEFAULT_NAME = "Media Group"
 
@@ -148,11 +151,13 @@ class MediaPlayerGroup(MediaPlayerEntity):
             KEY_ON_OFF: set(),
             KEY_PAUSE_PLAY_STOP: set(),
             KEY_PLAY_MEDIA: set(),
+            KEY_SELECT_SOURCE: set(),
             KEY_SHUFFLE: set(),
             KEY_SEEK: set(),
             KEY_TRACKS: set(),
             KEY_VOLUME: set(),
         }
+        self._entity_sources: dict[str, set[str]] = {}
 
     @callback
     def async_on_state_change(self, event: Event[EventStateChangedData]) -> None:
@@ -161,8 +166,25 @@ class MediaPlayerGroup(MediaPlayerEntity):
         self.async_update_supported_features(
             event.data["entity_id"], event.data["new_state"]
         )
+        self.async_update_entity_sources(
+            event.data["entity_id"], event.data["new_state"]
+        )
         self.async_update_group_state()
         self.async_write_ha_state()
+
+    @callback
+    def async_update_entity_sources(
+        self,
+        entity_id: str,
+        new_state: State | None,
+    ) -> None:
+        """Update the source list."""
+        if new_state:
+            self._entity_sources[entity_id] = set(
+                new_state.attributes.get(ATTR_INPUT_SOURCE_LIST, [])
+            )
+        else:
+            self._entity_sources.pop(entity_id, None)
 
     @callback
     def async_update_supported_features(
@@ -230,6 +252,10 @@ class MediaPlayerGroup(MediaPlayerEntity):
             self._features[KEY_ENQUEUE].add(entity_id)
         else:
             self._features[KEY_ENQUEUE].discard(entity_id)
+        if new_features & MediaPlayerEntityFeature.SELECT_SOURCE:
+            self._features[KEY_SELECT_SOURCE].add(entity_id)
+        else:
+            self._features[KEY_SELECT_SOURCE].discard(entity_id)
 
     @callback
     def async_start_preview(
@@ -257,6 +283,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
         for entity_id in self._entities:
             new_state = self.hass.states.get(entity_id)
             self.async_update_supported_features(entity_id, new_state)
+            self.async_update_entity_sources(entity_id, new_state)
         async_track_state_change_event(
             self.hass, self._entities, self.async_on_state_change
         )
@@ -437,6 +464,16 @@ class MediaPlayerGroup(MediaPlayerEntity):
             if volume_level > 0:
                 await self.async_set_volume_level(max(0, volume_level - 0.1))
 
+    async def async_select_source(self, source: str) -> None:
+        """Change the source for media player(s)."""
+        data = {ATTR_ENTITY_ID: self._features[KEY_SELECT_SOURCE], "source": source}
+        await self.hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            data,
+            context=self._context,
+        )
+
     @callback
     def async_update_group_state(self) -> None:
         """Query all members and determine the media group state."""
@@ -500,5 +537,13 @@ class MediaPlayerGroup(MediaPlayerEntity):
             supported_features |= MediaPlayerEntityFeature.MEDIA_ANNOUNCE
         if self._features[KEY_ENQUEUE]:
             supported_features |= MediaPlayerEntityFeature.MEDIA_ENQUEUE
+        if self._features[KEY_SELECT_SOURCE]:
+            supported_features |= MediaPlayerEntityFeature.SELECT_SOURCE
 
         self._attr_supported_features = supported_features
+        if len(self._entity_sources):
+            self._attr_source_list = list(
+                set.intersection(*self._entity_sources.values())
+            )
+        else:
+            self._attr_source_list = []

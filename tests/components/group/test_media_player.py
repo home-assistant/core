@@ -7,6 +7,8 @@ import pytest
 
 from homeassistant.components.group import DOMAIN
 from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -21,6 +23,7 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_SEEK,
     SERVICE_PLAY_MEDIA,
+    SERVICE_SELECT_SOURCE,
     SERVICE_SHUFFLE_SET,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -188,6 +191,52 @@ async def test_state_reporting(hass: HomeAssistant) -> None:
     assert hass.states.get("media_player.media_group").state == STATE_UNAVAILABLE
 
 
+async def test_source_list_reporting(hass: HomeAssistant) -> None:
+    """Test source list reporting."""
+    await async_setup_component(
+        hass,
+        MEDIA_DOMAIN,
+        {
+            MEDIA_DOMAIN: {
+                "platform": DOMAIN,
+                "entities": ["media_player.player_1", "media_player.player_2"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("media_player.media_group").attributes.get(
+            ATTR_INPUT_SOURCE_LIST
+        )
+        is None
+    )
+
+    # A matching source name
+    hass.states.async_set(
+        "media_player.player_1",
+        STATE_ON,
+        {
+            ATTR_INPUT_SOURCE_LIST: ["hdmi", "radio"],
+            ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.SELECT_SOURCE,
+        },
+    )
+    hass.states.async_set(
+        "media_player.player_2",
+        STATE_ON,
+        {
+            ATTR_INPUT_SOURCE_LIST: ["minijack", "radio"],
+            ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.SELECT_SOURCE,
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.media_group").attributes[
+        ATTR_INPUT_SOURCE_LIST
+    ] == ["radio"]
+
+
 async def test_supported_features(hass: HomeAssistant) -> None:
     """Test supported features reporting."""
     pause_play_stop = (
@@ -255,6 +304,18 @@ async def test_supported_features(hass: HomeAssistant) -> None:
     state = hass.states.get("media_player.media_group")
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == pause_play_stop | play_media
 
+    hass.states.async_set(
+        "media_player.player_2",
+        STATE_OFF,
+        {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.SELECT_SOURCE},
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("media_player.media_group")
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == pause_play_stop | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
+
 
 async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None:
     """Test service calls."""
@@ -270,6 +331,7 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
                         "media_player.bedroom",
                         "media_player.kitchen",
                         "media_player.living_room",
+                        "media_player.lounge_room",
                     ],
                 },
             ]
@@ -525,6 +587,20 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
     await hass.async_block_till_done()
     # SERVICE_CLEAR_PLAYLIST is not supported by bedroom and living_room players
     assert hass.states.get("media_player.kitchen").state == STATE_OFF
+
+    await hass.services.async_call(
+        MEDIA_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: "media_player.media_group", ATTR_INPUT_SOURCE: "radio"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    # State can't be off or attributes will be blank
+    assert hass.states.get("media_player.lounge_room").state != STATE_OFF
+    assert (
+        hass.states.get("media_player.lounge_room").attributes[ATTR_INPUT_SOURCE]
+        == "radio"
+    )
 
     await hass.services.async_call(
         MEDIA_DOMAIN,
