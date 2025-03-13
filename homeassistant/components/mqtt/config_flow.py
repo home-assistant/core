@@ -933,9 +933,15 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         """Add or edit an mqtt entity."""
         errors: dict[str, str] = {}
         data_schema_fields = COMMON_ENTITY_FIELDS
-        data_schema = data_schema_from_fields(
-            data_schema_fields, reconfig=(self._component_id is not None)
-        )
+        entity_name_label: str = ""
+        platform_label: str = ""
+        if reconfig := (self._component_id is not None):
+            name: str | None = self._subentry_data["components"][
+                self._component_id
+            ].get(CONF_NAME)
+            platform_label = f"{self._subentry_data['components'][self._component_id][CONF_PLATFORM]} "
+            entity_name_label = f" ({name})" if name is not None else ""
+        data_schema = data_schema_from_fields(data_schema_fields, reconfig=reconfig)
         if user_input is not None:
             validate_user_input(user_input, data_schema_fields, errors)
             if not errors:
@@ -953,7 +959,11 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="entity",
             data_schema=data_schema,
-            description_placeholders={"mqtt_device": device_name},
+            description_placeholders={
+                "mqtt_device": device_name,
+                "entity_name_label": entity_name_label,
+                "platform_label": platform_label,
+            },
             errors=errors,
             last_step=False,
         )

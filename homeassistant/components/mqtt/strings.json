@@ -149,7 +149,7 @@
         },
         "entity": {
           "title": "Configure MQTT device \"{mqtt_device}\"",
-          "description": "Configure the basic entity settings",
+          "description": "Configure the basic {platform_label}entity settings{entity_name_label}",
           "data": {
             "platform": "Type of entity",
             "name": "Entity name",
