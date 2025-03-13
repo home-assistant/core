@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Any, Final
 
-from aioshelly.const import RPC_GENERATIONS
+from aioshelly.const import BLU_TRV_IDENTIFIER, MODEL_BLU_GATEWAY, RPC_GENERATIONS
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -28,12 +28,7 @@ from homeassistant.util import slugify
 
 from .const import LOGGER, SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
-from .entity import (
-    RpcEntityDescription,
-    ShellyRpcAttributeEntity,
-    async_setup_entry_rpc,
-)
-from .utils import get_device_entry_gen
+from .utils import get_device_entry_gen, get_rpc_key_ids
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -42,7 +37,7 @@ class ShellyButtonDescription[
 ](ButtonEntityDescription):
     """Class to describe a Button entity."""
 
-    press_action: Callable[[_ShellyCoordinatorT], Coroutine[Any, Any, None]]
+    press_action: str
 
     supported: Callable[[_ShellyCoordinatorT], bool] = lambda _: True
 
@@ -53,14 +48,14 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
         name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
-        press_action=lambda coordinator: coordinator.device.trigger_reboot(),
+        press_action="trigger_reboot",
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="self_test",
         name="Self test",
         translation_key="self_test",
         entity_category=EntityCategory.DIAGNOSTIC,
-        press_action=lambda coordinator: coordinator.device.trigger_shelly_gas_self_test(),
+        press_action="trigger_shelly_gas_self_test",
         supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
@@ -68,7 +63,7 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
         name="Mute",
         translation_key="mute",
         entity_category=EntityCategory.CONFIG,
-        press_action=lambda coordinator: coordinator.device.trigger_shelly_gas_mute(),
+        press_action="trigger_shelly_gas_mute",
         supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
@@ -76,35 +71,22 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
         name="Unmute",
         translation_key="unmute",
         entity_category=EntityCategory.CONFIG,
-        press_action=lambda coordinator: coordinator.device.trigger_shelly_gas_unmute(),
+        press_action="trigger_shelly_gas_unmute",
         supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
     ),
 ]
 
-
-@dataclass(frozen=True, kw_only=True)
-class BluTrvButtonDescription(RpcEntityDescription, ButtonEntityDescription):
-    """Class to describe a BluTrv button entity."""
-
-    press_action: str
-    press_params_fn: Callable[[int], dict]
-
-
-BLU_TRV_BUTTONS: Final[dict[str, BluTrvButtonDescription]] = {
-    "calibrate": BluTrvButtonDescription(
-        key="blutrv",
-        sub_key="errors",
+BLU_TRV_BUTTONS: Final[list[ShellyButtonDescription]] = [
+    ShellyButtonDescription(
+        key="calibrate",
         name="Calibrate",
+        has_entity_name=True,
         translation_key="calibrate",
         entity_category=EntityCategory.CONFIG,
-        press_action="BluTRV.Call",
-        press_params_fn=lambda idx: {
-            "id": idx,
-            "method": "Trv.Calibrate",
-            "params": {"id": 0},
-        },
+        press_action="calibrate",
+        supported=lambda coordinator: coordinator.device.model == MODEL_BLU_GATEWAY,
     ),
-}
+]
 
 
 @callback
@@ -163,9 +145,16 @@ async def async_setup_entry(
         if button.supported(coordinator)
     )
 
-    async_setup_entry_rpc(
-        hass, config_entry, async_add_entities, BLU_TRV_BUTTONS, BluTrvButton
-    )
+    if blutrv_key_ids := get_rpc_key_ids(coordinator.device.status, BLU_TRV_IDENTIFIER):
+        if TYPE_CHECKING:
+            assert isinstance(coordinator, ShellyRpcCoordinator)
+
+        async_add_entities(
+            BluTrvButton(coordinator, button, id_)
+            for id_ in blutrv_key_ids
+            for button in BLU_TRV_BUTTONS
+            if button.supported(coordinator)
+        )
 
 
 class ShellyButton(
@@ -196,35 +185,42 @@ class ShellyButton(
 
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
-        await self.entity_description.press_action(self.coordinator)
+        method = getattr(self.coordinator.device, self.entity_description.press_action)
+
+        if TYPE_CHECKING:
+            assert method is not None
+
+        await method()
 
 
-class BluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
+class BluTrvButton(CoordinatorEntity[ShellyRpcCoordinator], ButtonEntity):
     """Represent a RPC BluTrv button."""
 
-    entity_description: BluTrvButtonDescription
+    entity_description: ShellyButtonDescription[ShellyRpcCoordinator]
 
     def __init__(
         self,
         coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: BluTrvButtonDescription,
+        description: ShellyButtonDescription,
+        id_: int,
     ) -> None:
         """Initialize."""
+        super().__init__(coordinator)
+        self.entity_description = description
 
-        super().__init__(coordinator, key, attribute, description)
-        ble_addr: str = coordinator.device.config[key]["addr"]
+        # self._attr_name = f"{coordinator.device.name} {description.name}"
+        ble_addr: str = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]["addr"]
+        self._attr_unique_id = f"{ble_addr}_{description.key}"
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, ble_addr)}
         )
+        self._id = id_
 
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
-        if TYPE_CHECKING:
-            assert isinstance(self._id, int)
+        method = getattr(self.coordinator.device, self.entity_description.press_action)
 
-        await self.call_rpc(
-            self.entity_description.press_action,
-            self.entity_description.press_params_fn(self._id),
-        )
+        if TYPE_CHECKING:
+            assert method is not None
+
+        await method(self._id)
