@@ -235,6 +235,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "unit_of_measurement": UnitOfTemperature.CELSIUS,
         "has_mean": True,
         "has_sum": False,
+        "has_circular_mean": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
     async_add_external_statistics(hass, metadata, statistics)
@@ -248,6 +249,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "has_mean": False,
         "has_sum": True,
+        "has_circular_mean": False,
     }
     await _insert_sum_statistics(hass, metadata, yesterday_midnight, today_midnight, 1)
 
@@ -260,6 +262,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "unit_of_measurement": UnitOfEnergy.MEGA_WATT_HOUR,
         "has_mean": False,
         "has_sum": True,
+        "has_circular_mean": False,
     }
     await _insert_sum_statistics(
         hass, metadata, yesterday_midnight, today_midnight, 0.001
@@ -274,6 +277,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "has_mean": False,
         "has_sum": True,
+        "has_circular_mean": False,
     }
     await _insert_sum_statistics(
         hass, metadata, yesterday_midnight, today_midnight, 0.5
@@ -288,6 +292,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "unit_of_measurement": UnitOfVolume.CUBIC_FEET,
         "has_mean": False,
         "has_sum": True,
+        "has_circular_mean": False,
     }
     await _insert_sum_statistics(hass, metadata, yesterday_midnight, today_midnight, 15)
 
@@ -300,6 +305,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "has_mean": True,
         "has_sum": False,
+        "has_circular_mean": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
     async_import_statistics(hass, metadata, statistics)
@@ -312,6 +318,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "unit_of_measurement": "cats",
         "has_mean": True,
         "has_sum": False,
+        "has_circular_mean": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
     async_import_statistics(hass, metadata, statistics)
@@ -324,6 +331,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "has_mean": True,
         "has_sum": False,
+        "has_circular_mean": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
     async_import_statistics(hass, metadata, statistics)
@@ -336,6 +344,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "has_mean": True,
         "has_sum": False,
+        "has_circular_mean": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
     async_import_statistics(hass, metadata, statistics)

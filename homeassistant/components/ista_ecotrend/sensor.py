@@ -276,6 +276,7 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
                 "source": DOMAIN,
                 "statistic_id": statistic_id,
                 "unit_of_measurement": self.entity_description.native_unit_of_measurement,
+                "has_circular_mean": False,
             }
             if statistics:
                 _LOGGER.debug("Insert statistics: %s %s", metadata, statistics)

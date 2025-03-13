@@ -54,6 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_STATISTICS = {
     SensorStateClass.MEASUREMENT: {"mean", "min", "max"},
+    SensorStateClass.MEASUREMENT_ANGLE: {"circular_mean"},
     SensorStateClass.TOTAL: {"sum"},
     SensorStateClass.TOTAL_INCREASING: {"sum"},
 }
@@ -144,6 +145,53 @@ def _time_weighted_average(
         # to happen if the state change event fired at the exact microsecond
         return 0.0
     return accumulated / period_seconds
+
+
+def _time_weighted_circular_mean(
+    fstates: list[tuple[float, State]], start: datetime.datetime, end: datetime.datetime
+) -> float:
+    """Calculate a time weighted circular mean.
+
+    The circular mean is calculated by weighting the states by duration in seconds between
+    state changes.
+    Note: there's no interpolation of values between state changes.
+    """
+    old_fstate: float | None = None
+    old_start_time: datetime.datetime | None = None
+    values: list[tuple[float, float]] = []
+
+    for fstate, state in fstates:
+        # The recorder will give us the last known state, which may be well
+        # before the requested start time for the statistics
+        start_time = max(state.last_updated, start)
+        if old_start_time is None:
+            # Adjust start time, if there was no last known state
+            start = start_time
+        else:
+            duration = (start_time - old_start_time).total_seconds()
+            if duration != 0:
+                # No need to add if duration is 0 as it won't affect the result
+                # Append same value for each second between state changes
+                assert old_fstate is not None
+                values.append((old_fstate, duration))
+
+        old_fstate = fstate
+        old_start_time = start_time
+
+    if old_fstate is not None:
+        # Accumulate the value, weighted by duration until end of the period
+        assert old_start_time is not None
+        duration = (end - old_start_time).total_seconds()
+        if duration != 0:
+            values.append((old_fstate, duration))
+
+    sin_sum = sum(
+        math.sin(x * statistics.DEG_TO_RAD) * duration for x, duration in values
+    )
+    cos_sum = sum(
+        math.cos(x * statistics.DEG_TO_RAD) * duration for x, duration in values
+    )
+    return (statistics.RAD_TO_DEG * math.atan2(sin_sum, cos_sum)) % 360
 
 
 def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
@@ -521,6 +569,7 @@ def compile_statistics(  # noqa: C901
             "source": RECORDER_DOMAIN,
             "statistic_id": entity_id,
             "unit_of_measurement": statistics_unit,
+            "has_circular_mean": "circular_mean" in wanted_statistics[entity_id],
         }
 
         # Make calculations
@@ -536,6 +585,11 @@ def compile_statistics(  # noqa: C901
 
         if "mean" in wanted_statistics[entity_id]:
             stat["mean"] = _time_weighted_average(valid_float_states, start, end)
+
+        if "circular_mean" in wanted_statistics[entity_id]:
+            stat["circular_mean"] = _time_weighted_circular_mean(
+                valid_float_states, start, end
+            )
 
         if "sum" in wanted_statistics[entity_id]:
             last_reset = old_last_reset = None
@@ -678,6 +732,7 @@ def list_statistic_ids(
             "source": RECORDER_DOMAIN,
             "statistic_id": entity_id,
             "unit_of_measurement": attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+            "has_circular_mean": "circular_mean" in provided_statistics,
         }
 
     return result
