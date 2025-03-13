@@ -4,21 +4,20 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Final, cast
+from typing import Any, Final
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import _LOGGER
-from .coordinator import VodafoneStationRouter
+from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -68,13 +67,13 @@ BUTTON_TYPES: Final = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VodafoneConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up Vodafone Station buttons")
 
-    coordinator = cast(VodafoneStationRouter, entry.runtime_data)
+    coordinator = entry.runtime_data
 
     sensors_data = coordinator.data.sensors
 
