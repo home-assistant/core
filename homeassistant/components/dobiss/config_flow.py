@@ -47,7 +47,6 @@ class DobissConnection:
         response = False
         dobiss = dobissapi.DobissAPI(self.secret, self.host, self.secure)
         try:
-            # dobissapi.logger.setLevel(logging.DEBUG)
             if await dobiss.auth_check():
                 response = True
         except Exception:

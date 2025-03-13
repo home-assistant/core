@@ -15,7 +15,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     _LOGGER.debug(f"Setting up sensor component of {DOMAIN}")
     dobiss = hass.data[DOMAIN][config_entry.entry_id][KEY_API].api
-    # _LOGGER.warn("set up dobiss switch on {}".format(dobiss.url))
 
     entities = []
     d_entities = dobiss.get_devices_by_type(DobissTempSensor)
@@ -26,11 +25,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             and (d.address in (210, 211))
         ):
             continue
-        # _LOGGER.warn("set up dobiss temp sensor on {}".format(dobiss.host))
         entities.append(HADobissTempSensor(d))
     d_entities = dobiss.get_devices_by_type(DobissLightSensor)
     for d in d_entities:
-        # _LOGGER.warn("set up dobiss light sensor on {}".format(dobiss.host))
         entities.append(HADobissLightSensor(d))
     if entities:
         async_add_entities(entities)

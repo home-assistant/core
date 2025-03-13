@@ -102,8 +102,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.warning("Dobiss setup failed")
         return False
 
-    # entry.add_update_listener(async_reload_entry)
-
     return True
 
 
@@ -170,7 +168,6 @@ class HADobiss:
             devices = self.api.get_all_devices()
             self.hass.data[DOMAIN][self.config_entry.entry_id][DEVICES] = devices
 
-            # logger.setLevel(logging.DEBUG)
             await self.api.discovery()
             self.hass.async_create_task(self.api.dobiss_monitor())
 
@@ -279,14 +276,7 @@ class HADobiss:
     @staticmethod
     async def update_listener(hass, entry):
         """Handle options update."""
-        # dobiss = hass.data[DOMAIN][entry.entry_id][KEY_API].api
-        # websocket_timeout = entry.options.get(CONF_WEBSOCKET_TIMEOUT, DEFAULT_WEBSOCKET_TIMEOUT)
-        # _LOGGER.debug(f"(update_listener) Setting websocket timeout to {websocket_timeout}")
-        # if websocket_timeout == 0:
-        #    dobiss.websocket_timeout = None
-        # else:
-        #    dobiss.websocket_timeout = websocket_timeout
-        # await dobiss.update_all(force=True)
+
 
         if entry.source == SOURCE_IMPORT:
             return

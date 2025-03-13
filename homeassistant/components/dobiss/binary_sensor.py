@@ -20,7 +20,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     _LOGGER.debug(f"Setting up binary_sensor component of {DOMAIN}")
     dobiss = hass.data[DOMAIN][config_entry.entry_id][KEY_API].api
-    # _LOGGER.warn("set up dobiss switch on {}".format(dobiss.url))
 
     entities = []
     d_entities = dobiss.get_devices_by_type(DobissBinarySensor)
@@ -31,7 +30,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             and (d.address in (210, 211))
         ):
             continue
-        # _LOGGER.warn("set up dobiss binary sensor on {}".format(dobiss.host))
         entities.append(HADobissBinarySensor(d, config_entry))
 
     if entities:
@@ -77,11 +75,6 @@ class HADobissBinarySensor(BinarySensorEntity):
         """Return True."""
         return True
 
-    # leave the icon up to the class
-    #    @property
-    #    def icon(self):
-    #        """Return the icon to use in the frontend"""
-    #        return ICON_FROM_DOBISS[self._dobisssensor.icons_id]
 
     async def async_added_to_hass(self):
         """Run when this Entity has been added to HA."""

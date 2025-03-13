@@ -17,7 +17,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     _LOGGER.debug(f"Setting up switch component of {DOMAIN}")
     dobiss = hass.data[DOMAIN][config_entry.entry_id][KEY_API].api
-    # _LOGGER.warn(f"set up dobiss switch on {dobiss.host}")
 
     d_entities = dobiss.get_devices_by_type(DobissSwitch)
     entities = []
@@ -28,7 +27,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             and (d.address in (210, 211))
         ):
             continue
-        # _LOGGER.warn(f"set up dobiss switch {d.name} on {dobiss.host}")
         if not d.buddy:
             entities.append(HADobissSwitch(d))
     if entities:

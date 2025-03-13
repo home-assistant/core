@@ -42,7 +42,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     _LOGGER.debug(f"Setting up cover component of {DOMAIN}")
     dobiss = hass.data[DOMAIN][config_entry.entry_id][KEY_API].api
-    # _LOGGER.warn(f"set up dobiss switch on {dobiss.host}")
 
     d_entities = dobiss.get_devices_by_type(DobissSwitch)
     entities = []
@@ -56,7 +55,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if d.buddy:
             # only add the up cover, and his buddy is down
             if d.icons_id == DOBISS_UP:
-                # _LOGGER.warn(f"set up dobiss cover {d.name} and {d.buddy.name}")
                 if (
                     d.name.endswith(" op")
                     or d.name.endswith(" open")
