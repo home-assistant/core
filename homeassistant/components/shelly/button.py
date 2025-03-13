@@ -139,7 +139,9 @@ async def async_setup_entry(
         hass, config_entry.entry_id, partial(async_migrate_unique_ids, coordinator)
     )
 
-    async_add_entities(
+    entities: list[ShellyButton | BluTrvButton] = []
+
+    entities.extend(
         ShellyButton(coordinator, button)
         for button in BUTTONS
         if button.supported(coordinator)
@@ -149,12 +151,14 @@ async def async_setup_entry(
         if TYPE_CHECKING:
             assert isinstance(coordinator, ShellyRpcCoordinator)
 
-        async_add_entities(
+        entities.extend(
             BluTrvButton(coordinator, button, id_)
             for id_ in blutrv_key_ids
             for button in BLU_TRV_BUTTONS
             if button.supported(coordinator)
         )
+
+    async_add_entities(entities)
 
 
 class ShellyButton(
