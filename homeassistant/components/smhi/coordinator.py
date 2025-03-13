@@ -61,3 +61,8 @@ class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
             daily=_forecast_daily,
             hourly=_forecast_hourly,
         )
+
+    @property
+    def current(self) -> SMHIForecast:
+        """Return the current metrics."""
+        return self.data.daily[0]
