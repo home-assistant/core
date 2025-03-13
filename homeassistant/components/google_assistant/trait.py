@@ -735,24 +735,20 @@ class DockTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute a dock command."""
         domain = self.state.domain
+
         if domain == vacuum.DOMAIN:
+            service = vacuum.SERVICE_RETURN_TO_BASE
+        elif domain == lawn_mower.DOMAIN:
+            service = lawn_mower.SERVICE_DOCK
+
+        if service:
             await self.hass.services.async_call(
                 self.state.domain,
-                vacuum.SERVICE_RETURN_TO_BASE,
+                service,
                 {ATTR_ENTITY_ID: self.state.entity_id},
                 blocking=not self.config.should_report_state,
                 context=data.context,
             )
-            return
-        if domain == lawn_mower.DOMAIN:
-            await self.hass.services.async_call(
-                self.state.domain,
-                lawn_mower.SERVICE_DOCK,
-                {ATTR_ENTITY_ID: self.state.entity_id},
-                blocking=not self.config.should_report_state,
-                context=data.context,
-            )
-            return
 
 
 @register_trait
