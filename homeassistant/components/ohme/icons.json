@@ -54,6 +54,9 @@
         "state": {
           "off": "mdi:sleep-off"
         }
+      },
+      "price_cap": {
+        "default": "mdi:car-speed-limiter"
       }
     },
     "time": {
