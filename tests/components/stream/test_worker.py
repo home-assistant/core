@@ -56,6 +56,8 @@ from .test_ll_hls import TEST_PART_DURATION
 
 from tests.components.camera.common import EMPTY_8_6_JPEG, mock_turbo_jpeg
 
+_LOGGER = logging.getLogger(__name__)
+
 STREAM_SOURCE = "some-stream-source"
 # Formats here are arbitrary, not exercised by tests
 AUDIO_STREAM_FORMAT = "mp3"
@@ -229,7 +231,7 @@ class FakePyAvBuffer:
                 return
 
             def mux(self, packet):
-                logging.debug("Muxed packet: %s", packet)
+                _LOGGER.debug("Muxed packet: %s", packet)
                 self.capture_packets.append(packet)
 
             def __str__(self) -> str:
