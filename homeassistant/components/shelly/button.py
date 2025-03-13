@@ -8,6 +8,7 @@ from functools import partial
 from typing import TYPE_CHECKING, Any, Final
 
 from aioshelly.const import BLU_TRV_IDENTIFIER, MODEL_BLU_GATEWAY, RPC_GENERATIONS
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -16,6 +17,7 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
@@ -193,7 +195,21 @@ class ShellyButton(
         if TYPE_CHECKING:
             assert method is not None
 
-        await method()
+        try:
+            await method()
+        except DeviceConnectionError as err:
+            self.coordinator.last_update_success = False
+            raise HomeAssistantError(
+                f"Call for {self.name} connection error, "
+                f"method: {self.entity_description.press_action}, error: {err!r}"
+            ) from err
+        except RpcCallError as err:
+            raise HomeAssistantError(
+                f"Call for {self.name} request error, "
+                f"method: {self.entity_description.press_action}, error: {err!r}"
+            ) from err
+        except InvalidAuthError:
+            await self.coordinator.async_shutdown_device_and_start_reauth()
 
 
 class BluTrvButton(CoordinatorEntity[ShellyRpcCoordinator], ButtonEntity):
@@ -225,4 +241,18 @@ class BluTrvButton(CoordinatorEntity[ShellyRpcCoordinator], ButtonEntity):
         if TYPE_CHECKING:
             assert method is not None
 
-        await method(self._id)
+        try:
+            await method(self._id)
+        except DeviceConnectionError as err:
+            self.coordinator.last_update_success = False
+            raise HomeAssistantError(
+                f"Call RPC for {self.name} connection error, "
+                f"method: {self.entity_description.press_action}, error: {err!r}"
+            ) from err
+        except RpcCallError as err:
+            raise HomeAssistantError(
+                f"Call RPC for {self.name} request error, "
+                f"method: {self.entity_description.press_action}, error: {err!r}"
+            ) from err
+        except InvalidAuthError:
+            await self.coordinator.async_shutdown_device_and_start_reauth()
