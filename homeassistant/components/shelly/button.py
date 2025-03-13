@@ -77,7 +77,7 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
 ]
 
 BLU_TRV_BUTTONS: Final[list[ShellyButtonDescription]] = [
-    ShellyButtonDescription(
+    ShellyButtonDescription[ShellyRpcCoordinator](
         key="calibrate",
         name="Calibrate",
         has_entity_name=True,
