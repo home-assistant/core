@@ -29,9 +29,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: todo
-    comment: not set at the moment, we use a coordinator
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
