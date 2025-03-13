@@ -2965,8 +2965,6 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={
-            "platform": component_list[1]["platform"],
-            "name": component_list[1]["name"],
             "entity_picture": "https://example.com",
         },
     )
@@ -3076,10 +3074,7 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     # submit the new common entity data, reset entity_picture
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={
-            "platform": component["platform"],
-            "name": component["name"],
-        },
+        user_input={},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "mqtt_platform_config"
@@ -3259,10 +3254,8 @@ async def test_subentry_reconfigure_update_device_properties(
     assert device is not None
 
     # assert we have an entity for all subentry components
-    # Check we have "notify_milkman_alert" and "notify_the_second_notifier" in our mock data
     components = deepcopy(dict(subentry.data))["components"]
-    assert "notify_milkman_alert" in components
-    assert "notify_the_second_notifier" in components
+    assert len(components) == 2
 
     # Assert initial data
     device = deepcopy(dict(subentry.data))["device"]

@@ -217,6 +217,7 @@ SUBENTRY_PLATFORM_SELECTOR = SelectSelector(
         translation_key=CONF_PLATFORM,
     )
 )
+
 TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
 
 
@@ -228,16 +229,20 @@ class PlatformField:
     required: bool
     validator: Callable[..., Any]
     error: str | None = None
+    default: str | int | vol.Undefined = vol.UNDEFINED
+    no_reconfig: bool = False
 
 
 COMMON_ENTITY_FIELDS = {
-    CONF_PLATFORM: PlatformField(SUBENTRY_PLATFORM_SELECTOR, True, str),
-    CONF_NAME: PlatformField(TEXT_SELECTOR, False, str),
+    CONF_PLATFORM: PlatformField(
+        SUBENTRY_PLATFORM_SELECTOR, True, str, no_reconfig=True
+    ),
+    CONF_NAME: PlatformField(TEXT_SELECTOR, False, str, no_reconfig=True),
     CONF_ENTITY_PICTURE: PlatformField(TEXT_SELECTOR, False, cv.url, "invalid_url"),
 }
 
 COMMON_MQTT_FIELDS = {
-    CONF_QOS: PlatformField(QOS_SELECTOR, False, valid_qos_schema),
+    CONF_QOS: PlatformField(QOS_SELECTOR, False, valid_qos_schema, default=0),
     CONF_RETAIN: PlatformField(BOOLEAN_SELECTOR, False, bool),
 }
 PLATFORM_MQTT_FIELDS = {
@@ -327,14 +332,20 @@ def validate_user_input(
 
 
 @callback
-def data_schema_from_fields(data_schema_fields: dict[str, PlatformField]) -> vol.Schema:
+def data_schema_from_fields(
+    data_schema_fields: dict[str, PlatformField],
+    reconfig: bool = False,
+) -> vol.Schema:
     """Generate data schema from platform fields."""
     return vol.Schema(
         {
-            vol.Required(field_name)
-            if field_details.required
-            else vol.Optional(field_name): field_details.selector
+            vol.Required(field_name, default=field_details.default)
+            if field_details.required and field_details.no_reconfig
+            else vol.Optional(
+                field_name, default=field_details.default
+            ): field_details.selector
             for field_name, field_details in data_schema_fields.items()
+            if not field_details.no_reconfig or not reconfig
         }
     )
 
@@ -921,9 +932,10 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Add or edit an mqtt entity."""
         errors: dict[str, str] = {}
-        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
         data_schema_fields = COMMON_ENTITY_FIELDS
-        data_schema = data_schema_from_fields(data_schema_fields)
+        data_schema = data_schema_from_fields(
+            data_schema_fields, reconfig=(self._component_id is not None)
+        )
         if user_input is not None:
             validate_user_input(user_input, data_schema_fields, errors)
             if not errors:
@@ -937,7 +949,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             data_schema = self.add_suggested_values_to_schema(
                 data_schema, self._subentry_data["components"][self._component_id]
             )
-
+        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
         return self.async_show_form(
             step_id="entity",
             data_schema=data_schema,
@@ -998,16 +1010,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
         if TYPE_CHECKING:
             assert self._component_id is not None
-        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
         platform = self._subentry_data["components"][self._component_id][CONF_PLATFORM]
-        entity_name: str | None
-        if entity_name := self._subentry_data["components"][self._component_id].get(
-            CONF_NAME
-        ):
-            full_entity_name: str = f"{device_name} {entity_name}"
-        else:
-            full_entity_name = device_name
-
         data_schema_fields = PLATFORM_MQTT_FIELDS[platform] | COMMON_MQTT_FIELDS
         data_schema = data_schema_from_fields(data_schema_fields)
         if user_input is not None:
@@ -1025,7 +1028,14 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             data_schema = self.add_suggested_values_to_schema(
                 data_schema, self._subentry_data["components"][self._component_id]
             )
-
+        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
+        entity_name: str | None
+        if entity_name := self._subentry_data["components"][self._component_id].get(
+            CONF_NAME
+        ):
+            full_entity_name: str = f"{device_name} {entity_name}"
+        else:
+            full_entity_name = device_name
         return self.async_show_form(
             step_id="mqtt_platform_config",
             data_schema=data_schema,

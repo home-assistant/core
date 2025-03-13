@@ -123,7 +123,7 @@
             "name": "[%key:common::config_flow::data::name%]",
             "configuration_url": "Configuration URL",
             "sw_version": "Software version",
-            "hw_version": "The hardware version of the device.",
+            "hw_version": "Hardware version",
             "model": "Model",
             "model_id": "Model ID"
           },
@@ -149,7 +149,7 @@
         },
         "entity": {
           "title": "Configure MQTT device \"{mqtt_device}\"",
-          "description": "Select the type of entity and configure the basic settings",
+          "description": "Configure the basic entity settings",
           "data": {
             "platform": "Type of entity",
             "name": "Entity name",
