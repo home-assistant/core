@@ -258,7 +258,7 @@ HOST_SELECT_ENTITIES = (
         cmd_key="GetScene",
         translation_key="scene_mode",
         entity_category=EntityCategory.CONFIG,
-        get_options=lambda api: api.baichuan.scene_dict.values(),
+        get_options=lambda api: api.baichuan.scene_names,
         supported=lambda api: api.supported(None, "scenes"),
         value=lambda api: api.baichuan.active_scene,
         method=lambda api, name: api.baichuan.set_scene(scene_name=name),
@@ -327,7 +327,9 @@ async def async_setup_entry(
     """Set up a Reolink select entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
 
-    entities: list[ReolinkSelectEntity | ReolinkHostSelectEntity | ReolinkChimeSelectEntity] = [
+    entities: list[
+        ReolinkSelectEntity | ReolinkHostSelectEntity | ReolinkChimeSelectEntity
+    ] = [
         ReolinkSelectEntity(reolink_data, channel, entity_description)
         for entity_description in SELECT_ENTITIES
         for channel in reolink_data.host.api.channels
