@@ -582,6 +582,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.POWER_FACTOR: {PERCENTAGE, None},
     SensorDeviceClass.POWER: {
+        UnitOfPower.MILLIWATT,
         UnitOfPower.WATT,
         UnitOfPower.KILO_WATT,
         UnitOfPower.MEGA_WATT,
