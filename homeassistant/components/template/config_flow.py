@@ -410,6 +410,8 @@ CREATE_PREVIEW_ENTITY: dict[
 class TemplateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle config flow for template helper."""
 
+    MINOR_VERSION = 2
+
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
 

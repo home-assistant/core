@@ -16,6 +16,35 @@ from homeassistant.helpers import device_registry as dr
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
+SWITCH_BEFORE_OPTIONS = {
+    "name": "test_template_switch",
+    "template_type": "switch",
+    "turn_off": [{"event": "test_template_switch", "event_data": {"event": "off"}}],
+    "turn_on": [{"event": "test_template_switch", "event_data": {"event": "on"}}],
+    "value_template": "{{ now().minute % 2 == 0 }}",
+}
+
+
+SWITCH_AFTER_OPTIONS = {
+    "name": "test_template_switch",
+    "template_type": "switch",
+    "turn_off": [{"event": "test_template_switch", "event_data": {"event": "off"}}],
+    "turn_on": [{"event": "test_template_switch", "event_data": {"event": "on"}}],
+    "state": "{{ now().minute % 2 == 0 }}",
+}
+
+SENSOR_OPTIONS = {
+    "name": "test_template_sensor",
+    "template_type": "sensor",
+    "state": "{{ 'a' if now().minute % 2 == 0 else 'b' }}",
+}
+
+BINARY_SENSOR_OPTIONS = {
+    "name": "test_template_sensor",
+    "template_type": "binary_sensor",
+    "state": "{{ now().minute % 2 == 0 else }}",
+}
+
 
 @pytest.mark.parametrize(
     (
@@ -1449,3 +1478,48 @@ async def test_options_flow_change_device(
         **state_template,
         **extra_options,
     }
+
+
+@pytest.mark.parametrize(
+    (
+        "version",
+        "minor_version",
+        "options",
+        "expected_version",
+        "expected_minor_version",
+        "expected_options",
+    ),
+    [
+        (1, 1, SWITCH_BEFORE_OPTIONS, 1, 2, SWITCH_AFTER_OPTIONS),
+        (1, 2, SWITCH_AFTER_OPTIONS, 1, 2, SWITCH_AFTER_OPTIONS),
+        (1, 1, SENSOR_OPTIONS, 1, 2, SENSOR_OPTIONS),
+        (1, 2, SENSOR_OPTIONS, 1, 2, SENSOR_OPTIONS),
+        (1, 1, BINARY_SENSOR_OPTIONS, 1, 2, BINARY_SENSOR_OPTIONS),
+        (1, 2, BINARY_SENSOR_OPTIONS, 1, 2, BINARY_SENSOR_OPTIONS),
+    ],
+)
+async def test_migrate_config_entry(
+    hass: HomeAssistant,
+    version: int,
+    minor_version: int,
+    options: dict[str, Any],
+    expected_options: dict[str, Any],
+    expected_version: int,
+    expected_minor_version: int,
+) -> None:
+    """Test migrating a config entry."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options=options,
+        title="My Template",
+        version=version,
+        minor_version=minor_version,
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert dict(config_entry.options) == expected_options
+    assert config_entry.version == expected_version
+    assert config_entry.minor_version == expected_minor_version

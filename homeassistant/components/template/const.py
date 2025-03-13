@@ -20,6 +20,9 @@ CONF_TRIGGER = "trigger"
 CONF_TURN_OFF = "turn_off"
 CONF_TURN_ON = "turn_on"
 
+CONFIG_ENTRY_VERSION = 1
+CONFIG_ENTRY_MINOR_VERSION = 2
+
 DOMAIN = "template"
 
 PLATFORM_STORAGE_KEY = "template_platforms"
