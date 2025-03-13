@@ -591,7 +591,7 @@ async def test_add_delta_content_stream_errors(
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
         # Stream content without LLM API set
-        with pytest.raises(ValueError):  # noqa: PT012
+        with pytest.raises(ValueError):
             async for _tool_result_content in chat_log.async_add_delta_content_stream(
                 "mock-agent-id",
                 stream(
@@ -613,7 +613,7 @@ async def test_add_delta_content_stream_errors(
 
         # Non assistant role
         for role in "system", "user":
-            with pytest.raises(ValueError):  # noqa: PT012
+            with pytest.raises(ValueError):
                 async for (
                     _tool_result_content
                 ) in chat_log.async_add_delta_content_stream(
