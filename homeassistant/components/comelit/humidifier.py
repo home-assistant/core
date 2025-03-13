@@ -100,7 +100,6 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
     _attr_min_humidity = 10
     _attr_max_humidity = 90
     _attr_has_entity_name = True
-    _attr_mode: str | None = None
 
     def __init__(
         self,

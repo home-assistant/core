@@ -15,7 +15,6 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
-    HVACAction,
     HVACMode,
 )
 from homeassistant.components.comelit.const import SCAN_INTERVAL
@@ -50,18 +49,24 @@ async def test_all_entities(
 
 
 @pytest.mark.parametrize(
-    "val",
+    ("val", "temp"),
     [
-        [
-            [270, 0, "U", "M", 50, 0, 0, "U"],
-            [650, 0, "O", "M", 500, 0, 0, "N"],
-            [0, 0],
-        ],
-        [
-            [270, 1, "O", "A", 50, 1, 0, "O"],
-            [650, 1, "O", "A", 500, 1, 0, "N"],
-            [0, 0],
-        ],
+        (
+            [
+                [100, 0, "U", "M", 210, 0, 0, "U"],
+                [650, 0, "O", "M", 500, 0, 0, "N"],
+                [0, 0],
+            ],
+            21.0,
+        ),
+        (
+            [
+                [100, 1, "O", "A", 210, 1, 0, "O"],
+                [650, 0, "O", "M", 500, 0, 0, "N"],
+                [0, 0],
+            ],
+            21.0,
+        ),
     ],
 )
 async def test_climate_data_update(
@@ -70,14 +75,15 @@ async def test_climate_data_update(
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
     val: list[Any, Any],
+    temp: float,
 ) -> None:
     """Test climate data update."""
     await setup_integration(hass, mock_serial_bridge_config_entry)
 
     entity = hass.states.get(ENTITY_ID)
     assert entity
-    assert entity.state == HVACAction.HEATING
-    assert entity.attributes[ATTR_TEMPERATURE] == 21.1
+    assert entity.state == HVACMode.HEAT
+    assert entity.attributes[ATTR_TEMPERATURE] == 5.0
 
     mock_serial_bridge.get_all_devices.return_value[CLIMATE] = {
         0: ComelitSerialBridgeObject(
@@ -100,8 +106,8 @@ async def test_climate_data_update(
 
     entity = hass.states.get(ENTITY_ID)
     assert entity
-    assert entity.state == HVACAction.HEATING
-    assert entity.attributes[ATTR_TEMPERATURE] == 27
+    assert entity.state == HVACMode.HEAT
+    assert entity.attributes[ATTR_TEMPERATURE] == temp
 
 
 async def test_climate_set_temperature(
@@ -117,7 +123,7 @@ async def test_climate_set_temperature(
     entity = hass.states.get(ENTITY_ID)
     assert entity
     assert entity.state == HVACMode.HEAT
-    assert entity.attributes[ATTR_TEMPERATURE] == 21.1
+    assert entity.attributes[ATTR_TEMPERATURE] == 5.0
 
     # Test set temperature
     await hass.services.async_call(
@@ -131,7 +137,7 @@ async def test_climate_set_temperature(
     entity = hass.states.get(ENTITY_ID)
     assert entity
     assert entity.state == HVACMode.HEAT
-    assert entity.attributes[ATTR_TEMPERATURE] == 23
+    assert entity.attributes[ATTR_TEMPERATURE] == 23.0
 
 
 async def test_climate_hvac_mode(
@@ -147,7 +153,7 @@ async def test_climate_hvac_mode(
     entity = hass.states.get(ENTITY_ID)
     assert entity
     assert entity.state == HVACMode.HEAT
-    assert entity.attributes[ATTR_TEMPERATURE] == 21.1
+    assert entity.attributes[ATTR_TEMPERATURE] == 5.0
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
