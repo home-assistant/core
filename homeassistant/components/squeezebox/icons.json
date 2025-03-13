@@ -27,6 +27,9 @@
     },
     "call_query": {
       "service": "mdi:database"
+    },
+    "button": {
+      "service": "mdi:button-pointer"
     }
   }
 }

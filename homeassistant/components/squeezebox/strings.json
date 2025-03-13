@@ -132,16 +132,25 @@
   "selector": {
     "button_selector": {
       "options": {
-        "preset_0.single": "Play Preset 0",
-        "preset_1.single": "Play Preset 1",
-        "preset_2.single": "Play Preset 2",
-        "preset_3.single": "Play Preset 3",
-        "preset_4.single": "Play Preset 4",
-        "preset_5.single": "Play Preset 5",
-        "preset_6.single": "Play Preset 6",
-        "preset_7.single": "Play Preset 7",
-        "preset_8.single": "Play Preset 8",
-        "preset_9.single": "Play Preset 9"
+        "preset_0_dot_single": "Play Preset 0",
+        "preset_1_dot_single": "Play Preset 1",
+        "preset_2_dot_single": "Play Preset 2",
+        "preset_3_dot_single": "Play Preset 3",
+        "preset_4_dot_single": "Play Preset 4",
+        "preset_5_dot_single": "Play Preset 5",
+        "preset_6_dot_single": "Play Preset 6",
+        "preset_7_dot_single": "Play Preset 7",
+        "preset_8_dot_single": "Play Preset 8",
+        "preset_9_dot_single": "Play Preset 9",
+        "brightness_down": "Brightness Up",
+        "brightness_up": "Brightness Up",
+        "brightness_dot_single": "Brightness Toggle",
+        "sleep": "Sleep",
+        "snooze": "Snooze",
+        "bassdown": "Bass Down",
+        "bassup": "Bass Up",
+        "trebledown": "Treble Down",
+        "trebleup": "Treble Up"
       }
     }
   }

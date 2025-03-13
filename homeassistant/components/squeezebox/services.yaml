@@ -6,7 +6,7 @@ call_method:
   fields:
     command:
       required: true
-      example: 'playlist'
+      example: "playlist"
       selector:
         text:
     parameters:
@@ -22,7 +22,7 @@ call_query:
   fields:
     command:
       required: true
-      example: 'albums'
+      example: "albums"
       selector:
         text:
     parameters:
@@ -40,17 +40,26 @@ button:
       required: true
       selector:
         select:
-          translation_key: 'button_selector'
+          translation_key: "button_selector"
           multiple: false
           custom_value: true
           options:
-            - preset_0.single
-            - preset_1.single
-            - preset_2.single
-            - preset_3.single
-            - preset_4.single
-            - preset_5.single
-            - preset_6.single
-            - preset_7.single
-            - preset_8.single
-            - preset_9.single
+            - preset_0_dot_single
+            - preset_1_dot_single
+            - preset_2_dot_single
+            - preset_3_dot_single
+            - preset_4_dot_single
+            - preset_5_dot_single
+            - preset_6_dot_single
+            - preset_7_dot_single
+            - preset_8_dot_single
+            - preset_9_dot_single
+            - brightness_down
+            - brightness_up
+            - brightness_dot_single
+            - sleep
+            - snooze
+            - bassdown
+            - bassup
+            - trebledown
+            - trebleup

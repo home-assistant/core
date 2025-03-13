@@ -605,7 +605,9 @@ class SqueezeBoxMediaPlayerEntity(
         positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
         """
         all_params = ["button"]
-        all_params.extend([button])
+        # Replace -- back to . to overcome translation key character rules
+        newbutton = button.replace("_dot_", ".")
+        all_params.extend([newbutton])
         await self._player.async_query(*all_params)
 
     async def async_call_query(
