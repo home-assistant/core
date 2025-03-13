@@ -722,7 +722,7 @@
         "name": "Fluent bit rate"
       },
       "scene_mode": {
-        "name": "Scene mode"
+        "name": "Scene mode",
         "state": {
           "off": "[%key:common::state::off%]",
           "disarm": "Disarmed",
