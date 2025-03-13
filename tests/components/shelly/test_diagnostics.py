@@ -207,7 +207,7 @@ async def test_rpc_config_entry_diagnostics_no_ws(
     config.pop("ws")
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
-    entry = await init_integration(hass, 2, sleep_period=60)
+    entry = await init_integration(hass, 3)
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
