@@ -74,12 +74,14 @@ async def async_get_config_entry_diagnostics(
             device_settings = {
                 k: v for k, v in rpc_coordinator.device.config.items() if k in ["cloud"]
             }
-            ws_config = rpc_coordinator.device.config["ws"]
-            device_settings["ws_outbound_enabled"] = ws_config["enable"]
-            if ws_config["enable"]:
-                device_settings["ws_outbound_server_valid"] = bool(
-                    ws_config["server"] == get_rpc_ws_url(hass)
-                )
+            if not (ws_config := rpc_coordinator.device.config.get("ws", {})):
+                device_settings["ws_outbound"] = "not supported"
+            if (ws_outbound_enabled := ws_config.get("enable")) is not None:
+                device_settings["ws_outbound_enabled"] = ws_outbound_enabled
+                if ws_outbound_enabled:
+                    device_settings["ws_outbound_server_valid"] = bool(
+                        ws_config["server"] == get_rpc_ws_url(hass)
+                    )
             device_status = {
                 k: v
                 for k, v in rpc_coordinator.device.status.items()
