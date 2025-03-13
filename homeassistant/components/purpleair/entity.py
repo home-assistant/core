@@ -7,13 +7,12 @@ from typing import Any
 
 from aiopurpleair.models.sensors import SensorModel
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import PurpleAirDataUpdateCoordinator
+from .coordinator import PurpleAirConfigEntry, PurpleAirDataUpdateCoordinator
 
 
 class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
@@ -23,12 +22,11 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
 
     def __init__(
         self,
-        coordinator: PurpleAirDataUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: PurpleAirConfigEntry,
         sensor_index: int,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator)
+        super().__init__(entry.runtime_data)
 
         self._sensor_index = sensor_index
 
