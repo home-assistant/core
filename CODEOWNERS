@@ -1574,6 +1574,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/touchline_sl/ @jnsgruk
 /tests/components/touchline_sl/ @jnsgruk
 /homeassistant/components/tplink/ @rytilahti @bdraco @sdb9696
+/homeassistant/components/tplink_tapo/ @rytilahti @bdraco @sdb9696
 /tests/components/tplink/ @rytilahti @bdraco @sdb9696
 /homeassistant/components/tplink_omada/ @MarkGodwin
 /tests/components/tplink_omada/ @MarkGodwin
