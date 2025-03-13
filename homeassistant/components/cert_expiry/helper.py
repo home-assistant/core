@@ -8,6 +8,7 @@ import zoneinfo
 
 import OpenSSL.crypto
 
+from homeassistant.core import HomeAssistant
 from homeassistant.util.ssl import get_default_context
 
 from .const import TIMEOUT
@@ -21,7 +22,7 @@ from .errors import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def async_get_cert(
+def get_cert(
     host: str,
     port: int,
 ) -> OpenSSL.crypto.X509 | None:
@@ -43,13 +44,14 @@ def async_get_cert(
     return OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_ASN1, der_cert)
 
 
-def get_cert_expiry_timestamp(
+async def get_cert_expiry_timestamp(
+    hass: HomeAssistant,
     hostname: str,
     port: int,
 ) -> datetime.datetime:
     """Return the certificate's expiration timestamp."""
     try:
-        cert = async_get_cert(hostname, port)
+        cert = await hass.async_add_executor_job(get_cert, hostname, port)
     except socket.gaierror as err:
         raise ResolveFailed(f"Cannot resolve hostname: {hostname}") from err
     except TimeoutError as err:

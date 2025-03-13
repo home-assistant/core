@@ -32,13 +32,14 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._errors: dict[str, str] = {}
 
-    def _test_connection(
+    async def _test_connection(
         self,
         user_input: Mapping[str, Any],
     ) -> bool:
         """Test connection to the server and try to get the certificate."""
         try:
-            get_cert_expiry_timestamp(
+            await get_cert_expiry_timestamp(
+                self.hass,
                 user_input[CONF_HOST],
                 user_input.get(CONF_PORT, DEFAULT_PORT),
             )
@@ -66,7 +67,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{host}:{port}")
             self._abort_if_unique_id_configured()
 
-            if self._test_connection(user_input):
+            if await self._test_connection(user_input):
                 title_port = f":{port}" if port != DEFAULT_PORT else ""
                 title = f"{host}{title_port}"
                 return self.async_create_entry(
