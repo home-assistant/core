@@ -361,3 +361,28 @@ WOBLINDTILT_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=True,
     tx_power=-127,
 )
+
+
+def make_advertisement(
+    address: str, manufacturer_data: bytes, service_data: bytes
+) -> BluetoothServiceInfoBleak:
+    """Make a dummy advertisement."""
+    return BluetoothServiceInfoBleak(
+        name="Test Device",
+        address=address,
+        manufacturer_data={2409: manufacturer_data},
+        service_data={"00000d00-0000-1000-8000-00805f9b34fb": service_data},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        rssi=-60,
+        source="local",
+        advertisement=generate_advertisement_data(
+            local_name="Test Device",
+            manufacturer_data={2409: manufacturer_data},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": service_data},
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        ),
+        device=generate_ble_device(address, "Test Device"),
+        time=0,
+        connectable=True,
+        tx_power=-127,
+    )

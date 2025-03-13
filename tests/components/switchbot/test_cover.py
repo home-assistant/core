@@ -1,6 +1,6 @@
 """Test the switchbot covers."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -30,7 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
-from . import WOBLINDTILT_SERVICE_INFO, WOCURTAIN3_SERVICE_INFO
+from . import WOBLINDTILT_SERVICE_INFO, WOCURTAIN3_SERVICE_INFO, make_advertisement
 
 from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -107,50 +107,67 @@ async def test_curtain3_controlling(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         entity_id = "cover.test_name"
-        coordinator = entry.runtime_data
+        address = "AA:BB:CC:DD:EE:FF"
+        service_data = b"{\xc06\x00\x11D"
 
         # Test open
+        manufacturer_data = b"\xcf;Zwu\x0c\x19\x0b\x05\x11D\x006"
         await hass.services.async_call(
             COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
-        coordinator.device.parsed_data["position"] = 100
-        coordinator.async_update_listeners()
+        inject_bluetooth_service_info(
+            hass, make_advertisement(address, manufacturer_data, service_data)
+        )
+        await hass.async_block_till_done()
+
         mock_open.assert_awaited_once()
         assert hass.states.get(entity_id).state == CoverState.OPEN
-        assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 100
+        assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 95
 
         # Test close
+        manufacturer_data = b"\xcf;Zwu\x0c\x19\x0b\x58\x11D\x006"
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        coordinator.device.parsed_data["position"] = 0
-        coordinator.async_update_listeners()
+        inject_bluetooth_service_info(
+            hass, make_advertisement(address, manufacturer_data, service_data)
+        )
+        await hass.async_block_till_done()
+
         mock_close.assert_awaited_once()
         assert hass.states.get(entity_id).state == CoverState.CLOSED
-        assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 0
+        assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 12
 
         # Test stop
+        manufacturer_data = b"\xcf;Zwu\x0c\x19\x0b\x3c\x11D\x006"
         await hass.services.async_call(
             COVER_DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
-        coordinator.device.parsed_data["position"] = 40
-        coordinator.async_update_listeners()
+        inject_bluetooth_service_info(
+            hass, make_advertisement(address, manufacturer_data, service_data)
+        )
+        await hass.async_block_till_done()
+
         mock_stop.assert_awaited_once()
         assert hass.states.get(entity_id).state == CoverState.OPEN
         assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 40
 
         # Test set position
+        manufacturer_data = b"\xcf;Zwu\x0c\x19\x0b(\x11D\x006"
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
             {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 50},
             blocking=True,
         )
-        coordinator.device.parsed_data["position"] = 60
-        coordinator.async_update_listeners()
+        inject_bluetooth_service_info(
+            hass, make_advertisement(address, manufacturer_data, service_data)
+        )
+        await hass.async_block_till_done()
+
         mock_set_position.assert_awaited_once()
         assert hass.states.get(entity_id).state == CoverState.OPEN
         assert hass.states.get(entity_id).attributes[ATTR_CURRENT_POSITION] == 60
@@ -173,7 +190,6 @@ async def test_blindtilt_setup(hass: HomeAssistant) -> None:
     )
 
     entity_id = "cover.test_name"
-
     mock_restore_cache(
         hass,
         [
@@ -186,7 +202,7 @@ async def test_blindtilt_setup(hass: HomeAssistant) -> None:
     )
 
     entry.add_to_hass(hass)
-    with patch("switchbot.SwitchbotDevice.update", new=Mock(return_value=True)):
+    with patch("switchbot.SwitchbotDevice.update", new=AsyncMock(return_value=True)):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -212,7 +228,10 @@ async def test_blindtilt_controlling(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with (
-        patch("switchbot.SwitchbotDevice.update", new=Mock(return_value=True)),
+        patch(
+            "switchbot.SwitchbotBlindTilt._get_basic_info",
+            new=AsyncMock(return_value=b"\xfbgA`\x98\xe8\x1d%2\x11\x84"),
+        ),
         patch(
             "switchbot.SwitchbotBlindTilt.open", new=AsyncMock(return_value=True)
         ) as mock_open,
@@ -231,69 +250,97 @@ async def test_blindtilt_controlling(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         entity_id = "cover.test_name"
-        coordinator = entry.runtime_data
+        address = "AA:BB:CC:DD:EE:FF"
+        service_data = b"x\x00*"
 
         # Test open
+        manufacturer_data = b"\xfbgA`\x98\xe8\x1d%F\x12\x85"
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER_TILT,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        coordinator.device.parsed_data["tilt"] = 70
+        with patch(
+            "switchbot.SwitchbotBlindTilt._get_basic_info",
+            return_value=manufacturer_data,
+        ):
+            inject_bluetooth_service_info(
+                hass, make_advertisement(address, manufacturer_data, service_data)
+            )
+            await hass.async_block_till_done()
 
-        coordinator.device.parsed_data["motionDirection"] = {}
-        motionDirection = coordinator.device.parsed_data["motionDirection"]
-        motionDirection["opening"] = True
-        motionDirection["closing"] = False
-        coordinator.device.parsed_data["tilt"] = 70
-        coordinator.async_update_listeners()
-
-        mock_open.assert_awaited_once()
-        assert hass.states.get(entity_id).state == CoverState.OPENING
-        assert hass.states.get(entity_id).attributes[ATTR_CURRENT_TILT_POSITION] == 70
+            mock_open.assert_awaited_once()
+            assert hass.states.get(entity_id).state == CoverState.OPEN
+            assert (
+                hass.states.get(entity_id).attributes[ATTR_CURRENT_TILT_POSITION] == 70
+            )
 
         # Test close
+        manufacturer_data = b"\xfbgA`\x98\xe8\x1d%\x0f\x12\x85"
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER_TILT,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        coordinator.device.parsed_data["tilt"] = 15
-        motionDirection["opening"] = False
-        motionDirection["closing"] = True
-        coordinator.async_update_listeners()
-        mock_close.assert_awaited_once()
-        assert hass.states.get(entity_id).state == CoverState.CLOSING
-        assert hass.states.get(entity_id).attributes[ATTR_CURRENT_TILT_POSITION] == 15
+        with patch(
+            "switchbot.SwitchbotBlindTilt._get_basic_info",
+            return_value=manufacturer_data,
+        ):
+            inject_bluetooth_service_info(
+                hass, make_advertisement(address, manufacturer_data, service_data)
+            )
+            await hass.async_block_till_done()
+
+            mock_close.assert_awaited_once()
+            assert hass.states.get(entity_id).state == CoverState.CLOSED
+            assert (
+                hass.states.get(entity_id).attributes[ATTR_CURRENT_TILT_POSITION] == 15
+            )
 
         # Test stop
+        manufacturer_data = b"\xfbgA`\x98\xe8\x1d%\n\x12\x85"
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_STOP_COVER_TILT,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        coordinator.device.parsed_data["tilt"] = 10
-        motionDirection["opening"] = True
-        motionDirection["closing"] = False
-        coordinator.async_update_listeners()
-        mock_stop.assert_awaited_once()
-        assert hass.states.get(entity_id).state == CoverState.OPENING
-        assert hass.states.get(entity_id).attributes[ATTR_CURRENT_TILT_POSITION] == 10
+        with patch(
+            "switchbot.SwitchbotBlindTilt._get_basic_info",
+            return_value=manufacturer_data,
+        ):
+            inject_bluetooth_service_info(
+                hass, make_advertisement(address, manufacturer_data, service_data)
+            )
+            await hass.async_block_till_done()
+
+            mock_stop.assert_awaited_once()
+            assert hass.states.get(entity_id).state == CoverState.CLOSED
+            assert (
+                hass.states.get(entity_id).attributes[ATTR_CURRENT_TILT_POSITION] == 10
+            )
 
         # Test set position
+        manufacturer_data = b"\xfbgA`\x98\xe8\x1d%2\x12\x85"
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_TILT_POSITION,
             {ATTR_ENTITY_ID: entity_id, ATTR_TILT_POSITION: 50},
             blocking=True,
         )
-        coordinator.device.parsed_data["tilt"] = 60
-        motionDirection["opening"] = True
-        motionDirection["closing"] = False
-        coordinator.async_update_listeners()
-        mock_set_position.assert_awaited_once()
-        assert hass.states.get(entity_id).state == CoverState.OPENING
-        assert hass.states.get(entity_id).attributes[ATTR_CURRENT_TILT_POSITION] == 60
+        with patch(
+            "switchbot.SwitchbotBlindTilt._get_basic_info",
+            return_value=manufacturer_data,
+        ):
+            inject_bluetooth_service_info(
+                hass, make_advertisement(address, manufacturer_data, service_data)
+            )
+            await hass.async_block_till_done()
+
+            mock_set_position.assert_awaited_once()
+            assert hass.states.get(entity_id).state == CoverState.OPEN
+            assert (
+                hass.states.get(entity_id).attributes[ATTR_CURRENT_TILT_POSITION] == 50
+            )
