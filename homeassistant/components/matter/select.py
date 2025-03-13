@@ -435,4 +435,24 @@ DISCOVERY_SCHEMAS = [
         # don't discover this entry if the supported rinses list is empty
         secondary_value_is_not=[],
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="LocalConfigDisabled",
+            entity_category=EntityCategory.CONFIG,
+            options=["Enable Local Configuration", "Disable Local Configuration"],
+            measurement_to_ha={
+                False: "Enable Local Configuration",
+                True: "Disable Local Configuration",
+            }.get,
+            ha_to_native_value={
+                "Enable Local Configuration": False,
+                "Disable Local Configuration": True,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(
+            clusters.BasicInformation.Attributes.LocalConfigDisabled,
+        ),
+    ),
 ]
