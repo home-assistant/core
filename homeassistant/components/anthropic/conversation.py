@@ -375,31 +375,23 @@ class AnthropicConversationEntity(
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
+            model_args = {
+                "model": model,
+                "messages": messages,
+                "tools": tools or NOT_GIVEN,
+                "max_tokens": options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+                "system": system.content,
+                "stream": True,
+            }
             if model in THINKING_MODELS and thinking_budget >= MIN_THINKING_BUDGET:
-                model_args = {
-                    "model": model,
-                    "messages": messages,
-                    "tools": tools or NOT_GIVEN,
-                    "max_tokens": options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
-                    "system": system.content,
-                    "stream": True,
-                    "thinking": ThinkingConfigEnabledParam(
-                        type="enabled", budget_tokens=thinking_budget
-                    ),
-                }
+                model_args["thinking"] = ThinkingConfigEnabledParam(
+                    type="enabled", budget_tokens=thinking_budget
+                )
             else:
-                model_args = {
-                    "model": model,
-                    "messages": messages,
-                    "tools": tools or NOT_GIVEN,
-                    "max_tokens": options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
-                    "system": system.content,
-                    "stream": True,
-                    "thinking": ThinkingConfigDisabledParam(type="disabled"),
-                    "temperature": options.get(
-                        CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
-                    ),
-                }
+                model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
+                model_args["temperature"] = options.get(
+                    CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+                )
 
             try:
                 stream = await client.messages.create(**model_args)
