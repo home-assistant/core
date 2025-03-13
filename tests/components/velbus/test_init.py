@@ -161,6 +161,7 @@ async def test_api_call(
             {ATTR_ENTITY_ID: "switch.living_room_relayname"},
             blocking=True,
         )
+    assert mock_relay._attr_available is False
 
 
 async def test_device_registry(
