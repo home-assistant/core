@@ -110,7 +110,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.38
+SQLAlchemy==2.0.39
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -231,7 +231,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.5.1
+aioesphomeapi==29.6.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -404,7 +404,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.4.1
+aiowebdav2==0.4.2
 
 # homeassistant.components.webostv
 aiowebostv==0.7.3
@@ -821,7 +821,7 @@ freebox-api==1.2.2
 fritzconnection[qr]==1.14.0
 
 # homeassistant.components.fyta
-fyta_cli==0.7.0
+fyta_cli==0.7.1
 
 # homeassistant.components.google_translate
 gTTS==2.5.3
@@ -959,7 +959,7 @@ hass-nabucasa==0.94.0
 hassil==2.2.3
 
 # homeassistant.components.jewish_calendar
-hdate==0.11.1
+hdate[astral]==1.0.3
 
 # homeassistant.components.here_travel_time
 here-routing==1.0.1
@@ -1040,7 +1040,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.8.0
+inkbird-ble==0.9.0
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.5.0
@@ -1541,7 +1541,7 @@ pycountry==24.6.1
 pycsspeechtts==1.0.8
 
 # homeassistant.components.daikin
-pydaikin==2.13.8
+pydaikin==2.14.1
 
 # homeassistant.components.deako
 pydeako==0.6.0
@@ -1556,7 +1556,7 @@ pydexcom==0.2.3
 pydiscovergy==3.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2025.2.0
+pydrawise==2025.3.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -1625,7 +1625,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==1.0.2
+pyheos==1.0.3
 
 # homeassistant.components.hive
 pyhive-integration==1.0.2
@@ -1712,7 +1712,7 @@ pylitejet==0.6.3
 pylitterbot==2024.0.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.23.0
+pylutron-caseta==0.24.0
 
 # homeassistant.components.lutron
 pylutron==0.2.16
@@ -1882,7 +1882,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.7.0
+pysmartthings==2.7.2
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -1994,7 +1994,7 @@ python-picnic-api2==1.2.2
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.11.1
+python-roborock==2.12.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.39
@@ -2121,7 +2121,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.12.1
+reolink-aio==0.12.2
 
 # homeassistant.components.rflink
 rflink==0.0.66
@@ -2312,7 +2312,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.9.12
+tesla-fleet-api==0.9.13
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -2321,7 +2321,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.6.10
+teslemetry-stream==0.6.12
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
@@ -2416,7 +2416,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2025.3.0
+velbus-aio==2025.3.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2492,7 +2492,7 @@ xiaomi-ble==0.33.0
 xknx==3.6.0
 
 # homeassistant.components.knx
-xknxproject==3.8.1
+xknxproject==3.8.2
 
 # homeassistant.components.fritz
 # homeassistant.components.rest
@@ -2538,7 +2538,7 @@ zeroconf==0.146.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.51
+zha==0.0.52
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.61.0
