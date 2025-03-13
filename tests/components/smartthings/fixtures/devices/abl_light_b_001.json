@@ -1,0 +1,59 @@
+{
+  "items": [
+    {
+      "deviceId": "7c16163e-c94e-482f-95f6-139ae0cd9d5e",
+      "name": "ABL Wafer Down Light(BLE)",
+      "label": "Kitchen Light 5",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "ABL-LIGHT-B-001",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "6c314222-8baf-48a0-9442-5b1102a8757f",
+      "ownerId": "f24ff388-700c-7d1e-91f2-1c37ae68ce2b",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "colorTemperature",
+              "version": 1
+            },
+            {
+              "id": "switchLevel",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Light",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2025-03-08T22:40:25.073Z",
+      "profile": {
+        "id": "65f5db53-9a78-4b19-8e40-d32187cd59ab"
+      },
+      "bleD2D": {
+        "encryptionKey": "f593369dcea915f6352a4a42cd4b2ea6",
+        "cipher": "AES_128-CBC-PKCS7Padding",
+        "advertisingId": "b13d7192",
+        "identifier": "88-57-1d-7c-cb-cf",
+        "configurationUrl": "https://apis.samsungiotcloud.com/v1/miniature/profile/65f5db53-9a78-4b19-8e40-d32187cd59ab",
+        "bleDeviceType": "BLE",
+        "metadata": null
+      },
+      "type": "BLE_D2D",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

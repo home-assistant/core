@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 from datetime import datetime, timedelta
 import logging
 import os
@@ -58,7 +59,7 @@ class OneWireHub:
 
     owproxy: protocol._Proxy
     devices: list[OWDeviceDescription]
-    _version: str
+    _version: str | None = None
 
     def __init__(self, hass: HomeAssistant, config_entry: OneWireConfigEntry) -> None:
         """Initialize."""
@@ -74,7 +75,9 @@ class OneWireHub:
         port = self._config_entry.data[CONF_PORT]
         _LOGGER.debug("Initializing connection to %s:%s", host, port)
         self.owproxy = protocol.proxy(host, port)
-        self._version = self.owproxy.read(protocol.PTH_VERSION).decode()
+        with contextlib.suppress(protocol.OwnetError):
+            # Version is not available on all servers
+            self._version = self.owproxy.read(protocol.PTH_VERSION).decode()
         self.devices = _discover_devices(self.owproxy)
 
     async def initialize(self) -> None:
