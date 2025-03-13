@@ -5200,7 +5200,7 @@ async def test_get_integration_settings(
     }
 
 
-async def test_backup_nvm_raw(
+async def test_backup_nvm(
     hass: HomeAssistant,
     integration,
     client,
@@ -5217,9 +5217,8 @@ async def test_backup_nvm_raw(
         controller, "async_backup_nvm_raw_base64", return_value="test"
     ) as mock_backup:
         # Send the subscription request
-        await ws_client.send_json(
+        await ws_client.send_json_auto_id(
             {
-                "id": 1,
                 "type": "zwave_js/backup_nvm",
                 "entry_id": integration.entry_id,
             }
@@ -5273,10 +5272,28 @@ async def test_backup_nvm_raw(
         # Verify the backup was called
         assert mock_backup.called
 
+    # Test backup failure
+    with patch.object(
+        controller,
+        "async_backup_nvm_raw_base64",
+        side_effect=FailedCommand("failed_command", "Backup failed"),
+    ):
+        # Send the subscription request
+        await ws_client.send_json_auto_id(
+            {
+                "type": "zwave_js/backup_nvm",
+                "entry_id": integration.entry_id,
+            }
+        )
+
+        # Verify error response
+        msg = await ws_client.receive_json()
+        assert not msg["success"]
+        assert msg["error"]["code"] == "Backup failed"
+
     # Test config entry not found
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            "id": 2,
             "type": "zwave_js/backup_nvm",
             "entry_id": "invalid_entry_id",
         }
@@ -5289,9 +5306,8 @@ async def test_backup_nvm_raw(
     await hass.config_entries.async_unload(integration.entry_id)
     await hass.async_block_till_done()
 
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            "id": 3,
             "type": "zwave_js/backup_nvm",
             "entry_id": integration.entry_id,
         }
@@ -5317,9 +5333,8 @@ async def test_restore_nvm(
         controller, "async_restore_nvm_base64", return_value=None
     ) as mock_restore:
         # Send the subscription request
-        await ws_client.send_json(
+        await ws_client.send_json_auto_id(
             {
-                "id": 1,
                 "type": "zwave_js/restore_nvm",
                 "entry_id": integration.entry_id,
                 "data": "dGVzdA==",  # base64 encoded "test"
@@ -5380,9 +5395,8 @@ async def test_restore_nvm(
         side_effect=FailedCommand("failed_command", "Restore failed"),
     ):
         # Send the subscription request
-        await ws_client.send_json(
+        await ws_client.send_json_auto_id(
             {
-                "id": 3,
                 "type": "zwave_js/restore_nvm",
                 "entry_id": integration.entry_id,
                 "data": "dGVzdA==",  # base64 encoded "test"
@@ -5393,6 +5407,33 @@ async def test_restore_nvm(
         msg = await ws_client.receive_json()
         assert not msg["success"]
         assert msg["error"]["code"] == "Restore failed"
+
+    # Test entry_id not found
+    await ws_client.send_json_auto_id(
+        {
+            "type": "zwave_js/restore_nvm",
+            "entry_id": "invalid_entry_id",
+            "data": "dGVzdA==",  # base64 encoded "test"
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+
+    # Test config entry not loaded
+    await hass.config_entries.async_unload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "zwave_js/restore_nvm",
+            "entry_id": integration.entry_id,
+            "data": "dGVzdA==",  # base64 encoded "test"
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_loaded"
 
 
 async def test_cancel_secure_bootstrap_s2(
