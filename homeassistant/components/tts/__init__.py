@@ -126,6 +126,18 @@ SCHEMA_SERVICE_CLEAR_CACHE = vol.Schema({})
 class TTSCache:
     """Cached bytes of a TTS result."""
 
+    _result_data: bytes | None = None
+    """When fully loaded, contains the result data."""
+
+    _partial_data: list[bytes] | None = None
+    """While loading, contains the data already received from the generator."""
+
+    _loading_error: Exception | None = None
+    """If an error occurred while loading, contains the error."""
+
+    _consumers: list[asyncio.Queue[bytes | None]] | None = None
+    """A queue for each current consumer to notify of new data while the generator is loading."""
+
     def __init__(
         self,
         cache_key: str,
@@ -136,11 +148,7 @@ class TTSCache:
         self.cache_key = cache_key
         self.extension = extension
         self.last_used = monotonic()
-        self._result_data: bytes | None = None
         self._data_gen = data_gen
-        self._partial_data: list[bytes] | None = None
-        self._error: Exception | None = None
-        self._listeners: list[asyncio.Queue[bytes | None]] | None
 
     async def async_load_data(self) -> bytes:
         """Load the data from the generator."""
@@ -148,20 +156,20 @@ class TTSCache:
             raise RuntimeError("Data already being loaded")
 
         self._partial_data = []
-        self._listeners = []
+        self._consumers = []
 
         try:
             async for chunk in self._data_gen:
                 self._partial_data.append(chunk)
-                for queue in self._listeners:
+                for queue in self._consumers:
                     queue.put_nowait(chunk)
         except Exception as err:  # pylint: disable=broad-except
-            self._error = err
+            self._loading_error = err
             raise
         finally:
-            for queue in self._listeners:
+            for queue in self._consumers:
                 queue.put_nowait(None)
-            self._listeners = None
+            self._consumers = None
 
         self._result_data = b"".join(self._partial_data)
         self._partial_data = None
@@ -177,30 +185,30 @@ class TTSCache:
         if self._result_data is not None:
             yield self._result_data
             return
-        if self._error:
-            raise self._error
+        if self._loading_error:
+            raise self._loading_error
 
         if self._partial_data is None:
             raise RuntimeError("Data not being loaded")
 
         queue: asyncio.Queue[bytes | None] | None = None
         # Check if generator is still feeding data
-        if self._listeners is not None:
+        if self._consumers is not None:
             queue = asyncio.Queue()
-            self._listeners.append(queue)
+            self._consumers.append(queue)
 
         for chunk in list(self._partial_data):
             yield chunk
 
-        if self._error:
-            raise self._error
+        if self._loading_error:
+            raise self._loading_error
 
         if queue is not None:
             while (chunk2 := await queue.get()) is not None:
                 yield chunk2
 
-        if self._error:
-            raise self._error
+        if self._loading_error:
+            raise self._loading_error
 
         self.last_used = monotonic()
 
