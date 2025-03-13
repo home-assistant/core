@@ -140,7 +140,7 @@ async def async_setup_entry(
         hass, config_entry.entry_id, partial(async_migrate_unique_ids, coordinator)
     )
 
-    entities: list[ShellyButton | BluTrvButton] = []
+    entities: list[ShellyButton | RpcBluTrvButton] = []
 
     entities.extend(
         ShellyButton(coordinator, button)
@@ -153,7 +153,7 @@ async def async_setup_entry(
             assert isinstance(coordinator, ShellyRpcCoordinator)
 
         entities.extend(
-            BluTrvButton(coordinator, button, id_)
+            RpcBluTrvButton(coordinator, button, id_)
             for id_ in blutrv_key_ids
             for button in BLU_TRV_BUTTONS
         )
@@ -211,7 +211,7 @@ class ShellyButton(
             await self.coordinator.async_shutdown_device_and_start_reauth()
 
 
-class BluTrvButton(CoordinatorEntity[ShellyRpcCoordinator], ButtonEntity):
+class RpcBluTrvButton(CoordinatorEntity[ShellyRpcCoordinator], ButtonEntity):
     """Represent a RPC BluTrv button."""
 
     entity_description: ShellyButtonDescription[ShellyRpcCoordinator]
