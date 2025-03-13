@@ -14,7 +14,7 @@ import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any, Final, Required, TypedDict, final
+from typing import Any, Final, Required, TypedDict, cast, final
 from urllib.parse import quote, urlparse
 
 import aiohttp
@@ -68,7 +68,11 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
-from .browse_media import BrowseMedia, async_process_play_media_url  # noqa: F401
+from .browse_media import (  # noqa: F401
+    BrowseMedia,
+    SearchMedia,
+    async_process_play_media_url,
+)
 from .const import (  # noqa: F401
     _DEPRECATED_MEDIA_CLASS_DIRECTORY,
     _DEPRECATED_SUPPORT_BROWSE_MEDIA,
@@ -121,6 +125,8 @@ from .const import (  # noqa: F401
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_SEARCH_OFFSET_OR_NEXT,
+    ATTR_SEARCH_PAGE_SIZE,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     CONTENT_AUTH_EXPIRY_TIME,
@@ -460,6 +466,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Optional(ATTR_MEDIA_TARGET_CLASSES): vol.All(
                 cv.ensure_list, [vol.In([m.value for m in MediaClass])]
             ),
+            vol.Optional(ATTR_SEARCH_PAGE_SIZE, default=128): int,
+            vol.Optional(ATTR_SEARCH_OFFSET_OR_NEXT, default=0): vol.Any(int, str),
         },
         "async_search_media",
         supports_response=SupportsResponse.ONLY,
@@ -1181,7 +1189,9 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         media_content_id: str | None = None,
         query: str | None = None,
         target_media_classes: set[MediaClass] | None = None,
-    ) -> list[BrowseMedia]:
+        page_size: int = 128,
+        offset_or_next: int | str = 0,
+    ) -> SearchMedia:
         """Return a list of BrowseMedia instances.
 
         The BrowseMedia list will be used by the
@@ -1410,6 +1420,8 @@ async def websocket_browse_media(
         vol.Optional(ATTR_MEDIA_TARGET_CLASSES): vol.All(
             cv.ensure_list, [vol.In([m.value for m in MediaClass])]
         ),
+        vol.Optional(ATTR_SEARCH_PAGE_SIZE, default=128): int,
+        vol.Optional(ATTR_SEARCH_OFFSET_OR_NEXT, default=0): vol.Any(int, str),
     }
 )
 @websocket_api.async_response
@@ -1441,10 +1453,17 @@ async def websocket_search_media(
     media_content_id = msg.get(ATTR_MEDIA_CONTENT_ID)
     query = msg.get(ATTR_MEDIA_SEARCH_QUERY)
     target_media_classes = msg.get(ATTR_MEDIA_TARGET_CLASSES)
+    page_size = cast(int, msg.get(ATTR_SEARCH_PAGE_SIZE))
+    offset_or_next = cast(int | str, msg.get(ATTR_SEARCH_OFFSET_OR_NEXT))
 
     try:
         payload = await player.async_search_media(
-            media_content_type, media_content_id, query, target_media_classes
+            media_content_type,
+            media_content_id,
+            query,
+            target_media_classes,
+            page_size,
+            offset_or_next,
         )
     except NotImplementedError:
         assert player.platform
@@ -1467,7 +1486,7 @@ async def websocket_search_media(
         )
         return
 
-    result = [p.as_dict() for p in payload]
+    result = payload.as_dict()
     connection.send_result(msg["id"], result)
 
 

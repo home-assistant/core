@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 from typing import Any
@@ -162,3 +163,18 @@ class BrowseMedia:
     def __repr__(self) -> str:
         """Return representation of browse media."""
         return f"<BrowseMedia {self.title} ({self.media_class})>"
+
+
+@dataclass(kw_only=True, frozen=True)
+class SearchMedia:
+    """Represent a search media file."""
+
+    result: list[BrowseMedia]
+    offset_or_next: int | str = field(default=0)
+
+    def as_dict(self, *, parent: bool = True) -> dict[str, Any]:
+        """Convert SearchMedia class to browse media dictionary."""
+        return {
+            "result": [item.as_dict(parent=parent) for item in self.result],
+            "offset_or_next": self.offset_or_next,
+        }
