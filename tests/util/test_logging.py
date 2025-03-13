@@ -167,7 +167,7 @@ async def test_catch_log_exception_catches_and_logs() -> None:
         "logger2_count",
         "logger2_expected_notices",
     ),
-    [(4, 0, 0, 0), (5, 1, 1, 0), (11, 2, 5, 1), (20, 4, 20, 4)],
+    [(4, 0, 0, 0), (5, 1, 1, 0), (11, 1, 5, 1), (20, 1, 20, 1)],
 )
 async def test_noisy_loggers(
     hass: HomeAssistant,

@@ -31,12 +31,14 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
 
     _last_reset: float
     _log_counts: dict[str, int]
+    _warned_modules: set[str]
 
     def __init__(
         self, queue: SimpleQueue[logging.Handler], *handlers: logging.Handler
     ) -> None:
         """Initialize the handler."""
         super().__init__(queue, *handlers)
+        self._warned_modules = set()
         self._reset_counters(time.time())
 
     @override
@@ -51,7 +53,7 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
             self._reset_counters(record.created)
 
         module_name = record.name
-        if module_name == __name__:
+        if module_name == __name__ or module_name in self._warned_modules:
             return
 
         self._log_counts[module_name] += 1
@@ -65,6 +67,7 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
             module_count,
         )
         self._log_counts[module_name] = 0
+        self._warned_modules.add(module_name)
 
     def _reset_counters(self, time_sec: float) -> None:
         _LOGGER.debug("Resetting log counters")
