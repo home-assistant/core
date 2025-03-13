@@ -827,7 +827,7 @@ fyta_cli==0.7.1
 gTTS==2.5.3
 
 # homeassistant.components.gardena_bluetooth
-gardena-bluetooth==1.5.0
+gardena-bluetooth==1.6.0
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.11
