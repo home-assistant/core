@@ -140,12 +140,12 @@ class TTSCache:
         self._data_gen = data_gen
         self._partial_data: list[bytes] | None = None
         self._error: Exception | None = None
-        self._listeners: list[asyncio.Queue[bytes]] | None
+        self._listeners: list[asyncio.Queue[bytes | None]] | None
 
     async def async_load_data(self) -> bytes:
         """Load the data from the generator."""
         if self._result_data is not None or self._partial_data is not None:
-            raise ValueError("Data already being loaded")
+            raise RuntimeError("Data already being loaded")
 
         self._partial_data = []
         self._listeners = []
@@ -159,6 +159,8 @@ class TTSCache:
             self._error = err
             raise
         finally:
+            for queue in self._listeners:
+                queue.put_nowait(None)
             self._listeners = None
 
         self._result_data = b"".join(self._partial_data)
@@ -179,9 +181,9 @@ class TTSCache:
             raise self._error
 
         if self._partial_data is None:
-            raise ValueError("Data not being loaded")
+            raise RuntimeError("Data not being loaded")
 
-        queue: asyncio.Queue[bytes] | None = None
+        queue: asyncio.Queue[bytes | None] | None = None
         if self._listeners is not None:  # Generator done while we were yielding
             queue = asyncio.Queue()
             self._listeners.append(queue)
@@ -193,9 +195,8 @@ class TTSCache:
             raise self._error
 
         if queue is not None:
-            # While there is data in the queue or we are still loading (self._listeners exists)
-            while not queue.empty() or self._listeners is not None:
-                yield await queue.get()
+            while chunk2 := await queue.get():
+                yield chunk2
 
         if self._error:
             raise self._error
