@@ -168,6 +168,7 @@ async def test_network_status(
     assert result["client"]["server_version"] == "1.0.0"
     assert not result["client"]["server_logging_enabled"]
     assert result["controller"]["inclusion_state"] == InclusionState.IDLE
+    assert result["controller"]["supports_long_range"]
 
     # Try API call with device ID
     device = device_registry.async_get_device(
