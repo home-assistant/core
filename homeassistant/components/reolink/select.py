@@ -407,22 +407,12 @@ class ReolinkHostSelectEntity(ReolinkHostCoordinatorEntity, SelectEntity):
         """Initialize Reolink select entity."""
         self.entity_description = entity_description
         super().__init__(reolink_data)
-        self._log_error = True
         self._attr_options = entity_description.get_options(self._host.api)
 
     @property
     def current_option(self) -> str | None:
         """Return the current option."""
-        try:
-            option = self.entity_description.value(self._host.api)
-        except (ValueError, KeyError):
-            if self._log_error:
-                _LOGGER.exception("Reolink '%s' has an unknown value", self.name)
-                self._log_error = False
-            return None
-
-        self._log_error = True
-        return option
+        return self.entity_description.value(self._host.api)
 
     @raise_translated_error
     async def async_select_option(self, option: str) -> None:

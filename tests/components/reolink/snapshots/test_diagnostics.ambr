@@ -166,6 +166,9 @@
         '0': 1,
         'null': 2,
       }),
+      'GetScene': dict({
+        'null': 1,
+      }),
       'GetStateLight': dict({
         'null': 1,
       }),
