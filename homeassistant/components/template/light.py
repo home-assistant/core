@@ -100,21 +100,21 @@ DEFAULT_MIN_MIREDS = 153
 DEFAULT_MAX_MIREDS = 500
 
 LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
-    CONF_VALUE_TEMPLATE: CONF_STATE,
-    CONF_RGB_TEMPLATE: CONF_RGB,
-    CONF_RGBW_TEMPLATE: CONF_RGBW,
-    CONF_RGBWW_TEMPLATE: CONF_RGBWW,
+    CONF_COLOR_ACTION: CONF_HS_ACTION,
+    CONF_COLOR_TEMPLATE: CONF_HS,
     CONF_EFFECT_LIST_TEMPLATE: CONF_EFFECT_LIST,
     CONF_EFFECT_TEMPLATE: CONF_EFFECT,
+    CONF_HS_TEMPLATE: CONF_HS,
     CONF_LEVEL_TEMPLATE: CONF_LEVEL,
     CONF_MAX_MIREDS_TEMPLATE: CONF_MAX_MIREDS,
     CONF_MIN_MIREDS_TEMPLATE: CONF_MIN_MIREDS,
+    CONF_RGB_TEMPLATE: CONF_RGB,
+    CONF_RGBW_TEMPLATE: CONF_RGBW,
+    CONF_RGBWW_TEMPLATE: CONF_RGBWW,
     CONF_SUPPORTS_TRANSITION_TEMPLATE: CONF_SUPPORTS_TRANSITION,
     CONF_TEMPERATURE_TEMPLATE: CONF_TEMPERATURE,
+    CONF_VALUE_TEMPLATE: CONF_STATE,
     CONF_WHITE_VALUE_TEMPLATE: CONF_WHITE_VALUE,
-    CONF_COLOR_ACTION: CONF_HS_ACTION,
-    CONF_COLOR_TEMPLATE: CONF_HS,
-    CONF_HS_TEMPLATE: CONF_HS,
 }
 
 DEFAULT_NAME = "Template Light"
@@ -122,8 +122,16 @@ DEFAULT_NAME = "Template Light"
 LIGHT_SCHEMA = (
     vol.Schema(
         {
+            vol.Inclusive(CONF_EFFECT_ACTION, "effect"): cv.SCRIPT_SCHEMA,
+            vol.Inclusive(CONF_EFFECT_LIST, "effect"): cv.template,
+            vol.Inclusive(CONF_EFFECT, "effect"): cv.template,
             vol.Optional(CONF_HS_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_HS): cv.template,
+            vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_LEVEL): cv.template,
+            vol.Optional(CONF_MAX_MIREDS): cv.template,
+            vol.Optional(CONF_MIN_MIREDS): cv.template,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
             vol.Optional(CONF_PICTURE): cv.template,
             vol.Optional(CONF_RGB_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_RGB): cv.template,
@@ -131,21 +139,13 @@ LIGHT_SCHEMA = (
             vol.Optional(CONF_RGBW): cv.template,
             vol.Optional(CONF_RGBWW_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_RGBWW): cv.template,
-            vol.Inclusive(CONF_EFFECT_ACTION, "effect"): cv.SCRIPT_SCHEMA,
-            vol.Inclusive(CONF_EFFECT_LIST, "effect"): cv.template,
-            vol.Inclusive(CONF_EFFECT, "effect"): cv.template,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-            vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_LEVEL): cv.template,
-            vol.Optional(CONF_MAX_MIREDS): cv.template,
-            vol.Optional(CONF_MIN_MIREDS): cv.template,
-            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_STATE): cv.template,
             vol.Optional(CONF_SUPPORTS_TRANSITION): cv.template,
             vol.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_TEMPERATURE): cv.template,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_STATE): cv.template,
+            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
         }
     )
     .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
@@ -273,13 +273,11 @@ class LightTemplate(TemplateEntity, LightEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the light."""
+        super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
-        super().__init__(
-            hass, config=config, fallback_name=object_id, unique_id=unique_id
-        )
         name = self._attr_name
         if TYPE_CHECKING:
             assert name is not None
@@ -320,7 +318,6 @@ class LightTemplate(TemplateEntity, LightEntity):
         for action_id, color_mode in (
             (CONF_TEMPERATURE_ACTION, ColorMode.COLOR_TEMP),
             (CONF_LEVEL_ACTION, ColorMode.BRIGHTNESS),
-            (CONF_COLOR_ACTION, ColorMode.HS),
             (CONF_HS_ACTION, ColorMode.HS),
             (CONF_RGB_ACTION, ColorMode.RGB),
             (CONF_RGBW_ACTION, ColorMode.RGBW),
@@ -652,17 +649,6 @@ class LightTemplate(TemplateEntity, LightEntity):
 
             await self.async_run_script(
                 effect_script, run_variables=common_params, context=self._context
-            )
-        elif ATTR_HS_COLOR in kwargs and (
-            color_script := self._action_scripts.get(CONF_COLOR_ACTION)
-        ):
-            hs_value = kwargs[ATTR_HS_COLOR]
-            common_params["hs"] = hs_value
-            common_params["h"] = int(hs_value[0])
-            common_params["s"] = int(hs_value[1])
-
-            await self.async_run_script(
-                color_script, run_variables=common_params, context=self._context
             )
         elif ATTR_HS_COLOR in kwargs and (
             hs_script := self._action_scripts.get(CONF_HS_ACTION)
