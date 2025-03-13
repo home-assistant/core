@@ -45,8 +45,9 @@
 # name: test_all_entities[climate.climate0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': None,
+      'current_temperature': 22.1,
       'friendly_name': 'Climate0',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
       'hvac_modes': list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
@@ -57,13 +58,13 @@
       'min_temp': 5,
       'supported_features': <ClimateEntityFeature: 385>,
       'target_temp_step': 0.1,
-      'temperature': None,
+      'temperature': 5.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.climate0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'heat',
   })
 # ---
