@@ -17,3 +17,4 @@ set_price_cap:
       selector:
         number:
           min: 0
+          mode: box
