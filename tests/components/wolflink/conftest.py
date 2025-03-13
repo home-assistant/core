@@ -83,25 +83,6 @@ def mock_wolflink() -> Generator[MagicMock]:
             SimpleParameter(1002800000, "Simple Parameter", "DHW", 1005200000),
         ]
 
-        wolflink.parameters = [
-            EnergyParameter(6002800000, "Energy Parameter", "Heating", 6005200000),
-            ListItemParameter(
-                8002800000,
-                "List Item Parameter",
-                "Heating",
-                (["Pump", 0], ["Heating", 1]),
-                8005200000,
-            ),
-            PowerParameter(5002800000, "Power Parameter", "Heating", 5005200000),
-            Pressure(4002800000, "Pressure Parameter", "Heating", 4005200000),
-            Temperature(3002800000, "Temperature Parameter", "Solar", 3005200000),
-            PercentageParameter(
-                2002800000, "Percentage Parameter", "Solar", 2005200000
-            ),
-            HoursParameter(7002800000, "Hours Parameter", "Heating", 7005200000),
-            SimpleParameter(1002800000, "Simple Parameter", "DHW", 1005200000),
-        ]
-
         yield wolflink
 
 
