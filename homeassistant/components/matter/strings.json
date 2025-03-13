@@ -298,7 +298,7 @@
           "emergency_stop": "Emergency stop",
           "ev_disconnected": "EV disconnected",
           "wrong_power_supply": "Wrong power supply",
-          "live_neutral_swap": "Live neutral swap",
+          "live_neutral_swap": "Live/neutral swap",
           "over_temperature": "Overtemperature",
           "other": "Other fault"
         }
