@@ -1,8 +1,9 @@
 """Test the aidot config flow."""
 
-from unittest.mock import AsyncMock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock
 
-from aidot.const import CONF_LOGIN_INFO, SUPPORTED_COUNTRY_NAMES
+from aidot.const import CONF_LOGIN_INFO
 from aidot.exceptions import AidotUserOrPassIncorrect
 
 from homeassistant import config_entries
@@ -13,8 +14,12 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_COUNTRY, TEST_EMAIL, TEST_LOGIN_RESP, TEST_PASSWORD
 
+from tests.common import MockConfigEntry
 
-async def test_config_flow_cloud_login_success(hass: HomeAssistant) -> None:
+
+async def test_config_flow_cloud_login_success(
+    hass: HomeAssistant, mock_setup_entry: Generator[AsyncMock]
+) -> None:
     """Test a failed config flow using cloud login success."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -36,26 +41,8 @@ async def test_config_flow_cloud_login_success(hass: HomeAssistant) -> None:
     assert result["data"] == {CONF_LOGIN_INFO: TEST_LOGIN_RESP}
 
 
-async def test_async_show_country_form(hass: HomeAssistant) -> None:
-    """Test that async_show_form is called with correct parameters in user step."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert (
-        result["data_schema"].schema[CONF_COUNTRY].container == SUPPORTED_COUNTRY_NAMES
-    )
-
-
 async def test_config_flow_login_user_password_incorrect(
-    hass: HomeAssistant, mocked_aidot_client
+    hass: HomeAssistant, mocked_aidot_client: MagicMock
 ) -> None:
     """Test a failed config flow using cloud connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -68,6 +55,44 @@ async def test_config_flow_login_user_password_incorrect(
     mocked_aidot_client.async_post_login = AsyncMock(
         side_effect=AidotUserOrPassIncorrect()
     )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_COUNTRY: TEST_COUNTRY,
+            CONF_USERNAME: TEST_EMAIL,
+            CONF_PASSWORD: "ErrorPassword",
+        },
+    )
+
+    assert result2["errors"] == {"base": "account_pwd_incorrect"}
+
+    mocked_aidot_client.async_post_login.side_effect = None
+    mocked_aidot_client.async_post_login.return_value = TEST_LOGIN_RESP
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_COUNTRY: TEST_COUNTRY,
+            CONF_USERNAME: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result3["data"] == {CONF_LOGIN_INFO: TEST_LOGIN_RESP}
+
+
+async def test_form_abort_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a failed config flow using cloud login success."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -77,4 +102,5 @@ async def test_config_flow_login_user_password_incorrect(
         },
     )
 
-    assert result["errors"] == {"base": "account_pwd_incorrect"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

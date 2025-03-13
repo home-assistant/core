@@ -53,7 +53,7 @@ rules:
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: todo
-  entity-device-class: done
+  entity-device-class: todo
   entity-translations: done
   exception-translations: todo
   icon-translations: todo
@@ -63,5 +63,5 @@ rules:
   entity-disabled-by-default: todo
   # Platinum
   async-dependency: done
-  inject-websession: done
+  inject-websession: todo
   strict-typing: todo

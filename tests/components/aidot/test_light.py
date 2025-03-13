@@ -1,6 +1,6 @@
 """Test the aidot device."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import async_init_integration
-from .conftest import (
+from .const import (
     ENTITY_LIGHT,
     ENTITY_LIGHT2,
     LIGHT_DOMAIN,
@@ -44,7 +44,9 @@ async def test_state(
 
 
 async def test_turn_on(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mocked_device_client
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
 ) -> None:
     """Test turn on."""
     await async_init_integration(hass, mock_config_entry)
@@ -61,7 +63,9 @@ async def test_turn_on(
 
 
 async def test_turn_off(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mocked_device_client
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
 ) -> None:
     """Test turn off."""
     await async_init_integration(hass, mock_config_entry)
@@ -78,7 +82,9 @@ async def test_turn_off(
 
 
 async def test_trun_on_brightness(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mocked_device_client
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
 ) -> None:
     """Test turn on brightness."""
     await async_init_integration(hass, mock_config_entry)
@@ -95,7 +101,9 @@ async def test_trun_on_brightness(
 
 
 async def test_turn_on_with_color_temp(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mocked_device_client
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
 ) -> None:
     """Test turn on with color temp."""
     await async_init_integration(hass, mock_config_entry)
@@ -112,7 +120,9 @@ async def test_turn_on_with_color_temp(
 
 
 async def test_turn_on_with_rgbw(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mocked_device_client
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_device_client: MagicMock,
 ) -> None:
     """Test turn on with rgbw."""
     await async_init_integration(hass, mock_config_entry)
@@ -132,7 +142,7 @@ async def test_dynamic_device_add(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
-    mocked_aidot_client,
+    mocked_aidot_client: MagicMock,
 ) -> None:
     """Test if adding a new device dynamically creates the corresponding light entity."""
     await async_init_integration(hass, mock_config_entry)
@@ -154,7 +164,7 @@ async def test_dynamic_device_remove(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
-    mocked_aidot_client,
+    mocked_aidot_client: MagicMock,
 ) -> None:
     """Test if adding a new device dynamically creates the corresponding light entity."""
     mocked_aidot_client.async_get_all_device = AsyncMock(

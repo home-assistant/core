@@ -36,7 +36,6 @@ class AidotDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceStatusData]):
     """Class to manage Aidot data."""
 
     device: dict[str, Any]
-    ip_address: str
     device_client: DeviceClient
 
     def __init__(
@@ -54,7 +53,6 @@ class AidotDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceStatusData]):
             update_interval=timedelta(seconds=1),
         )
         self.device_client = device_client
-        self.identifier = config_entry.entry_id
 
     async def _async_setup(self) -> None:
         """Set up the coordinator.
@@ -104,7 +102,6 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         )
         self.client.start_discover()
         self.client.set_token_fresh_cb(self.token_fresh_cb)
-        self.identifier = config_entry.entry_id
         self.device_coordinators: dict[str, AidotDeviceUpdateCoordinator] = {}
         self.previous_lists: set[str] = set()
 
