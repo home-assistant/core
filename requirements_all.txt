@@ -603,7 +603,7 @@ bizkaibus==0.1.1
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.11.0
+bleak-esphome==2.12.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.9.0
@@ -1553,7 +1553,7 @@ odp-amsterdam==6.0.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ohme
-ohme==1.4.0
+ohme==1.4.1
 
 # homeassistant.components.ollama
 ollama==0.4.7
