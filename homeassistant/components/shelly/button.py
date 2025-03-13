@@ -83,7 +83,7 @@ BLU_TRV_BUTTONS: Final[list[ShellyButtonDescription]] = [
         has_entity_name=True,
         translation_key="calibrate",
         entity_category=EntityCategory.CONFIG,
-        press_action="calibrate",
+        press_action="trigger_calibration",
         supported=lambda coordinator: coordinator.device.model == MODEL_BLU_GATEWAY,
     ),
 ]
@@ -212,7 +212,6 @@ class BluTrvButton(CoordinatorEntity[ShellyRpcCoordinator], ButtonEntity):
         super().__init__(coordinator)
         self.entity_description = description
 
-        # self._attr_name = f"{coordinator.device.name} {description.name}"
         ble_addr: str = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]["addr"]
         self._attr_unique_id = f"{ble_addr}_{description.key}"
         self._attr_device_info = DeviceInfo(
