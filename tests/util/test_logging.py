@@ -18,8 +18,6 @@ from homeassistant.core import (
 )
 from homeassistant.util import logging as logging_util
 
-from tests.common import async_fire_time_changed
-
 
 async def empty_log_queue() -> None:
     """Empty the log queue."""
@@ -241,10 +239,6 @@ async def test_noisy_loggers_ignores_lower_than_info(
 
 
 @patch("homeassistant.util.logging.HomeAssistantQueueListener.MAX_LOGS_COUNT", 3)
-@patch(
-    "homeassistant.util.logging.HomeAssistantQueueListener.LOG_COUNTS_RESET_INTERVAL",
-    datetime.timedelta(seconds=4),
-)
 async def test_noisy_loggers_counters_reset(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -262,12 +256,12 @@ async def test_noisy_loggers_counters_reset(
         logger.info("This is log 0")
         await empty_log_queue()
 
-        freezer.move_to(
-            start_time
-            + (it * logging_util.HomeAssistantQueueListener.LOG_COUNTS_RESET_INTERVAL)
+        it_time_delta = datetime.timedelta(
+            seconds=(
+                it * logging_util.HomeAssistantQueueListener.LOG_COUNTS_RESET_INTERVAL
+            )
         )
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        freezer.move_to(start_time + it_time_delta)
 
         logger.info("This is log 1")
 

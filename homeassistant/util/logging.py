@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
-import datetime
 from functools import partial, wraps
 import inspect
 import logging
 import logging.handlers
 from queue import SimpleQueue
+import time
 import traceback
 from typing import Any, cast, overload, override
 
@@ -19,7 +19,6 @@ from homeassistant.core import (
     callback,
     get_hassjob_callable_job_type,
 )
-from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,36 +26,18 @@ _LOGGER = logging.getLogger(__name__)
 class HomeAssistantQueueListener(logging.handlers.QueueListener):
     """Custom QueueListener to watch for noisy loggers."""
 
-    LOG_COUNTS_RESET_INTERVAL = datetime.timedelta(minutes=5)
+    LOG_COUNTS_RESET_INTERVAL = 300
     MAX_LOGS_COUNT = 200
 
-    _reset_pending: bool
+    _last_reset: float
     _log_counts: dict[str, int]
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        queue: SimpleQueue[logging.Handler],
-        *handlers: logging.Handler,
+        self, queue: SimpleQueue[logging.Handler], *handlers: logging.Handler
     ) -> None:
         """Initialize the handler."""
         super().__init__(queue, *handlers)
-        self._hass = hass
-        self._reset_counters()
-
-        @callback
-        def _set_reset_pending_flag(_: datetime.datetime) -> None:
-            _LOGGER.debug("Setting reset pending")
-            # Set a boolean instead of directly resetting the counters so that the actual
-            # reset happens on the QueueListener thread without the need for a Lock.
-            self._reset_pending = True
-
-        async_track_time_interval(
-            self._hass,
-            _set_reset_pending_flag,
-            self.LOG_COUNTS_RESET_INTERVAL,
-            cancel_on_shutdown=True,
-        )
+        self._reset_counters(time.time())
 
     @override
     def handle(self, record: logging.LogRecord) -> None:
@@ -66,8 +47,8 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
         if record.levelno < logging.INFO:
             return
 
-        if self._reset_pending:
-            self._reset_counters()
+        if (record.created - self._last_reset) > self.LOG_COUNTS_RESET_INTERVAL:
+            self._reset_counters(record.created)
 
         module_name = record.name
         if module_name == __name__:
@@ -85,9 +66,9 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
         )
         self._log_counts[module_name] = 0
 
-    def _reset_counters(self) -> None:
+    def _reset_counters(self, time_sec: float) -> None:
         _LOGGER.debug("Resetting log counters")
-        self._reset_pending = False
+        self._last_reset = time_sec
         self._log_counts = defaultdict(int)
 
 
@@ -143,7 +124,7 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
         logging.root.removeHandler(handler)
         migrated_handlers.append(handler)
 
-    listener = HomeAssistantQueueListener(hass, simple_queue, *migrated_handlers)
+    listener = HomeAssistantQueueListener(simple_queue, *migrated_handlers)
     queue_handler.listener = listener
 
     listener.start()
