@@ -827,10 +827,11 @@ async def test_announce(
     assert err.value.translation_domain == "voip"
     assert err.value.translation_key == "non_tts_announcement"
 
+    mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav())
     announcement = assist_satellite.AssistSatelliteAnnouncement(
         message="test announcement",
         media_id=_MEDIA_ID,
-        tts_token="test-token",
+        tts_token=mock_tts_result_stream.token,
         original_media_id=_MEDIA_ID,
         media_id_source="tts",
     )
@@ -857,7 +858,7 @@ async def test_announce(
             await announce_task
 
         mock_send_tts.assert_called_once_with(
-            media_source_id=_MEDIA_ID, wait_for_tone=False
+            mock_tts_result_stream, wait_for_tone=False
         )
 
 
@@ -877,10 +878,11 @@ async def test_voip_id_is_ip_address(
         & assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
     )
 
+    mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav())
     announcement = assist_satellite.AssistSatelliteAnnouncement(
         message="test announcement",
         media_id=_MEDIA_ID,
-        tts_token="test-token",
+        tts_token=mock_tts_result_stream.token,
         original_media_id=_MEDIA_ID,
         media_id_source="tts",
     )
@@ -912,7 +914,7 @@ async def test_voip_id_is_ip_address(
             await announce_task
 
         mock_send_tts.assert_called_once_with(
-            media_source_id=_MEDIA_ID, wait_for_tone=False
+            mock_tts_result_stream, wait_for_tone=False
         )
 
 
@@ -932,10 +934,11 @@ async def test_announce_timeout(
         & assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
     )
 
+    mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav())
     announcement = assist_satellite.AssistSatelliteAnnouncement(
         message="test announcement",
         media_id=_MEDIA_ID,
-        tts_token="test-token",
+        tts_token=mock_tts_result_stream.token,
         original_media_id=_MEDIA_ID,
         media_id_source="tts",
     )
@@ -973,10 +976,11 @@ async def test_start_conversation(
         & assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
     )
 
+    mock_tts_result_stream = MockResultStream(hass, "wav", _empty_wav())
     announcement = assist_satellite.AssistSatelliteAnnouncement(
         message="test announcement",
         media_id=_MEDIA_ID,
-        tts_token="test-token",
+        tts_token=mock_tts_result_stream.token,
         original_media_id=_MEDIA_ID,
         media_id_source="tts",
     )

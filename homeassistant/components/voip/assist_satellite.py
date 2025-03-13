@@ -408,12 +408,18 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """Play an announcement once."""
         _LOGGER.debug("Playing announcement")
 
-        try:
-            await asyncio.sleep(_ANNOUNCEMENT_BEFORE_DELAY)
-            await self._send_tts(
-                media_source_id=announcement.original_media_id, wait_for_tone=False
-            )
+        if announcement.tts_token is None:
+            _LOGGER.error("Only TTS announcements are supported")
+            return
 
+        await asyncio.sleep(_ANNOUNCEMENT_BEFORE_DELAY)
+        stream = tts.async_get_stream(self.hass, announcement.tts_token)
+        if stream is None:
+            _LOGGER.error("TTS stream no longer available")
+            return
+
+        try:
+            await self._send_tts(stream, wait_for_tone=False)
             if not self._run_pipeline_after_announce:
                 # Delay before looping announcement
                 await asyncio.sleep(_ANNOUNCEMENT_AFTER_DELAY)
@@ -464,9 +470,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
     async def _send_tts(
         self,
-        *,
-        media_source_id: str | None = None,
-        tts_stream: tts.ResultStream | None = None,
+        tts_stream: tts.ResultStream,
         wait_for_tone: bool = True,
     ) -> None:
         """Send TTS audio to caller via RTP."""
@@ -474,20 +478,12 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             if self.transport is None:
                 return  # not connected
 
-            if media_source_id is not None:
-                extension, data = await tts.async_get_media_source_audio(
-                    self.hass, media_source_id
-                )
-            elif tts_stream is not None:
-                extension = tts_stream.extension
-                data = b"".join(
-                    [chunk async for chunk in tts_stream.async_stream_result()]
-                )
-            else:
-                raise ValueError("No TTS source provided")
+            data = b"".join([chunk async for chunk in tts_stream.async_stream_result()])
 
-            if extension != "wav":
-                raise ValueError(f"Only WAV audio can be streamed, got {extension}")
+            if tts_stream.extension != "wav":
+                raise ValueError(
+                    f"Only TTS WAV audio can be streamed, got {tts_stream.extension}"
+                )
 
             if wait_for_tone and ((self._tones & Tones.PROCESSING) == Tones.PROCESSING):
                 # Don't overlap TTS and processing beep
