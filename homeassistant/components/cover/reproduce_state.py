@@ -9,6 +9,7 @@ from typing import Any
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -17,6 +18,7 @@ from homeassistant.const import (
     SERVICE_SET_COVER_TILT_POSITION,
 )
 from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.util.enum import try_parse_enum
 
 from . import (
     ATTR_CURRENT_POSITION,
@@ -24,6 +26,7 @@ from . import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN,
+    CoverEntityFeature,
     CoverState,
 )
 
@@ -74,8 +77,18 @@ async def _async_reproduce_state(
         == state.attributes.get(ATTR_CURRENT_POSITION)
     ):
         # Open/Close
+        supported_features = try_parse_enum(
+            CoverEntityFeature,
+            cur_state.attributes.get(ATTR_SUPPORTED_FEATURES),
+        ) or CoverEntityFeature(0)
         if state.state in [CoverState.CLOSED, CoverState.CLOSING]:
-            service = SERVICE_CLOSE_COVER
+            if (
+                CoverEntityFeature.CLOSE in supported_features
+                or CoverEntityFeature.CLOSE_TILT not in supported_features
+            ):
+                service = SERVICE_CLOSE_COVER
+            elif CoverEntityFeature.CLOSE_TILT in supported_features:
+                service = SERVICE_CLOSE_COVER_TILT
         elif state.state in [CoverState.OPEN, CoverState.OPENING]:
             if (
                 ATTR_CURRENT_POSITION in cur_state.attributes
@@ -83,8 +96,13 @@ async def _async_reproduce_state(
             ):
                 service = SERVICE_SET_COVER_POSITION
                 service_data[ATTR_POSITION] = state.attributes[ATTR_CURRENT_POSITION]
-            else:
+            elif (
+                CoverEntityFeature.OPEN in supported_features
+                or CoverEntityFeature.OPEN_TILT not in supported_features
+            ):
                 service = SERVICE_OPEN_COVER
+            elif CoverEntityFeature.OPEN_TILT in supported_features:
+                service = SERVICE_OPEN_COVER_TILT
 
         await hass.services.async_call(
             DOMAIN, service, service_data, context=context, blocking=True

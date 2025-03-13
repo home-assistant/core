@@ -7,9 +7,11 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    CoverEntityFeature,
     CoverState,
 )
 from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -54,6 +56,24 @@ async def test_reproducing_states(
         "cover.entity_entirely_open",
         CoverState.OPEN,
         {ATTR_CURRENT_POSITION: 100, ATTR_CURRENT_TILT_POSITION: 100},
+    )
+    hass.states.async_set(
+        "cover.tilt_only_open",
+        CoverState.OPEN,
+        {
+            ATTR_CURRENT_TILT_POSITION: 100,
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.OPEN_TILT,
+        },
+    )
+    hass.states.async_set(
+        "cover.tilt_only_closed",
+        CoverState.CLOSED,
+        {
+            ATTR_CURRENT_TILT_POSITION: 0,
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.OPEN_TILT,
+        },
     )
 
     close_calls = async_mock_service(hass, "cover", SERVICE_CLOSE_COVER)
@@ -100,6 +120,16 @@ async def test_reproducing_states(
                 "cover.entity_entirely_open",
                 CoverState.OPEN,
                 {ATTR_CURRENT_POSITION: 100, ATTR_CURRENT_TILT_POSITION: 100},
+            ),
+            State(
+                "cover.tilt_only_open",
+                CoverState.OPEN,
+                {ATTR_CURRENT_TILT_POSITION: 100},
+            ),
+            State(
+                "cover.tilt_only_closed",
+                CoverState.CLOSED,
+                {ATTR_CURRENT_TILT_POSITION: 0},
             ),
         ],
     )
@@ -152,6 +182,16 @@ async def test_reproducing_states(
             ),
             # Should not raise
             State("cover.non_existing", "on"),
+            State(
+                "cover.tilt_only_open",
+                CoverState.CLOSED,
+                {},
+            ),
+            State(
+                "cover.tilt_only_closed",
+                CoverState.OPEN,
+                {},
+            ),
         ],
     )
 
@@ -180,16 +220,23 @@ async def test_reproducing_states(
     valid_close_tilt_calls = [
         {"entity_id": "cover.entity_open_tilt"},
         {"entity_id": "cover.entity_entirely_open"},
+        {"entity_id": "cover.tilt_only_open"},
     ]
-    assert len(close_tilt_calls) == 2
+    assert len(close_tilt_calls) == 3
     for call in close_tilt_calls:
         assert call.domain == "cover"
         assert call.data in valid_close_tilt_calls
         valid_close_tilt_calls.remove(call.data)
 
-    assert len(open_tilt_calls) == 1
-    assert open_tilt_calls[0].domain == "cover"
-    assert open_tilt_calls[0].data == {"entity_id": "cover.entity_close_tilt"}
+    valid_open_tilt_calls = [
+        {"entity_id": "cover.entity_close_tilt"},
+        {"entity_id": "cover.tilt_only_closed"},
+    ]
+    assert len(open_tilt_calls) == 2
+    for call in open_tilt_calls:
+        assert call.domain == "cover"
+        assert call.data in valid_open_tilt_calls
+        valid_open_tilt_calls.remove(call.data)
 
     assert len(position_calls) == 1
     assert position_calls[0].domain == "cover"
