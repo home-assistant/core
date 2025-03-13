@@ -75,7 +75,7 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
                 await self.solarlog.test_extended_data_available()
         if logged_in or await self.solarlog.test_extended_data_available():
             device_list = await self.solarlog.update_device_list()
-            self.solarlog.set_enabled_devices({key: True for key in device_list})
+            self.solarlog.set_enabled_devices(dict.fromkeys(device_list, True))
 
     async def _async_update_data(self) -> SolarlogData:
         """Update the data from the SolarLog device."""
