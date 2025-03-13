@@ -82,7 +82,6 @@ BLU_TRV_BUTTONS: Final[list[ShellyButtonDescription]] = [
     ShellyButtonDescription[ShellyRpcCoordinator](
         key="calibrate",
         name="Calibrate",
-        has_entity_name=True,
         translation_key="calibrate",
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_calibration",
@@ -228,6 +227,11 @@ class BluTrvButton(CoordinatorEntity[ShellyRpcCoordinator], ButtonEntity):
         self.entity_description = description
 
         ble_addr: str = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]["addr"]
+        device_name = (
+            coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]["name"]
+            or f"shellyblutrv-{ble_addr.replace(':', '')}"
+        )
+        self._attr_name = f"{device_name} {description.name}"
         self._attr_unique_id = f"{ble_addr}_{description.key}"
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, ble_addr)}

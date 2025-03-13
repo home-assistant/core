@@ -120,7 +120,7 @@ async def test_rpc_blu_trv_button(
 
     await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
-    entity_id = "button.none_calibrate"
+    entity_id = "button.trv_name_calibrate"
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
