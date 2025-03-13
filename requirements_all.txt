@@ -116,7 +116,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.38
+SQLAlchemy==2.0.39
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.5.1
+aioesphomeapi==29.6.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -968,7 +968,7 @@ freesms==0.2.0
 fritzconnection[qr]==1.14.0
 
 # homeassistant.components.fyta
-fyta_cli==0.7.0
+fyta_cli==0.7.1
 
 # homeassistant.components.google_translate
 gTTS==2.5.3
@@ -2872,7 +2872,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.9.12
+tesla-fleet-api==0.9.13
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -3000,7 +3000,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2025.3.0
+velbus-aio==2025.3.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
