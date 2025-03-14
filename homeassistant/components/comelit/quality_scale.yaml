@@ -10,9 +10,7 @@ rules:
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions:
-    status: todo
-    comment: include the proper docs snippet
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -29,9 +27,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: todo
-    comment: not set at the moment, we use a coordinator
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage:
     status: todo
@@ -46,7 +42,7 @@ rules:
   discovery:
     status: exempt
     comment: device not discoverable
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations:
     status: exempt
@@ -60,7 +56,9 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: done
+  exception-translations:
+    status: todo
+    comment: need merging of PR 140404
   icon-translations: done
   reconfiguration-flow:
     status: exempt
