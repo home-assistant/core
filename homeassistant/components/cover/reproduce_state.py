@@ -116,6 +116,7 @@ async def _async_reproduce_state(
             service = SERVICE_CLOSE_COVER
         elif CoverEntityFeature.CLOSE_TILT in supported_features:
             service = SERVICE_CLOSE_COVER_TILT
+        # Fallback for features not being set for backwards compatibility
         elif ATTR_CURRENT_POSITION in state.attributes:
             service = SERVICE_CLOSE_COVER
         elif ATTR_CURRENT_TILT_POSITION in state.attributes:
@@ -125,6 +126,7 @@ async def _async_reproduce_state(
             service = SERVICE_OPEN_COVER
         elif CoverEntityFeature.OPEN_TILT in supported_features:
             service = SERVICE_OPEN_COVER_TILT
+        # Fallback for features not being set for backwards compatibility
         elif ATTR_CURRENT_POSITION in state.attributes:
             service = SERVICE_OPEN_COVER
         elif ATTR_CURRENT_TILT_POSITION in state.attributes:
