@@ -100,7 +100,7 @@ async def test_climate_data_update(
         ),
     }
 
-    freezer.tick(SCAN_INTERVAL + 1)
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -114,7 +114,6 @@ async def test_climate_set_temperature(
     hass: HomeAssistant,
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test climate set temperature service."""
 
@@ -144,7 +143,6 @@ async def test_climate_hvac_mode(
     hass: HomeAssistant,
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test climate hvac mode service."""
 
