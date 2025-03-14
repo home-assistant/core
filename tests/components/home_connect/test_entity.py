@@ -23,6 +23,7 @@ from aiohomeconnect.model.error import (
     SelectedProgramNotSetError,
 )
 from aiohomeconnect.model.program import (
+    EnumerateProgram,
     ProgramDefinitionConstraints,
     ProgramDefinitionOption,
 )
@@ -85,7 +86,7 @@ def platforms() -> list[str]:
             [False, True, True],
             (
                 OptionKey.DISHCARE_DISHWASHER_HYGIENE_PLUS,
-                "switch.dishwasher_hygiene_plus",
+                "switch.dishwasher_hygiene",
             ),
             (OptionKey.DISHCARE_DISHWASHER_EXTRA_DRY, "switch.dishwasher_extra_dry"),
         )
@@ -232,6 +233,78 @@ async def test_program_options_retrieval(
         )
     for _, entity_id in (option_without_default, option_without_constraints):
         assert hass.states.is_state(entity_id, STATE_UNKNOWN)
+
+
+@pytest.mark.parametrize(
+    ("array_of_programs_program_arg", "event_key"),
+    [
+        (
+            "active",
+            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+        ),
+        (
+            "selected",
+            EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+        ),
+    ],
+)
+async def test_no_options_retrieval_on_unknown_program(
+    array_of_programs_program_arg: str,
+    event_key: EventKey,
+    appliance_ha_id: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test that no options are retrieved when the program is unknown."""
+
+    async def get_all_programs_with_options_mock(ha_id: str) -> ArrayOfPrograms:
+        return ArrayOfPrograms(
+            **(
+                {
+                    "programs": [
+                        EnumerateProgram(ProgramKey.UNKNOWN, "unknown program")
+                    ],
+                    array_of_programs_program_arg: Program(
+                        ProgramKey.UNKNOWN, options=[]
+                    ),
+                }
+            )
+        )
+
+    client.get_all_programs = AsyncMock(side_effect=get_all_programs_with_options_mock)
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    assert client.get_available_program.call_count == 0
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=event_key,
+                            raw_key=event_key.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=ProgramKey.UNKNOWN,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert client.get_available_program.call_count == 0
 
 
 @pytest.mark.parametrize(

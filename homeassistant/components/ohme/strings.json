@@ -66,6 +66,9 @@
           "max_charge": "Max charge",
           "paused": "Paused"
         }
+      },
+      "vehicle": {
+        "name": "Vehicle"
       }
     },
     "sensor": {

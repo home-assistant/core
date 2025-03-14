@@ -8,6 +8,7 @@ from enum import Enum
 import logging
 from typing import cast
 
+from awesomeversion import AwesomeVersion
 from pynecil import (
     CharSetting,
     CommunicationError,
@@ -33,6 +34,8 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=5)
 SCAN_INTERVAL_GITHUB = timedelta(hours=3)
 SCAN_INTERVAL_SETTINGS = timedelta(seconds=60)
+
+V223 = AwesomeVersion("v2.23")
 
 
 @dataclass
@@ -72,6 +75,7 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             ),
         )
         self.device = device
+        self.v223_features = False
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -80,6 +84,8 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
         except CommunicationError as e:
             raise UpdateFailed("Cannot connect to device") from e
+
+        self.v223_features = AwesomeVersion(self.device_info.build) >= V223
 
 
 class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):

@@ -354,7 +354,7 @@
       "options": {
         "consumer_products_coffee_maker_enum_type_flow_rate_normal": "Normal",
         "consumer_products_coffee_maker_enum_type_flow_rate_intense": "Intense",
-        "consumer_products_coffee_maker_enum_type_flow_rate_intense_plus": "Intense plus"
+        "consumer_products_coffee_maker_enum_type_flow_rate_intense_plus": "Intense +"
       }
     },
     "coffee_milk_ratio": {
@@ -410,7 +410,7 @@
         "laundry_care_dryer_enum_type_drying_target_iron_dry": "Iron dry",
         "laundry_care_dryer_enum_type_drying_target_gentle_dry": "Gentle dry",
         "laundry_care_dryer_enum_type_drying_target_cupboard_dry": "Cupboard dry",
-        "laundry_care_dryer_enum_type_drying_target_cupboard_dry_plus": "Cupboard dry plus",
+        "laundry_care_dryer_enum_type_drying_target_cupboard_dry_plus": "Cupboard dry +",
         "laundry_care_dryer_enum_type_drying_target_extra_dry": "Extra dry"
       }
     },
@@ -461,6 +461,7 @@
         "laundry_care_washer_enum_type_spin_speed_r_p_m400": "400 rpm",
         "laundry_care_washer_enum_type_spin_speed_r_p_m600": "600 rpm",
         "laundry_care_washer_enum_type_spin_speed_r_p_m800": "800 rpm",
+        "laundry_care_washer_enum_type_spin_speed_r_p_m900": "900 rpm",
         "laundry_care_washer_enum_type_spin_speed_r_p_m1000": "1000 rpm",
         "laundry_care_washer_enum_type_spin_speed_r_p_m1200": "1200 rpm",
         "laundry_care_washer_enum_type_spin_speed_r_p_m1400": "1400 rpm",
@@ -592,7 +593,7 @@
           "description": "Defines if the program sequence is optimized with a special drying cycle to ensure more shine on glasses and plastic items."
         },
         "dishcare_dishwasher_option_vario_speed_plus": {
-          "name": "Vario speed plus",
+          "name": "Vario speed +",
           "description": "Defines if the program run time is reduced by up to 66% with the usual optimum cleaning and drying."
         },
         "dishcare_dishwasher_option_silence_on_demand": {
@@ -608,7 +609,7 @@
           "description": "Defines if improved drying for glasses and plasticware is enabled."
         },
         "dishcare_dishwasher_option_hygiene_plus": {
-          "name": "Hygiene plus",
+          "name": "Hygiene +",
           "description": "Defines if the cleaning is done with increased temperature. This ensures maximum hygienic cleanliness for regular use."
         },
         "dishcare_dishwasher_option_eco_dry": {
@@ -1430,6 +1431,7 @@
           "laundry_care_washer_enum_type_spin_speed_r_p_m400": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m400%]",
           "laundry_care_washer_enum_type_spin_speed_r_p_m600": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m600%]",
           "laundry_care_washer_enum_type_spin_speed_r_p_m800": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m800%]",
+          "laundry_care_washer_enum_type_spin_speed_r_p_m900": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m900%]",
           "laundry_care_washer_enum_type_spin_speed_r_p_m1000": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m1000%]",
           "laundry_care_washer_enum_type_spin_speed_r_p_m1200": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m1200%]",
           "laundry_care_washer_enum_type_spin_speed_r_p_m1400": "[%key:component::home_connect::selector::spin_speed::options::laundry_care_washer_enum_type_spin_speed_r_p_m1400%]",
@@ -1462,7 +1464,7 @@
           "inactive": "Inactive",
           "ready": "Ready",
           "delayedstart": "Delayed start",
-          "run": "Run",
+          "run": "Running",
           "pause": "[%key:common::state::paused%]",
           "actionrequired": "Action required",
           "finished": "Finished",
@@ -1529,8 +1531,8 @@
           "map3": "Map 3"
         }
       },
-      "current_cavity_temperature": {
-        "name": "Current cavity temperature"
+      "oven_current_cavity_temperature": {
+        "name": "Current oven cavity temperature"
       },
       "freezer_door_alarm": {
         "name": "Freezer door alarm",

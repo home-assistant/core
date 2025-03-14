@@ -5763,7 +5763,6 @@ async def test_reauth_reconfigure_missing_entry(
 
 
 @pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 @pytest.mark.parametrize(
     "source", [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE]
 )
@@ -5995,7 +5994,7 @@ async def test_async_wait_component_startup(hass: HomeAssistant) -> None:
     "integration_frame_path",
     ["homeassistant/components/my_integration", "homeassistant.core"],
 )
-@pytest.mark.usefixtures("mock_integration_frame")
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
 async def test_options_flow_with_config_entry_core() -> None:
     """Test that OptionsFlowWithConfigEntry cannot be used in core."""
     entry = MockConfigEntry(
@@ -6009,8 +6008,7 @@ async def test_options_flow_with_config_entry_core() -> None:
 
 
 @pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
-@pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
 async def test_options_flow_with_config_entry(caplog: pytest.LogCaptureFixture) -> None:
     """Test that OptionsFlowWithConfigEntry doesn't mutate entry options."""
     entry = MockConfigEntry(
@@ -8789,7 +8787,6 @@ async def test_options_flow_config_entry(
 
 @pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
 @pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_options_flow_deprecated_config_entry_setter(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -8849,7 +8846,8 @@ async def test_options_flow_deprecated_config_entry_setter(
         "config_entry explicitly, which is deprecated at "
         "custom_components/my_integration/light.py, line 23: "
         "self.light.is_on. This will stop working in Home Assistant 2025.12, please "
-        "create a bug report at " in caplog.text
+        "report it to the author of the 'my_integration' custom integration"
+        in caplog.text
     )
 
 
@@ -8899,3 +8897,63 @@ async def test_add_description_placeholder_automatically_not_overwrites(
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], None)
     assert result["type"] == FlowResultType.FORM
     assert result["description_placeholders"] == {"name": "Custom title"}
+
+
+@pytest.mark.parametrize(
+    ("domain", "expected_log"),
+    [
+        ("some_integration", True),
+        ("mobile_app", False),
+    ],
+)
+async def test_create_entry_existing_unique_id(
+    hass: HomeAssistant,
+    domain: str,
+    expected_log: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test to highlight unexpected behavior on create_entry."""
+    entry = MockConfigEntry(
+        title="From config flow",
+        domain=domain,
+        entry_id="01J915Q6T9F6G5V0QJX6HBC94T",
+        data={"host": "any", "port": 123},
+        unique_id="mock-unique-id",
+    )
+    entry.add_to_hass(hass)
+
+    assert len(hass.config_entries.async_entries(domain)) == 1
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(hass, MockModule(domain, async_setup_entry=mock_setup_entry))
+    mock_platform(hass, f"{domain}.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            await self.async_set_unique_id("mock-unique-id")
+            return self.async_create_entry(title="mock-title", data={})
+
+    with (
+        mock_config_flow(domain, TestFlow),
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            domain, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    assert len(hass.config_entries.async_entries(domain)) == 1
+
+    log_text = (
+        f"Detected that integration '{domain}' creates a config entry "
+        "when another entry with the same unique ID exists. Please "
+        "create a bug report at https:"
+    )
+    assert (log_text in caplog.text) == expected_log

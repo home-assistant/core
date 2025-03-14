@@ -40,8 +40,37 @@ ADD_ON_DISCOVERY_INFO = {
     "protocol": "3.1.1",
     "ssl": False,
 }
-MOCK_CLIENT_CERT = b"## mock client certificate file ##"
-MOCK_CLIENT_KEY = b"## mock key file ##"
+
+MOCK_CA_CERT = (
+    b"-----BEGIN CERTIFICATE-----\n"
+    b"## mock CA certificate file ##"
+    b"\n-----END CERTIFICATE-----\n"
+)
+MOCK_GENERIC_CERT = (
+    b"-----BEGIN CERTIFICATE-----\n"
+    b"## mock generic certificate file ##"
+    b"\n-----END CERTIFICATE-----\n"
+)
+MOCK_CA_CERT_DER = b"## mock DER formatted CA certificate file ##\n"
+MOCK_CLIENT_CERT = (
+    b"-----BEGIN CERTIFICATE-----\n"
+    b"## mock client certificate file ##"
+    b"\n-----END CERTIFICATE-----\n"
+)
+MOCK_CLIENT_CERT_DER = b"## mock DER formatted client certificate file ##\n"
+MOCK_CLIENT_KEY = (
+    b"-----BEGIN PRIVATE KEY-----\n"
+    b"## mock client key file ##"
+    b"\n-----END PRIVATE KEY-----"
+)
+MOCK_ENCRYPTED_CLIENT_KEY = (
+    b"-----BEGIN ENCRYPTED PRIVATE KEY-----\n"
+    b"## mock client key file ##\n"
+    b"-----END ENCRYPTED PRIVATE KEY-----"
+)
+MOCK_CLIENT_KEY_DER = b"## mock DER formatted key file ##\n"
+MOCK_ENCRYPTED_CLIENT_KEY_DER = b"## mock DER formatted encrypted key file ##\n"
+
 
 MOCK_ENTRY_DATA = {
     mqtt.CONF_BROKER: "test-broker",
@@ -102,15 +131,27 @@ def mock_ssl_context() -> Generator[dict[str, MagicMock]]:
         patch("homeassistant.components.mqtt.config_flow.SSLContext") as mock_context,
         patch(
             "homeassistant.components.mqtt.config_flow.load_pem_private_key"
-        ) as mock_key_check,
+        ) as mock_pem_key_check,
+        patch(
+            "homeassistant.components.mqtt.config_flow.load_der_private_key"
+        ) as mock_der_key_check,
         patch(
             "homeassistant.components.mqtt.config_flow.load_pem_x509_certificate"
-        ) as mock_cert_check,
+        ) as mock_pem_cert_check,
+        patch(
+            "homeassistant.components.mqtt.config_flow.load_der_x509_certificate"
+        ) as mock_der_cert_check,
     ):
+        mock_pem_key_check().private_bytes.return_value = MOCK_CLIENT_KEY
+        mock_pem_cert_check().public_bytes.return_value = MOCK_GENERIC_CERT
+        mock_der_key_check().private_bytes.return_value = MOCK_CLIENT_KEY
+        mock_der_cert_check().public_bytes.return_value = MOCK_GENERIC_CERT
         yield {
             "context": mock_context,
-            "load_pem_x509_certificate": mock_cert_check,
-            "load_pem_private_key": mock_key_check,
+            "load_der_private_key": mock_der_key_check,
+            "load_der_x509_certificate": mock_der_cert_check,
+            "load_pem_private_key": mock_pem_key_check,
+            "load_pem_x509_certificate": mock_pem_cert_check,
         }
 
 
@@ -181,8 +222,30 @@ def mock_try_connection_time_out() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_ca_cert() -> bytes:
+    """Mock the CA certificate."""
+    return MOCK_CA_CERT
+
+
+@pytest.fixture
+def mock_client_cert() -> bytes:
+    """Mock the client certificate."""
+    return MOCK_CLIENT_CERT
+
+
+@pytest.fixture
+def mock_client_key() -> bytes:
+    """Mock the client key."""
+    return MOCK_CLIENT_KEY
+
+
+@pytest.fixture
 def mock_process_uploaded_file(
-    tmp_path: Path, mock_temp_dir: str
+    tmp_path: Path,
+    mock_ca_cert: bytes,
+    mock_client_cert: bytes,
+    mock_client_key: bytes,
+    mock_temp_dir: str,
 ) -> Generator[MagicMock]:
     """Mock upload certificate files."""
     file_id_ca = str(uuid4())
@@ -195,15 +258,15 @@ def mock_process_uploaded_file(
     ) -> Iterator[Path | None]:
         if file_id == file_id_ca:
             with open(tmp_path / "ca.crt", "wb") as cafile:
-                cafile.write(b"## mock CA certificate file ##")
+                cafile.write(mock_ca_cert)
             yield tmp_path / "ca.crt"
         elif file_id == file_id_cert:
             with open(tmp_path / "client.crt", "wb") as certfile:
-                certfile.write(b"## mock client certificate file ##")
+                certfile.write(mock_client_cert)
             yield tmp_path / "client.crt"
         elif file_id == file_id_key:
             with open(tmp_path / "client.key", "wb") as keyfile:
-                keyfile.write(b"## mock key file ##")
+                keyfile.write(mock_client_key)
             yield tmp_path / "client.key"
         else:
             pytest.fail(f"Unexpected file_id: {file_id}")
@@ -1025,11 +1088,36 @@ async def test_option_flow(
 
 
 @pytest.mark.parametrize(
+    ("mock_ca_cert", "mock_client_cert", "mock_client_key", "client_key_password"),
+    [
+        (MOCK_GENERIC_CERT, MOCK_GENERIC_CERT, MOCK_CLIENT_KEY, ""),
+        (
+            MOCK_GENERIC_CERT,
+            MOCK_GENERIC_CERT,
+            MOCK_ENCRYPTED_CLIENT_KEY,
+            "very*secret",
+        ),
+        (MOCK_CA_CERT_DER, MOCK_CLIENT_CERT_DER, MOCK_CLIENT_KEY_DER, ""),
+        (
+            MOCK_CA_CERT_DER,
+            MOCK_CLIENT_CERT_DER,
+            MOCK_ENCRYPTED_CLIENT_KEY_DER,
+            "very*secret",
+        ),
+    ],
+    ids=[
+        "pem_certs_private_key_no_password",
+        "pem_certs_private_key_with_password",
+        "der_certs_private_key_no_password",
+        "der_certs_private_key_with_password",
+    ],
+)
+@pytest.mark.parametrize(
     "test_error",
     [
         "bad_certificate",
         "bad_client_cert",
-        "bad_client_key",
+        "client_key_error",
         "bad_client_cert_key",
         "invalid_inclusion",
         None,
@@ -1042,31 +1130,54 @@ async def test_bad_certificate(
     mock_ssl_context: dict[str, MagicMock],
     mock_process_uploaded_file: MagicMock,
     test_error: str | None,
+    client_key_password: str,
+    mock_ca_cert: bytes,
 ) -> None:
     """Test bad certificate tests."""
+
+    def _side_effect_on_client_cert(data: bytes) -> MagicMock:
+        """Raise on client cert only.
+
+        The function is called twice, once for the CA chain
+        and once for the client cert. We only want to raise on a client cert.
+        """
+        if data == MOCK_CLIENT_CERT_DER:
+            raise ValueError
+        mock_certificate_side_effect = MagicMock()
+        mock_certificate_side_effect().public_bytes.return_value = MOCK_GENERIC_CERT
+        return mock_certificate_side_effect
+
     # Mock certificate files
     file_id = mock_process_uploaded_file.file_id
+    set_ca_cert = "custom"
+    set_client_cert = True
+    tls_insecure = False
     test_input = {
         mqtt.CONF_BROKER: "another-broker",
         CONF_PORT: 2345,
         mqtt.CONF_CERTIFICATE: file_id[mqtt.CONF_CERTIFICATE],
         mqtt.CONF_CLIENT_CERT: file_id[mqtt.CONF_CLIENT_CERT],
         mqtt.CONF_CLIENT_KEY: file_id[mqtt.CONF_CLIENT_KEY],
-        "set_ca_cert": True,
+        "client_key_password": client_key_password,
+        "set_ca_cert": set_ca_cert,
         "set_client_cert": True,
     }
-    set_client_cert = True
-    set_ca_cert = "custom"
-    tls_insecure = False
     if test_error == "bad_certificate":
         # CA chain is not loading
         mock_ssl_context["context"]().load_verify_locations.side_effect = SSLError
+        # Fail on the CA cert if DER encoded
+        mock_ssl_context["load_der_x509_certificate"].side_effect = ValueError
     elif test_error == "bad_client_cert":
         # Client certificate is invalid
         mock_ssl_context["load_pem_x509_certificate"].side_effect = ValueError
-    elif test_error == "bad_client_key":
+        # Fail on the client cert if DER encoded
+        mock_ssl_context[
+            "load_der_x509_certificate"
+        ].side_effect = _side_effect_on_client_cert
+    elif test_error == "client_key_error":
         # Client key file is invalid
         mock_ssl_context["load_pem_private_key"].side_effect = ValueError
+        mock_ssl_context["load_der_private_key"].side_effect = ValueError
     elif test_error == "bad_client_cert_key":
         # Client key file file and certificate do not pair
         mock_ssl_context["context"]().load_cert_chain.side_effect = SSLError
@@ -2078,8 +2189,8 @@ async def test_setup_with_advanced_settings(
         CONF_USERNAME: "user",
         CONF_PASSWORD: "secret",
         mqtt.CONF_KEEPALIVE: 30,
-        mqtt.CONF_CLIENT_CERT: "## mock client certificate file ##",
-        mqtt.CONF_CLIENT_KEY: "## mock key file ##",
+        mqtt.CONF_CLIENT_CERT: MOCK_CLIENT_CERT.decode(encoding="utf-8"),
+        mqtt.CONF_CLIENT_KEY: MOCK_CLIENT_KEY.decode(encoding="utf-8"),
         "tls_insecure": True,
         mqtt.CONF_TRANSPORT: "websockets",
         mqtt.CONF_WS_PATH: "/custom_path/",
@@ -2088,6 +2199,155 @@ async def test_setup_with_advanced_settings(
             "header_2": "content_header_2",
         },
         mqtt.CONF_CERTIFICATE: "auto",
+    }
+
+
+@pytest.mark.usefixtures("mock_ssl_context")
+@pytest.mark.parametrize(
+    ("mock_ca_cert", "mock_client_cert", "mock_client_key", "client_key_password"),
+    [
+        (MOCK_GENERIC_CERT, MOCK_GENERIC_CERT, MOCK_CLIENT_KEY, ""),
+        (
+            MOCK_GENERIC_CERT,
+            MOCK_GENERIC_CERT,
+            MOCK_ENCRYPTED_CLIENT_KEY,
+            "very*secret",
+        ),
+        (MOCK_CA_CERT_DER, MOCK_CLIENT_CERT_DER, MOCK_CLIENT_KEY_DER, ""),
+        (
+            MOCK_CA_CERT_DER,
+            MOCK_CLIENT_CERT_DER,
+            MOCK_ENCRYPTED_CLIENT_KEY_DER,
+            "very*secret",
+        ),
+    ],
+    ids=[
+        "pem_certs_private_key_no_password",
+        "pem_certs_private_key_with_password",
+        "der_certs_private_key_no_password",
+        "der_certs_private_key_with_password",
+    ],
+)
+async def test_setup_with_certificates(
+    hass: HomeAssistant,
+    mock_try_connection: MagicMock,
+    mock_process_uploaded_file: MagicMock,
+    client_key_password: str,
+) -> None:
+    """Test config flow setup with PEM and DER encoded certificates."""
+    file_id = mock_process_uploaded_file.file_id
+
+    config_entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 1234,
+        },
+    )
+
+    mock_try_connection.return_value = True
+
+    result = await config_entry.start_reconfigure_flow(hass, show_advanced_options=True)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "broker"
+    assert result["data_schema"].schema["advanced_options"]
+
+    # first iteration, basic settings
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 2345,
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "secret",
+            "advanced_options": True,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "broker"
+    assert "advanced_options" not in result["data_schema"].schema
+    assert result["data_schema"].schema[CONF_CLIENT_ID]
+    assert result["data_schema"].schema[mqtt.CONF_KEEPALIVE]
+    assert result["data_schema"].schema["set_client_cert"]
+    assert result["data_schema"].schema["set_ca_cert"]
+    assert result["data_schema"].schema[mqtt.CONF_TLS_INSECURE]
+    assert result["data_schema"].schema[CONF_PROTOCOL]
+    assert result["data_schema"].schema[mqtt.CONF_TRANSPORT]
+    assert mqtt.CONF_CLIENT_CERT not in result["data_schema"].schema
+    assert mqtt.CONF_CLIENT_KEY not in result["data_schema"].schema
+
+    # second iteration, advanced settings with request for client cert
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 2345,
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "secret",
+            mqtt.CONF_KEEPALIVE: 30,
+            "set_ca_cert": "custom",
+            "set_client_cert": True,
+            mqtt.CONF_TLS_INSECURE: False,
+            CONF_PROTOCOL: "3.1.1",
+            mqtt.CONF_TRANSPORT: "tcp",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "broker"
+    assert "advanced_options" not in result["data_schema"].schema
+    assert result["data_schema"].schema[CONF_CLIENT_ID]
+    assert result["data_schema"].schema[mqtt.CONF_KEEPALIVE]
+    assert result["data_schema"].schema["set_client_cert"]
+    assert result["data_schema"].schema["set_ca_cert"]
+    assert result["data_schema"].schema["client_key_password"]
+    assert result["data_schema"].schema[mqtt.CONF_TLS_INSECURE]
+    assert result["data_schema"].schema[CONF_PROTOCOL]
+    assert result["data_schema"].schema[mqtt.CONF_CERTIFICATE]
+    assert result["data_schema"].schema[mqtt.CONF_CLIENT_CERT]
+    assert result["data_schema"].schema[mqtt.CONF_CLIENT_KEY]
+    assert result["data_schema"].schema[mqtt.CONF_TRANSPORT]
+
+    # third iteration, advanced settings with client cert and key and CA certificate
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 2345,
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "secret",
+            mqtt.CONF_KEEPALIVE: 30,
+            "set_ca_cert": "custom",
+            "set_client_cert": True,
+            "client_key_password": client_key_password,
+            mqtt.CONF_CERTIFICATE: file_id[mqtt.CONF_CERTIFICATE],
+            mqtt.CONF_CLIENT_CERT: file_id[mqtt.CONF_CLIENT_CERT],
+            mqtt.CONF_CLIENT_KEY: file_id[mqtt.CONF_CLIENT_KEY],
+            mqtt.CONF_TLS_INSECURE: False,
+            mqtt.CONF_TRANSPORT: "tcp",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # Check config entry result
+    assert config_entry.data == {
+        mqtt.CONF_BROKER: "test-broker",
+        CONF_PORT: 2345,
+        CONF_USERNAME: "user",
+        CONF_PASSWORD: "secret",
+        mqtt.CONF_KEEPALIVE: 30,
+        mqtt.CONF_CLIENT_CERT: MOCK_GENERIC_CERT.decode(encoding="utf-8"),
+        mqtt.CONF_CLIENT_KEY: MOCK_CLIENT_KEY.decode(encoding="utf-8"),
+        "tls_insecure": False,
+        mqtt.CONF_TRANSPORT: "tcp",
+        mqtt.CONF_CERTIFICATE: MOCK_GENERIC_CERT.decode(encoding="utf-8"),
     }
 
 
