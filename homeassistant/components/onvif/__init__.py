@@ -19,8 +19,9 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     CONF_ENABLE_WEBHOOKS,
@@ -99,6 +100,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if device.capabilities.imaging:
         device.platforms += [Platform.SWITCH]
 
+    _async_migrate_camera_entities_unique_ids(hass, entry, device)
+
     await hass.config_entries.async_forward_entry_setups(entry, device.platforms)
 
     entry.async_on_unload(
@@ -155,3 +158,58 @@ async def async_populate_options(hass: HomeAssistant, entry: ConfigEntry) -> Non
     }
 
     hass.config_entries.async_update_entry(entry, options=options)
+
+
+@callback
+def _async_migrate_camera_entities_unique_ids(
+    hass: HomeAssistant, config_entry: ConfigEntry, device: ONVIFDevice
+) -> None:
+    """Migrate unique ids of camera entities from profile index to profile token."""
+    entity_reg = er.async_get(hass)
+    entities: list[er.RegistryEntry] = er.async_entries_for_config_entry(
+        entity_reg, config_entry.entry_id
+    )
+
+    mac_or_serial = device.info.mac or device.info.serial_number
+    old_uid_start = f"{mac_or_serial}_"
+    new_uid_start = f"{mac_or_serial}#"
+
+    for entity in entities:
+        if entity.domain != Platform.CAMERA:
+            continue
+
+        if (
+            not entity.unique_id.startswith(old_uid_start)
+            and entity.unique_id != mac_or_serial
+        ):
+            continue
+
+        index = 0
+        if entity.unique_id.startswith(old_uid_start):
+            try:
+                index = int(entity.unique_id[len(old_uid_start) :])
+            except ValueError:
+                LOGGER.error(
+                    "Failed to migrate unique id for '%s' as the ONVIF profile index could not be parsed from unique id '%s'",
+                    entity.entity_id,
+                    entity.unique_id,
+                )
+                continue
+        try:
+            token = device.profiles[index].token
+        except IndexError:
+            LOGGER.error(
+                "Failed to migrate unique id for '%s' as the ONVIF profile index '%d' parsed from unique id '%s' could not be found",
+                entity.entity_id,
+                index,
+                entity.unique_id,
+            )
+            continue
+        new_uid = f"{new_uid_start}{token}"
+        LOGGER.debug(
+            "Migrating unique id for '%s' from '%s' to '%s'",
+            entity.entity_id,
+            entity.unique_id,
+            new_uid,
+        )
+        entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_uid)

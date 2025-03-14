@@ -486,7 +486,7 @@ class KNXModule:
                 transcoder := DPTBase.parse_transcoder(dpt)
             ):
                 self._address_filter_transcoder.update(
-                    {_filter: transcoder for _filter in _filters}
+                    dict.fromkeys(_filters, transcoder)
                 )
 
         return self.xknx.telegram_queue.register_telegram_received_cb(
