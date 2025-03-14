@@ -1444,9 +1444,14 @@ async def test_level_template(
     hass: HomeAssistant,
     expected_level: Any,
     expected_color_mode: ColorMode,
+    style: ConfigurationStyle,
     setup_single_attribute_light,
 ) -> None:
     """Test the template for the level."""
+    if style == ConfigurationStyle.TRIGGER:
+        hass.states.async_set("light.test_state", STATE_ON)
+        await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("brightness") == expected_level
     assert state.state == STATE_ON
@@ -1482,9 +1487,13 @@ async def test_temperature_template(
     hass: HomeAssistant,
     expected_temp: Any,
     expected_color_mode: ColorMode,
+    style: ConfigurationStyle,
     setup_single_attribute_light,
 ) -> None:
     """Test the template for the temperature."""
+    if style == ConfigurationStyle.TRIGGER:
+        hass.states.async_set("light.test_state", STATE_ON)
+        await hass.async_block_till_done()
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("color_temp") == expected_temp
     assert state.state == STATE_ON
@@ -1595,7 +1604,7 @@ async def test_friendly_name(hass: HomeAssistant, entity_id: str, setup_light) -
 async def test_icon_template(hass: HomeAssistant, setup_single_attribute_light) -> None:
     """Test icon template."""
     state = hass.states.get("light.test_template_light")
-    assert state.attributes.get("icon") == ""
+    assert state.attributes.get("icon") in ("", None)
 
     state = hass.states.async_set("light.test_state", STATE_ON)
     await hass.async_block_till_done()
@@ -1625,7 +1634,7 @@ async def test_entity_picture_template(
 ) -> None:
     """Test entity_picture template."""
     state = hass.states.get("light.test_template_light")
-    assert state.attributes.get("entity_picture") == ""
+    assert state.attributes.get("entity_picture") in ("", None)
 
     state = hass.states.async_set("light.test_state", STATE_ON)
     await hass.async_block_till_done()
@@ -1928,9 +1937,14 @@ async def test_hs_template(
     hass: HomeAssistant,
     expected_hs,
     expected_color_mode,
+    style: ConfigurationStyle,
     setup_single_attribute_light,
 ) -> None:
     """Test the template for the color."""
+    if style == ConfigurationStyle.TRIGGER:
+        hass.states.async_set("light.test_state", STATE_ON)
+        await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("hs_color") == expected_hs
     assert state.state == STATE_ON
@@ -1970,9 +1984,14 @@ async def test_rgb_template(
     hass: HomeAssistant,
     expected_rgb,
     expected_color_mode,
+    style: ConfigurationStyle,
     setup_single_attribute_light,
 ) -> None:
     """Test the template for the color."""
+    if style == ConfigurationStyle.TRIGGER:
+        hass.states.async_set("light.test_state", STATE_ON)
+        await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("rgb_color") == expected_rgb
     assert state.state == STATE_ON
@@ -2013,9 +2032,14 @@ async def test_rgbw_template(
     hass: HomeAssistant,
     expected_rgbw,
     expected_color_mode,
+    style: ConfigurationStyle,
     setup_single_attribute_light,
 ) -> None:
     """Test the template for the color."""
+    if style == ConfigurationStyle.TRIGGER:
+        hass.states.async_set("light.test_state", STATE_ON)
+        await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("rgbw_color") == expected_rgbw
     assert state.state == STATE_ON
@@ -2061,9 +2085,14 @@ async def test_rgbww_template(
     hass: HomeAssistant,
     expected_rgbww,
     expected_color_mode,
+    style: ConfigurationStyle,
     setup_single_attribute_light,
 ) -> None:
     """Test the template for the color."""
+    if style == ConfigurationStyle.TRIGGER:
+        hass.states.async_set("light.test_state", STATE_ON)
+        await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("rgbww_color") == expected_rgbww
     assert state.state == STATE_ON
@@ -2364,9 +2393,16 @@ async def test_effect_action(
     ],
 )
 async def test_effect_list_template(
-    hass: HomeAssistant, expected_effect_list, setup_light_with_effects
+    hass: HomeAssistant,
+    expected_effect_list,
+    style: ConfigurationStyle,
+    setup_light_with_effects,
 ) -> None:
     """Test the template for the effect list."""
+    if style == ConfigurationStyle.TRIGGER:
+        hass.states.async_set("light.test_state", STATE_ON)
+        await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
     assert state is not None
     assert state.attributes.get("effect_list") == expected_effect_list
@@ -2391,9 +2427,16 @@ async def test_effect_list_template(
     ],
 )
 async def test_effect_template(
-    hass: HomeAssistant, expected_effect, setup_light_with_effects
+    hass: HomeAssistant,
+    expected_effect,
+    style: ConfigurationStyle,
+    setup_light_with_effects,
 ) -> None:
     """Test the template for the effect."""
+    if style == ConfigurationStyle.TRIGGER:
+        hass.states.async_set("light.test_state", STATE_ON)
+        await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
     assert state is not None
     assert state.attributes.get("effect") == expected_effect
@@ -2420,9 +2463,16 @@ async def test_effect_template(
     ],
 )
 async def test_min_mireds_template(
-    hass: HomeAssistant, expected_min_mireds, setup_light_with_mireds
+    hass: HomeAssistant,
+    expected_min_mireds,
+    style: ConfigurationStyle,
+    setup_light_with_mireds,
 ) -> None:
     """Test the template for the min mireds."""
+    if style == ConfigurationStyle.TRIGGER:
+        hass.states.async_set("light.test_state", STATE_ON)
+        await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
     assert state is not None
     assert state.attributes.get("min_mireds") == expected_min_mireds
@@ -2449,9 +2499,16 @@ async def test_min_mireds_template(
     ],
 )
 async def test_max_mireds_template(
-    hass: HomeAssistant, expected_max_mireds, setup_light_with_mireds
+    hass: HomeAssistant,
+    expected_max_mireds,
+    style: ConfigurationStyle,
+    setup_light_with_mireds,
 ) -> None:
     """Test the template for the max mireds."""
+    if style == ConfigurationStyle.TRIGGER:
+        hass.states.async_set("light.test_state", STATE_ON)
+        await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
     assert state is not None
     assert state.attributes.get("max_mireds") == expected_max_mireds
