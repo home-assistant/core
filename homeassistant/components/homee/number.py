@@ -11,7 +11,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -100,7 +100,7 @@ NUMBER_DESCRIPTIONS = {
         native_min_value=0,
         native_max_value=22.5,
         native_step=2.5,
-        native_unit_of_measurement="m/s",
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         native_value_fn=lambda value: value * 2.5,
         set_native_value_fn=lambda value: value / 2.5,
     ),
