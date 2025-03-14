@@ -1,9 +1,9 @@
-"""The PurpleAir integration."""
+"""PurpleAir entities."""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Final
 
 from aiopurpleair.models.sensors import SensorModel
 
@@ -11,12 +11,14 @@ from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN
 from .coordinator import PurpleAirConfigEntry, PurpleAirDataUpdateCoordinator
+
+MANUFACTURER: Final[str] = "PurpleAir, Inc."
 
 
 class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
-    """Define a base PurpleAir entity."""
+    """PurpleAir entity."""
 
     _attr_has_entity_name = True
 
@@ -43,7 +45,7 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
-        """Return entity specific state attributes."""
+        """Get extra state attributes."""
         attrs: dict[str, Any] = {}
         if self.sensor_data.latitude is None or self.sensor_data.longitude is None:
             return attrs
@@ -56,5 +58,5 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
 
     @property
     def sensor_data(self) -> SensorModel:
-        """Define a property to get this entity's SensorModel object."""
+        """Get SensorModel object."""
         return self.coordinator.data.data[self._sensor_index]

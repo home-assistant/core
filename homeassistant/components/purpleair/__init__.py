@@ -1,12 +1,16 @@
-"""The PurpleAir integration."""
+"""PurpleAir integration."""
 
 from __future__ import annotations
 
+from typing import Final
+
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .config_schema import ConfigSchema
-from .const import PLATFORMS
 from .coordinator import PurpleAirConfigEntry, PurpleAirDataUpdateCoordinator
+
+PLATFORMS: Final[list[str]] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) -> bool:
@@ -20,15 +24,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) ->
     await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    coordinator.async_delete_orphans_from_device_registry()
+    # TODO: Update orphan logic to match subentry schema # pylint: disable=W0511
+    # coordinator.async_delete_orphans_from_device_registry()
 
     return True
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) -> bool:
     """Migrate config entry."""
+
+    # TODO: Migrate to sub entries # pylint: disable=W0511
     return ConfigSchema.async_migrate_entry(hass, entry)
 
 

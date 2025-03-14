@@ -1,4 +1,4 @@
-"""Configuration schema for PurpleAir integration."""
+"""PurpleAir configuration schema."""
 
 from __future__ import annotations
 
@@ -8,12 +8,9 @@ from typing import Any, Final
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    CONF_SENSOR_INDEX,
-    CONF_SENSOR_LIST,
-    CONF_SENSOR_READ_KEY,
-    SCHEMA_VERSION,
-)
+from .const import CONF_SENSOR_INDEX, CONF_SENSOR_READ_KEY, SCHEMA_VERSION
+
+# TODO: Update for new schema # pylint: disable=fixme
 
 # Config schema:
 # API Key: config_entry.data[CONF_API_KEY / "api_key"]
@@ -24,6 +21,8 @@ from .const import (
 #   Show sensor on map: config_entry.options[CONF_SHOW_ON_MAP / "show_on_map"] as bool
 
 type SensorConfigList = list[dict[str, Any]]
+
+CONF_SENSOR_LIST: Final[str] = "sensor_list"
 
 
 class ConfigSchema:

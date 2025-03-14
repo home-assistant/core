@@ -1,9 +1,9 @@
-"""Configuration validation for PurpleAir integration."""
+"""PurpleAir configuration validation."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Final
 
 from aiopurpleair.endpoints.sensors import NearbySensorResult
 from aiopurpleair.errors import (
@@ -17,17 +17,16 @@ from aiopurpleair.models.sensors import GetSensorsResponse
 
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    CONF_BASE,
-    CONF_INVALID_API_KEY,
-    CONF_NO_SENSOR_FOUND,
-    CONF_NO_SENSORS_FOUND,
-    CONF_UNKNOWN,
-    LIMIT_RESULTS,
-    LOGGER,
-    SENSOR_FIELDS_TO_RETRIEVE,
-)
+from .const import LOGGER, SENSOR_FIELDS_TO_RETRIEVE
 from .coordinator import async_get_api
+
+LIMIT_RESULTS: Final[int] = 25
+
+CONF_BASE: Final[str] = "base"
+CONF_INVALID_API_KEY: Final[str] = "invalid_api_key"
+CONF_NO_SENSOR_FOUND: Final[str] = "no_sensor_found"
+CONF_NO_SENSORS_FOUND: Final[str] = "no_sensors_found"
+CONF_UNKNOWN: Final[str] = "unknown"
 
 
 @dataclass
@@ -48,6 +47,7 @@ class ConfigValidation:
         try:
             await api.async_check_api_key()
         except InvalidApiKeyError as err:
+            # TODO: Set debug level when debugging in vscode # pylint: disable=fixme
             LOGGER.error(
                 "PurpleAir:async_check_api_key():InvalidApiKeyErrorPurpleAir: %s", err
             )

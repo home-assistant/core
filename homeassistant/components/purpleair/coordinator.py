@@ -1,9 +1,9 @@
-"""Define a PurpleAir DataUpdateCoordinator."""
+"""PurpleAir data update coordinator."""
 
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, Final
 
 from aiopurpleair import API
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
@@ -17,9 +17,17 @@ from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .config_schema import ConfigSchema
-from .const import DOMAIN, LOGGER, SENSOR_FIELDS_TO_RETRIEVE, UPDATE_INTERVAL
+from .const import (
+    CONF_SENSOR_INDEX,
+    CONF_SENSOR_READ_KEY,
+    DOMAIN,
+    LOGGER,
+    SENSOR_FIELDS_TO_RETRIEVE,
+)
 
 type PurpleAirConfigEntry = ConfigEntry[PurpleAirDataUpdateCoordinator]
+
+UPDATE_INTERVAL: Final[int] = 2
 
 
 def async_get_api(hass: HomeAssistant, api_key: str) -> API:
@@ -29,7 +37,7 @@ def async_get_api(hass: HomeAssistant, api_key: str) -> API:
 
 
 class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
-    """Define a PurpleAir-specific coordinator."""
+    """Data update coordinator."""
 
     config_entry: PurpleAirConfigEntry
 
@@ -45,25 +53,25 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
         self._api = async_get_api(hass, entry.data[CONF_API_KEY])
 
     async def _async_update_data(self) -> GetSensorsResponse:
-        """Get the latest sensor information."""
-        index_list = ConfigSchema.async_get_sensor_index_list(
-            dict(self.config_entry.options)
-        )
-        assert index_list is not None and len(index_list) > 0, (
-            "No sensor indexes found in configuration"
-        )
+        """Update sensor data."""
+        index_list: list[int] = [
+            int(subentry.data[CONF_SENSOR_INDEX])
+            for subentry in self.config_entry.subentries.values()
+        ]
+        read_key_list: list[str] | None = [
+            str(subentry.data[CONF_SENSOR_READ_KEY])
+            for subentry in self.config_entry.subentries.values()
+            if CONF_SENSOR_READ_KEY in subentry.data
+        ] or None
 
-        read_keys_list = ConfigSchema.async_get_sensor_read_key_list(
-            dict(self.config_entry.options)
-        )
-        if read_keys_list is None or len(read_keys_list) == 0:
-            read_keys_list = None
+        if index_list is None or len(index_list) == 0:
+            raise UpdateFailed("No sensors found in configuration")
 
         try:
             return await self._api.sensors.async_get_sensors(
                 SENSOR_FIELDS_TO_RETRIEVE,
                 sensor_indices=index_list,
-                read_keys=read_keys_list,
+                read_keys=read_key_list,
             )
         except InvalidApiKeyError as err:
             raise ConfigEntryAuthFailed("Invalid API key") from err
@@ -73,9 +81,10 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
             raise UpdateFailed(f"Unexpected error while fetching data: {err}") from err
 
     def async_get_map_url(self, sensor_index: int) -> str:
-        """Get the map URL for a sensor index."""
+        """Get map URL."""
         return self._api.get_map_url(sensor_index)
 
+    # TODO: Update for new schema # pylint: disable=fixme
     def async_delete_orphans_from_device_registry(
         self, options: dict[str, Any] | None = None
     ) -> None:
