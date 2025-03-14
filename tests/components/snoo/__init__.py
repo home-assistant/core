@@ -49,6 +49,6 @@ def find_update_callback(
 ) -> Callable[[SnooData], Awaitable[None]]:
     """Find the update callback for a specific identifier."""
     for call in mock.subscribe.call_args_list:
-        if call[0][0].serial_number == serial_number:
+        if call[0][0].serialNumber == serial_number:
             return call[0][1]
     pytest.fail(f"Callback for identifier {serial_number} not found")
