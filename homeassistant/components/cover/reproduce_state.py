@@ -118,9 +118,6 @@ async def _async_reproduce_state(
             )
             set_tilt = True
 
-    if state_matches:
-        return
-
     # Open/Close
     if state.state in {CoverState.CLOSED, CoverState.CLOSING}:
         if not set_position and CoverEntityFeature.CLOSE in supported_features:

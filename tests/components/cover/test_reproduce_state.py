@@ -70,7 +70,9 @@ async def test_reproducing_states(
         CoverState.OPEN,
         {
             ATTR_CURRENT_POSITION: 50,
-            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN,
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.OPEN,
         },
     )
     hass.states.async_set(
@@ -316,8 +318,10 @@ async def test_reproducing_states(
         {"entity_id": "cover.entity_open_tilt"},
         {"entity_id": "cover.entity_entirely_open"},
         {"entity_id": "cover.tilt_only_open"},
+        {"entity_id": "cover.entity_open_attr"},
+        {"entity_id": "cover.tilt_only_tilt_position_100"},
     ]
-    assert len(close_tilt_calls) == 3
+    assert len(close_tilt_calls) == 5
     for call in close_tilt_calls:
         assert call.domain == "cover"
         assert call.data in valid_close_tilt_calls
@@ -326,8 +330,9 @@ async def test_reproducing_states(
     valid_open_tilt_calls = [
         {"entity_id": "cover.entity_close_tilt"},
         {"entity_id": "cover.tilt_only_closed"},
+        {"entity_id": "cover.tilt_only_tilt_position_0"},
     ]
-    assert len(open_tilt_calls) == 2
+    assert len(open_tilt_calls) == 3
     for call in open_tilt_calls:
         assert call.domain == "cover"
         assert call.data in valid_open_tilt_calls
