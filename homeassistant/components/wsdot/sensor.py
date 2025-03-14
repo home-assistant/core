@@ -11,37 +11,34 @@ from typing import Any
 import requests
 import voluptuous as vol
 
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import ATTR_NAME, CONF_API_KEY, CONF_ID, CONF_NAME, UnitOfTime
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_ACCESS_CODE = "AccessCode"
-ATTR_AVG_TIME = "AverageTime"
-ATTR_CURRENT_TIME = "CurrentTime"
-ATTR_DESCRIPTION = "Description"
-ATTR_TIME_UPDATED = "TimeUpdated"
-ATTR_TRAVEL_TIME_ID = "TravelTimeID"
-
-ATTRIBUTION = "Data provided by WSDOT"
-
-CONF_TRAVEL_TIMES = "travel_time"
-
-ICON = "mdi:car"
-
-RESOURCE = (
-    "http://www.wsdot.wa.gov/Traffic/api/TravelTimes/"
-    "TravelTimesREST.svc/GetTravelTimeAsJson"
+from .const import (
+    CONF_API_KEY,
+    CONF_ID,
+    CONF_NAME,
+    CONF_TRAVEL_TIMES,
+    ATTR_ACCESS_CODE,
+    ATTR_AVG_TIME,
+    ATTR_CURRENT_TIME,
+    ATTR_DESCRIPTION,
+    ATTR_NAME,
+    ATTR_TIME_UPDATED,
+    ATTR_TRAVEL_TIME_ID,
+    ATTRIBUTION,
+    ICON,
+    RESOURCE,
+    UnitOfTime,
 )
 
-SCAN_INTERVAL = timedelta(minutes=3)
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -53,12 +50,10 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WSDOT sensor."""
     sensors = []
@@ -70,26 +65,7 @@ async def async_setup_entry(
             )
         )
 
-    async_add_entities(sensors)
-
-
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the WSDOT sensor."""
-    sensors = []
-    for travel_time in config[CONF_TRAVEL_TIMES]:
-        name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
-        sensors.append(
-            WashingtonStateTravelTimeSensor(
-                name, config.get(CONF_API_KEY), travel_time.get(CONF_ID)
-            )
-        )
-
-    add_entities(sensors, True)
+    add_entities(sensors)
 
 
 class WashingtonStateTransportSensor(SensorEntity):

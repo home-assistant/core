@@ -1,7 +1,7 @@
 """The wsdot component."""
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

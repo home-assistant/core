@@ -5,8 +5,8 @@ import re
 
 import requests_mock
 
-from homeassistant.components.wsdot import sensor as wsdot
-from homeassistant.components.wsdot.sensor import (
+from homeassistant.components.wsdot import sensor as wsdot_sensor
+from homeassistant.components.wsdot.const import (
     ATTR_DESCRIPTION,
     ATTR_TIME_UPDATED,
     CONF_API_KEY,
@@ -19,38 +19,29 @@ from homeassistant.components.wsdot.sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import load_fixture
-
-config = {
-    CONF_API_KEY: "foo",
-    SCAN_INTERVAL: timedelta(seconds=120),
-    CONF_TRAVEL_TIMES: [{CONF_ID: 96, CONF_NAME: "I90 EB"}],
-}
+from tests.common import MockConfigEntry, load_fixture
 
 
-async def test_setup_with_config(hass: HomeAssistant) -> None:
+async def test_setup_with_config(hass: HomeAssistant, mock_config_data: dict) -> None:
     """Test the platform setup with configuration."""
-    assert await async_setup_component(hass, "sensor", {"wsdot": config})
+    assert await async_setup_component(hass, "sensor", {"wsdot": {"data": mock_config_data}})
 
 
-async def test_setup(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
+async def test_setup(hass: HomeAssistant, mock_config_entry:MockConfigEntry, requests_mock: requests_mock.Mocker) -> None:
     """Test for operational WSDOT sensor with proper attributes."""
     entities = []
 
-    def add_entities(new_entities, update_before_add=False):
+    def add_entities(new_entities):
         """Mock add entities."""
         for entity in new_entities:
             entity.hass = hass
-
-        if update_before_add:
-            for entity in new_entities:
-                entity.update()
+            entity.update()
 
         entities.extend(new_entities)
 
     uri = re.compile(RESOURCE + "*")
     requests_mock.get(uri, text=load_fixture("wsdot/wsdot.json"))
-    wsdot.setup_platform(hass, config, add_entities)
+    await wsdot_sensor.async_setup_entry(hass, mock_config_entry, add_entities)
     assert len(entities) == 1
     sensor = entities[0]
     assert sensor.name == "I90 EB"
