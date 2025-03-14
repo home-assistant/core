@@ -1244,8 +1244,10 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
         optimistic_set = self.set_optimistic_attributes(**kwargs)
         for script_id, script_params in self.get_registered_scripts(**kwargs):
             if self._template and self._state is None:
-                # The template hasn't rendered yet, but turn on was called.
-                # Assume state is on.
+                # Ensure an optimistic state is set on the entity when turn_on
+                # is called and the main state hasn't rendered.  This will only
+                # occur when the state is unknown, the template hasn't triggered,
+                # and turn_on is called.
                 self._state = True
 
             await self.async_run_script(
@@ -1261,10 +1263,6 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
         """Turn the light off."""
         off_script = self._action_scripts[CONF_OFF_ACTION]
         if ATTR_TRANSITION in kwargs and self._supports_transition is True:
-            if self._template and self._state is None:
-                # The template hasn't rendered yet, but turn off was called.
-                # Assume state is false.
-                self._state = False
             await self.async_run_script(
                 off_script,
                 run_variables={"transition": kwargs[ATTR_TRANSITION]},
