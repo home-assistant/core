@@ -217,7 +217,7 @@ async def _async_reproduce_state(
             service_call, service_data, features, target_tilt_position
         )
     )
-    # Open/Close
+
     if target_state in CLOSING_STATES:
         await _async_close_cover(
             service_call, service_data, features, set_position, set_tilt
