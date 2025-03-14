@@ -53,6 +53,26 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the WSDOT sensor."""
+    sensors = []
+    for travel_time in entry.data[CONF_TRAVEL_TIMES]:
+        name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
+        sensors.append(
+            WashingtonStateTravelTimeSensor(
+                name, entry.data.get(CONF_API_KEY), travel_time.get(CONF_ID)
+            )
+        )
+
+    async_add_entities(sensors)
+
+
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
