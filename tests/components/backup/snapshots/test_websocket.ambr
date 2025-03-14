@@ -229,6 +229,17 @@
     'type': 'result',
   })
 # ---
+# name: test_can_decrypt_on_download_get_backup_returns_none
+  dict({
+    'error': dict({
+      'code': 'home_assistant_error',
+      'message': 'Backup abc123 not found in agent test.remote',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
 # name: test_can_decrypt_on_download_with_agent_error[BackupAgentError]
   dict({
     'error': dict({
@@ -4930,6 +4941,18 @@
     'type': 'result',
   })
 # ---
+# name: test_details_get_backup_returns_none
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backup': None,
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_details_with_errors[BackupAgentUnreachableError]
   dict({
     'id': 1,
@@ -5727,6 +5750,17 @@
 # ---
 # name: test_restore_remote_agent[remote_agents1-backups1].1
   1
+# ---
+# name: test_restore_remote_agent_get_backup_returns_none
+  dict({
+    'error': dict({
+      'code': 'home_assistant_error',
+      'message': 'Backup abc123 not found in agent test.remote',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
 # ---
 # name: test_restore_wrong_password
   dict({

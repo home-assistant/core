@@ -19,14 +19,7 @@ import wave
 import hass_nabucasa
 import voluptuous as vol
 
-from homeassistant.components import (
-    conversation,
-    media_source,
-    stt,
-    tts,
-    wake_word,
-    websocket_api,
-)
+from homeassistant.components import conversation, stt, tts, wake_word, websocket_api
 from homeassistant.components.tts import (
     generate_media_source_id as tts_generate_media_source_id,
 )
@@ -569,8 +562,7 @@ class PipelineRun:
 
     id: str = field(default_factory=ulid_util.ulid_now)
     stt_provider: stt.SpeechToTextEntity | stt.Provider = field(init=False, repr=False)
-    tts_engine: str = field(init=False, repr=False)
-    tts_options: dict | None = field(init=False, default=None)
+    tts_stream: tts.ResultStream | None = field(init=False, default=None)
     wake_word_entity_id: str | None = field(init=False, default=None, repr=False)
     wake_word_entity: wake_word.WakeWordDetectionEntity = field(init=False, repr=False)
 
@@ -648,13 +640,19 @@ class PipelineRun:
         self._device_id = device_id
         self._start_debug_recording_thread()
 
-        data = {
+        data: dict[str, Any] = {
             "pipeline": self.pipeline.id,
             "language": self.language,
             "conversation_id": conversation_id,
         }
         if self.runner_data is not None:
             data["runner_data"] = self.runner_data
+        if self.tts_stream:
+            data["tts_output"] = {
+                "token": self.tts_stream.token,
+                "url": self.tts_stream.url,
+                "mime_type": self.tts_stream.content_type,
+            }
 
         self.process_event(PipelineEvent(PipelineEventType.RUN_START, data))
 
@@ -1246,36 +1244,31 @@ class PipelineRun:
                 tts_options[tts.ATTR_PREFERRED_SAMPLE_BYTES] = SAMPLE_WIDTH
 
         try:
-            options_supported = await tts.async_support_options(
-                self.hass,
-                engine,
-                self.pipeline.tts_language,
-                tts_options,
+            self.tts_stream = tts.async_create_stream(
+                hass=self.hass,
+                engine=engine,
+                language=self.pipeline.tts_language,
+                options=tts_options,
             )
         except HomeAssistantError as err:
             raise TextToSpeechError(
                 code="tts-not-supported",
-                message=f"Text-to-speech engine '{engine}' not found",
-            ) from err
-        if not options_supported:
-            raise TextToSpeechError(
-                code="tts-not-supported",
                 message=(
                     f"Text-to-speech engine {engine} "
-                    f"does not support language {self.pipeline.tts_language} or options {tts_options}"
+                    f"does not support language {self.pipeline.tts_language} or options {tts_options}:"
+                    f" {err}"
                 ),
-            )
-
-        self.tts_engine = engine
-        self.tts_options = tts_options
+            ) from err
 
     async def text_to_speech(self, tts_input: str) -> None:
         """Run text-to-speech portion of pipeline."""
+        assert self.tts_stream is not None
+
         self.process_event(
             PipelineEvent(
                 PipelineEventType.TTS_START,
                 {
-                    "engine": self.tts_engine,
+                    "engine": self.tts_stream.engine,
                     "language": self.pipeline.tts_language,
                     "voice": self.pipeline.tts_voice,
                     "tts_input": tts_input,
@@ -1288,14 +1281,9 @@ class PipelineRun:
             tts_media_id = tts_generate_media_source_id(
                 self.hass,
                 tts_input,
-                engine=self.tts_engine,
-                language=self.pipeline.tts_language,
-                options=self.tts_options,
-            )
-            tts_media = await media_source.async_resolve_media(
-                self.hass,
-                tts_media_id,
-                None,
+                engine=self.tts_stream.engine,
+                language=self.tts_stream.language,
+                options=self.tts_stream.options,
             )
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during text-to-speech")
@@ -1304,10 +1292,13 @@ class PipelineRun:
                 message="Unexpected error during text-to-speech",
             ) from src_error
 
-        _LOGGER.debug("TTS result %s", tts_media)
+        self.tts_stream.async_set_message(tts_input)
+
         tts_output = {
             "media_id": tts_media_id,
-            **asdict(tts_media),
+            "token": self.tts_stream.token,
+            "url": self.tts_stream.url,
+            "mime_type": self.tts_stream.content_type,
         }
 
         self.process_event(

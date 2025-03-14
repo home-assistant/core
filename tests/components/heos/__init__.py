@@ -64,3 +64,7 @@ class MockHeos(Heos):
     def mock_set_connection_state(self, connection_state: ConnectionState) -> None:
         """Set the connection state on the mock instance."""
         self._connection._state = connection_state
+
+    def mock_set_current_host(self, host: str) -> None:
+        """Set the current host on the mock instance."""
+        self._connection._host = host

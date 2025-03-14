@@ -417,7 +417,12 @@ def test_supported_mysql(caplog: pytest.LogCaptureFixture, mysql_version) -> Non
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "mysql", dbapi_connection, True)
+    database_engine = util.setup_connection_for_dialect(
+        instance_mock, "mysql", dbapi_connection, True
+    )
+    assert database_engine is not None
+    assert database_engine.optimizer.slow_range_in_select is False
+    assert database_engine.optimizer.slow_dependent_subquery is True
 
     assert "minimum supported version" not in caplog.text
 
@@ -502,6 +507,7 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
     assert "minimum supported version" not in caplog.text
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is True
+    assert database_engine.optimizer.slow_dependent_subquery is False
 
 
 @pytest.mark.parametrize(
@@ -583,6 +589,7 @@ def test_supported_sqlite(caplog: pytest.LogCaptureFixture, sqlite_version) -> N
     assert "minimum supported version" not in caplog.text
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is False
+    assert database_engine.optimizer.slow_dependent_subquery is False
 
 
 @pytest.mark.parametrize(
@@ -675,6 +682,7 @@ async def test_issue_for_mariadb_with_MDEV_25020(
 
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is True
+    assert database_engine.optimizer.slow_dependent_subquery is False
 
 
 @pytest.mark.parametrize(
@@ -731,6 +739,7 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
 
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is False
+    assert database_engine.optimizer.slow_dependent_subquery is False
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])

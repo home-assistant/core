@@ -9,7 +9,7 @@ from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 import logging
 from time import time
-from typing import TYPE_CHECKING, Any, cast, final
+from typing import TYPE_CHECKING, Any, TypedDict, cast, final
 from uuid import UUID
 
 import sqlalchemy
@@ -712,6 +712,11 @@ def _modify_columns(
                 raise
 
 
+class _FKAlterDict(TypedDict):
+    old_fk: ForeignKeyConstraint
+    columns: list[str]
+
+
 def _update_states_table_with_foreign_key_options(
     session_maker: Callable[[], Session], engine: Engine
 ) -> None:
@@ -729,7 +734,7 @@ def _update_states_table_with_foreign_key_options(
 
     inspector = sqlalchemy.inspect(engine)
     tmp_states_table = Table(TABLE_STATES, MetaData())
-    alters = [
+    alters: list[_FKAlterDict] = [
         {
             "old_fk": ForeignKeyConstraint(
                 (), (), name=foreign_key["name"], table=tmp_states_table
@@ -755,14 +760,14 @@ def _update_states_table_with_foreign_key_options(
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(DropConstraint(alter["old_fk"]))  # type: ignore[no-untyped-call]
+                connection.execute(DropConstraint(alter["old_fk"]))
                 for fkc in states_key_constraints:
                     if fkc.column_keys == alter["columns"]:
                         # AddConstraint mutates the constraint passed to it, we need to
                         # undo that to avoid changing the behavior of the table schema.
                         # https://github.com/sqlalchemy/sqlalchemy/blob/96f1172812f858fead45cdc7874abac76f45b339/lib/sqlalchemy/sql/ddl.py#L746-L748
                         create_rule = fkc._create_rule  # noqa: SLF001
-                        add_constraint = AddConstraint(fkc)  # type: ignore[no-untyped-call]
+                        add_constraint = AddConstraint(fkc)
                         fkc._create_rule = create_rule  # noqa: SLF001
                         connection.execute(add_constraint)
             except (InternalError, OperationalError):
@@ -800,7 +805,7 @@ def _drop_foreign_key_constraints(
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(DropConstraint(drop))  # type: ignore[no-untyped-call]
+                connection.execute(DropConstraint(drop))
             except (InternalError, OperationalError):
                 _LOGGER.exception(
                     "Could not drop foreign constraints in %s table on %s",
@@ -845,7 +850,7 @@ def _restore_foreign_key_constraints(
         # undo that to avoid changing the behavior of the table schema.
         # https://github.com/sqlalchemy/sqlalchemy/blob/96f1172812f858fead45cdc7874abac76f45b339/lib/sqlalchemy/sql/ddl.py#L746-L748
         create_rule = constraint._create_rule  # noqa: SLF001
-        add_constraint = AddConstraint(constraint)  # type: ignore[no-untyped-call]
+        add_constraint = AddConstraint(constraint)
         constraint._create_rule = create_rule  # noqa: SLF001
         try:
             _add_constraint(session_maker, add_constraint, table, column)

@@ -12,6 +12,7 @@ from pyfibaro.fibaro_client import (
     FibaroClient,
     FibaroConnectFailed,
 )
+from pyfibaro.fibaro_data_helper import read_rooms
 from pyfibaro.fibaro_device import DeviceModel
 from pyfibaro.fibaro_info import InfoModel
 from pyfibaro.fibaro_scene import SceneModel
@@ -83,7 +84,7 @@ class FibaroController:
         # Whether to import devices from plugins
         self._import_plugins = import_plugins
         # Mapping roomId to room object
-        self._room_map = {room.fibaro_id: room for room in self._client.read_rooms()}
+        self._room_map = read_rooms(fibaro_client)
         self._device_map: dict[int, DeviceModel]  # Mapping deviceId to device object
         self.fibaro_devices: dict[Platform, list[DeviceModel]] = defaultdict(
             list
@@ -269,9 +270,7 @@ class FibaroController:
 
     def get_room_name(self, room_id: int) -> str | None:
         """Get the room name by room id."""
-        assert self._room_map
-        room = self._room_map.get(room_id)
-        return room.name if room else None
+        return self._room_map.get(room_id)
 
     def read_scenes(self) -> list[SceneModel]:
         """Return list of scenes."""
@@ -294,20 +293,17 @@ class FibaroController:
         for device in devices:
             try:
                 device.fibaro_controller = self
-                if device.room_id == 0:
+                room_name = self.get_room_name(device.room_id)
+                if not room_name:
                     room_name = "Unknown"
-                else:
-                    room_name = self._room_map[device.room_id].name
                 device.room_name = room_name
                 device.friendly_name = f"{room_name} {device.name}"
                 device.ha_id = (
                     f"{slugify(room_name)}_{slugify(device.name)}_{device.fibaro_id}"
                 )
                 if device.enabled and (not device.is_plugin or self._import_plugins):
-                    device.mapped_platform = self._map_device_to_platform(device)
-                else:
-                    device.mapped_platform = None
-                if (platform := device.mapped_platform) is None:
+                    platform = self._map_device_to_platform(device)
+                if platform is None:
                     continue
                 device.unique_id_str = f"{slugify(self.hub_serial)}.{device.fibaro_id}"
                 self._create_device_info(device, devices)

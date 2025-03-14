@@ -1,0 +1,276 @@
+# serializer version: 1
+# name: test_blu_trv_climate_set_temperature[climate.trv_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 4,
+      'target_temp_step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.trv_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 257>,
+    'translation_key': None,
+    'unique_id': 'f8:44:77:25:f0:dd-blutrv:200',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_blu_trv_climate_set_temperature[climate.trv_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 15.2,
+      'friendly_name': 'TRV-Name',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 4,
+      'supported_features': <ClimateEntityFeature: 257>,
+      'target_temp_step': 0.1,
+      'temperature': 17.1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.trv_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_climate_hvac_mode[climate.test_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 31,
+      'min_temp': 4,
+      'preset_modes': list([
+        'none',
+        'Profile1',
+        'Profile2',
+      ]),
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test_name',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Test name',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': '123456789ABC-sensor_0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_hvac_mode[climate.test_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 22.1,
+      'friendly_name': 'Test name',
+      'hvac_action': <HVACAction.OFF: 'off'>,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 31,
+      'min_temp': 4,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'Profile1',
+        'Profile2',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 0.5,
+      'temperature': 4,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_rpc_climate_hvac_mode[climate.test_name_thermostat_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 5,
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test_name_thermostat_0',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Test name Thermostat 0',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '123456789ABC-thermostat:0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_rpc_climate_hvac_mode[climate.test_name_thermostat_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 44.4,
+      'current_temperature': 12.3,
+      'friendly_name': 'Test name Thermostat 0',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 5,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'target_temp_step': 0.5,
+      'temperature': 23,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_name_thermostat_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_wall_display_thermostat_mode[climate.test_name_thermostat_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 5,
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test_name_thermostat_0',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Test name Thermostat 0',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '123456789ABC-thermostat:0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_wall_display_thermostat_mode[climate.test_name_thermostat_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 44.4,
+      'current_temperature': 12.3,
+      'friendly_name': 'Test name Thermostat 0',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 5,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'target_temp_step': 0.5,
+      'temperature': 23,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_name_thermostat_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---

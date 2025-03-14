@@ -163,7 +163,7 @@ async def mock_async_browse(
             "title": "Fake Item 2",
             "id": FAKE_VALID_ITEM_ID + "_2",
             "hasitems": media_type == "favorites",
-            "isaudio": True,
+            "isaudio": False,
             "item_type": child_types[media_type],
             "image_url": "http://lms.internal:9000/html/images/favorites.png",
             "url": "file:///var/lib/squeezeboxserver/music/track_2.mp3",

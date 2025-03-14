@@ -36,6 +36,9 @@
     },
     "cannot_access_or_create_backup_path": {
       "message": "Cannot access or create backup path. Please check the path and permissions."
+    },
+    "failed_to_migrate_folder": {
+      "message": "Failed to migrate wrong encoded folder \"{wrong_path}\" to \"{correct_path}\"."
     }
   }
 }

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from roborock.containers import RoborockStateCode
 from roborock.roborock_typing import DeviceProp
 
 from homeassistant.components.binary_sensor import (
@@ -12,7 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import ATTR_BATTERY_CHARGING, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -62,6 +63,13 @@ BINARY_SENSOR_DESCRIPTIONS = [
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.in_cleaning,
+    ),
+    RoborockBinarySensorDescription(
+        key=ATTR_BATTERY_CHARGING,
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.status.state
+        in (RoborockStateCode.charging, RoborockStateCode.charging_complete),
     ),
 ]
 

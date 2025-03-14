@@ -93,7 +93,4 @@ rules:
   # Platinum
   async-dependency: todo
   inject-websession: todo
-  strict-typing:
-    status: todo
-    comment: |
-      Requirement 'Mastodon.py==1.8.1' appears untyped
+  strict-typing: done

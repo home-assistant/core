@@ -285,6 +285,7 @@ SPIN_SPEED_OPTIONS = {
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM400",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM600",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM800",
+        "LaundryCare.Washer.EnumType.SpinSpeed.RPM900",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM1000",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM1200",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM1400",

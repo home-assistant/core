@@ -36,7 +36,6 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.IMAGE,
     Platform.NUMBER,
-    Platform.SCENE,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -50,6 +49,7 @@ IMAGE_CACHE_INTERVAL = 90
 MAP_SLEEP = 3
 
 GET_MAPS_SERVICE_NAME = "get_maps"
+MAP_SCALE = 4
 MAP_FILE_FORMAT = "PNG"
 MAP_FILENAME_SUFFIX = ".png"
 SET_VACUUM_GOTO_POSITION_SERVICE_NAME = "set_vacuum_goto_position"

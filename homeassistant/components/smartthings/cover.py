@@ -41,7 +41,9 @@ async def async_setup_entry(
     """Add covers for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsCover(entry_data.client, device, Capability(capability))
+        SmartThingsCover(
+            entry_data.client, device, entry_data.rooms, Capability(capability)
+        )
         for device in entry_data.devices.values()
         for capability in device.status[MAIN]
         if capability in CAPABILITIES
@@ -55,12 +57,17 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
     _state: CoverState | None = None
 
     def __init__(
-        self, client: SmartThings, device: FullDevice, capability: Capability
+        self,
+        client: SmartThings,
+        device: FullDevice,
+        rooms: dict[str, str],
+        capability: Capability,
     ) -> None:
         """Initialize the cover class."""
         super().__init__(
             client,
             device,
+            rooms,
             {
                 capability,
                 Capability.BATTERY,
@@ -117,6 +124,10 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         if self.supports_capability(Capability.SWITCH_LEVEL):
             self._attr_current_cover_position = self.get_attribute_value(
                 Capability.SWITCH_LEVEL, Attribute.LEVEL
+            )
+        elif self.supports_capability(Capability.WINDOW_SHADE_LEVEL):
+            self._attr_current_cover_position = self.get_attribute_value(
+                Capability.WINDOW_SHADE_LEVEL, Attribute.SHADE_LEVEL
             )
 
         self._attr_extra_state_attributes = {}

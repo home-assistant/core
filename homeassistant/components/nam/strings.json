@@ -54,6 +54,9 @@
   },
   "entity": {
     "sensor": {
+      "bh1750_illuminance": {
+        "name": "BH1750 illuminance"
+      },
       "bme280_humidity": {
         "name": "BME280 humidity"
       },

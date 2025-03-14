@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from ollama import Message, ResponseError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -404,7 +405,10 @@ async def test_unknown_hass_api(
 
 
 async def test_message_history_trimming(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a single message history is trimmed according to the config."""
     response_idx = 0

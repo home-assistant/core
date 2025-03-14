@@ -20,6 +20,7 @@ from pynecil import (
     ScrollSpeed,
     SettingsDataResponse,
     TempUnit,
+    TipType,
 )
 import pytest
 
@@ -164,7 +165,7 @@ def mock_pynecil() -> Generator[AsyncMock]:
         client = mock_client.return_value
 
         client.get_device_info.return_value = DeviceInfoResponse(
-            build="v2.22",
+            build="v2.23",
             device_id="c0ffeeC0",
             address="c0:ff:ee:c0:ff:ee",
             device_sn="0000c0ffeec0ffee",
@@ -205,6 +206,8 @@ def mock_pynecil() -> Generator[AsyncMock]:
             display_invert=True,
             calibrate_cjc=True,
             usb_pd_mode=True,
+            hall_sleep_time=5,
+            tip_type=TipType.PINE_SHORT,
         )
         client.get_live_data.return_value = LiveDataResponse(
             live_temp=298,
