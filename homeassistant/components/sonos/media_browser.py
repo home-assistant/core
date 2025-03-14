@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from contextlib import suppress
 from functools import partial
 import logging
-from typing import cast
+from typing import Protocol, cast
 import urllib.parse
 
 from soco.data_structures import DidlObject
@@ -43,7 +42,21 @@ from .speaker import SonosMedia, SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
-type GetBrowseImageUrlType = Callable[[str, str, str | None], str]
+# type GetBrowseImageUrlType = Callable[[str, str, str | None, MusicServiceItem | None], str]
+
+
+class GetBrowseImageUrlType(Protocol):
+    """Type for callable function."""
+
+    def __call__(
+        self,
+        media_type: str,
+        content_id: str,
+        image_id: str | None = None,
+        item: MusicServiceItem | None = None,
+    ) -> str:
+        """Define method signature."""
+        ...
 
 
 def fix_image_url(url: str) -> str:
@@ -451,7 +464,7 @@ def favorites_payload(favorites: SonosFavorites) -> BrowseMedia:
 def favorites_folder_payload(
     favorites: SonosFavorites,
     media_content_id: str,
-    get_browse_image_url: GetBrowseImageUrlType,
+    get_thumbnail_url=None,
 ) -> BrowseMedia:
     """Create response payload to describe all items of a type of favorite.
 
@@ -471,7 +484,7 @@ def favorites_folder_payload(
                 media_content_type="favorite_item_id",
                 can_play=True,
                 can_expand=False,
-                thumbnail=get_browse_image_url(
+                thumbnail=get_thumbnail_url(
                     "favorite_item_id", favorite.item_id, item=favorite
                 ),
             )
