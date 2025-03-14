@@ -755,8 +755,7 @@ async def test_wall_display_thermostat_mode(
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     # the switch entity should be removed
-    state = hass.states.get(switch_entity_id)
-    assert state is None
+    assert hass.states.get(switch_entity_id) is None
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
     # the climate entity should be created

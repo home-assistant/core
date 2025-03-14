@@ -90,8 +90,7 @@ async def test_block_reload_on_cfg_change(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test_name_channel_1")
-    assert state is None
+    assert hass.states.get("switch.test_name_channel_1") is None
 
 
 async def test_block_no_reload_on_bulb_changes(
@@ -442,8 +441,7 @@ async def test_rpc_reload_on_cfg_change(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test_switch_0")
-    assert state is None
+    assert hass.states.get("switch.test_switch_0") is None
 
 
 async def test_rpc_reload_with_invalid_auth(

@@ -310,8 +310,7 @@ async def test_block_device_no_relay_blocks(
     """Test block device without relay blocks."""
     monkeypatch.setattr(mock_block_device.blocks[RELAY_BLOCK_ID], "type", "roller")
     await init_integration(hass, 1)
-    state = hass.states.get("switch.test_name_channel_1")
-    assert state is None
+    assert hass.states.get("switch.test_name_channel_1") is None
 
 
 async def test_block_device_mode_roller(
@@ -320,8 +319,7 @@ async def test_block_device_mode_roller(
     """Test block device in roller mode."""
     monkeypatch.setitem(mock_block_device.settings, "mode", "roller")
     await init_integration(hass, 1)
-    state = hass.states.get("switch.test_name_channel_1")
-    assert state is None
+    assert hass.states.get("switch.test_name_channel_1") is None
 
 
 async def test_block_device_app_type_light(
@@ -332,8 +330,7 @@ async def test_block_device_app_type_light(
         mock_block_device.settings["relays"][RELAY_BLOCK_ID], "appliance_type", "light"
     )
     await init_integration(hass, 1)
-    state = hass.states.get("switch.test_name_channel_1")
-    assert state is None
+    assert hass.states.get("switch.test_name_channel_1") is None
 
 
 async def test_rpc_device_services(
@@ -393,8 +390,7 @@ async def test_rpc_device_switch_type_lights_mode(
     )
     await init_integration(hass, 2)
 
-    state = hass.states.get("switch.test_switch_0")
-    assert state is None
+    assert hass.states.get("switch.test_switch_0") is None
 
 
 @pytest.mark.parametrize("exc", [DeviceConnectionError, RpcCallError(-1, "error")])
@@ -499,8 +495,7 @@ async def test_wall_display_relay_mode(
 
     # the climate entity should be removed
 
-    state = hass.states.get(climate_entity_id)
-    assert state is None
+    assert hass.states.get(climate_entity_id) is None
     assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 0
 
     # the switch entity should be created
@@ -594,8 +589,7 @@ async def test_rpc_device_virtual_binary_sensor(
 
     await init_integration(hass, 3)
 
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
 
 async def test_rpc_remove_virtual_switch_when_mode_label(
@@ -628,8 +622,7 @@ async def test_rpc_remove_virtual_switch_when_mode_label(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
+    assert entity_registry.async_get(entity_id) is None
 
 
 async def test_rpc_remove_virtual_switch_when_orphaned(
@@ -653,8 +646,7 @@ async def test_rpc_remove_virtual_switch_when_orphaned(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
+    assert entity_registry.async_get(entity_id) is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

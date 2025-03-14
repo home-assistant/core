@@ -330,8 +330,7 @@ async def test_sleeping_rpc_device_offline_during_setup(
 
     assert "will resume when device is online" in caplog.text
     assert "is online (source: setup)" in caplog.text
-    state = hass.states.get("sensor.test_name_temperature")
-    assert state is None
+    assert hass.states.get("sensor.test_name_temperature") is None
 
     # Create an online event and verify that device is init successfully
     monkeypatch.setattr(mock_rpc_device, "initialize", AsyncMock())
@@ -395,8 +394,7 @@ async def test_entry_unload_device_not_ready(
     assert entry
     assert entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

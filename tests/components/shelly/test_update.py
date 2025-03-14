@@ -429,8 +429,7 @@ async def test_rpc_sleeping_update(
     await init_integration(hass, 2, sleep_period=1000)
 
     # Entity should be created when device is online
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
     # Make device online
     mock_rpc_device.mock_online()

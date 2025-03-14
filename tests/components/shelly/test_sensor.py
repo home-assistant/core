@@ -179,8 +179,7 @@ async def test_block_sleeping_sensor(
     await init_integration(hass, 1, sleep_period=1000)
 
     # Sensor should be created when device is online
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
     # Make device online
     mock_block_device.mock_online()
@@ -371,8 +370,7 @@ async def test_block_sensor_without_value(
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "battery", None)
     await init_integration(hass, 1)
 
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
 
 async def test_block_sensor_unknown_value(
@@ -435,8 +433,7 @@ async def test_rpc_rssi_sensor_removal(
     monkeypatch.setitem(mock_rpc_device.config["wifi"]["sta"], "enable", False)
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
     # WiFi2 enabled, do not remove sensor
     monkeypatch.setitem(mock_rpc_device.config["wifi"]["sta1"], "enable", True)
@@ -532,8 +529,7 @@ async def test_rpc_sleeping_sensor(
     entry = await init_integration(hass, 2, sleep_period=1000)
 
     # Sensor should be created when device is online
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
     register_entity(
         hass,
@@ -699,8 +695,7 @@ async def test_rpc_sleeping_update_entity_service(
     await init_integration(hass, 2, sleep_period=1000)
 
     # Entity should be created when device is online
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
     # Make device online
     mock_rpc_device.mock_online()
@@ -751,8 +746,7 @@ async def test_block_sleeping_update_entity_service(
     await init_integration(hass, 1, sleep_period=3600)
 
     # Sensor should be created when device is online
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
     # Make device online
     mock_block_device.mock_online()
@@ -838,12 +832,10 @@ async def test_rpc_disabled_analog_input_sensors(
     await init_integration(hass, 2)
 
     entity_id = f"{SENSOR_DOMAIN}.test_name_input_1_analog"
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
     entity_id = f"{SENSOR_DOMAIN}.test_name_input_1_analog_value"
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
 
 async def test_rpc_disabled_xpercent(
@@ -865,8 +857,7 @@ async def test_rpc_disabled_xpercent(
     assert state.state == "89"
 
     entity_id = f"{SENSOR_DOMAIN}.test_name_input_1_analog_value"
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
 
 @pytest.mark.parametrize(
@@ -925,12 +916,10 @@ async def test_rpc_disabled_pulse_counter_sensors(
     await init_integration(hass, 2)
 
     entity_id = f"{SENSOR_DOMAIN}.gas_pulse_counter"
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
     entity_id = f"{SENSOR_DOMAIN}.gas_counter_value"
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
 
 async def test_rpc_disabled_xtotal_counter(
@@ -952,8 +941,7 @@ async def test_rpc_disabled_xtotal_counter(
     assert state.state == "20635"
 
     entity_id = f"{SENSOR_DOMAIN}.gas_counter_value"
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
 
 @pytest.mark.parametrize(
@@ -1020,11 +1008,9 @@ async def test_rpc_disabled_xfreq(
 
     entity_id = f"{SENSOR_DOMAIN}.gas_pulse_counter_frequency_value"
 
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
+    assert entity_registry.async_get(entity_id) is None
 
 
 @pytest.mark.parametrize(
@@ -1101,8 +1087,7 @@ async def test_rpc_remove_text_virtual_sensor_when_mode_field(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
+    assert entity_registry.async_get(entity_id) is None
 
 
 async def test_rpc_remove_text_virtual_sensor_when_orphaned(
@@ -1126,8 +1111,7 @@ async def test_rpc_remove_text_virtual_sensor_when_orphaned(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
+    assert entity_registry.async_get(entity_id) is None
 
 
 @pytest.mark.parametrize(
@@ -1214,8 +1198,7 @@ async def test_rpc_remove_number_virtual_sensor_when_mode_field(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
+    assert entity_registry.async_get(entity_id) is None
 
 
 async def test_rpc_remove_number_virtual_sensor_when_orphaned(
@@ -1239,8 +1222,7 @@ async def test_rpc_remove_number_virtual_sensor_when_orphaned(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
+    assert entity_registry.async_get(entity_id) is None
 
 
 @pytest.mark.parametrize(
@@ -1336,8 +1318,7 @@ async def test_rpc_remove_enum_virtual_sensor_when_mode_dropdown(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
+    assert entity_registry.async_get(entity_id) is None
 
 
 async def test_rpc_remove_enum_virtual_sensor_when_orphaned(
@@ -1361,8 +1342,7 @@ async def test_rpc_remove_enum_virtual_sensor_when_orphaned(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
+    assert entity_registry.async_get(entity_id) is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

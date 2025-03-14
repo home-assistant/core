@@ -159,8 +159,7 @@ async def test_block_sleeping_binary_sensor(
     await init_integration(hass, 1, sleep_period=1000)
 
     # Sensor should be created when device is online
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
     # Make device online
     mock_block_device.mock_online()
@@ -313,8 +312,7 @@ async def test_rpc_sleeping_binary_sensor(
     config_entry = await init_integration(hass, 2, sleep_period=1000)
 
     # Sensor should be created when device is online
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
     register_entity(
         hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud-cloud", config_entry
@@ -499,8 +497,7 @@ async def test_rpc_remove_virtual_binary_sensor_when_mode_toggle(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
+    assert entity_registry.async_get(entity_id) is None
 
 
 async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
@@ -524,8 +521,7 @@ async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
+    assert entity_registry.async_get(entity_id) is None
 
 
 async def test_blu_trv_binary_sensor_entity(

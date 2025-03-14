@@ -48,8 +48,7 @@ async def test_block_number_update(
     )
     await init_integration(hass, 1, sleep_period=3600)
 
-    state = hass.states.get(entity_id)
-    assert state is None
+    assert hass.states.get(entity_id) is None
 
     # Make device online
     mock_block_device.mock_online()
@@ -382,8 +381,7 @@ async def test_rpc_remove_virtual_number_when_mode_label(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
+    assert entity_registry.async_get(entity_id) is None
 
 
 async def test_rpc_remove_virtual_number_when_orphaned(
@@ -407,8 +405,7 @@ async def test_rpc_remove_virtual_number_when_orphaned(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
+    assert entity_registry.async_get(entity_id) is None
 
 
 async def test_blu_trv_number_entity(

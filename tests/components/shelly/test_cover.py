@@ -110,8 +110,8 @@ async def test_block_device_no_roller_blocks(
     """Test block device without roller blocks."""
     monkeypatch.setattr(mock_block_device.blocks[ROLLER_BLOCK_ID], "type", None)
     await init_integration(hass, 1)
-    state = hass.states.get("cover.test_name")
-    assert state is None
+
+    assert hass.states.get("cover.test_name") is None
 
 
 async def test_rpc_device_services(
@@ -187,8 +187,8 @@ async def test_rpc_device_no_cover_keys(
     """Test RPC device without cover keys."""
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
     await init_integration(hass, 2)
-    state = hass.states.get("cover.test_cover_0")
-    assert state is None
+
+    assert hass.states.get("cover.test_cover_0") is None
 
 
 async def test_rpc_device_update(

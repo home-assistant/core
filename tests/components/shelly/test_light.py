@@ -410,8 +410,7 @@ async def test_block_device_relay_app_type_light(
     )
     await init_integration(hass, 1)
 
-    state = hass.states.get("switch.test_name_channel_1")
-    assert state is None
+    assert hass.states.get("switch.test_name_channel_1") is None
 
     # Test initial
     state = hass.states.get(entity_id)
@@ -462,8 +461,7 @@ async def test_block_device_no_light_blocks(
     monkeypatch.setattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "type", "roller")
     await init_integration(hass, 1)
 
-    state = hass.states.get("light.test_name_channel_1")
-    assert state is None
+    assert hass.states.get("light.test_name_channel_1") is None
 
 
 async def test_rpc_device_switch_type_lights_mode(
