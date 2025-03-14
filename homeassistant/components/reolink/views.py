@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from base64 import urlsafe_b64decode, urlsafe_b64encode
 from http import HTTPStatus
 import logging
@@ -47,6 +48,7 @@ class PlaybackProxyView(HomeAssistantView):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a proxy view."""
         self.hass = hass
+        self._download_mutex = asyncio.Lock()
         self.session = async_get_clientsession(
             hass,
             verify_ssl=False,
@@ -85,63 +87,75 @@ class PlaybackProxyView(HomeAssistantView):
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
-                "Opening VOD stream from %s: %s",
+                "Opening proxy VOD stream from %s: %s",
                 host.api.camera_name(ch),
                 host.api.hide_password(reolink_url),
             )
 
+        await self._download_mutex.acquire()
         try:
-            reolink_response = await self.session.get(
-                reolink_url,
-                timeout=ClientTimeout(
-                    connect=15, sock_connect=15, sock_read=5, total=None
-                ),
-            )
-        except ClientError as err:
-            err_str = host.api.hide_password(
-                f"Reolink playback error while getting mp4: {err!s}"
-            )
-            if retry <= 0:
-                _LOGGER.warning(err_str)
+            try:
+                reolink_response = await self.session.get(
+                    reolink_url,
+                    timeout=ClientTimeout(
+                        connect=15, sock_connect=15, sock_read=5, total=None
+                    ),
+                )
+            except ClientError as err:
+                err_str = host.api.hide_password(
+                    f"Reolink playback error while getting mp4: {err!s}"
+                )
+                if retry <= 0:
+                    _LOGGER.warning(err_str)
+                    return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
+                _LOGGER.debug("%s, renewing token", err_str)
+                await host.api.expire_session(unsubscribe=False)
+                self._download_mutex.release()
+                return await self.get(
+                    request,
+                    config_entry_id,
+                    channel,
+                    stream_res,
+                    vod_type,
+                    filename,
+                    retry,
+                )
+
+            # Reolink typo "apolication/octet-stream" instead of "application/octet-stream"
+            if reolink_response.content_type not in [
+                "video/mp4",
+                "application/octet-stream",
+                "apolication/octet-stream",
+            ]:
+                err_str = f"Reolink playback expected video/mp4 but got {reolink_response.content_type}"
+                _LOGGER.error(err_str)
                 return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
-            _LOGGER.debug("%s, renewing token", err_str)
-            await host.api.expire_session(unsubscribe=False)
-            return await self.get(
-                request, config_entry_id, channel, stream_res, vod_type, filename, retry
+
+            response = web.StreamResponse(
+                status=200,
+                reason="OK",
+                headers={
+                    "Content-Type": "video/mp4",
+                },
             )
 
-        # Reolink typo "apolication/octet-stream" instead of "application/octet-stream"
-        if reolink_response.content_type not in [
-            "video/mp4",
-            "application/octet-stream",
-            "apolication/octet-stream",
-        ]:
-            err_str = f"Reolink playback expected video/mp4 but got {reolink_response.content_type}"
-            _LOGGER.error(err_str)
-            return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
+            if reolink_response.content_length is not None:
+                response.content_length = reolink_response.content_length
 
-        response = web.StreamResponse(
-            status=200,
-            reason="OK",
-            headers={
-                "Content-Type": "video/mp4",
-            },
-        )
+            await response.prepare(request)
 
-        if reolink_response.content_length is not None:
-            response.content_length = reolink_response.content_length
+            try:
+                async for chunk in reolink_response.content.iter_chunked(65536):
+                    await response.write(chunk)
+            except TimeoutError:
+                _LOGGER.debug(
+                    "Timeout while reading Reolink playback from %s, writing EOF",
+                    host.api.nvr_name,
+                )
 
-        await response.prepare(request)
-
-        try:
-            async for chunk in reolink_response.content.iter_chunked(65536):
-                await response.write(chunk)
-        except TimeoutError:
-            _LOGGER.debug(
-                "Timeout while reading Reolink playback from %s, writing EOF",
-                host.api.nvr_name,
-            )
-
-        reolink_response.release()
-        await response.write_eof()
+            reolink_response.release()
+            await response.write_eof()
+        finally:
+            if self._download_mutex.locked():
+                self._download_mutex.release()
         return response
