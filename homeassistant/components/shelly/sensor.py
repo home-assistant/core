@@ -414,15 +414,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         options=["not_completed", "completed", "running", "pending"],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    ("air", "totalWorkTime"): BlockSensorDescription(
-        key="air|totalWorkTime",
-        name="Filter life",
-        native_unit_of_measurement=PERCENTAGE,
-        translation_key="filter_life",
-        value=lambda value: 100 - (value / 3600 / 8760),
-        suggested_display_precision=1,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
 }
 
 REST_SENSORS: Final = {
