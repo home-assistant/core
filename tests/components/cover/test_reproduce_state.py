@@ -214,6 +214,28 @@ async def test_reproducing_states(
             | CoverEntityFeature.SET_TILT_POSITION,
         },
     )
+    hass.states.async_set(
+        "cover.tilt_open_only_supports_tilt_position",
+        CoverState.OPEN,
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_TILT_POSITION,
+        },
+    )
+    hass.states.async_set(
+        "cover.tilt_partial_open_only_supports_tilt_position",
+        CoverState.OPEN,
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_TILT_POSITION,
+            ATTR_CURRENT_TILT_POSITION: 50,
+        },
+    )
+    hass.states.async_set(
+        "cover.tilt_closed_only_supports_tilt_position",
+        CoverState.CLOSED,
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_TILT_POSITION,
+        },
+    )
     close_calls = async_mock_service(hass, "cover", SERVICE_CLOSE_COVER)
     open_calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
     close_tilt_calls = async_mock_service(hass, "cover", SERVICE_CLOSE_COVER_TILT)
@@ -247,7 +269,11 @@ async def test_reproducing_states(
                     ATTR_CURRENT_TILT_POSITION: 50,
                 },
             ),
-            State("cover.closed_only_supports_position", CoverState.CLOSED),
+            State(
+                "cover.closed_only_supports_position",
+                CoverState.CLOSED,
+                {ATTR_CURRENT_POSITION: 0},
+            ),
             State("cover.open_only_supports_position", CoverState.OPEN),
             State(
                 "cover.entity_close_attr",
@@ -299,6 +325,19 @@ async def test_reproducing_states(
                 "cover.tilt_only_tilt_position_0",
                 CoverState.CLOSED,
                 {ATTR_CURRENT_TILT_POSITION: 0},
+            ),
+            State(
+                "cover.tilt_partial_open_only_supports_tilt_position",
+                CoverState.OPEN,
+                {ATTR_CURRENT_TILT_POSITION: 50},
+            ),
+            State(
+                "cover.tilt_open_only_supports_tilt_position",
+                CoverState.OPEN,
+            ),
+            State(
+                "cover.tilt_closed_only_supports_tilt_position",
+                CoverState.CLOSED,
             ),
         ],
     )
@@ -400,6 +439,19 @@ async def test_reproducing_states(
                 CoverState.OPEN,
                 {ATTR_CURRENT_TILT_POSITION: 100},
             ),
+            State(
+                "cover.tilt_partial_open_only_supports_tilt_position",
+                CoverState.OPEN,
+                {ATTR_CURRENT_TILT_POSITION: 70},
+            ),
+            State(
+                "cover.tilt_open_only_supports_tilt_position",
+                CoverState.CLOSED,
+            ),
+            State(
+                "cover.tilt_closed_only_supports_tilt_position",
+                CoverState.OPEN,
+            ),
         ],
     )
 
@@ -463,6 +515,14 @@ async def test_reproducing_states(
             "entity_id": "cover.closed_missing_all_features_has_position",
             ATTR_POSITION: 70,
         },
+        {
+            "entity_id": "cover.closed_only_supports_position",
+            ATTR_POSITION: 100,
+        },
+        {
+            "entity_id": "cover.open_only_supports_position",
+            ATTR_POSITION: 0,
+        },
     ]
     assert len(position_calls) == len(valid_position_calls)
     for call in position_calls:
@@ -478,6 +538,18 @@ async def test_reproducing_states(
         {
             "entity_id": "cover.open_missing_all_features_has_tilt_position",
             ATTR_TILT_POSITION: 20,
+        },
+        {
+            "entity_id": "cover.tilt_open_only_supports_tilt_position",
+            ATTR_TILT_POSITION: 0,
+        },
+        {
+            "entity_id": "cover.tilt_closed_only_supports_tilt_position",
+            ATTR_TILT_POSITION: 100,
+        },
+        {
+            "entity_id": "cover.tilt_partial_open_only_supports_tilt_position",
+            ATTR_TILT_POSITION: 70,
         },
     ]
     assert len(position_tilt_calls) == len(valid_position_tilt_calls)
