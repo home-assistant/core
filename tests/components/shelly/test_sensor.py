@@ -358,6 +358,23 @@ async def test_block_sensor_unknown_value(
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
+async def test_block_sensor_unknown_option_value(
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test block sensor unknown option value."""
+    entity_id = f"{SENSOR_DOMAIN}.test_name_operation"
+    await init_integration(hass, 1)
+
+    assert hass.states.get(entity_id).state == "normal"
+
+    monkeypatch.setattr(
+        mock_block_device.blocks[SENSOR_BLOCK_ID], "sensorOp", "unknown"
+    )
+    mock_block_device.mock_update()
+
+    assert hass.states.get(entity_id).state is None
+
+
 async def test_rpc_sensor(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
