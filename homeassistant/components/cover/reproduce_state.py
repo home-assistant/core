@@ -89,7 +89,7 @@ async def _async_reproduce_state(
         elif CoverEntityFeature.SET_POSITION in supported_features:
             await _service_call(
                 SERVICE_SET_COVER_POSITION,
-                {**service_data, ATTR_POSITION: target_position},
+                service_data | {ATTR_POSITION: target_position},
             )
         else:
             # Requested a position but the cover doesn't support it
@@ -109,7 +109,7 @@ async def _async_reproduce_state(
         elif CoverEntityFeature.SET_TILT_POSITION in supported_features:
             await _service_call(
                 SERVICE_SET_COVER_TILT_POSITION,
-                {**service_data, ATTR_TILT_POSITION: target_tilt_position},
+                service_data | {ATTR_TILT_POSITION: target_tilt_position},
             )
         else:
             # Requested a tilt position but the cover doesn't support it
