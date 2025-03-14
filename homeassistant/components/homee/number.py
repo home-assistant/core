@@ -21,12 +21,14 @@ from .entity import HomeeEntity
 
 PARALLEL_UPDATES = 0
 
+
 @dataclass(frozen=True, kw_only=True)
 class HomeeNumberEntityDescription(NumberEntityDescription):
     """A class that describes Homee number entities."""
 
     native_value_fn: Callable[[float], float] = lambda value: value
     set_native_value_fn: Callable[[float], float] = lambda value: value
+
 
 NUMBER_DESCRIPTIONS = {
     AttributeType.DOWN_POSITION: HomeeNumberEntityDescription(
