@@ -165,7 +165,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     def current_operation(self) -> str | None:
         """Return current operation."""
 
-        # away mode leaves the current operation unchanged
+        # The Away Mode leaves the current operation unchanged
         if self.is_boost_mode_on:
             return STATE_ELECTRIC
 
@@ -227,7 +227,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         elif operation_mode == STATE_HEAT_PUMP:
             refresh_target_temp = False
             if self.is_state_perfomance:
-                # switching from STATE_PERFORMANCE to STATE_HEAT_PUMP
+                # Switching from STATE_PERFORMANCE to STATE_HEAT_PUMP
                 #  changes the target temperature and requires a target temperature refresh
                 refresh_target_temp = True
 
@@ -268,7 +268,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             },
             refresh_afterwards=False,
         )
-        # toggling the AWAY mode changes away mode duration so we have to refresh it
+        # Toggling the AWAY mode changes away mode duration so we have to refresh it
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_AWAY_MODE_DURATION,
             refresh_afterwards=False,
@@ -287,7 +287,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             },
             refresh_afterwards=False,
         )
-        # toggling the AWAY mode changes away mode duration so we have to refresh it
+        # Toggling the AWAY mode changes away mode duration so we have to refresh it
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_AWAY_MODE_DURATION,
             refresh_afterwards=False,
@@ -300,7 +300,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
 
         refresh_target_temp = False
         if self.is_state_perfomance:
-            # switching from STATE_PERFORMANCE to BOOST requires a target temperature refresh
+            # Switching from STATE_PERFORMANCE to BOOST requires a target temperature refresh
             refresh_target_temp = True
 
         await self.executor.async_execute_command(
@@ -342,7 +342,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             },
             refresh_afterwards=False,
         )
-        # toggling the BOOST mode changes boost mode duration so we have to refresh it
+        # Toggling the BOOST mode changes boost mode duration so we have to refresh it
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_BOOST_MODE_DURATION,
             refresh_afterwards=False,
