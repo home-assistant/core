@@ -29,7 +29,13 @@ async def test_reproducing_states(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test reproducing Cover states."""
-    hass.states.async_set("cover.entity_close", CoverState.CLOSED, {})
+    hass.states.async_set(
+        "cover.entity_close",
+        CoverState.CLOSED,
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN,
+        },
+    )
     hass.states.async_set(
         "cover.entity_close_attr",
         CoverState.CLOSED,
@@ -64,9 +70,7 @@ async def test_reproducing_states(
         CoverState.OPEN,
         {
             ATTR_CURRENT_POSITION: 50,
-            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE
-            | CoverEntityFeature.OPEN
-            | CoverEntityFeature.SET_POSITION,
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN,
         },
     )
     hass.states.async_set(
