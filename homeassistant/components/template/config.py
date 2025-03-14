@@ -111,6 +111,8 @@ CONFIG_SECTION_SCHEMA = vol.All(
             vol.Optional(WEATHER_DOMAIN): vol.All(
                 cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
             ),
+        }
+    ),
     ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN, LIGHT_DOMAIN),
 )
 
