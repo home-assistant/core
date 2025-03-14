@@ -176,7 +176,7 @@ jobs:
     name: Build wheels ${{ matrix.abi }} for ${{ matrix.arch }}
     if: github.repository_owner == 'home-assistant'
     needs: init
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     strategy:
       fail-fast: false
       matrix:
