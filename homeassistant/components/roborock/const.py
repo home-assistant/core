@@ -46,7 +46,7 @@ PLATFORMS = [
 ]
 
 # This can be lowered in the future if we do not receive rate limiting issues.
-IMAGE_CACHE_INTERVAL = 45
+IMAGE_CACHE_INTERVAL = 40
 
 MAP_SLEEP = 3
 
@@ -59,7 +59,7 @@ GET_VACUUM_CURRENT_POSITION_SERVICE_NAME = "get_vacuum_current_position"
 
 
 A01_UPDATE_INTERVAL = timedelta(seconds=30)
-V1_CLOUD_IN_CLEANING_INTERVAL = timedelta(seconds=30)
+V1_CLOUD_IN_CLEANING_INTERVAL = timedelta(seconds=20)
 V1_CLOUD_NOT_CLEANING_INTERVAL = timedelta(seconds=30)
-V1_LOCAL_IN_CLEANING_INTERVAL = timedelta(seconds=30)
-V1_LOCAL_NOT_CLEANING_INTERVAL = timedelta(seconds=30)
+V1_LOCAL_IN_CLEANING_INTERVAL = timedelta(seconds=10)
+V1_LOCAL_NOT_CLEANING_INTERVAL = timedelta(seconds=20)

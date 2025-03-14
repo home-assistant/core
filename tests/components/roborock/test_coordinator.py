@@ -8,14 +8,12 @@ import pytest
 from roborock.exceptions import RoborockException
 
 from homeassistant.components.roborock.const import (
-    DOMAIN,
     V1_CLOUD_IN_CLEANING_INTERVAL,
     V1_CLOUD_NOT_CLEANING_INTERVAL,
     V1_LOCAL_IN_CLEANING_INTERVAL,
     V1_LOCAL_NOT_CLEANING_INTERVAL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .mock_data import PROP
@@ -26,8 +24,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 @pytest.mark.parametrize(
     ("interval", "in_cleaning"),
     [
-        (V1_CLOUD_IN_CLEANING_INTERVAL, True),
-        (V1_CLOUD_NOT_CLEANING_INTERVAL, False),
+        (V1_CLOUD_IN_CLEANING_INTERVAL, 1),
+        (V1_CLOUD_NOT_CLEANING_INTERVAL, 0),
     ],
 )
 async def test_dynamic_cloud_scan_interval(
@@ -35,11 +33,11 @@ async def test_dynamic_cloud_scan_interval(
     mock_roborock_entry: MockConfigEntry,
     bypass_api_fixture_v1_only,
     interval: timedelta,
-    in_cleaning: bool,
+    in_cleaning: int,
 ) -> None:
     """Test dynamic scan interval."""
     prop = copy.deepcopy(PROP)
-    prop.status.in_cleaning = 1 if in_cleaning else 0
+    prop.status.in_cleaning = in_cleaning
     with (
         # Force the system to use the cloud api.
         patch(
@@ -51,7 +49,7 @@ async def test_dynamic_cloud_scan_interval(
             return_value=prop,
         ),
     ):
-        await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     assert hass.states.get("sensor.roborock_s7_maxv_battery").state == "100"
     prop = copy.deepcopy(prop)
     prop.status.battery = 20
@@ -59,6 +57,10 @@ async def test_dynamic_cloud_scan_interval(
         "homeassistant.components.roborock.RoborockMqttClientV1.get_prop",
         return_value=prop,
     ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + interval - timedelta(seconds=5)
+        )
+        assert hass.states.get("sensor.roborock_s7_maxv_battery").state == "100"
         async_fire_time_changed(hass, dt_util.utcnow() + interval)
 
     assert hass.states.get("sensor.roborock_s7_maxv_battery").state == "20"
@@ -67,8 +69,8 @@ async def test_dynamic_cloud_scan_interval(
 @pytest.mark.parametrize(
     ("interval", "in_cleaning"),
     [
-        (V1_LOCAL_IN_CLEANING_INTERVAL, True),
-        (V1_LOCAL_NOT_CLEANING_INTERVAL, False),
+        (V1_LOCAL_IN_CLEANING_INTERVAL, 1),
+        (V1_LOCAL_NOT_CLEANING_INTERVAL, 0),
     ],
 )
 async def test_dynamic_local_scan_interval(
@@ -76,18 +78,18 @@ async def test_dynamic_local_scan_interval(
     mock_roborock_entry: MockConfigEntry,
     bypass_api_fixture_v1_only,
     interval: timedelta,
-    in_cleaning: bool,
+    in_cleaning: int,
 ) -> None:
     """Test dynamic scan interval."""
     prop = copy.deepcopy(PROP)
-    prop.status.in_cleaning = 1 if in_cleaning else 0
+    prop.status.in_cleaning = in_cleaning
     with (
         patch(
             "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
             return_value=prop,
         ),
     ):
-        await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     assert hass.states.get("sensor.roborock_s7_maxv_battery").state == "100"
     prop = copy.deepcopy(prop)
     prop.status.battery = 20
@@ -95,6 +97,11 @@ async def test_dynamic_local_scan_interval(
         "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
         return_value=prop,
     ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + interval - timedelta(seconds=5)
+        )
+        assert hass.states.get("sensor.roborock_s7_maxv_battery").state == "100"
+
         async_fire_time_changed(hass, dt_util.utcnow() + interval)
 
     assert hass.states.get("sensor.roborock_s7_maxv_battery").state == "20"
