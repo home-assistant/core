@@ -2170,7 +2170,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "vizio",
     "vlc",
     "vlc_telnet",
-    "vodafone_station",
     "voicerss",
     "voip",
     "volkszaehler",
