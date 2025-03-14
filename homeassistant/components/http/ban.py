@@ -64,12 +64,6 @@ ATTR_LOG: Final = "log"
 SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
     {vol.Optional(ATTR_BANNED_AT): vol.Any(None, cv.datetime)}
 )
-SCHEMA_OPTIONS: Final = vol.Schema(
-    {
-        vol.Optional(ATTR_NOTIFY, default=False): cv.boolean,
-        vol.Optional(ATTR_LOG, default=True): cv.boolean,
-    }
-)
 
 
 @callback
