@@ -88,6 +88,8 @@ from .const import (
     ATTR_QOS,
     ATTR_RETAIN,
     ATTR_TOPIC,
+    CONF_AVAILABILITY_TEMPLATE,
+    CONF_AVAILABILITY_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
     CONF_CERTIFICATE,
@@ -98,6 +100,8 @@ from .const import (
     CONF_DISCOVERY_PREFIX,
     CONF_ENTITY_PICTURE,
     CONF_KEEPALIVE,
+    CONF_PAYLOAD_AVAILABLE,
+    CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS,
     CONF_RETAIN,
     CONF_TLS_INSECURE,
@@ -111,6 +115,8 @@ from .const import (
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
     DEFAULT_KEEPALIVE,
+    DEFAULT_PAYLOAD_AVAILABLE,
+    DEFAULT_PAYLOAD_NOT_AVAILABLE,
     DEFAULT_PORT,
     DEFAULT_PREFIX,
     DEFAULT_PROTOCOL,
@@ -123,13 +129,15 @@ from .const import (
     TRANSPORT_WEBSOCKETS,
     Platform,
 )
-from .models import MqttDeviceData, MqttSubentryData
+from .models import MqttAvailabilityData, MqttDeviceData, MqttSubentryData
 from .util import (
     async_create_certificate_temp_files,
     get_file_path,
     valid_birth_will,
     valid_publish_topic,
     valid_qos_schema,
+    valid_subscribe_topic,
+    valid_subscribe_topic_template,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -219,6 +227,19 @@ SUBENTRY_PLATFORM_SELECTOR = SelectSelector(
 )
 
 TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
+
+SUBENTRY_AVAILABILITY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_AVAILABILITY_TOPIC): TEXT_SELECTOR,
+        vol.Optional(CONF_AVAILABILITY_TEMPLATE): TEMPLATE_SELECTOR,
+        vol.Optional(
+            CONF_PAYLOAD_AVAILABLE, default=DEFAULT_PAYLOAD_AVAILABLE
+        ): TEXT_SELECTOR,
+        vol.Optional(
+            CONF_PAYLOAD_NOT_AVAILABLE, default=DEFAULT_PAYLOAD_NOT_AVAILABLE
+        ): TEXT_SELECTOR,
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -1085,6 +1106,44 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             },
         )
 
+    async def async_step_availability(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Configure availability options."""
+        errors: dict[str, str] = {}
+        validate_field(
+            "availability_topic",
+            valid_subscribe_topic,
+            user_input,
+            errors,
+            "invalid_subscribe_topic",
+        )
+        validate_field(
+            "availability_template",
+            valid_subscribe_topic_template,
+            user_input,
+            errors,
+            "invalid_template",
+        )
+        if not errors and user_input is not None:
+            self._subentry_data.setdefault("availability", MqttAvailabilityData())
+            self._subentry_data["availability"] = cast(MqttAvailabilityData, user_input)
+            return await self.async_step_summary_menu()
+
+        data_schema = SUBENTRY_AVAILABILITY_SCHEMA
+        data_schema = self.add_suggested_values_to_schema(
+            data_schema,
+            dict(self._subentry_data.setdefault("availability", {}))
+            if self.source == SOURCE_RECONFIGURE
+            else user_input,
+        )
+        return self.async_show_form(
+            step_id="availability",
+            data_schema=data_schema,
+            errors=errors,
+            last_step=False,
+        )
+
     async def async_step_summary_menu(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -1101,7 +1160,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         ]
         if len(self._subentry_data["components"]) > 1:
             menu_options.append("delete_entity")
-        menu_options.append("device")
+        menu_options.extend(["device", "availability"])
         if self._subentry_data != self._get_reconfigure_subentry().data:
             menu_options.append("save_changes")
         return self.async_show_menu(
