@@ -1,7 +1,43 @@
 # serializer version: 1
-# name: test_devices[aeotec_home_energy_meter_gen5]
+# name: test_button_event[button]
+  <Event smartthings.button[L]: component_id=main, device_id=c4bdd19f-85d1-4d58-8f9c-e75ac3cf113b, location_id=abc, value=pushed, name=button, data=None>
+# ---
+# name: test_devices[abl_light_b_001]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '7c16163e-c94e-482f-95f6-139ae0cd9d5e',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Kitchen Light 5',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[aeotec_home_energy_meter_gen5]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'toilet',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -27,14 +63,14 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Toilet',
     'sw_version': None,
     'via_device_id': None,
   })
 # ---
 # name: test_devices[base_electric_meter]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -60,6 +96,39 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
+    'suggested_area': 'Theater',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[bosch_radiator_thermostat_ii]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '286ba274-4093-4bcb-849c-a1a3efe7b1e5',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Radiator Thermostat II [+M] Wohnzimmer',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
@@ -67,7 +136,7 @@
 # ---
 # name: test_devices[c2c_arlo_pro_3_switch]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -93,7 +162,7 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -133,7 +202,7 @@
 # ---
 # name: test_devices[centralite]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -159,14 +228,14 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
 # ---
 # name: test_devices[contact_sensor]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -192,14 +261,14 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
 # ---
 # name: test_devices[da_ac_rac_000001]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -207,7 +276,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': '1.0',
+    'hw_version': None,
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -219,20 +288,20 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'ARTIK051_KRAC_18K',
+    'model': None,
     'model_id': None,
     'name': 'AC Office Granit',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '0.1.0',
+    'suggested_area': 'Theater',
+    'sw_version': None,
     'via_device_id': None,
   })
 # ---
 # name: test_devices[da_ac_rac_01001]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -258,14 +327,47 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': 'ARA-WW-TP1-22-COMMON_11240702',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_ac_rac_100001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'theater',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'F8042E25-0E53-0000-0000-000000000000',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'TP6X_RAC_15K',
+    'model_id': None,
+    'name': 'Corridor A/C',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': 'Theater',
+    'sw_version': None,
     'via_device_id': None,
   })
 # ---
 # name: test_devices[da_ks_microwave_0101x]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -291,14 +393,47 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': 'AKS-WW-TP2-20-MICROWAVE-OTR_40230125',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_ks_range_0101x]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'TP1X_DA-KS-RANGE-0101X',
+    'model_id': None,
+    'name': 'Vulcan',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'AKS-WW-TP1-20-OVEN-3-CR_40240205',
     'via_device_id': None,
   })
 # ---
 # name: test_devices[da_ref_normal_000001]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -324,14 +459,14 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': 'A-RFWW-TP2-21-COMMON_20220110',
     'via_device_id': None,
   })
 # ---
 # name: test_devices[da_rvc_normal_000001]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -357,14 +492,14 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': '1.0',
     'via_device_id': None,
   })
 # ---
 # name: test_devices[da_wm_dw_000001]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -390,14 +525,14 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': 'DA_DW_A51_20_COMMON_30230714',
     'via_device_id': None,
   })
 # ---
 # name: test_devices[da_wm_wd_000001]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -423,6 +558,39 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
+    'suggested_area': 'Theater',
+    'sw_version': 'DA_WM_A51_20_COMMON_30230708',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_wm_wd_000001_1]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'ARTIK051',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '3a6c4e05-811d-5041-e956-3d04c424cbcd',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'DA_WM_A51_20_COMMON',
+    'model_id': None,
+    'name': 'Seca-Roupa',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
     'suggested_area': None,
     'sw_version': 'DA_WM_A51_20_COMMON_30230708',
     'via_device_id': None,
@@ -430,7 +598,7 @@
 # ---
 # name: test_devices[da_wm_wm_000001]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -456,8 +624,41 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': 'DA_WM_TP2_20_COMMON_30230804',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_wm_wm_000001_1]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'ARTIK051',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '63803fae-cbed-f356-a063-2cf148ae3ca7',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'DA_WM_A51_20_COMMON',
+    'model_id': None,
+    'name': 'Washing Machine',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'DA_WM_A51_20_COMMON_30230708',
     'via_device_id': None,
   })
 # ---
@@ -527,9 +728,42 @@
     'via_device_id': None,
   })
 # ---
-# name: test_devices[fake_fan]
+# name: test_devices[ecobee_thermostat_offline]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '250308073247',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '1888b38f-6246-4f1e-911b-bfcfb66999db',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'ecobee',
+    'model': 'nikeSmart-thermostat',
+    'model_id': None,
+    'name': 'Downstairs',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '250308073247',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[fake_fan]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -555,14 +789,14 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
 # ---
 # name: test_devices[ge_in_wall_smart_dimmer]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -585,6 +819,105 @@
     'model': None,
     'model_id': None,
     'name': 'Basement Exit Light',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': 'Theater',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[generic_ef00_v1]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '656569c2-7976-4232-a789-34b4d1176c3a',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Thermostat Küche',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[generic_fan_3_speed]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '6d95a8b7-4ee3-429a-a13a-00ec9354170c',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Bedroom Fan',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[heatit_ztrm3_thermostat]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '69a271f6-6537-4982-8cd9-979866872692',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Hall thermostat',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -659,6 +992,72 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[ikea_kadrilj]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '71afed1c-006d-4e48-b16e-e7f88f9fd638',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Kitchen IKEA KADRILJ Window blind',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[im_speaker_ai_0001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '1.0',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'c9276e43-fe3c-88c3-1dcc-2eb79e292b8c',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'SM-V310',
+    'model_id': None,
+    'name': 'Galaxy Home Mini',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'V310XXU1AWK1',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[iphone]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -694,7 +1093,7 @@
 # ---
 # name: test_devices[multipurpose_sensor]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -720,7 +1119,7 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -760,7 +1159,7 @@
 # ---
 # name: test_devices[smart_plug]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -786,14 +1185,14 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
 # ---
 # name: test_devices[sonos_player]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -819,14 +1218,47 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[tplink_p110]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '1.0',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '6602696a-1e48-49e4-919f-69406f5b5da1',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'TP-Link',
+    'model': 'P110',
+    'model_id': None,
+    'name': 'Spülmaschine',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '1.3.1 Build 240621 Rel.162048',
     'via_device_id': None,
   })
 # ---
 # name: test_devices[vd_network_audio_002s]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -852,14 +1284,14 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': 'SAT-iMX8M23WWC-1010.5',
     'via_device_id': None,
   })
 # ---
 # name: test_devices[vd_stv_2017_k]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -885,14 +1317,14 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': 'T-KTMAKUC-1290.3',
     'via_device_id': None,
   })
 # ---
 # name: test_devices[virtual_thermostat]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -918,14 +1350,14 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
 # ---
 # name: test_devices[virtual_valve]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -951,14 +1383,14 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
 # ---
 # name: test_devices[virtual_water_sensor]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -984,14 +1416,14 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
 # ---
 # name: test_devices[yale_push_button_deadbolt_lock]
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
@@ -1017,14 +1449,14 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
 # ---
 # name: test_hub_via_device
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': None,
@@ -1054,7 +1486,7 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'suggested_area': 'Theater',
     'sw_version': '000.055.00005',
     'via_device_id': None,
   })

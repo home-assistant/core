@@ -118,12 +118,12 @@ async def async_setup_entry(
     """Add climate entities for a config entry."""
     entry_data = entry.runtime_data
     entities: list[ClimateEntity] = [
-        SmartThingsAirConditioner(entry_data.client, device)
+        SmartThingsAirConditioner(entry_data.client, entry_data.rooms, device)
         for device in entry_data.devices.values()
         if all(capability in device.status[MAIN] for capability in AC_CAPABILITIES)
     ]
     entities.extend(
-        SmartThingsThermostat(entry_data.client, device)
+        SmartThingsThermostat(entry_data.client, entry_data.rooms, device)
         for device in entry_data.devices.values()
         if all(
             capability in device.status[MAIN] for capability in THERMOSTAT_CAPABILITIES
@@ -137,11 +137,14 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
 
     _attr_name = None
 
-    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+    def __init__(
+        self, client: SmartThings, rooms: dict[str, str], device: FullDevice
+    ) -> None:
         """Init the class."""
         super().__init__(
             client,
             device,
+            rooms,
             {
                 Capability.THERMOSTAT_FAN_MODE,
                 Capability.THERMOSTAT_MODE,
@@ -161,9 +164,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
             | ClimateEntityFeature.TURN_OFF
             | ClimateEntityFeature.TURN_ON
         )
-        if self.get_attribute_value(
-            Capability.THERMOSTAT_FAN_MODE, Attribute.THERMOSTAT_FAN_MODE
-        ):
+        if self.supports_capability(Capability.THERMOSTAT_FAN_MODE):
             flags |= ClimateEntityFeature.FAN_MODE
         return flags
 
@@ -253,6 +254,8 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
+        if not self.supports_capability(Capability.THERMOSTAT_OPERATING_STATE):
+            return None
         return OPERATING_STATE_TO_ACTION.get(
             self.get_attribute_value(
                 Capability.THERMOSTAT_OPERATING_STATE,
@@ -272,11 +275,15 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
-        return [
-            state
-            for mode in self.get_attribute_value(
+        if (
+            supported_thermostat_modes := self.get_attribute_value(
                 Capability.THERMOSTAT_MODE, Attribute.SUPPORTED_THERMOSTAT_MODES
             )
+        ) is None:
+            return []
+        return [
+            state
+            for mode in supported_thermostat_modes
             if (state := AC_MODE_TO_STATE.get(mode)) is not None
         ]
 
@@ -314,10 +321,14 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
-            Attribute.TEMPERATURE
-        ].unit
-        assert unit
+        # Offline third party thermostats may not have a unit
+        # Since climate always requires a unit, default to Celsius
+        if (
+            unit := self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
+                Attribute.TEMPERATURE
+            ].unit
+        ) is None:
+            return UnitOfTemperature.CELSIUS
         return UNIT_MAP[unit]
 
 
@@ -327,11 +338,14 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     _attr_name = None
     _attr_preset_mode = None
 
-    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+    def __init__(
+        self, client: SmartThings, rooms: dict[str, str], device: FullDevice
+    ) -> None:
         """Init the class."""
         super().__init__(
             client,
             device,
+            rooms,
             {
                 Capability.AIR_CONDITIONER_MODE,
                 Capability.SWITCH,
@@ -345,7 +359,8 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
         self._attr_hvac_modes = self._determine_hvac_modes()
         self._attr_preset_modes = self._determine_preset_modes()
-        self._attr_swing_modes = self._determine_swing_modes()
+        if self.supports_capability(Capability.FAN_OSCILLATION_MODE):
+            self._attr_swing_modes = self._determine_swing_modes()
         self._attr_supported_features = self._determine_supported_features()
 
     def _determine_supported_features(self) -> ClimateEntityFeature:
@@ -444,12 +459,15 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific state attributes.
 
         Include attributes from the Demand Response Load Control (drlc)
         and Power Consumption capabilities.
         """
+        if not self.supports_capability(Capability.DEMAND_RESPONSE_LOAD_CONTROL):
+            return None
+
         drlc_status = self.get_attribute_value(
             Capability.DEMAND_RESPONSE_LOAD_CONTROL,
             Attribute.DEMAND_RESPONSE_LOAD_CONTROL_STATUS,
@@ -559,5 +577,6 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                 Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
             )
             if (state := AC_MODE_TO_STATE.get(mode)) is not None
+            if state not in modes
         )
         return modes

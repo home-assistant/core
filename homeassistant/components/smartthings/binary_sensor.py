@@ -109,7 +109,12 @@ async def async_setup_entry(
     entry_data = entry.runtime_data
     async_add_entities(
         SmartThingsBinarySensor(
-            entry_data.client, device, description, capability, attribute
+            entry_data.client,
+            device,
+            description,
+            entry_data.rooms,
+            capability,
+            attribute,
         )
         for device in entry_data.devices.values()
         for capability, attribute_map in CAPABILITY_TO_SENSORS.items()
@@ -128,11 +133,12 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
         client: SmartThings,
         device: FullDevice,
         entity_description: SmartThingsBinarySensorEntityDescription,
+        rooms: dict[str, str],
         capability: Capability,
         attribute: Attribute,
     ) -> None:
         """Init the class."""
-        super().__init__(client, device, {capability})
+        super().__init__(client, device, rooms, {capability})
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description

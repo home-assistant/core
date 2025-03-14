@@ -27,7 +27,11 @@ class SmartThingsEntity(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, client: SmartThings, device: FullDevice, capabilities: set[Capability]
+        self,
+        client: SmartThings,
+        device: FullDevice,
+        rooms: dict[str, str],
+        capabilities: set[Capability],
     ) -> None:
         """Initialize the instance."""
         self.client = client
@@ -43,6 +47,9 @@ class SmartThingsEntity(Entity):
             configuration_url="https://account.smartthings.com",
             identifiers={(DOMAIN, device.device.device_id)},
             name=device.device.label,
+            suggested_area=(
+                rooms.get(device.device.room_id) if device.device.room_id else None
+            ),
         )
         if device.device.parent_device_id:
             self._attr_device_info["via_device"] = (
@@ -53,7 +60,9 @@ class SmartThingsEntity(Entity):
             self._attr_device_info.update(
                 {
                     "manufacturer": ocf.manufacturer_name,
-                    "model": ocf.model_number.split("|")[0],
+                    "model": (
+                        (ocf.model_number.split("|")[0]) if ocf.model_number else None
+                    ),
                     "hw_version": ocf.hardware_version,
                     "sw_version": ocf.firmware_version,
                 }

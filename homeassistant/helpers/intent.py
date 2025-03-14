@@ -38,7 +38,7 @@ from .typing import VolSchemaType
 _LOGGER = logging.getLogger(__name__)
 type _SlotsType = dict[str, Any]
 type _IntentSlotsType = dict[
-    str | tuple[str, str], VolSchemaType | Callable[[Any], Any]
+    str | tuple[str, str], IntentSlotInfo | VolSchemaType | Callable[[Any], Any]
 ]
 
 INTENT_TURN_OFF = "HassTurnOff"
@@ -874,6 +874,34 @@ def non_empty_string(value: Any) -> str:
     return value_str
 
 
+@dataclass(kw_only=True)
+class IntentSlotInfo:
+    """Details about how intent slots are processed and validated."""
+
+    service_data_name: str | None = None
+    """Optional name of the service data input to map to this slot."""
+
+    description: str | None = None
+    """Human readable description of the slot."""
+
+    value_schema: VolSchemaType | Callable[[Any], Any] = vol.Any
+    """Validator for the slot."""
+
+
+def _convert_slot_info(
+    key: str | tuple[str, str],
+    value: IntentSlotInfo | VolSchemaType | Callable[[Any], Any],
+) -> tuple[str, IntentSlotInfo]:
+    """Create an IntentSlotInfo from the various supported input arguments."""
+    if isinstance(value, IntentSlotInfo):
+        if not isinstance(key, str):
+            raise TypeError("Tuple key and IntentSlotDescription value not supported")
+        return key, value
+    if isinstance(key, tuple):
+        return key[0], IntentSlotInfo(service_data_name=key[1], value_schema=value)
+    return key, IntentSlotInfo(value_schema=value)
+
+
 class DynamicServiceIntentHandler(IntentHandler):
     """Service Intent handler registration (dynamic).
 
@@ -907,23 +935,14 @@ class DynamicServiceIntentHandler(IntentHandler):
         self.platforms = platforms
         self.device_classes = device_classes
 
-        self.required_slots: _IntentSlotsType = {}
-        if required_slots:
-            for key, value_schema in required_slots.items():
-                if isinstance(key, str):
-                    # Slot name/service data key
-                    key = (key, key)
-
-                self.required_slots[key] = value_schema
-
-        self.optional_slots: _IntentSlotsType = {}
-        if optional_slots:
-            for key, value_schema in optional_slots.items():
-                if isinstance(key, str):
-                    # Slot name/service data key
-                    key = (key, key)
-
-                self.optional_slots[key] = value_schema
+        self.required_slots: dict[str, IntentSlotInfo] = dict(
+            _convert_slot_info(key, value)
+            for key, value in (required_slots or {}).items()
+        )
+        self.optional_slots: dict[str, IntentSlotInfo] = dict(
+            _convert_slot_info(key, value)
+            for key, value in (optional_slots or {}).items()
+        )
 
     @cached_property
     def slot_schema(self) -> dict:
@@ -964,16 +983,20 @@ class DynamicServiceIntentHandler(IntentHandler):
         if self.required_slots:
             slot_schema.update(
                 {
-                    vol.Required(key[0]): validator
-                    for key, validator in self.required_slots.items()
+                    vol.Required(
+                        key, description=slot_info.description
+                    ): slot_info.value_schema
+                    for key, slot_info in self.required_slots.items()
                 }
             )
 
         if self.optional_slots:
             slot_schema.update(
                 {
-                    vol.Optional(key[0]): validator
-                    for key, validator in self.optional_slots.items()
+                    vol.Optional(
+                        key, description=slot_info.description
+                    ): slot_info.value_schema
+                    for key, slot_info in self.optional_slots.items()
                 }
             )
 
@@ -1156,18 +1179,15 @@ class DynamicServiceIntentHandler(IntentHandler):
 
         service_data: dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
         if self.required_slots:
-            service_data.update(
-                {
-                    key[1]: intent_obj.slots[key[0]]["value"]
-                    for key in self.required_slots
-                }
-            )
+            for key, slot_info in self.required_slots.items():
+                service_data[slot_info.service_data_name or key] = intent_obj.slots[
+                    key
+                ]["value"]
 
         if self.optional_slots:
-            for key in self.optional_slots:
-                value = intent_obj.slots.get(key[0])
-                if value:
-                    service_data[key[1]] = value["value"]
+            for key, slot_info in self.optional_slots.items():
+                if value := intent_obj.slots.get(key):
+                    service_data[slot_info.service_data_name or key] = value["value"]
 
         await self._run_then_background(
             hass.async_create_task_internal(

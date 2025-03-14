@@ -5,9 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
-from pysmartthings import Attribute, Capability, SmartThings
+from pysmartthings import Attribute, Capability, SmartThings, Status
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -57,6 +57,7 @@ JOB_STATE_MAP = {
     "freezeProtection": "freeze_protection",
     "preDrain": "pre_drain",
     "preWash": "pre_wash",
+    "prewash": "pre_wash",
     "wrinklePrevent": "wrinkle_prevent",
     "unknown": None,
 }
@@ -130,7 +131,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     unique_id_separator: str = "."
     capability_ignore_list: list[set[Capability]] | None = None
     options_attribute: Attribute | None = None
-    except_if_state_none: bool = False
+    exists_fn: Callable[[Status], bool] | None = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -561,6 +562,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
+                device_class=SensorDeviceClass.TIMESTAMP,
+                value_fn=dt_util.parse_datetime,
             )
         ],
     },
@@ -569,6 +572,9 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.OVEN_SETPOINT,
                 translation_key="oven_setpoint",
+                device_class=SensorDeviceClass.TEMPERATURE,
+                native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+                value_fn=lambda value: value if value != 0 else None,
             )
         ]
     },
@@ -581,7 +587,10 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["energy"] / 1000,
                 suggested_display_precision=2,
-                except_if_state_none=True,
+                exists_fn=lambda status: (
+                    (value := cast(dict | None, status.value)) is not None
+                    and "energy" in value
+                ),
             ),
             SmartThingsSensorEntityDescription(
                 key="power_meter",
@@ -591,7 +600,10 @@ CAPABILITY_TO_SENSORS: dict[
                 value_fn=lambda value: value["power"],
                 extra_state_attributes_fn=power_attributes,
                 suggested_display_precision=2,
-                except_if_state_none=True,
+                exists_fn=lambda status: (
+                    (value := cast(dict | None, status.value)) is not None
+                    and "power" in value
+                ),
             ),
             SmartThingsSensorEntityDescription(
                 key="deltaEnergy_meter",
@@ -601,7 +613,10 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["deltaEnergy"] / 1000,
                 suggested_display_precision=2,
-                except_if_state_none=True,
+                exists_fn=lambda status: (
+                    (value := cast(dict | None, status.value)) is not None
+                    and "deltaEnergy" in value
+                ),
             ),
             SmartThingsSensorEntityDescription(
                 key="powerEnergy_meter",
@@ -611,7 +626,10 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["powerEnergy"] / 1000,
                 suggested_display_precision=2,
-                except_if_state_none=True,
+                exists_fn=lambda status: (
+                    (value := cast(dict | None, status.value)) is not None
+                    and "powerEnergy" in value
+                ),
             ),
             SmartThingsSensorEntityDescription(
                 key="energySaved_meter",
@@ -621,7 +639,10 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["energySaved"] / 1000,
                 suggested_display_precision=2,
-                except_if_state_none=True,
+                exists_fn=lambda status: (
+                    (value := cast(dict | None, status.value)) is not None
+                    and "energySaved" in value
+                ),
             ),
         ]
     },
@@ -951,6 +972,7 @@ UNITS = {
     "F": UnitOfTemperature.FAHRENHEIT,
     "lux": LIGHT_LUX,
     "mG": None,
+    "μg/m^3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
 }
 
 
@@ -962,7 +984,14 @@ async def async_setup_entry(
     """Add sensors for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsSensor(entry_data.client, device, description, capability, attribute)
+        SmartThingsSensor(
+            entry_data.client,
+            device,
+            description,
+            entry_data.rooms,
+            capability,
+            attribute,
+        )
         for device in entry_data.devices.values()
         for capability, attributes in CAPABILITY_TO_SENSORS.items()
         if capability in device.status[MAIN]
@@ -976,8 +1005,8 @@ async def async_setup_entry(
             )
         )
         and (
-            not description.except_if_state_none
-            or device.status[MAIN][capability][attribute].value is not None
+            not description.exists_fn
+            or description.exists_fn(device.status[MAIN][capability][attribute])
         )
     )
 
@@ -992,11 +1021,12 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         client: SmartThings,
         device: FullDevice,
         entity_description: SmartThingsSensorEntityDescription,
+        rooms: dict[str, str],
         capability: Capability,
         attribute: Attribute,
     ) -> None:
         """Init the class."""
-        super().__init__(client, device, {capability})
+        super().__init__(client, device, rooms, {capability})
         self._attr_unique_id = f"{device.device.device_id}{entity_description.unique_id_separator}{entity_description.key}"
         self._attribute = attribute
         self.capability = capability
@@ -1031,8 +1061,11 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     def options(self) -> list[str] | None:
         """Return the options for this sensor."""
         if self.entity_description.options_attribute:
-            options = self.get_attribute_value(
-                self.capability, self.entity_description.options_attribute
-            )
+            if (
+                options := self.get_attribute_value(
+                    self.capability, self.entity_description.options_attribute
+                )
+            ) is None:
+                return []
             return [option.lower() for option in options]
         return super().options

@@ -41,7 +41,6 @@ from homeassistant.components.esphome.assist_satellite import (
     EsphomeAssistSatellite,
     VoiceAssistantUDPServer,
 )
-from homeassistant.components.media_source import PlayMedia
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
@@ -56,6 +55,8 @@ from homeassistant.helpers import (
 from homeassistant.helpers.entity_component import EntityComponent
 
 from .conftest import MockESPHomeDevice
+
+from tests.components.tts.common import MockResultStream
 
 
 def get_satellite_entity(
@@ -298,7 +299,7 @@ async def test_pipeline_api_audio(
             VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END,
             {
                 "conversation_id": conversation_id,
-                "continue_conversation": True,
+                "continue_conversation": "1",
             },
         )
 
@@ -1209,22 +1210,23 @@ async def test_announce_message(
         media_id: str, timeout: float, text: str
     ):
         assert satellite.state == AssistSatelliteState.RESPONDING
-        assert media_id == "https://www.home-assistant.io/resolved.mp3"
+        assert media_id == "http://10.10.10.10:8123/api/tts_proxy/test-token"
         assert text == "test-text"
 
         done.set()
 
     with (
         patch(
-            "homeassistant.components.assist_satellite.entity.tts_generate_media_source_id",
+            "homeassistant.components.tts.generate_media_source_id",
             return_value="media-source://bla",
         ),
         patch(
-            "homeassistant.components.media_source.async_resolve_media",
-            return_value=PlayMedia(
-                url="https://www.home-assistant.io/resolved.mp3",
-                mime_type="audio/mp3",
-            ),
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud_tts",
+        ),
+        patch(
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
         ),
         patch.object(
             mock_client,

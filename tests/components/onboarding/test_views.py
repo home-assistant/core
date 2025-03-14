@@ -762,7 +762,7 @@ async def test_onboarding_backup_info(
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test returning installation type during onboarding."""
+    """Test backup info."""
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
@@ -879,7 +879,7 @@ async def test_onboarding_backup_restore(
     params: dict[str, Any],
     expected_kwargs: dict[str, Any],
 ) -> None:
-    """Test returning installation type during onboarding."""
+    """Test restore backup."""
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
@@ -976,7 +976,7 @@ async def test_onboarding_backup_restore_error(
     expected_json: str,
     restore_calls: int,
 ) -> None:
-    """Test returning installation type during onboarding."""
+    """Test restore backup fails."""
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
@@ -1020,7 +1020,7 @@ async def test_onboarding_backup_restore_unexpected_error(
     expected_message: str,
     restore_calls: int,
 ) -> None:
-    """Test returning installation type during onboarding."""
+    """Test restore backup fails."""
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
@@ -1046,7 +1046,7 @@ async def test_onboarding_backup_upload(
     hass_storage: dict[str, Any],
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test returning installation type during onboarding."""
+    """Test upload backup."""
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
