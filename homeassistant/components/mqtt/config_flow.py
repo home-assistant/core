@@ -230,14 +230,14 @@ class PlatformField:
     validator: Callable[..., Any]
     error: str | None = None
     default: str | int | vol.Undefined = vol.UNDEFINED
-    no_reconfig: bool = False
+    exclude_from_reconfig: bool = False
 
 
 COMMON_ENTITY_FIELDS = {
     CONF_PLATFORM: PlatformField(
-        SUBENTRY_PLATFORM_SELECTOR, True, str, no_reconfig=True
+        SUBENTRY_PLATFORM_SELECTOR, True, str, exclude_from_reconfig=True
     ),
-    CONF_NAME: PlatformField(TEXT_SELECTOR, False, str, no_reconfig=True),
+    CONF_NAME: PlatformField(TEXT_SELECTOR, False, str, exclude_from_reconfig=True),
     CONF_ENTITY_PICTURE: PlatformField(TEXT_SELECTOR, False, cv.url, "invalid_url"),
 }
 
@@ -334,18 +334,18 @@ def validate_user_input(
 @callback
 def data_schema_from_fields(
     data_schema_fields: dict[str, PlatformField],
-    reconfig: bool = False,
+    reconfig: bool,
 ) -> vol.Schema:
     """Generate data schema from platform fields."""
     return vol.Schema(
         {
             vol.Required(field_name, default=field_details.default)
-            if field_details.required and field_details.no_reconfig
+            if field_details.required
             else vol.Optional(
                 field_name, default=field_details.default
             ): field_details.selector
             for field_name, field_details in data_schema_fields.items()
-            if not field_details.no_reconfig or not reconfig
+            if not field_details.exclude_from_reconfig or not reconfig
         }
     )
 
@@ -1022,7 +1022,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             assert self._component_id is not None
         platform = self._subentry_data["components"][self._component_id][CONF_PLATFORM]
         data_schema_fields = PLATFORM_MQTT_FIELDS[platform] | COMMON_MQTT_FIELDS
-        data_schema = data_schema_from_fields(data_schema_fields)
+        data_schema = data_schema_from_fields(
+            data_schema_fields, reconfig=self._component_id is not None
+        )
         if user_input is not None:
             # Test entity fields against the validator
             validate_user_input(user_input, data_schema_fields, errors)
