@@ -1130,7 +1130,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             self._subentry_data["availability"] = cast(MqttAvailabilityData, user_input)
             return await self.async_step_summary_menu()
 
-        data_schema = SUENTRY_AVAILABILITY_SCHEMA
+        data_schema = SUBENTRY_AVAILABILITY_SCHEMA
         data_schema = self.add_suggested_values_to_schema(
             data_schema,
             dict(self._subentry_data.setdefault("availability", {}))
