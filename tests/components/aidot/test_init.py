@@ -9,15 +9,6 @@ from . import async_init_integration
 from tests.common import MockConfigEntry
 
 
-async def test_async_setup_entry_returns_true(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test that async_setup_entry returns True."""
-
-    await async_init_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-
 async def test_async_unload_entry(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

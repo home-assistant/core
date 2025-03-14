@@ -81,7 +81,7 @@ async def test_turn_off(
     mocked_device_client.async_turn_off.assert_called_once()
 
 
-async def test_trun_on_brightness(
+async def test_turn_on_brightness(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mocked_device_client: MagicMock,
