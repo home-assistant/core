@@ -5,12 +5,18 @@
         "description": "Enter your Roborock email address.",
         "data": {
           "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "username": "The email address used to sign in to the Roborock app."
         }
       },
       "code": {
         "description": "Type the verification code sent to your email",
         "data": {
           "code": "Verification code"
+        },
+        "data_description": {
+          "code": "The verification code sent to your email."
         }
       },
       "reauth_confirm": {
@@ -54,6 +60,25 @@
           "vacuum_position": "Vacuum position",
           "virtual_walls": "Virtual walls",
           "zones": "Zones"
+        },
+        "data_description": {
+          "charger": "Show the charger on the map.",
+          "cleaned_area": "Show the area cleaned on the map.",
+          "goto_path": "Show the go-to path on the map.",
+          "ignored_obstacles": "Show ignored obstacles on the map.",
+          "ignored_obstacles_with_photo": "Show ignored obstacles with photos on the map.",
+          "mop_path": "Show the mop path on the map.",
+          "no_carpet_zones": "Show the no carpet zones on the map.",
+          "no_go_zones": "Show the no-go zones on the map.",
+          "no_mopping_zones": "Show the no-mop zones on the map.",
+          "obstacles": "Show obstacles on the map.",
+          "obstacles_with_photo": "Show obstacles with photos on the map.",
+          "path": "Show the path on the map.",
+          "predicted_path": "Show the predicted path on the map.",
+          "room_names": "Show room names on the map.",
+          "vacuum_position": "Show the vacuum position on the map.",
+          "virtual_walls": "Show virtual walls on the map.",
+          "zones": "Show zones on the map."
         }
       }
     }
@@ -353,6 +378,15 @@
       },
       "selected_map": {
         "name": "Selected map"
+      },
+      "dust_collection_mode": {
+        "name": "Empty mode",
+        "state": {
+          "smart": "Smart",
+          "light": "Light",
+          "balanced": "[%key:component::roborock::entity::vacuum::roborock::state_attributes::fan_speed::state::balanced%]",
+          "max": "[%key:component::roborock::entity::select::mop_intensity::state::max%]"
+        }
       }
     },
     "switch": {

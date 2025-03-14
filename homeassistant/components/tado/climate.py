@@ -157,8 +157,8 @@ async def create_climate_entity(
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_OFF],
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_SMART_SCHEDULE],
     ]
-    supported_fan_modes = None
-    supported_swing_modes = None
+    supported_fan_modes: list[str] | None = None
+    supported_swing_modes: list[str] | None = None
     heat_temperatures = None
     cool_temperatures = None
 

@@ -30,6 +30,7 @@ from .mock_data import (
     MULTI_MAP_LIST,
     NETWORK_INFO,
     PROP,
+    SCENES,
     USER_DATA,
     USER_EMAIL,
 )
@@ -67,18 +68,30 @@ class A01Mock(RoborockMqttClientA01):
         return {prot: self.protocol_responses[prot] for prot in dyad_data_protocols}
 
 
+@pytest.fixture(name="bypass_api_client_fixture")
+def bypass_api_client_fixture() -> None:
+    """Skip calls to the API client."""
+    with (
+        patch(
+            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+            return_value=HOME_DATA,
+        ),
+        patch(
+            "homeassistant.components.roborock.RoborockApiClient.get_scenes",
+            return_value=SCENES,
+        ),
+    ):
+        yield
+
+
 @pytest.fixture(name="bypass_api_fixture")
-def bypass_api_fixture() -> None:
+def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
     """Skip calls to the API."""
     with (
         patch("homeassistant.components.roborock.RoborockMqttClientV1.async_connect"),
         patch("homeassistant.components.roborock.RoborockMqttClientV1._send_command"),
         patch(
             "homeassistant.components.roborock.coordinator.RoborockMqttClientV1._send_command"
-        ),
-        patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
-            return_value=HOME_DATA,
         ),
         patch(
             "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
