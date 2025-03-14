@@ -1,18 +1,27 @@
 """The tests for shared code of the MQTT platform."""
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import mqtt, sensor
 from homeassistant.components.mqtt.sensor import DEFAULT_NAME as DEFAULT_SENSOR_NAME
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_STATE_CHANGED,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.util import slugify
+
+from .common import MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA, MOCK_SUBENTRY_DATA_SET_MIX
 
 from tests.common import MockConfigEntry, async_capture_events, async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator
@@ -451,5 +460,76 @@ async def test_value_template_fails(
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_subentries_data",
+    [
+        (
+            ConfigSubentryData(
+                data=MOCK_SUBENTRY_DATA_SET_MIX,
+                subentry_type="device",
+                title="Mock subentry",
+            ),
+        )
+    ],
+)
+async def test_loading_subentries(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_config_subentries_data: tuple[dict[str, Any]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test loading subentries."""
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    subentry_id = next(iter(entry.subentries))
+    # Each subentry has one device
+    device = device_registry.async_get_device({("mqtt", subentry_id)})
+    assert device is not None
+    for object_id, component in mqtt_config_subentries_data[0]["data"][
+        "components"
+    ].items():
+        platform = component["platform"]
+        entity_id = f"{platform}.{slugify(device.name)}_{slugify(component['name'])}"
+        entity_entry_entity_id = entity_registry.async_get_entity_id(
+            platform, mqtt.DOMAIN, f"{subentry_id}_{object_id}"
+        )
+        assert entity_entry_entity_id == entity_id
+        state = hass.states.get(entity_id)
+        assert state is not None
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_subentries_data",
+    [
+        (
+            ConfigSubentryData(
+                data=MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA,
+                subentry_type="device",
+                title="Mock subentry",
+            ),
+        )
+    ],
+)
+async def test_loading_subentry_with_bad_component_schema(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_config_subentries_data: tuple[dict[str, Any]],
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test loading subentries."""
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    subentry_id = next(iter(entry.subentries))
+    # Each subentry has one device
+    device = device_registry.async_get_device({("mqtt", subentry_id)})
+    assert device is None
+    assert (
+        "Schema violation occurred when trying to set up entity from subentry"
         in caplog.text
     )

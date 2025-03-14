@@ -5,12 +5,15 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
+from copy import deepcopy
+from dataclasses import dataclass
 from enum import IntEnum
 import logging
 import queue
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
+from uuid import uuid4
 
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
@@ -29,21 +32,32 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    ConfigSubentryFlow,
     OptionsFlow,
+    SubentryFlowResult,
 )
 from homeassistant.const import (
+    ATTR_CONFIGURATION_URL,
+    ATTR_HW_VERSION,
+    ATTR_MODEL,
+    ATTR_MODEL_ID,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
     CONF_CLIENT_ID,
+    CONF_DEVICE,
     CONF_DISCOVERY,
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PAYLOAD,
+    CONF_PLATFORM,
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
@@ -54,9 +68,12 @@ from homeassistant.helpers.selector import (
     NumberSelectorConfig,
     NumberSelectorMode,
     SelectOptionDict,
+    Selector,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TemplateSelector,
+    TemplateSelectorConfig,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
@@ -76,8 +93,13 @@ from .const import (
     CONF_CERTIFICATE,
     CONF_CLIENT_CERT,
     CONF_CLIENT_KEY,
+    CONF_COMMAND_TEMPLATE,
+    CONF_COMMAND_TOPIC,
     CONF_DISCOVERY_PREFIX,
+    CONF_ENTITY_PICTURE,
     CONF_KEEPALIVE,
+    CONF_QOS,
+    CONF_RETAIN,
     CONF_TLS_INSECURE,
     CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
@@ -99,12 +121,15 @@ from .const import (
     SUPPORTED_PROTOCOLS,
     TRANSPORT_TCP,
     TRANSPORT_WEBSOCKETS,
+    Platform,
 )
+from .models import MqttDeviceData, MqttSubentryData
 from .util import (
     async_create_certificate_temp_files,
     get_file_path,
     valid_birth_will,
     valid_publish_topic,
+    valid_qos_schema,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -128,10 +153,10 @@ PORT_SELECTOR = vol.All(
     vol.Coerce(int),
 )
 PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
-QOS_SELECTOR = vol.All(
-    NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=2)),
-    vol.Coerce(int),
+QOS_SELECTOR = NumberSelector(
+    NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=2)
 )
+QOS_DATA_SCHEMA = vol.All(QOS_SELECTOR, valid_qos_schema)
 KEEPALIVE_SELECTOR = vol.All(
     NumberSelector(
         NumberSelectorConfig(
@@ -183,6 +208,65 @@ KEY_UPLOAD_SELECTOR = FileSelector(
     FileSelectorConfig(accept=".pem,.key,.der,.pk8,application/pkcs8")
 )
 
+# Subentry selectors
+SUBENTRY_PLATFORMS = [Platform.NOTIFY]
+SUBENTRY_PLATFORM_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[platform.value for platform in SUBENTRY_PLATFORMS],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key=CONF_PLATFORM,
+    )
+)
+
+TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
+
+
+@dataclass(frozen=True)
+class PlatformField:
+    """Stores a platform config field schema, required flag and validator."""
+
+    selector: Selector
+    required: bool
+    validator: Callable[..., Any]
+    error: str | None = None
+    default: str | int | vol.Undefined = vol.UNDEFINED
+    exclude_from_reconfig: bool = False
+
+
+COMMON_ENTITY_FIELDS = {
+    CONF_PLATFORM: PlatformField(
+        SUBENTRY_PLATFORM_SELECTOR, True, str, exclude_from_reconfig=True
+    ),
+    CONF_NAME: PlatformField(TEXT_SELECTOR, False, str, exclude_from_reconfig=True),
+    CONF_ENTITY_PICTURE: PlatformField(TEXT_SELECTOR, False, cv.url, "invalid_url"),
+}
+
+COMMON_MQTT_FIELDS = {
+    CONF_QOS: PlatformField(QOS_SELECTOR, False, valid_qos_schema, default=0),
+    CONF_RETAIN: PlatformField(BOOLEAN_SELECTOR, False, bool),
+}
+PLATFORM_MQTT_FIELDS = {
+    Platform.NOTIFY.value: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            TEXT_SELECTOR, True, valid_publish_topic, "invalid_publish_topic"
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            TEMPLATE_SELECTOR, False, cv.template, "invalid_template"
+        ),
+    },
+}
+
+MQTT_DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_NAME): TEXT_SELECTOR,
+        vol.Optional(ATTR_SW_VERSION): TEXT_SELECTOR,
+        vol.Optional(ATTR_HW_VERSION): TEXT_SELECTOR,
+        vol.Optional(ATTR_MODEL): TEXT_SELECTOR,
+        vol.Optional(ATTR_MODEL_ID): TEXT_SELECTOR,
+        vol.Optional(ATTR_CONFIGURATION_URL): TEXT_SELECTOR,
+    }
+)
+
 REAUTH_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): TEXT_SELECTOR,
@@ -215,6 +299,57 @@ def update_password_from_user_input(
     return substituted_used_data
 
 
+@callback
+def validate_field(
+    field: str,
+    validator: Callable[..., Any],
+    user_input: dict[str, Any] | None,
+    errors: dict[str, str],
+    error: str,
+) -> None:
+    """Validate a single field."""
+    if user_input is None or field not in user_input:
+        return
+    try:
+        validator(user_input[field])
+    except (ValueError, vol.Invalid):
+        errors[field] = error
+
+
+@callback
+def validate_user_input(
+    user_input: dict[str, Any],
+    data_schema_fields: dict[str, PlatformField],
+    errors: dict[str, str],
+) -> None:
+    """Validate user input."""
+    for field, value in user_input.items():
+        validator = data_schema_fields[field].validator
+        try:
+            validator(value)
+        except (ValueError, vol.Invalid):
+            errors[field] = data_schema_fields[field].error or "invalid_input"
+
+
+@callback
+def data_schema_from_fields(
+    data_schema_fields: dict[str, PlatformField],
+    reconfig: bool,
+) -> vol.Schema:
+    """Generate data schema from platform fields."""
+    return vol.Schema(
+        {
+            vol.Required(field_name, default=field_details.default)
+            if field_details.required
+            else vol.Optional(
+                field_name, default=field_details.default
+            ): field_details.selector
+            for field_name, field_details in data_schema_fields.items()
+            if not field_details.exclude_from_reconfig or not reconfig
+        }
+    )
+
+
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
@@ -229,6 +364,14 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Set up flow instance."""
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this handler."""
+        return {CONF_DEVICE: MQTTSubentryFlowHandler}
 
     @staticmethod
     @callback
@@ -685,7 +828,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
                 "birth_payload", description={"suggested_value": birth[CONF_PAYLOAD]}
             )
         ] = TEXT_SELECTOR
-        fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_SELECTOR
+        fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_DATA_SCHEMA
         fields[vol.Optional("birth_retain", default=birth[ATTR_RETAIN])] = (
             BOOLEAN_SELECTOR
         )
@@ -708,7 +851,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
                 "will_payload", description={"suggested_value": will[CONF_PAYLOAD]}
             )
         ] = TEXT_SELECTOR
-        fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = QOS_SELECTOR
+        fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = QOS_DATA_SCHEMA
         fields[vol.Optional("will_retain", default=will[ATTR_RETAIN])] = (
             BOOLEAN_SELECTOR
         )
@@ -718,6 +861,288 @@ class MQTTOptionsFlowHandler(OptionsFlow):
             data_schema=vol.Schema(fields),
             errors=errors,
             last_step=True,
+        )
+
+
+class MQTTSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle MQTT subentry flow."""
+
+    _subentry_data: MqttSubentryData
+    _component_id: str | None = None
+
+    @callback
+    def update_component_fields(
+        self, data_schema: vol.Schema, user_input: dict[str, Any]
+    ) -> None:
+        """Update the componment fields."""
+        if TYPE_CHECKING:
+            assert self._component_id is not None
+        component_data = self._subentry_data["components"][self._component_id]
+        # Remove the fields from the component data if they are not in the user input
+        for field in [
+            form_field
+            for form_field in data_schema.schema
+            if form_field in component_data and form_field not in user_input
+        ]:
+            component_data.pop(field)
+        component_data.update(user_input)
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a subentry."""
+        self._subentry_data = MqttSubentryData(device=MqttDeviceData(), components={})
+        return await self.async_step_device()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure a subentry."""
+        reconfigure_subentry = self._get_reconfigure_subentry()
+        self._subentry_data = cast(
+            MqttSubentryData, deepcopy(dict(reconfigure_subentry.data))
+        )
+        return await self.async_step_summary_menu()
+
+    async def async_step_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a new MQTT device."""
+        errors: dict[str, str] = {}
+        validate_field("configuration_url", cv.url, user_input, errors, "invalid_url")
+        if not errors and user_input is not None:
+            self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, user_input)
+            if self.source == SOURCE_RECONFIGURE:
+                return await self.async_step_summary_menu()
+            return await self.async_step_entity()
+
+        data_schema = self.add_suggested_values_to_schema(
+            MQTT_DEVICE_SCHEMA,
+            self._subentry_data[CONF_DEVICE] if user_input is None else user_input,
+        )
+        return self.async_show_form(
+            step_id=CONF_DEVICE,
+            data_schema=data_schema,
+            errors=errors,
+            last_step=False,
+        )
+
+    async def async_step_entity(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add or edit an mqtt entity."""
+        errors: dict[str, str] = {}
+        data_schema_fields = COMMON_ENTITY_FIELDS
+        entity_name_label: str = ""
+        platform_label: str = ""
+        if reconfig := (self._component_id is not None):
+            name: str | None = self._subentry_data["components"][
+                self._component_id
+            ].get(CONF_NAME)
+            platform_label = f"{self._subentry_data['components'][self._component_id][CONF_PLATFORM]} "
+            entity_name_label = f" ({name})" if name is not None else ""
+        data_schema = data_schema_from_fields(data_schema_fields, reconfig=reconfig)
+        if user_input is not None:
+            validate_user_input(user_input, data_schema_fields, errors)
+            if not errors:
+                if self._component_id is None:
+                    self._component_id = uuid4().hex
+                self._subentry_data["components"].setdefault(self._component_id, {})
+                self.update_component_fields(data_schema, user_input)
+                return await self.async_step_mqtt_platform_config()
+            data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
+        elif self.source == SOURCE_RECONFIGURE and self._component_id is not None:
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema, self._subentry_data["components"][self._component_id]
+            )
+        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
+        return self.async_show_form(
+            step_id="entity",
+            data_schema=data_schema,
+            description_placeholders={
+                "mqtt_device": device_name,
+                "entity_name_label": entity_name_label,
+                "platform_label": platform_label,
+            },
+            errors=errors,
+            last_step=False,
+        )
+
+    def _show_update_or_delete_form(self, step_id: str) -> SubentryFlowResult:
+        """Help selecting an entity to update or delete."""
+        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
+        entities = [
+            SelectOptionDict(
+                value=key, label=f"{device_name} {component.get(CONF_NAME, '-')}"
+            )
+            for key, component in self._subentry_data["components"].items()
+        ]
+        data_schema = vol.Schema(
+            {
+                vol.Required("component"): SelectSelector(
+                    SelectSelectorConfig(
+                        options=entities,
+                        mode=SelectSelectorMode.LIST,
+                    )
+                )
+            }
+        )
+        return self.async_show_form(
+            step_id=step_id, data_schema=data_schema, last_step=False
+        )
+
+    async def async_step_update_entity(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Select the entity to update."""
+        if user_input:
+            self._component_id = user_input["component"]
+            return await self.async_step_entity()
+        if len(self._subentry_data["components"]) == 1:
+            # Return first key
+            self._component_id = next(iter(self._subentry_data["components"]))
+            return await self.async_step_entity()
+        return self._show_update_or_delete_form("update_entity")
+
+    async def async_step_delete_entity(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Select the entity to delete."""
+        if user_input:
+            del self._subentry_data["components"][user_input["component"]]
+            return await self.async_step_summary_menu()
+        return self._show_update_or_delete_form("delete_entity")
+
+    async def async_step_mqtt_platform_config(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Configure entity platform MQTT details."""
+        errors: dict[str, str] = {}
+        if TYPE_CHECKING:
+            assert self._component_id is not None
+        platform = self._subentry_data["components"][self._component_id][CONF_PLATFORM]
+        data_schema_fields = PLATFORM_MQTT_FIELDS[platform] | COMMON_MQTT_FIELDS
+        data_schema = data_schema_from_fields(
+            data_schema_fields, reconfig=self._component_id is not None
+        )
+        if user_input is not None:
+            # Test entity fields against the validator
+            validate_user_input(user_input, data_schema_fields, errors)
+            if not errors:
+                self.update_component_fields(data_schema, user_input)
+                self._component_id = None
+                if self.source == SOURCE_RECONFIGURE:
+                    return await self.async_step_summary_menu()
+                return self._async_create_subentry()
+
+            data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
+        else:
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema, self._subentry_data["components"][self._component_id]
+            )
+        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
+        entity_name: str | None
+        if entity_name := self._subentry_data["components"][self._component_id].get(
+            CONF_NAME
+        ):
+            full_entity_name: str = f"{device_name} {entity_name}"
+        else:
+            full_entity_name = device_name
+        return self.async_show_form(
+            step_id="mqtt_platform_config",
+            data_schema=data_schema,
+            description_placeholders={
+                "mqtt_device": device_name,
+                CONF_PLATFORM: platform,
+                "entity": full_entity_name,
+            },
+            errors=errors,
+            last_step=False,
+        )
+
+    @callback
+    def _async_create_subentry(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Create a subentry for a new MQTT device."""
+        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
+        component: dict[str, Any] = next(
+            iter(self._subentry_data["components"].values())
+        )
+        platform = component[CONF_PLATFORM]
+        entity_name: str | None
+        if entity_name := component.get(CONF_NAME):
+            full_entity_name: str = f"{device_name} {entity_name}"
+        else:
+            full_entity_name = device_name
+
+        return self.async_create_entry(
+            data=self._subentry_data,
+            title=self._subentry_data[CONF_DEVICE][CONF_NAME],
+            description_placeholders={
+                "entity": full_entity_name,
+                CONF_PLATFORM: platform,
+            },
+        )
+
+    async def async_step_summary_menu(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Show summary menu and decide to add more entities or to finish the flow."""
+        self._component_id = None
+        mqtt_device = self._subentry_data[CONF_DEVICE][CONF_NAME]
+        mqtt_items = ", ".join(
+            f"{mqtt_device} {component.get(CONF_NAME, '-')}"
+            for component in self._subentry_data["components"].values()
+        )
+        menu_options = [
+            "entity",
+            "update_entity",
+        ]
+        if len(self._subentry_data["components"]) > 1:
+            menu_options.append("delete_entity")
+        menu_options.append("device")
+        if self._subentry_data != self._get_reconfigure_subentry().data:
+            menu_options.append("save_changes")
+        return self.async_show_menu(
+            step_id="summary_menu",
+            menu_options=menu_options,
+            description_placeholders={
+                "mqtt_device": mqtt_device,
+                "mqtt_items": mqtt_items,
+            },
+        )
+
+    async def async_step_save_changes(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Save the changes made to the subentry."""
+        entry = self._get_reconfigure_entry()
+        subentry = self._get_reconfigure_subentry()
+        entity_registry = er.async_get(self.hass)
+
+        # When a component is removed from the MQTT device,
+        # And we save the changes to the subentry,
+        # we need to clean up stale entity registry entries.
+        # The component id is used as a part of the unique id of the entity.
+        for unique_id, platform in [
+            (
+                f"{subentry.subentry_id}_{component_id}",
+                subentry.data["components"][component_id][CONF_PLATFORM],
+            )
+            for component_id in subentry.data["components"]
+            if component_id not in self._subentry_data["components"]
+        ]:
+            if entity_id := entity_registry.async_get_entity_id(
+                platform, DOMAIN, unique_id
+            ):
+                entity_registry.async_remove(entity_id)
+
+        return self.async_update_and_abort(
+            entry,
+            subentry,
+            data=self._subentry_data,
+            title=self._subentry_data[CONF_DEVICE][CONF_NAME],
         )
 
 
