@@ -56,9 +56,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations:
-    status: todo
-    comment: need merging of PR 140404
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow:
     status: exempt
