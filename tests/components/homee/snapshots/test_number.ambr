@@ -664,7 +664,7 @@
     'supported_features': 0,
     'translation_key': 'wind_monitoring_state',
     'unique_id': '00055511EECC-1-16',
-    'unit_of_measurement': 'm/s',
+    'unit_of_measurement': <UnitOfSpeed.METERS_PER_SECOND: 'm/s'>,
   })
 # ---
 # name: test_number_snapshot[number.test_number_threshold_for_wind_trigger-state]
@@ -676,7 +676,7 @@
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 2.5,
-      'unit_of_measurement': 'm/s',
+      'unit_of_measurement': <UnitOfSpeed.METERS_PER_SECOND: 'm/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_threshold_for_wind_trigger',
