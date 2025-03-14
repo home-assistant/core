@@ -177,12 +177,26 @@ jobs:
     name: Build wheels ${{ matrix.abi }} for ${{ matrix.arch }}
     if: github.repository_owner == 'home-assistant'
     needs: init
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp313"]
-        arch: ${{ fromJson(needs.init.outputs.architectures) }}
+        include:
+          - os: ubuntu-latest
+            arch: amd64
+            abi: cp313
+          - os: ubuntu-latest
+            arch: i386
+            abi: cp313
+          - os: ubuntu-24.04-arm
+            arch: aarch64
+            abi: cp313
+          - os: ubuntu-latest
+            arch: armv7
+            abi: cp313
+          - os: ubuntu-latest
+            arch: armhf
+            abi: cp313
     steps:
       - name: Checkout the repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
