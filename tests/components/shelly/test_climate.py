@@ -275,7 +275,7 @@ async def test_block_restored_climate(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == HVACMode.OFF
-    assert state.attributes.get("temperature") == 4.0
+    assert state.attributes.get(ATTR_TEMPERATURE) == 4.0
 
     # Partial update, should not change state
     mock_block_device.mock_update()
@@ -284,7 +284,7 @@ async def test_block_restored_climate(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == HVACMode.OFF
-    assert state.attributes.get("temperature") == 4.0
+    assert state.attributes.get(ATTR_TEMPERATURE) == 4.0
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
@@ -294,7 +294,7 @@ async def test_block_restored_climate(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == HVACMode.OFF
-    assert state.attributes.get("temperature") == 4.0
+    assert state.attributes.get(ATTR_TEMPERATURE) == 4.0
 
     # Test set hvac mode heat, target temp should be set to last target temp (22)
     await hass.services.async_call(
@@ -313,7 +313,7 @@ async def test_block_restored_climate(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == HVACMode.HEAT
-    assert state.attributes.get("temperature") == 22.0
+    assert state.attributes.get(ATTR_TEMPERATURE) == 22.0
 
 
 async def test_block_restored_climate_us_customary(
@@ -351,8 +351,8 @@ async def test_block_restored_climate_us_customary(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == HVACMode.OFF
-    assert state.attributes.get("temperature") == 39
-    assert state.attributes.get("current_temperature") == 67
+    assert state.attributes.get(ATTR_TEMPERATURE) == 39
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 67
 
     # Partial update, should not change state
     mock_block_device.mock_update()
@@ -361,8 +361,8 @@ async def test_block_restored_climate_us_customary(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == HVACMode.OFF
-    assert state.attributes.get("temperature") == 39
-    assert state.attributes.get("current_temperature") == 67
+    assert state.attributes.get(ATTR_TEMPERATURE) == 39
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 67
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
@@ -374,8 +374,8 @@ async def test_block_restored_climate_us_customary(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == HVACMode.OFF
-    assert state.attributes.get("temperature") == 39
-    assert state.attributes.get("current_temperature") == 65
+    assert state.attributes.get(ATTR_TEMPERATURE) == 39
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 65
 
     # Test set hvac mode heat, target temp should be set to last target temp (10.0/50)
     await hass.services.async_call(
@@ -394,7 +394,7 @@ async def test_block_restored_climate_us_customary(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == HVACMode.HEAT
-    assert state.attributes.get("temperature") == 50
+    assert state.attributes.get(ATTR_TEMPERATURE) == 50
 
 
 async def test_block_restored_climate_unavailable(
