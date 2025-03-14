@@ -92,12 +92,11 @@ async def async_setup_entry(
 
 
 class EheimDigitalSensor(
-    Generic[_DeviceT_co], EheimDigitalEntity[_DeviceT_co], SensorEntity
+    EheimDigitalEntity[_DeviceT_co], SensorEntity, Generic[_DeviceT_co]
 ):
     """Represent a EHEIM Digital sensor entity."""
 
     entity_description: EheimDigitalSensorDescription[_DeviceT_co]
-    _attr_has_entity_name = True
 
     def __init__(
         self,

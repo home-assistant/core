@@ -23,7 +23,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:pump',
+    'original_icon': None,
     'original_name': 'Current speed',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
@@ -37,7 +37,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock classicVARIO Current speed',
-      'icon': 'mdi:pump',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -134,7 +133,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:wrench-clock',
+    'original_icon': None,
     'original_name': 'Remaining hours until service',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
@@ -149,7 +148,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Mock classicVARIO Remaining hours until service',
-      'icon': 'mdi:wrench-clock',
       'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
