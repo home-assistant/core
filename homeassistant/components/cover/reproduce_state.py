@@ -70,12 +70,12 @@ async def _async_reproduce_state(
     if cur_state.state == state.state and position_matches and tilt_position_matches:
         return
 
-    service_data = {ATTR_ENTITY_ID: state.entity_id}
-    supported_features = try_parse_enum(
-        CoverEntityFeature, cur_state.attributes.get(ATTR_SUPPORTED_FEATURES)
-    ) or CoverEntityFeature(0)
-
+    service: str | None = None
     if cur_state.state != state.state:
+        service_data = {ATTR_ENTITY_ID: state.entity_id}
+        supported_features = try_parse_enum(
+            CoverEntityFeature, cur_state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        ) or CoverEntityFeature(0)
         if (
             not position_matches
             and requested_position is not None
@@ -83,36 +83,22 @@ async def _async_reproduce_state(
         ):
             service = SERVICE_SET_COVER_POSITION
             service_data[ATTR_POSITION] = state.attributes[ATTR_CURRENT_POSITION]
-        elif (
-            not tilt_position_matches
-            and requested_tilt_position is not None
-            and CoverEntityFeature.SET_TILT_POSITION in supported_features
-        ):
-            service = SERVICE_SET_COVER_TILT_POSITION
-            service_data[ATTR_TILT_POSITION] = state.attributes[
-                ATTR_CURRENT_TILT_POSITION
-            ]
         # Open/Close
         elif state.state in {CoverState.CLOSED, CoverState.CLOSING}:
-            if (
-                CoverEntityFeature.CLOSE in supported_features
-                or CoverEntityFeature.CLOSE_TILT not in supported_features
-            ):
+            if CoverEntityFeature.CLOSE in supported_features:
                 service = SERVICE_CLOSE_COVER
             elif CoverEntityFeature.CLOSE_TILT in supported_features:
                 service = SERVICE_CLOSE_COVER_TILT
         elif state.state in {CoverState.OPEN, CoverState.OPENING}:
-            if (
-                CoverEntityFeature.OPEN in supported_features
-                or CoverEntityFeature.OPEN_TILT not in supported_features
-            ):
+            if CoverEntityFeature.OPEN in supported_features:
                 service = SERVICE_OPEN_COVER
             elif CoverEntityFeature.OPEN_TILT in supported_features:
                 service = SERVICE_OPEN_COVER_TILT
 
-        await hass.services.async_call(
-            DOMAIN, service, service_data, context=context, blocking=True
-        )
+        if service:
+            await hass.services.async_call(
+                DOMAIN, service, service_data, context=context, blocking=True
+            )
 
     service_data_tilting = {ATTR_ENTITY_ID: state.entity_id}
 
@@ -120,6 +106,7 @@ async def _async_reproduce_state(
         ATTR_CURRENT_TILT_POSITION in state.attributes
         and ATTR_CURRENT_TILT_POSITION in cur_state.attributes
         and not tilt_position_matches
+        and service not in {SERVICE_OPEN_COVER_TILT, SERVICE_CLOSE_COVER_TILT}
     ):
         # Tilt position
         if state.attributes.get(ATTR_CURRENT_TILT_POSITION) == 100:
