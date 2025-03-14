@@ -61,7 +61,6 @@ async def test_reproducing_states(
         "cover.tilt_only_open",
         CoverState.OPEN,
         {
-            ATTR_CURRENT_TILT_POSITION: 100,
             ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE_TILT
             | CoverEntityFeature.OPEN_TILT,
         },
@@ -70,12 +69,28 @@ async def test_reproducing_states(
         "cover.tilt_only_closed",
         CoverState.CLOSED,
         {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.OPEN_TILT,
+        },
+    )
+    hass.states.async_set(
+        "cover.tilt_only_tilt_position_100",
+        CoverState.OPEN,
+        {
+            ATTR_CURRENT_TILT_POSITION: 100,
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.OPEN_TILT,
+        },
+    )
+    hass.states.async_set(
+        "cover.tilt_only_tilt_position_0",
+        CoverState.CLOSED,
+        {
             ATTR_CURRENT_TILT_POSITION: 0,
             ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE_TILT
             | CoverEntityFeature.OPEN_TILT,
         },
     )
-
     close_calls = async_mock_service(hass, "cover", SERVICE_CLOSE_COVER)
     open_calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
     close_tilt_calls = async_mock_service(hass, "cover", SERVICE_CLOSE_COVER_TILT)
@@ -124,10 +139,20 @@ async def test_reproducing_states(
             State(
                 "cover.tilt_only_open",
                 CoverState.OPEN,
+                {},
+            ),
+            State(
+                "cover.tilt_only_tilt_position_100",
+                CoverState.OPEN,
                 {ATTR_CURRENT_TILT_POSITION: 100},
             ),
             State(
                 "cover.tilt_only_closed",
+                CoverState.CLOSED,
+                {},
+            ),
+            State(
+                "cover.tilt_only_tilt_position_0",
                 CoverState.CLOSED,
                 {ATTR_CURRENT_TILT_POSITION: 0},
             ),
@@ -188,9 +213,19 @@ async def test_reproducing_states(
                 {},
             ),
             State(
+                "cover.tilt_only_tilt_position_100",
+                CoverState.CLOSED,
+                {ATTR_CURRENT_TILT_POSITION: 0},
+            ),
+            State(
                 "cover.tilt_only_closed",
                 CoverState.OPEN,
                 {},
+            ),
+            State(
+                "cover.tilt_only_tilt_position_0",
+                CoverState.OPEN,
+                {ATTR_CURRENT_TILT_POSITION: 100},
             ),
         ],
     )
