@@ -28,13 +28,7 @@
   "entity": {
     "alarm_control_panel": {
       "homee_mode": {
-        "name": "Status",
-        "state": {
-          "armed_home": "Home",
-          "armed_night": "Night",
-          "armed_away": "Away",
-          "armed_vacation": "Vacation"
-        }
+        "name": "Status"
       }
     },
     "button": {

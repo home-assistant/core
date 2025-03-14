@@ -27,7 +27,7 @@ class HomeeEntity(Entity):
         )
         self._entry = entry
         node = entry.runtime_data.get_node_by_id(attribute.node_id)
-        ## Homee hub itself has node-id -1
+        # Homee hub itself has node-id -1
         if node.id == -1:
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, entry.runtime_data.settings.uid)},
