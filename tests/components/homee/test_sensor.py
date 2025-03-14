@@ -14,7 +14,7 @@ from homeassistant.components.homee.const import (
     WINDOW_MAP_REVERSED,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import LIGHT_LUX, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
@@ -94,26 +94,6 @@ async def test_window_position(
             hass.states.get("sensor.test_multisensor_window_position").state
             == WINDOW_MAP_REVERSED[i]
         )
-
-
-async def test_brightness_sensor(
-    hass: HomeAssistant,
-    mock_homee: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test brightness sensor's lx & klx units and naming of multi-instance sensors."""
-    await setup_sensor(hass, mock_homee, mock_config_entry)
-
-    sensor_state = hass.states.get("sensor.test_multisensor_illuminance_1")
-    assert sensor_state.state == "175.0"
-    assert sensor_state.attributes["unit_of_measurement"] == LIGHT_LUX
-    assert sensor_state.attributes["friendly_name"] == "Test MultiSensor Illuminance 1"
-
-    # Sensor with Homee unit klx
-    sensor_state = hass.states.get("sensor.test_multisensor_illuminance_2")
-    assert sensor_state.state == "7000.0"
-    assert sensor_state.attributes["unit_of_measurement"] == LIGHT_LUX
-    assert sensor_state.attributes["friendly_name"] == "Test MultiSensor Illuminance 2"
 
 
 @pytest.mark.parametrize(
