@@ -152,22 +152,14 @@ async def _async_reproduce_state(
     # Open/Close
     services: list[str] = []
     if state.state in {CoverState.CLOSED, CoverState.CLOSING}:
-        if CoverEntityFeature.CLOSE in supported_features and (
-            not position_matches or requested_position is None
-        ):
+        if CoverEntityFeature.CLOSE in supported_features:
             services.append(SERVICE_CLOSE_COVER)
-        if CoverEntityFeature.CLOSE_TILT in supported_features and (
-            not tilt_position_matches or requested_tilt_position is None
-        ):
+        if CoverEntityFeature.CLOSE_TILT in supported_features:
             services.append(SERVICE_CLOSE_COVER_TILT)
     elif state.state in {CoverState.OPEN, CoverState.OPENING}:
-        if CoverEntityFeature.OPEN in supported_features and (
-            not position_matches or requested_position is None
-        ):
+        if CoverEntityFeature.OPEN in supported_features:
             services.append(SERVICE_OPEN_COVER)
-        if CoverEntityFeature.OPEN_TILT in supported_features and (
-            not tilt_position_matches or requested_tilt_position is None
-        ):
+        if CoverEntityFeature.OPEN_TILT in supported_features:
             services.append(SERVICE_OPEN_COVER_TILT)
 
     for service in services:
