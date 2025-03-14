@@ -113,10 +113,6 @@ class DescrMediaPlayer(SimpleMediaPlayer):
 
     entity_description = mp.MediaPlayerEntityDescription(key="test", volume_step=0.3)
 
-    def idle(self):
-        """Put device in idle."""
-        self._state = STATE_IDLE
-
 
 @pytest.fixture(params=[ExtendedMediaPlayer, SimpleMediaPlayer])
 def player(hass: HomeAssistant, request: pytest.FixtureRequest) -> mp.MediaPlayerEntity:
