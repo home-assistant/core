@@ -18,6 +18,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform
@@ -66,15 +67,20 @@ async def aiter_from_iter(iterable: Iterable) -> AsyncIterator:
 def mock_backup_agent(name: str, backups: list[AgentBackup] | None = None) -> Mock:
     """Create a mock backup agent."""
 
+    async def delete_backup(backup_id: str, **kwargs: Any) -> None:
+        """Mock delete."""
+        get_backup(backup_id)
+
     async def download_backup(backup_id: str, **kwargs: Any) -> AsyncIterator[bytes]:
         """Mock download."""
-        if not await get_backup(backup_id):
-            raise BackupNotFound
         return aiter_from_iter((backups_data.get(backup_id, b"backup data"),))
 
-    async def get_backup(backup_id: str, **kwargs: Any) -> AgentBackup | None:
+    async def get_backup(backup_id: str, **kwargs: Any) -> AgentBackup:
         """Get a backup."""
-        return next((b for b in backups if b.backup_id == backup_id), None)
+        backup = next((b for b in backups if b.backup_id == backup_id), None)
+        if backup is None:
+            raise BackupNotFound
+        return backup
 
     async def upload_backup(
         *,
@@ -98,7 +104,7 @@ def mock_backup_agent(name: str, backups: list[AgentBackup] | None = None) -> Mo
     mock_agent.unique_id = name
     type(mock_agent).agent_id = BackupAgent.agent_id
     mock_agent.async_delete_backup = AsyncMock(
-        spec_set=[BackupAgent.async_delete_backup]
+        side_effect=delete_backup, spec_set=[BackupAgent.async_delete_backup]
     )
     mock_agent.async_download_backup = AsyncMock(
         side_effect=download_backup, spec_set=[BackupAgent.async_download_backup]
@@ -125,6 +131,7 @@ async def setup_backup_integration(
 ) -> dict[str, Mock]:
     """Set up the Backup integration."""
     backups = backups or {}
+    async_initialize_backup(hass)
     with (
         patch("homeassistant.components.backup.is_hassio", return_value=with_hassio),
         patch(

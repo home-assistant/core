@@ -105,6 +105,12 @@
       },
       "one_touch_filter": {
         "name": "Fresh air filter"
+      },
+      "water_heater_operation_mode": {
+        "name": "[%key:component::binary_sensor::entity_component::power::name%]",
+        "state": {
+          "off": "[%key:common::state::standby%]"
+        }
       }
     },
     "climate": {
@@ -264,10 +270,10 @@
         "name": "{location} schedule turn-on"
       },
       "relative_hour_to_start_wm": {
-        "name": "Delay starts in"
+        "name": "Delayed start"
       },
       "relative_hour_to_start_wm_for_location": {
-        "name": "{location} delay starts in"
+        "name": "{location} delayed start"
       },
       "relative_hour_to_stop": {
         "name": "Schedule turn-off"
@@ -276,10 +282,10 @@
         "name": "{location} schedule turn-off"
       },
       "relative_hour_to_stop_wm": {
-        "name": "Delay ends in"
+        "name": "Delayed end"
       },
       "relative_hour_to_stop_wm_for_location": {
-        "name": "{location} delay ends in"
+        "name": "{location} delayed end"
       },
       "sleep_timer_relative_hour_to_stop": {
         "name": "Sleep timer"
@@ -405,7 +411,7 @@
           "cancel": "Cancel",
           "carbonation": "Carbonation",
           "change_condition": "Settings Change",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "charging_complete": "Charging completed",
           "checking_turbidity": "Detecting soil level",
           "cleaning": "Cleaning",
@@ -492,7 +498,7 @@
           "cancel": "[%key:component::lg_thinq::entity::sensor::current_state::state::cancel%]",
           "carbonation": "[%key:component::lg_thinq::entity::sensor::current_state::state::carbonation%]",
           "change_condition": "[%key:component::lg_thinq::entity::sensor::current_state::state::change_condition%]",
-          "charging": "[%key:component::lg_thinq::entity::sensor::current_state::state::charging%]",
+          "charging": "[%key:common::state::charging%]",
           "charging_complete": "[%key:component::lg_thinq::entity::sensor::current_state::state::charging_complete%]",
           "checking_turbidity": "[%key:component::lg_thinq::entity::sensor::current_state::state::checking_turbidity%]",
           "cleaning": "[%key:component::lg_thinq::entity::sensor::current_state::state::cleaning%]",
@@ -927,6 +933,7 @@
         "state": {
           "cancel": "[%key:component::lg_thinq::entity::sensor::current_state::state::cancel%]",
           "power_off": "Power off",
+          "power_on": "Power on",
           "preheating": "Preheating",
           "start": "[%key:common::action::start%]",
           "stop": "[%key:common::action::stop%]",
@@ -938,6 +945,7 @@
         "state": {
           "cancel": "[%key:component::lg_thinq::entity::sensor::current_state::state::cancel%]",
           "power_off": "[%key:component::lg_thinq::entity::select::operation_mode::state::power_off%]",
+          "power_on": "[%key:component::lg_thinq::entity::select::operation_mode::state::power_on%]",
           "preheating": "[%key:component::lg_thinq::entity::select::operation_mode::state::preheating%]",
           "start": "[%key:common::action::start%]",
           "stop": "[%key:common::action::stop%]",

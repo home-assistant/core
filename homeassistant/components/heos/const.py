@@ -3,6 +3,7 @@
 ATTR_PASSWORD = "password"
 ATTR_USERNAME = "username"
 DOMAIN = "heos"
+ENTRY_TITLE = "HEOS System"
 SERVICE_GROUP_VOLUME_SET = "group_volume_set"
 SERVICE_GROUP_VOLUME_DOWN = "group_volume_down"
 SERVICE_GROUP_VOLUME_UP = "group_volume_up"

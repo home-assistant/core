@@ -23,6 +23,8 @@ from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 from .utils import get_dict_from_home_connect_error
 
+PARALLEL_UPDATES = 1
+
 TIME_ENTITIES = (
     TimeEntityDescription(
         key=SettingKey.BSH_COMMON_ALARM_CLOCK,

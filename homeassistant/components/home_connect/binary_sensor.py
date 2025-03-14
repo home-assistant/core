@@ -38,6 +38,8 @@ from .coordinator import (
 )
 from .entity import HomeConnectEntity
 
+PARALLEL_UPDATES = 0
+
 REFRIGERATION_DOOR_BOOLEAN_MAP = {
     REFRIGERATION_STATUS_DOOR_CLOSED: False,
     REFRIGERATION_STATUS_DOOR_OPEN: True,
