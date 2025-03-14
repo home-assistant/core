@@ -119,6 +119,15 @@ MOCK_SUBENTRY_NOTIFY_BAD_SCHEMA = {
     },
 }
 
+MOCK_SUBENTRY_AVAILABILITY_DATA = {
+    "availability": {
+        "availability_topic": "test/availability",
+        "availability_template": "{{ value_json.availability }}",
+        "payload_available": "online",
+        "payload_not_available": "offline",
+    }
+}
+
 MOCK_NOTIFY_SUBENTRY_DATA_MULTI = {
     "device": {
         "name": "Milk notifier",
@@ -129,7 +138,7 @@ MOCK_NOTIFY_SUBENTRY_DATA_MULTI = {
         "configuration_url": "https://example.com",
     },
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1 | MOCK_SUBENTRY_NOTIFY_COMPONENT2,
-}
+} | MOCK_SUBENTRY_AVAILABILITY_DATA
 
 MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
     "device": {
@@ -177,7 +186,7 @@ MOCK_SUBENTRY_DATA_SET_MIX = {
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1
     | MOCK_SUBENTRY_NOTIFY_COMPONENT2
     | MOCK_SUBENTRY_LIGHT_COMPONENT,
-}
+} | MOCK_SUBENTRY_AVAILABILITY_DATA
 _SENTINEL = object()
 
 DISCOVERY_COUNT = sum(len(discovery_topic) for discovery_topic in MQTT.values())

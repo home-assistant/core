@@ -2821,6 +2821,7 @@ async def test_subentry_reconfigure_remove_entity(
         "update_entity",
         "delete_entity",
         "device",
+        "availability",
     ]
 
     # assert we can delete an entity
@@ -2849,6 +2850,7 @@ async def test_subentry_reconfigure_remove_entity(
         "entity",
         "update_entity",
         "device",
+        "availability",
         "save_changes",
     ]
 
@@ -2938,6 +2940,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
         "update_entity",
         "delete_entity",
         "device",
+        "availability",
     ]
 
     # assert we can update an entity
@@ -3061,6 +3064,7 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
         "entity",
         "update_entity",
         "device",
+        "availability",
     ]
 
     # assert we can update the entity, there is no select step
@@ -3174,6 +3178,7 @@ async def test_subentry_reconfigure_add_entity(
         "entity",
         "update_entity",
         "device",
+        "availability",
     ]
 
     # assert we can update the entity, there is no select step
@@ -3272,6 +3277,7 @@ async def test_subentry_reconfigure_update_device_properties(
         "update_entity",
         "delete_entity",
         "device",
+        "availability",
     ]
 
     # assert we can update the device properties
@@ -3310,3 +3316,119 @@ async def test_subentry_reconfigure_update_device_properties(
     assert "hw_version" not in device
     assert device["model"] == "Beer bottle XL"
     assert device["model_id"] == "bn003"
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_subentries_data",
+    [
+        (
+            ConfigSubentryData(
+                data=MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
+                subentry_type="device",
+                title="Mock subentry",
+            ),
+        )
+    ],
+)
+async def test_subentry_reconfigure_availablity(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test the subentry ConfigFlow reconfigure and update device properties."""
+    await mqtt_mock_entry()
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    subentry_id: str
+    subentry: ConfigSubentry
+    subentry_id, subentry = next(iter(config_entry.subentries.items()))
+
+    expected_availability = {
+        "availability_topic": "test/availability",
+        "availability_template": "{{ value_json.availability }}",
+        "payload_available": "online",
+        "payload_not_available": "offline",
+    }
+    assert subentry.data.get("availability") == expected_availability
+
+    result = await config_entry.start_subentry_reconfigure_flow(
+        hass, "device", subentry_id
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "summary_menu"
+
+    # assert we can set the availability config
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "availability"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "availability"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "availability_topic": "test/new_availability#invalid_topic",
+            "payload_available": "1",
+            "payload_not_available": "0",
+        },
+    )
+    assert result["errors"] == {"availability_topic": "invalid_subscribe_topic"}
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "availability_topic": "test/new_availability",
+            "payload_available": "1",
+            "payload_not_available": "0",
+        },
+    )
+
+    # finish reconfigure flow
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "save_changes"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # Check the availability was updated
+    expected_availability = {
+        "availability_topic": "test/new_availability",
+        "payload_available": "1",
+        "payload_not_available": "0",
+    }
+    assert subentry.data.get("availability") == expected_availability
+
+    # Assert we can reset the availability config
+    result = await config_entry.start_subentry_reconfigure_flow(
+        hass, "device", subentry_id
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "summary_menu"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "availability"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "availability"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "payload_available": "1",
+            "payload_not_available": "0",
+        },
+    )
+
+    # Finish reconfigure flow
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "save_changes"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # Check the availability was updated
+    assert subentry.data.get("availability") == {
+        "payload_available": "1",
+        "payload_not_available": "0",
+    }

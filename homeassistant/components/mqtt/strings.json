@@ -116,6 +116,22 @@
       },
       "entry_type": "MQTT Device",
       "step": {
+        "availability": {
+          "title": "Availability options",
+          "description": "The availability feature allows a device to report it's availability.",
+          "data": {
+            "availability_topic": "Availability topic",
+            "availability_template": "Availability template",
+            "payload_available": "Payload available",
+            "payload_not_available": "Payload not available"
+          },
+          "data_description": {
+            "availability_topic": "Topic to receive the availabillity payload on",
+            "availability_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-templates-with-the-mqtt-integration) to render the availability payload received on the availability topic",
+            "payload_available": "The payload that indicates the device is available (defaults to 'online')",
+            "payload_not_available": "The payload that indicates the device is not available (defaults to 'offline')"
+          }
+        },
         "device": {
           "title": "Configure MQTT device details",
           "description": "Enter the MQTT device details:",
@@ -143,6 +159,7 @@
             "entity": "Add another entity to \"{mqtt_device}\"",
             "update_entity": "Update entity properties",
             "delete_entity": "Delete an entity",
+            "availability": "Configure availability",
             "device": "Update device properties",
             "save_changes": "Save changes"
           }

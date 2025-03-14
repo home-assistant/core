@@ -432,11 +432,21 @@ class MqttDeviceData(TypedDict, total=False):
     model_id: str
 
 
-class MqttSubentryData(TypedDict):
+class MqttAvailabilityData(TypedDict, total=False):
+    """Hold the availability configuration for a device."""
+
+    availability_topic: str
+    availability_template: str
+    payload_available: str
+    payload_not_available: str
+
+
+class MqttSubentryData(TypedDict, total=False):
     """Hold the data for a MQTT subentry."""
 
     device: MqttDeviceData
     components: dict[str, dict[str, Any]]
+    availability: MqttAvailabilityData
 
 
 DATA_MQTT: HassKey[MqttData] = HassKey("mqtt")
