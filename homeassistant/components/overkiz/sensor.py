@@ -484,6 +484,22 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_REGULATION_MODE,
+        icon="mdi:auto-mode",
+        name="Regulation mode",
+        device_class=SensorDeviceClass.ENUM,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_DEROGATED_TARGET_TEMPERATURE,
+        icon="mdi:thermometer-alert",
+        name="Derogated target temperature",
+        native_value=lambda value: cast(float, value) if value else None,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}
