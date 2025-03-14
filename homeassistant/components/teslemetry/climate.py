@@ -38,6 +38,18 @@ from .models import TeslemetryVehicleData
 
 DEFAULT_MIN_TEMP = 15
 DEFAULT_MAX_TEMP = 28
+COP_TEMPERATURES = {
+    30: CabinOverheatProtectionTemp.LOW,
+    35: CabinOverheatProtectionTemp.MEDIUM,
+    40: CabinOverheatProtectionTemp.HIGH,
+}
+PRESET_MODES = {
+    "Off": "off",
+    "On": "keep",
+    "Dog": "dog",
+    "Party": "camp",
+}
+
 
 PARALLEL_UPDATES = 0
 
@@ -73,14 +85,6 @@ async def async_setup_entry(
             ),
         )
     )
-
-
-PRESET_MODES = {
-    "Off": "off",
-    "On": "keep",
-    "Dog": "dog",
-    "Party": "camp",
-}
 
 
 class TeslemetryClimateEntity(TeslemetryRootEntity, ClimateEntity):
@@ -394,13 +398,7 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryRootEntity, ClimateEntit
         """Set the climate temperature."""
 
         if temp := kwargs.get(ATTR_TEMPERATURE):
-            if temp == 30:
-                cop_mode = CabinOverheatProtectionTemp.LOW
-            elif temp == 35:
-                cop_mode = CabinOverheatProtectionTemp.MEDIUM
-            elif temp == 40:
-                cop_mode = CabinOverheatProtectionTemp.HIGH
-            else:
+            if (cop_mode := COP_TEMPERATURES.get(temp)) is None:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="invalid_cop_temp",
