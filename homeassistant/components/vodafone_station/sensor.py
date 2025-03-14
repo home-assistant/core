@@ -12,14 +12,16 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DOMAIN, LINE_TYPES
-from .coordinator import VodafoneStationRouter
+from .const import _LOGGER, LINE_TYPES
+from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
 UPTIME_DEVIATION = 60
@@ -166,13 +168,13 @@ SENSOR_TYPES: Final = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VodafoneConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up Vodafone Station sensors")
 
-    coordinator: VodafoneStationRouter = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     sensors_data = coordinator.data.sensors
 
