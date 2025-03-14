@@ -104,7 +104,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         )
 
     @property
-    def is_state_perfomance(self) -> bool:
+    def is_state_performance(self) -> bool:
         """Return true if performance mode is on."""
 
         return (
@@ -172,7 +172,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         if self.is_state_eco:
             return STATE_ECO
 
-        if self.is_state_perfomance:
+        if self.is_state_performance:
             return STATE_PERFORMANCE
 
         if self.is_state_heat_pump:
@@ -226,7 +226,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
 
         elif operation_mode == STATE_HEAT_PUMP:
             refresh_target_temp = False
-            if self.is_state_perfomance:
+            if self.is_state_performance:
                 # Switching from STATE_PERFORMANCE to STATE_HEAT_PUMP
                 #  changes the target temperature and requires a target temperature refresh
                 refresh_target_temp = True
@@ -299,7 +299,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         """Turn boost mode on."""
 
         refresh_target_temp = False
-        if self.is_state_perfomance:
+        if self.is_state_performance:
             # Switching from STATE_PERFORMANCE to BOOST requires a target temperature refresh
             refresh_target_temp = True
 
