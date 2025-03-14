@@ -28,8 +28,6 @@ PRESET_FROST_PROTECTION = "frost_protection"
 PRESET_PROG = "prog"
 PRESET_EXTERNAL = "external"
 
-ATTR_REGULATION_MODE = "regulation_mode"
-ATTR_DEROGATED_TARGET_TEMPERATURE = "derogated_target_temperature"
 
 # Map Overkiz presets to Home Assistant presets
 OVERKIZ_TO_PRESET_MODE: dict[str, str] = {
@@ -156,16 +154,3 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
         await self.executor.async_execute_command(
             OverkizCommand.SET_TARGET_TEMPERATURE, temperature
         )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Set extra attributes such as regulation mode (none, standby, increase)."""
-        states = self.device.states
-        attributes: dict[str, Any] = {}
-        if (state := states[OverkizState.CORE_REGULATION_MODE]) and state.value_as_str:
-            attributes[ATTR_REGULATION_MODE] = state.value_as_str
-        if (
-            state := states[OverkizState.CORE_DEROGATED_TARGET_TEMPERATURE]
-        ) and state.value_as_float:
-            attributes[ATTR_DEROGATED_TARGET_TEMPERATURE] = state.value_as_float
-        return attributes
