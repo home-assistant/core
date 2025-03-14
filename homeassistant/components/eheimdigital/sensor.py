@@ -38,7 +38,6 @@ CLASSICVARIO_DESCRIPTIONS: tuple[
         translation_key="current_speed",
         value_fn=lambda device: device.current_speed,
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:pump",
     ),
     EheimDigitalSensorDescription[EheimDigitalClassicVario](
         key="service_hours",
@@ -46,16 +45,17 @@ CLASSICVARIO_DESCRIPTIONS: tuple[
         value_fn=lambda device: device.service_hours,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
-        icon="mdi:wrench-clock",
         suggested_unit_of_measurement=UnitOfTime.DAYS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     EheimDigitalSensorDescription[EheimDigitalClassicVario](
         key="error_code",
         translation_key="error_code",
-        value_fn=lambda device: device.error_code.name.lower()
-        if device.error_code is not None
-        else None,
+        value_fn=(
+            lambda device: device.error_code.name.lower()
+            if device.error_code is not None
+            else None
+        ),
         device_class=SensorDeviceClass.ENUM,
         options=[name.lower() for name in FilterErrorCode._member_names_],
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -112,5 +112,4 @@ class EheimDigitalSensor(
 
     @override
     def _async_update_attrs(self) -> None:
-        a = self.entity_description.value_fn(self._device)
-        self._attr_native_value = a
+        self._attr_native_value = self.entity_description.value_fn(self._device)
