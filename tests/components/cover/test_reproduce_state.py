@@ -51,6 +51,24 @@ async def test_reproducing_states(
         },
     )
     hass.states.async_set(
+        "cover.open_missing_all_features",
+        CoverState.OPEN,
+    )
+    hass.states.async_set(
+        "cover.closed_missing_all_features_has_position",
+        CoverState.CLOSED,
+        {
+            ATTR_CURRENT_POSITION: 0,
+        },
+    )
+    hass.states.async_set(
+        "cover.open_missing_all_features_has_tilt_position",
+        CoverState.OPEN,
+        {
+            ATTR_CURRENT_TILT_POSITION: 50,
+        },
+    )
+    hass.states.async_set(
         "cover.closed_only_supports_tilt_close_open",
         CoverState.CLOSED,
         {
@@ -201,6 +219,21 @@ async def test_reproducing_states(
             State("cover.closed_only_supports_tilt_close_open", CoverState.CLOSED),
             State("cover.open_only_supports_close_open", CoverState.OPEN),
             State("cover.open_only_supports_tilt_close_open", CoverState.OPEN),
+            State("cover.open_missing_all_features", CoverState.OPEN),
+            State(
+                "cover.closed_missing_all_features_has_position",
+                CoverState.CLOSED,
+                {
+                    ATTR_CURRENT_POSITION: 0,
+                },
+            ),
+            State(
+                "cover.open_missing_all_features_has_tilt_position",
+                CoverState.OPEN,
+                {
+                    ATTR_CURRENT_TILT_POSITION: 50,
+                },
+            ),
             State(
                 "cover.entity_close_attr",
                 CoverState.CLOSED,
@@ -294,6 +327,17 @@ async def test_reproducing_states(
                 {ATTR_CURRENT_TILT_POSITION: 50},
             ),
             State("cover.closed_only_supports_tilt_close_open", CoverState.OPEN),
+            State("cover.open_missing_all_features", CoverState.CLOSED),
+            State(
+                "cover.closed_missing_all_features_has_position",
+                CoverState.OPEN,
+                {ATTR_CURRENT_POSITION: 70},
+            ),
+            State(
+                "cover.open_missing_all_features_has_tilt_position",
+                CoverState.OPEN,
+                {ATTR_CURRENT_TILT_POSITION: 20},
+            ),
             State(
                 "cover.entity_close_attr",
                 CoverState.OPEN,
@@ -347,6 +391,7 @@ async def test_reproducing_states(
         {"entity_id": "cover.entity_open_attr"},
         {"entity_id": "cover.entity_entirely_open"},
         {"entity_id": "cover.open_only_supports_close_open"},
+        {"entity_id": "cover.open_missing_all_features"},
     ]
     assert len(close_calls) == len(valid_close_calls)
     for call in close_calls:
@@ -392,16 +437,34 @@ async def test_reproducing_states(
         assert call.data in valid_open_tilt_calls
         valid_open_tilt_calls.remove(call.data)
 
-    assert len(position_calls) == 1
-    assert position_calls[0].domain == "cover"
-    assert position_calls[0].data == {
-        "entity_id": "cover.entity_close_attr",
-        ATTR_POSITION: 50,
-    }
+    valid_position_calls = [
+        {
+            "entity_id": "cover.entity_close_attr",
+            ATTR_POSITION: 50,
+        },
+        {
+            "entity_id": "cover.closed_missing_all_features_has_position",
+            ATTR_POSITION: 70,
+        },
+    ]
+    assert len(position_calls) == len(valid_position_calls)
+    for call in position_calls:
+        assert call.domain == "cover"
+        assert call.data in valid_position_calls
+        valid_position_calls.remove(call.data)
 
-    assert len(position_tilt_calls) == 1
-    assert position_tilt_calls[0].domain == "cover"
-    assert position_tilt_calls[0].data == {
-        "entity_id": "cover.entity_close_attr",
-        ATTR_TILT_POSITION: 50,
-    }
+    valid_position_tilt_calls = [
+        {
+            "entity_id": "cover.entity_close_attr",
+            ATTR_TILT_POSITION: 50,
+        },
+        {
+            "entity_id": "cover.open_missing_all_features_has_tilt_position",
+            ATTR_TILT_POSITION: 20,
+        },
+    ]
+    assert len(position_tilt_calls) == len(valid_position_tilt_calls)
+    for call in position_tilt_calls:
+        assert call.domain == "cover"
+        assert call.data in valid_position_tilt_calls
+        valid_position_tilt_calls.remove(call.data)

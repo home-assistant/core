@@ -74,8 +74,28 @@ async def _async_reproduce_state(
 
     features = try_parse_enum(
         CoverEntityFeature, current_attrs.get(ATTR_SUPPORTED_FEATURES)
-    ) or CoverEntityFeature(0)
-    set_position = not position_matches and target_position is not None
+    )
+    if features is None:
+        # Backwards compatibility for integrations that
+        # don't set supported features since it previously
+        # worked without it.
+        _LOGGER.warning("Unable to determine supported features for %s", entity_id)
+        features = CoverEntityFeature(0)
+        if ATTR_CURRENT_POSITION in current_attrs:
+            features |= (
+                CoverEntityFeature.SET_POSITION
+                | CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+            )
+        if ATTR_CURRENT_TILT_POSITION in current_attrs:
+            features |= (
+                CoverEntityFeature.SET_TILT_POSITION
+                | CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+            )
+        if features == CoverEntityFeature(0):
+            features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+
     service_data = {ATTR_ENTITY_ID: entity_id}
 
     _service_call = partial(
