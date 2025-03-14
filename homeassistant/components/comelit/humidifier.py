@@ -121,11 +121,10 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         self._active_mode = active_mode
         self._active_action = active_action
         self._set_command = set_command
-        self._handle_coordinator_update()
+        self._update_attributes()
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _update_attributes(self) -> None:
+        """Update class attributes."""
         device = self.coordinator.data[CLIMATE][self._device.index]
         if not isinstance(device.val, list):
             raise HomeAssistantError("Invalid clima data")
@@ -149,6 +148,12 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         self._attr_is_on = _mode == self._active_mode
         self._attr_mode = MODE_AUTO if _automatic else MODE_NORMAL
         self._attr_target_humidity = values[4] / 10
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_attributes()
+        self.async_write_ha_state()
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
