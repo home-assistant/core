@@ -285,16 +285,35 @@ async def test_reconnected_new_entities_created(
     players = controller.players.copy()
     players[3] = player_factory(3, "Test Player 3", "HEOS Link")
     controller.mock_set_players(players)
-    controller.load_players.return_value = PlayerUpdateResult([3], [], {})
+    update = PlayerUpdateResult([3], [], {})
 
     # Simulate reconnection
     await controller.dispatcher.wait_send(
-        SignalType.HEOS_EVENT, SignalHeosEvent.CONNECTED
+        SignalType.CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED, update
     )
     await hass.async_block_till_done()
 
     # Assert new entity created
     assert entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "3")
+
+
+async def test_reconnected_failover_updates_host(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test the config entry host is updated after failover."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.data[CONF_HOST] == "127.0.0.1"
+
+    # Simulate reconnection
+    controller.mock_set_current_host("127.0.0.2")
+    await controller.dispatcher.wait_send(
+        SignalType.HEOS_EVENT, SignalHeosEvent.CONNECTED
+    )
+    await hass.async_block_till_done()
+
+    # Assert config entry host updated
+    assert config_entry.data[CONF_HOST] == "127.0.0.2"
 
 
 async def test_players_changed_new_entities_created(
