@@ -65,7 +65,11 @@ async def _async_set_position(
     features: CoverEntityFeature,
     target_position: int,
 ) -> bool:
-    """Set the position of the cover."""
+    """Set the position of the cover.
+
+    Returns True if the position was set, False if there is no
+    supported method for setting the position.
+    """
     if target_position == 0 and CoverEntityFeature.CLOSE in features:
         await service_call(SERVICE_CLOSE_COVER, service_data)
     elif target_position == 100 and CoverEntityFeature.OPEN in features:
@@ -86,7 +90,11 @@ async def _async_set_tilt_position(
     features: CoverEntityFeature,
     target_tilt_position: int,
 ) -> bool:
-    """Set the tilt position of the cover."""
+    """Set the tilt position of the cover.
+
+    Returns True if the tilt position was set, False if there is no
+    supported method for setting the tilt position.
+    """
     if target_tilt_position == 0 and CoverEntityFeature.CLOSE_TILT in features:
         await service_call(SERVICE_CLOSE_COVER_TILT, service_data)
     elif target_tilt_position == 100 and CoverEntityFeature.OPEN_TILT in features:
@@ -109,7 +117,7 @@ async def _async_close_cover(
     set_position: bool,
     set_tilt: bool,
 ) -> None:
-    """Close the cover."""
+    """Close the cover if it was not closed by setting the position."""
     if not set_position:
         if CoverEntityFeature.CLOSE in features:
             await service_call(SERVICE_CLOSE_COVER, service_data)
@@ -134,7 +142,7 @@ async def _async_open_cover(
     set_position: bool,
     set_tilt: bool,
 ) -> None:
-    """Open the cover."""
+    """Open the cover if it was not opened by setting the position."""
     if not set_position:
         if CoverEntityFeature.OPEN in features:
             await service_call(SERVICE_OPEN_COVER, service_data)
