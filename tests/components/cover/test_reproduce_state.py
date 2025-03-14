@@ -85,6 +85,19 @@ async def test_reproducing_states(
         },
     )
     hass.states.async_set(
+        "cover.closed_only_supports_position",
+        CoverState.CLOSED,
+        {
+            ATTR_CURRENT_POSITION: 0,
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
+        },
+    )
+    hass.states.async_set(
+        "cover.open_only_supports_position",
+        CoverState.OPEN,
+        {ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION},
+    )
+    hass.states.async_set(
         "cover.entity_close_attr",
         CoverState.CLOSED,
         {
@@ -234,6 +247,8 @@ async def test_reproducing_states(
                     ATTR_CURRENT_TILT_POSITION: 50,
                 },
             ),
+            State("cover.closed_only_supports_position", CoverState.CLOSED),
+            State("cover.open_only_supports_position", CoverState.OPEN),
             State(
                 "cover.entity_close_attr",
                 CoverState.CLOSED,
@@ -338,6 +353,8 @@ async def test_reproducing_states(
                 CoverState.OPEN,
                 {ATTR_CURRENT_TILT_POSITION: 20},
             ),
+            State("cover.closed_only_supports_position", CoverState.OPEN),
+            State("cover.open_only_supports_position", CoverState.CLOSED),
             State(
                 "cover.entity_close_attr",
                 CoverState.OPEN,
