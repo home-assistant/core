@@ -68,6 +68,9 @@
   "services": {
     "list_charge_slots": {
       "service": "mdi:clock-start"
+    },
+    "set_price_cap": {
+      "service": "mdi:car-speed-limiter"
     }
   }
 }
