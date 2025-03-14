@@ -69,7 +69,7 @@ async def _async_reproduce_state(
     if state_matches and position_matches and tilt_position_matches:
         return
 
-    supported_features = try_parse_enum(
+    features = try_parse_enum(
         CoverEntityFeature, cur_state.attributes.get(ATTR_SUPPORTED_FEATURES)
     ) or CoverEntityFeature(0)
     set_position = not position_matches and target_position is not None
@@ -82,11 +82,11 @@ async def _async_reproduce_state(
         blocking=True,
     )
     if set_position := not position_matches and target_position is not None:
-        if target_position == 0 and CoverEntityFeature.CLOSE in supported_features:
+        if target_position == 0 and CoverEntityFeature.CLOSE in features:
             await _service_call(SERVICE_CLOSE_COVER, service_data)
-        elif target_position == 100 and CoverEntityFeature.OPEN in supported_features:
+        elif target_position == 100 and CoverEntityFeature.OPEN in features:
             await _service_call(SERVICE_OPEN_COVER, service_data)
-        elif CoverEntityFeature.SET_POSITION in supported_features:
+        elif CoverEntityFeature.SET_POSITION in features:
             await _service_call(
                 SERVICE_SET_COVER_POSITION,
                 service_data | {ATTR_POSITION: target_position},
@@ -96,17 +96,11 @@ async def _async_reproduce_state(
             set_position = False
 
     if set_tilt := not tilt_position_matches and target_tilt_position is not None:
-        if (
-            target_tilt_position == 0
-            and CoverEntityFeature.CLOSE_TILT in supported_features
-        ):
+        if target_tilt_position == 0 and CoverEntityFeature.CLOSE_TILT in features:
             await _service_call(SERVICE_CLOSE_COVER_TILT, service_data)
-        elif (
-            target_tilt_position == 100
-            and CoverEntityFeature.OPEN_TILT in supported_features
-        ):
+        elif target_tilt_position == 100 and CoverEntityFeature.OPEN_TILT in features:
             await _service_call(SERVICE_OPEN_COVER_TILT, service_data)
-        elif CoverEntityFeature.SET_TILT_POSITION in supported_features:
+        elif CoverEntityFeature.SET_TILT_POSITION in features:
             await _service_call(
                 SERVICE_SET_COVER_TILT_POSITION,
                 service_data | {ATTR_TILT_POSITION: target_tilt_position},
@@ -117,14 +111,14 @@ async def _async_reproduce_state(
 
     # Open/Close
     if target_state in CLOSING_STATES:
-        if not set_position and CoverEntityFeature.CLOSE in supported_features:
+        if not set_position and CoverEntityFeature.CLOSE in features:
             await _service_call(SERVICE_CLOSE_COVER, service_data)
-        if not set_tilt and CoverEntityFeature.CLOSE_TILT in supported_features:
+        if not set_tilt and CoverEntityFeature.CLOSE_TILT in features:
             await _service_call(SERVICE_CLOSE_COVER_TILT, service_data)
     elif target_state in OPENING_STATES:
-        if not set_position and CoverEntityFeature.OPEN in supported_features:
+        if not set_position and CoverEntityFeature.OPEN in features:
             await _service_call(SERVICE_OPEN_COVER, service_data)
-        if not set_tilt and CoverEntityFeature.OPEN_TILT in supported_features:
+        if not set_tilt and CoverEntityFeature.OPEN_TILT in features:
             await _service_call(SERVICE_OPEN_COVER_TILT, service_data)
 
 
