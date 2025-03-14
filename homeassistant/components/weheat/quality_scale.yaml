@@ -20,12 +20,7 @@ rules:
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
-  test-before-configure:
-    status: todo
-    comment: |
-      There are two servers that are used for this integration.
-      If the authentication server is unreachable, the user will not pass the configuration step.
-      If the backend is unreachable, an empty error message is displayed.
+  test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
 
