@@ -12,16 +12,12 @@ from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 
 from .const import _LOGGER, DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
+from .coordinator import VodafoneConfigEntry
 
 
 def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
@@ -63,7 +59,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: VodafoneConfigEntry,
     ) -> VodafoneStationOptionsFlowHandler:
         """Get the options flow for this handler."""
         return VodafoneStationOptionsFlowHandler()
