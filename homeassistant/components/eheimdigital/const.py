@@ -2,7 +2,7 @@
 
 from logging import Logger, getLogger
 
-from eheimdigital.types import FilterMode, HeaterMode, LightMode
+from eheimdigital.types import HeaterMode, LightMode
 
 from homeassistant.components.climate import PRESET_NONE
 from homeassistant.components.light import EFFECT_OFF
@@ -24,12 +24,4 @@ HEATER_PRESET_TO_HEATER_MODE = {
     HEATER_BIO_MODE: HeaterMode.BIO,
     HEATER_SMART_MODE: HeaterMode.SMART,
     PRESET_NONE: HeaterMode.MANUAL,
-}
-
-FILTER_PULSE_MODE = "pulse_mode"
-FILTER_BIO_MODE = "bio_mode"
-
-FILTER_PRESET_TO_FILTER_MODE = {
-    FILTER_BIO_MODE: FilterMode.BIO,
-    FILTER_PULSE_MODE: FilterMode.PULSE,
 }
