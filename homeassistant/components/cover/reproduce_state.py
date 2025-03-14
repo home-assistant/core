@@ -192,7 +192,7 @@ async def _async_reproduce_state(
         # Backwards compatibility for integrations that
         # don't set supported features since it previously
         # worked without it.
-        _LOGGER.warning("Unable to determine supported features for %s", entity_id)
+        _LOGGER.warning("Supported features is not set for %s", entity_id)
         features = _determine_features(current_attrs)
 
     service_call = partial(
