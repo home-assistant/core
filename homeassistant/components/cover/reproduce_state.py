@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
+from functools import partial
 import logging
 from typing import Any
 
@@ -77,11 +78,12 @@ async def _async_reproduce_state(
     set_tilt: bool = False
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
-    async def _service_call(service: str, data: dict[str, Any]) -> None:
-        await hass.services.async_call(
-            DOMAIN, service, data, context=context, blocking=True
-        )
-
+    _service_call = partial(
+        hass.services.async_call,
+        DOMAIN,
+        context=context,
+        blocking=True,
+    )
     if not position_matches and requested_position is not None:
         if requested_position == 0 and CoverEntityFeature.CLOSE in supported_features:
             await _service_call(SERVICE_CLOSE_COVER, service_data)
