@@ -33,12 +33,10 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-VALID_STATES = {
-    CoverState.CLOSED,
-    CoverState.CLOSING,
-    CoverState.OPEN,
-    CoverState.OPENING,
-}
+
+OPENING_STATES = {CoverState.OPENING, CoverState.OPEN}
+CLOSING_STATES = {CoverState.CLOSING, CoverState.CLOSED}
+VALID_STATES: set[CoverState] = OPENING_STATES | CLOSING_STATES
 
 
 async def _async_reproduce_state(
@@ -54,8 +52,7 @@ async def _async_reproduce_state(
         _LOGGER.warning("Unable to find entity %s", entity_id)
         return
 
-    target_state = state.state
-    if target_state not in VALID_STATES:
+    if (target_state := state.state) not in VALID_STATES:
         _LOGGER.warning("Invalid state specified for %s: %s", entity_id, target_state)
         return
 
@@ -119,12 +116,12 @@ async def _async_reproduce_state(
             set_tilt = False
 
     # Open/Close
-    if target_state in {CoverState.CLOSED, CoverState.CLOSING}:
+    if target_state in CLOSING_STATES:
         if not set_position and CoverEntityFeature.CLOSE in supported_features:
             await _service_call(SERVICE_CLOSE_COVER, service_data)
         if not set_tilt and CoverEntityFeature.CLOSE_TILT in supported_features:
             await _service_call(SERVICE_CLOSE_COVER_TILT, service_data)
-    elif target_state in {CoverState.OPEN, CoverState.OPENING}:
+    elif target_state in OPENING_STATES:
         if not set_position and CoverEntityFeature.OPEN in supported_features:
             await _service_call(SERVICE_OPEN_COVER, service_data)
         if not set_tilt and CoverEntityFeature.OPEN_TILT in supported_features:
