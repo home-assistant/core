@@ -77,34 +77,24 @@ async def _async_reproduce_state(
     set_tilt: bool = False
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
+    async def _service_call(service: str, data: dict[str, Any]) -> None:
+        await hass.services.async_call(
+            DOMAIN, service, data, context=context, blocking=True
+        )
+
     if not position_matches and requested_position is not None:
         if requested_position == 0 and CoverEntityFeature.CLOSE in supported_features:
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_CLOSE_COVER,
-                service_data,
-                context=context,
-                blocking=True,
-            )
+            await _service_call(SERVICE_CLOSE_COVER, service_data)
             set_position = True
         elif (
             requested_position == 100 and CoverEntityFeature.OPEN in supported_features
         ):
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_OPEN_COVER,
-                service_data,
-                context=context,
-                blocking=True,
-            )
+            await _service_call(SERVICE_OPEN_COVER, service_data)
             set_position = True
         elif CoverEntityFeature.SET_POSITION in supported_features:
-            await hass.services.async_call(
-                DOMAIN,
+            await _service_call(
                 SERVICE_SET_COVER_POSITION,
                 {**service_data, ATTR_POSITION: requested_position},
-                context=context,
-                blocking=True,
             )
             set_position = True
 
@@ -113,53 +103,35 @@ async def _async_reproduce_state(
             requested_tilt_position == 0
             and CoverEntityFeature.CLOSE_TILT in supported_features
         ):
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_CLOSE_COVER_TILT,
-                service_data,
-                context=context,
-                blocking=True,
-            )
+            await _service_call(SERVICE_CLOSE_COVER_TILT, service_data)
             set_tilt = True
         elif (
             requested_tilt_position == 100
             and CoverEntityFeature.OPEN_TILT in supported_features
         ):
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_OPEN_COVER_TILT,
-                service_data,
-                context=context,
-                blocking=True,
-            )
+            await _service_call(SERVICE_OPEN_COVER_TILT, service_data)
             set_tilt = True
         elif CoverEntityFeature.SET_TILT_POSITION in supported_features:
-            await hass.services.async_call(
-                DOMAIN,
+            await _service_call(
                 SERVICE_SET_COVER_TILT_POSITION,
                 {**service_data, ATTR_TILT_POSITION: requested_tilt_position},
-                context=context,
-                blocking=True,
             )
             set_tilt = True
 
-    if set_position and set_tilt:
-        return
-
-    if state_matches and position_matches and tilt_position_matches:
+    if state_matches:
         return
 
     # Open/Close
     services: list[str] = []
     if state.state in {CoverState.CLOSED, CoverState.CLOSING}:
-        if CoverEntityFeature.CLOSE in supported_features:
+        if not set_position and CoverEntityFeature.CLOSE in supported_features:
             services.append(SERVICE_CLOSE_COVER)
-        if CoverEntityFeature.CLOSE_TILT in supported_features:
+        if not set_tilt and CoverEntityFeature.CLOSE_TILT in supported_features:
             services.append(SERVICE_CLOSE_COVER_TILT)
     elif state.state in {CoverState.OPEN, CoverState.OPENING}:
-        if CoverEntityFeature.OPEN in supported_features:
+        if not set_position and CoverEntityFeature.OPEN in supported_features:
             services.append(SERVICE_OPEN_COVER)
-        if CoverEntityFeature.OPEN_TILT in supported_features:
+        if not set_tilt and CoverEntityFeature.OPEN_TILT in supported_features:
             services.append(SERVICE_OPEN_COVER_TILT)
 
     for service in services:
