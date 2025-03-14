@@ -668,7 +668,8 @@ async def websocket_update_topology(
 ) -> None:
     """Update the ZHA network topology."""
     zha_gateway = get_zha_gateway(hass)
-    hass.async_create_task(zha_gateway.application_controller.topology.scan())
+    await hass.async_create_task(zha_gateway.application_controller.topology.scan())
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
