@@ -8,14 +8,20 @@ from aiopurpleair.endpoints.sensors import NearbySensorResult
 from aiopurpleair.models.sensors import GetSensorsResponse
 import pytest
 
-from homeassistant.components.purpleair.const import DOMAIN
+from homeassistant.components.purpleair.const import (
+    CONF_SENSOR_INDEX,
+    CONF_SENSOR_LIST,
+    CONF_SENSOR_READ_KEY,
+    DOMAIN,
+    SCHEMA_VERSION,
+    TITLE,
+)
+from homeassistant.const import CONF_API_KEY, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from .const import TEST_API_KEY, TEST_SENSOR_INDEX1
 
-TEST_API_KEY = "abcde12345"
-TEST_SENSOR_INDEX1 = 123456
-TEST_SENSOR_INDEX2 = 567890
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="api")
@@ -45,10 +51,11 @@ def config_entry_fixture(
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="abcde",
         unique_id=TEST_API_KEY,
         data=config_entry_data,
         options=config_entry_options,
+        version=SCHEMA_VERSION,
+        title=TITLE,
     )
     entry.add_to_hass(hass)
     return entry
@@ -58,7 +65,7 @@ def config_entry_fixture(
 def config_entry_data_fixture() -> dict[str, Any]:
     """Define a config entry data fixture."""
     return {
-        "api_key": TEST_API_KEY,
+        CONF_API_KEY: TEST_API_KEY,
     }
 
 
@@ -66,7 +73,10 @@ def config_entry_data_fixture() -> dict[str, Any]:
 def config_entry_options_fixture() -> dict[str, Any]:
     """Define a config entry options fixture."""
     return {
-        "sensor_indices": [TEST_SENSOR_INDEX1],
+        CONF_SENSOR_LIST: [
+            {CONF_SENSOR_INDEX: TEST_SENSOR_INDEX1, CONF_SENSOR_READ_KEY: None},
+        ],
+        CONF_SHOW_ON_MAP: False,
     }
 
 
@@ -82,7 +92,6 @@ def get_sensors_response_fixture() -> GetSensorsResponse:
 def mock_aiopurpleair_fixture(api: Mock) -> Generator[Mock]:
     """Define a fixture to patch aiopurpleair."""
     with (
-        patch("homeassistant.components.purpleair.config_flow.API", return_value=api),
         patch("homeassistant.components.purpleair.coordinator.API", return_value=api),
     ):
         yield api

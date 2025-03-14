@@ -1,111 +1,95 @@
 {
   "config": {
     "step": {
-      "by_coordinates": {
-        "description": "Search for a PurpleAir sensor within a certain distance of a latitude/longitude.",
+      "api_key": {
+        "title": "API Key",
+        "description": "Enter PurpleAir API read key",
         "data": {
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]",
-          "distance": "Search radius"
-        },
-        "data_description": {
-          "latitude": "The latitude around which to search for sensors",
-          "longitude": "The longitude around which to search for sensors",
-          "distance": "The radius (in kilometers) of the circle to search within"
-        }
-      },
-      "choose_sensor": {
-        "description": "Which of the nearby sensors would you like to track?",
-        "data": {
-          "sensor_index": "Sensor"
-        },
-        "data_description": {
-          "sensor_index": "The sensor to track"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
       "reauth_confirm": {
+        "title": "Re-authenticate",
+        "description": "Change PurpleAir API read key",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "[%key:component::purpleair::config::step::user::data_description::api_key%]"
         }
       },
-      "user": {
+      "reconfigure": {
+        "title": "Reconfigure",
+        "description": "Change PurpleAir API read key",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "Your PurpleAir API key (if you have both read and write keys, use the read key)"
         }
       }
     },
     "error": {
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
-      "no_sensors_near_coordinates": "No sensors found near coordinates (within distance)",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "config_subentries": {
+    "sensor": {
+      "initiate_flow": {
+        "user": "Add PurpleAir Sensor"
+      },
+      "step": {
+        "add_options": {
+          "title": "Add Sensor",
+          "menu_options": {
+            "add_map_location": "Add sensor from map location",
+            "add_sensor_index": "Add sensor by index and optional read key"
+          }
+        },
+        "add_map_location": {
+          "title": "Add Sensor from Map",
+          "description": "Search for sensors in the circle on the map",
+          "data": {
+            "latitude": "[%key:common::config_flow::data::latitude%]",
+            "longitude": "[%key:common::config_flow::data::longitude%]",
+            "radius": "Radius (m)"
+          }
+        },
+        "select_sensor": {
+          "title": "Select Sensor",
+          "description": "Select sensor to add",
+          "data": {
+            "sensor_index": "Sensor"
+          }
+        },
+        "add_sensor_index": {
+          "title": "Sensor Details",
+          "description": "Enter sensor identification details",
+          "data": {
+            "sensor_index": "Sensor Index",
+            "sensor_read_key": "Sensor Read Key"
+          }
+        }
+      },
+      "error": {
+        "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+        "no_sensors_found": "No sensors found in search area",
+        "no_sensor_found": "Sensors not found",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      }
     }
   },
   "options": {
     "step": {
-      "add_sensor": {
-        "title": "Add sensor",
-        "description": "[%key:component::purpleair::config::step::by_coordinates::description%]",
-        "data": {
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]",
-          "distance": "[%key:component::purpleair::config::step::by_coordinates::data::distance%]"
-        },
-        "data_description": {
-          "latitude": "[%key:component::purpleair::config::step::by_coordinates::data_description::latitude%]",
-          "longitude": "[%key:component::purpleair::config::step::by_coordinates::data_description::longitude%]",
-          "distance": "[%key:component::purpleair::config::step::by_coordinates::data_description::distance%]"
-        }
-      },
-      "choose_sensor": {
-        "title": "Choose sensor to add",
-        "description": "[%key:component::purpleair::config::step::choose_sensor::description%]",
-        "data": {
-          "sensor_index": "[%key:component::purpleair::config::step::choose_sensor::data::sensor_index%]"
-        },
-        "data_description": {
-          "sensor_index": "[%key:component::purpleair::config::step::choose_sensor::data_description::sensor_index%]"
-        }
-      },
-      "init": {
-        "menu_options": {
-          "add_sensor": "Add sensor",
-          "remove_sensor": "Remove sensor",
-          "settings": "Settings"
-        }
-      },
-      "remove_sensor": {
-        "title": "Remove sensor",
-        "data": {
-          "sensor_device_id": "Sensor name"
-        },
-        "data_description": {
-          "sensor_device_id": "The sensor to remove"
-        }
-      },
       "settings": {
-        "title": "[%key:component::purpleair::options::step::init::menu_options::settings%]",
+        "title": "PurpleAir settings",
         "data": {
-          "show_on_map": "Show configured sensor locations on the map"
+          "show_on_map": "Show sensor location on map"
         }
       }
-    },
-    "error": {
-      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
-      "no_sensors_near_coordinates": "[%key:component::purpleair::config::error::no_sensors_near_coordinates%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "entity": {
