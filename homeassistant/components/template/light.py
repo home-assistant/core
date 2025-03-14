@@ -19,6 +19,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     DEFAULT_MAX_KELVIN,
     DEFAULT_MIN_KELVIN,
+    DOMAIN as LIGHT_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
@@ -47,6 +48,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
+from . import TriggerUpdateCoordinator
 from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
@@ -56,6 +58,7 @@ from .template_entity import (
     TemplateEntity,
     rewrite_common_legacy_to_modern_conf,
 )
+from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
@@ -251,6 +254,13 @@ async def async_setup_platform(
             hass,
             rewrite_legacy_to_modern_conf(hass, config[CONF_LIGHTS]),
             None,
+        )
+        return
+
+    if "coordinator" in discovery_info:
+        async_add_entities(
+            TriggerLightEntity(hass, discovery_info["coordinator"], config)
+            for config in discovery_info["entities"]
         )
         return
 
@@ -1095,6 +1105,139 @@ class LightTemplate(TemplateEntity, AbstractTemplateLight):
             ", ".join(_VALID_STATES),
         )
         self._state = None
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the light on."""
+        optimistic_set = self.set_optimistic_attributes(**kwargs)
+        for script_id, script_params in self.get_registered_scripts(**kwargs):
+            await self.async_run_script(
+                self._action_scripts[script_id],
+                run_variables=script_params,
+                context=self._context,
+            )
+
+        if optimistic_set:
+            self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the light off."""
+        off_script = self._action_scripts[CONF_OFF_ACTION]
+        if ATTR_TRANSITION in kwargs and self._supports_transition is True:
+            await self.async_run_script(
+                off_script,
+                run_variables={"transition": kwargs[ATTR_TRANSITION]},
+                context=self._context,
+            )
+        else:
+            await self.async_run_script(off_script, context=self._context)
+        if self._template is None:
+            self._state = False
+            self.async_write_ha_state()
+
+
+class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
+    """Light entity based on trigger data."""
+
+    domain = LIGHT_DOMAIN
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TriggerUpdateCoordinator,
+        config: ConfigType,
+    ) -> None:
+        """Initialize the entity."""
+        TriggerEntity.__init__(self, hass, coordinator, config)
+        AbstractTemplateLight.__init__(self, config, None)
+
+        # Render the _attr_name before initializing TemplateLightEntity
+        self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
+
+        self._optimistic_attrs: dict[str, str] = {}
+        self._optimistic = True
+        for key in (
+            CONF_STATE,
+            CONF_LEVEL,
+            CONF_TEMPERATURE,
+            CONF_RGB,
+            CONF_RGBW,
+            CONF_RGBWW,
+            CONF_EFFECT,
+            CONF_MAX_MIREDS,
+            CONF_MIN_MIREDS,
+            CONF_SUPPORTS_TRANSITION,
+        ):
+            if isinstance(config.get(key), template.Template):
+                if key == CONF_STATE:
+                    self._optimistic = False
+                self._to_render_simple.append(key)
+                self._parse_result.add(key)
+
+        for key in (CONF_EFFECT_LIST, CONF_HS):
+            if isinstance(config.get(key), template.Template):
+                self._to_render_complex.append(key)
+                self._parse_result.add(key)
+
+        color_modes = {ColorMode.ONOFF}
+        for action_id, action_config, color_mode in self._register_scripts(config):
+            self.add_script(action_id, action_config, name, DOMAIN)
+            if color_mode:
+                color_modes.add(color_mode)
+
+        self._supported_color_modes = filter_supported_color_modes(color_modes)
+        if len(self._supported_color_modes) > 1:
+            self._color_mode = ColorMode.UNKNOWN
+        if len(self._supported_color_modes) == 1:
+            self._color_mode = next(iter(self._supported_color_modes))
+
+        self._attr_supported_features = LightEntityFeature(0)
+        if self._action_scripts.get(CONF_EFFECT_ACTION):
+            self._attr_supported_features |= LightEntityFeature.EFFECT
+        if self._supports_transition is True:
+            self._attr_supported_features |= LightEntityFeature.TRANSITION
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle update of the data."""
+        self._process_data()
+
+        if not self.available:
+            self.async_write_ha_state()
+            return
+
+        write_ha_state = False
+        for key, updater in (
+            (CONF_LEVEL, self._update_brightness),
+            (CONF_EFFECT_LIST, self._update_effect_list),
+            (CONF_EFFECT, self._update_effect),
+            (CONF_TEMPERATURE, self._update_temperature),
+            (CONF_HS, self._update_hs),
+            (CONF_RGB, self._update_rgb),
+            (CONF_RGBW, self._update_rgbw),
+            (CONF_RGBWW, self._update_rgbww),
+            (CONF_MAX_MIREDS, self._update_max_mireds),
+            (CONF_MIN_MIREDS, self._update_min_mireds),
+        ):
+            if (rendered := self._rendered.get(key)) is not None:
+                updater(rendered)
+                write_ha_state = True
+
+        if (rendered := self._rendered.get(CONF_SUPPORTS_TRANSITION)) is not None:
+            self._update_supports_transition(rendered)
+            write_ha_state = True
+
+        if not self._optimistic:
+            raw = self._rendered.get(CONF_STATE)
+            self._state = template.result_as_boolean(raw)
+
+            self.async_set_context(self.coordinator.data["context"])
+            write_ha_state = True
+        elif self._optimistic and len(self._rendered) > 0:
+            # In case any non optimistic template
+            write_ha_state = True
+
+        if write_ha_state:
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
