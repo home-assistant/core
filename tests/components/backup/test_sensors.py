@@ -57,16 +57,15 @@ async def test_sensor_updates(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test update of backup sensors."""
-    client = await hass_ws_client(hass)
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-12T12:00:00+01:00")
     storage_data = {
         "backups": [],
         "config": {
             "agents": {},
-            "automatic_backups_configured": False,
+            "automatic_backups_configured": True,
             "create_backup": {
-                "agent_ids": ["test.test-agent"],
+                "agent_ids": ["test.remote"],
                 "include_addons": [],
                 "include_all_addons": False,
                 "include_database": True,
@@ -103,30 +102,7 @@ async def test_sensor_updates(
     state = hass.states.get("sensor.backup_next_scheduled_automatic_backup")
     assert state.state == "2024-11-13T05:00:00+00:00"
 
-    # freezer.move_to("2024-11-13T12:00:00+01:00")
-
-    await client.send_json_auto_id(
-        {
-            "type": "backup/config/update",
-            "create_backup": {
-                "agent_ids": ["test.remote"],
-                "include_addons": None,
-                "include_all_addons": False,
-                "include_database": True,
-                "include_folders": None,
-                "name": None,
-                "password": None,
-            },
-        }
-    )
-    await client.receive_json()
     freezer.move_to("2024-11-13T12:00:00+01:00")
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await client.send_json_auto_id({"type": "backup/generate_with_automatic_settings"})
-    await client.receive_json()
-    await hass.async_block_till_done()
-    freezer.tick()
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
