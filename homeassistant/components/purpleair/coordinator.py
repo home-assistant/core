@@ -36,6 +36,9 @@ def async_get_api(hass: HomeAssistant, api_key: str) -> API:
     return API(api_key, session=session)
 
 
+type PurpleAirConfigEntry = ConfigEntry[PurpleAirDataUpdateCoordinator]
+
+
 class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
     """Data update coordinator."""
 

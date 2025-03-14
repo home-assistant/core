@@ -23,9 +23,6 @@ from homeassistant.components.assist_pipeline import (
     vad,
 )
 from homeassistant.components.media_player import async_process_play_media_url
-from homeassistant.components.tts import (
-    generate_media_source_id as tts_generate_media_source_id,
-)
 from homeassistant.core import Context, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, entity
@@ -97,6 +94,9 @@ class AssistSatelliteAnnouncement:
 
     original_media_id: str
     """The raw media ID before processing."""
+
+    tts_token: str | None
+    """The TTS token of the media."""
 
     media_id_source: Literal["url", "media_id", "tts"]
     """Source of the media ID."""
@@ -474,6 +474,7 @@ class AssistSatelliteEntity(entity.Entity):
     ) -> AssistSatelliteAnnouncement:
         """Resolve the media ID."""
         media_id_source: Literal["url", "media_id", "tts"] | None = None
+        tts_token: str | None = None
 
         if media_id:
             original_media_id = media_id
@@ -484,6 +485,10 @@ class AssistSatelliteEntity(entity.Entity):
             pipeline_id = self._resolve_pipeline()
             pipeline = async_get_pipeline(self.hass, pipeline_id)
 
+            engine = tts.async_resolve_engine(self.hass, pipeline.tts_engine)
+            if engine is None:
+                raise HomeAssistantError(f"TTS engine {pipeline.tts_engine} not found")
+
             tts_options: dict[str, Any] = {}
             if pipeline.tts_voice is not None:
                 tts_options[tts.ATTR_VOICE] = pipeline.tts_voice
@@ -491,14 +496,23 @@ class AssistSatelliteEntity(entity.Entity):
             if self.tts_options is not None:
                 tts_options.update(self.tts_options)
 
-            media_id = tts_generate_media_source_id(
+            stream = tts.async_create_stream(
                 self.hass,
-                message,
-                engine=pipeline.tts_engine,
+                engine=engine,
                 language=pipeline.tts_language,
                 options=tts_options,
             )
-            original_media_id = media_id
+            stream.async_set_message(message)
+
+            tts_token = stream.token
+            media_id = stream.url
+            original_media_id = tts.generate_media_source_id(
+                self.hass,
+                message,
+                engine=engine,
+                language=pipeline.tts_language,
+                options=tts_options,
+            )
 
         if media_source.is_media_source_id(media_id):
             if not media_id_source:
@@ -517,5 +531,9 @@ class AssistSatelliteEntity(entity.Entity):
         media_id = async_process_play_media_url(self.hass, media_id)
 
         return AssistSatelliteAnnouncement(
-            message, media_id, original_media_id, media_id_source
+            message=message,
+            media_id=media_id,
+            original_media_id=original_media_id,
+            tts_token=tts_token,
+            media_id_source=media_id_source,
         )
