@@ -22,11 +22,11 @@ async def test_cannot_auth(hass: HomeAssistant, bypass_api: AsyncMock) -> None:
     """Test that we are put into retry when we fail to auth."""
     bypass_api.authorize.side_effect = SnooAuthException
     entry = await async_init_integration(hass)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_failed_devices(hass: HomeAssistant, bypass_api: AsyncMock) -> None:
     """Test that we are put into rretry when we fail to get devices."""
     bypass_api.get_devices.side_effect = SnooDeviceError
     entry = await async_init_integration(hass)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
