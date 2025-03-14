@@ -24,6 +24,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 class HumidifierComelitMode(StrEnum):
     """Serial Bridge humidifier modes."""
