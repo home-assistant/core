@@ -326,8 +326,8 @@ async def test_owning_integration_temporarily_stop_missing_entry(
             pass
 
     # Because there's no matching entry, no unload or setup calls are made
-    mock_unload.assert_not_called()
-    mock_setup.assert_not_called()
+    assert len(mock_unload.mock_calls) == 0
+    assert len(mock_setup.mock_calls) == 0
 
 
 async def test_owning_integration_temporarily_stop_not_loaded(
@@ -348,8 +348,8 @@ async def test_owning_integration_temporarily_stop_not_loaded(
             pass
 
     # Since the entry was not loaded, we never unload or re-setup
-    mock_unload.assert_not_called()
-    mock_setup.assert_not_called()
+    assert len(mock_unload.mock_calls) == 0
+    assert len(mock_setup.mock_calls) == 0
 
 
 async def test_owning_integration_temporarily_stop_loaded(hass: HomeAssistant) -> None:

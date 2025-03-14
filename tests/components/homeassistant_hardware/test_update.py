@@ -30,13 +30,17 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
     OwningIntegration,
 )
-from homeassistant.components.update import (
-    DATA_COMPONENT as UPDATE_DATA_COMPONENT,
-    UpdateDeviceClass,
-)
+from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
-from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, HomeAssistantError, State, callback
+from homeassistant.const import EVENT_STATE_CHANGED, EntityCategory
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    HomeAssistantError,
+    State,
+    callback,
+)
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -47,6 +51,7 @@ from tests.common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
+    async_capture_events,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -315,6 +320,7 @@ async def test_update_entity_installation(
     )
 
     state_before_update = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state_before_update is not None
     assert state_before_update.state == "unknown"
     assert state_before_update.attributes["title"] == "EmberZNet"
     assert state_before_update.attributes["installed_version"] == "7.3.1.0"
@@ -328,6 +334,7 @@ async def test_update_entity_installation(
         blocking=True,
     )
     state_after_update = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state_after_update is not None
     assert state_after_update.state == "on"
     assert state_after_update.attributes["title"] == "EmberZNet"
     assert state_after_update.attributes["installed_version"] == "7.3.1.0"
@@ -376,6 +383,9 @@ async def test_update_entity_installation(
             owning_config_entry, "async_unload", wraps=owning_config_entry.async_unload
         ) as owning_config_entry_unload,
     ):
+        state_changes: list[Event[EventStateChangedData]] = async_capture_events(
+            hass, EVENT_STATE_CHANGED
+        )
         await hass.services.async_call(
             "update",
             "install",
@@ -383,11 +393,33 @@ async def test_update_entity_installation(
             blocking=True,
         )
 
+    # Progress events are emitted during the installation
+    assert len(state_changes) == 7
+
+    # Indeterminate progress first
+    assert state_changes[0].data["new_state"].attributes["in_progress"] is True
+    assert state_changes[0].data["new_state"].attributes["update_percentage"] is None
+
+    # Then the update starts
+    assert state_changes[1].data["new_state"].attributes["update_percentage"] == 0
+    assert state_changes[2].data["new_state"].attributes["update_percentage"] == 50
+    assert state_changes[3].data["new_state"].attributes["update_percentage"] == 100
+
+    # Once it is done, we probe the firmware
+    assert state_changes[4].data["new_state"].attributes["in_progress"] is True
+    assert state_changes[4].data["new_state"].attributes["update_percentage"] is None
+
+    # Finally, the update finishes
+    assert state_changes[5].data["new_state"].attributes["update_percentage"] is None
+    assert state_changes[6].data["new_state"].attributes["update_percentage"] is None
+    assert state_changes[6].data["new_state"].attributes["in_progress"] is False
+
     # The owning integration was unloaded and is again running
     assert len(owning_config_entry_unload.mock_calls) == 1
 
     # After the firmware update, the entity has the new version and the correct state
     state_after_install = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state_after_install is not None
     assert state_after_install.state == "off"
     assert state_after_install.attributes["title"] == "EmberZNet"
     assert state_after_install.attributes["installed_version"] == "7.4.4.0"
@@ -409,6 +441,7 @@ async def test_update_entity_installation_failure(
     )
 
     state_before_install = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state_before_install is not None
     assert state_before_install.state == "on"
     assert state_before_install.attributes["title"] == "EmberZNet"
     assert state_before_install.attributes["installed_version"] == "7.3.1.0"
@@ -439,6 +472,7 @@ async def test_update_entity_installation_failure(
 
     # After the firmware update fails, we can still try again
     state_after_install = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state_after_install is not None
     assert state_after_install.state == "on"
     assert state_after_install.attributes["title"] == "EmberZNet"
     assert state_after_install.attributes["installed_version"] == "7.3.1.0"
@@ -460,6 +494,7 @@ async def test_update_entity_installation_probe_failure(
     )
 
     state_before_install = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state_before_install is not None
     assert state_before_install.state == "on"
     assert state_before_install.attributes["title"] == "EmberZNet"
     assert state_before_install.attributes["installed_version"] == "7.3.1.0"
@@ -491,6 +526,7 @@ async def test_update_entity_installation_probe_failure(
 
     # After the firmware update fails, we can still try again
     state_after_install = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state_after_install is not None
     assert state_after_install.state == "on"
     assert state_after_install.attributes["title"] == "EmberZNet"
     assert state_after_install.attributes["installed_version"] == "7.3.1.0"
@@ -519,6 +555,7 @@ async def test_update_entity_state_restoration(
 
     # The state is correctly restored
     state = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state is not None
     assert state.state == "on"
     assert state.attributes["title"] == "EmberZNet"
     assert state.attributes["installed_version"] == "7.3.1.0"
@@ -550,6 +587,7 @@ async def test_update_entity_firmware_missing_from_manifest(
 
     # The state is restored, accounting for the missing firmware
     state = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state is not None
     assert state.state == "unknown"
     assert state.attributes["title"] == "EmberZNet"
     assert state.attributes["installed_version"] == "7.3.1.0"
@@ -565,13 +603,22 @@ async def test_update_entity_graceful_firmware_type_callback_errors(
 ) -> None:
     """Test firmware update entity handling of firmware type callback errors."""
 
-    assert await hass.config_entries.async_setup(update_config_entry.entry_id)
-    await hass.async_block_till_done()
+    session = async_get_clientsession(hass)
+    update_entity = MockFirmwareUpdateEntity(
+        device=TEST_DEVICE,
+        config_entry=update_config_entry,
+        update_coordinator=FirmwareUpdateCoordinator(
+            hass,
+            session,
+            TEST_FIRMWARE_RELEASES_URL,
+        ),
+        entity_description=TEST_FIRMWARE_ENTITY_DESCRIPTIONS[ApplicationType.EZSP],
+    )
+    update_entity.hass = hass
+    await update_entity.async_added_to_hass()
 
     callback = Mock(side_effect=RuntimeError("Callback failed"))
-
-    entity = hass.data[UPDATE_DATA_COMPONENT].get_entity(TEST_UPDATE_ENTITY_ID)
-    unregister_callback = entity.add_firmware_type_changed_callback(callback)
+    unregister_callback = update_entity.add_firmware_type_changed_callback(callback)
 
     with caplog.at_level(logging.WARNING):
         await async_notify_firmware_info(
