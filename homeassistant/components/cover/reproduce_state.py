@@ -87,12 +87,18 @@ async def _async_reproduce_state(
         elif state.state in {CoverState.CLOSED, CoverState.CLOSING}:
             if CoverEntityFeature.CLOSE in supported_features:
                 service = SERVICE_CLOSE_COVER
-            elif CoverEntityFeature.CLOSE_TILT in supported_features:
+            elif (
+                CoverEntityFeature.CLOSE_TILT in supported_features
+                and ATTR_CURRENT_TILT_POSITION not in state.attributes
+            ):
                 service = SERVICE_CLOSE_COVER_TILT
         elif state.state in {CoverState.OPEN, CoverState.OPENING}:
             if CoverEntityFeature.OPEN in supported_features:
                 service = SERVICE_OPEN_COVER
-            elif CoverEntityFeature.OPEN_TILT in supported_features:
+            elif (
+                CoverEntityFeature.OPEN_TILT in supported_features
+                and ATTR_CURRENT_TILT_POSITION not in state.attributes
+            ):
                 service = SERVICE_OPEN_COVER_TILT
 
         if service:
