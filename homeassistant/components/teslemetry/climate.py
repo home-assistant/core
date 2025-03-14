@@ -239,7 +239,6 @@ class TeslemetryStreamingClimateEntity(
     )
 
     side: TeslemetryClimateSide
-    rhd: bool
 
     def __init__(
         self,
@@ -273,7 +272,7 @@ class TeslemetryStreamingClimateEntity(
             float,
             data.coordinator.data.get("climate_state_max_avail_temp", DEFAULT_MAX_TEMP),
         )
-        self.rhd = data.coordinator.data.get("vehicle_config_rhd", False)
+        self.rhd: bool = data.coordinator.data.get("vehicle_config_rhd", False)
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
