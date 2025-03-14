@@ -44,8 +44,23 @@ async def test_reproducing_states(
         },
     )
     hass.states.async_set(
+        "cover.open_only_supports_close_open",
+        CoverState.OPEN,
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN,
+        },
+    )
+    hass.states.async_set(
         "cover.closed_only_supports_tilt_close_open",
         CoverState.CLOSED,
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.OPEN_TILT,
+        },
+    )
+    hass.states.async_set(
+        "cover.open_only_supports_tilt_close_open",
+        CoverState.OPEN,
         {
             ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE_TILT
             | CoverEntityFeature.OPEN_TILT,
@@ -184,6 +199,8 @@ async def test_reproducing_states(
             State("cover.entity_close", CoverState.CLOSED),
             State("cover.closed_only_supports_close_open", CoverState.CLOSED),
             State("cover.closed_only_supports_tilt_close_open", CoverState.CLOSED),
+            State("cover.open_only_supports_close_open", CoverState.OPEN),
+            State("cover.open_only_supports_tilt_close_open", CoverState.OPEN),
             State(
                 "cover.entity_close_attr",
                 CoverState.CLOSED,
@@ -266,6 +283,16 @@ async def test_reproducing_states(
                 CoverState.OPEN,
                 {ATTR_CURRENT_POSITION: 100},
             ),
+            State(
+                "cover.open_only_supports_close_open",
+                CoverState.CLOSED,
+                {ATTR_CURRENT_POSITION: 50},
+            ),
+            State(
+                "cover.open_only_supports_tilt_close_open",
+                CoverState.CLOSED,
+                {ATTR_CURRENT_TILT_POSITION: 50},
+            ),
             State("cover.closed_only_supports_tilt_close_open", CoverState.OPEN),
             State(
                 "cover.entity_close_attr",
@@ -319,6 +346,7 @@ async def test_reproducing_states(
         {"entity_id": "cover.entity_open"},
         {"entity_id": "cover.entity_open_attr"},
         {"entity_id": "cover.entity_entirely_open"},
+        {"entity_id": "cover.open_only_supports_close_open"},
     ]
     assert len(close_calls) == len(valid_close_calls)
     for call in close_calls:
@@ -344,6 +372,7 @@ async def test_reproducing_states(
         {"entity_id": "cover.tilt_only_open"},
         {"entity_id": "cover.entity_open_attr"},
         {"entity_id": "cover.tilt_only_tilt_position_100"},
+        {"entity_id": "cover.open_only_supports_tilt_close_open"},
     ]
     assert len(close_tilt_calls) == len(valid_close_tilt_calls)
     for call in close_tilt_calls:
