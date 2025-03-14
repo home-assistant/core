@@ -80,6 +80,7 @@ def classic_vario_mock():
     classic_vario_mock.is_active = True
     classic_vario_mock.filter_mode = FilterMode.MANUAL
     classic_vario_mock.error_code = FilterErrorCode.NO_ERROR
+    classic_vario_mock.service_hours = 360
     return classic_vario_mock
 
 
