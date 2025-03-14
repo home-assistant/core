@@ -735,6 +735,7 @@ class DockTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute a dock command."""
         domain = self.state.domain
+        service: str | None = None
 
         if domain == vacuum.DOMAIN:
             service = vacuum.SERVICE_RETURN_TO_BASE
@@ -932,6 +933,7 @@ class StartStopTrait(_Trait):
 
     async def _execute_vacuum(self, command, data, params, challenge):
         """Execute a StartStop command."""
+        service: str | None = None
         if command == COMMAND_START_STOP:
             service = vacuum.SERVICE_START if params["start"] else vacuum.SERVICE_STOP
         elif command == COMMAND_PAUSE_UNPAUSE:
@@ -947,6 +949,7 @@ class StartStopTrait(_Trait):
 
     async def _execute_lawn_mower(self, command, data, params, challenge):
         """Execute a StartStop command."""
+        service: str | None = None
         if command == COMMAND_START_STOP:
             service = (
                 lawn_mower.SERVICE_START_MOWING
