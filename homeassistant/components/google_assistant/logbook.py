@@ -1,4 +1,5 @@
 """Describe logbook events."""
+
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.core import callback
 
@@ -17,9 +18,7 @@ def async_describe_events(hass, async_describe_event):
         commands = []
 
         for command_payload in event.data["execution"]:
-            command = command_payload["command"]
-            if command.startswith(COMMON_COMMAND_PREFIX):
-                command = command[len(COMMON_COMMAND_PREFIX) :]
+            command = command_payload["command"].removeprefix(COMMON_COMMAND_PREFIX)
             commands.append(command)
 
         message = f"sent command {', '.join(commands)}"

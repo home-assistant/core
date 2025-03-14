@@ -1,4 +1,5 @@
 """Tests for the samsungtv component."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -7,7 +8,6 @@ from homeassistant.components.samsungtv.const import DOMAIN, ENTRY_RELOAD_COOLDO
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -29,7 +29,7 @@ async def setup_samsungtv_entry(hass: HomeAssistant, data: ConfigType) -> Config
     )
     entry.add_to_hass(hass)
 
-    await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     return entry

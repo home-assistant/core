@@ -1,4 +1,5 @@
 """Support for Google travel time sensors."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -6,21 +7,25 @@ import logging
 
 from googlemaps import Client
 from googlemaps.distance_matrix import distance_matrix
+from googlemaps.exceptions import ApiError, Timeout, TransportError
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STARTED,
-    TIME_MINUTES,
+    UnitOfTime,
 )
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.location import find_coordinates
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTRIBUTION,
@@ -50,7 +55,7 @@ def convert_time_to_utc(timestr):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Google travel time sensor entry."""
     api_key = config_entry.data[CONF_API_KEY]
@@ -71,15 +76,23 @@ class GoogleTravelTimeSensor(SensorEntity):
     """Representation of a Google travel time sensor."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, config_entry, name, api_key, origin, destination, client):
         """Initialize the sensor."""
-        self._name = name
+        self._attr_name = name
+        self._attr_unique_id = config_entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, api_key)},
+            name=DOMAIN,
+        )
+
         self._config_entry = config_entry
-        self._unit_of_measurement = TIME_MINUTES
         self._matrix = None
         self._api_key = api_key
-        self._unique_id = config_entry.entry_id
         self._client = client
         self._origin = origin
         self._destination = destination
@@ -88,7 +101,7 @@ class GoogleTravelTimeSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added."""
-        if self.hass.state != CoreState.running:
+        if self.hass.state is not CoreState.running:
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STARTED, self.first_update
             )
@@ -107,25 +120,6 @@ class GoogleTravelTimeSensor(SensorEntity):
         if "duration" in _data:
             return round(_data["duration"]["value"] / 60)
         return None
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device specific attributes."""
-        return DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._api_key)},
-            name=DOMAIN,
-        )
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID of entity."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Get the name of the sensor."""
-        return self._name
 
     @property
     def extra_state_attributes(self):
@@ -147,11 +141,6 @@ class GoogleTravelTimeSensor(SensorEntity):
         res["origin"] = self._resolved_origin
         res["destination"] = self._resolved_destination
         return res
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
 
     async def first_update(self, _=None):
         """Run the first update and write the state."""
@@ -184,9 +173,13 @@ class GoogleTravelTimeSensor(SensorEntity):
             self._resolved_destination,
         )
         if self._resolved_destination is not None and self._resolved_origin is not None:
-            self._matrix = distance_matrix(
-                self._client,
-                self._resolved_origin,
-                self._resolved_destination,
-                **options_copy,
-            )
+            try:
+                self._matrix = distance_matrix(
+                    self._client,
+                    self._resolved_origin,
+                    self._resolved_destination,
+                    **options_copy,
+                )
+            except (ApiError, TransportError, Timeout) as ex:
+                _LOGGER.error("Error getting travel time: %s", ex)
+                self._matrix = None

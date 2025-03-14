@@ -1,4 +1,5 @@
 """Support for monitoring a Smappee energy sensor."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -9,40 +10,30 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-    UnitOfElectricPotential,
-    UnitOfPower,
-)
+from homeassistant.const import UnitOfElectricPotential, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import SmappeeConfigEntry
 from .const import DOMAIN
 
 
-@dataclass
-class SmappeeRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class SmappeeSensorEntityDescription(SensorEntityDescription):
+    """Describes Smappee sensor entity."""
 
     sensor_id: str
 
 
-@dataclass
-class SmappeeSensorEntityDescription(SensorEntityDescription, SmappeeRequiredKeysMixin):
-    """Describes Smappee sensor entity."""
-
-
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class SmappeePollingSensorEntityDescription(SmappeeSensorEntityDescription):
     """Describes Smappee sensor entity."""
 
     local_polling: bool = False
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class SmappeeVoltageSensorEntityDescription(SmappeeSensorEntityDescription):
     """Describes Smappee sensor entity."""
 
@@ -70,7 +61,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="power_today",
         name="Total consumption - Today",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         sensor_id="power_today",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -78,7 +69,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="power_current_hour",
         name="Total consumption - Current hour",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         sensor_id="power_current_hour",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -86,7 +77,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="power_last_5_minutes",
         name="Total consumption - Last 5 minutes",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         sensor_id="power_last_5_minutes",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -94,7 +85,7 @@ TREND_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="alwayson_today",
         name="Always on - Today",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         sensor_id="alwayson_today",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -123,7 +114,7 @@ SOLAR_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="solar_today",
         name="Total production - Today",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         sensor_id="solar_today",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -131,7 +122,7 @@ SOLAR_SENSORS: tuple[SmappeePollingSensorEntityDescription, ...] = (
     SmappeePollingSensorEntityDescription(
         key="solar_current_hour",
         name="Total production - Current hour",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         sensor_id="solar_current_hour",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -197,11 +188,11 @@ VOLTAGE_SENSORS: tuple[SmappeeVoltageSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: SmappeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Smappee sensor."""
-    smappee_base = hass.data[DOMAIN][config_entry.entry_id]
+    smappee_base = config_entry.runtime_data
 
     entities = []
     for service_location in smappee_base.smappee.service_locations.values():
@@ -317,7 +308,7 @@ async def async_setup_entry(
                     description=SmappeeSensorEntityDescription(
                         key="switch",
                         name=f"{actuator.name} - energy today",
-                        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                         sensor_id=actuator_id,
                         device_class=SensorDeviceClass.ENERGY,
                         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -341,11 +332,18 @@ class SmappeeSensor(SensorEntity):
         smappee_base,
         service_location,
         description: SmappeeSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the Smappee sensor."""
         self.entity_description = description
         self._smappee_base = smappee_base
         self._service_location = service_location
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, service_location.device_serial_number)},
+            manufacturer="Smappee",
+            model=service_location.device_model,
+            name=service_location.service_location_name,
+            sw_version=service_location.firmware_version,
+        )
 
     @property
     def name(self):
@@ -375,17 +373,6 @@ class SmappeeSensor(SensorEntity):
             f"{self._service_location.device_serial_number}-"
             f"{self._service_location.service_location_id}-"
             f"{sensor_key}"
-        )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info for this sensor."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._service_location.device_serial_number)},
-            manufacturer="Smappee",
-            model=self._service_location.device_model,
-            name=self._service_location.service_location_name,
-            sw_version=self._service_location.firmware_version,
         )
 
     async def async_update(self) -> None:

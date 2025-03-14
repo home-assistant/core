@@ -1,4 +1,5 @@
 """Platform for Omnilogic switch integration."""
+
 import time
 from typing import Any
 
@@ -9,21 +10,27 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import OmniLogicEntity, OmniLogicUpdateCoordinator, check_guard
+from .common import check_guard
 from .const import COORDINATOR, DOMAIN, PUMP_TYPES
+from .coordinator import OmniLogicUpdateCoordinator
+from .entity import OmniLogicEntity
 
 SERVICE_SET_SPEED = "set_pump_speed"
 OMNILOGIC_SWITCH_OFF = 7
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the light platform."""
 
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+    coordinator: OmniLogicUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR
+    ]
     entities = []
 
     for item_id, item in coordinator.data.items():
@@ -94,9 +101,10 @@ class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
         """Return the on/off state of the switch."""
         state_int = 0
 
-        # The Omnilogic API has a significant delay in state reporting after calling for a
-        # change. This state delay will ensure that HA keeps an optimistic value of state
-        # during this period to improve the user experience and avoid confusion.
+        # The Omnilogic API has a significant delay in state reporting after
+        # calling for a change. This state delay will ensure that HA keeps an
+        # optimistic value of state during this period to improve the user
+        # experience and avoid confusion.
         if self._last_action < (time.time() - self._state_delay):
             state_int = int(self.coordinator.data[self._item_id][self._state_key])
 

@@ -1,12 +1,16 @@
 """Validate dependencies."""
+
 from __future__ import annotations
 
 import ast
+from collections import deque
+import multiprocessing
 from pathlib import Path
 
 from homeassistant.const import Platform
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
 
+from . import ast_parse_module
 from .model import Config, Integration
 
 
@@ -29,13 +33,26 @@ class ImportCollector(ast.NodeVisitor):
 
             self._cur_fil_dir = fil.relative_to(self.integration.path)
             self.referenced[self._cur_fil_dir] = set()
-            self.visit(ast.parse(fil.read_text()))
+            try:
+                self.visit(ast_parse_module(fil))
+            except SyntaxError as e:
+                e.add_note(f"File: {fil}")
+                raise
             self._cur_fil_dir = None
 
     def _add_reference(self, reference_domain: str) -> None:
         """Add a reference."""
         assert self._cur_fil_dir
         self.referenced[self._cur_fil_dir].add(reference_domain)
+
+    def visit_If(self, node: ast.If) -> None:
+        """Visit If node."""
+        if isinstance(node.test, ast.Name) and node.test.id == "TYPE_CHECKING":
+            # Ignore TYPE_CHECKING block
+            return
+
+        # Have it visit other kids
+        self.generic_visit(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         """Visit ImportFrom node."""
@@ -105,10 +122,10 @@ ALLOWED_USED_COMPONENTS = {
     "alert",
     "automation",
     "conversation",
+    "default_config",
     "device_automation",
     "frontend",
     "group",
-    "hassio",
     "homeassistant",
     "input_boolean",
     "input_button",
@@ -118,6 +135,7 @@ ALLOWED_USED_COMPONENTS = {
     "input_text",
     "media_source",
     "onboarding",
+    "panel_custom",
     "persistent_notification",
     "person",
     "script",
@@ -135,23 +153,30 @@ ALLOWED_USED_COMPONENTS = {
 }
 
 IGNORE_VIOLATIONS = {
-    # Has same requirement, gets defaults.
-    ("sql", "recorder"),
     # Sharing a base class
-    ("openalpr_cloud", "openalpr_local"),
     ("lutron_caseta", "lutron"),
     ("ffmpeg_noise", "ffmpeg_motion"),
     # Demo
     ("demo", "manual"),
-    ("demo", "openalpr_local"),
     # This would be a circular dep
     ("http", "network"),
+    ("http", "cloud"),
+    # This would be a circular dep
+    ("zha", "homeassistant_hardware"),
+    ("zha", "homeassistant_sky_connect"),
+    ("zha", "homeassistant_yellow"),
+    ("homeassistant_sky_connect", "zha"),
+    ("homeassistant_hardware", "zha"),
     # This should become a helper method that integrations can submit data to
     ("websocket_api", "lovelace"),
     ("websocket_api", "shopping_list"),
     "logbook",
-    # Migration wizard from zwave to zwave_js.
-    "zwave_js",
+    # Temporary needed for migration until 2024.10
+    ("conversation", "assist_pipeline"),
+    # The onboarding integration provides a limited backup API used during
+    # onboarding. The onboarding integration waits for the backup manager
+    # to be ready before calling any backup functionality.
+    ("onboarding", "backup"),
 }
 
 
@@ -163,6 +188,12 @@ def calc_allowed_references(integration: Integration) -> set[str]:
         | set(manifest.get("dependencies", []))
         | set(manifest.get("after_dependencies", []))
     )
+    # bluetooth_adapters is a wrapper to ensure
+    # that all the integrations that provide bluetooth
+    # adapters are setup before loading integrations
+    # that use them.
+    if "bluetooth_adapters" in allowed_references:
+        allowed_references.add("bluetooth")
 
     # Discovery requirements are ok if referenced in manifest
     for check_domain, to_check in DISCOVERY_INTEGRATIONS.items():
@@ -220,41 +251,109 @@ def find_non_referenced_integrations(
     return referenced
 
 
-def validate_dependencies(
-    integrations: dict[str, Integration],
+def _compute_integration_dependencies(
     integration: Integration,
-) -> None:
-    """Validate all dependencies."""
+) -> tuple[str, dict[Path, set[str]] | None]:
+    """Compute integration dependencies."""
     # Some integrations are allowed to have violations.
     if integration.domain in IGNORE_VIOLATIONS:
-        return
+        return (integration.domain, None)
 
     # Find usage of hass.components
     collector = ImportCollector(integration)
     collector.collect()
+    return (integration.domain, collector.referenced)
 
-    for domain in sorted(
-        find_non_referenced_integrations(
-            integrations, integration, collector.referenced
+
+def _validate_dependency_imports(
+    integrations: dict[str, Integration],
+) -> None:
+    """Validate all dependencies."""
+
+    # Find integration dependencies with multiprocessing
+    # (because it takes some time to parse thousands of files)
+    with multiprocessing.Pool() as pool:
+        integration_imports = dict(
+            pool.imap_unordered(
+                _compute_integration_dependencies,
+                integrations.values(),
+                chunksize=10,
+            )
         )
-    ):
-        integration.add_error(
-            "dependencies",
-            f"Using component {domain} but it's not in 'dependencies' "
-            "or 'after_dependencies'",
-        )
 
-
-def validate(integrations: dict[str, Integration], config: Config) -> None:
-    """Handle dependencies for integrations."""
-    # check for non-existing dependencies
     for integration in integrations.values():
-        validate_dependencies(integrations, integration)
-
-        if config.specific_integrations:
+        referenced = integration_imports[integration.domain]
+        if not referenced:  # Either ignored or has no references
             continue
 
-        # check that all referenced dependencies exist
+        for domain in sorted(
+            find_non_referenced_integrations(integrations, integration, referenced)
+        ):
+            integration.add_error(
+                "dependencies",
+                f"Using component {domain} but it's not in 'dependencies' "
+                "or 'after_dependencies'",
+            )
+
+
+def _check_circular_deps(
+    integrations: dict[str, Integration],
+    start_domain: str,
+    integration: Integration,
+    checked: set[str],
+    checking: deque[str],
+) -> None:
+    """Check for circular dependencies pointing at starting_domain."""
+
+    if integration.domain in checked or integration.domain in checking:
+        return
+
+    checking.append(integration.domain)
+    for domain in integration.manifest.get("dependencies", []):
+        if domain == start_domain:
+            integrations[start_domain].add_error(
+                "dependencies",
+                f"Found a circular dependency with {integration.domain} ({', '.join(checking)})",
+            )
+            break
+
+        _check_circular_deps(
+            integrations, start_domain, integrations[domain], checked, checking
+        )
+    else:
+        for domain in integration.manifest.get("after_dependencies", []):
+            if domain == start_domain:
+                integrations[start_domain].add_error(
+                    "dependencies",
+                    f"Found a circular dependency with after dependencies of {integration.domain} ({', '.join(checking)})",
+                )
+                break
+
+            _check_circular_deps(
+                integrations, start_domain, integrations[domain], checked, checking
+            )
+    checked.add(integration.domain)
+    checking.remove(integration.domain)
+
+
+def _validate_circular_dependencies(integrations: dict[str, Integration]) -> None:
+    for integration in integrations.values():
+        if integration.domain in IGNORE_VIOLATIONS:
+            continue
+
+        _check_circular_deps(
+            integrations, integration.domain, integration, set(), deque()
+        )
+
+
+def _validate_dependencies(
+    integrations: dict[str, Integration],
+) -> None:
+    """Check that all referenced dependencies exist and are not duplicated."""
+    for integration in integrations.values():
+        if not integration.manifest:
+            continue
+
         after_deps = integration.manifest.get("after_dependencies", [])
         for dep in integration.manifest.get("dependencies", []):
             if dep in after_deps:
@@ -267,3 +366,15 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
                 integration.add_error(
                     "dependencies", f"Dependency {dep} does not exist"
                 )
+
+
+def validate(
+    integrations: dict[str, Integration],
+    config: Config,
+) -> None:
+    """Handle dependencies for integrations."""
+    _validate_dependency_imports(integrations)
+
+    if not config.specific_integrations:
+        _validate_dependencies(integrations)
+        _validate_circular_dependencies(integrations)

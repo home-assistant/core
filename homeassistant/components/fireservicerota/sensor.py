@@ -1,45 +1,44 @@
 """Sensor platform for FireServiceRota integration."""
+
 import logging
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DATA_CLIENT, DOMAIN as FIRESERVICEROTA_DOMAIN
+from .const import DOMAIN as FIRESERVICEROTA_DOMAIN
+from .coordinator import FireServiceConfigEntry, FireServiceRotaClient
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FireServiceConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up FireServiceRota sensor based on a config entry."""
-    client = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][DATA_CLIENT]
-
-    async_add_entities([IncidentsSensor(client)])
+    async_add_entities([IncidentsSensor(entry.runtime_data.client)])
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class IncidentsSensor(RestoreEntity, SensorEntity):
     """Representation of FireServiceRota incidents sensor."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_translation_key = "incidents"
 
-    def __init__(self, client):
+    def __init__(self, client: FireServiceRotaClient) -> None:
         """Initialize."""
         self._client = client
         self._entry_id = self._client.entry_id
-        self._unique_id = f"{self._client.unique_id}_Incidents"
-        self._state = None
-        self._state_attributes = {}
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return "Incidents"
+        self._attr_unique_id = f"{self._client.unique_id}_Incidents"
+        self._state: str | None = None
+        self._state_attributes: dict[str, Any] = {}
 
     @property
     def icon(self) -> str:
@@ -53,14 +52,9 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
         return "mdi:fire-truck"
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the sensor."""
-        return self._unique_id
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

@@ -1,23 +1,24 @@
 """UniFi Protect Integration utils."""
+
 from __future__ import annotations
 
 from collections.abc import Generator, Iterable
 import contextlib
-from enum import Enum
+from pathlib import Path
 import socket
-from typing import Any
+from typing import TYPE_CHECKING
 
 from aiohttp import CookieJar
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import (
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
     Bootstrap,
+    CameraChannel,
     Light,
     LightModeEnableType,
     LightModeType,
     ProtectAdoptableDeviceModel,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -27,30 +28,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
     CONF_ALL_UPDATES,
     CONF_OVERRIDE_CHOST,
     DEVICES_FOR_SUBSCRIBE,
-    DOMAIN,
     ModelType,
 )
 
-
-def get_nested_attr(obj: Any, attr: str) -> Any:
-    """Fetch a nested attribute."""
-    attrs = attr.split(".")
-
-    value = obj
-    for key in attrs:
-        if not hasattr(value, key):
-            return None
-        value = getattr(value, key)
-
-    if isinstance(value, Enum):
-        value = value.value
-
-    return value
+if TYPE_CHECKING:
+    from .data import UFPConfigEntry
 
 
 @callback
@@ -86,17 +74,15 @@ def async_get_devices_by_type(
     bootstrap: Bootstrap, device_type: ModelType
 ) -> dict[str, ProtectAdoptableDeviceModel]:
     """Get devices by type."""
-
-    devices: dict[str, ProtectAdoptableDeviceModel] = getattr(
-        bootstrap, f"{device_type.value}s"
-    )
+    devices: dict[str, ProtectAdoptableDeviceModel]
+    devices = getattr(bootstrap, device_type.devices_key)
     return devices
 
 
 @callback
 def async_get_devices(
     bootstrap: Bootstrap, model_type: Iterable[ModelType]
-) -> Generator[ProtectAdoptableDeviceModel, None, None]:
+) -> Generator[ProtectAdoptableDeviceModel]:
     """Return all device by type."""
     return (
         device
@@ -110,23 +96,16 @@ def async_get_light_motion_current(obj: Light) -> str:
     """Get light motion mode for Flood Light."""
 
     if (
-        obj.light_mode_settings.mode == LightModeType.MOTION
-        and obj.light_mode_settings.enable_at == LightModeEnableType.DARK
+        obj.light_mode_settings.mode is LightModeType.MOTION
+        and obj.light_mode_settings.enable_at is LightModeEnableType.DARK
     ):
         return f"{LightModeType.MOTION.value}Dark"
     return obj.light_mode_settings.mode.value
 
 
 @callback
-def async_dispatch_id(entry: ConfigEntry, dispatch: str) -> str:
-    """Generate entry specific dispatch ID."""
-
-    return f"{DOMAIN}.{entry.entry_id}.{dispatch}"
-
-
-@callback
 def async_create_api_client(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: UFPConfigEntry
 ) -> ProtectApiClient:
     """Create ProtectApiClient from config entry."""
 
@@ -142,4 +121,17 @@ def async_create_api_client(
         override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
         ignore_unadopted=False,
+        cache_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect")),
+        config_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect")),
     )
+
+
+@callback
+def get_camera_base_name(channel: CameraChannel) -> str:
+    """Get base name for cameras channel."""
+
+    camera_name = channel.name
+    if channel.name != "Package Camera":
+        camera_name = f"{channel.name} resolution channel"
+
+    return camera_name

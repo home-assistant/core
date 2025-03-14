@@ -1,0 +1,14 @@
+get_forecasts_extra:
+  target:
+    entity:
+      domain: weather
+      integration: nws
+  fields:
+    type:
+      required: true
+      selector:
+        select:
+          options:
+            - "hourly"
+            - "twice_daily"
+          translation_key: nws_forecast_type

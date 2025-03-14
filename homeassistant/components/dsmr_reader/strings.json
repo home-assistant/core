@@ -9,10 +9,261 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "low_tariff_usage": {
+        "name": "Low tariff usage"
+      },
+      "low_tariff_returned": {
+        "name": "Low tariff returned"
+      },
+      "high_tariff_usage": {
+        "name": "High tariff usage"
+      },
+      "high_tariff_returned": {
+        "name": "High tariff returned"
+      },
+      "current_power_usage": {
+        "name": "Current power usage"
+      },
+      "current_power_return": {
+        "name": "Current power return"
+      },
+      "current_power_usage_l1": {
+        "name": "Current power usage L1"
+      },
+      "current_power_usage_l2": {
+        "name": "Current power usage L2"
+      },
+      "current_power_usage_l3": {
+        "name": "Current power usage L3"
+      },
+      "current_power_return_l1": {
+        "name": "Current power return L1"
+      },
+      "current_power_return_l2": {
+        "name": "Current power return L2"
+      },
+      "current_power_return_l3": {
+        "name": "Current power return L3"
+      },
+      "gas_meter_usage": {
+        "name": "Gas meter usage"
+      },
+      "current_voltage_l1": {
+        "name": "Current voltage L1"
+      },
+      "current_voltage_l2": {
+        "name": "Current voltage L2"
+      },
+      "current_voltage_l3": {
+        "name": "Current voltage L3"
+      },
+      "phase_power_current_l1": {
+        "name": "Phase power current L1"
+      },
+      "phase_power_current_l2": {
+        "name": "Phase power current L2"
+      },
+      "phase_power_current_l3": {
+        "name": "Phase power current L3"
+      },
+      "telegram_timestamp": {
+        "name": "Telegram timestamp"
+      },
+      "gas_usage": {
+        "name": "Gas usage"
+      },
+      "current_gas_usage": {
+        "name": "Current gas usage"
+      },
+      "gas_meter_read": {
+        "name": "Gas meter read"
+      },
+      "daily_low_tariff_usage": {
+        "name": "Low tariff usage (daily)"
+      },
+      "daily_high_tariff_usage": {
+        "name": "High tariff usage (daily)"
+      },
+      "daily_low_tariff_return": {
+        "name": "Low tariff return (daily)"
+      },
+      "daily_high_tariff_return": {
+        "name": "High tariff return (daily)"
+      },
+      "daily_power_usage_total": {
+        "name": "Power usage total (daily)"
+      },
+      "daily_power_return_total": {
+        "name": "Power return total (daily)"
+      },
+      "daily_low_tariff_cost": {
+        "name": "Low tariff cost (daily)"
+      },
+      "daily_high_tariff_cost": {
+        "name": "High tariff cost (daily)"
+      },
+      "daily_power_total_cost": {
+        "name": "Power total cost (daily)"
+      },
+      "daily_gas_usage": {
+        "name": "Gas usage (daily)"
+      },
+      "gas_cost": {
+        "name": "Gas cost"
+      },
+      "total_cost": {
+        "name": "Total cost"
+      },
+      "low_tariff_delivered_price": {
+        "name": "Low tariff delivered price"
+      },
+      "high_tariff_delivered_price": {
+        "name": "High tariff delivered price"
+      },
+      "low_tariff_returned_price": {
+        "name": "Low tariff returned price"
+      },
+      "high_tariff_returned_price": {
+        "name": "High tariff returned price"
+      },
+      "gas_price": {
+        "name": "Gas Price"
+      },
+      "current_day_fixed_cost": {
+        "name": "Current day fixed cost"
+      },
+      "dsmr_version": {
+        "name": "DSMR version"
+      },
+      "electricity_tariff": {
+        "name": "Electricity tariff",
+        "state": {
+          "low": "Low",
+          "high": "High"
+        }
+      },
+      "power_failure_count": {
+        "name": "Power failure count"
+      },
+      "long_power_failure_count": {
+        "name": "Long power failure count"
+      },
+      "voltage_sag_l1": {
+        "name": "Voltage sag L1"
+      },
+      "voltage_sag_l2": {
+        "name": "Voltage sag L2"
+      },
+      "voltage_sag_l3": {
+        "name": "Voltage sag L3"
+      },
+      "voltage_swell_l1": {
+        "name": "Voltage swell L1"
+      },
+      "voltage_swell_l2": {
+        "name": "Voltage swell L2"
+      },
+      "voltage_swell_l3": {
+        "name": "Voltage swell L3"
+      },
+      "rejected_telegrams": {
+        "name": "Rejected telegrams"
+      },
+      "current_month_low_tariff_usage": {
+        "name": "Current month low tariff usage"
+      },
+      "current_month_high_tariff_usage": {
+        "name": "Current month high tariff usage"
+      },
+      "current_month_low_tariff_returned": {
+        "name": "Current month low tariff returned"
+      },
+      "current_month_high_tariff_returned": {
+        "name": "Current month high tariff returned"
+      },
+      "current_month_power_usage_total": {
+        "name": "Current month power usage total"
+      },
+      "current_month_power_return_total": {
+        "name": "Current month power return total"
+      },
+      "current_month_low_tariff_cost": {
+        "name": "Current month low tariff cost"
+      },
+      "current_month_high_tariff_cost": {
+        "name": "Current month high tariff cost"
+      },
+      "current_month_power_total_cost": {
+        "name": "Current month power total cost"
+      },
+      "current_month_gas_usage": {
+        "name": "Current month gas usage"
+      },
+      "current_month_gas_cost": {
+        "name": "Current month gas cost"
+      },
+      "current_month_fixed_cost": {
+        "name": "Current month fixed cost"
+      },
+      "current_month_total_cost": {
+        "name": "Current month total cost"
+      },
+      "current_year_low_tariff_usage": {
+        "name": "Current year low tariff usage"
+      },
+      "current_year_high_tariff_usage": {
+        "name": "Current year high tariff usage"
+      },
+      "current_year_low_tariff_returned": {
+        "name": "Current year low tariff returned"
+      },
+      "current_year_high_tariff_returned": {
+        "name": "Current year high tariff returned"
+      },
+      "current_year_power_usage_total": {
+        "name": "Current year power usage total"
+      },
+      "current_year_power_returned_total": {
+        "name": "Current year power returned total"
+      },
+      "current_year_low_tariff_cost": {
+        "name": "Current year low tariff cost"
+      },
+      "current_year_high_tariff_cost": {
+        "name": "Current year high tariff cost"
+      },
+      "current_year_power_total_cost": {
+        "name": "Current year power total cost"
+      },
+      "current_year_gas_usage": {
+        "name": "Current year gas usage"
+      },
+      "current_year_gas_cost": {
+        "name": "Current year gas cost"
+      },
+      "current_year_fixed_cost": {
+        "name": "Current year fixed cost"
+      },
+      "current_year_total_cost": {
+        "name": "Current year total cost"
+      },
+      "previous_quarter_hour_peak_usage": {
+        "name": "Previous quarter-hour peak usage"
+      },
+      "quarter_hour_peak_start_time": {
+        "name": "Quarter-hour peak start time"
+      },
+      "quarter_hour_peak_end_time": {
+        "name": "Quarter-hour peak end time"
+      }
+    }
+  },
   "issues": {
-    "deprecated_yaml": {
-      "title": "The DSMR Reader configuration is being removed",
-      "description": "Configuring DSMR Reader using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the DSMR Reader YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    "cannot_subscribe_mqtt_topic": {
+      "title": "Cannot subscribe to MQTT topic {topic_title}",
+      "description": "The DSMR Reader integration cannot subscribe to the MQTT topic: `{topic}`. Please check the configuration of the MQTT broker and the topic.\nDSMR Reader needs to be running, before starting this integration."
     }
   }
 }

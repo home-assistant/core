@@ -1,45 +1,40 @@
 """Support for Renault button entities."""
+
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .renault_entities import RenaultEntity
-from .renault_hub import RenaultHub
+from . import RenaultConfigEntry
+from .entity import RenaultEntity
 
-
-@dataclass
-class RenaultButtonRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    async_press: Callable[[RenaultButtonEntity], Awaitable]
+# Coordinator is used to centralize the data updates
+# but renault servers are unreliable and it's safer to queue action calls
+PARALLEL_UPDATES = 1
 
 
-@dataclass
-class RenaultButtonEntityDescription(
-    ButtonEntityDescription, RenaultButtonRequiredKeysMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class RenaultButtonEntityDescription(ButtonEntityDescription):
     """Class describing Renault button entities."""
 
+    async_press: Callable[[RenaultButtonEntity], Coroutine[Any, Any, Any]]
     requires_electricity: bool = False
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: RenaultConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[RenaultButtonEntity] = [
         RenaultButtonEntity(vehicle, description)
-        for vehicle in proxy.vehicles.values()
+        for vehicle in config_entry.runtime_data.vehicles.values()
         for description in BUTTON_TYPES
         if not description.requires_electricity or vehicle.details.uses_electricity()
     ]
@@ -56,28 +51,22 @@ class RenaultButtonEntity(RenaultEntity, ButtonEntity):
         await self.entity_description.async_press(self)
 
 
-async def _start_charge(entity: RenaultButtonEntity) -> None:
-    """Start charge on the vehicle."""
-    await entity.vehicle.vehicle.set_charge_start()
-
-
-async def _start_air_conditioner(entity: RenaultButtonEntity) -> None:
-    """Start air conditioner on the vehicle."""
-    await entity.vehicle.vehicle.set_ac_start(21, None)
-
-
 BUTTON_TYPES: tuple[RenaultButtonEntityDescription, ...] = (
     RenaultButtonEntityDescription(
-        async_press=_start_air_conditioner,
+        async_press=lambda x: x.vehicle.set_ac_start(21, None),
         key="start_air_conditioner",
-        icon="mdi:air-conditioner",
-        name="Start air conditioner",
+        translation_key="start_air_conditioner",
     ),
     RenaultButtonEntityDescription(
-        async_press=_start_charge,
+        async_press=lambda x: x.vehicle.set_charge_start(),
         key="start_charge",
-        icon="mdi:ev-station",
-        name="Start charge",
         requires_electricity=True,
+        translation_key="start_charge",
+    ),
+    RenaultButtonEntityDescription(
+        async_press=lambda x: x.vehicle.set_charge_stop(),
+        key="stop_charge",
+        requires_electricity=True,
+        translation_key="stop_charge",
     ),
 )

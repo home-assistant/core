@@ -1,24 +1,30 @@
 """Constants used be the HomeKit component."""
 
+from __future__ import annotations
+
 from homeassistant.const import CONF_DEVICES
+from homeassistant.util.signal_type import SignalTypeFormat
 
 # #### Misc ####
 DEBOUNCE_TIMEOUT = 0.5
 DEVICE_PRECISION_LEEWAY = 6
 DOMAIN = "homekit"
+PERSIST_LOCK_DATA = f"{DOMAIN}_persist_lock"
 HOMEKIT_FILE = ".homekit.state"
-HOMEKIT_PAIRING_QR = "homekit-pairing-qr"
-HOMEKIT_PAIRING_QR_SECRET = "homekit-pairing-qr-secret"
-HOMEKIT = "homekit"
 SHUTDOWN_TIMEOUT = 30
 CONF_ENTRY_INDEX = "index"
-PERSIST_LOCK = "persist_lock"
+EMPTY_MAC = "00:00:00:00:00:00"
+SIGNAL_RELOAD_ENTITIES: SignalTypeFormat[tuple[str, ...]] = SignalTypeFormat(
+    "homekit_reload_entities_{}"
+)
 
 # ### Codecs ####
 VIDEO_CODEC_COPY = "copy"
 VIDEO_CODEC_LIBX264 = "libx264"
 AUDIO_CODEC_OPUS = "libopus"
 VIDEO_CODEC_H264_OMX = "h264_omx"
+VIDEO_CODEC_H264_V4L2M2M = "h264_v4l2m2m"
+VIDEO_PROFILE_NAMES = ["baseline", "main", "high"]
 AUDIO_CODEC_COPY = "copy"
 
 # #### Attributes ####
@@ -53,7 +59,10 @@ CONF_MAX_WIDTH = "max_width"
 CONF_STREAM_ADDRESS = "stream_address"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_SUPPORT_AUDIO = "support_audio"
+CONF_THRESHOLD_CO = "co_threshold"
+CONF_THRESHOLD_CO2 = "co2_threshold"
 CONF_VIDEO_CODEC = "video_codec"
+CONF_VIDEO_PROFILE_NAMES = "video_profile_names"
 CONF_VIDEO_MAP = "video_map"
 CONF_VIDEO_PACKET_SIZE = "video_packet_size"
 CONF_STREAM_COUNT = "stream_count"
@@ -71,6 +80,7 @@ DEFAULT_MAX_WIDTH = 1920
 DEFAULT_PORT = 21063
 DEFAULT_CONFIG_FLOW_PORT = 21064
 DEFAULT_VIDEO_CODEC = VIDEO_CODEC_LIBX264
+DEFAULT_VIDEO_PROFILE_NAMES = VIDEO_PROFILE_NAMES
 DEFAULT_VIDEO_MAP = "0:v:0"
 DEFAULT_VIDEO_PACKET_SIZE = 1316
 DEFAULT_STREAM_COUNT = 3
@@ -111,6 +121,9 @@ TYPE_SPRINKLER = "sprinkler"
 TYPE_SWITCH = "switch"
 TYPE_VALVE = "valve"
 
+# #### Categories ####
+CATEGORY_RECEIVER = 34
+
 # #### Services ####
 SERV_ACCESSORY_INFO = "AccessoryInformation"
 SERV_AIR_QUALITY_SENSOR = "AirQualitySensor"
@@ -119,6 +132,7 @@ SERV_CAMERA_RTP_STREAM_MANAGEMENT = "CameraRTPStreamManagement"
 SERV_CARBON_DIOXIDE_SENSOR = "CarbonDioxideSensor"
 SERV_CARBON_MONOXIDE_SENSOR = "CarbonMonoxideSensor"
 SERV_CONTACT_SENSOR = "ContactSensor"
+SERV_DOOR = "Door"
 SERV_DOORBELL = "Doorbell"
 SERV_FANV2 = "Fanv2"
 SERV_GARAGE_DOOR_OPENER = "GarageDoorOpener"

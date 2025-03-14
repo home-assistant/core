@@ -1,4 +1,5 @@
 """Models for Hardware."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,7 +8,7 @@ from typing import Protocol
 from homeassistant.core import HomeAssistant, callback
 
 
-@dataclass
+@dataclass(slots=True)
 class BoardInfo:
     """Board info type."""
 
@@ -17,7 +18,7 @@ class BoardInfo:
     revision: str | None
 
 
-@dataclass(frozen=True)
+@dataclass(slots=True, frozen=True)
 class USBInfo:
     """USB info type."""
 
@@ -28,7 +29,7 @@ class USBInfo:
     description: str | None
 
 
-@dataclass(frozen=True)
+@dataclass(slots=True, frozen=True)
 class HardwareInfo:
     """Hardware info type."""
 

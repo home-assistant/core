@@ -17,5 +17,28 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "number": {
+      "perfume_amount": {
+        "name": "Perfume amount"
+      }
+    },
+    "select": {
+      "room_size_square_meter": {
+        "name": "Room size"
+      }
+    },
+    "sensor": {
+      "fill": {
+        "name": "Fill"
+      },
+      "perfume": {
+        "name": "Perfume"
+      },
+      "wifi_percentage": {
+        "name": "Wi-Fi signal"
+      }
+    }
   }
 }

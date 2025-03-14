@@ -1,95 +1,108 @@
 """Common tradfri test fixtures."""
-from unittest.mock import Mock, PropertyMock, patch
+
+from __future__ import annotations
+
+from collections.abc import Callable, Generator
+import json
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytradfri.command import Command
+from pytradfri.const import ATTR_FIRMWARE_VERSION, ATTR_GATEWAY_ID
+from pytradfri.device import Device
+from pytradfri.gateway import Gateway
+
+from homeassistant.components.tradfri.const import DOMAIN
 
 from . import GATEWAY_ID, TRADFRI_PATH
+from .common import CommandStore
 
-# pylint: disable=protected-access
-
-
-@pytest.fixture
-def mock_gateway_info():
-    """Mock get_gateway_info."""
-    with patch(f"{TRADFRI_PATH}.config_flow.get_gateway_info") as gateway_info:
-        yield gateway_info
+from tests.common import load_fixture
 
 
 @pytest.fixture
-def mock_entry_setup():
+def mock_entry_setup() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(f"{TRADFRI_PATH}.async_setup_entry") as mock_setup:
         mock_setup.return_value = True
         yield mock_setup
 
 
-@pytest.fixture(name="mock_gateway")
-def mock_gateway_fixture():
+@pytest.fixture(name="mock_gateway", autouse=True)
+def mock_gateway_fixture(command_store: CommandStore) -> Gateway:
     """Mock a Tradfri gateway."""
-
-    def get_devices():
-        """Return mock devices."""
-        return gateway.mock_devices
-
-    def get_groups():
-        """Return mock groups."""
-        return gateway.mock_groups
-
-    gateway_info = Mock(id=GATEWAY_ID, firmware_version="1.2.1234")
-
-    def get_gateway_info():
-        """Return mock gateway info."""
-        return gateway_info
-
-    gateway = Mock(
-        get_devices=get_devices,
-        get_groups=get_groups,
-        get_gateway_info=get_gateway_info,
-        mock_devices=[],
-        mock_groups=[],
-        mock_responses=[],
+    gateway = Gateway()
+    command_store.register_response(
+        gateway.get_gateway_info(),
+        {ATTR_GATEWAY_ID: GATEWAY_ID, ATTR_FIRMWARE_VERSION: "1.2.1234"},
     )
-    with patch(f"{TRADFRI_PATH}.Gateway", return_value=gateway), patch(
-        f"{TRADFRI_PATH}.config_flow.Gateway", return_value=gateway
-    ):
-        yield gateway
+    command_store.register_response(
+        gateway.get_devices(),
+        [],
+    )
+    return gateway
+
+
+@pytest.fixture(name="command_store", autouse=True)
+def command_store_fixture() -> CommandStore:
+    """Store commands and command responses for the API."""
+    return CommandStore([], {})
 
 
 @pytest.fixture(name="mock_api")
-def mock_api_fixture(mock_gateway):
+def mock_api_fixture(
+    command_store: CommandStore,
+) -> Callable[[Command | list[Command], float | None], Any | None]:
     """Mock api."""
 
-    async def api(command, timeout=None):
+    async def api(
+        command: Command | list[Command], timeout: float | None = None
+    ) -> Any | None:
         """Mock api function."""
-        # Store the data for "real" command objects.
-        if hasattr(command, "_data") and not isinstance(command, Mock):
-            mock_gateway.mock_responses.append(command._data)
-        return command
+        if isinstance(command, list):
+            result = []
+            for cmd in command:
+                command_store.sent_commands.append(cmd)
+                result.append(command_store.process_command(cmd))
+            return result
+
+        command_store.sent_commands.append(command)
+        return command_store.process_command(command)
 
     return api
 
 
-@pytest.fixture
-def mock_api_factory(mock_api):
-    """Mock pytradfri api factory."""
-    with patch(f"{TRADFRI_PATH}.APIFactory", autospec=True) as factory:
-        factory.init.return_value = factory.return_value
-        factory.return_value.request = mock_api
-        yield factory.return_value
-
-
 @pytest.fixture(autouse=True)
-def setup(request):
-    """
-    Set up patches for pytradfri methods for the fan platform.
+def mock_api_factory(
+    mock_api: Callable[[Command | list[Command], float | None], Any | None],
+) -> Generator[MagicMock]:
+    """Mock pytradfri api factory."""
+    with patch(f"{TRADFRI_PATH}.APIFactory", autospec=True) as factory_class:
+        factory = factory_class.return_value
+        factory_class.init.return_value = factory
+        factory.request = mock_api
+        yield factory
 
-    This is used in test_fan as well as in test_sensor.
-    """
-    with patch(
-        "pytradfri.device.AirPurifierControl.raw",
-        new_callable=PropertyMock,
-        return_value=[{"mock": "mock"}],
-    ), patch(
-        "pytradfri.device.AirPurifierControl.air_purifiers",
-    ):
-        yield
+
+@pytest.fixture
+def device(
+    command_store: CommandStore, mock_gateway: Gateway, request: pytest.FixtureRequest
+) -> Device:
+    """Return a device."""
+    device_response: dict[str, Any] = json.loads(request.getfixturevalue(request.param))
+    device = Device(device_response)
+    command_store.register_device(mock_gateway, device.raw)
+    return device
+
+
+@pytest.fixture(scope="package")
+def air_purifier() -> str:
+    """Return an air purifier response."""
+    return load_fixture("air_purifier.json", DOMAIN)
+
+
+@pytest.fixture(scope="package")
+def blind() -> str:
+    """Return a blind response."""
+    return load_fixture("blind.json", DOMAIN)

@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration models."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -7,6 +8,7 @@ import bleak
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
+from habluetooth.wrappers import HaBleakClientWrapper, HaBleakScannerWrapper
 import pytest
 
 from homeassistant.components.bluetooth import (
@@ -14,24 +16,24 @@ from homeassistant.components.bluetooth import (
     BaseHaScanner,
     HaBluetoothConnector,
 )
-from homeassistant.components.bluetooth.wrappers import (
-    HaBleakClientWrapper,
-    HaBleakScannerWrapper,
-)
+from homeassistant.core import HomeAssistant
 
 from . import (
+    FakeScannerMixin,
     MockBleakClient,
     _get_manager,
     generate_advertisement_data,
+    generate_ble_device,
     inject_advertisement,
     inject_advertisement_with_source,
 )
 
 
-async def test_wrapped_bleak_scanner(hass, enable_bluetooth):
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_wrapped_bleak_scanner(hass: HomeAssistant) -> None:
     """Test wrapped bleak scanner dispatches calls as expected."""
     scanner = HaBleakScannerWrapper()
-    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
     switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
@@ -40,9 +42,10 @@ async def test_wrapped_bleak_scanner(hass, enable_bluetooth):
     assert await scanner.discover() == [switchbot_device]
 
 
-async def test_wrapped_bleak_client_raises_device_missing(hass, enable_bluetooth):
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_wrapped_bleak_client_raises_device_missing(hass: HomeAssistant) -> None:
     """Test wrapped bleak client dispatches calls as expected."""
-    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
     client = HaBleakClientWrapper(switchbot_device)
     assert client.is_connected is False
     with pytest.raises(bleak.BleakError):
@@ -52,22 +55,22 @@ async def test_wrapped_bleak_client_raises_device_missing(hass, enable_bluetooth
     assert await client.clear_cache() is False
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_wrapped_bleak_client_set_disconnected_callback_before_connected(
-    hass, enable_bluetooth
-):
+    hass: HomeAssistant,
+) -> None:
     """Test wrapped bleak client can set a disconnected callback before connected."""
-    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
     client = HaBleakClientWrapper(switchbot_device)
     client.set_disconnected_callback(lambda client: None)
 
 
-async def test_wrapped_bleak_client_local_adapter_only(
-    hass, enable_bluetooth, one_adapter
-):
+@pytest.mark.usefixtures("enable_bluetooth", "one_adapter")
+async def test_wrapped_bleak_client_local_adapter_only(hass: HomeAssistant) -> None:
     """Test wrapped bleak client with only a local adapter."""
     manager = _get_manager()
 
-    switchbot_device = BLEDevice(
+    switchbot_device = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {"path": "/org/bluez/hci0/dev_44_44_33_11_23_45"},
@@ -76,7 +79,7 @@ async def test_wrapped_bleak_client_local_adapter_only(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}, rssi=-100
     )
 
-    class FakeScanner(BaseHaScanner):
+    class FakeScanner(FakeScannerMixin, BaseHaScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""
@@ -101,20 +104,26 @@ async def test_wrapped_bleak_client_local_adapter_only(
             return None
 
     scanner = FakeScanner(
-        hass,
         "00:00:00:00:00:01",
         "hci0",
     )
-    cancel = manager.async_register_scanner(scanner, True)
+    # pylint: disable-next=attribute-defined-outside-init
+    scanner.connectable = True
+    cancel = manager.async_register_scanner(scanner)
     inject_advertisement_with_source(
         hass, switchbot_device, switchbot_adv, "00:00:00:00:00:01"
     )
 
     client = HaBleakClientWrapper(switchbot_device)
-    with patch(
-        "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect",
-        return_value=True,
-    ), patch("bleak.backends.bluezdbus.client.BleakClientBlueZDBus.is_connected", True):
+    with (
+        patch(
+            "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect",
+            return_value=True,
+        ),
+        patch(
+            "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.is_connected", True
+        ),
+    ):
         assert await client.connect() is True
         assert client.is_connected is True
     client.set_disconnected_callback(lambda client: None)
@@ -122,13 +131,14 @@ async def test_wrapped_bleak_client_local_adapter_only(
     cancel()
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "one_adapter")
 async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
-    hass, enable_bluetooth, one_adapter
-):
+    hass: HomeAssistant,
+) -> None:
     """Test wrapped bleak client can set a disconnected callback after connected."""
     manager = _get_manager()
 
-    switchbot_proxy_device_has_connection_slot = BLEDevice(
+    switchbot_proxy_device_has_connection_slot = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {
@@ -143,7 +153,7 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
         manufacturer_data={1: b"\x01"},
         rssi=-40,
     )
-    switchbot_device = BLEDevice(
+    switchbot_device = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {"path": "/org/bluez/hci0/dev_44_44_33_11_23_45"},
@@ -152,7 +162,7 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}, rssi=-100
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(FakeScannerMixin, BaseHaRemoteScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""
@@ -180,14 +190,12 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
         MockBleakClient, "esp32_has_connection_slot", lambda: True
     )
     scanner = FakeScanner(
-        hass,
         "esp32_has_connection_slot",
         "esp32_has_connection_slot",
-        lambda info: None,
         connector,
         True,
     )
-    cancel = manager.async_register_scanner(scanner, True)
+    cancel = manager.async_register_scanner(scanner)
     inject_advertisement_with_source(
         hass, switchbot_device, switchbot_adv, "00:00:00:00:00:01"
     )
@@ -198,10 +206,15 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
         "esp32_has_connection_slot",
     )
     client = HaBleakClientWrapper(switchbot_proxy_device_has_connection_slot)
-    with patch(
-        "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect",
-        return_value=True,
-    ), patch("bleak.backends.bluezdbus.client.BleakClientBlueZDBus.is_connected", True):
+    with (
+        patch(
+            "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect",
+            return_value=True,
+        ),
+        patch(
+            "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.is_connected", True
+        ),
+    ):
         assert await client.connect() is True
         assert client.is_connected is True
     client.set_disconnected_callback(lambda client: None)
@@ -209,13 +222,14 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
     cancel()
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "one_adapter")
 async def test_ble_device_with_proxy_client_out_of_connections_no_scanners(
-    hass, enable_bluetooth, one_adapter
-):
+    hass: HomeAssistant,
+) -> None:
     """Test we switch to the next available proxy when one runs out of connections with no scanners."""
     manager = _get_manager()
 
-    switchbot_proxy_device_no_connection_slot = BLEDevice(
+    switchbot_proxy_device_no_connection_slot = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {
@@ -237,22 +251,24 @@ async def test_ble_device_with_proxy_client_out_of_connections_no_scanners(
     ]
 
     client = HaBleakClientWrapper(switchbot_proxy_device_no_connection_slot)
-    with patch(
-        "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect"
-    ), pytest.raises(BleakError):
+    with (
+        patch("bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect"),
+        pytest.raises(BleakError),
+    ):
         await client.connect()
     assert client.is_connected is False
     client.set_disconnected_callback(lambda client: None)
     await client.disconnect()
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "one_adapter")
 async def test_ble_device_with_proxy_client_out_of_connections(
-    hass, enable_bluetooth, one_adapter
-):
+    hass: HomeAssistant,
+) -> None:
     """Test handling all scanners are out of connection slots."""
     manager = _get_manager()
 
-    switchbot_proxy_device_no_connection_slot = BLEDevice(
+    switchbot_proxy_device_no_connection_slot = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {
@@ -265,7 +281,7 @@ async def test_ble_device_with_proxy_client_out_of_connections(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(FakeScannerMixin, BaseHaRemoteScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""
@@ -290,8 +306,8 @@ async def test_ble_device_with_proxy_client_out_of_connections(
             return None
 
     connector = HaBluetoothConnector(MockBleakClient, "esp32", lambda: False)
-    scanner = FakeScanner(hass, "esp32", "esp32", lambda info: None, connector, True)
-    cancel = manager.async_register_scanner(scanner, True)
+    scanner = FakeScanner("esp32", "esp32", connector, True)
+    cancel = manager.async_register_scanner(scanner)
     inject_advertisement_with_source(
         hass, switchbot_proxy_device_no_connection_slot, switchbot_adv, "esp32"
     )
@@ -301,9 +317,10 @@ async def test_ble_device_with_proxy_client_out_of_connections(
     ]
 
     client = HaBleakClientWrapper(switchbot_proxy_device_no_connection_slot)
-    with patch(
-        "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect"
-    ), pytest.raises(BleakError):
+    with (
+        patch("bleak.backends.bluezdbus.client.BleakClientBlueZDBus.connect"),
+        pytest.raises(BleakError),
+    ):
         await client.connect()
     assert client.is_connected is False
     client.set_disconnected_callback(lambda client: None)
@@ -311,11 +328,12 @@ async def test_ble_device_with_proxy_client_out_of_connections(
     cancel()
 
 
-async def test_ble_device_with_proxy_clear_cache(hass, enable_bluetooth, one_adapter):
+@pytest.mark.usefixtures("enable_bluetooth", "one_adapter")
+async def test_ble_device_with_proxy_clear_cache(hass: HomeAssistant) -> None:
     """Test we can clear cache on the proxy."""
     manager = _get_manager()
 
-    switchbot_proxy_device_with_connection_slot = BLEDevice(
+    switchbot_proxy_device_with_connection_slot = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {
@@ -328,7 +346,7 @@ async def test_ble_device_with_proxy_clear_cache(hass, enable_bluetooth, one_ada
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(FakeScannerMixin, BaseHaRemoteScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""
@@ -353,8 +371,8 @@ async def test_ble_device_with_proxy_clear_cache(hass, enable_bluetooth, one_ada
             return None
 
     connector = HaBluetoothConnector(MockBleakClient, "esp32", lambda: True)
-    scanner = FakeScanner(hass, "esp32", "esp32", lambda info: None, connector, True)
-    cancel = manager.async_register_scanner(scanner, True)
+    scanner = FakeScanner("esp32", "esp32", connector, True)
+    cancel = manager.async_register_scanner(scanner)
     inject_advertisement_with_source(
         hass, switchbot_proxy_device_with_connection_slot, switchbot_adv, "esp32"
     )
@@ -371,13 +389,14 @@ async def test_ble_device_with_proxy_clear_cache(hass, enable_bluetooth, one_ada
     cancel()
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "one_adapter")
 async def test_ble_device_with_proxy_client_out_of_connections_uses_best_available(
-    hass, enable_bluetooth, one_adapter
-):
+    hass: HomeAssistant,
+) -> None:
     """Test we switch to the next available proxy when one runs out of connections."""
     manager = _get_manager()
 
-    switchbot_proxy_device_no_connection_slot = BLEDevice(
+    switchbot_proxy_device_no_connection_slot = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {
@@ -391,7 +410,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         manufacturer_data={1: b"\x01"},
         rssi=-30,
     )
-    switchbot_proxy_device_has_connection_slot = BLEDevice(
+    switchbot_proxy_device_has_connection_slot = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {
@@ -406,7 +425,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         manufacturer_data={1: b"\x01"},
         rssi=-40,
     )
-    switchbot_device = BLEDevice(
+    switchbot_device = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {"path": "/org/bluez/hci0/dev_44_44_33_11_23_45"},
@@ -431,7 +450,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         "esp32_no_connection_slot",
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(FakeScannerMixin, BaseHaRemoteScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""
@@ -459,14 +478,12 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         MockBleakClient, "esp32_has_connection_slot", lambda: True
     )
     scanner = FakeScanner(
-        hass,
         "esp32_has_connection_slot",
         "esp32_has_connection_slot",
-        lambda info: None,
         connector,
         True,
     )
-    cancel = manager.async_register_scanner(scanner, True)
+    cancel = manager.async_register_scanner(scanner)
     assert manager.async_discovered_devices(True) == [
         switchbot_proxy_device_no_connection_slot
     ]
@@ -480,13 +497,14 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
     cancel()
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "macos_adapter")
 async def test_ble_device_with_proxy_client_out_of_connections_uses_best_available_macos(
-    hass, enable_bluetooth, macos_adapter
-):
+    hass: HomeAssistant,
+) -> None:
     """Test we switch to the next available proxy when one runs out of connections on MacOS."""
     manager = _get_manager()
 
-    switchbot_proxy_device_no_connection_slot = BLEDevice(
+    switchbot_proxy_device_no_connection_slot = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand_no_connection_slot",
         {
@@ -495,14 +513,13 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         },
         rssi=-30,
     )
-    switchbot_proxy_device_no_connection_slot.metadata["delegate"] = 0
     switchbot_proxy_device_no_connection_slot_adv = generate_advertisement_data(
         local_name="wohand",
         service_uuids=[],
         manufacturer_data={1: b"\x01"},
         rssi=-30,
     )
-    switchbot_proxy_device_has_connection_slot = BLEDevice(
+    switchbot_proxy_device_has_connection_slot = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand_has_connection_slot",
         {
@@ -510,7 +527,6 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
             "path": "/org/bluez/hci0/dev_44_44_33_11_23_45",
         },
     )
-    switchbot_proxy_device_has_connection_slot.metadata["delegate"] = 0
     switchbot_proxy_device_has_connection_slot_adv = generate_advertisement_data(
         local_name="wohand",
         service_uuids=[],
@@ -518,13 +534,12 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         rssi=-40,
     )
 
-    switchbot_device = BLEDevice(
+    switchbot_device = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {},
         rssi=-100,
     )
-    switchbot_device.metadata["delegate"] = 0
     switchbot_device_adv = generate_advertisement_data(
         local_name="wohand",
         service_uuids=[],
@@ -548,7 +563,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         "esp32_no_connection_slot",
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(FakeScannerMixin, BaseHaRemoteScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""
@@ -576,14 +591,12 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         MockBleakClient, "esp32_has_connection_slot", lambda: True
     )
     scanner = FakeScanner(
-        hass,
         "esp32_has_connection_slot",
         "esp32_has_connection_slot",
-        lambda info: None,
         connector,
         True,
     )
-    cancel = manager.async_register_scanner(scanner, True)
+    cancel = manager.async_register_scanner(scanner)
     assert manager.async_discovered_devices(True) == [
         switchbot_proxy_device_no_connection_slot
     ]

@@ -1,0 +1,120 @@
+{
+  "title": "Statistics",
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "missing_max_age_or_sampling_size": "The sensor configuration must provide 'Max age' and/or 'Sampling size'",
+      "missing_keep_last_sample": "The sensor configuration must provide 'Max age' if 'Keep last sample' is true"
+    },
+    "step": {
+      "user": {
+        "description": "Create a statistics sensor",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "entity_id": "Entity"
+        },
+        "data_description": {
+          "name": "Name for the created entity.",
+          "entity_id": "Entity to get statistics from."
+        }
+      },
+      "state_characteristic": {
+        "description": "Read the documentation for further details on available options and how to use them.",
+        "data": {
+          "state_characteristic": "Statistic characteristic"
+        },
+        "data_description": {
+          "state_characteristic": "The statistic characteristic that should be used as the state of the sensor."
+        }
+      },
+      "options": {
+        "description": "Read the documentation for further details on how to configure the statistics sensor using these options.",
+        "data": {
+          "sampling_size": "Sampling size",
+          "max_age": "Max age",
+          "keep_last_sample": "Keep last sample",
+          "percentile": "Percentile",
+          "precision": "Precision"
+        },
+        "data_description": {
+          "sampling_size": "Maximum number of source sensor measurements stored.",
+          "max_age": "Maximum age of source sensor measurements stored.",
+          "keep_last_sample": "Defines whether the most recent sampled value should be preserved regardless of the 'Max age' setting.",
+          "percentile": "Only relevant in combination with the 'Percentile' characteristic. Must be a value between 1 and 99.",
+          "precision": "Defines the number of decimal places of the calculated sensor value."
+        }
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "missing_max_age_or_sampling_size": "[%key:component::statistics::config::error::missing_max_age_or_sampling_size%]",
+      "missing_keep_last_sample": "[%key:component::statistics::config::error::missing_keep_last_sample%]"
+    },
+    "step": {
+      "init": {
+        "description": "[%key:component::statistics::config::step::options::description%]",
+        "data": {
+          "sampling_size": "[%key:component::statistics::config::step::options::data::sampling_size%]",
+          "max_age": "[%key:component::statistics::config::step::options::data::max_age%]",
+          "keep_last_sample": "[%key:component::statistics::config::step::options::data::keep_last_sample%]",
+          "percentile": "[%key:component::statistics::config::step::options::data::percentile%]",
+          "precision": "[%key:component::statistics::config::step::options::data::precision%]"
+        },
+        "data_description": {
+          "sampling_size": "[%key:component::statistics::config::step::options::data_description::sampling_size%]",
+          "max_age": "[%key:component::statistics::config::step::options::data_description::max_age%]",
+          "keep_last_sample": "[%key:component::statistics::config::step::options::data_description::keep_last_sample%]",
+          "percentile": "[%key:component::statistics::config::step::options::data_description::percentile%]",
+          "precision": "[%key:component::statistics::config::step::options::data_description::precision%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "state_characteristic": {
+      "options": {
+        "average_linear": "Average linear",
+        "average_step": "Average step",
+        "average_timeless": "Average timeless",
+        "change": "Change",
+        "change_sample": "Change sample",
+        "change_second": "Change second",
+        "count": "Count",
+        "count_on": "Count on",
+        "count_off": "Count off",
+        "datetime_newest": "Newest datetime",
+        "datetime_oldest": "Oldest datetime",
+        "datetime_value_max": "Max value datetime",
+        "datetime_value_min": "Min value datetime",
+        "distance_95_percent_of_values": "Distance 95% of values",
+        "distance_99_percent_of_values": "Distance 99% of values",
+        "distance_absolute": "Absolute distance",
+        "mean": "Mean",
+        "mean_circular": "Mean circular",
+        "median": "Median",
+        "noisiness": "Noisiness",
+        "percentile": "Percentile",
+        "standard_deviation": "Standard deviation",
+        "sum": "Sum",
+        "sum_differences": "Sum of differences",
+        "sum_differences_nonnegative": "Sum of differences non-negative",
+        "total": "Total",
+        "value_max": "Max value",
+        "value_min": "Min value",
+        "variance": "Variance"
+      }
+    }
+  },
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads statistics sensors from the YAML-configuration."
+    }
+  }
+}

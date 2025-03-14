@@ -1,4 +1,5 @@
 """Support for Bizkaibus, Biscay (Basque Country, Spain) Bus service."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -6,10 +7,13 @@ from contextlib import suppress
 from bizkaibus.bizkaibus import BizkaibusData
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, TIME_MINUTES
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -20,7 +24,7 @@ CONF_ROUTE = "route"
 
 DEFAULT_NAME = "Next bus"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_ID): cv.string,
         vol.Required(CONF_ROUTE): cv.string,
@@ -47,7 +51,7 @@ def setup_platform(
 class BizkaibusSensor(SensorEntity):
     """The class for handling the data."""
 
-    _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(self, data, name):
         """Initialize the sensor."""

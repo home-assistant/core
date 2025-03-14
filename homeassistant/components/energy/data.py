@@ -1,10 +1,11 @@
 """Energy data."""
+
 from __future__ import annotations
 
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
-from typing import Literal, TypedDict, Union
+from typing import Literal, TypedDict
 
 import voluptuous as vol
 
@@ -120,9 +121,13 @@ class WaterSourceType(TypedDict):
     number_energy_price: float | None  # Price for energy ($/m³)
 
 
-SourceType = Union[
-    GridSourceType, SolarSourceType, BatterySourceType, GasSourceType, WaterSourceType
-]
+type SourceType = (
+    GridSourceType
+    | SolarSourceType
+    | BatterySourceType
+    | GasSourceType
+    | WaterSourceType
+)
 
 
 class DeviceConsumption(TypedDict):
@@ -130,6 +135,9 @@ class DeviceConsumption(TypedDict):
 
     # This is an ever increasing value
     stat_consumption: str
+
+    # An optional custom name for display in energy graphs
+    name: str | None
 
 
 class EnergyPreferences(TypedDict):
@@ -282,6 +290,7 @@ ENERGY_SOURCE_SCHEMA = vol.All(
 DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
     {
         vol.Required("stat_consumption"): str,
+        vol.Optional("name"): str,
     }
 )
 
@@ -322,7 +331,7 @@ class EnergyManager:
             "device_consumption",
         ):
             if key in update:
-                data[key] = update[key]  # type: ignore[literal-required]
+                data[key] = update[key]
 
         self.data = data
         self._store.async_delay_save(lambda: data, 60)

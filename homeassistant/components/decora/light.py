@@ -1,4 +1,5 @@
 """Support for Decora dimmers."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -6,32 +7,27 @@ import copy
 from functools import wraps
 import logging
 import time
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate
 
-from bluepy.btle import BTLEException  # pylint: disable=import-error
-import decora  # pylint: disable=import-error
-from typing_extensions import Concatenate, ParamSpec
+from bluepy.btle import BTLEException
+import decora
 import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
     from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-
-_DecoraLightT = TypeVar("_DecoraLightT", bound="DecoraLight")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +48,7 @@ DEVICE_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA = vol.Schema(
     vol.All(
-        PLATFORM_SCHEMA.extend(
+        LIGHT_PLATFORM_SCHEMA.extend(
             {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}}
         ),
         _name_validator,
@@ -60,8 +56,8 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-def retry(
-    method: Callable[Concatenate[_DecoraLightT, _P], _R]
+def retry[_DecoraLightT: DecoraLight, **_P, _R](
+    method: Callable[Concatenate[_DecoraLightT, _P], _R],
 ) -> Callable[Concatenate[_DecoraLightT, _P], _R | None]:
     """Retry bluetooth commands."""
 
@@ -82,8 +78,7 @@ def retry(
                     "Decora connect error for device %s. Reconnecting",
                     device.name,
                 )
-                # pylint: disable=protected-access
-                device._switch.connect()
+                device._switch.connect()  # noqa: SLF001
 
     return wrapper_retry
 

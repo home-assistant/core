@@ -1,4 +1,6 @@
 """Tests for the arcam_fmj component."""
+
+from collections.abc import AsyncGenerator
 from unittest.mock import Mock, patch
 
 from arcam.fmj.client import Client
@@ -8,8 +10,10 @@ import pytest
 from homeassistant.components.arcam_fmj.const import DEFAULT_NAME
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockEntityPlatform
 
 MOCK_HOST = "127.0.0.1"
 MOCK_PORT = 50000
@@ -25,7 +29,7 @@ MOCK_CONFIG_ENTRY = {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT}
 
 
 @pytest.fixture(name="client")
-def client_fixture():
+def client_fixture() -> Mock:
     """Get a mocked client."""
     client = Mock(Client)
     client.host = MOCK_HOST
@@ -34,7 +38,7 @@ def client_fixture():
 
 
 @pytest.fixture(name="state_1")
-def state_1_fixture(client):
+def state_1_fixture(client: Mock) -> State:
     """Get a mocked state."""
     state = Mock(State)
     state.client = client
@@ -49,7 +53,7 @@ def state_1_fixture(client):
 
 
 @pytest.fixture(name="state_2")
-def state_2_fixture(client):
+def state_2_fixture(client: Mock) -> State:
     """Get a mocked state."""
     state = Mock(State)
     state.client = client
@@ -64,23 +68,26 @@ def state_2_fixture(client):
 
 
 @pytest.fixture(name="state")
-def state_fixture(state_1):
+def state_fixture(state_1: State) -> State:
     """Get a mocked state."""
     return state_1
 
 
 @pytest.fixture(name="player")
-def player_fixture(hass, state):
+def player_fixture(hass: HomeAssistant, state: State) -> ArcamFmj:
     """Get standard player."""
     player = ArcamFmj(MOCK_NAME, state, MOCK_UUID)
     player.entity_id = MOCK_ENTITY_ID
     player.hass = hass
+    player.platform = MockEntityPlatform(hass)
     player.async_write_ha_state = Mock()
     return player
 
 
 @pytest.fixture(name="player_setup")
-async def player_setup_fixture(hass, state_1, state_2, client):
+async def player_setup_fixture(
+    hass: HomeAssistant, state_1: State, state_2: State, client: Mock
+) -> AsyncGenerator[str]:
     """Get standard player."""
     config_entry = MockConfigEntry(
         domain="arcam_fmj", data=MOCK_CONFIG_ENTRY, title=MOCK_NAME
@@ -92,10 +99,18 @@ async def player_setup_fixture(hass, state_1, state_2, client):
             return state_1
         if zone == 2:
             return state_2
+        raise ValueError(f"Unknown player zone: {zone}")
 
-    with patch("homeassistant.components.arcam_fmj.Client", return_value=client), patch(
-        "homeassistant.components.arcam_fmj.media_player.State", side_effect=state_mock
-    ), patch("homeassistant.components.arcam_fmj._run_client", return_value=None):
+    await async_setup_component(hass, "homeassistant", {})
+
+    with (
+        patch("homeassistant.components.arcam_fmj.Client", return_value=client),
+        patch(
+            "homeassistant.components.arcam_fmj.media_player.State",
+            side_effect=state_mock,
+        ),
+        patch("homeassistant.components.arcam_fmj._run_client", return_value=None),
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         yield MOCK_ENTITY_ID

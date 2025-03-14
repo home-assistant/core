@@ -1,4 +1,5 @@
 """Support for Broadlink devices."""
+
 from contextlib import suppress
 from functools import partial
 import logging
@@ -12,55 +13,63 @@ from broadlink.exceptions import (
     NetworkTimeoutError,
 )
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_TIMEOUT,
+    CONF_TYPE,
+    Platform,
+)
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
-from .updater import get_update_manager
+from .updater import BroadlinkUpdateManager, get_update_manager
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_domains(device_type):
+def get_domains(device_type: str) -> set[Platform]:
     """Return the domains available for a device type."""
     return {d for d, t in DOMAINS_AND_TYPES.items() if device_type in t}
 
 
-class BroadlinkDevice:
+class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
     """Manages a Broadlink device."""
 
-    def __init__(self, hass, config):
+    api: _ApiT
+
+    def __init__(self, hass: HomeAssistant, config: ConfigEntry) -> None:
         """Initialize the device."""
         self.hass = hass
         self.config = config
-        self.api = None
-        self.update_manager = None
-        self.fw_version = None
-        self.authorized = None
-        self.reset_jobs = []
+        self.update_manager: BroadlinkUpdateManager[_ApiT] | None = None
+        self.fw_version: int | None = None
+        self.authorized: bool | None = None
+        self.reset_jobs: list[CALLBACK_TYPE] = []
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self.config.title
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str | None:
         """Return the unique id of the device."""
         return self.config.unique_id
 
     @property
-    def mac_address(self):
+    def mac_address(self) -> str:
         """Return the mac address of the device."""
         return self.config.data[CONF_MAC]
 
     @property
-    def available(self):
+    def available(self) -> bool | None:
         """Return True if the device is available."""
-        if self.update_manager is None:  # pragma: no cover
+        if self.update_manager is None:
             return False
         return self.update_manager.available
 
@@ -72,19 +81,21 @@ class BroadlinkDevice:
         """
         device_registry = dr.async_get(hass)
         assert entry.unique_id
-        device_entry = device_registry.async_get_device({(DOMAIN, entry.unique_id)})
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, entry.unique_id)}
+        )
         assert device_entry
         device_registry.async_update_device(device_entry.id, name=entry.title)
         await hass.config_entries.async_reload(entry.entry_id)
 
-    def _get_firmware_version(self):
+    def _get_firmware_version(self) -> int | None:
         """Get firmware version."""
         self.api.auth()
         with suppress(BroadlinkException, OSError):
             return self.api.get_fwversion()
         return None
 
-    async def async_setup(self):
+    async def async_setup(self) -> bool:
         """Set up the device and related entities."""
         config = self.config
 
@@ -132,7 +143,7 @@ class BroadlinkDevice:
 
         return True
 
-    async def async_unload(self):
+    async def async_unload(self) -> bool:
         """Unload the device and related entities."""
         if self.update_manager is None:
             return True
@@ -144,7 +155,7 @@ class BroadlinkDevice:
             self.config, get_domains(self.api.type)
         )
 
-    async def async_auth(self):
+    async def async_auth(self) -> bool:
         """Authenticate to the device."""
         try:
             await self.hass.async_add_executor_job(self.api.auth)
@@ -167,7 +178,7 @@ class BroadlinkDevice:
                 raise
             return await self.hass.async_add_executor_job(request)
 
-    async def _async_handle_auth_error(self):
+    async def _async_handle_auth_error(self) -> None:
         """Handle an authentication error."""
         if self.authorized is False:
             return
@@ -175,18 +186,14 @@ class BroadlinkDevice:
         self.authorized = False
 
         _LOGGER.error(
-            "%s (%s at %s) is locked. Click Configuration in the sidebar, "
-            "click Integrations, click Configure on the device and follow "
-            "the instructions to unlock it",
+            (
+                "%s (%s at %s) is locked. Click Configuration in the sidebar, "
+                "click Integrations, click Configure on the device and follow "
+                "the instructions to unlock it"
+            ),
             self.name,
             self.api.model,
             self.api.host[0],
         )
 
-        self.hass.async_create_task(
-            self.hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH},
-                data={CONF_NAME: self.name, **self.config.data},
-            )
-        )
+        self.config.async_start_reauth(self.hass, data={CONF_NAME: self.name})

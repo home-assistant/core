@@ -1,4 +1,5 @@
 """Allows to configuration ecoal (esterownik.pl) pumps as switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -32,8 +33,7 @@ class EcoalSwitch(SwitchEntity):
     """Representation of Ecoal switch."""
 
     def __init__(self, ecoal_contr, name, state_attr):
-        """
-        Initialize switch.
+        """Initialize switch.
 
         Sets HA switch to state as read from controller.
         """

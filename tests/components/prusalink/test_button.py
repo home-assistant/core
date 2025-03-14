@@ -2,13 +2,15 @@
 
 from unittest.mock import patch
 
-from pyprusalink import Conflict
+from pyprusalink.types import Conflict
 import pytest
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
+
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -19,18 +21,19 @@ def setup_button_platform_only():
 
 
 @pytest.mark.parametrize(
-    "object_id, method",
-    (
+    ("object_id", "method"),
+    [
         ("mock_title_cancel_job", "cancel_job"),
         ("mock_title_pause_job", "pause_job"),
-    ),
+    ],
 )
 async def test_button_pause_cancel(
     hass: HomeAssistant,
     mock_config_entry,
     mock_api,
-    hass_client,
+    hass_client: ClientSessionGenerator,
     mock_job_api_printing,
+    mock_get_status_printing,
     object_id,
     method,
 ) -> None:
@@ -52,8 +55,9 @@ async def test_button_pause_cancel(
     assert len(mock_meth.mock_calls) == 1
 
     # Verify it calls correct method + does error handling
-    with pytest.raises(HomeAssistantError), patch(
-        f"pyprusalink.PrusaLink.{method}", side_effect=Conflict
+    with (
+        pytest.raises(HomeAssistantError),
+        patch(f"pyprusalink.PrusaLink.{method}", side_effect=Conflict),
     ):
         await hass.services.async_call(
             "button",
@@ -64,14 +68,17 @@ async def test_button_pause_cancel(
 
 
 @pytest.mark.parametrize(
-    "object_id, method",
-    (("mock_title_resume_job", "resume_job"),),
+    ("object_id", "method"),
+    [
+        ("mock_title_cancel_job", "cancel_job"),
+        ("mock_title_resume_job", "resume_job"),
+    ],
 )
-async def test_button_resume(
+async def test_button_resume_cancel(
     hass: HomeAssistant,
     mock_config_entry,
     mock_api,
-    hass_client,
+    hass_client: ClientSessionGenerator,
     mock_job_api_paused,
     object_id,
     method,
@@ -83,8 +90,11 @@ async def test_button_resume(
     assert state is not None
     assert state.state == "unknown"
 
-    with patch(f"pyprusalink.PrusaLink.{method}") as mock_meth, patch(
-        "homeassistant.components.prusalink.PrusaLinkUpdateCoordinator._fetch_data"
+    with (
+        patch(f"pyprusalink.PrusaLink.{method}") as mock_meth,
+        patch(
+            "homeassistant.components.prusalink.coordinator.PrusaLinkUpdateCoordinator._fetch_data"
+        ),
     ):
         await hass.services.async_call(
             "button",
@@ -96,8 +106,9 @@ async def test_button_resume(
     assert len(mock_meth.mock_calls) == 1
 
     # Verify it calls correct method + does error handling
-    with pytest.raises(HomeAssistantError), patch(
-        f"pyprusalink.PrusaLink.{method}", side_effect=Conflict
+    with (
+        pytest.raises(HomeAssistantError),
+        patch(f"pyprusalink.PrusaLink.{method}", side_effect=Conflict),
     ):
         await hass.services.async_call(
             "button",

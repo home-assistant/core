@@ -1,10 +1,6 @@
 set_profile_fan_speed_home:
-  name: Set profile fan speed home
-  description: Set the fan speed of the Home profile.
   fields:
     fan_speed:
-      name: Fan speed
-      description: Fan speed.
       required: true
       selector:
         number:
@@ -13,12 +9,8 @@ set_profile_fan_speed_home:
           unit_of_measurement: "%"
 
 set_profile_fan_speed_away:
-  name: Set profile fan speed away
-  description: Set the fan speed of the Away profile.
   fields:
     fan_speed:
-      name: Fan speed
-      description: Fan speed.
       required: true
       selector:
         number:
@@ -27,15 +19,32 @@ set_profile_fan_speed_away:
           unit_of_measurement: "%"
 
 set_profile_fan_speed_boost:
-  name: Set profile fan speed boost
-  description: Set the fan speed of the Boost profile.
   fields:
     fan_speed:
-      name: Fan speed
-      description: Fan speed.
       required: true
       selector:
         number:
           min: 0
           max: 100
           unit_of_measurement: "%"
+
+set_profile:
+  fields:
+    profile:
+      required: true
+      selector:
+        select:
+          translation_key: "profile"
+          options:
+            - "home"
+            - "away"
+            - "boost"
+            - "fireplace"
+            - "extra"
+    duration:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 65535
+          unit_of_measurement: "minutes"

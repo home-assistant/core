@@ -1,4 +1,5 @@
 """Support for LaMetric sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,35 +13,26 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 
 
-@dataclass
-class LaMetricEntityDescriptionMixin:
-    """Mixin values for LaMetric entities."""
+@dataclass(frozen=True, kw_only=True)
+class LaMetricSensorEntityDescription(SensorEntityDescription):
+    """Class describing LaMetric sensor entities."""
 
     value_fn: Callable[[Device], int | None]
-
-
-@dataclass
-class LaMetricSensorEntityDescription(
-    SensorEntityDescription, LaMetricEntityDescriptionMixin
-):
-    """Class describing LaMetric sensor entities."""
 
 
 SENSORS = [
     LaMetricSensorEntityDescription(
         key="rssi",
-        name="Wi-Fi signal",
-        icon="mdi:wifi",
+        translation_key="rssi",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=PERCENTAGE,
@@ -53,7 +45,7 @@ SENSORS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LaMetric sensor based on a config entry."""
     coordinator: LaMetricDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]

@@ -1,11 +1,12 @@
 """The sensor tests for the nexia platform."""
 
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
 
 
-async def test_create_sensors(hass):
+async def test_create_sensors(hass: HomeAssistant) -> None:
     """Test creation of sensors."""
 
     await async_init_integration(hass)
@@ -17,24 +18,24 @@ async def test_create_sensors(hass):
         "attribution": "Data provided by Trane Technologies",
         "device_class": "temperature",
         "friendly_name": "Nick Office Temperature",
-        "unit_of_measurement": TEMP_CELSIUS,
+        "unit_of_measurement": UnitOfTemperature.CELSIUS,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("sensor.nick_office_zone_setpoint_status")
     assert state.state == "Permanent Hold"
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
-        "friendly_name": "Nick Office Zone Setpoint Status",
+        "friendly_name": "Nick Office Zone setpoint status",
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("sensor.nick_office_zone_status")
@@ -42,12 +43,12 @@ async def test_create_sensors(hass):
 
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
-        "friendly_name": "Nick Office Zone Status",
+        "friendly_name": "Nick Office Zone status",
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("sensor.master_suite_air_cleaner_mode")
@@ -55,12 +56,12 @@ async def test_create_sensors(hass):
 
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
-        "friendly_name": "Master Suite Air Cleaner Mode",
+        "friendly_name": "Master Suite Air cleaner mode",
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("sensor.master_suite_current_compressor_speed")
@@ -68,13 +69,13 @@ async def test_create_sensors(hass):
 
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
-        "friendly_name": "Master Suite Current Compressor Speed",
+        "friendly_name": "Master Suite Current compressor speed",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("sensor.master_suite_outdoor_temperature")
@@ -83,28 +84,28 @@ async def test_create_sensors(hass):
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
         "device_class": "temperature",
-        "friendly_name": "Master Suite Outdoor Temperature",
-        "unit_of_measurement": TEMP_CELSIUS,
+        "friendly_name": "Master Suite Outdoor temperature",
+        "unit_of_measurement": UnitOfTemperature.CELSIUS,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
-    state = hass.states.get("sensor.master_suite_relative_humidity")
+    state = hass.states.get("sensor.master_suite_humidity")
     assert state.state == "52.0"
 
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
         "device_class": "humidity",
-        "friendly_name": "Master Suite Relative Humidity",
+        "friendly_name": "Master Suite Humidity",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("sensor.master_suite_requested_compressor_speed")
@@ -112,13 +113,13 @@ async def test_create_sensors(hass):
 
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
-        "friendly_name": "Master Suite Requested Compressor Speed",
+        "friendly_name": "Master Suite Requested compressor speed",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("sensor.master_suite_system_status")
@@ -126,10 +127,10 @@ async def test_create_sensors(hass):
 
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
-        "friendly_name": "Master Suite System Status",
+        "friendly_name": "Master Suite System status",
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )

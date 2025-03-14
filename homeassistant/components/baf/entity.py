@@ -1,24 +1,25 @@
 """The baf integration entities."""
+
 from __future__ import annotations
 
 from aiobafi6 import Device
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.entity import Entity, EntityDescription
 
 
 class BAFEntity(Entity):
     """Base class for baf entities."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
-    def __init__(self, device: Device, name: str) -> None:
+    def __init__(self, device: Device) -> None:
         """Initialize the entity."""
         self._device = device
         self._attr_unique_id = format_mac(self._device.mac_address)
-        self._attr_name = name
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._device.mac_address)},
             name=self._device.name,
@@ -46,3 +47,13 @@ class BAFEntity(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Remove data updated listener after this object has been initialized."""
         self._device.remove_callback(self._async_update_from_device)
+
+
+class BAFDescriptionEntity(BAFEntity):
+    """Base class for baf entities that use an entity description."""
+
+    def __init__(self, device: Device, description: EntityDescription) -> None:
+        """Initialize the entity."""
+        self.entity_description = description
+        super().__init__(device)
+        self._attr_unique_id = f"{device.mac_address}-{description.key}"

@@ -1,26 +1,35 @@
 """Integration providing core pieces of infrastructure."""
+
 import asyncio
+from collections.abc import Callable, Coroutine
 import itertools as it
 import logging
+from typing import Any
 
 import voluptuous as vol
 
+from homeassistant import config as conf_util, core_config
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components import persistent_notification
-import homeassistant.config as conf_util
 from homeassistant.const import (
+    ATTR_ELEVATION,
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     RESTART_EXIT_CODE,
-    SERVICE_HOMEASSISTANT_RESTART,
-    SERVICE_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
     SERVICE_SAVE_PERSISTENT_STATES,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-import homeassistant.core as ha
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
 from homeassistant.helpers import config_validation as cv, recorder, restore_state
 from homeassistant.helpers.entity_component import async_update_entity
@@ -29,17 +38,35 @@ from homeassistant.helpers.service import (
     async_extract_referenced_entity_ids,
     async_register_admin_service,
 )
+from homeassistant.helpers.signal import KEY_HA_STOP
+from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
 
+# The scene integration will do a late import of scene
+# so we want to make sure its loaded with the component
+# so its already in memory when its imported so the import
+# does not do blocking I/O in the event loop.
+from . import scene as scene_pre_import  # noqa: F401
+from .const import (
+    DATA_EXPOSED_ENTITIES,
+    DATA_STOP_HANDLER,
+    DOMAIN,
+    SERVICE_HOMEASSISTANT_RESTART,
+    SERVICE_HOMEASSISTANT_STOP,
+)
+from .exposed_entities import ExposedEntities, async_should_expose  # noqa: F401
+
 ATTR_ENTRY_ID = "entry_id"
+ATTR_SAFE_MODE = "safe_mode"
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = ha.DOMAIN
 SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
 SERVICE_RELOAD_CONFIG_ENTRY = "reload_config_entry"
+SERVICE_RELOAD_CUSTOM_TEMPLATES = "reload_custom_templates"
 SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
+SERVICE_RELOAD_ALL = "reload_all"
 SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
     vol.Schema(
@@ -50,19 +77,19 @@ SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
     ),
     cv.has_at_least_one_key(ATTR_ENTRY_ID, *cv.ENTITY_SERVICE_FIELDS),
 )
-
+SCHEMA_RESTART = vol.Schema({vol.Optional(ATTR_SAFE_MODE, default=False): bool})
 
 SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
 
 
-async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up general services related to Home Assistant."""
 
-    async def async_save_persistent_states(service: ha.ServiceCall) -> None:
+    async def async_save_persistent_states(service: ServiceCall) -> None:
         """Handle calls to homeassistant.save_persistent_states."""
         await restore_state.RestoreStateData.async_save_persistent_states(hass)
 
-    async def async_handle_turn_service(service: ha.ServiceCall) -> None:
+    async def async_handle_turn_service(service: ServiceCall) -> None:
         """Handle calls to homeassistant.turn_on/off."""
         referenced = async_extract_referenced_entity_ids(hass, service)
         all_referenced = referenced.referenced | referenced.indirectly_referenced
@@ -77,11 +104,11 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
 
         # Group entity_ids by domain. groupby requires sorted data.
         by_domain = it.groupby(
-            sorted(all_referenced), lambda item: ha.split_entity_id(item)[0]
+            sorted(all_referenced), lambda item: split_entity_id(item)[0]
         )
 
-        tasks = []
-        unsupported_entities = set()
+        tasks: list[Coroutine[Any, Any, ServiceResponse]] = []
+        unsupported_entities: set[str] = set()
 
         for domain, ent_ids in by_domain:
             # This leads to endless loop.
@@ -124,23 +151,25 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             await asyncio.gather(*tasks)
 
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_SAVE_PERSISTENT_STATES, async_save_persistent_states
+        DOMAIN, SERVICE_SAVE_PERSISTENT_STATES, async_save_persistent_states
     )
 
     service_schema = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids}, extra=vol.ALLOW_EXTRA)
 
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service, schema=service_schema
+        DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service, schema=service_schema
     )
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_TURN_ON, async_handle_turn_service, schema=service_schema
+        DOMAIN, SERVICE_TURN_ON, async_handle_turn_service, schema=service_schema
     )
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service, schema=service_schema
+        DOMAIN, SERVICE_TOGGLE, async_handle_turn_service, schema=service_schema
     )
 
-    async def async_handle_core_service(call: ha.ServiceCall) -> None:
+    async def async_handle_core_service(call: ServiceCall) -> None:
         """Service handler for handling core services."""
+        stop_handler: Callable[[HomeAssistant, bool], Coroutine[Any, Any, None]]
+
         if call.service in SHUTDOWN_SERVICES and recorder.async_migration_in_progress(
             hass
         ):
@@ -154,7 +183,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             )
 
         if call.service == SERVICE_HOMEASSISTANT_STOP:
-            asyncio.create_task(hass.async_stop())
+            stop_handler = hass.data[DATA_STOP_HANDLER]
+            await stop_handler(hass, False)
             return
 
         errors = await conf_util.async_check_ha_config_file(hass)
@@ -169,7 +199,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
                 hass,
                 "Config error. See [the logs](/config/logs) for details.",
                 "Config validating",
-                f"{ha.DOMAIN}.check_config",
+                f"{DOMAIN}.check_config",
             )
             raise HomeAssistantError(
                 f"The system cannot {call.service} "
@@ -177,9 +207,12 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             )
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
-            asyncio.create_task(hass.async_stop(RESTART_EXIT_CODE))
+            if call.data[ATTR_SAFE_MODE]:
+                await conf_util.async_enable_safe_mode(hass)
+            stop_handler = hass.data[DATA_STOP_HANDLER]
+            await stop_handler(hass, True)
 
-    async def async_handle_update_service(call: ha.ServiceCall) -> None:
+    async def async_handle_update_service(call: ServiceCall) -> None:
         """Service handler for updating an entity."""
         if call.context.user_id:
             user = await hass.auth.async_get_user(call.context.user_id)
@@ -208,22 +241,26 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             await asyncio.gather(*tasks)
 
     async_register_admin_service(
-        hass, ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service
+        hass, DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service
     )
     async_register_admin_service(
-        hass, ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service
+        hass,
+        DOMAIN,
+        SERVICE_HOMEASSISTANT_RESTART,
+        async_handle_core_service,
+        SCHEMA_RESTART,
     )
     async_register_admin_service(
-        hass, ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service
+        hass, DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service
     )
     hass.services.async_register(
-        ha.DOMAIN,
+        DOMAIN,
         SERVICE_UPDATE_ENTITY,
         async_handle_update_service,
         schema=SCHEMA_UPDATE_ENTITY,
     )
 
-    async def async_handle_reload_config(call: ha.ServiceCall) -> None:
+    async def async_handle_reload_config(call: ServiceCall) -> None:
         """Service handler for reloading core config."""
         try:
             conf = await conf_util.async_hass_config_yaml(hass)
@@ -232,29 +269,49 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             return
 
         # auth only processed during startup
-        await conf_util.async_process_ha_core_config(hass, conf.get(ha.DOMAIN) or {})
+        await core_config.async_process_ha_core_config(hass, conf.get(DOMAIN) or {})
 
     async_register_admin_service(
-        hass, ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config
+        hass, DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config
     )
 
-    async def async_set_location(call: ha.ServiceCall) -> None:
+    async def async_set_location(call: ServiceCall) -> None:
         """Service handler to set location."""
-        await hass.config.async_update(
-            latitude=call.data[ATTR_LATITUDE], longitude=call.data[ATTR_LONGITUDE]
-        )
+        service_data = {
+            "latitude": call.data[ATTR_LATITUDE],
+            "longitude": call.data[ATTR_LONGITUDE],
+        }
+
+        if (elevation := call.data.get(ATTR_ELEVATION)) is not None:
+            service_data["elevation"] = elevation
+
+        await hass.config.async_update(**service_data)
 
     async_register_admin_service(
         hass,
-        ha.DOMAIN,
+        DOMAIN,
         SERVICE_SET_LOCATION,
         async_set_location,
-        vol.Schema({ATTR_LATITUDE: cv.latitude, ATTR_LONGITUDE: cv.longitude}),
+        vol.Schema(
+            {
+                vol.Required(ATTR_LATITUDE): cv.latitude,
+                vol.Required(ATTR_LONGITUDE): cv.longitude,
+                vol.Optional(ATTR_ELEVATION): int,
+            }
+        ),
     )
 
-    async def async_handle_reload_config_entry(call: ha.ServiceCall) -> None:
+    async def async_handle_reload_templates(call: ServiceCall) -> None:
+        """Service handler to reload custom Jinja."""
+        await async_load_custom_templates(hass)
+
+    async_register_admin_service(
+        hass, DOMAIN, SERVICE_RELOAD_CUSTOM_TEMPLATES, async_handle_reload_templates
+    )
+
+    async def async_handle_reload_config_entry(call: ServiceCall) -> None:
         """Service handler for reloading a config entry."""
-        reload_entries = set()
+        reload_entries: set[str] = set()
         if ATTR_ENTRY_ID in call.data:
             reload_entries.add(call.data[ATTR_ENTRY_ID])
         reload_entries.update(await async_extract_config_entry_ids(hass, call))
@@ -269,10 +326,80 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
 
     async_register_admin_service(
         hass,
-        ha.DOMAIN,
+        DOMAIN,
         SERVICE_RELOAD_CONFIG_ENTRY,
         async_handle_reload_config_entry,
         schema=SCHEMA_RELOAD_CONFIG_ENTRY,
     )
 
+    async def async_handle_reload_all(call: ServiceCall) -> None:
+        """Service handler for calling all integration reload services.
+
+        Calls all reload services on all active domains, which triggers the
+        reload of YAML configurations for the domain that support it.
+
+        Additionally, it also calls the `homeasssitant.reload_core_config`
+        service, as that reloads the core YAML configuration, the
+        `frontend.reload_themes` service that reloads the themes, and the
+        `homeassistant.reload_custom_templates` service that reloads any custom
+        jinja into memory.
+
+        We only do so, if there are no configuration errors.
+        """
+
+        if errors := await conf_util.async_check_ha_config_file(hass):
+            _LOGGER.error(
+                "The system cannot reload because the configuration is not valid: %s",
+                errors,
+            )
+            raise HomeAssistantError(
+                "Cannot quick reload all YAML configurations because the "
+                f"configuration is not valid: {errors}"
+            )
+
+        services = hass.services.async_services_internal()
+        tasks = [
+            hass.services.async_call(
+                domain, SERVICE_RELOAD, context=call.context, blocking=True
+            )
+            for domain, domain_services in services.items()
+            if domain != "notify" and SERVICE_RELOAD in domain_services
+        ] + [
+            hass.services.async_call(
+                domain, service, context=call.context, blocking=True
+            )
+            for domain, service in (
+                (DOMAIN, SERVICE_RELOAD_CORE_CONFIG),
+                ("frontend", "reload_themes"),
+                (DOMAIN, SERVICE_RELOAD_CUSTOM_TEMPLATES),
+            )
+        ]
+
+        await asyncio.gather(*tasks)
+
+    async_register_admin_service(
+        hass, DOMAIN, SERVICE_RELOAD_ALL, async_handle_reload_all
+    )
+
+    exposed_entities = ExposedEntities(hass)
+    await exposed_entities.async_initialize()
+    hass.data[DATA_EXPOSED_ENTITIES] = exposed_entities
+    async_set_stop_handler(hass, _async_stop)
+
     return True
+
+
+async def _async_stop(hass: HomeAssistant, restart: bool) -> None:
+    """Stop home assistant."""
+    exit_code = RESTART_EXIT_CODE if restart else 0
+    # Track trask in hass.data. No need to cleanup, we're stopping.
+    hass.data[KEY_HA_STOP] = asyncio.create_task(hass.async_stop(exit_code))
+
+
+@callback
+def async_set_stop_handler(
+    hass: HomeAssistant,
+    stop_handler: Callable[[HomeAssistant, bool], Coroutine[Any, Any, None]],
+) -> None:
+    """Set function which is called by the stop and restart services."""
+    hass.data[DATA_STOP_HANDLER] = stop_handler

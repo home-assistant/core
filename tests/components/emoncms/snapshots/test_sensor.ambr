@@ -1,0 +1,60 @@
+# serializer version: 1
+# name: test_coordinator_update[sensor.temperature_tag_parameter_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.temperature_tag_parameter_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature tag parameter 1',
+    'platform': 'emoncms',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': '123-53535292-1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_coordinator_update[sensor.temperature_tag_parameter_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'FeedId': '1',
+      'FeedName': 'parameter 1',
+      'LastUpdated': 1665509570,
+      'LastUpdatedStr': '2022-10-11T10:32:50-07:00',
+      'Size': '35809224',
+      'Tag': 'tag',
+      'UserId': '1',
+      'device_class': 'temperature',
+      'friendly_name': 'Temperature tag parameter 1',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.temperature_tag_parameter_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '18.04',
+  })
+# ---

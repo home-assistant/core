@@ -1,12 +1,12 @@
 """Platform for Kostal Plenticore numbers."""
+
 from __future__ import annotations
 
-from abc import ABC
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from kostal.plenticore import SettingsData
+from pykoplenti import SettingsData
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -15,33 +15,27 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfPower
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .helper import PlenticoreDataFormatter, SettingDataUpdateCoordinator
+from .coordinator import SettingDataUpdateCoordinator
+from .helper import PlenticoreDataFormatter
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class PlenticoreNumberEntityDescriptionMixin:
-    """Define an entity description mixin for number entities."""
+@dataclass(frozen=True, kw_only=True)
+class PlenticoreNumberEntityDescription(NumberEntityDescription):
+    """Describes a Plenticore number entity."""
 
     module_id: str
     data_id: str
     fmt_from: str
     fmt_to: str
-
-
-@dataclass
-class PlenticoreNumberEntityDescription(
-    NumberEntityDescription, PlenticoreNumberEntityDescriptionMixin
-):
-    """Describes a Plenticore number entity."""
 
 
 NUMBER_SETTINGS_DATA = [
@@ -79,7 +73,9 @@ NUMBER_SETTINGS_DATA = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Kostal Plenticore Number entities."""
     plenticore = hass.data[DOMAIN][entry.entry_id]
@@ -88,11 +84,7 @@ async def async_setup_entry(
 
     available_settings_data = await plenticore.client.get_settings()
     settings_data_update_coordinator = SettingDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        "Settings Data",
-        timedelta(seconds=30),
-        plenticore,
+        hass, entry, _LOGGER, "Settings Data", timedelta(seconds=30), plenticore
     )
 
     for description in NUMBER_SETTINGS_DATA:
@@ -130,11 +122,12 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PlenticoreDataNumber(CoordinatorEntity, NumberEntity, ABC):
+class PlenticoreDataNumber(
+    CoordinatorEntity[SettingDataUpdateCoordinator], NumberEntity
+):
     """Representation of a Kostal Plenticore Number entity."""
 
     entity_description: PlenticoreNumberEntityDescription
-    coordinator: SettingDataUpdateCoordinator
 
     def __init__(
         self,
@@ -188,7 +181,9 @@ class PlenticoreDataNumber(CoordinatorEntity, NumberEntity, ABC):
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
-        self.coordinator.start_fetch_data(self.module_id, self.data_id)
+        self.async_on_remove(
+            self.coordinator.start_fetch_data(self.module_id, self.data_id)
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""

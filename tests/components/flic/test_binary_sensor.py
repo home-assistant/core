@@ -1,15 +1,18 @@
 """Tests for Flic button integration."""
+
 from unittest import mock
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 
 class _MockFlicClient:
-    def __init__(self, button_addresses):
+    def __init__(self, button_addresses) -> None:
         self.addresses = button_addresses
         self.get_info_callback = None
         self.scan_wizard = None
+        self.channel = None
 
     def close(self):
         pass
@@ -28,7 +31,9 @@ class _MockFlicClient:
         self.channel = channel
 
 
-async def test_button_uid(hass):
+async def test_button_uid(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test UID assignment for Flic buttons."""
     address_to_name = {
         "80:e4:da:78:6e:11": "binary_sensor.flic_80e4da786e11",
@@ -52,7 +57,6 @@ async def test_button_uid(hass):
 
         await hass.async_block_till_done()
 
-        entity_registry = er.async_get(hass)
         for address, name in address_to_name.items():
             state = hass.states.get(name)
             assert state

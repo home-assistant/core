@@ -1,4 +1,5 @@
 """Test the update significant change platform."""
+
 from homeassistant.components.update.const import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,

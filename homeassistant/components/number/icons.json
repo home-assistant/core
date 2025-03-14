@@ -1,0 +1,165 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:ray-vertex"
+    },
+    "apparent_power": {
+      "default": "mdi:flash"
+    },
+    "aqi": {
+      "default": "mdi:air-filter"
+    },
+    "area": {
+      "default": "mdi:texture-box"
+    },
+    "atmospheric_pressure": {
+      "default": "mdi:thermometer-lines"
+    },
+    "battery": {
+      "default": "mdi:battery"
+    },
+    "blood_glucose_concentration": {
+      "default": "mdi:spoon-sugar"
+    },
+    "carbon_dioxide": {
+      "default": "mdi:molecule-co2"
+    },
+    "carbon_monoxide": {
+      "default": "mdi:molecule-co"
+    },
+    "conductivity": {
+      "default": "mdi:sprout-outline"
+    },
+    "current": {
+      "default": "mdi:current-ac"
+    },
+    "data_rate": {
+      "default": "mdi:transmission-tower"
+    },
+    "data_size": {
+      "default": "mdi:database"
+    },
+    "distance": {
+      "default": "mdi:arrow-left-right"
+    },
+    "duration": {
+      "default": "mdi:progress-clock"
+    },
+    "energy": {
+      "default": "mdi:lightning-bolt"
+    },
+    "energy_storage": {
+      "default": "mdi:car-battery"
+    },
+    "frequency": {
+      "default": "mdi:sine-wave"
+    },
+    "gas": {
+      "default": "mdi:meter-gas"
+    },
+    "humidity": {
+      "default": "mdi:water-percent"
+    },
+    "illuminance": {
+      "default": "mdi:brightness-5"
+    },
+    "irradiance": {
+      "default": "mdi:sun-wireless"
+    },
+    "moisture": {
+      "default": "mdi:water-percent"
+    },
+    "monetary": {
+      "default": "mdi:cash"
+    },
+    "nitrogen_dioxide": {
+      "default": "mdi:molecule"
+    },
+    "nitrogen_monoxide": {
+      "default": "mdi:molecule"
+    },
+    "nitrous_oxide": {
+      "default": "mdi:molecule"
+    },
+    "ozone": {
+      "default": "mdi:molecule"
+    },
+    "ph": {
+      "default": "mdi:ph"
+    },
+    "pm1": {
+      "default": "mdi:molecule"
+    },
+    "pm10": {
+      "default": "mdi:molecule"
+    },
+    "pm25": {
+      "default": "mdi:molecule"
+    },
+    "power": {
+      "default": "mdi:flash"
+    },
+    "power_factor": {
+      "default": "mdi:angle-acute"
+    },
+    "precipitation": {
+      "default": "mdi:weather-rainy"
+    },
+    "precipitation_intensity": {
+      "default": "mdi:weather-pouring"
+    },
+    "pressure": {
+      "default": "mdi:gauge"
+    },
+    "reactive_power": {
+      "default": "mdi:flash"
+    },
+    "signal_strength": {
+      "default": "mdi:wifi"
+    },
+    "sound_pressure": {
+      "default": "mdi:ear-hearing"
+    },
+    "speed": {
+      "default": "mdi:speedometer"
+    },
+    "sulfur_dioxide": {
+      "default": "mdi:molecule"
+    },
+    "temperature": {
+      "default": "mdi:thermometer"
+    },
+    "volatile_organic_compounds": {
+      "default": "mdi:molecule"
+    },
+    "volatile_organic_compounds_parts": {
+      "default": "mdi:molecule"
+    },
+    "voltage": {
+      "default": "mdi:sine-wave"
+    },
+    "volume": {
+      "default": "mdi:car-coolant-level"
+    },
+    "volume_storage": {
+      "default": "mdi:storage-tank"
+    },
+    "water": {
+      "default": "mdi:water"
+    },
+    "weight": {
+      "default": "mdi:weight"
+    },
+    "wind_direction": {
+      "default": "mdi:compass-rose"
+    },
+    "wind_speed": {
+      "default": "mdi:weather-windy"
+    }
+  },
+  "services": {
+    "set_value": {
+      "service": "mdi:numeric"
+    }
+  }
+}

@@ -1,5 +1,6 @@
 """Support to emulate keyboard presses on host machine."""
-from pykeyboard import PyKeyboard  # pylint: disable=import-error
+
+from pykeyboard import PyKeyboard
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -11,11 +12,14 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "keyboard"
 
 TAP_KEY_SCHEMA = vol.Schema({})
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -1,4 +1,5 @@
 """Config flow for Mikrotik."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -6,7 +7,12 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -15,7 +21,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_ARP_PING,
@@ -26,27 +31,26 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+from .coordinator import get_api
 from .errors import CannotConnect, LoginError
-from .hub import get_api
 
 
-class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class MikrotikFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Mikrotik config flow."""
 
     VERSION = 1
-    _reauth_entry: config_entries.ConfigEntry | None
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> MikrotikOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return MikrotikOptionsFlowHandler(config_entry)
+        return MikrotikOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -78,21 +82,21 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors = {}
-        assert self._reauth_entry
+
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            user_input = {**self._reauth_entry.data, **user_input}
+            user_input = {**reauth_entry.data, **user_input}
             try:
                 await self.hass.async_add_executor_job(get_api, user_input)
             except CannotConnect:
@@ -101,17 +105,10 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_PASSWORD] = "invalid_auth"
 
             if not errors:
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry,
-                    data=user_input,
-                )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(reauth_entry, data=user_input)
 
         return self.async_show_form(
-            description_placeholders={
-                CONF_USERNAME: self._reauth_entry.data[CONF_USERNAME]
-            },
+            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
             step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
@@ -122,22 +119,18 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
+class MikrotikOptionsFlowHandler(OptionsFlow):
     """Handle Mikrotik options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize Mikrotik options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the Mikrotik options."""
         return await self.async_step_device_tracker()
 
     async def async_step_device_tracker(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the device tracker options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

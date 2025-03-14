@@ -1,5 +1,5 @@
 """Tests for pylint hass_enforce_type_hints plugin."""
-# pylint:disable=protected-access
+
 from __future__ import annotations
 
 import re
@@ -54,6 +54,8 @@ def test_regex_get_module_platform(
         ("list[dict[str, str]]", 1, ("list", "dict[str, str]")),
         ("list[dict[str, Any]]", 1, ("list", "dict[str, Any]")),
         ("tuple[bytes | None, str | None]", 2, ("tuple", "bytes | None", "str | None")),
+        ("Callable[[], TestServer]", 2, ("Callable", "[]", "TestServer")),
+        ("pytest.CaptureFixture[str]", 1, ("pytest.CaptureFixture", "str")),
     ],
 )
 def test_regex_x_of_y_i(
@@ -108,7 +110,7 @@ def test_ignore_no_annotations(
 ) -> None:
     """Ensure that _is_valid_type is not run if there are no annotations."""
     # Set ignore option
-    type_hint_checker.config.ignore_missing_annotations = True
+    type_hint_checker.linter.config.ignore_missing_annotations = True
 
     func_node = astroid.extract_node(
         code,
@@ -143,7 +145,7 @@ def test_bypass_ignore_no_annotations(
     but `ignore-missing-annotations` option is forced to False.
     """
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     func_node = astroid.extract_node(
         code,
@@ -311,7 +313,9 @@ def test_invalid_config_flow_step(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Ensure invalid hints are rejected for ConfigFlow step."""
-    class_node, func_node, arg_node = astroid.extract_node(
+    type_hint_checker.linter.config.ignore_missing_annotations = True
+
+    class_node, func_node, arg_node, func_node2 = astroid.extract_node(
         """
     class FlowHandler():
         pass
@@ -325,6 +329,12 @@ def test_invalid_config_flow_step(
         async def async_step_zeroconf( #@
             self,
             device_config: dict #@
+        ):
+            pass
+
+        async def async_step_custom( #@
+            self,
+            user_input
         ):
             pass
     """,
@@ -346,11 +356,60 @@ def test_invalid_config_flow_step(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
-            args=("FlowResult", "async_step_zeroconf"),
+            args=("ConfigFlowResult", "async_step_zeroconf"),
             line=11,
             col_offset=4,
             end_line=11,
             end_col_offset=33,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node2,
+            args=("ConfigFlowResult", "async_step_custom"),
+            line=17,
+            col_offset=4,
+            end_line=17,
+            end_col_offset=31,
+        ),
+    ):
+        type_hint_checker.visit_classdef(class_node)
+
+
+def test_invalid_custom_config_flow_step(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure invalid hints are rejected for ConfigFlow step."""
+    class_node, func_node, arg_node = astroid.extract_node(
+        """
+    class FlowHandler():
+        pass
+
+    class ConfigFlow(FlowHandler):
+        pass
+
+    class AxisFlowHandler( #@
+        ConfigFlow, domain=AXIS_DOMAIN
+    ):
+        async def async_step_axis_specific( #@
+            self,
+            device_config: dict #@
+        ):
+            pass
+    """,
+        "homeassistant.components.pylint_test.config_flow",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node,
+            args=("ConfigFlowResult", "async_step_axis_specific"),
+            line=11,
+            col_offset=4,
+            end_line=11,
+            end_col_offset=38,
         ),
     ):
         type_hint_checker.visit_classdef(class_node)
@@ -374,7 +433,7 @@ def test_valid_config_flow_step(
         async def async_step_zeroconf(
             self,
             device_config: ZeroconfServiceInfo
-        ) -> FlowResult:
+        ) -> ConfigFlowResult:
             pass
     """,
         "homeassistant.components.pylint_test.config_flow",
@@ -485,7 +544,7 @@ def test_invalid_entity_properties(
 ) -> None:
     """Check missing entity properties when ignore_missing_annotations is False."""
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     class_node, prop_node, func_node = astroid.extract_node(
         """
@@ -552,7 +611,7 @@ def test_ignore_invalid_entity_properties(
 ) -> None:
     """Check invalid entity properties are ignored by default."""
     # Set ignore option
-    type_hint_checker.config.ignore_missing_annotations = True
+    type_hint_checker.linter.config.ignore_missing_annotations = True
 
     class_node = astroid.extract_node(
         """
@@ -574,7 +633,7 @@ def test_ignore_invalid_entity_properties(
         async def async_lock(
             self,
             **kwargs
-        ) -> bool:
+        ):
             pass
     """,
         "homeassistant.components.pylint_test.lock",
@@ -590,7 +649,7 @@ def test_named_arguments(
 ) -> None:
     """Check missing entity properties when ignore_missing_annotations is False."""
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     class_node, func_node, percentage_node, preset_mode_node = astroid.extract_node(
         """
@@ -676,7 +735,7 @@ def test_invalid_mapping_return_type(
 ) -> None:
     """Check that Mapping[xxx, Any] doesn't accept invalid Mapping or dict."""
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     class_node, property_node = astroid.extract_node(
         f"""
@@ -724,6 +783,7 @@ def test_invalid_mapping_return_type(
         "-> Mapping[str, bool | int]",
         "-> dict[str, Any]",
         "-> dict[str, str]",
+        "-> CustomTypedDict",
     ],
 )
 def test_valid_mapping_return_type(
@@ -733,10 +793,15 @@ def test_valid_mapping_return_type(
 ) -> None:
     """Check that Mapping[xxx, Any] accepts both Mapping and dict."""
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     class_node = astroid.extract_node(
         f"""
+    from typing import TypedDict
+
+    class CustomTypedDict(TypedDict):
+        pass
+
     class Entity():
         pass
 
@@ -768,9 +833,9 @@ def test_valid_long_tuple(
 ) -> None:
     """Check invalid entity properties are ignored by default."""
     # Set ignore option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
-    class_node, _, _ = astroid.extract_node(
+    class_node, _, _, _ = astroid.extract_node(
         """
     class Entity():
         pass
@@ -784,6 +849,12 @@ def test_valid_long_tuple(
     class TestLight( #@
         LightEntity
     ):
+        @property
+        def hs_color( #@
+            self
+        ) -> tuple[int, int]:
+            pass
+
         @property
         def rgbw_color( #@
             self
@@ -809,7 +880,7 @@ def test_invalid_long_tuple(
 ) -> None:
     """Check invalid entity properties are ignored by default."""
     # Set ignore option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     class_node, rgbw_node, rgbww_node = astroid.extract_node(
         """
@@ -870,7 +941,7 @@ def test_invalid_device_class(
 ) -> None:
     """Ensure invalid hints are rejected for entity device_class."""
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     class_node, prop_node = astroid.extract_node(
         """
@@ -913,7 +984,7 @@ def test_media_player_entity(
 ) -> None:
     """Ensure valid hints are accepted for media_player entity."""
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     class_node = astroid.extract_node(
         """
@@ -937,10 +1008,43 @@ def test_media_player_entity(
         type_hint_checker.visit_classdef(class_node)
 
 
+def test_humidifier_entity(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure valid hints are accepted for humidifier entity."""
+    # Set bypass option
+    type_hint_checker.linter.config.ignore_missing_annotations = False
+
+    # Ensure that `float` and `int` are valid for `int` argument type
+    class_node = astroid.extract_node(
+        """
+    class Entity():
+        pass
+
+    class HumidifierEntity(Entity):
+        pass
+
+    class MyHumidifier(  #@
+        HumidifierEntity
+    ):
+        def set_humidity(self, humidity: int) -> None:
+            pass
+
+        def async_set_humidity(self, humidity: float) -> None:
+            pass
+    """,
+        "homeassistant.components.pylint_test.humidifier",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)
+
+
 def test_number_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -> None:
     """Ensure valid hints are accepted for number entity."""
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     # Ensure that device class is valid despite Entity inheritance
     # Ensure that `int` is valid for `float` return type
@@ -977,7 +1081,7 @@ def test_number_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -
 def test_vacuum_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -> None:
     """Ensure valid hints are accepted for vacuum entity."""
     # Set bypass option
-    type_hint_checker.config.ignore_missing_annotations = False
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     # Ensure that `dict | list | None` is valid for params
     class_node = astroid.extract_node(
@@ -1038,5 +1142,288 @@ def test_notify_get_service(
 
     with assert_no_messages(
         linter,
+    ):
+        type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+def test_pytest_function(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure valid hints are accepted for a test function."""
+    func_node = astroid.extract_node(
+        """
+    async def test_sample( #@
+        hass: HomeAssistant,
+        caplog: pytest.LogCaptureFixture,
+        aiohttp_server: Callable[[], TestServer],
+        unused_tcp_port_factory: Callable[[], int],
+    ) -> None:
+        pass
+    """,
+        "tests.components.pylint_test.notify",
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_no_messages(
+        linter,
+    ):
+        type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+def test_pytest_nested_function(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure valid hints are accepted for a test function."""
+    func_node, nested_func_node = astroid.extract_node(
+        """
+    async def some_function( #@
+    ):
+        def test_value(value: str) -> bool: #@
+            return value == "Yes"
+        return test_value
+    """,
+        "tests.components.pylint_test.notify",
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_no_messages(
+        linter,
+    ):
+        type_hint_checker.visit_asyncfunctiondef(nested_func_node)
+
+
+def test_pytest_invalid_function(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure invalid hints are rejected for a test function."""
+    func_node, hass_node, caplog_node, first_none_node, second_none_node = (
+        astroid.extract_node(
+            """
+    async def test_sample( #@
+        hass: Something, #@
+        caplog: SomethingElse, #@
+        current_request_with_host, #@
+        enable_custom_integrations: None, #@
+    ) -> Anything:
+        pass
+    """,
+            "tests.components.pylint_test.notify",
+        )
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node,
+            args=("None", "test_sample"),
+            line=2,
+            col_offset=0,
+            end_line=2,
+            end_col_offset=21,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=caplog_node,
+            args=("caplog", "pytest.LogCaptureFixture", "test_sample"),
+            line=4,
+            col_offset=4,
+            end_line=4,
+            end_col_offset=25,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-consider-usefixtures-decorator",
+            node=first_none_node,
+            args=("current_request_with_host", "None", "test_sample"),
+            line=5,
+            col_offset=4,
+            end_line=5,
+            end_col_offset=29,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=first_none_node,
+            args=("current_request_with_host", "None", "test_sample"),
+            line=5,
+            col_offset=4,
+            end_line=5,
+            end_col_offset=29,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-consider-usefixtures-decorator",
+            node=second_none_node,
+            args=("enable_custom_integrations", "None", "test_sample"),
+            line=6,
+            col_offset=4,
+            end_line=6,
+            end_col_offset=36,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=hass_node,
+            args=("hass", "HomeAssistant", "test_sample"),
+            line=3,
+            col_offset=4,
+            end_line=3,
+            end_col_offset=19,
+        ),
+    ):
+        type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+def test_pytest_fixture(linter: UnittestLinter, type_hint_checker: BaseChecker) -> None:
+    """Ensure valid hints are accepted for a test fixture."""
+    func_node = astroid.extract_node(
+        """
+    import pytest
+
+    @pytest.fixture
+    def sample_fixture( #@
+        hass: HomeAssistant,
+        caplog: pytest.LogCaptureFixture,
+        capsys: pytest.CaptureFixture[str],
+        aiohttp_server: Callable[[], TestServer],
+        unused_tcp_port_factory: Callable[[], int],
+        enable_custom_integrations: None,
+    ) -> None:
+        pass
+    """,
+        "tests.components.pylint_test.notify",
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_no_messages(
+        linter,
+    ):
+        type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+@pytest.mark.parametrize("decorator", ["@pytest.fixture", "@pytest.fixture()"])
+def test_pytest_invalid_fixture(
+    linter: UnittestLinter, type_hint_checker: BaseChecker, decorator: str
+) -> None:
+    """Ensure invalid hints are rejected for a test fixture."""
+    func_node, hass_node, caplog_node, none_node = astroid.extract_node(
+        f"""
+    import pytest
+
+    {decorator}
+    def sample_fixture( #@
+        hass: Something, #@
+        caplog: SomethingElse, #@
+        current_request_with_host, #@
+    ) -> Any:
+        pass
+    """,
+        "tests.components.pylint_test.notify",
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=caplog_node,
+            args=("caplog", "pytest.LogCaptureFixture", "sample_fixture"),
+            line=7,
+            col_offset=4,
+            end_line=7,
+            end_col_offset=25,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=none_node,
+            args=("current_request_with_host", "None", "sample_fixture"),
+            line=8,
+            col_offset=4,
+            end_line=8,
+            end_col_offset=29,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=hass_node,
+            args=("hass", "HomeAssistant", "sample_fixture"),
+            line=6,
+            col_offset=4,
+            end_line=6,
+            end_col_offset=19,
+        ),
+    ):
+        type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+@pytest.mark.parametrize(
+    "entry_annotation",
+    [
+        "ConfigEntry",
+        "ConfigEntry[AdGuardData]",
+        "AdGuardConfigEntry",  # prefix allowed for type aliases
+    ],
+)
+def test_valid_generic(
+    linter: UnittestLinter, type_hint_checker: BaseChecker, entry_annotation: str
+) -> None:
+    """Ensure valid hints are accepted for generic types."""
+    func_node = astroid.extract_node(
+        f"""
+    async def async_setup_entry( #@
+        hass: HomeAssistant,
+        entry: {entry_annotation},
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        pass
+    """,
+        "homeassistant.components.pylint_test.notify",
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+@pytest.mark.parametrize(
+    ("entry_annotation", "end_col_offset"),
+    [
+        ("Config", 17),  # not generic
+        ("ConfigEntryXX[Data]", 30),  # generic type needs to match exactly
+        ("ConfigEntryData", 26),  # ConfigEntry should be the suffix
+    ],
+)
+def test_invalid_generic(
+    linter: UnittestLinter,
+    type_hint_checker: BaseChecker,
+    entry_annotation: str,
+    end_col_offset: int,
+) -> None:
+    """Ensure invalid hints are rejected for generic types."""
+    func_node, entry_node = astroid.extract_node(
+        f"""
+    async def async_setup_entry( #@
+        hass: HomeAssistant,
+        entry: {entry_annotation}, #@
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        pass
+    """,
+        "homeassistant.components.pylint_test.notify",
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=entry_node,
+            args=(
+                2,
+                "ConfigEntry",
+                "async_setup_entry",
+            ),
+            line=4,
+            col_offset=4,
+            end_line=4,
+            end_col_offset=end_col_offset,
+        ),
     ):
         type_hint_checker.visit_asyncfunctiondef(func_node)

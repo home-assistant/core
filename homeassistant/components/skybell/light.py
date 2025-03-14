@@ -1,4 +1,5 @@
 """Light/LED support for the Skybell HD Doorbell."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -14,14 +15,16 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import SkybellEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Skybell switch."""
     async_add_entities(
@@ -35,6 +38,7 @@ class SkybellLight(SkybellEntity, LightEntity):
 
     _attr_color_mode = ColorMode.RGB
     _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_name = None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""

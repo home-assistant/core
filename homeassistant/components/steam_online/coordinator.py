@@ -1,4 +1,5 @@
 """Data update coordinator for the Steam integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -14,17 +15,22 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_ACCOUNTS, DOMAIN, LOGGER
 
+type SteamConfigEntry = ConfigEntry[SteamDataUpdateCoordinator]
 
-class SteamDataUpdateCoordinator(DataUpdateCoordinator):
+
+class SteamDataUpdateCoordinator(
+    DataUpdateCoordinator[dict[str, dict[str, str | int]]]
+):
     """Data update coordinator for the Steam integration."""
 
-    config_entry: ConfigEntry
+    config_entry: SteamConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: SteamConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
@@ -54,9 +60,9 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator):
             for player in response["response"]["players"]["player"]
             if player["steamid"] in _ids
         }
-        for k in players:
-            data = self.player_interface.GetSteamLevel(steamid=players[k]["steamid"])
-            players[k]["level"] = data["response"].get("player_level")
+        for value in players.values():
+            data = self.player_interface.GetSteamLevel(steamid=value["steamid"])
+            value["level"] = data["response"].get("player_level")
         return players
 
     async def _async_update_data(self) -> dict[str, dict[str, str | int]]:

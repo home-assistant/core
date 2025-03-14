@@ -1,4 +1,5 @@
 """Constants for the Subaru integration."""
+
 from subarulink.const import ALL_DOORS, DRIVERS_DOOR, TAILGATE_DOOR
 
 from homeassistant.const import Platform
@@ -7,7 +8,6 @@ DOMAIN = "subaru"
 FETCH_INTERVAL = 300
 UPDATE_INTERVAL = 7200
 CONF_UPDATE_ENABLED = "update_enabled"
-CONF_COUNTRY = "country"
 
 # entry fields
 ENTRY_CONTROLLER = "controller"
@@ -28,14 +28,16 @@ VEHICLE_HAS_REMOTE_START = "has_res"
 VEHICLE_HAS_REMOTE_SERVICE = "has_remote"
 VEHICLE_HAS_SAFETY_SERVICE = "has_safety"
 VEHICLE_LAST_UPDATE = "last_update"
-VEHICLE_STATUS = "status"
+VEHICLE_STATUS = "vehicle_status"
 
 
 API_GEN_1 = "g1"
 API_GEN_2 = "g2"
+API_GEN_3 = "g3"
 MANUFACTURER = "Subaru"
 
 PLATFORMS = [
+    Platform.DEVICE_TRACKER,
     Platform.LOCK,
     Platform.SENSOR,
 ]

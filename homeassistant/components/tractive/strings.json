@@ -19,14 +19,74 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "tracker_battery_charging": {
+        "name": "Tracker battery charging"
+      }
+    },
+    "device_tracker": {
+      "tracker": {
+        "name": "Tracker"
+      }
+    },
     "sensor": {
-      "tracker_state": {
+      "activity": {
+        "name": "Activity",
         "state": {
+          "good": "Good",
+          "low": "Low",
+          "ok": "OK"
+        }
+      },
+      "activity_time": {
+        "name": "Activity time"
+      },
+      "calories": {
+        "name": "Calories burned"
+      },
+      "daily_goal": {
+        "name": "Daily goal"
+      },
+      "minutes_day_sleep": {
+        "name": "Day sleep"
+      },
+      "minutes_night_sleep": {
+        "name": "Night sleep"
+      },
+      "rest_time": {
+        "name": "Rest time"
+      },
+      "sleep": {
+        "name": "Sleep",
+        "state": {
+          "good": "[%key:component::tractive::entity::sensor::activity::state::good%]",
+          "low": "[%key:component::tractive::entity::sensor::activity::state::low%]",
+          "ok": "[%key:component::tractive::entity::sensor::activity::state::ok%]"
+        }
+      },
+      "tracker_battery_level": {
+        "name": "Tracker battery"
+      },
+      "tracker_state": {
+        "name": "Tracker state",
+        "state": {
+          "inaccurate_position": "Inaccurate position",
           "not_reporting": "Not reporting",
           "operational": "Operational",
           "system_shutdown_user": "System shutdown user",
           "system_startup": "System startup"
         }
+      }
+    },
+    "switch": {
+      "tracker_buzzer": {
+        "name": "Tracker buzzer"
+      },
+      "tracker_led": {
+        "name": "Tracker LED"
+      },
+      "live_tracking": {
+        "name": "Live tracking"
       }
     }
   }

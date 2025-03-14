@@ -1,4 +1,5 @@
 """Local Media Source Implementation."""
+
 from __future__ import annotations
 
 import logging
@@ -12,9 +13,9 @@ from aiohttp.web_request import FileField
 import voluptuous as vol
 
 from homeassistant.components import http, websocket_api
+from homeassistant.components.http import require_admin
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import Unauthorized
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
@@ -38,7 +39,7 @@ def async_setup(hass: HomeAssistant) -> None:
 class LocalSource(MediaSource):
     """Provide local directories as media sources."""
 
-    name: str = "Local Media"
+    name: str = "My media"
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize local source."""
@@ -48,7 +49,10 @@ class LocalSource(MediaSource):
     @callback
     def async_full_path(self, source_dir_id: str, location: str) -> Path:
         """Return full path."""
-        return Path(self.hass.config.media_dirs[source_dir_id], location)
+        base_path = self.hass.config.media_dirs[source_dir_id]
+        full_path = Path(base_path, location)
+        full_path.relative_to(base_path)
+        return full_path
 
     @callback
     def async_parse_identifier(self, item: MediaSourceItem) -> tuple[str, str]:
@@ -64,6 +68,9 @@ class LocalSource(MediaSource):
             raise_if_invalid_path(location)
         except ValueError as err:
             raise Unresolvable("Invalid path.") from err
+
+        if Path(location).is_absolute():
+            raise Unresolvable("Invalid path.")
 
         return source_dir_id, location
 
@@ -86,11 +93,9 @@ class LocalSource(MediaSource):
         else:
             source_dir_id, location = None, ""
 
-        result = await self.hass.async_add_executor_job(
+        return await self.hass.async_add_executor_job(
             self._browse_media, source_dir_id, location
         )
-
-        return result
 
     def _browse_media(
         self, source_dir_id: str | None, location: str
@@ -192,8 +197,7 @@ class LocalSource(MediaSource):
 
 
 class LocalMediaView(http.HomeAssistantView):
-    """
-    Local Media Finder View.
+    """Local Media Finder View.
 
     Returns media files in config/media.
     """
@@ -213,21 +217,21 @@ class LocalMediaView(http.HomeAssistantView):
         try:
             raise_if_invalid_path(location)
         except ValueError as err:
-            raise web.HTTPBadRequest() from err
+            raise web.HTTPBadRequest from err
 
         if source_dir_id not in self.hass.config.media_dirs:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         media_path = self.source.async_full_path(source_dir_id, location)
 
         # Check that the file exists
-        if not media_path.is_file():
-            raise web.HTTPNotFound()
+        if not self.hass.async_add_executor_job(media_path.is_file):
+            raise web.HTTPNotFound
 
         # Check that it's a media file
         mime_type, _ = mimetypes.guess_type(str(media_path))
         if not mime_type or mime_type.split("/")[0] not in MEDIA_MIME_TYPES:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         return web.FileResponse(media_path)
 
@@ -249,31 +253,29 @@ class UploadMediaView(http.HomeAssistantView):
             }
         )
 
+    @require_admin
     async def post(self, request: web.Request) -> web.Response:
         """Handle upload."""
-        if not request["hass_user"].is_admin:
-            raise Unauthorized()
-
         # Increase max payload
-        request._client_max_size = MAX_UPLOAD_SIZE  # pylint: disable=protected-access
+        request._client_max_size = MAX_UPLOAD_SIZE  # noqa: SLF001
 
         try:
             data = self.schema(dict(await request.post()))
         except vol.Invalid as err:
             LOGGER.error("Received invalid upload data: %s", err)
-            raise web.HTTPBadRequest() from err
+            raise web.HTTPBadRequest from err
 
         try:
             item = MediaSourceItem.from_uri(self.hass, data["media_content_id"], None)
         except ValueError as err:
             LOGGER.error("Received invalid upload data: %s", err)
-            raise web.HTTPBadRequest() from err
+            raise web.HTTPBadRequest from err
 
         try:
             source_dir_id, location = self.source.async_parse_identifier(item)
         except Unresolvable as err:
             LOGGER.error("Invalid local source ID")
-            raise web.HTTPBadRequest() from err
+            raise web.HTTPBadRequest from err
 
         uploaded_file: FileField = data["file"]
 
@@ -285,7 +287,7 @@ class UploadMediaView(http.HomeAssistantView):
             raise_if_invalid_filename(uploaded_file.filename)
         except ValueError as err:
             LOGGER.error("Invalid filename")
-            raise web.HTTPBadRequest() from err
+            raise web.HTTPBadRequest from err
 
         try:
             await self.hass.async_add_executor_job(
@@ -295,7 +297,7 @@ class UploadMediaView(http.HomeAssistantView):
             )
         except ValueError as err:
             LOGGER.error("Moving upload failed: %s", err)
-            raise web.HTTPBadRequest() from err
+            raise web.HTTPBadRequest from err
 
         return self.json(
             {"media_content_id": f"{data['media_content_id']}/{uploaded_file.filename}"}

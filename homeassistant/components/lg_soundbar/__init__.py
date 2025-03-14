@@ -1,4 +1,5 @@
 """The lg_soundbar component."""
+
 import logging
 
 from homeassistant import config_entries, core
@@ -26,7 +27,7 @@ async def async_setup_entry(
     except ConnectionError as err:
         raise ConfigEntryNotReady from err
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -34,5 +35,4 @@ async def async_unload_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    result = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    return result
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

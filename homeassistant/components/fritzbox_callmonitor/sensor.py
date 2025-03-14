@@ -1,8 +1,10 @@
 """Sensor to monitor incoming/outgoing phone calls on a Fritz!Box router."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime, timedelta
+from enum import StrEnum
 import logging
 import queue
 from threading import Event as ThreadingEvent, Thread
@@ -11,22 +13,19 @@ from typing import Any, cast
 
 from fritzconnection.core.fritzmonitor import FritzMonitor
 
-from homeassistant.backports.enum import StrEnum
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .base import FritzBoxPhonebook
+from . import FritzBoxCallMonitorConfigEntry
+from .base import Contact, FritzBoxPhonebook
 from .const import (
     ATTR_PREFIXES,
     CONF_PHONEBOOK,
     CONF_PREFIXES,
     DOMAIN,
-    FRITZBOX_PHONEBOOK,
-    ICON_PHONE,
     MANUFACTURER,
     SERIAL_NUMBER,
     FritzState,
@@ -48,26 +47,22 @@ class CallState(StrEnum):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FritzBoxCallMonitorConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the fritzbox_callmonitor sensor from config_entry."""
-    fritzbox_phonebook: FritzBoxPhonebook = hass.data[DOMAIN][config_entry.entry_id][
-        FRITZBOX_PHONEBOOK
-    ]
+    fritzbox_phonebook = config_entry.runtime_data
 
-    phonebook_name: str = config_entry.title
     phonebook_id: int = config_entry.data[CONF_PHONEBOOK]
     prefixes: list[str] | None = config_entry.options.get(CONF_PREFIXES)
     serial_number: str = config_entry.data[SERIAL_NUMBER]
     host: str = config_entry.data[CONF_HOST]
     port: int = config_entry.data[CONF_PORT]
 
-    name = f"{fritzbox_phonebook.fph.modelname} Call Monitor {phonebook_name}"
     unique_id = f"{serial_number}-{phonebook_id}"
 
     sensor = FritzBoxCallSensor(
-        name=name,
+        phonebook_name=config_entry.title,
         unique_id=unique_id,
         fritzbox_phonebook=fritzbox_phonebook,
         prefixes=prefixes,
@@ -81,11 +76,14 @@ async def async_setup_entry(
 class FritzBoxCallSensor(SensorEntity):
     """Implementation of a Fritz!Box call monitor."""
 
-    _attr_icon = ICON_PHONE
+    _attr_has_entity_name = True
+    _attr_translation_key = DOMAIN
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = list(CallState)
 
     def __init__(
         self,
-        name: str,
+        phonebook_name: str,
         unique_id: str,
         fritzbox_phonebook: FritzBoxPhonebook,
         prefixes: list[str] | None,
@@ -98,12 +96,13 @@ class FritzBoxCallSensor(SensorEntity):
         self._host = host
         self._port = port
         self._monitor: FritzBoxCallMonitor | None = None
-        self._attributes: dict[str, str | list[str]] = {}
+        self._attributes: dict[str, str | list[str] | bool] = {}
 
-        self._attr_name = name.title()
+        self._attr_translation_placeholders = {"phonebook_name": phonebook_name}
         self._attr_unique_id = unique_id
         self._attr_native_value = CallState.IDLE
         self._attr_device_info = DeviceInfo(
+            configuration_url=self._fritzbox_phonebook.fph.fc.address,
             identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
             model=self._fritzbox_phonebook.fph.modelname,
@@ -153,20 +152,20 @@ class FritzBoxCallSensor(SensorEntity):
         """Set the state."""
         self._attr_native_value = state
 
-    def set_attributes(self, attributes: Mapping[str, str]) -> None:
+    def set_attributes(self, attributes: Mapping[str, str | bool]) -> None:
         """Set the state attributes."""
         self._attributes = {**attributes}
 
     @property
-    def extra_state_attributes(self) -> dict[str, str | list[str]]:
+    def extra_state_attributes(self) -> dict[str, str | list[str] | bool]:
         """Return the state attributes."""
         if self._prefixes:
             self._attributes[ATTR_PREFIXES] = self._prefixes
         return self._attributes
 
-    def number_to_name(self, number: str) -> str:
-        """Return a name for a given phone number."""
-        return self._fritzbox_phonebook.get_name(number)
+    def number_to_contact(self, number: str) -> Contact:
+        """Return a contact for a given phone number."""
+        return self._fritzbox_phonebook.get_contact(number)
 
     def update(self) -> None:
         """Update the phonebook if it is defined."""
@@ -189,7 +188,11 @@ class FritzBoxCallMonitor:
         _LOGGER.debug("Setting up socket connection")
         try:
             self.connection = FritzMonitor(address=self.host, port=self.port)
-            kwargs: dict[str, Any] = {"event_queue": self.connection.start()}
+            kwargs: dict[str, Any] = {
+                "event_queue": self.connection.start(
+                    reconnect_tries=50, reconnect_delay=120
+                )
+            }
             Thread(target=self._process_events, kwargs=kwargs).start()
         except OSError as err:
             self.connection = None
@@ -222,35 +225,42 @@ class FritzBoxCallMonitor:
         df_in = "%d.%m.%y %H:%M:%S"
         df_out = "%Y-%m-%dT%H:%M:%S"
         isotime = datetime.strptime(line[0], df_in).strftime(df_out)
+        att: dict[str, str | bool]
         if line[1] == FritzState.RING:
             self._sensor.set_state(CallState.RINGING)
+            contact = self._sensor.number_to_contact(line[3])
             att = {
                 "type": "incoming",
                 "from": line[3],
                 "to": line[4],
                 "device": line[5],
                 "initiated": isotime,
-                "from_name": self._sensor.number_to_name(line[3]),
+                "from_name": contact.name,
+                "vip": contact.vip,
             }
             self._sensor.set_attributes(att)
         elif line[1] == FritzState.CALL:
             self._sensor.set_state(CallState.DIALING)
+            contact = self._sensor.number_to_contact(line[5])
             att = {
                 "type": "outgoing",
                 "from": line[4],
                 "to": line[5],
                 "device": line[6],
                 "initiated": isotime,
-                "to_name": self._sensor.number_to_name(line[5]),
+                "to_name": contact.name,
+                "vip": contact.vip,
             }
             self._sensor.set_attributes(att)
         elif line[1] == FritzState.CONNECT:
             self._sensor.set_state(CallState.TALKING)
+            contact = self._sensor.number_to_contact(line[4])
             att = {
                 "with": line[4],
                 "device": line[3],
                 "accepted": isotime,
-                "with_name": self._sensor.number_to_name(line[4]),
+                "with_name": contact.name,
+                "vip": contact.vip,
             }
             self._sensor.set_attributes(att)
         elif line[1] == FritzState.DISCONNECT:

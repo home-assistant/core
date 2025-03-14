@@ -24,15 +24,9 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_time_interval,
 )
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_CALENDAR_ACCESS,
-    DATA_CONFIG,
-    DEFAULT_FEATURE_ACCESS,
-    DOMAIN,
-    FeatureAccess,
-)
+from .const import CONF_CALENDAR_ACCESS, DEFAULT_FEATURE_ACCESS, FeatureAccess
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,13 +39,20 @@ class OAuthError(Exception):
     """OAuth related error."""
 
 
-class DeviceAuth(AuthImplementation):
-    """OAuth implementation for Device Auth."""
+class InvalidCredential(OAuthError):
+    """Error with an invalid credential that does not support device auth."""
+
+
+class GoogleHybridAuth(AuthImplementation):
+    """OAuth implementation that supports both Web Auth (base class) and Device Auth."""
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve a Google API Credentials object to Home Assistant token."""
+        if DEVICE_AUTH_CREDS not in external_data:
+            # Assume the Web Auth flow was used, so use the default behavior
+            return await super().async_resolve_external_data(external_data)
         creds: Credentials = external_data[DEVICE_AUTH_CREDS]
-        delta = creds.token_expiry.replace(tzinfo=datetime.timezone.utc) - dt.utcnow()
+        delta = creds.token_expiry.replace(tzinfo=datetime.UTC) - dt_util.utcnow()
         _LOGGER.debug(
             "Token expires at %s (in %s)", creds.token_expiry, delta.total_seconds()
         )
@@ -108,11 +109,13 @@ class DeviceFlow:
     def async_start_exchange(self) -> None:
         """Start the device auth exchange flow polling."""
         _LOGGER.debug("Starting exchange flow")
-        max_timeout = dt.utcnow() + datetime.timedelta(seconds=EXCHANGE_TIMEOUT_SECONDS)
+        max_timeout = dt_util.utcnow() + datetime.timedelta(
+            seconds=EXCHANGE_TIMEOUT_SECONDS
+        )
         # For some reason, oauth.step1_get_device_and_user_codes() returns a datetime
         # object without tzinfo. For the comparison below to work, it needs one.
         user_code_expiry = self._device_flow_info.user_code_expiry.replace(
-            tzinfo=datetime.timezone.utc
+            tzinfo=datetime.UTC
         )
         expiration_time = min(user_code_expiry, max_timeout)
 
@@ -152,27 +155,11 @@ class DeviceFlow:
             self._listener()
 
 
-def get_feature_access(
-    hass: HomeAssistant, config_entry: ConfigEntry | None = None
-) -> FeatureAccess:
+def get_feature_access(config_entry: ConfigEntry) -> FeatureAccess:
     """Return the desired calendar feature access."""
-    if (
-        config_entry
-        and config_entry.options
-        and CONF_CALENDAR_ACCESS in config_entry.options
-    ):
+    if config_entry.options and CONF_CALENDAR_ACCESS in config_entry.options:
         return FeatureAccess[config_entry.options[CONF_CALENDAR_ACCESS]]
-
-    # This may be called during config entry setup without integration setup running when there
-    # is no google entry in configuration.yaml
-    return cast(
-        FeatureAccess,
-        (
-            hass.data.get(DOMAIN, {})
-            .get(DATA_CONFIG, {})
-            .get(CONF_CALENDAR_ACCESS, DEFAULT_FEATURE_ACCESS)
-        ),
-    )
+    return DEFAULT_FEATURE_ACCESS
 
 
 async def async_create_device_flow(
@@ -190,6 +177,10 @@ async def async_create_device_flow(
             oauth_flow.step1_get_device_and_user_codes
         )
     except OAuth2DeviceCodeError as err:
+        _LOGGER.debug("OAuth2DeviceCodeError error: %s", err)
+        # Web auth credentials reply with invalid_client when hitting this endpoint
+        if "Error: invalid_client" in str(err):
+            raise InvalidCredential(str(err)) from err
         raise OAuthError(str(err)) from err
     return DeviceFlow(hass, oauth_flow, device_flow_info)
 

@@ -1,103 +1,114 @@
 """Support for Dexcom sensors."""
+
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import CONF_USERNAME, UnitOfBloodGlucoseConcentration
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import COORDINATOR, DOMAIN, GLUCOSE_TREND_ICON, GLUCOSE_VALUE_ICON, MG_DL
+from .const import DOMAIN
+from .coordinator import DexcomConfigEntry, DexcomCoordinator
+
+TRENDS = {
+    1: "rising_quickly",
+    2: "rising",
+    3: "rising_slightly",
+    4: "steady",
+    5: "falling_slightly",
+    6: "falling",
+    7: "falling_quickly",
+}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DexcomConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Dexcom sensors."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    coordinator = config_entry.runtime_data
     username = config_entry.data[CONF_USERNAME]
-    unit_of_measurement = config_entry.options[CONF_UNIT_OF_MEASUREMENT]
-    sensors: list[SensorEntity] = []
-    sensors.append(DexcomGlucoseTrendSensor(coordinator, username))
-    sensors.append(DexcomGlucoseValueSensor(coordinator, username, unit_of_measurement))
-    async_add_entities(sensors, False)
+    async_add_entities(
+        [
+            DexcomGlucoseTrendSensor(coordinator, username, config_entry.entry_id),
+            DexcomGlucoseValueSensor(coordinator, username, config_entry.entry_id),
+        ],
+    )
 
 
-class DexcomGlucoseValueSensor(CoordinatorEntity, SensorEntity):
+class DexcomSensorEntity(CoordinatorEntity[DexcomCoordinator], SensorEntity):
+    """Base Dexcom sensor entity."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: DexcomCoordinator,
+        username: str,
+        entry_id: str,
+        key: str,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{username}-{key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry_id)},
+            name=username,
+        )
+
+
+class DexcomGlucoseValueSensor(DexcomSensorEntity):
     """Representation of a Dexcom glucose value sensor."""
 
-    def __init__(self, coordinator, username, unit_of_measurement):
+    _attr_device_class = SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION
+    _attr_native_unit_of_measurement = (
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER
+    )
+    _attr_translation_key = "glucose_value"
+
+    def __init__(
+        self,
+        coordinator: DexcomCoordinator,
+        username: str,
+        entry_id: str,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._state = None
-        self._unit_of_measurement = unit_of_measurement
-        self._attribute_unit_of_measurement = (
-            "mg_dl" if unit_of_measurement == MG_DL else "mmol_l"
-        )
-        self._name = f"{DOMAIN}_{username}_glucose_value"
-        self._unique_id = f"{username}-value"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon for the frontend."""
-        return GLUCOSE_VALUE_ICON
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of the device."""
-        return self._unit_of_measurement
+        super().__init__(coordinator, username, entry_id, "value")
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data:
-            return getattr(self.coordinator.data, self._attribute_unit_of_measurement)
+            return self.coordinator.data.mg_dl
         return None
 
-    @property
-    def unique_id(self):
-        """Device unique id."""
-        return self._unique_id
 
-
-class DexcomGlucoseTrendSensor(CoordinatorEntity, SensorEntity):
+class DexcomGlucoseTrendSensor(DexcomSensorEntity):
     """Representation of a Dexcom glucose trend sensor."""
 
-    def __init__(self, coordinator, username):
+    _attr_translation_key = "glucose_trend"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = list(TRENDS.values())
+
+    def __init__(
+        self, coordinator: DexcomCoordinator, username: str, entry_id: str
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._state = None
-        self._name = f"{DOMAIN}_{username}_glucose_trend"
-        self._unique_id = f"{username}-trend"
+        super().__init__(coordinator, username, entry_id, "trend")
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon for the frontend."""
-        if self.coordinator.data:
-            return GLUCOSE_TREND_ICON[self.coordinator.data.trend]
-        return GLUCOSE_TREND_ICON[0]
-
-    @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         if self.coordinator.data:
-            return self.coordinator.data.trend_description
+            return TRENDS.get(self.coordinator.data.trend)
         return None
 
     @property
-    def unique_id(self):
-        """Device unique id."""
-        return self._unique_id
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and (
+            self.coordinator.data is None or self.coordinator.data.trend != 9
+        )

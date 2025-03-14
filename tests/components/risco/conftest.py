@@ -1,7 +1,11 @@
 """Fixtures for Risco tests."""
+
+from collections.abc import AsyncGenerator
+from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
-from pytest import fixture
+from pyrisco.cloud.event import Event
+import pytest
 
 from homeassistant.components.risco.const import DOMAIN, TYPE_LOCAL
 from homeassistant.const import (
@@ -12,8 +16,9 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 
-from .util import TEST_SITE_NAME, TEST_SITE_UUID, zone_mock
+from .util import TEST_SITE_NAME, TEST_SITE_UUID, system_mock, zone_mock
 
 from tests.common import MockConfigEntry
 
@@ -30,82 +35,104 @@ TEST_LOCAL_CONFIG = {
 }
 
 
-@fixture
+@pytest.fixture
 def two_zone_cloud():
     """Fixture to mock alarm with two zones."""
     zone_mocks = {0: zone_mock(), 1: zone_mock()}
     alarm_mock = MagicMock()
-    with patch.object(
-        zone_mocks[0], "id", new_callable=PropertyMock(return_value=0)
-    ), patch.object(
-        zone_mocks[0], "name", new_callable=PropertyMock(return_value="Zone 0")
-    ), patch.object(
-        zone_mocks[0], "bypassed", new_callable=PropertyMock(return_value=False)
-    ), patch.object(
-        zone_mocks[1], "id", new_callable=PropertyMock(return_value=1)
-    ), patch.object(
-        zone_mocks[1], "name", new_callable=PropertyMock(return_value="Zone 1")
-    ), patch.object(
-        zone_mocks[1], "bypassed", new_callable=PropertyMock(return_value=False)
-    ), patch.object(
-        alarm_mock,
-        "zones",
-        new_callable=PropertyMock(return_value=zone_mocks),
-    ), patch(
-        "homeassistant.components.risco.RiscoCloud.get_state",
-        return_value=alarm_mock,
+    with (
+        patch.object(zone_mocks[0], "id", new_callable=PropertyMock(return_value=0)),
+        patch.object(
+            zone_mocks[0], "name", new_callable=PropertyMock(return_value="Zone 0")
+        ),
+        patch.object(
+            zone_mocks[0], "bypassed", new_callable=PropertyMock(return_value=False)
+        ),
+        patch.object(zone_mocks[1], "id", new_callable=PropertyMock(return_value=1)),
+        patch.object(
+            zone_mocks[1], "name", new_callable=PropertyMock(return_value="Zone 1")
+        ),
+        patch.object(
+            zone_mocks[1], "bypassed", new_callable=PropertyMock(return_value=False)
+        ),
+        patch.object(
+            alarm_mock,
+            "zones",
+            new_callable=PropertyMock(return_value=zone_mocks),
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoCloud.get_state",
+            return_value=alarm_mock,
+        ),
     ):
         yield zone_mocks
 
 
-@fixture
+@pytest.fixture
 def two_zone_local():
     """Fixture to mock alarm with two zones."""
     zone_mocks = {0: zone_mock(), 1: zone_mock()}
-    with patch.object(
-        zone_mocks[0], "id", new_callable=PropertyMock(return_value=0)
-    ), patch.object(
-        zone_mocks[0], "name", new_callable=PropertyMock(return_value="Zone 0")
-    ), patch.object(
-        zone_mocks[0], "alarmed", new_callable=PropertyMock(return_value=False)
-    ), patch.object(
-        zone_mocks[0], "bypassed", new_callable=PropertyMock(return_value=False)
-    ), patch.object(
-        zone_mocks[0], "armed", new_callable=PropertyMock(return_value=False)
-    ), patch.object(
-        zone_mocks[1], "id", new_callable=PropertyMock(return_value=1)
-    ), patch.object(
-        zone_mocks[1], "name", new_callable=PropertyMock(return_value="Zone 1")
-    ), patch.object(
-        zone_mocks[1], "alarmed", new_callable=PropertyMock(return_value=False)
-    ), patch.object(
-        zone_mocks[1], "bypassed", new_callable=PropertyMock(return_value=False)
-    ), patch.object(
-        zone_mocks[1], "armed", new_callable=PropertyMock(return_value=False)
-    ), patch(
-        "homeassistant.components.risco.RiscoLocal.partitions",
-        new_callable=PropertyMock(return_value={}),
-    ), patch(
-        "homeassistant.components.risco.RiscoLocal.zones",
-        new_callable=PropertyMock(return_value=zone_mocks),
+    system = system_mock()
+    with (
+        patch.object(zone_mocks[0], "id", new_callable=PropertyMock(return_value=0)),
+        patch.object(
+            zone_mocks[0], "name", new_callable=PropertyMock(return_value="Zone 0")
+        ),
+        patch.object(
+            zone_mocks[0], "alarmed", new_callable=PropertyMock(return_value=False)
+        ),
+        patch.object(
+            zone_mocks[0], "bypassed", new_callable=PropertyMock(return_value=False)
+        ),
+        patch.object(
+            zone_mocks[0], "armed", new_callable=PropertyMock(return_value=False)
+        ),
+        patch.object(zone_mocks[1], "id", new_callable=PropertyMock(return_value=1)),
+        patch.object(
+            zone_mocks[1], "name", new_callable=PropertyMock(return_value="Zone 1")
+        ),
+        patch.object(
+            zone_mocks[1], "alarmed", new_callable=PropertyMock(return_value=False)
+        ),
+        patch.object(
+            zone_mocks[1], "bypassed", new_callable=PropertyMock(return_value=False)
+        ),
+        patch.object(
+            zone_mocks[1], "armed", new_callable=PropertyMock(return_value=False)
+        ),
+        patch.object(
+            system, "name", new_callable=PropertyMock(return_value=TEST_SITE_NAME)
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoLocal.partitions",
+            new_callable=PropertyMock(return_value={}),
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoLocal.zones",
+            new_callable=PropertyMock(return_value=zone_mocks),
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoLocal.system",
+            new_callable=PropertyMock(return_value=system),
+        ),
     ):
         yield zone_mocks
 
 
-@fixture
-def options():
+@pytest.fixture
+def options() -> dict[str, Any]:
     """Fixture for default (empty) options."""
     return {}
 
 
-@fixture
-def events():
+@pytest.fixture
+def events() -> list[Event]:
     """Fixture for default (empty) events."""
     return []
 
 
-@fixture
-def cloud_config_entry(hass, options):
+@pytest.fixture
+def cloud_config_entry(hass: HomeAssistant, options: dict[str, Any]) -> MockConfigEntry:
     """Fixture for a cloud config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -117,7 +144,7 @@ def cloud_config_entry(hass, options):
     return config_entry
 
 
-@fixture
+@pytest.fixture
 def login_with_error(exception):
     """Fixture to simulate error on login."""
     with patch(
@@ -127,23 +154,31 @@ def login_with_error(exception):
         yield
 
 
-@fixture
-async def setup_risco_cloud(hass, cloud_config_entry, events):
+@pytest.fixture
+async def setup_risco_cloud(
+    hass: HomeAssistant, cloud_config_entry: MockConfigEntry, events: list[Event]
+) -> AsyncGenerator[MockConfigEntry]:
     """Set up a Risco integration for testing."""
-    with patch(
-        "homeassistant.components.risco.RiscoCloud.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.risco.RiscoCloud.site_uuid",
-        new_callable=PropertyMock(return_value=TEST_SITE_UUID),
-    ), patch(
-        "homeassistant.components.risco.RiscoCloud.site_name",
-        new_callable=PropertyMock(return_value=TEST_SITE_NAME),
-    ), patch(
-        "homeassistant.components.risco.RiscoCloud.close"
-    ), patch(
-        "homeassistant.components.risco.RiscoCloud.get_events",
-        return_value=events,
+    with (
+        patch(
+            "homeassistant.components.risco.RiscoCloud.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoCloud.site_uuid",
+            new_callable=PropertyMock(return_value=TEST_SITE_UUID),
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoCloud.site_name",
+            new_callable=PropertyMock(return_value=TEST_SITE_NAME),
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoCloud.close",
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoCloud.get_events",
+            return_value=events,
+        ),
     ):
         await hass.config_entries.async_setup(cloud_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -151,8 +186,8 @@ async def setup_risco_cloud(hass, cloud_config_entry, events):
         yield cloud_config_entry
 
 
-@fixture
-def local_config_entry(hass, options):
+@pytest.fixture
+def local_config_entry(hass: HomeAssistant, options: dict[str, Any]) -> MockConfigEntry:
     """Fixture for a local config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=TEST_LOCAL_CONFIG, options=options
@@ -161,7 +196,7 @@ def local_config_entry(hass, options):
     return config_entry
 
 
-@fixture
+@pytest.fixture
 def connect_with_error(exception):
     """Fixture to simulate error on connect."""
     with patch(
@@ -171,17 +206,23 @@ def connect_with_error(exception):
         yield
 
 
-@fixture
-async def setup_risco_local(hass, local_config_entry):
+@pytest.fixture
+async def setup_risco_local(
+    hass: HomeAssistant, local_config_entry: MockConfigEntry
+) -> AsyncGenerator[MockConfigEntry]:
     """Set up a local Risco integration for testing."""
-    with patch(
-        "homeassistant.components.risco.RiscoLocal.connect",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.risco.RiscoLocal.id",
-        new_callable=PropertyMock(return_value=TEST_SITE_UUID),
-    ), patch(
-        "homeassistant.components.risco.RiscoLocal.disconnect"
+    with (
+        patch(
+            "homeassistant.components.risco.RiscoLocal.connect",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoLocal.id",
+            new_callable=PropertyMock(return_value=TEST_SITE_UUID),
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoLocal.disconnect",
+        ),
     ):
         await hass.config_entries.async_setup(local_config_entry.entry_id)
         await hass.async_block_till_done()

@@ -1,4 +1,5 @@
 """Support for TMB (Transports Metropolitans de Barcelona) Barcelona public transport."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,17 +9,18 @@ from requests import HTTPError
 from tmb import IBus
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, TIME_MINUTES
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-
-ICON = "mdi:bus-clock"
 
 CONF_APP_ID = "app_id"
 CONF_APP_KEY = "app_key"
@@ -38,7 +40,7 @@ LINE_STOP_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_APP_ID): cv.string,
         vol.Required(CONF_APP_KEY): cv.string,
@@ -74,6 +76,7 @@ class TMBSensor(SensorEntity):
     """Implementation of a TMB line/stop Sensor."""
 
     _attr_attribution = "Data provided by Transport Metropolitans de Barcelona"
+    _attr_icon = "mdi:bus-clock"
 
     def __init__(self, ibus_client, stop, line, name):
         """Initialize the sensor."""
@@ -81,18 +84,13 @@ class TMBSensor(SensorEntity):
         self._stop = stop
         self._line = line.upper()
         self._name = name
-        self._unit = TIME_MINUTES
+        self._unit = UnitOfTime.MINUTES
         self._state = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon for the frontend."""
-        return ICON
 
     @property
     def native_unit_of_measurement(self):
@@ -124,5 +122,6 @@ class TMBSensor(SensorEntity):
             self._state = self._ibus_client.get_stop_forecast(self._stop, self._line)
         except HTTPError:
             _LOGGER.error(
-                "Unable to fetch data from TMB API. Please check your API keys are valid"
+                "Unable to fetch data from TMB API. Please check your API keys are"
+                " valid"
             )

@@ -5,20 +5,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyinsteon.address import Address
 from pyinsteon.constants import ALDBStatus, ResponseStatus
-from pyinsteon.device_types import (
+from pyinsteon.device_types.ipdb import (
     AccessControl_Morningstar,
     DimmableLightingControl_KeypadLinc_8,
     GeneralController_RemoteLinc,
     Hub,
     SensorsActuators_IOLink,
-    SwitchedLightingControl_SwitchLinc,
+    SwitchedLightingControl_SwitchLinc02,
 )
 from pyinsteon.managers.saved_devices_manager import dict_to_aldb_record
 from pyinsteon.topics import DEVICE_LIST_CHANGED
 from pyinsteon.utils import subscribe_topic
 
 
-class MockSwitchLinc(SwitchedLightingControl_SwitchLinc):
+class MockSwitchLinc(SwitchedLightingControl_SwitchLinc02):
     """Mock SwitchLinc device."""
 
     @property
@@ -30,7 +30,7 @@ class MockSwitchLinc(SwitchedLightingControl_SwitchLinc):
 class MockDevices:
     """Mock devices class."""
 
-    def __init__(self, connected=True):
+    def __init__(self, connected=True) -> None:
         """Init the MockDevices class."""
         self._devices = {}
         self.modem = None
@@ -85,7 +85,7 @@ class MockDevices:
             )
 
             for device in [
-                self._devices[addr] for addr in [addr1, addr2, addr3, addr4, addr5]
+                self._devices[addr] for addr in (addr1, addr2, addr3, addr4, addr5)
             ]:
                 device.async_read_config = AsyncMock()
                 device.aldb.async_write = AsyncMock()
@@ -105,7 +105,7 @@ class MockDevices:
                 )
 
             for device in [
-                self._devices[addr] for addr in [addr2, addr3, addr4, addr5]
+                self._devices[addr] for addr in (addr2, addr3, addr4, addr5)
             ]:
                 device.async_status = AsyncMock()
             self._devices[addr1].async_status = AsyncMock(side_effect=AttributeError)
@@ -151,11 +151,11 @@ class MockDevices:
             for flag in operating_flags:
                 value = operating_flags[flag]
                 if device.operating_flags.get(flag):
-                    device.operating_flags[flag].load(value)
+                    device.operating_flags[flag].set_value(value)
             for flag in properties:
                 value = properties[flag]
                 if device.properties.get(flag):
-                    device.properties[flag].load(value)
+                    device.properties[flag].set_value(value)
 
     async def async_add_device(self, address=None, multiple=False):
         """Mock the async_add_device method."""
@@ -167,6 +167,14 @@ class MockDevices:
         if address:
             yield address
         await asyncio.sleep(0.01)
+
+    def values(self):
+        """Return the devices."""
+        return self._devices.values()
+
+    def items(self):
+        """Return the address, device pair."""
+        return self._devices.items()
 
     def subscribe(self, listener, force_strong_ref=False):
         """Mock the subscribe function."""

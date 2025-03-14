@@ -1,10 +1,9 @@
 {
   "domain": "aladdin_connect",
   "name": "Aladdin Connect",
+  "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/aladdin_connect",
-  "requirements": ["AIOAladdinConnect==0.1.48"],
-  "codeowners": ["@mkmer"],
+  "integration_type": "system",
   "iot_class": "cloud_polling",
-  "loggers": ["aladdin_connect"],
-  "config_flow": true
+  "requirements": []
 }

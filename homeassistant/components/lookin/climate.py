@@ -1,10 +1,11 @@
 """The lookin integration climate platform."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any, Final, cast
 
-from aiolookin import Climate, MeteoSensor
+from aiolookin import Climate, MeteoSensor, Remote
 from aiolookin.models import UDPCommandType, UDPEvent
 
 from homeassistant.components.climate import (
@@ -27,7 +28,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, TYPE_TO_PLATFORM
 from .coordinator import LookinDataUpdateCoordinator
@@ -64,7 +65,7 @@ LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the climate platform for lookin from a config entry."""
     lookin_data: LookinData = hass.data[DOMAIN][config_entry.entry_id]
@@ -75,7 +76,7 @@ async def async_setup_entry(
             continue
         uuid = remote["UUID"]
         coordinator = lookin_data.device_coordinators[uuid]
-        device: Climate = coordinator.data
+        device = cast(Climate, coordinator.data)
         entities.append(
             ConditionerEntity(
                 uuid=uuid,
@@ -97,6 +98,8 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_fan_modes: list[str] = LOOKIN_FAN_MODE_IDX_TO_HASS
     _attr_swing_modes: list[str] = LOOKIN_SWING_MODE_IDX_TO_HASS
@@ -110,7 +113,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         uuid: str,
         device: Climate,
         lookin_data: LookinData,
-        coordinator: LookinDataUpdateCoordinator,
+        coordinator: LookinDataUpdateCoordinator[Remote],
     ) -> None:
         """Init the ConditionerEntity."""
         super().__init__(coordinator, uuid, device, lookin_data)

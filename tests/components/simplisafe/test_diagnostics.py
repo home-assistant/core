@@ -1,15 +1,25 @@
 """Test SimpliSafe diagnostics."""
+
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.core import HomeAssistant
 
+from tests.common import ANY
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, config_entry, hass_client, setup_simplisafe):
+async def test_entry_diagnostics(
+    hass: HomeAssistant,
+    config_entry,
+    hass_client: ClientSessionGenerator,
+    setup_simplisafe,
+) -> None:
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
             "entry_id": config_entry.entry_id,
             "version": 1,
+            "minor_version": 1,
             "domain": "simplisafe",
             "title": REDACTED,
             "data": {"token": REDACTED, "username": REDACTED},
@@ -19,6 +29,10 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_simplisa
             "source": "user",
             "unique_id": REDACTED,
             "disabled_by": None,
+            "created_at": ANY,
+            "modified_at": ANY,
+            "discovery_keys": {},
+            "subentries": [],
         },
         "subscription_data": {
             "12345": {
@@ -237,7 +251,7 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_simplisa
                                 "battery": [],
                                 "dbm": 0,
                                 "vmUse": 161592,
-                                "resSet": 10540,
+                                "resSet": 10540,  # codespell:ignore resset
                                 "uptime": 810043.74,
                                 "wifiDisconnects": 1,
                                 "wifiDriverReloads": 1,

@@ -1,4 +1,5 @@
 """Helper methods for various modules."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,22 +10,18 @@ import random
 import re
 import string
 import threading
-from typing import Any, TypeVar
+from typing import Any
 
 import slugify as unicode_slug
 
 from .dt import as_local, utcnow
-
-_T = TypeVar("_T")
-_U = TypeVar("_U")
 
 RE_SANITIZE_FILENAME = re.compile(r"(~|\.\.|/|\\)")
 RE_SANITIZE_PATH = re.compile(r"(~|\.(\.)+)")
 
 
 def raise_if_invalid_filename(filename: str) -> None:
-    """
-    Check if a filename is valid.
+    """Check if a filename is valid.
 
     Raises a ValueError if the filename is invalid.
     """
@@ -33,8 +30,7 @@ def raise_if_invalid_filename(filename: str) -> None:
 
 
 def raise_if_invalid_path(path: str) -> None:
-    """
-    Check if a path is valid.
+    """Check if a path is valid.
 
     Raises a ValueError if the path is invalid.
     """
@@ -62,7 +58,7 @@ def repr_helper(inp: Any) -> str:
     return str(inp)
 
 
-def convert(
+def convert[_T, _U](
     value: _T | None, to_type: Callable[[_T], _U], default: _U | None = None
 ) -> _U | None:
     """Convert value to to_type, returns default if fails."""
@@ -105,7 +101,7 @@ class Throttle:
     """A class for throttling the execution of tasks.
 
     This method decorator adds a cooldown to a method to prevent it from being
-    called more then 1 time within the timedelta interval `min_time` after it
+    called more than 1 time within the timedelta interval `min_time` after it
     returned its result.
 
     Calling a method a second time during the interval will return None.
@@ -133,13 +129,11 @@ class Throttle:
 
             async def throttled_value() -> None:
                 """Stand-in function for when real func is being throttled."""
-                return None
 
         else:
 
             def throttled_value() -> None:  # type: ignore[misc]
                 """Stand-in function for when real func is being throttled."""
-                return None
 
         if self.limit_no_throttle is not None:
             method = Throttle(self.limit_no_throttle)(method)
@@ -172,14 +166,12 @@ class Throttle:
             else:
                 host = args[0] if args else wrapper
 
-            # pylint: disable=protected-access # to _throttle
             if not hasattr(host, "_throttle"):
-                host._throttle = {}
+                host._throttle = {}  # noqa: SLF001
 
-            if id(self) not in host._throttle:
-                host._throttle[id(self)] = [threading.Lock(), None]
-            throttle = host._throttle[id(self)]
-            # pylint: enable=protected-access
+            if id(self) not in host._throttle:  # noqa: SLF001
+                host._throttle[id(self)] = [threading.Lock(), None]  # noqa: SLF001
+            throttle = host._throttle[id(self)]  # noqa: SLF001
 
             if not throttle[0].acquire(False):
                 return throttled_value()

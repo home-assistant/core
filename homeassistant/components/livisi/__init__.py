@@ -1,22 +1,23 @@
 """The Livisi Smart Home integration."""
+
 from __future__ import annotations
 
-import asyncio
 from typing import Final
 
 from aiohttp import ClientConnectorError
-from aiolivisi import AioLivisi
+from livisi.aiolivisi import AioLivisi
 
 from homeassistant import core
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 
-from .const import DOMAIN, SWITCH_PLATFORM
+from .const import DOMAIN
 from .coordinator import LivisiDataUpdateCoordinator
 
-PLATFORMS: Final = [SWITCH_PLATFORM]
+PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> bool:
@@ -33,7 +34,7 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> boo
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
-        config_entry_id=coordinator.serial_number,
+        config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
         manufacturer="Livisi",
         name=f"SHC {coordinator.controller_type} {coordinator.serial_number}",
@@ -41,7 +42,9 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await coordinator.async_config_entry_first_refresh()
-    asyncio.create_task(coordinator.ws_connect())
+    entry.async_create_background_task(
+        hass, coordinator.ws_connect(), "livisi-ws_connect"
+    )
     return True
 
 

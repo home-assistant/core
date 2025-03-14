@@ -1,5 +1,6 @@
 """Sensor tests for the Goalzero integration."""
-from unittest.mock import AsyncMock
+
+import pytest
 
 from homeassistant.components.goalzero.const import DEFAULT_NAME
 from homeassistant.components.sensor import (
@@ -10,15 +11,14 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_WATT_HOUR,
     PERCENTAGE,
-    POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS,
-    TEMP_CELSIUS,
-    TIME_MINUTES,
-    TIME_SECONDS,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 
@@ -27,48 +27,53 @@ from . import async_init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    entity_registry_enabled_by_default: AsyncMock,
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we get sensor data."""
     await async_init_integration(hass, aioclient_mock)
 
-    state = hass.states.get(f"sensor.{DEFAULT_NAME}_watts_in")
+    state = hass.states.get(f"sensor.{DEFAULT_NAME}_power_in")
     assert state.state == "0.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    state = hass.states.get(f"sensor.{DEFAULT_NAME}_amps_in")
+    state = hass.states.get(f"sensor.{DEFAULT_NAME}_current_in")
     assert state.state == "0.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CURRENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRIC_CURRENT_AMPERE
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfElectricCurrent.AMPERE
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    state = hass.states.get(f"sensor.{DEFAULT_NAME}_watts_out")
+    state = hass.states.get(f"sensor.{DEFAULT_NAME}_power_out")
     assert state.state == "50.5"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    state = hass.states.get(f"sensor.{DEFAULT_NAME}_amps_out")
+    state = hass.states.get(f"sensor.{DEFAULT_NAME}_current_out")
     assert state.state == "2.1"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CURRENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRIC_CURRENT_AMPERE
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfElectricCurrent.AMPERE
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    state = hass.states.get(f"sensor.{DEFAULT_NAME}_wh_out")
+    state = hass.states.get(f"sensor.{DEFAULT_NAME}_energy_out")
     assert state.state == "5.23"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_WATT_HOUR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.WATT_HOUR
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
-    state = hass.states.get(f"sensor.{DEFAULT_NAME}_wh_stored")
+    state = hass.states.get(f"sensor.{DEFAULT_NAME}_energy_stored")
     assert state.state == "1330"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_WATT_HOUR
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    state = hass.states.get(f"sensor.{DEFAULT_NAME}_volts")
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.WATT_HOUR
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
+    state = hass.states.get(f"sensor.{DEFAULT_NAME}_voltage")
     assert state.state == "12.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.VOLTAGE
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRIC_POTENTIAL_VOLT
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfElectricPotential.VOLT
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_state_of_charge_percent")
     assert state.state == "95"
@@ -78,12 +83,12 @@ async def test_sensors(
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_time_to_empty_full")
     assert state.state == "-1"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DURATION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TIME_MINUTES
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.MINUTES
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_temperature")
     assert state.state == "25"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_wi_fi_strength")
     assert state.state == "-62"
@@ -93,7 +98,7 @@ async def test_sensors(
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_total_run_time")
     assert state.state == "1720984"
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TIME_SECONDS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.SECONDS
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_wi_fi_ssid")
     assert state.state == "wifi"

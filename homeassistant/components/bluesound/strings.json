@@ -1,0 +1,75 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Bluesound player",
+          "port": "Port of your Bluesound player. This is usually 11000."
+        }
+      },
+      "confirm": {
+        "title": "Discover Bluesound player",
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "no_ipv4_address": "No IPv4 address found."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "services": {
+    "join": {
+      "name": "Join",
+      "description": "Groups players together under a single master speaker.",
+      "fields": {
+        "master": {
+          "name": "Master",
+          "description": "Entity ID of the player that should become the master of the group."
+        },
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of entity that will group to master speaker. Platform dependent."
+        }
+      }
+    },
+    "unjoin": {
+      "name": "Unjoin",
+      "description": "Separates a player from a group.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name of entity that will be separated from their group. Platform dependent."
+        }
+      }
+    },
+    "set_sleep_timer": {
+      "name": "Set sleep timer",
+      "description": "Sets a Bluesound timer that will turn off the speaker. It will increase in steps: 15, 30, 45, 60, 90, 0.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name(s) of entities that will have a timer set."
+        }
+      }
+    },
+    "clear_sleep_timer": {
+      "name": "Clear sleep timer",
+      "description": "Clears a Bluesound timer.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Name(s) of entities that will have the timer cleared."
+        }
+      }
+    }
+  }
+}

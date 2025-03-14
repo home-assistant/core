@@ -1,17 +1,19 @@
 """Test KNX number."""
+
 import pytest
 
 from homeassistant.components.knx.const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from homeassistant.components.knx.schema import NumberSchema
 from homeassistant.const import CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import KNXTestKit
 
 from tests.common import mock_restore_cache_with_extra_data
 
 
-async def test_number_set_value(hass: HomeAssistant, knx: KNXTestKit):
+async def test_number_set_value(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX number with passive_address and respond_to_read restoring state."""
     test_address = "1/1/1"
     await knx.setup_integration(
@@ -36,14 +38,14 @@ async def test_number_set_value(hass: HomeAssistant, knx: KNXTestKit):
     assert state.attributes.get("unit_of_measurement") == "%"
 
     # set value out of range
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             "number",
             "set_value",
             {"entity_id": "number.test", "value": 101.0},
             blocking=True,
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             "number",
             "set_value",
@@ -60,7 +62,7 @@ async def test_number_set_value(hass: HomeAssistant, knx: KNXTestKit):
     assert state.state == "90"
 
 
-async def test_number_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit):
+async def test_number_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX number with passive_address and respond_to_read restoring state."""
     test_address = "1/1/1"
     test_passive_address = "3/3/3"

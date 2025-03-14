@@ -1,7 +1,7 @@
 """Support for Nightscout sensors."""
+
 from __future__ import annotations
 
-from asyncio import TimeoutError as AsyncIOTimeoutError
 from datetime import timedelta
 import logging
 from typing import Any
@@ -9,11 +9,11 @@ from typing import Any
 from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DATE
+from homeassistant.const import ATTR_DATE, UnitOfBloodGlucoseConcentration
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
 
@@ -27,7 +27,7 @@ DEFAULT_NAME = "Blood Glucose"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Glucose Sensor."""
     api = hass.data[DOMAIN][entry.entry_id]
@@ -37,21 +37,24 @@ async def async_setup_entry(
 class NightscoutSensor(SensorEntity):
     """Implementation of a Nightscout sensor."""
 
-    def __init__(self, api: NightscoutAPI, name, unique_id):
+    _attr_device_class = SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION
+    _attr_native_unit_of_measurement = (
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER
+    )
+    _attr_icon = "mdi:cloud-question"
+
+    def __init__(self, api: NightscoutAPI, name: str, unique_id: str | None) -> None:
         """Initialize the Nightscout sensor."""
         self.api = api
         self._attr_unique_id = unique_id
         self._attr_name = name
         self._attr_extra_state_attributes: dict[str, Any] = {}
-        self._attr_native_unit_of_measurement = "mg/dL"
-        self._attr_icon = "mdi:cloud-question"
-        self._attr_available = False
 
     async def async_update(self) -> None:
         """Fetch the latest data from Nightscout REST API and update the state."""
         try:
             values = await self.api.get_sgvs()
-        except (ClientError, AsyncIOTimeoutError, OSError) as error:
+        except (ClientError, TimeoutError, OSError) as error:
             _LOGGER.error("Error fetching data. Failed with %s", error)
             self._attr_available = False
             return

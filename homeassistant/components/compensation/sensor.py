@@ -1,4 +1,5 @@
 """Support for compensation sensor."""
+
 from __future__ import annotations
 
 import logging
@@ -10,12 +11,20 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ATTRIBUTE,
+    CONF_MAXIMUM,
+    CONF_MINIMUM,
     CONF_SOURCE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -64,6 +73,8 @@ async def async_setup_platform(
                 conf[CONF_PRECISION],
                 conf[CONF_POLYNOMIAL],
                 conf.get(CONF_UNIT_OF_MEASUREMENT),
+                conf[CONF_MINIMUM],
+                conf[CONF_MAXIMUM],
             )
         ]
     )
@@ -83,6 +94,8 @@ class CompensationSensor(SensorEntity):
         precision: int,
         polynomial: np.poly1d,
         unit_of_measurement: str | None,
+        minimum: tuple[float, float] | None,
+        maximum: tuple[float, float] | None,
     ) -> None:
         """Initialize the Compensation sensor."""
         self._source_entity_id = source
@@ -93,6 +106,8 @@ class CompensationSensor(SensorEntity):
         self._coefficients = polynomial.coefficients.tolist()
         self._attr_unique_id = unique_id
         self._attr_name = name
+        self._minimum = minimum
+        self._maximum = maximum
 
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
@@ -116,10 +131,12 @@ class CompensationSensor(SensorEntity):
         return ret
 
     @callback
-    def _async_compensation_sensor_state_listener(self, event: Event) -> None:
+    def _async_compensation_sensor_state_listener(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
         """Handle sensor state changes."""
         new_state: State | None
-        if (new_state := event.data.get("new_state")) is None:
+        if (new_state := event.data["new_state"]) is None:
             return
 
         if self.native_unit_of_measurement is None and self._source_attribute is None:
@@ -132,7 +149,14 @@ class CompensationSensor(SensorEntity):
         else:
             value = None if new_state.state == STATE_UNKNOWN else new_state.state
         try:
-            self._attr_native_value = round(self._poly(float(value)), self._precision)
+            x_value = float(value)  # type: ignore[arg-type]
+            if self._minimum is not None and x_value <= self._minimum[0]:
+                y_value = self._minimum[1]
+            elif self._maximum is not None and x_value >= self._maximum[0]:
+                y_value = self._maximum[1]
+            else:
+                y_value = self._poly(x_value)
+            self._attr_native_value = round(y_value, self._precision)
 
         except (ValueError, TypeError):
             self._attr_native_value = None

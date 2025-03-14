@@ -4,7 +4,8 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
@@ -15,16 +16,92 @@
       "not_supported": "Only PrusaLink API v2 is supported"
     }
   },
+  "issues": {
+    "firmware_5_1_required": {
+      "description": "The PrusaLink integration has been updated to utilize the latest v1 API endpoints, which require firmware version 4.7.0 or later. If you own a Prusa Mini, please make sure your printer is running firmware 5.1.0 or a more recent version, as firmware versions 4.7.x and 5.0.x are not available for this model.\n\nFollow the guide below to update your {entry_title}.\n* [Prusa Mini Firmware Update]({prusa_mini_firmware_update})\n* [Prusa MK4/XL Firmware Update]({prusa_mk4_xl_firmware_update})\n\nAfter you've updated your printer's firmware, make sure to reload the config entry to fix this issue.",
+      "title": "Firmware update required"
+    }
+  },
   "entity": {
+    "binary_sensor": {
+      "mmu": {
+        "name": "MMU"
+      }
+    },
     "sensor": {
       "printer_state": {
         "state": {
-          "cancelling": "Cancelling",
-          "idle": "Idle",
-          "paused": "Paused",
-          "pausing": "Pausing",
-          "printing": "Printing"
+          "idle": "[%key:common::state::idle%]",
+          "busy": "Busy",
+          "printing": "Printing",
+          "paused": "[%key:common::state::paused%]",
+          "finished": "Finished",
+          "stopped": "Stopped",
+          "error": "Error",
+          "attention": "Attention",
+          "ready": "Ready"
         }
+      },
+      "heatbed_temperature": {
+        "name": "Heatbed temperature"
+      },
+      "heatbed_target_temperature": {
+        "name": "Heatbed target temperature"
+      },
+      "nozzle_temperature": {
+        "name": "Nozzle temperature"
+      },
+      "nozzle_target_temperature": {
+        "name": "Nozzle target temperature"
+      },
+      "progress": {
+        "name": "Progress"
+      },
+      "filename": {
+        "name": "Filename"
+      },
+      "material": {
+        "name": "Material"
+      },
+      "print_start": {
+        "name": "Print start"
+      },
+      "print_finish": {
+        "name": "Print finish"
+      },
+      "print_speed": {
+        "name": "Print speed"
+      },
+      "print_flow": {
+        "name": "Print flow"
+      },
+      "fan_hotend": {
+        "name": "Hotend fan"
+      },
+      "fan_print": {
+        "name": "Print fan"
+      },
+      "z_height": {
+        "name": "Z-Height"
+      },
+      "nozzle_diameter": {
+        "name": "Nozzle Diameter"
+      }
+    },
+    "button": {
+      "cancel_job": {
+        "name": "Cancel job"
+      },
+      "pause_job": {
+        "name": "Pause job"
+      },
+      "resume_job": {
+        "name": "Resume job"
+      }
+    },
+    "camera": {
+      "job_preview": {
+        "name": "Preview"
       }
     }
   }

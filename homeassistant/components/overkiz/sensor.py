@@ -1,4 +1,5 @@
 """Support for Overkiz sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -14,31 +15,36 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
-    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import HomeAssistantOverkizData
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, OVERKIZ_STATE_TO_TRANSLATION
+from . import OverkizDataConfigEntry
+from .const import (
+    DOMAIN,
+    IGNORED_OVERKIZ_DEVICES,
+    OVERKIZ_STATE_TO_TRANSLATION,
+    OVERKIZ_UNIT_TO_HA,
+)
 from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity, OverkizEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizSensorDescription(SensorEntityDescription):
     """Class to describe an Overkiz sensor."""
 
@@ -61,7 +67,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:battery",
         device_class=SensorDeviceClass.ENUM,
-        options=["full", "normal", "low", "verylow"],
+        options=["full", "normal", "medium", "low", "verylow"],
         translation_key="battery",
     ),
     OverkizSensorDescription(
@@ -86,13 +92,15 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         icon="mdi:shower-head",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # V40 is measured in litres (L) and shows the amount of warm (mixed) water with a temperature of 40 C, which can be drained from a switched off electric water heater.
+    # V40 is measured in litres (L) and shows the amount of warm (mixed) water
+    # with a temperature of 40 C, which can be drained from
+    # a switched off electric water heater.
     OverkizSensorDescription(
         key=OverkizState.CORE_V40_WATER_VOLUME_ESTIMATION,
         name="Water volume estimation at 40 °C",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfVolume.LITERS,
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -101,22 +109,21 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Water consumption",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfVolume.LITERS,
-        device_class=SensorDeviceClass.VOLUME,
-        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
         key=OverkizState.IO_OUTLET_ENGINE,
         name="Outlet engine",
         icon="mdi:fan-chevron-down",
-        native_unit_of_measurement=UnitOfVolume.LITERS,
-        device_class=SensorDeviceClass.VOLUME,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     OverkizSensorDescription(
         key=OverkizState.IO_INLET_ENGINE,
         name="Inlet engine",
         icon="mdi:fan-chevron-up",
-        native_unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     OverkizSensorDescription(
@@ -150,7 +157,8 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_LUMINANCE,
         name="Luminance",
         device_class=SensorDeviceClass.ILLUMINANCE,
-        native_unit_of_measurement=LIGHT_LUX,  # core:MeasuredValueType = core:LuminanceInLux
+        # core:MeasuredValueType = core:LuminanceInLux
+        native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # ElectricitySensor/CumulativeElectricPowerConsumptionSensor
@@ -158,21 +166,34 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_ELECTRIC_ENERGY_CONSUMPTION,
         name="Electric energy consumption",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,  # core:MeasuredValueType = core:ElectricalEnergyInWh (not for modbus:YutakiV2DHWElectricalEnergyConsumptionComponent)
-        state_class=SensorStateClass.TOTAL_INCREASING,  # core:MeasurementCategory attribute = electric/overall
+        # core:MeasuredValueType = core:ElectricalEnergyInWh
+        # (not for modbus:YutakiV2DHWElectricalEnergyConsumptionComponent)
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        # core:MeasurementCategory attribute = electric/overall
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_ELECTRIC_POWER_CONSUMPTION,
         name="Electric power consumption",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.WATT,  # core:MeasuredValueType = core:ElectricalEnergyInWh (not for modbus:YutakiV2DHWElectricalEnergyConsumptionComponent)
+        # core:MeasuredValueType = core:ElectricalEnergyInWh
+        # (not for modbus:YutakiV2DHWElectricalEnergyConsumptionComponent)
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.MODBUSLINK_POWER_HEAT_ELECTRICAL,
+        name="Electric power consumption",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_CONSUMPTION_TARIFF1,
         name="Consumption tariff 1",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,  # core:MeasuredValueType = core:ElectricalEnergyInWh
+        # core:MeasuredValueType = core:ElectricalEnergyInWh
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -180,7 +201,8 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_CONSUMPTION_TARIFF2,
         name="Consumption tariff 2",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,  # core:MeasuredValueType = core:ElectricalEnergyInWh
+        # core:MeasuredValueType = core:ElectricalEnergyInWh
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -188,7 +210,8 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_CONSUMPTION_TARIFF3,
         name="Consumption tariff 3",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,  # core:MeasuredValueType = core:ElectricalEnergyInWh
+        # core:MeasuredValueType = core:ElectricalEnergyInWh
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -196,7 +219,8 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_CONSUMPTION_TARIFF4,
         name="Consumption tariff 4",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,  # core:MeasuredValueType = core:ElectricalEnergyInWh
+        # core:MeasuredValueType = core:ElectricalEnergyInWh
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -204,7 +228,8 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_CONSUMPTION_TARIFF5,
         name="Consumption tariff 5",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,  # core:MeasuredValueType = core:ElectricalEnergyInWh
+        # core:MeasuredValueType = core:ElectricalEnergyInWh
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -212,7 +237,8 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_CONSUMPTION_TARIFF6,
         name="Consumption tariff 6",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,  # core:MeasuredValueType = core:ElectricalEnergyInWh
+        # core:MeasuredValueType = core:ElectricalEnergyInWh
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -220,7 +246,8 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_CONSUMPTION_TARIFF7,
         name="Consumption tariff 7",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,  # core:MeasuredValueType = core:ElectricalEnergyInWh
+        # core:MeasuredValueType = core:ElectricalEnergyInWh
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -228,7 +255,8 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_CONSUMPTION_TARIFF8,
         name="Consumption tariff 8",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,  # core:MeasuredValueType = core:ElectricalEnergyInWh
+        # core:MeasuredValueType = core:ElectricalEnergyInWh
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -236,7 +264,8 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_CONSUMPTION_TARIFF9,
         name="Consumption tariff 9",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,  # core:MeasuredValueType = core:ElectricalEnergyInWh
+        # core:MeasuredValueType = core:ElectricalEnergyInWh
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -246,7 +275,8 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Relative humidity",
         native_value=lambda value: round(cast(float, value), 2),
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,  # core:MeasuredValueType = core:RelativeValueInPercentage
+        # core:MeasuredValueType = core:RelativeValueInPercentage
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # TemperatureSensor/TemperatureSensor
@@ -255,7 +285,8 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Temperature",
         native_value=lambda value: round(cast(float, value), 2),
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,  # core:MeasuredValueType = core:TemperatureInCelcius
+        # core:MeasuredValueType = core:TemperatureInCelcius
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # WeatherSensor/WeatherForecastSensor
@@ -374,6 +405,27 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_BOTTOM_TANK_WATER_TEMPERATURE,
+        name="Bottom tank water temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_CONTROL_WATER_TARGET_TEMPERATURE,
+        name="Control water target temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_REMAINING_HOT_WATER,
+        name="Warm water remaining",
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+    ),
     # Cover
     OverkizSensorDescription(
         key=OverkizState.CORE_TARGET_CLOSURE,
@@ -386,8 +438,42 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_THREE_WAY_HANDLE_DIRECTION,
         name="Three way handle direction",
         device_class=SensorDeviceClass.ENUM,
-        options=["open", "tilt", "close"],
+        options=["open", "tilt", "closed"],
         translation_key="three_way_handle_direction",
+    ),
+    # Hitachi air to air heatpump outdoor temperature sensors (HLRRWIFI protocol)
+    OverkizSensorDescription(
+        key=OverkizState.HLRRWIFI_OUTDOOR_TEMPERATURE,
+        name="Outdoor temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    # Hitachi air to air heatpump outdoor temperature sensors (OVP protocol)
+    OverkizSensorDescription(
+        key=OverkizState.OVP_OUTDOOR_TEMPERATURE,
+        name="Outdoor temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    # HitachiHeatingSystem/HitachiAirToWaterHeatingZone
+    OverkizSensorDescription(
+        key=OverkizState.MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE_1,
+        name="Room ambient temperature",
+        native_value=lambda value: cast(float, value),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # HitachiHeatingSystem/HitachiAirToWaterMainComponent
+    OverkizSensorDescription(
+        key=OverkizState.MODBUS_OUTDOOR_AMBIENT_TEMPERATURE,
+        name="Outdoor ambient temperature",
+        native_value=lambda value: cast(int, value),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
 
@@ -396,11 +482,11 @@ SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCR
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: OverkizDataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Overkiz sensors from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[SensorEntity] = []
 
     for device in data.coordinator.data.values():
@@ -418,15 +504,15 @@ async def async_setup_entry(
         ):
             continue
 
-        for state in device.definition.states:
-            if description := SUPPORTED_STATES.get(state.qualified_name):
-                entities.append(
-                    OverkizStateSensor(
-                        device.device_url,
-                        data.coordinator,
-                        description,
-                    )
-                )
+        entities.extend(
+            OverkizStateSensor(
+                device.device_url,
+                data.coordinator,
+                description,
+            )
+            for state in device.definition.states
+            if (description := SUPPORTED_STATES.get(state.qualified_name))
+        )
 
     async_add_entities(entities)
 
@@ -441,7 +527,15 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         """Return the value of the sensor."""
         state = self.device.states.get(self.entity_description.key)
 
-        if not state or not state.value:
+        if (
+            state is None
+            or state.value is None
+            # It seems that in some cases we return `None` if state.value is falsy.
+            # This is probably incorrect and should be fixed in a follow up PR.
+            # To ensure measurement sensors do not get an `unknown` state on
+            # a falsy value (e.g. 0 or 0.0) we also check the state_class.
+            or (self.state_class != SensorStateClass.MEASUREMENT and not state.value)
+        ):
             return None
 
         # Transform the value with a lambda function
@@ -452,6 +546,29 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
             return None
 
         return state.value
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement."""
+        if (
+            not (default_unit := self.entity_description.native_unit_of_measurement)
+            or not (state := self.device.states.get(self.entity_description.key))
+            or not state.value
+        ):
+            return default_unit
+
+        attrs = self.device.attributes
+        if (unit := attrs[f"{state.name}MeasuredValueType"]) and (
+            unit_value := unit.value_as_str
+        ):
+            return OVERKIZ_UNIT_TO_HA.get(unit_value, default_unit)
+
+        if (unit := attrs[OverkizAttribute.CORE_MEASURED_VALUE_TYPE]) and (
+            unit_value := unit.value_as_str
+        ):
+            return OVERKIZ_UNIT_TO_HA.get(unit_value, default_unit)
+
+        return default_unit
 
 
 class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
@@ -478,7 +595,8 @@ class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         # By default this sensor will be listed at a virtual HomekitStack device,
-        # but it makes more sense to show this at the gateway device in the entity registry.
-        return {
-            "identifiers": {(DOMAIN, self.executor.get_gateway_id())},
-        }
+        # but it makes more sense to show this at the gateway device
+        # in the entity registry.
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.executor.get_gateway_id())},
+        )

@@ -1,0 +1,2315 @@
+{
+  "home_assistant": {
+    "installation_type": "Home Assistant OS",
+    "version": "2023.10.5",
+    "dev": false,
+    "hassio": true,
+    "virtualenv": false,
+    "python_version": "3.11.5",
+    "docker": true,
+    "arch": "aarch64",
+    "timezone": "America/New_York",
+    "os_name": "Linux",
+    "os_version": "6.1.56",
+    "supervisor": "2023.10.1",
+    "host_os": "Home Assistant OS 11.0",
+    "docker_version": "24.0.6",
+    "chassis": "embedded",
+    "run_as_root": true
+  },
+  "custom_components": {
+    "pyscript": {
+      "version": "1.5.0",
+      "requirements": ["croniter==1.3.8", "watchdog==2.3.1"]
+    }
+  },
+  "integration_manifest": {
+    "domain": "zwave_js",
+    "name": "Z-Wave",
+    "codeowners": ["@home-assistant/z-wave"],
+    "config_flow": true,
+    "dependencies": ["http", "repairs", "usb", "websocket_api"],
+    "documentation": "https://www.home-assistant.io/integrations/zwave_js",
+    "integration_type": "hub",
+    "iot_class": "local_push",
+    "loggers": ["zwave_js_server"],
+    "quality_scale": "platinum",
+    "requirements": ["pyserial==3.5", "zwave-js-server-python==0.52.1"],
+    "usb": [
+      {
+        "vid": "0658",
+        "pid": "0200",
+        "known_devices": ["Aeotec Z-Stick Gen5+", "Z-WaveMe UZB"]
+      },
+      {
+        "vid": "10C4",
+        "pid": "8A2A",
+        "description": "*z-wave*",
+        "known_devices": ["Nortek HUSBZB-1"]
+      }
+    ],
+    "zeroconf": ["_zwave-js-server._tcp.local."],
+    "is_built_in": true
+  },
+  "data": {
+    "versionInfo": {
+      "driverVersion": "12.2.1",
+      "serverVersion": "1.33.0",
+      "minSchemaVersion": 0,
+      "maxSchemaVersion": 33
+    },
+    "entities": [
+      {
+        "domain": "sensor",
+        "entity_id": "sensor.2nd_floor_sensor_heat_alarm_heat_sensor_status",
+        "original_name": "Heat Alarm Heat sensor status",
+        "original_device_class": "enum",
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": null,
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-113-0-Heat Alarm-Heat sensor status",
+        "primary_value": {
+          "command_class": 113,
+          "command_class_name": "Notification",
+          "endpoint": 0,
+          "property": "Heat Alarm",
+          "property_name": "Heat Alarm",
+          "property_key": "Heat sensor status",
+          "property_key_name": "Heat sensor status"
+        }
+      },
+      {
+        "domain": "sensor",
+        "entity_id": "sensor.2nd_floor_sensor_weather_alarm_moisture_alarm_status",
+        "original_name": "Weather Alarm Moisture alarm status",
+        "original_device_class": "enum",
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": null,
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-113-0-Weather Alarm-Moisture alarm status",
+        "primary_value": {
+          "command_class": 113,
+          "command_class_name": "Notification",
+          "endpoint": 0,
+          "property": "Weather Alarm",
+          "property_name": "Weather Alarm",
+          "property_key": "Moisture alarm status",
+          "property_key_name": "Moisture alarm status"
+        }
+      },
+      {
+        "domain": "sensor",
+        "entity_id": "sensor.2nd_floor_sensor_alarmtype",
+        "original_name": "Alarm Type",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": null,
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-113-0-alarmType",
+        "primary_value": null
+      },
+      {
+        "domain": "sensor",
+        "entity_id": "sensor.2nd_floor_sensor_alarmlevel",
+        "original_name": "Alarm Level",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": null,
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-113-0-alarmLevel",
+        "primary_value": null
+      },
+      {
+        "domain": "sensor",
+        "entity_id": "sensor.2nd_floor_sensor_battery_level",
+        "original_name": "Battery level",
+        "original_device_class": "battery",
+        "disabled": false,
+        "disabled_by": null,
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "diagnostic",
+        "supported_features": 0,
+        "unit_of_measurement": "%",
+        "value_id": "23-128-0-level",
+        "primary_value": {
+          "command_class": 128,
+          "command_class_name": "Battery",
+          "endpoint": 0,
+          "property": "level",
+          "property_name": "level",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "sensor",
+        "entity_id": "sensor.2nd_floor_sensor_charging_status",
+        "original_name": "Charging status",
+        "original_device_class": "battery",
+        "disabled": false,
+        "disabled_by": null,
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "diagnostic",
+        "supported_features": 0,
+        "unit_of_measurement": "%",
+        "value_id": "23-128-0-chargingStatus",
+        "primary_value": {
+          "command_class": 128,
+          "command_class_name": "Battery",
+          "endpoint": 0,
+          "property": "chargingStatus",
+          "property_name": "chargingStatus",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "sensor",
+        "entity_id": "sensor.2nd_floor_sensor_recharge_or_replace",
+        "original_name": "Recharge or replace",
+        "original_device_class": "battery",
+        "disabled": false,
+        "disabled_by": null,
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "diagnostic",
+        "supported_features": 0,
+        "unit_of_measurement": "%",
+        "value_id": "23-128-0-rechargeOrReplace",
+        "primary_value": {
+          "command_class": 128,
+          "command_class_name": "Battery",
+          "endpoint": 0,
+          "property": "rechargeOrReplace",
+          "property_name": "rechargeOrReplace",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "sensor",
+        "entity_id": "sensor.2nd_floor_sensor_node_identify_on_off_period_duration",
+        "original_name": "Node Identify - On/Off Period: Duration",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": null,
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-135-0-80-3",
+        "primary_value": {
+          "command_class": 135,
+          "command_class_name": "Indicator",
+          "endpoint": 0,
+          "property": 80,
+          "property_name": "Node Identify",
+          "property_key": 3,
+          "property_key_name": "On/Off Period: Duration"
+        }
+      },
+      {
+        "domain": "sensor",
+        "entity_id": "sensor.2nd_floor_sensor_node_identify_on_off_cycle_count",
+        "original_name": "Node Identify - On/Off Cycle Count",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": null,
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-135-0-80-4",
+        "primary_value": {
+          "command_class": 135,
+          "command_class_name": "Indicator",
+          "endpoint": 0,
+          "property": 80,
+          "property_name": "Node Identify",
+          "property_key": 4,
+          "property_key_name": "On/Off Cycle Count"
+        }
+      },
+      {
+        "domain": "sensor",
+        "entity_id": "sensor.2nd_floor_sensor_node_identify_on_off_period_on_time",
+        "original_name": "Node Identify - On/Off Period: On time",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": null,
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-135-0-80-5",
+        "primary_value": {
+          "command_class": 135,
+          "command_class_name": "Indicator",
+          "endpoint": 0,
+          "property": 80,
+          "property_name": "Node Identify",
+          "property_key": 5,
+          "property_key_name": "On/Off Period: On time"
+        }
+      },
+      {
+        "domain": "sensor",
+        "entity_id": "sensor.2nd_floor_sensor_indicator_value",
+        "original_name": "Indicator value",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": null,
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-135-0-value",
+        "primary_value": null
+      },
+      {
+        "domain": "binary_sensor",
+        "entity_id": "binary_sensor.2nd_floor_sensor_low_battery_level",
+        "original_name": "Low battery level",
+        "original_device_class": "battery",
+        "disabled": false,
+        "disabled_by": null,
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "diagnostic",
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-128-0-isLow",
+        "primary_value": {
+          "command_class": 128,
+          "command_class_name": "Battery",
+          "endpoint": 0,
+          "property": "isLow",
+          "property_name": "isLow",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "binary_sensor",
+        "entity_id": "binary_sensor.2nd_floor_sensor_rechargeable",
+        "original_name": "Rechargeable",
+        "original_device_class": "battery",
+        "disabled": false,
+        "disabled_by": null,
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "diagnostic",
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-128-0-rechargeable",
+        "primary_value": {
+          "command_class": 128,
+          "command_class_name": "Battery",
+          "endpoint": 0,
+          "property": "rechargeable",
+          "property_name": "rechargeable",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "binary_sensor",
+        "entity_id": "binary_sensor.2nd_floor_sensor_used_as_backup",
+        "original_name": "Used as backup",
+        "original_device_class": "battery",
+        "disabled": false,
+        "disabled_by": null,
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "diagnostic",
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-128-0-backup",
+        "primary_value": {
+          "command_class": 128,
+          "command_class_name": "Battery",
+          "endpoint": 0,
+          "property": "backup",
+          "property_name": "backup",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "binary_sensor",
+        "entity_id": "binary_sensor.2nd_floor_sensor_overheating",
+        "original_name": "Overheating",
+        "original_device_class": "battery",
+        "disabled": false,
+        "disabled_by": null,
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "diagnostic",
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-128-0-overheating",
+        "primary_value": {
+          "command_class": 128,
+          "command_class_name": "Battery",
+          "endpoint": 0,
+          "property": "overheating",
+          "property_name": "overheating",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "binary_sensor",
+        "entity_id": "binary_sensor.2nd_floor_sensor_fluid_is_low",
+        "original_name": "Fluid is low",
+        "original_device_class": "battery",
+        "disabled": false,
+        "disabled_by": null,
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "diagnostic",
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-128-0-lowFluid",
+        "primary_value": {
+          "command_class": 128,
+          "command_class_name": "Battery",
+          "endpoint": 0,
+          "property": "lowFluid",
+          "property_name": "lowFluid",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "binary_sensor",
+        "entity_id": "binary_sensor.2nd_floor_sensor_battery_is_disconnected",
+        "original_name": "Battery is disconnected",
+        "original_device_class": "battery",
+        "disabled": false,
+        "disabled_by": null,
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "diagnostic",
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-128-0-disconnected",
+        "primary_value": {
+          "command_class": 128,
+          "command_class_name": "Battery",
+          "endpoint": 0,
+          "property": "disconnected",
+          "property_name": "disconnected",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "binary_sensor",
+        "entity_id": "binary_sensor.2nd_floor_sensor_battery_temperature_is_low",
+        "original_name": "Battery temperature is low",
+        "original_device_class": "battery",
+        "disabled": false,
+        "disabled_by": null,
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "diagnostic",
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-128-0-lowTemperatureStatus",
+        "primary_value": {
+          "command_class": 128,
+          "command_class_name": "Battery",
+          "endpoint": 0,
+          "property": "lowTemperatureStatus",
+          "property_name": "lowTemperatureStatus",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "sensor",
+        "entity_id": "sensor.2nd_floor_air_temperature",
+        "original_name": "Air temperature",
+        "original_device_class": "temperature",
+        "disabled": false,
+        "disabled_by": null,
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": null,
+        "supported_features": 0,
+        "unit_of_measurement": "\u00b0F",
+        "value_id": "23-49-0-Air temperature",
+        "primary_value": {
+          "command_class": 49,
+          "command_class_name": "Multilevel Sensor",
+          "endpoint": 0,
+          "property": "Air temperature",
+          "property_name": "Air temperature",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "binary_sensor",
+        "entity_id": "binary_sensor.2nd_floor_underheat_detected",
+        "original_name": "Underheat detected",
+        "original_device_class": "heat",
+        "disabled": false,
+        "disabled_by": null,
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": null,
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-113-0-Heat Alarm-Heat sensor status",
+        "primary_value": {
+          "command_class": 113,
+          "command_class_name": "Notification",
+          "endpoint": 0,
+          "property": "Heat Alarm",
+          "property_name": "Heat Alarm",
+          "property_key": "Heat sensor status",
+          "property_key_name": "Heat sensor status",
+          "state_key": 6
+        }
+      },
+      {
+        "domain": "sensor",
+        "entity_id": "sensor.2nd_floor_humidity",
+        "original_name": "Humidity",
+        "original_device_class": "humidity",
+        "disabled": false,
+        "disabled_by": null,
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": null,
+        "supported_features": 0,
+        "unit_of_measurement": "%",
+        "value_id": "23-49-0-Humidity",
+        "primary_value": {
+          "command_class": 49,
+          "command_class_name": "Multilevel Sensor",
+          "endpoint": 0,
+          "property": "Humidity",
+          "property_name": "Humidity",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "binary_sensor",
+        "entity_id": "binary_sensor.2nd_floor_moisture_alarm",
+        "original_name": "Moisture alarm",
+        "original_device_class": null,
+        "disabled": false,
+        "disabled_by": null,
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": null,
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-113-0-Weather Alarm-Moisture alarm status",
+        "primary_value": {
+          "command_class": 113,
+          "command_class_name": "Notification",
+          "endpoint": 0,
+          "property": "Weather Alarm",
+          "property_name": "Weather Alarm",
+          "property_key": "Moisture alarm status",
+          "property_key_name": "Moisture alarm status",
+          "state_key": 2
+        }
+      },
+      {
+        "domain": "button",
+        "entity_id": "button.2nd_floor_sensor_idle_heat_sensor_status",
+        "original_name": "Idle Heat Alarm Heat sensor status",
+        "original_device_class": null,
+        "disabled": false,
+        "disabled_by": null,
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-113-0-Heat Alarm-Heat sensor status",
+        "primary_value": {
+          "command_class": 113,
+          "command_class_name": "Notification",
+          "endpoint": 0,
+          "property": "Heat Alarm",
+          "property_name": "Heat Alarm",
+          "property_key": "Heat sensor status",
+          "property_key_name": "Heat sensor status"
+        }
+      },
+      {
+        "domain": "button",
+        "entity_id": "button.2nd_floor_sensor_idle_moisture_alarm_status",
+        "original_name": "Idle Weather Alarm Moisture alarm status",
+        "original_device_class": null,
+        "disabled": false,
+        "disabled_by": null,
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-113-0-Weather Alarm-Moisture alarm status",
+        "primary_value": {
+          "command_class": 113,
+          "command_class_name": "Notification",
+          "endpoint": 0,
+          "property": "Weather Alarm",
+          "property_name": "Weather Alarm",
+          "property_key": "Moisture alarm status",
+          "property_key_name": "Moisture alarm status"
+        }
+      },
+      {
+        "domain": "select",
+        "entity_id": "select.2nd_floor_sensor_high_temperature_alert_reporting",
+        "original_name": "High Temperature Alert Reporting",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-112-0-6",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 6,
+          "property_name": "High Temperature Alert Reporting",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "select",
+        "entity_id": "select.2nd_floor_sensor_low_temperature_alert_reporting",
+        "original_name": "Low Temperature Alert Reporting",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-112-0-8",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 8,
+          "property_name": "Low Temperature Alert Reporting",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "select",
+        "entity_id": "select.2nd_floor_sensor_high_humidity_alert_reporting",
+        "original_name": "High Humidity Alert Reporting",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-112-0-10",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 10,
+          "property_name": "High Humidity Alert Reporting",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "select",
+        "entity_id": "select.2nd_floor_sensor_low_humidity_alert_reporting",
+        "original_name": "Low Humidity Alert Reporting",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-112-0-12",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 12,
+          "property_name": "Low Humidity Alert Reporting",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "select",
+        "entity_id": "select.2nd_floor_sensor_temperature_scale",
+        "original_name": "Temperature Scale",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": null,
+        "value_id": "23-112-0-13",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 13,
+          "property_name": "Temperature Scale",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "number",
+        "entity_id": "number.2nd_floor_sensor_battery_report_threshold",
+        "original_name": "Battery Report Threshold",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": "%",
+        "value_id": "23-112-0-1",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 1,
+          "property_name": "Battery Report Threshold",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "number",
+        "entity_id": "number.2nd_floor_sensor_low_battery_alarm_threshold",
+        "original_name": "Low Battery Alarm Threshold",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": "%",
+        "value_id": "23-112-0-2",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 2,
+          "property_name": "Low Battery Alarm Threshold",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "number",
+        "entity_id": "number.2nd_floor_sensor_temperature_report_threshold",
+        "original_name": "Temperature Report Threshold",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": "0.1 \u00b0F/C",
+        "value_id": "23-112-0-3",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 3,
+          "property_name": "Temperature Report Threshold",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "number",
+        "entity_id": "number.2nd_floor_sensor_humidity_report_threshold",
+        "original_name": "Humidity Report Threshold",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": "%",
+        "value_id": "23-112-0-4",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 4,
+          "property_name": "Humidity Report Threshold",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "number",
+        "entity_id": "number.2nd_floor_sensor_high_temperature_alert_threshold",
+        "original_name": "High Temperature Alert Threshold",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": "\u00b0F/C",
+        "value_id": "23-112-0-5",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 5,
+          "property_name": "High Temperature Alert Threshold",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "number",
+        "entity_id": "number.2nd_floor_sensor_low_temperature_alert_threshold",
+        "original_name": "Low Temperature Alert Threshold",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": "\u00b0F/C",
+        "value_id": "23-112-0-7",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 7,
+          "property_name": "Low Temperature Alert Threshold",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "number",
+        "entity_id": "number.2nd_floor_sensor_high_humidity_alert_threshold",
+        "original_name": "High Humidity Alert Threshold",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": "%",
+        "value_id": "23-112-0-9",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 9,
+          "property_name": "High Humidity Alert Threshold",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "number",
+        "entity_id": "number.2nd_floor_sensor_low_humidity_alert_threshold",
+        "original_name": "Low Humidity Alert Threshold",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": "%",
+        "value_id": "23-112-0-11",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 11,
+          "property_name": "Low Humidity Alert Threshold",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "number",
+        "entity_id": "number.2nd_floor_sensor_temperature_offset",
+        "original_name": "Temperature Offset",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": "0.1 \u00b0F/C",
+        "value_id": "23-112-0-14",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 14,
+          "property_name": "Temperature Offset",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "number",
+        "entity_id": "number.2nd_floor_sensor_humidity_offset",
+        "original_name": "Humidity Offset",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": "0.1 %",
+        "value_id": "23-112-0-15",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 15,
+          "property_name": "Humidity Offset",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "number",
+        "entity_id": "number.2nd_floor_sensor_temperature_reporting_interval",
+        "original_name": "Temperature Reporting Interval",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": "minutes",
+        "value_id": "23-112-0-16",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 16,
+          "property_name": "Temperature Reporting Interval",
+          "property_key": null,
+          "property_key_name": null
+        }
+      },
+      {
+        "domain": "number",
+        "entity_id": "number.2nd_floor_sensor_humidity_reporting_interval",
+        "original_name": "Humidity Reporting Interval",
+        "original_device_class": null,
+        "disabled": true,
+        "disabled_by": "integration",
+        "hidden_by": null,
+        "original_icon": null,
+        "entity_category": "config",
+        "supported_features": 0,
+        "unit_of_measurement": "minutes",
+        "value_id": "23-112-0-17",
+        "primary_value": {
+          "command_class": 112,
+          "command_class_name": "Configuration",
+          "endpoint": 0,
+          "property": 17,
+          "property_name": "Humidity Reporting Interval",
+          "property_key": null,
+          "property_key_name": null
+        }
+      }
+    ],
+    "state": {
+      "nodeId": 23,
+      "index": 0,
+      "installerIcon": 3327,
+      "userIcon": 3327,
+      "status": 1,
+      "ready": true,
+      "isListening": false,
+      "isRouting": true,
+      "isSecure": true,
+      "manufacturerId": 634,
+      "productId": 57348,
+      "productType": 28672,
+      "firmwareVersion": "1.10",
+      "zwavePlusVersion": 2,
+      "name": "2nd Floor Sensor",
+      "location": "**REDACTED**",
+      "deviceConfig": {
+        "filename": "/usr/src/app/store/.config-db/devices/0x027a/zse44.json",
+        "isEmbedded": true,
+        "manufacturer": "Zooz",
+        "manufacturerId": 634,
+        "label": "ZSE44",
+        "description": "Temperature Humidity XS Sensor",
+        "devices": [
+          {
+            "productType": 28672,
+            "productId": 57348
+          }
+        ],
+        "firmwareVersion": {
+          "min": "0.0",
+          "max": "255.255"
+        },
+        "preferred": false,
+        "associations": {},
+        "paramInformation": {
+          "_map": {}
+        },
+        "metadata": {
+          "inclusion": "Initiate inclusion (pairing) in the app (or web interface). Not sure how? ask@getzooz.com\nWhile the hub is looking for new devices, click the Z-Wave button 3 times as quickly as possible. The LED indicator will start flashing to confirm inclusion mode and turn off once inclusion is completed.",
+          "exclusion": "1. Bring the sensor within direct range of your Z-Wave hub.\n2. Put the Z-Wave hub into exclusion mode (not sure how to do that? ask@getzooz.com).\n3. Click the Z-Wave button 3 times as quickly as possible.\n4. Your hub will confirm exclusion and the sensor will disappear from your controller's device list",
+          "reset": "When your network\u2019s primary controller is missing or otherwise inoperable, you may need to reset the device to factory settings manually. In order to complete the process, make sure the sensor is powered, then click the Z-Wave button twice and hold it the third time for 10 seconds. The LED indicator will blink continuously. Immediately after, click the Z-Wave button twice more to finalize the reset. The LED indicator will flash 3 times to confirm a successful reset",
+          "manual": "https://cdn.shopify.com/s/files/1/0218/7704/files/zooz-700-series-tilt-shock-xs-sensor-zse43-manual.pdf"
+        }
+      },
+      "label": "ZSE44",
+      "interviewAttempts": 0,
+      "isFrequentListening": false,
+      "maxDataRate": 100000,
+      "supportedDataRates": [40000, 100000],
+      "protocolVersion": 3,
+      "supportsBeaming": true,
+      "supportsSecurity": false,
+      "nodeType": 1,
+      "zwavePlusNodeType": 0,
+      "zwavePlusRoleType": 6,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 7,
+          "label": "Notification Sensor"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Notification Sensor"
+        },
+        "mandatorySupportedCCs": [],
+        "mandatoryControlledCCs": []
+      },
+      "interviewStage": "Complete",
+      "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x027a:0x7000:0xe004:1.10",
+      "statistics": {
+        "commandsTX": 0,
+        "commandsRX": 0,
+        "commandsDroppedRX": 0,
+        "commandsDroppedTX": 0,
+        "timeoutResponse": 0,
+        "lwr": {
+          "repeaters": [2],
+          "protocolDataRate": 3
+        }
+      },
+      "highestSecurityClass": 1,
+      "isControllerNode": false,
+      "keepAwake": false,
+      "lastSeen": "2023-08-09T13:26:05.031Z",
+      "values": {
+        "23-49-0-Air temperature": {
+          "endpoint": 0,
+          "commandClass": 49,
+          "commandClassName": "Multilevel Sensor",
+          "property": "Air temperature",
+          "propertyName": "Air temperature",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "label": "Air temperature",
+            "ccSpecific": {
+              "sensorType": 1,
+              "scale": 1
+            },
+            "unit": "\u00b0F",
+            "stateful": true,
+            "secret": false
+          },
+          "value": 69.9
+        },
+        "23-49-0-Humidity": {
+          "endpoint": 0,
+          "commandClass": 49,
+          "commandClassName": "Multilevel Sensor",
+          "property": "Humidity",
+          "propertyName": "Humidity",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "label": "Humidity",
+            "ccSpecific": {
+              "sensorType": 5,
+              "scale": 0
+            },
+            "unit": "%",
+            "stateful": true,
+            "secret": false
+          },
+          "value": 54
+        },
+        "23-112-0-1": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 1,
+          "propertyName": "Battery Report Threshold",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "label": "Battery Report Threshold",
+            "default": 5,
+            "min": 1,
+            "max": 10,
+            "unit": "%",
+            "valueSize": 1,
+            "format": 1,
+            "allowManualEntry": true,
+            "isFromConfig": true
+          },
+          "value": 5
+        },
+        "23-112-0-2": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 2,
+          "propertyName": "Low Battery Alarm Threshold",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "label": "Low Battery Alarm Threshold",
+            "default": 20,
+            "min": 10,
+            "max": 50,
+            "unit": "%",
+            "valueSize": 1,
+            "format": 1,
+            "allowManualEntry": true,
+            "isFromConfig": true
+          },
+          "value": 10
+        },
+        "23-112-0-3": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 3,
+          "propertyName": "Temperature Report Threshold",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "label": "Temperature Report Threshold",
+            "default": 20,
+            "min": 10,
+            "max": 100,
+            "unit": "0.1 \u00b0F/C",
+            "valueSize": 1,
+            "format": 1,
+            "allowManualEntry": true,
+            "isFromConfig": true
+          },
+          "value": 10
+        },
+        "23-112-0-4": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 4,
+          "propertyName": "Humidity Report Threshold",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "label": "Humidity Report Threshold",
+            "default": 10,
+            "min": 1,
+            "max": 50,
+            "unit": "%",
+            "valueSize": 1,
+            "format": 1,
+            "allowManualEntry": true,
+            "isFromConfig": true
+          },
+          "value": 5
+        },
+        "23-112-0-5": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 5,
+          "propertyName": "High Temperature Alert Threshold",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "label": "High Temperature Alert Threshold",
+            "default": 120,
+            "min": 50,
+            "max": 120,
+            "unit": "\u00b0F/C",
+            "valueSize": 1,
+            "format": 1,
+            "allowManualEntry": true,
+            "isFromConfig": true
+          },
+          "value": 120
+        },
+        "23-112-0-6": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 6,
+          "propertyName": "High Temperature Alert Reporting",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "label": "High Temperature Alert Reporting",
+            "default": 7,
+            "min": 0,
+            "max": 7,
+            "states": {
+              "0": "Disable",
+              "1": "Lifeline only",
+              "2": "0xff (on) to Group 2 only",
+              "3": "0xff (on) to Lifeline and Group 2",
+              "4": "0x00 (off) to Group 2 only",
+              "5": "0x00 (off) to Lifeline and Group 2",
+              "6": "0xff (on) and 0x00 (off) to Group 2 only",
+              "7": "0xff (on) and 0x00 (off) to Lifeline and Group 2"
+            },
+            "valueSize": 1,
+            "format": 1,
+            "allowManualEntry": false,
+            "isFromConfig": true
+          },
+          "value": 7
+        },
+        "23-112-0-7": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 7,
+          "propertyName": "Low Temperature Alert Threshold",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "label": "Low Temperature Alert Threshold",
+            "default": 10,
+            "min": 10,
+            "max": 100,
+            "unit": "\u00b0F/C",
+            "valueSize": 1,
+            "format": 1,
+            "allowManualEntry": true,
+            "isFromConfig": true
+          },
+          "value": 10
+        },
+        "23-112-0-8": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 8,
+          "propertyName": "Low Temperature Alert Reporting",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "label": "Low Temperature Alert Reporting",
+            "default": 7,
+            "min": 0,
+            "max": 7,
+            "states": {
+              "0": "Disable",
+              "1": "Lifeline only",
+              "2": "0xff (on) to Group 3 only",
+              "3": "0xff (on) to Lifeline and Group 3",
+              "4": "0x00 (off) to Group 3 only",
+              "5": "0x00 (off) to Lifeline and Group 3",
+              "6": "0xff (on) and 0x00 (off) to Group 3 only",
+              "7": "0xff (on) and 0x00 (off) to Lifeline and Group 3"
+            },
+            "valueSize": 1,
+            "format": 1,
+            "allowManualEntry": false,
+            "isFromConfig": true
+          },
+          "value": 7
+        },
+        "23-112-0-9": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 9,
+          "propertyName": "High Humidity Alert Threshold",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "label": "High Humidity Alert Threshold",
+            "default": 0,
+            "min": 0,
+            "max": 100,
+            "unit": "%",
+            "valueSize": 1,
+            "format": 1,
+            "allowManualEntry": true,
+            "isFromConfig": true
+          },
+          "value": 0
+        },
+        "23-112-0-10": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 10,
+          "propertyName": "High Humidity Alert Reporting",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "label": "High Humidity Alert Reporting",
+            "default": 7,
+            "min": 0,
+            "max": 7,
+            "states": {
+              "0": "Disable",
+              "1": "Lifeline only",
+              "2": "0xff (on) to Group 4 only",
+              "3": "0xff (on) to Lifeline and Group 4",
+              "4": "0x00 (off) to Group 4 only",
+              "5": "0x00 (off) to Lifeline and Group 4",
+              "6": "0xff (on) and 0x00 (off) to Group 4 only",
+              "7": "0xff (on) and 0x00 (off) to Lifeline and Group 4"
+            },
+            "valueSize": 1,
+            "format": 1,
+            "allowManualEntry": false,
+            "isFromConfig": true
+          },
+          "value": 7
+        },
+        "23-112-0-11": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 11,
+          "propertyName": "Low Humidity Alert Threshold",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "label": "Low Humidity Alert Threshold",
+            "default": 0,
+            "min": 0,
+            "max": 100,
+            "unit": "%",
+            "valueSize": 1,
+            "format": 1,
+            "allowManualEntry": true,
+            "isFromConfig": true
+          },
+          "value": 0
+        },
+        "23-112-0-12": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 12,
+          "propertyName": "Low Humidity Alert Reporting",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "label": "Low Humidity Alert Reporting",
+            "default": 7,
+            "min": 0,
+            "max": 7,
+            "states": {
+              "0": "Disable",
+              "1": "Lifeline only",
+              "2": "0xff (on) to Group 5 only",
+              "3": "0xff (on) to Lifeline and Group 5",
+              "4": "0x00 (off) to Group 5 only",
+              "5": "0x00 (off) to Lifeline and Group 5",
+              "6": "0xff (on) and 0x00 (off) to Group 5 only",
+              "7": "0xff (on) and 0x00 (off) to Lifeline and Group 5"
+            },
+            "valueSize": 1,
+            "format": 1,
+            "allowManualEntry": false,
+            "isFromConfig": true
+          },
+          "value": 7
+        },
+        "23-112-0-13": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 13,
+          "propertyName": "Temperature Scale",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "label": "Temperature Scale",
+            "default": 1,
+            "min": 0,
+            "max": 1,
+            "states": {
+              "0": "Celsius",
+              "1": "Fahrenheit"
+            },
+            "valueSize": 1,
+            "format": 0,
+            "allowManualEntry": false,
+            "isFromConfig": true
+          },
+          "value": 1
+        },
+        "23-112-0-14": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 14,
+          "propertyName": "Temperature Offset",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "description": "0=-10, 100=0, 200=+10",
+            "label": "Temperature Offset",
+            "default": 100,
+            "min": 0,
+            "max": 200,
+            "unit": "0.1 \u00b0F/C",
+            "valueSize": 1,
+            "format": 1,
+            "allowManualEntry": true,
+            "isFromConfig": true
+          },
+          "value": 100
+        },
+        "23-112-0-15": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 15,
+          "propertyName": "Humidity Offset",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "description": "0=-10, 100=0, 200=+10",
+            "label": "Humidity Offset",
+            "default": 100,
+            "min": 0,
+            "max": 200,
+            "unit": "0.1 %",
+            "valueSize": 1,
+            "format": 1,
+            "allowManualEntry": true,
+            "isFromConfig": true
+          },
+          "value": 100
+        },
+        "23-112-0-16": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 16,
+          "propertyName": "Temperature Reporting Interval",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "label": "Temperature Reporting Interval",
+            "default": 240,
+            "min": 1,
+            "max": 480,
+            "unit": "minutes",
+            "valueSize": 2,
+            "format": 1,
+            "allowManualEntry": true,
+            "isFromConfig": true
+          },
+          "value": 240
+        },
+        "23-112-0-17": {
+          "endpoint": 0,
+          "commandClass": 112,
+          "commandClassName": "Configuration",
+          "property": 17,
+          "propertyName": "Humidity Reporting Interval",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "label": "Humidity Reporting Interval",
+            "default": 240,
+            "min": 1,
+            "max": 480,
+            "unit": "minutes",
+            "valueSize": 2,
+            "format": 1,
+            "allowManualEntry": true,
+            "isFromConfig": true
+          },
+          "value": 240
+        },
+        "23-113-0-Heat Alarm-Heat sensor status": {
+          "endpoint": 0,
+          "commandClass": 113,
+          "commandClassName": "Notification",
+          "property": "Heat Alarm",
+          "propertyKey": "Heat sensor status",
+          "propertyName": "Heat Alarm",
+          "propertyKeyName": "Heat sensor status",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "label": "Heat sensor status",
+            "ccSpecific": {
+              "notificationType": 4
+            },
+            "min": 0,
+            "max": 255,
+            "states": {
+              "0": "idle",
+              "6": "Underheat detected"
+            },
+            "stateful": true,
+            "secret": false
+          },
+          "value": 0
+        },
+        "23-113-0-Weather Alarm-Moisture alarm status": {
+          "endpoint": 0,
+          "commandClass": 113,
+          "commandClassName": "Notification",
+          "property": "Weather Alarm",
+          "propertyKey": "Moisture alarm status",
+          "propertyName": "Weather Alarm",
+          "propertyKeyName": "Moisture alarm status",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "label": "Moisture alarm status",
+            "ccSpecific": {
+              "notificationType": 16
+            },
+            "min": 0,
+            "max": 255,
+            "states": {
+              "0": "idle",
+              "2": "Moisture alarm"
+            },
+            "stateful": true,
+            "secret": false
+          },
+          "value": 0
+        },
+        "23-114-0-manufacturerId": {
+          "endpoint": 0,
+          "commandClass": 114,
+          "commandClassName": "Manufacturer Specific",
+          "property": "manufacturerId",
+          "propertyName": "manufacturerId",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "label": "Manufacturer ID",
+            "min": 0,
+            "max": 65535,
+            "stateful": true,
+            "secret": false
+          },
+          "value": 634
+        },
+        "23-114-0-productType": {
+          "endpoint": 0,
+          "commandClass": 114,
+          "commandClassName": "Manufacturer Specific",
+          "property": "productType",
+          "propertyName": "productType",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "label": "Product type",
+            "min": 0,
+            "max": 65535,
+            "stateful": true,
+            "secret": false
+          },
+          "value": 28672
+        },
+        "23-114-0-productId": {
+          "endpoint": 0,
+          "commandClass": 114,
+          "commandClassName": "Manufacturer Specific",
+          "property": "productId",
+          "propertyName": "productId",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "label": "Product ID",
+            "min": 0,
+            "max": 65535,
+            "stateful": true,
+            "secret": false
+          },
+          "value": 57348
+        },
+        "23-128-0-level": {
+          "endpoint": 0,
+          "commandClass": 128,
+          "commandClassName": "Battery",
+          "property": "level",
+          "propertyName": "level",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "label": "Battery level",
+            "min": 0,
+            "max": 100,
+            "unit": "%",
+            "stateful": true,
+            "secret": false
+          },
+          "value": 0
+        },
+        "23-128-0-isLow": {
+          "endpoint": 0,
+          "commandClass": 128,
+          "commandClassName": "Battery",
+          "property": "isLow",
+          "propertyName": "isLow",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "boolean",
+            "readable": true,
+            "writeable": false,
+            "label": "Low battery level",
+            "stateful": true,
+            "secret": false
+          },
+          "value": true
+        },
+        "23-128-0-chargingStatus": {
+          "endpoint": 0,
+          "commandClass": 128,
+          "commandClassName": "Battery",
+          "property": "chargingStatus",
+          "propertyName": "chargingStatus",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "label": "Charging status",
+            "min": 0,
+            "max": 255,
+            "states": {
+              "0": "Discharging",
+              "1": "Charging",
+              "2": "Maintaining"
+            },
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-128-0-rechargeable": {
+          "endpoint": 0,
+          "commandClass": 128,
+          "commandClassName": "Battery",
+          "property": "rechargeable",
+          "propertyName": "rechargeable",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "boolean",
+            "readable": true,
+            "writeable": false,
+            "label": "Rechargeable",
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-128-0-backup": {
+          "endpoint": 0,
+          "commandClass": 128,
+          "commandClassName": "Battery",
+          "property": "backup",
+          "propertyName": "backup",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "boolean",
+            "readable": true,
+            "writeable": false,
+            "label": "Used as backup",
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-128-0-overheating": {
+          "endpoint": 0,
+          "commandClass": 128,
+          "commandClassName": "Battery",
+          "property": "overheating",
+          "propertyName": "overheating",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "boolean",
+            "readable": true,
+            "writeable": false,
+            "label": "Overheating",
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-128-0-lowFluid": {
+          "endpoint": 0,
+          "commandClass": 128,
+          "commandClassName": "Battery",
+          "property": "lowFluid",
+          "propertyName": "lowFluid",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "boolean",
+            "readable": true,
+            "writeable": false,
+            "label": "Fluid is low",
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-128-0-rechargeOrReplace": {
+          "endpoint": 0,
+          "commandClass": 128,
+          "commandClassName": "Battery",
+          "property": "rechargeOrReplace",
+          "propertyName": "rechargeOrReplace",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "label": "Recharge or replace",
+            "min": 0,
+            "max": 255,
+            "states": {
+              "0": "No",
+              "1": "Soon",
+              "2": "Now"
+            },
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-128-0-disconnected": {
+          "endpoint": 0,
+          "commandClass": 128,
+          "commandClassName": "Battery",
+          "property": "disconnected",
+          "propertyName": "disconnected",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "boolean",
+            "readable": true,
+            "writeable": false,
+            "label": "Battery is disconnected",
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-128-0-lowTemperatureStatus": {
+          "endpoint": 0,
+          "commandClass": 128,
+          "commandClassName": "Battery",
+          "property": "lowTemperatureStatus",
+          "propertyName": "lowTemperatureStatus",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "boolean",
+            "readable": true,
+            "writeable": false,
+            "label": "Battery temperature is low",
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-132-0-wakeUpInterval": {
+          "endpoint": 0,
+          "commandClass": 132,
+          "commandClassName": "Wake Up",
+          "property": "wakeUpInterval",
+          "propertyName": "wakeUpInterval",
+          "ccVersion": 1,
+          "metadata": {
+            "type": "number",
+            "default": 21600,
+            "readable": false,
+            "writeable": true,
+            "min": 3600,
+            "max": 86400,
+            "steps": 60,
+            "stateful": true,
+            "secret": false
+          },
+          "value": 21600
+        },
+        "23-132-0-controllerNodeId": {
+          "endpoint": 0,
+          "commandClass": 132,
+          "commandClassName": "Wake Up",
+          "property": "controllerNodeId",
+          "propertyName": "controllerNodeId",
+          "ccVersion": 1,
+          "metadata": {
+            "type": "any",
+            "readable": true,
+            "writeable": false,
+            "label": "Node ID of the controller",
+            "stateful": true,
+            "secret": false
+          },
+          "value": 1
+        },
+        "23-134-0-libraryType": {
+          "endpoint": 0,
+          "commandClass": 134,
+          "commandClassName": "Version",
+          "property": "libraryType",
+          "propertyName": "libraryType",
+          "ccVersion": 3,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "label": "Library type",
+            "states": {
+              "0": "Unknown",
+              "1": "Static Controller",
+              "2": "Controller",
+              "3": "Enhanced Slave",
+              "4": "Slave",
+              "5": "Installer",
+              "6": "Routing Slave",
+              "7": "Bridge Controller",
+              "8": "Device under Test",
+              "9": "N/A",
+              "10": "AV Remote",
+              "11": "AV Device"
+            },
+            "stateful": true,
+            "secret": false
+          },
+          "value": 3
+        },
+        "23-134-0-protocolVersion": {
+          "endpoint": 0,
+          "commandClass": 134,
+          "commandClassName": "Version",
+          "property": "protocolVersion",
+          "propertyName": "protocolVersion",
+          "ccVersion": 3,
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Z-Wave protocol version",
+            "stateful": true,
+            "secret": false
+          },
+          "value": "7.13"
+        },
+        "23-134-0-firmwareVersions": {
+          "endpoint": 0,
+          "commandClass": 134,
+          "commandClassName": "Version",
+          "property": "firmwareVersions",
+          "propertyName": "firmwareVersions",
+          "ccVersion": 3,
+          "metadata": {
+            "type": "string[]",
+            "readable": true,
+            "writeable": false,
+            "label": "Z-Wave chip firmware versions",
+            "stateful": true,
+            "secret": false
+          },
+          "value": ["1.10"]
+        },
+        "23-134-0-hardwareVersion": {
+          "endpoint": 0,
+          "commandClass": 134,
+          "commandClassName": "Version",
+          "property": "hardwareVersion",
+          "propertyName": "hardwareVersion",
+          "ccVersion": 3,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "label": "Z-Wave chip hardware version",
+            "stateful": true,
+            "secret": false
+          },
+          "value": 1
+        },
+        "23-134-0-sdkVersion": {
+          "endpoint": 0,
+          "commandClass": 134,
+          "commandClassName": "Version",
+          "property": "sdkVersion",
+          "propertyName": "sdkVersion",
+          "ccVersion": 3,
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "SDK version",
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-134-0-applicationFrameworkAPIVersion": {
+          "endpoint": 0,
+          "commandClass": 134,
+          "commandClassName": "Version",
+          "property": "applicationFrameworkAPIVersion",
+          "propertyName": "applicationFrameworkAPIVersion",
+          "ccVersion": 3,
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Z-Wave application framework API version",
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-134-0-applicationFrameworkBuildNumber": {
+          "endpoint": 0,
+          "commandClass": 134,
+          "commandClassName": "Version",
+          "property": "applicationFrameworkBuildNumber",
+          "propertyName": "applicationFrameworkBuildNumber",
+          "ccVersion": 3,
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Z-Wave application framework API build number",
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-134-0-hostInterfaceVersion": {
+          "endpoint": 0,
+          "commandClass": 134,
+          "commandClassName": "Version",
+          "property": "hostInterfaceVersion",
+          "propertyName": "hostInterfaceVersion",
+          "ccVersion": 3,
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Serial API version",
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-134-0-hostInterfaceBuildNumber": {
+          "endpoint": 0,
+          "commandClass": 134,
+          "commandClassName": "Version",
+          "property": "hostInterfaceBuildNumber",
+          "propertyName": "hostInterfaceBuildNumber",
+          "ccVersion": 3,
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Serial API build number",
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-134-0-zWaveProtocolVersion": {
+          "endpoint": 0,
+          "commandClass": 134,
+          "commandClassName": "Version",
+          "property": "zWaveProtocolVersion",
+          "propertyName": "zWaveProtocolVersion",
+          "ccVersion": 3,
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Z-Wave protocol version",
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-134-0-zWaveProtocolBuildNumber": {
+          "endpoint": 0,
+          "commandClass": 134,
+          "commandClassName": "Version",
+          "property": "zWaveProtocolBuildNumber",
+          "propertyName": "zWaveProtocolBuildNumber",
+          "ccVersion": 3,
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Z-Wave protocol build number",
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-134-0-applicationVersion": {
+          "endpoint": 0,
+          "commandClass": 134,
+          "commandClassName": "Version",
+          "property": "applicationVersion",
+          "propertyName": "applicationVersion",
+          "ccVersion": 3,
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Application version",
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-134-0-applicationBuildNumber": {
+          "endpoint": 0,
+          "commandClass": 134,
+          "commandClassName": "Version",
+          "property": "applicationBuildNumber",
+          "propertyName": "applicationBuildNumber",
+          "ccVersion": 3,
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Application build number",
+            "stateful": true,
+            "secret": false
+          }
+        },
+        "23-135-0-80-3": {
+          "endpoint": 0,
+          "commandClass": 135,
+          "commandClassName": "Indicator",
+          "property": 80,
+          "propertyKey": 3,
+          "propertyName": "Node Identify",
+          "propertyKeyName": "On/Off Period: Duration",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "description": "Sets the duration of an on/off period in 1/10th seconds. Must be set together with \"On/Off Cycle Count\"",
+            "label": "Node Identify - On/Off Period: Duration",
+            "ccSpecific": {
+              "indicatorId": 80,
+              "propertyId": 3
+            },
+            "stateful": true,
+            "secret": false
+          },
+          "value": 0
+        },
+        "23-135-0-80-4": {
+          "endpoint": 0,
+          "commandClass": 135,
+          "commandClassName": "Indicator",
+          "property": 80,
+          "propertyKey": 4,
+          "propertyName": "Node Identify",
+          "propertyKeyName": "On/Off Cycle Count",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "description": "Sets the number of on/off periods. 0xff means infinite. Must be set together with \"On/Off Period duration\"",
+            "label": "Node Identify - On/Off Cycle Count",
+            "ccSpecific": {
+              "indicatorId": 80,
+              "propertyId": 4
+            },
+            "stateful": true,
+            "secret": false
+          },
+          "value": 0
+        },
+        "23-135-0-80-5": {
+          "endpoint": 0,
+          "commandClass": 135,
+          "commandClassName": "Indicator",
+          "property": 80,
+          "propertyKey": 5,
+          "propertyName": "Node Identify",
+          "propertyKeyName": "On/Off Period: On time",
+          "ccVersion": 0,
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": true,
+            "description": "This property is used to set the length of the On time during an On/Off period. It allows asymmetric On/Off periods. The value 0x00 MUST represent symmetric On/Off period (On time equal to Off time)",
+            "label": "Node Identify - On/Off Period: On time",
+            "ccSpecific": {
+              "indicatorId": 80,
+              "propertyId": 5
+            },
+            "stateful": true,
+            "secret": false
+          },
+          "value": 0
+        }
+      },
+      "endpoints": {
+        "0": {
+          "nodeId": 23,
+          "index": 0,
+          "installerIcon": 3327,
+          "userIcon": 3327,
+          "deviceClass": {
+            "basic": {
+              "key": 4,
+              "label": "Routing Slave"
+            },
+            "generic": {
+              "key": 7,
+              "label": "Notification Sensor"
+            },
+            "specific": {
+              "key": 1,
+              "label": "Notification Sensor"
+            },
+            "mandatorySupportedCCs": [],
+            "mandatoryControlledCCs": []
+          },
+          "commandClasses": [
+            {
+              "id": 94,
+              "name": "Z-Wave Plus Info",
+              "version": 2,
+              "isSecure": false
+            },
+            {
+              "id": 133,
+              "name": "Association",
+              "version": 3,
+              "isSecure": true
+            },
+            {
+              "id": 142,
+              "name": "Multi Channel Association",
+              "version": 4,
+              "isSecure": true
+            },
+            {
+              "id": 89,
+              "name": "Association Group Information",
+              "version": 3,
+              "isSecure": true
+            },
+            {
+              "id": 49,
+              "name": "Multilevel Sensor",
+              "version": 11,
+              "isSecure": true
+            },
+            {
+              "id": 85,
+              "name": "Transport Service",
+              "version": 2,
+              "isSecure": false
+            },
+            {
+              "id": 134,
+              "name": "Version",
+              "version": 3,
+              "isSecure": true
+            },
+            {
+              "id": 114,
+              "name": "Manufacturer Specific",
+              "version": 2,
+              "isSecure": true
+            },
+            {
+              "id": 90,
+              "name": "Device Reset Locally",
+              "version": 1,
+              "isSecure": true
+            },
+            {
+              "id": 115,
+              "name": "Powerlevel",
+              "version": 1,
+              "isSecure": true
+            },
+            {
+              "id": 128,
+              "name": "Battery",
+              "version": 3,
+              "isSecure": true
+            },
+            {
+              "id": 159,
+              "name": "Security 2",
+              "version": 1,
+              "isSecure": true
+            },
+            {
+              "id": 113,
+              "name": "Notification",
+              "version": 8,
+              "isSecure": true
+            },
+            {
+              "id": 135,
+              "name": "Indicator",
+              "version": 4,
+              "isSecure": true
+            },
+            {
+              "id": 112,
+              "name": "Configuration",
+              "version": 4,
+              "isSecure": true
+            },
+            {
+              "id": 132,
+              "name": "Wake Up",
+              "version": 1,
+              "isSecure": true
+            },
+            {
+              "id": 108,
+              "name": "Supervision",
+              "version": 2,
+              "isSecure": false
+            },
+            {
+              "id": 122,
+              "name": "Firmware Update Meta Data",
+              "version": 7,
+              "isSecure": true
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "entity": {
+    "light": {
+      "main": {
+        "default": "mdi:led-strip-variant"
+      },
+      "segment": {
+        "default": "mdi:led-strip-variant"
+      }
+    },
+    "number": {
+      "speed": {
+        "default": "mdi:speedometer"
+      }
+    },
+    "select": {
+      "preset": {
+        "default": "mdi:playlist-play"
+      },
+      "playlist": {
+        "default": "mdi:play-speed"
+      },
+      "color_palette": {
+        "default": "mdi:palette-outline"
+      },
+      "segment_color_palette": {
+        "default": "mdi:palette-outline"
+      },
+      "live_override": {
+        "default": "mdi:theater"
+      }
+    },
+    "sensor": {
+      "free_heap": {
+        "default": "mdi:memory"
+      },
+      "wifi_signal": {
+        "default": "mdi:wifi"
+      },
+      "wifi_channel": {
+        "default": "mdi:wifi"
+      },
+      "wifi_bssid": {
+        "default": "mdi:wifi"
+      },
+      "ip": {
+        "default": "mdi:ip-network"
+      }
+    },
+    "switch": {
+      "nightlight": {
+        "default": "mdi:weather-night"
+      },
+      "sync_send": {
+        "default": "mdi:upload-network-outline"
+      },
+      "sync_receive": {
+        "default": "mdi:download-network-outline"
+      },
+      "reverse": {
+        "default": "mdi:swap-horizontal-bold"
+      },
+      "segment_reverse": {
+        "default": "mdi:swap-horizontal-bold"
+      }
+    }
+  }
+}

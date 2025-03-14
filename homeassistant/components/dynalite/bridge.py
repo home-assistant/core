@@ -1,4 +1,5 @@
 """Code to handle a Dynalite bridge."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -15,12 +16,15 @@ from dynalite_devices_lib.dynalite_devices import (
     DynaliteNotification,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import ATTR_AREA, ATTR_HOST, ATTR_PACKET, ATTR_PRESET, LOGGER, PLATFORMS
 from .convert_config import convert_config
+
+type DynaliteConfigEntry = ConfigEntry[DynaliteBridge]
 
 
 class DynaliteBridge:
@@ -67,7 +71,7 @@ class DynaliteBridge:
             log_string = (
                 "Connected" if self.dynalite_devices.connected else "Disconnected"
             )
-            LOGGER.info("%s to dynalite host", log_string)
+            LOGGER.debug("%s to dynalite host", log_string)
             async_dispatcher_send(self.hass, self.update_signal())
         else:
             async_dispatcher_send(self.hass, self.update_signal(device))

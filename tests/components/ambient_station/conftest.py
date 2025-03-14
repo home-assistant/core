@@ -1,18 +1,31 @@
 """Define test fixtures for Ambient PWS."""
-import json
-from unittest.mock import patch
+
+from collections.abc import Generator
+from typing import Any
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 from homeassistant.components.ambient_station.const import CONF_APP_KEY, DOMAIN
 from homeassistant.const import CONF_API_KEY
-from homeassistant.setup import async_setup_component
+from homeassistant.core import HomeAssistant
+from homeassistant.util.json import JsonArrayType, JsonObjectType
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
+
+
+@pytest.fixture(name="api")
+def api_fixture(data_devices: JsonArrayType) -> Mock:
+    """Define a mock API object."""
+    return Mock(get_devices=AsyncMock(return_value=data_devices))
 
 
 @pytest.fixture(name="config")
-def config_fixture(hass):
+def config_fixture() -> dict[str, Any]:
     """Define a config entry data fixture."""
     return {
         CONF_API_KEY: "12345abcde12345abcde",
@@ -21,34 +34,48 @@ def config_fixture(hass):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config):
+def config_entry_fixture(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> MockConfigEntry:
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, data=config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config,
+        entry_id="382cf7643f016fd48b3fe52163fe8877",
+    )
     entry.add_to_hass(hass)
     return entry
 
 
-@pytest.fixture(name="devices", scope="package")
-def devices_fixture():
+@pytest.fixture(name="data_devices", scope="package")
+def data_devices_fixture() -> JsonArrayType:
     """Define devices data."""
-    return json.loads(load_fixture("devices.json", "ambient_station"))
+    return load_json_array_fixture("devices.json", "ambient_station")
 
 
-@pytest.fixture(name="setup_ambient_station")
-async def setup_ambient_station_fixture(hass, config, devices):
-    """Define a fixture to set up AirVisual."""
-    with patch("homeassistant.components.ambient_station.PLATFORMS", []), patch(
-        "homeassistant.components.ambient_station.config_flow.API.get_devices",
-        side_effect=devices,
-    ), patch("aioambient.api.API.get_devices", side_effect=devices), patch(
-        "aioambient.websocket.Websocket.connect"
+@pytest.fixture(name="data_station", scope="package")
+def data_station_fixture() -> JsonObjectType:
+    """Define station data."""
+    return load_json_object_fixture("station_data.json", "ambient_station")
+
+
+@pytest.fixture(name="mock_aioambient")
+def mock_aioambient_fixture(api: Mock) -> Generator[None]:
+    """Define a fixture to patch aioambient."""
+    with (
+        patch(
+            "homeassistant.components.ambient_station.config_flow.API",
+            return_value=api,
+        ),
+        patch("aioambient.websocket.Websocket.connect"),
     ):
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
         yield
 
 
-@pytest.fixture(name="station_data", scope="package")
-def station_data_fixture():
-    """Define devices data."""
-    return json.loads(load_fixture("station_data.json", "ambient_station"))
+@pytest.fixture(name="setup_config_entry")
+async def setup_config_entry_fixture(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_aioambient: None
+) -> None:
+    """Define a fixture to set up ambient_station."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()

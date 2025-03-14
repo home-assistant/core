@@ -1,4 +1,5 @@
 """Representation of a sensorMultilevel."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -14,24 +15,25 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_KPA,
-    TEMP_CELSIUS,
+    UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ZWaveMeController, ZWaveMeEntity
+from . import ZWaveMeController
 from .const import DOMAIN, ZWaveMePlatform
+from .entity import ZWaveMeEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class ZWaveMeSensorEntityDescription(SensorEntityDescription):
     """Class describing ZWaveMeSensor sensor entities."""
 
@@ -42,7 +44,7 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
     "barometer": ZWaveMeSensorEntityDescription(
         key="barometer",
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_KPA,
+        native_unit_of_measurement=UnitOfPressure.KPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "co": ZWaveMeSensorEntityDescription(
@@ -72,13 +74,13 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
     "meterElectric_ampere": ZWaveMeSensorEntityDescription(
         key="meterElectric_ampere",
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "meterElectric_kilowatt_hour": ZWaveMeSensorEntityDescription(
         key="meterElectric_kilowatt_hour",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "meterElectric_power_factor": ZWaveMeSensorEntityDescription(
@@ -103,7 +105,7 @@ SENSORS_MAP: dict[str, ZWaveMeSensorEntityDescription] = {
     "temperature": ZWaveMeSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "generic": ZWaveMeSensorEntityDescription(
@@ -116,7 +118,7 @@ DEVICE_NAME = ZWaveMePlatform.SENSOR
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
 

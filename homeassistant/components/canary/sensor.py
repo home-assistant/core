@@ -1,27 +1,27 @@
 """Support for Canary sensors."""
+
 from __future__ import annotations
 
-from typing import Final, Optional
+from typing import Final
 
 from canary.model import Device, Location, SensorType
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
-from .coordinator import CanaryDataUpdateCoordinator
+from .const import DOMAIN, MANUFACTURER
+from .coordinator import CanaryConfigEntry, CanaryDataUpdateCoordinator
 
-SensorTypeItem = tuple[
-    str, Optional[str], Optional[str], Optional[SensorDeviceClass], list[str]
+type SensorTypeItem = tuple[
+    str, str | None, str | None, SensorDeviceClass | None, list[str]
 ]
 
 SENSOR_VALUE_PRECISION: Final = 2
@@ -37,7 +37,13 @@ CANARY_FLEX: Final = "Canary Flex"
 # Sensor types are defined like so:
 # sensor type name, unit_of_measurement, icon, device class, products supported
 SENSOR_TYPES: Final[list[SensorTypeItem]] = [
-    ("temperature", TEMP_CELSIUS, None, SensorDeviceClass.TEMPERATURE, [CANARY_PRO]),
+    (
+        "temperature",
+        UnitOfTemperature.CELSIUS,
+        None,
+        SensorDeviceClass.TEMPERATURE,
+        [CANARY_PRO],
+    ),
     ("humidity", PERCENTAGE, None, SensorDeviceClass.HUMIDITY, [CANARY_PRO]),
     ("air_quality", None, "mdi:weather-windy", None, [CANARY_PRO]),
     (
@@ -57,24 +63,22 @@ STATE_AIR_QUALITY_VERY_ABNORMAL: Final = "very_abnormal"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: CanaryConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Canary sensors based on a config entry."""
-    coordinator: CanaryDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = entry.runtime_data
     sensors: list[CanarySensor] = []
 
     for location in coordinator.data["locations"].values():
         for device in location.devices:
             if device.is_online:
                 device_type = device.device_type
-                for sensor_type in SENSOR_TYPES:
-                    if device_type.get("name") in sensor_type[4]:
-                        sensors.append(
-                            CanarySensor(coordinator, sensor_type, location, device)
-                        )
+                sensors.extend(
+                    CanarySensor(coordinator, sensor_type, location, device)
+                    for sensor_type in SENSOR_TYPES
+                    if device_type.get("name") in sensor_type[4]
+                )
 
     async_add_entities(sensors, True)
 

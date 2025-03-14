@@ -1,4 +1,5 @@
 """The Subaru integration."""
+
 from datetime import timedelta
 import logging
 import time
@@ -6,15 +7,20 @@ import time
 from subarulink import Controller as SubaruAPI, InvalidCredentials, SubaruException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_USERNAME
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_DEVICE_ID,
+    CONF_PASSWORD,
+    CONF_PIN,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONF_COUNTRY,
     CONF_UPDATE_ENABLED,
     COORDINATOR_NAME,
     DOMAIN,
@@ -43,7 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Subaru from a config entry."""
     config = entry.data
-    websession = aiohttp_client.async_get_clientsession(hass)
+    websession = aiohttp_client.async_create_clientsession(hass)
     try:
         controller = SubaruAPI(
             websession,
@@ -66,7 +72,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     vehicle_info = {}
     for vin in controller.get_vehicles():
-        vehicle_info[vin] = get_vehicle_info(controller, vin)
+        if controller.get_subscription_status(vin):
+            vehicle_info[vin] = get_vehicle_info(controller, vin)
 
     async def async_update_data():
         """Fetch data from API endpoint."""
@@ -78,6 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=COORDINATOR_NAME,
         update_method=async_update_data,
         update_interval=timedelta(seconds=FETCH_INTERVAL),
@@ -106,8 +114,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def refresh_subaru_data(config_entry, vehicle_info, controller):
-    """
-    Refresh local data with data fetched via Subaru API.
+    """Refresh local data with data fetched via Subaru API.
 
     Subaru API calls assume a server side vehicle context
     Data fetch/update must be done for each vehicle
@@ -116,10 +123,6 @@ async def refresh_subaru_data(config_entry, vehicle_info, controller):
 
     for vehicle in vehicle_info.values():
         vin = vehicle[VEHICLE_VIN]
-
-        # Active subscription required
-        if not vehicle[VEHICLE_HAS_SAFETY_SERVICE]:
-            continue
 
         # Optionally send an "update" remote command to vehicle (throttled with update_interval)
         if config_entry.options.get(CONF_UPDATE_ENABLED, False):
@@ -147,7 +150,7 @@ async def update_subaru(vehicle, controller):
 
 def get_vehicle_info(controller, vin):
     """Obtain vehicle identifiers and capabilities."""
-    info = {
+    return {
         VEHICLE_VIN: vin,
         VEHICLE_MODEL_NAME: controller.get_model_name(vin),
         VEHICLE_MODEL_YEAR: controller.get_model_year(vin),
@@ -159,7 +162,6 @@ def get_vehicle_info(controller, vin):
         VEHICLE_HAS_SAFETY_SERVICE: controller.get_safety_status(vin),
         VEHICLE_LAST_UPDATE: 0,
     }
-    return info
 
 
 def get_device_info(vehicle_info):

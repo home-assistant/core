@@ -1,15 +1,8 @@
 """Constants for the LCN component."""
+
 from itertools import product
 
-from homeassistant.const import (
-    DEGREE,
-    ELECTRIC_POTENTIAL_VOLT,
-    PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    TEMP_KELVIN,
-    Platform,
-)
+from homeassistant.const import Platform
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -25,13 +18,15 @@ DOMAIN = "lcn"
 DATA_LCN = "lcn"
 DEFAULT_NAME = "pchk"
 
+ADD_ENTITIES_CALLBACKS = "add_entities_callbacks"
 CONNECTION = "connection"
+DEVICE_CONNECTIONS = "device_connections"
 CONF_HARDWARE_SERIAL = "hardware_serial"
 CONF_SOFTWARE_SERIAL = "software_serial"
 CONF_HARDWARE_TYPE = "hardware_type"
-CONF_RESOURCE = "resource"
 CONF_DOMAIN_DATA = "domain_data"
 
+CONF_ACKNOWLEDGE = "acknowledge"
 CONF_CONNECTIONS = "connections"
 CONF_SK_NUM_TRIES = "sk_num_tries"
 CONF_OUTPUT = "output"
@@ -40,6 +35,7 @@ CONF_DIMMABLE = "dimmable"
 CONF_TRANSITION = "transition"
 CONF_MOTOR = "motor"
 CONF_LOCKABLE = "lockable"
+CONF_TARGET_VALUE_LOCKED = "target_value_locked"
 CONF_VARIABLE = "variable"
 CONF_VALUE = "value"
 CONF_RELVARREF = "value_reference"
@@ -48,6 +44,7 @@ CONF_LED = "led"
 CONF_KEYS = "keys"
 CONF_TIME = "time"
 CONF_TIME_UNIT = "time_unit"
+CONF_LOCK_TIME = "lock_time"
 CONF_TABLE = "table"
 CONF_ROW = "row"
 CONF_TEXT = "text"
@@ -166,9 +163,9 @@ VAR_UNITS = [
     "",
     "LCN",
     "NATIVE",
-    TEMP_CELSIUS,
-    TEMP_KELVIN,
-    TEMP_FAHRENHEIT,
+    "°C",
+    "K",
+    "°F",
     "LUX_T",
     "LX_T",
     "LUX_I",
@@ -176,16 +173,16 @@ VAR_UNITS = [
     "LX",
     "M/S",
     "METERPERSECOND",
-    PERCENTAGE,
+    "%",
     "PERCENT",
     "PPM",
     "VOLT",
-    ELECTRIC_POTENTIAL_VOLT,
+    "V",
     "AMPERE",
     "AMP",
     "A",
     "DEGREE",
-    DEGREE,
+    "°",
 ]
 
 RELVARREF = ["CURRENT", "PROG"]

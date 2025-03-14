@@ -1,26 +1,31 @@
 """Proxy to handle account communication with Renault servers."""
+
 from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from renault_api.gigya.exceptions import InvalidCredentialsException
 from renault_api.kamereon.models import KamereonVehiclesLink
 from renault_api.renault_account import RenaultAccount
 from renault_api.renault_client import RenaultClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_MODEL_ID,
     ATTR_NAME,
-    ATTR_SW_VERSION,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+if TYPE_CHECKING:
+    from . import RenaultConfigEntry
 
 from .const import CONF_KAMEREON_ACCOUNT_ID, DEFAULT_SCAN_INTERVAL
 from .renault_vehicle import RenaultVehicleProxy
@@ -50,15 +55,22 @@ class RenaultHub:
             return True
         return False
 
-    async def async_initialise(self, config_entry: ConfigEntry) -> None:
+    async def async_initialise(self, config_entry: RenaultConfigEntry) -> None:
         """Set up proxy."""
         account_id: str = config_entry.data[CONF_KAMEREON_ACCOUNT_ID]
         scan_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
         self._account = await self._client.get_api_account(account_id)
         vehicles = await self._account.get_vehicles()
-        device_registry = dr.async_get(self._hass)
         if vehicles.vehicleLinks:
+            if any(
+                vehicle_link.vehicleDetails is None
+                for vehicle_link in vehicles.vehicleLinks
+            ):
+                raise ConfigEntryNotReady(
+                    "Failed to retrieve vehicle details from Renault servers"
+                )
+            device_registry = dr.async_get(self._hass)
             await asyncio.gather(
                 *(
                     self.async_initialise_vehicle(
@@ -77,7 +89,7 @@ class RenaultHub:
         vehicle_link: KamereonVehiclesLink,
         renault_account: RenaultAccount,
         scan_interval: timedelta,
-        config_entry: ConfigEntry,
+        config_entry: RenaultConfigEntry,
         device_registry: dr.DeviceRegistry,
     ) -> None:
         """Set up proxy."""
@@ -86,6 +98,7 @@ class RenaultHub:
         # Generate vehicle proxy
         vehicle = RenaultVehicleProxy(
             hass=self._hass,
+            config_entry=config_entry,
             vehicle=await renault_account.get_api_vehicle(vehicle_link.vin),
             details=vehicle_link.vehicleDetails,
             scan_interval=scan_interval,
@@ -97,7 +110,7 @@ class RenaultHub:
             manufacturer=vehicle.device_info[ATTR_MANUFACTURER],
             name=vehicle.device_info[ATTR_NAME],
             model=vehicle.device_info[ATTR_MODEL],
-            sw_version=vehicle.device_info[ATTR_SW_VERSION],
+            model_id=vehicle.device_info[ATTR_MODEL_ID],
         )
         self._vehicles[vehicle_link.vin] = vehicle
 

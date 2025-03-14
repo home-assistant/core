@@ -1,8 +1,8 @@
 """Utils for Spotify."""
+
 from __future__ import annotations
 
-from typing import Any
-
+from spotifyaio import Image
 import yarl
 
 from .const import MEDIA_PLAYER_PREFIX
@@ -15,15 +15,14 @@ def is_spotify_media_type(media_content_type: str) -> bool:
 
 def resolve_spotify_media_type(media_content_type: str) -> str:
     """Return actual spotify media_content_type."""
-    return media_content_type[len(MEDIA_PLAYER_PREFIX) :]
+    return media_content_type.removeprefix(MEDIA_PLAYER_PREFIX)
 
 
-def fetch_image_url(item: dict[str, Any], key="images") -> str | None:
+def fetch_image_url(images: list[Image]) -> str | None:
     """Fetch image url."""
-    try:
-        return item.get(key, [])[0].get("url")
-    except IndexError:
+    if not images:
         return None
+    return images[0].url
 
 
 def spotify_uri_from_media_browser_url(media_content_id: str) -> str:

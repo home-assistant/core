@@ -1,17 +1,27 @@
 """Test OpenUV diagnostics."""
+
 from homeassistant.components.diagnostics import REDACTED
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import ANY
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, config_entry, hass_client, setup_openuv):
+async def test_entry_diagnostics(
+    hass: HomeAssistant,
+    config_entry,
+    hass_client: ClientSessionGenerator,
+    setup_config_entry,
+) -> None:
     """Test config entry diagnostics."""
     await async_setup_component(hass, "homeassistant", {})
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
             "entry_id": config_entry.entry_id,
             "version": 2,
+            "minor_version": 1,
             "domain": "openuv",
             "title": REDACTED,
             "data": {
@@ -26,6 +36,10 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_openuv):
             "source": "user",
             "unique_id": REDACTED,
             "disabled_by": None,
+            "created_at": ANY,
+            "modified_at": ANY,
+            "discovery_keys": {},
+            "subentries": [],
         },
         "data": {
             "protection_window": {

@@ -1,11 +1,12 @@
 """Tests for the sma integration."""
+
 from unittest.mock import patch
 
 MOCK_DEVICE = {
     "manufacturer": "SMA",
     "name": "SMA Device Name",
     "type": "Sunny Boy 3.6",
-    "serial": "123456789",
+    "serial": 123456789,
 }
 
 MOCK_USER_INPUT = {

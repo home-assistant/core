@@ -1,4 +1,5 @@
 """Blebox button entities tests."""
+
 import logging
 from unittest.mock import PropertyMock
 
@@ -6,6 +7,7 @@ import blebox_uniapi
 import pytest
 
 from homeassistant.const import ATTR_ICON
+from homeassistant.core import HomeAssistant
 
 from .conftest import async_setup_entity, mock_feature
 
@@ -19,7 +21,7 @@ query_icon_matching = [
 
 
 @pytest.fixture(name="tvliftbox")
-def tv_lift_box_fixture(caplog):
+def tv_lift_box_fixture(caplog: pytest.LogCaptureFixture):
     """Return simple button entity mock."""
     caplog.set_level(logging.ERROR)
 
@@ -39,7 +41,9 @@ def tv_lift_box_fixture(caplog):
     return (feature, "button.tvliftbox_open_or_stop")
 
 
-async def test_tvliftbox_init(tvliftbox, hass, caplog):
+async def test_tvliftbox_init(
+    tvliftbox, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test tvLiftBox initialisation."""
     caplog.set_level(logging.ERROR)
 
@@ -53,7 +57,9 @@ async def test_tvliftbox_init(tvliftbox, hass, caplog):
 
 
 @pytest.mark.parametrize("input", query_icon_matching)
-async def test_get_icon(input, tvliftbox, hass, caplog):
+async def test_get_icon(
+    input, tvliftbox, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test if proper icon is returned."""
     caplog.set_level(logging.ERROR)
 

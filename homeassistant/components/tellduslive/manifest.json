@@ -1,10 +1,9 @@
 {
   "domain": "tellduslive",
   "name": "Telldus Live",
+  "codeowners": ["@fredrike"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tellduslive",
-  "requirements": ["tellduslive==0.10.11"],
-  "codeowners": ["@fredrike"],
-  "quality_scale": "gold",
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "requirements": ["tellduslive==0.10.12"]
 }

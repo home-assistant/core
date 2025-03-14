@@ -1,7 +1,7 @@
 """Support for Plum Lightpad lights."""
+
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from plumlightpad import Plum
@@ -15,9 +15,9 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.color as color_util
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
 from .const import DOMAIN
 
@@ -25,7 +25,7 @@ from .const import DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Plum Lightpad dimmer lights and glow rings."""
 
@@ -51,13 +51,15 @@ async def async_setup_entry(
         setup_entities(device)
 
     device_web_session = async_get_clientsession(hass, verify_ssl=False)
-    asyncio.create_task(
+    entry.async_create_background_task(
+        hass,
         plum.discover(
             hass.loop,
             loadListener=new_load,
             lightpadListener=new_lightpad,
             websession=device_web_session,
-        )
+        ),
+        "plum.light-discover",
     )
 
 
@@ -65,11 +67,21 @@ class PlumLight(LightEntity):
     """Representation of a Plum Lightpad dimmer."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, load):
         """Initialize the light."""
         self._load = load
         self._brightness = load.level
+        unique_id = f"{load.llid}.light"
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="Plum",
+            model="Dimmer",
+            name=load.name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to dimmerchange events."""
@@ -79,26 +91,6 @@ class PlumLight(LightEntity):
         """Change event handler updating the brightness."""
         self._brightness = event["level"]
         self.schedule_update_ha_state()
-
-    @property
-    def unique_id(self):
-        """Combine logical load ID with .light to guarantee it is unique."""
-        return f"{self._load.llid}.light"
-
-    @property
-    def name(self):
-        """Return the name of the switch if any."""
-        return self._load.name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="Plum",
-            model="Dimmer",
-            name=self.name,
-        )
 
     @property
     def brightness(self) -> int:
@@ -139,19 +131,28 @@ class GlowRing(LightEntity):
 
     _attr_color_mode = ColorMode.HS
     _attr_should_poll = False
+    _attr_translation_key = "glow_ring"
     _attr_supported_color_modes = {ColorMode.HS}
 
     def __init__(self, lightpad):
         """Initialize the light."""
         self._lightpad = lightpad
-        self._name = f"{lightpad.friendly_name} Glow Ring"
+        self._attr_name = f"{lightpad.friendly_name} Glow Ring"
 
-        self._state = lightpad.glow_enabled
+        self._attr_is_on = lightpad.glow_enabled
         self._glow_intensity = lightpad.glow_intensity
+        unique_id = f"{self._lightpad.lpid}.glow"
+        self._attr_unique_id = unique_id
 
         self._red = lightpad.glow_color["red"]
         self._green = lightpad.glow_color["green"]
         self._blue = lightpad.glow_color["blue"]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="Plum",
+            model="Glow Ring",
+            name=self._attr_name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to configchange events."""
@@ -161,13 +162,12 @@ class GlowRing(LightEntity):
         """Handle Configuration change event."""
         config = event["changes"]
 
-        self._state = config["glowEnabled"]
+        self._attr_is_on = config["glowEnabled"]
         self._glow_intensity = config["glowIntensity"]
 
         self._red = config["glowColor"]["red"]
         self._green = config["glowColor"]["green"]
         self._blue = config["glowColor"]["blue"]
-
         self.schedule_update_ha_state()
 
     @property
@@ -176,44 +176,9 @@ class GlowRing(LightEntity):
         return color_util.color_RGB_to_hs(self._red, self._green, self._blue)
 
     @property
-    def unique_id(self):
-        """Combine LightPad ID with .glow to guarantee it is unique."""
-        return f"{self._lightpad.lpid}.glow"
-
-    @property
-    def name(self):
-        """Return the name of the switch if any."""
-        return self._name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="Plum",
-            model="Glow Ring",
-            name=self.name,
-        )
-
-    @property
     def brightness(self) -> int:
         """Return the brightness of this switch between 0..255."""
         return min(max(int(round(self._glow_intensity * 255, 0)), 0), 255)
-
-    @property
-    def glow_intensity(self):
-        """Brightness in float form."""
-        return self._glow_intensity
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if light is on."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the crop-portrait icon representing the glow ring."""
-        return "mdi:crop-portrait"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""

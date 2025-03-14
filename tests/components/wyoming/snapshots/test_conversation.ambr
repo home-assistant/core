@@ -1,0 +1,7 @@
+# serializer version: 1
+# name: test_connection_lost
+  'Connection to service was lost'
+# ---
+# name: test_oserror
+  'Error communicating with service: Boom!'
+# ---

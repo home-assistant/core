@@ -1,13 +1,16 @@
 """Test the Picnic config flow."""
+
 from unittest.mock import patch
 
 import pytest
-from python_picnic_api.session import PicnicAuthError
+from python_picnic_api2.session import PicnicAuthError
 import requests
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.picnic.const import CONF_COUNTRY_CODE, DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant import config_entries
+from homeassistant.components.picnic.const import DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY_CODE
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -33,13 +36,13 @@ def picnic_api():
         yield picnic_mock
 
 
-async def test_form(hass, picnic_api):
+async def test_form(hass: HomeAssistant, picnic_api) -> None:
     """Test we get the form and a config entry is created."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -57,8 +60,8 @@ async def test_form(hass, picnic_api):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "Teststreet 123b"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Picnic"
     assert result2["data"] == {
         CONF_ACCESS_TOKEN: picnic_api().session.auth_token,
         CONF_COUNTRY_CODE: "NL",
@@ -66,7 +69,7 @@ async def test_form(hass, picnic_api):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid authentication."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -85,11 +88,11 @@ async def test_form_invalid_auth(hass):
             },
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle connection errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -108,11 +111,11 @@ async def test_form_cannot_connect(hass):
             },
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_exception(hass):
+async def test_form_exception(hass: HomeAssistant) -> None:
     """Test we handle random exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -131,11 +134,11 @@ async def test_form_exception(hass):
             },
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_already_configured(hass, picnic_api):
+async def test_form_already_configured(hass: HomeAssistant, picnic_api) -> None:
     """Test that an entry with unique id can only be added once."""
     # Create a mocked config entry and make sure to use the same user_id as set for the picnic_api mock response.
     MockConfigEntry(
@@ -158,26 +161,25 @@ async def test_form_already_configured(hass, picnic_api):
     )
     await hass.async_block_till_done()
 
-    assert result_configure["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result_configure["type"] is FlowResultType.ABORT
     assert result_configure["reason"] == "already_configured"
 
 
-async def test_step_reauth(hass, picnic_api):
+async def test_step_reauth(hass: HomeAssistant, picnic_api) -> None:
     """Test the re-auth flow."""
     # Create a mocked config entry
     conf = {CONF_ACCESS_TOKEN: "a3p98fsen.a39p3fap", CONF_COUNTRY_CODE: "NL"}
 
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=picnic_api().get_user()["user_id"],
         data=conf,
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     # Init a re-auth flow
-    result_init = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=conf
-    )
-    assert result_init["type"] == data_entry_flow.FlowResultType.FORM
+    result_init = await entry.start_reauth_flow(hass)
+    assert result_init["type"] is FlowResultType.FORM
     assert result_init["step_id"] == "user"
 
     with patch(
@@ -195,29 +197,28 @@ async def test_step_reauth(hass, picnic_api):
         await hass.async_block_till_done()
 
     # Check that the returned flow has type abort because of successful re-authentication
-    assert result_configure["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result_configure["type"] is FlowResultType.ABORT
     assert result_configure["reason"] == "reauth_successful"
 
     assert len(hass.config_entries.async_entries()) == 1
 
 
-async def test_step_reauth_failed(hass):
+async def test_step_reauth_failed(hass: HomeAssistant) -> None:
     """Test the re-auth flow when authentication fails."""
     # Create a mocked config entry
     user_id = "f29-2a6-o32n"
     conf = {CONF_ACCESS_TOKEN: "a3p98fsen.a39p3fap", CONF_COUNTRY_CODE: "NL"}
 
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=user_id,
         data=conf,
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     # Init a re-auth flow
-    result_init = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=conf
-    )
-    assert result_init["type"] == data_entry_flow.FlowResultType.FORM
+    result_init = await entry.start_reauth_flow(hass)
+    assert result_init["type"] is FlowResultType.FORM
     assert result_init["step_id"] == "user"
 
     with patch(
@@ -235,28 +236,27 @@ async def test_step_reauth_failed(hass):
         await hass.async_block_till_done()
 
     # Check that the returned flow has type form with error set
-    assert result_configure["type"] == "form"
+    assert result_configure["type"] is FlowResultType.FORM
     assert result_configure["errors"] == {"base": "invalid_auth"}
 
     assert len(hass.config_entries.async_entries()) == 1
 
 
-async def test_step_reauth_different_account(hass, picnic_api):
+async def test_step_reauth_different_account(hass: HomeAssistant, picnic_api) -> None:
     """Test the re-auth flow when authentication is done with a different account."""
     # Create a mocked config entry, unique_id should be different that the user id in the api response
     conf = {CONF_ACCESS_TOKEN: "a3p98fsen.a39p3fap", CONF_COUNTRY_CODE: "NL"}
 
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="3fpawh-ues-af3ho",
         data=conf,
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     # Init a re-auth flow
-    result_init = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=conf
-    )
-    assert result_init["type"] == data_entry_flow.FlowResultType.FORM
+    result_init = await entry.start_reauth_flow(hass)
+    assert result_init["type"] is FlowResultType.FORM
     assert result_init["step_id"] == "user"
 
     with patch(
@@ -274,7 +274,7 @@ async def test_step_reauth_different_account(hass, picnic_api):
         await hass.async_block_till_done()
 
     # Check that the returned flow has type form with error set
-    assert result_configure["type"] == "form"
+    assert result_configure["type"] is FlowResultType.FORM
     assert result_configure["errors"] == {"base": "different_account"}
 
     assert len(hass.config_entries.async_entries()) == 1

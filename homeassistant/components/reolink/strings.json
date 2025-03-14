@@ -1,0 +1,821 @@
+{
+  "config": {
+    "flow_title": "{hostname} ({ip_address})",
+    "step": {
+      "user": {
+        "description": "See the [troubleshooting steps]({troubleshooting_link}) if you encounter problems. {error}",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "use_https": "Enable HTTPS",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Reolink device. For example: '192.168.1.25'.",
+          "port": "The port to connect to the Reolink device. For HTTP normally: '80', for HTTPS normally '443'.",
+          "use_https": "Use a HTTPS (SSL) connection to the Reolink device.",
+          "username": "Username to login to the Reolink device itself. Not the Reolink cloud account.",
+          "password": "Password to login to the Reolink device itself. Not the Reolink cloud account."
+        }
+      },
+      "privacy": {
+        "title": "Permission to disable Reolink privacy mode",
+        "description": "Privacy mode is enabled on Reolink device {host}. By pressing SUBMIT, the privacy mode will be disabled to retrieve the necessary information from the Reolink device. You can abort the setup by pressing X and repeat the setup at a time in which privacy mode can be disabled. After this configuration, you are free to enable the privacy mode again using the privacy mode switch entity. During normal startup the privacy mode will not be disabled. Note however that all entities will be marked unavailable as long as the privacy mode is active."
+      }
+    },
+    "error": {
+      "api_error": "API error occurred",
+      "cannot_connect": "Failed to connect, check the IP address of the camera",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "not_admin": "User needs to be admin, user \"{username}\" has authorisation level \"{userlevel}\"",
+      "password_incompatible": "Password contains incompatible special character, only these characters are allowed: a-z, A-Z, 0-9 or {special_chars}",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "update_needed": "Failed to login because of outdated firmware, please update the firmware to version {needed_firmware} using the Reolink Download Center: {download_center_url}, currently version {current_firmware} is installed",
+      "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The MAC address of the device does not match the previous MAC address"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "protocol": "Protocol"
+        },
+        "data_description": {
+          "protocol": "Streaming protocol to use for the camera entities. RTSP supports 4K streams (h265 encoding) while RTMP and FLV do not. FLV is the least demanding on the camera."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "service_entry_ex": {
+      "message": "Reolink {service_name} error: config entry not found or not loaded"
+    },
+    "service_not_chime": {
+      "message": "Reolink play_chime error: {device_name} is not a Chime"
+    },
+    "invalid_parameter": {
+      "message": "Invalid input parameter: {err}"
+    },
+    "api_error": {
+      "message": "The device responded with a error: {err}"
+    },
+    "invalid_content_type": {
+      "message": "Received a different content type than expected: {err}"
+    },
+    "invalid_credentials": {
+      "message": "Invalid credentials: {err}"
+    },
+    "login_error": {
+      "message": "Error during login attempt: {err}"
+    },
+    "no_data": {
+      "message": "Device returned no data: {err}"
+    },
+    "unexpected_data": {
+      "message": "Device returned unexpected data: {err}"
+    },
+    "not_supported": {
+      "message": "Function not supported by this device: {err}"
+    },
+    "subscription_error": {
+      "message": "Error during ONVIF subscription: {err}"
+    },
+    "connection_error": {
+      "message": "Could not connect to the device: {err}"
+    },
+    "timeout": {
+      "message": "Timeout waiting on a response: {err}"
+    },
+    "unexpected": {
+      "message": "Unexpected Reolink error: {err}"
+    },
+    "firmware_install_error": {
+      "message": "Error trying to update Reolink firmware: {err}"
+    },
+    "config_entry_not_ready": {
+      "message": "Error while trying to setup {host}: {err}"
+    }
+  },
+  "issues": {
+    "https_webhook": {
+      "title": "Reolink webhook URL uses HTTPS (SSL)",
+      "description": "Reolink products can not push motion events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`, a valid address could, for example, be `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device"
+    },
+    "ssl": {
+      "title": "Reolink incompatible with global SSL certificate",
+      "description": "Global SSL certificate configured in the [configuration.yaml under http]({ssl_link}) while a local HTTP address `{base_url}` is configured under \"Home Assistant URL\" in the [network settings]({network_link}). Therefore, the Reolink device can not reach Home Assistant to push its motion/AI events. Please make sure the local HTTP address is not covered by the SSL certificate, by for instance using [NGINX add-on]({nginx_link}) instead of a globally enforced SSL certificate."
+    },
+    "webhook_url": {
+      "title": "Reolink webhook URL unreachable",
+      "description": "Did not receive initial ONVIF state from {name}. Most likely, the Reolink camera can not reach the current (local) Home Assistant URL `{base_url}`, please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}) that points to Home Assistant. For example `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device. Also, make sure the Reolink camera can reach that URL. Using fast motion/AI state polling until the first ONVIF push is received."
+    },
+    "enable_port": {
+      "title": "Reolink port not enabled",
+      "description": "Failed to automatically enable {ports}port(s) on {name}. Use the [Reolink client]({info_link}) to manually set it to ON"
+    },
+    "firmware_update": {
+      "title": "Reolink firmware update required",
+      "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The firmware can be updated by pressing \"install\" in the more info dialog of the update entity of \"{name}\" from within Home Assistant. Alternatively, the latest firmware can be downloaded from the [Reolink download center]({download_link})."
+    },
+    "hub_switch_deprecated": {
+      "title": "Reolink Home Hub switches deprecated",
+      "description": "The redundant 'Record', 'Email on event', 'FTP upload', 'Push notifications', and 'Buzzer on event' switches on the Reolink Home Hub are deprecated since the new firmware no longer supports these. Please use the equally named switches under each of the camera devices connected to the Home Hub instead. To remove this issue, please adjust automations accordingly and disable the switch entities mentioned."
+    }
+  },
+  "services": {
+    "ptz_move": {
+      "name": "PTZ move",
+      "description": "Moves the camera with a specific speed.",
+      "fields": {
+        "speed": {
+          "name": "Speed",
+          "description": "PTZ move speed."
+        }
+      }
+    },
+    "play_chime": {
+      "name": "Play chime",
+      "description": "Plays a ringtone on a Reolink Chime.",
+      "fields": {
+        "device_id": {
+          "name": "Target chime",
+          "description": "The Reolink Chime to play the ringtone on."
+        },
+        "ringtone": {
+          "name": "Ringtone",
+          "description": "Ringtone to play."
+        }
+      }
+    }
+  },
+  "selector": {
+    "ringtone": {
+      "options": {
+        "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+        "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+        "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+        "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+        "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+        "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+        "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+        "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+        "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+        "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "face": {
+        "name": "Face",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "person": {
+        "name": "Person",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "vehicle": {
+        "name": "Vehicle",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "pet": {
+        "name": "Pet",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "animal": {
+        "name": "Animal",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "visitor": {
+        "name": "Visitor"
+      },
+      "package": {
+        "name": "Package",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "cry": {
+        "name": "Baby crying",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "motion_lens_0": {
+        "name": "Motion lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "face_lens_0": {
+        "name": "Face lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "person_lens_0": {
+        "name": "Person lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "vehicle_lens_0": {
+        "name": "Vehicle lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "pet_lens_0": {
+        "name": "Pet lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "animal_lens_0": {
+        "name": "Animal lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "visitor_lens_0": {
+        "name": "Visitor lens 0"
+      },
+      "package_lens_0": {
+        "name": "Package lens 0",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "motion_lens_1": {
+        "name": "Motion lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "face_lens_1": {
+        "name": "Face lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "person_lens_1": {
+        "name": "Person lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "vehicle_lens_1": {
+        "name": "Vehicle lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "pet_lens_1": {
+        "name": "Pet lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "animal_lens_1": {
+        "name": "Animal lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "visitor_lens_1": {
+        "name": "Visitor lens 1"
+      },
+      "package_lens_1": {
+        "name": "Package lens 1",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "sleep": {
+        "name": "Sleep status",
+        "state": {
+          "off": "Awake",
+          "on": "Sleeping"
+        }
+      }
+    },
+    "button": {
+      "ptz_stop": {
+        "name": "PTZ stop"
+      },
+      "ptz_left": {
+        "name": "PTZ left"
+      },
+      "ptz_right": {
+        "name": "PTZ right"
+      },
+      "ptz_up": {
+        "name": "PTZ up"
+      },
+      "ptz_down": {
+        "name": "PTZ down"
+      },
+      "ptz_zoom_in": {
+        "name": "PTZ zoom in"
+      },
+      "ptz_zoom_out": {
+        "name": "PTZ zoom out"
+      },
+      "ptz_calibrate": {
+        "name": "PTZ calibrate"
+      },
+      "guard_go_to": {
+        "name": "Guard go to"
+      },
+      "guard_set": {
+        "name": "Guard set current position"
+      }
+    },
+    "camera": {
+      "sub": {
+        "name": "Fluent"
+      },
+      "main": {
+        "name": "Clear"
+      },
+      "snapshots_sub": {
+        "name": "Snapshots fluent"
+      },
+      "snapshots_main": {
+        "name": "Snapshots clear"
+      },
+      "ext": {
+        "name": "Balanced"
+      },
+      "sub_lens_0": {
+        "name": "Fluent lens 0"
+      },
+      "main_lens_0": {
+        "name": "Clear lens 0"
+      },
+      "snapshots_sub_lens_0": {
+        "name": "Snapshots fluent lens 0"
+      },
+      "snapshots_main_lens_0": {
+        "name": "Snapshots clear lens 0"
+      },
+      "ext_lens_0": {
+        "name": "Balanced lens 0"
+      },
+      "sub_lens_1": {
+        "name": "Fluent lens 1"
+      },
+      "main_lens_1": {
+        "name": "Clear lens 1"
+      },
+      "snapshots_sub_lens_1": {
+        "name": "Snapshots fluent lens 1"
+      },
+      "snapshots_main_lens_1": {
+        "name": "Snapshots clear lens 1"
+      },
+      "ext_lens_1": {
+        "name": "Balanced lens 1"
+      },
+      "autotrack_sub": {
+        "name": "Autotrack fluent"
+      },
+      "autotrack_snapshots_sub": {
+        "name": "Autotrack snapshots fluent"
+      },
+      "autotrack_snapshots_main": {
+        "name": "Autotrack snapshots clear"
+      }
+    },
+    "light": {
+      "floodlight": {
+        "name": "Floodlight"
+      },
+      "status_led": {
+        "name": "Status LED"
+      }
+    },
+    "number": {
+      "zoom": {
+        "name": "Zoom"
+      },
+      "focus": {
+        "name": "Focus"
+      },
+      "floodlight_brightness": {
+        "name": "Floodlight turn on brightness"
+      },
+      "volume": {
+        "name": "Volume"
+      },
+      "alarm_volume": {
+        "name": "Alarm volume"
+      },
+      "message_volume": {
+        "name": "Message volume"
+      },
+      "guard_return_time": {
+        "name": "Guard return time"
+      },
+      "motion_sensitivity": {
+        "name": "Motion sensitivity"
+      },
+      "pir_sensitivity": {
+        "name": "PIR sensitivity"
+      },
+      "ai_face_sensitivity": {
+        "name": "AI face sensitivity"
+      },
+      "ai_person_sensitivity": {
+        "name": "AI person sensitivity"
+      },
+      "ai_vehicle_sensitivity": {
+        "name": "AI vehicle sensitivity"
+      },
+      "ai_package_sensitivity": {
+        "name": "AI package sensitivity"
+      },
+      "ai_pet_sensitivity": {
+        "name": "AI pet sensitivity"
+      },
+      "ai_animal_sensitivity": {
+        "name": "AI animal sensitivity"
+      },
+      "ai_face_delay": {
+        "name": "AI face delay"
+      },
+      "ai_person_delay": {
+        "name": "AI person delay"
+      },
+      "ai_vehicle_delay": {
+        "name": "AI vehicle delay"
+      },
+      "ai_package_delay": {
+        "name": "AI package delay"
+      },
+      "ai_pet_delay": {
+        "name": "AI pet delay"
+      },
+      "ai_animal_delay": {
+        "name": "AI animal delay"
+      },
+      "auto_quick_reply_time": {
+        "name": "Auto quick reply time"
+      },
+      "auto_track_limit_left": {
+        "name": "Auto track limit left"
+      },
+      "auto_track_limit_right": {
+        "name": "Auto track limit right"
+      },
+      "auto_track_disappear_time": {
+        "name": "Auto track disappear time"
+      },
+      "auto_track_stop_time": {
+        "name": "Auto track stop time"
+      },
+      "day_night_switch_threshold": {
+        "name": "Day night switch threshold"
+      },
+      "image_brightness": {
+        "name": "Image brightness"
+      },
+      "image_contrast": {
+        "name": "Image contrast"
+      },
+      "image_saturation": {
+        "name": "Image saturation"
+      },
+      "image_sharpness": {
+        "name": "Image sharpness"
+      },
+      "image_hue": {
+        "name": "Image hue"
+      }
+    },
+    "select": {
+      "floodlight_mode": {
+        "name": "Floodlight mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
+          "onatnight": "On at night",
+          "schedule": "Schedule",
+          "adaptive": "Adaptive",
+          "autoadaptive": "Auto adaptive"
+        }
+      },
+      "day_night_mode": {
+        "name": "Day night mode",
+        "state": {
+          "auto": "Auto",
+          "color": "Color",
+          "blackwhite": "Black & white"
+        }
+      },
+      "ptz_preset": {
+        "name": "PTZ preset"
+      },
+      "play_quick_reply_message": {
+        "name": "Play quick reply message"
+      },
+      "auto_quick_reply_message": {
+        "name": "Auto quick reply message",
+        "state": {
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "auto_track_method": {
+        "name": "Auto track method",
+        "state": {
+          "digital": "Digital",
+          "digitalfirst": "Digital first",
+          "pantiltfirst": "Pan/tilt first"
+        }
+      },
+      "doorbell_led": {
+        "name": "Doorbell LED",
+        "state": {
+          "stayoff": "Stay off",
+          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
+          "alwaysonatnight": "Auto & always on at night",
+          "always": "Always on",
+          "alwayson": "Always on"
+        }
+      },
+      "hdr": {
+        "name": "HDR",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]"
+        }
+      },
+      "binning_mode": {
+        "name": "Binning mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]"
+        }
+      },
+      "hub_alarm_ringtone": {
+        "name": "Hub alarm ringtone",
+        "state": {
+          "alarm": "Alarm",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
+      },
+      "hub_visitor_ringtone": {
+        "name": "Hub visitor ringtone",
+        "state": {
+          "alarm": "[%key:component::reolink::entity::select::hub_alarm_ringtone::state::alarm%]",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
+      },
+      "motion_tone": {
+        "name": "Motion ringtone",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "citybird": "City bird",
+          "originaltune": "Original tune",
+          "pianokey": "Piano key",
+          "loop": "Loop",
+          "attraction": "Attraction",
+          "hophop": "Hop hop",
+          "goodday": "Good day",
+          "operetta": "Operetta",
+          "moonlight": "Moonlight",
+          "waybackhome": "Way back home"
+        }
+      },
+      "people_tone": {
+        "name": "Person ringtone",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
+      },
+      "vehicle_tone": {
+        "name": "Vehicle ringtone",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
+      },
+      "visitor_tone": {
+        "name": "Visitor ringtone",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
+      },
+      "package_tone": {
+        "name": "Package ringtone",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
+      },
+      "main_frame_rate": {
+        "name": "Clear frame rate"
+      },
+      "sub_frame_rate": {
+        "name": "Fluent frame rate"
+      },
+      "main_bit_rate": {
+        "name": "Clear bit rate"
+      },
+      "sub_bit_rate": {
+        "name": "Fluent bit rate"
+      }
+    },
+    "sensor": {
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      },
+      "cpu_usage": {
+        "name": "CPU usage"
+      },
+      "ptz_pan_position": {
+        "name": "PTZ pan position"
+      },
+      "ptz_tilt_position": {
+        "name": "PTZ tilt position"
+      },
+      "battery_temperature": {
+        "name": "Battery temperature"
+      },
+      "battery_state": {
+        "name": "Battery state",
+        "state": {
+          "discharging": "[%key:common::state::discharging%]",
+          "charging": "[%key:common::state::charging%]",
+          "chargecomplete": "Charge complete"
+        }
+      },
+      "hdd_storage": {
+        "name": "HDD {hdd_index} storage"
+      },
+      "sd_storage": {
+        "name": "SD {hdd_index} storage"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "[%key:component::siren::title%]"
+      }
+    },
+    "switch": {
+      "ir_lights": {
+        "name": "Infra red lights in night mode"
+      },
+      "record_audio": {
+        "name": "Record audio"
+      },
+      "siren_on_event": {
+        "name": "Siren on event"
+      },
+      "auto_tracking": {
+        "name": "Auto tracking"
+      },
+      "auto_focus": {
+        "name": "Auto focus"
+      },
+      "guard_return": {
+        "name": "Guard return"
+      },
+      "ptz_patrol": {
+        "name": "PTZ patrol"
+      },
+      "email": {
+        "name": "Email on event"
+      },
+      "ftp_upload": {
+        "name": "FTP upload"
+      },
+      "push_notifications": {
+        "name": "Push notifications"
+      },
+      "record": {
+        "name": "Record"
+      },
+      "manual_record": {
+        "name": "Manual record"
+      },
+      "hub_ringtone_on_event": {
+        "name": "Hub ringtone on event"
+      },
+      "doorbell_button_sound": {
+        "name": "Doorbell button sound"
+      },
+      "hdr": {
+        "name": "[%key:component::reolink::entity::select::hdr::name%]"
+      },
+      "pir_enabled": {
+        "name": "PIR enabled"
+      },
+      "pir_reduce_alarm": {
+        "name": "PIR reduce false alarm"
+      },
+      "led": {
+        "name": "LED"
+      },
+      "privacy_mode": {
+        "name": "Privacy mode"
+      }
+    }
+  }
+}

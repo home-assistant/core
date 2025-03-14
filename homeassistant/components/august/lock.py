@@ -1,23 +1,25 @@
 """Support for August lock."""
+
+from __future__ import annotations
+
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
-from yalexs.activity import SOURCE_PUBNUB, ActivityType
-from yalexs.lock import LockStatus
-from yalexs.util import update_lock_detail_from_activity
+from yalexs.activity import ActivityType, ActivityTypes
+from yalexs.lock import Lock, LockStatus
+from yalexs.util import get_latest_activity, update_lock_detail_from_activity
 
-from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity, LockEntityFeature
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from . import AugustData
-from .const import DOMAIN
-from .entity import AugustEntityMixin
+from . import AugustConfigEntry, AugustData
+from .entity import AugustEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,40 +28,50 @@ LOCK_JAMMED_ERR = 531
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AugustConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up August locks."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     async_add_entities(AugustLock(data, lock) for lock in data.locks)
 
 
-class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
+class AugustLock(AugustEntity, RestoreEntity, LockEntity):
     """Representation of an August lock."""
 
-    def __init__(self, data, device):
+    _attr_name = None
+    _lock_status: LockStatus | None = None
+
+    def __init__(self, data: AugustData, device: Lock) -> None:
         """Initialize the lock."""
-        super().__init__(data, device)
-        self._lock_status = None
-        self._attr_name = device.device_name
-        self._attr_unique_id = f"{self._device_id:s}_lock"
-        self._update_from_data()
+        super().__init__(data, device, "lock")
+        if self._detail.unlatch_supported:
+            self._attr_supported_features = LockEntityFeature.OPEN
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
-        if self._data.activity_stream.pubnub.connected:
+        if self._data.push_updates_connected:
             await self._data.async_lock_async(self._device_id, self._hyper_bridge)
             return
         await self._call_lock_operation(self._data.async_lock)
 
+    async def async_open(self, **kwargs: Any) -> None:
+        """Open/unlatch the device."""
+        if self._data.push_updates_connected:
+            await self._data.async_unlatch_async(self._device_id, self._hyper_bridge)
+            return
+        await self._call_lock_operation(self._data.async_unlatch)
+
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        if self._data.activity_stream.pubnub.connected:
+        if self._data.push_updates_connected:
             await self._data.async_unlock_async(self._device_id, self._hyper_bridge)
             return
         await self._call_lock_operation(self._data.async_unlock)
 
-    async def _call_lock_operation(self, lock_operation):
+    async def _call_lock_operation(
+        self, lock_operation: Callable[[str], Coroutine[Any, Any, list[ActivityTypes]]]
+    ) -> None:
         try:
             activities = await lock_operation(self._device_id)
         except ClientResponseError as err:
@@ -79,7 +91,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
             )
             self._data.async_signal_device_id_update(self._device_id)
 
-    def _update_lock_status_from_detail(self):
+    def _update_lock_status_from_detail(self) -> bool:
         self._attr_available = self._detail.bridge_is_online
 
         if self._lock_status != self._detail.lock_status:
@@ -88,44 +100,41 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         return False
 
     @callback
-    def _update_from_data(self):
+    def _update_from_data(self) -> None:
         """Get the latest state of the sensor and update activity."""
-        lock_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id,
-            {ActivityType.LOCK_OPERATION, ActivityType.LOCK_OPERATION_WITHOUT_OPERATOR},
-        )
-
-        if lock_activity is not None:
+        detail = self._detail
+        if lock_activity := self._get_latest({ActivityType.LOCK_OPERATION}):
             self._attr_changed_by = lock_activity.operated_by
-            update_lock_detail_from_activity(self._detail, lock_activity)
-            # If the source is pubnub the lock must be online since its a live update
-            if lock_activity.source == SOURCE_PUBNUB:
-                self._detail.set_online(True)
-
-        bridge_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, {ActivityType.BRIDGE_OPERATION}
+        lock_activity_without_operator = self._get_latest(
+            {ActivityType.LOCK_OPERATION_WITHOUT_OPERATOR}
         )
+        if latest_activity := get_latest_activity(
+            lock_activity_without_operator, lock_activity
+        ):
+            if latest_activity.was_pushed:
+                self._detail.set_online(True)
+            update_lock_detail_from_activity(detail, latest_activity)
 
-        if bridge_activity is not None:
-            update_lock_detail_from_activity(self._detail, bridge_activity)
+        if bridge_activity := self._get_latest({ActivityType.BRIDGE_OPERATION}):
+            update_lock_detail_from_activity(detail, bridge_activity)
 
         self._update_lock_status_from_detail()
-        if self._lock_status is None or self._lock_status is LockStatus.UNKNOWN:
+        lock_status = self._lock_status
+        if lock_status is None or lock_status is LockStatus.UNKNOWN:
             self._attr_is_locked = None
         else:
-            self._attr_is_locked = self._lock_status is LockStatus.LOCKED
-
-        self._attr_is_jammed = self._lock_status is LockStatus.JAMMED
-        self._attr_is_locking = self._lock_status is LockStatus.LOCKING
-        self._attr_is_unlocking = self._lock_status is LockStatus.UNLOCKING
-
-        self._attr_extra_state_attributes = {
-            ATTR_BATTERY_LEVEL: self._detail.battery_level
-        }
-        if self._detail.keypad is not None:
-            self._attr_extra_state_attributes[
-                "keypad_battery_level"
-            ] = self._detail.keypad.battery_level
+            self._attr_is_locked = lock_status is LockStatus.LOCKED
+        self._attr_is_jammed = lock_status is LockStatus.JAMMED
+        self._attr_is_locking = lock_status is LockStatus.LOCKING
+        self._attr_is_unlocking = lock_status in (
+            LockStatus.UNLOCKING,
+            LockStatus.UNLATCHING,
+        )
+        self._attr_extra_state_attributes = {ATTR_BATTERY_LEVEL: detail.battery_level}
+        if keypad := detail.keypad:
+            self._attr_extra_state_attributes["keypad_battery_level"] = (
+                keypad.battery_level
+            )
 
     async def async_added_to_hass(self) -> None:
         """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""

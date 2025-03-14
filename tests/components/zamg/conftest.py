@@ -1,4 +1,5 @@
 """Fixtures for Zamg integration tests."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import MagicMock, patch
@@ -14,6 +15,9 @@ from tests.common import MockConfigEntry, load_fixture
 TEST_STATION_ID = "11240"
 TEST_STATION_NAME = "Graz/Flughafen"
 
+TEST_STATION_ID_2 = "11035"
+TEST_STATION_NAME_2 = "WIEN/HOHE WARTE"
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
@@ -26,16 +30,14 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch("homeassistant.components.zamg.async_setup_entry", return_value=True):
         yield
 
 
 @pytest.fixture
-def mock_zamg_config_flow(
-    request: pytest.FixtureRequest,
-) -> Generator[None, MagicMock, None]:
+def mock_zamg_config_flow() -> Generator[MagicMock]:
     """Return a mocked Zamg client."""
     with patch(
         "homeassistant.components.zamg.sensor.ZamgData", autospec=True
@@ -49,7 +51,7 @@ def mock_zamg_config_flow(
 
 
 @pytest.fixture
-def mock_zamg(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
+def mock_zamg() -> Generator[MagicMock]:
     """Return a mocked Zamg client."""
 
     with patch(
@@ -68,24 +70,26 @@ def mock_zamg(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None
 
 
 @pytest.fixture
-def mock_zamg_stations(
-    request: pytest.FixtureRequest,
-) -> Generator[None, MagicMock, None]:
+def mock_zamg_coordinator() -> Generator[MagicMock]:
     """Return a mocked Zamg client."""
+
     with patch(
-        "homeassistant.components.zamg.config_flow.ZamgData.zamg_stations"
+        "homeassistant.components.zamg.coordinator.ZamgDevice", autospec=True
     ) as zamg_mock:
-        zamg_mock.return_value = {
-            "11240": (46.99305556, 15.43916667, "GRAZ-FLUGHAFEN"),
-            "11244": (46.87222222, 15.90361111, "BAD GLEICHENBERG"),
+        zamg = zamg_mock.return_value
+        zamg.update.return_value = {TEST_STATION_ID: {"Name": TEST_STATION_NAME}}
+        zamg.zamg_stations.return_value = {
+            TEST_STATION_ID: (46.99305556, 15.43916667, TEST_STATION_NAME),
+            "11244": (46.8722229, 15.90361118, "BAD GLEICHENBERG"),
         }
-        yield zamg_mock
+        zamg.closest_station.return_value = TEST_STATION_ID
+        zamg.get_data.return_value = TEST_STATION_ID
+        zamg.get_station_name = TEST_STATION_NAME
+        yield zamg
 
 
 @pytest.fixture
-async def init_integration(
-    hass: HomeAssistant,
-) -> MockConfigEntry:
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Zamg integration for testing."""
     mock_config_entry.add_to_hass(hass)
 

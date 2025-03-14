@@ -1,6 +1,5 @@
 """Test the ibeacon device trackers."""
 
-
 from datetime import timedelta
 import time
 from unittest.mock import patch
@@ -24,6 +23,7 @@ from homeassistant.const import (
     STATE_NOT_HOME,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import (
@@ -42,11 +42,11 @@ from tests.components.bluetooth import (
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
 
 
-async def test_device_tracker_fixed_address(hass):
+async def test_device_tracker_fixed_address(hass: HomeAssistant) -> None:
     """Test creating and updating device_tracker."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -79,7 +79,7 @@ async def test_device_tracker_fixed_address(hass):
     await hass.async_block_till_done()
 
 
-async def test_device_tracker_random_address(hass):
+async def test_device_tracker_random_address(hass: HomeAssistant) -> None:
     """Test creating and updating device_tracker."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -104,9 +104,12 @@ async def test_device_tracker_random_address(hass):
     assert tracker_attributes[ATTR_FRIENDLY_NAME] == "RandomAddress_1234"
 
     await hass.async_block_till_done()
-    with patch_all_discovered_devices([]), patch(
-        "homeassistant.components.ibeacon.coordinator.MONOTONIC_TIME",
-        return_value=start_time + UNAVAILABLE_TIMEOUT + 1,
+    with (
+        patch_all_discovered_devices([]),
+        patch(
+            "homeassistant.components.ibeacon.coordinator.MONOTONIC_TIME",
+            return_value=start_time + UNAVAILABLE_TIMEOUT + 1,
+        ),
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TIMEOUT)
@@ -142,7 +145,9 @@ async def test_device_tracker_random_address(hass):
     assert tracker_attributes[ATTR_FRIENDLY_NAME] == "RandomAddress_1234"
 
 
-async def test_device_tracker_random_address_infrequent_changes(hass):
+async def test_device_tracker_random_address_infrequent_changes(
+    hass: HomeAssistant,
+) -> None:
     """Test creating and updating device_tracker with a random mac that only changes once per day."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -167,9 +172,12 @@ async def test_device_tracker_random_address_infrequent_changes(hass):
     assert tracker_attributes[ATTR_FRIENDLY_NAME] == "RandomAddress_1234"
 
     await hass.async_block_till_done()
-    with patch_all_discovered_devices([]), patch(
-        "homeassistant.components.ibeacon.coordinator.MONOTONIC_TIME",
-        return_value=start_time + UNAVAILABLE_TIMEOUT + 1,
+    with (
+        patch_all_discovered_devices([]),
+        patch(
+            "homeassistant.components.ibeacon.coordinator.MONOTONIC_TIME",
+            return_value=start_time + UNAVAILABLE_TIMEOUT + 1,
+        ),
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TIMEOUT)
@@ -194,9 +202,12 @@ async def test_device_tracker_random_address_infrequent_changes(hass):
     )
     device = async_ble_device_from_address(hass, "AA:BB:CC:DD:EE:14", False)
 
-    with patch_all_discovered_devices([device]), patch(
-        "homeassistant.components.ibeacon.coordinator.MONOTONIC_TIME",
-        return_value=start_time + UPDATE_INTERVAL.total_seconds() + 1,
+    with (
+        patch_all_discovered_devices([device]),
+        patch(
+            "homeassistant.components.ibeacon.coordinator.MONOTONIC_TIME",
+            return_value=start_time + UPDATE_INTERVAL.total_seconds() + 1,
+        ),
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
         await hass.async_block_till_done()
@@ -224,6 +235,7 @@ async def test_device_tracker_random_address_infrequent_changes(hass):
             connectable=False,
             device=device,
             advertisement=previous_service_info.advertisement,
+            tx_power=-127,
         ),
     )
     device = async_ble_device_from_address(hass, "AA:BB:CC:DD:EE:14", False)
@@ -232,9 +244,12 @@ async def test_device_tracker_random_address_infrequent_changes(hass):
         == one_day_future
     )
 
-    with patch_all_discovered_devices([device]), patch(
-        "homeassistant.components.ibeacon.coordinator.MONOTONIC_TIME",
-        return_value=start_time + UNAVAILABLE_TIMEOUT + 1,
+    with (
+        patch_all_discovered_devices([device]),
+        patch(
+            "homeassistant.components.ibeacon.coordinator.MONOTONIC_TIME",
+            return_value=start_time + UNAVAILABLE_TIMEOUT + 1,
+        ),
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TIMEOUT + 1)

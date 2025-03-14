@@ -1,4 +1,5 @@
 """Test Evil Genius Labs light."""
+
 from unittest.mock import patch
 
 import pytest
@@ -10,10 +11,11 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
+from homeassistant.core import HomeAssistant
 
 
 @pytest.mark.parametrize("platforms", [("light",)])
-async def test_works(hass, setup_evil_genius_labs):
+async def test_works(hass: HomeAssistant, setup_evil_genius_labs) -> None:
     """Test it works."""
     state = hass.states.get("light.fibonacci256_23d4")
     assert state is not None
@@ -25,13 +27,12 @@ async def test_works(hass, setup_evil_genius_labs):
 
 
 @pytest.mark.parametrize("platforms", [("light",)])
-async def test_turn_on_color(hass, setup_evil_genius_labs):
+async def test_turn_on_color(hass: HomeAssistant, setup_evil_genius_labs) -> None:
     """Test turning on with a color."""
-    with patch(
-        "pyevilgenius.EvilGeniusDevice.set_path_value"
-    ) as mock_set_path_value, patch(
-        "pyevilgenius.EvilGeniusDevice.set_rgb_color"
-    ) as mock_set_rgb_color:
+    with (
+        patch("pyevilgenius.EvilGeniusDevice.set_path_value") as mock_set_path_value,
+        patch("pyevilgenius.EvilGeniusDevice.set_rgb_color") as mock_set_rgb_color,
+    ):
         await hass.services.async_call(
             "light",
             "turn_on",
@@ -44,15 +45,15 @@ async def test_turn_on_color(hass, setup_evil_genius_labs):
         )
 
     assert len(mock_set_path_value.mock_calls) == 2
-    mock_set_path_value.mock_calls[0][1] == ("brightness", 100)
-    mock_set_path_value.mock_calls[1][1] == ("power", 1)
+    assert mock_set_path_value.mock_calls[0][1] == ("brightness", 100)
+    assert mock_set_path_value.mock_calls[1][1] == ("power", 1)
 
     assert len(mock_set_rgb_color.mock_calls) == 1
-    mock_set_rgb_color.mock_calls[0][1] == (10, 20, 30)
+    assert mock_set_rgb_color.mock_calls[0][1] == (10, 20, 30)
 
 
 @pytest.mark.parametrize("platforms", [("light",)])
-async def test_turn_on_effect(hass, setup_evil_genius_labs):
+async def test_turn_on_effect(hass: HomeAssistant, setup_evil_genius_labs) -> None:
     """Test turning on with an effect."""
     with patch("pyevilgenius.EvilGeniusDevice.set_path_value") as mock_set_path_value:
         await hass.services.async_call(
@@ -66,12 +67,12 @@ async def test_turn_on_effect(hass, setup_evil_genius_labs):
         )
 
     assert len(mock_set_path_value.mock_calls) == 2
-    mock_set_path_value.mock_calls[0][1] == ("pattern", 4)
-    mock_set_path_value.mock_calls[1][1] == ("power", 1)
+    assert mock_set_path_value.mock_calls[0][1] == ("pattern", 4)
+    assert mock_set_path_value.mock_calls[1][1] == ("power", 1)
 
 
 @pytest.mark.parametrize("platforms", [("light",)])
-async def test_turn_off(hass, setup_evil_genius_labs):
+async def test_turn_off(hass: HomeAssistant, setup_evil_genius_labs) -> None:
     """Test turning off."""
     with patch("pyevilgenius.EvilGeniusDevice.set_path_value") as mock_set_path_value:
         await hass.services.async_call(
@@ -84,4 +85,4 @@ async def test_turn_off(hass, setup_evil_genius_labs):
         )
 
     assert len(mock_set_path_value.mock_calls) == 1
-    mock_set_path_value.mock_calls[0][1] == ("power", 0)
+    assert mock_set_path_value.mock_calls[0][1] == ("power", 0)

@@ -1,7 +1,8 @@
 """Support for the sensors in a GreenEye Monitor."""
+
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any
 
 import greeneye
 
@@ -10,11 +11,9 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_TEMPERATURE_UNIT,
-    TIME_HOURS,
-    TIME_MINUTES,
-    TIME_SECONDS,
     UnitOfElectricPotential,
     UnitOfPower,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -63,48 +62,46 @@ async def async_setup_platform(
             None,
         )
         if monitor_config:
-            entities: list[GEMSensor] = []
-
             channel_configs = monitor_config[CONF_CHANNELS]
-            for sensor in channel_configs:
-                entities.append(
-                    CurrentSensor(
-                        monitor,
-                        sensor[CONF_NUMBER],
-                        sensor[CONF_NAME],
-                        sensor[CONF_NET_METERING],
-                    )
+            entities: list[GEMSensor] = [
+                CurrentSensor(
+                    monitor,
+                    sensor[CONF_NUMBER],
+                    sensor[CONF_NAME],
+                    sensor[CONF_NET_METERING],
                 )
+                for sensor in channel_configs
+            ]
 
             pulse_counter_configs = monitor_config[CONF_PULSE_COUNTERS]
-            for sensor in pulse_counter_configs:
-                entities.append(
-                    PulseCounter(
-                        monitor,
-                        sensor[CONF_NUMBER],
-                        sensor[CONF_NAME],
-                        sensor[CONF_COUNTED_QUANTITY],
-                        sensor[CONF_TIME_UNIT],
-                        sensor[CONF_COUNTED_QUANTITY_PER_PULSE],
-                    )
+            entities.extend(
+                PulseCounter(
+                    monitor,
+                    sensor[CONF_NUMBER],
+                    sensor[CONF_NAME],
+                    sensor[CONF_COUNTED_QUANTITY],
+                    sensor[CONF_TIME_UNIT],
+                    sensor[CONF_COUNTED_QUANTITY_PER_PULSE],
                 )
+                for sensor in pulse_counter_configs
+            )
 
             temperature_sensor_configs = monitor_config[CONF_TEMPERATURE_SENSORS]
-            for sensor in temperature_sensor_configs[CONF_SENSORS]:
-                entities.append(
-                    TemperatureSensor(
-                        monitor,
-                        sensor[CONF_NUMBER],
-                        sensor[CONF_NAME],
-                        temperature_sensor_configs[CONF_TEMPERATURE_UNIT],
-                    )
+            entities.extend(
+                TemperatureSensor(
+                    monitor,
+                    sensor[CONF_NUMBER],
+                    sensor[CONF_NAME],
+                    temperature_sensor_configs[CONF_TEMPERATURE_UNIT],
                 )
+                for sensor in temperature_sensor_configs[CONF_SENSORS]
+            )
 
             voltage_sensor_configs = monitor_config[CONF_VOLTAGE_SENSORS]
-            for sensor in voltage_sensor_configs:
-                entities.append(
-                    VoltageSensor(monitor, sensor[CONF_NUMBER], sensor[CONF_NAME])
-                )
+            entities.extend(
+                VoltageSensor(monitor, sensor[CONF_NUMBER], sensor[CONF_NAME])
+                for sensor in voltage_sensor_configs
+            )
 
             async_add_entities(entities)
             monitor_configs.remove(monitor_config)
@@ -118,12 +115,12 @@ async def async_setup_platform(
         on_new_monitor(monitor)
 
 
-UnderlyingSensorType = Union[
-    greeneye.monitor.Channel,
-    greeneye.monitor.PulseCounter,
-    greeneye.monitor.TemperatureSensor,
-    greeneye.monitor.VoltageSensor,
-]
+type UnderlyingSensorType = (
+    greeneye.monitor.Channel
+    | greeneye.monitor.PulseCounter
+    | greeneye.monitor.TemperatureSensor
+    | greeneye.monitor.VoltageSensor
+)
 
 
 class GEMSensor(SensorEntity):
@@ -223,26 +220,26 @@ class PulseCounter(GEMSensor):
         if self._sensor.pulses_per_second is None:
             return None
 
-        result = (
+        return (
             self._sensor.pulses_per_second
             * self._counted_quantity_per_pulse
             * self._seconds_per_time_unit
         )
-        return result
 
     @property
     def _seconds_per_time_unit(self) -> int:
         """Return the number of seconds in the given display time unit."""
-        if self._time_unit == TIME_SECONDS:
+        if self._time_unit == UnitOfTime.SECONDS:
             return 1
-        if self._time_unit == TIME_MINUTES:
+        if self._time_unit == UnitOfTime.MINUTES:
             return 60
-        if self._time_unit == TIME_HOURS:
+        if self._time_unit == UnitOfTime.HOURS:
             return 3600
 
         # Config schema should have ensured it is one of the above values
-        raise Exception(
-            f"Invalid value for time unit: {self._time_unit}. Expected one of {TIME_SECONDS}, {TIME_MINUTES}, or {TIME_HOURS}"
+        raise RuntimeError(
+            f"Invalid value for time unit: {self._time_unit}. Expected one of"
+            f" {UnitOfTime.SECONDS}, {UnitOfTime.MINUTES}, or {UnitOfTime.HOURS}"
         )
 
     @property

@@ -1,10 +1,11 @@
 """Handle MySensors messages."""
+
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
-from typing import Any
+from collections.abc import Callable
 
 from mysensors import Message
+from mysensors.const import SYSTEM_CHILD_ID
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -12,34 +13,39 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import decorator
 
 from .const import CHILD_CALLBACK, NODE_CALLBACK, DevId, GatewayId
-from .device import get_mysensors_devices
-from .helpers import discover_mysensors_platform, validate_set_msg
+from .entity import get_mysensors_devices
+from .helpers import (
+    discover_mysensors_node,
+    discover_mysensors_platform,
+    validate_set_msg,
+)
 
 HANDLERS: decorator.Registry[
-    str, Callable[[HomeAssistant, GatewayId, Message], Coroutine[Any, Any, None]]
+    str, Callable[[HomeAssistant, GatewayId, Message], None]
 ] = decorator.Registry()
 
 
 @HANDLERS.register("set")
-async def handle_set(hass: HomeAssistant, gateway_id: GatewayId, msg: Message) -> None:
+@callback
+def handle_set(hass: HomeAssistant, gateway_id: GatewayId, msg: Message) -> None:
     """Handle a mysensors set message."""
     validated = validate_set_msg(gateway_id, msg)
     _handle_child_update(hass, gateway_id, validated)
 
 
 @HANDLERS.register("internal")
-async def handle_internal(
-    hass: HomeAssistant, gateway_id: GatewayId, msg: Message
-) -> None:
+@callback
+def handle_internal(hass: HomeAssistant, gateway_id: GatewayId, msg: Message) -> None:
     """Handle a mysensors internal message."""
     internal = msg.gateway.const.Internal(msg.sub_type)
     if (handler := HANDLERS.get(internal.name)) is None:
         return
-    await handler(hass, gateway_id, msg)
+    handler(hass, gateway_id, msg)
 
 
 @HANDLERS.register("I_BATTERY_LEVEL")
-async def handle_battery_level(
+@callback
+def handle_battery_level(
     hass: HomeAssistant, gateway_id: GatewayId, msg: Message
 ) -> None:
     """Handle an internal battery level message."""
@@ -47,15 +53,15 @@ async def handle_battery_level(
 
 
 @HANDLERS.register("I_HEARTBEAT_RESPONSE")
-async def handle_heartbeat(
-    hass: HomeAssistant, gateway_id: GatewayId, msg: Message
-) -> None:
+@callback
+def handle_heartbeat(hass: HomeAssistant, gateway_id: GatewayId, msg: Message) -> None:
     """Handle an heartbeat."""
     _handle_node_update(hass, gateway_id, msg)
 
 
 @HANDLERS.register("I_SKETCH_NAME")
-async def handle_sketch_name(
+@callback
+def handle_sketch_name(
     hass: HomeAssistant, gateway_id: GatewayId, msg: Message
 ) -> None:
     """Handle an internal sketch name message."""
@@ -63,11 +69,22 @@ async def handle_sketch_name(
 
 
 @HANDLERS.register("I_SKETCH_VERSION")
-async def handle_sketch_version(
+@callback
+def handle_sketch_version(
     hass: HomeAssistant, gateway_id: GatewayId, msg: Message
 ) -> None:
     """Handle an internal sketch version message."""
     _handle_node_update(hass, gateway_id, msg)
+
+
+@HANDLERS.register("presentation")
+@callback
+def handle_presentation(
+    hass: HomeAssistant, gateway_id: GatewayId, msg: Message
+) -> None:
+    """Handle an internal presentation message."""
+    if msg.child_id == SYSTEM_CHILD_ID:
+        discover_mysensors_node(hass, gateway_id, msg.node_id)
 
 
 @callback

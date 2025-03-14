@@ -1,5 +1,9 @@
 """Apprise platform for notify component."""
+
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import apprise
 import voluptuous as vol
@@ -8,17 +12,19 @@ from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONF_URL
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FILE = "config"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_URL): vol.All(cv.ensure_list, [str]),
         vol.Optional(CONF_FILE): cv.string,
@@ -26,7 +32,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> AppriseNotificationService | None:
     """Get the Apprise notification service."""
     # Create our Apprise Instance (reference our asset)
     a_obj = apprise.Apprise()
@@ -43,9 +53,11 @@ def get_service(hass, config, discovery_info=None):
             return None
 
     # Ordered list of URLs
-    if config.get(CONF_URL) and not a_obj.add(config[CONF_URL]):
-        _LOGGER.error("Invalid Apprise URL(s) supplied")
-        return None
+    if urls := config.get(CONF_URL):
+        for entry in urls:
+            if not a_obj.add(entry):
+                _LOGGER.error("One or more specified Apprise URL(s) are invalid")
+                return None
 
     return AppriseNotificationService(a_obj)
 
@@ -53,11 +65,11 @@ def get_service(hass, config, discovery_info=None):
 class AppriseNotificationService(BaseNotificationService):
     """Implement the notification service for Apprise."""
 
-    def __init__(self, a_obj):
+    def __init__(self, a_obj: apprise.Apprise) -> None:
         """Initialize the service."""
         self.apprise = a_obj
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a specified target.
 
         If no target/tags are specified, then services are notified as is

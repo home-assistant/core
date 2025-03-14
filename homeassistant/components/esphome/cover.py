@@ -1,10 +1,11 @@
 """Support for ESPHome covers."""
+
 from __future__ import annotations
 
-from contextlib import suppress
+from functools import partial
 from typing import Any
 
-from aioesphomeapi import CoverInfo, CoverOperation, CoverState
+from aioesphomeapi import APIVersion, CoverInfo, CoverOperation, CoverState, EntityInfo
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -13,58 +14,41 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
+from homeassistant.util.enum import try_parse_enum
 
-from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up ESPHome covers based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        component_key="cover",
-        info_type=CoverInfo,
-        entity_type=EsphomeCover,
-        state_type=CoverState,
-    )
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 
 
 class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
     """A cover implementation for ESPHome."""
 
-    @property
-    def supported_features(self) -> CoverEntityFeature:
-        """Flag supported features."""
-        flags = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-        )
-        if self._static_info.supports_position:
+    @callback
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
+        """Set attrs from static info."""
+        super()._on_static_info_update(static_info)
+        static_info = self._static_info
+        flags = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        if self._api_version < APIVersion(1, 8) or static_info.supports_stop:
+            flags |= CoverEntityFeature.STOP
+        if static_info.supports_position:
             flags |= CoverEntityFeature.SET_POSITION
-        if self._static_info.supports_tilt:
+        if static_info.supports_tilt:
             flags |= (
                 CoverEntityFeature.OPEN_TILT
                 | CoverEntityFeature.CLOSE_TILT
                 | CoverEntityFeature.SET_TILT_POSITION
             )
-        return flags
-
-    @property
-    def device_class(self) -> CoverDeviceClass | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        with suppress(ValueError):
-            return CoverDeviceClass(self._static_info.device_class)
-        return None
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return self._static_info.assumed_state
+        self._attr_supported_features = flags
+        self._attr_device_class = try_parse_enum(
+            CoverDeviceClass, static_info.device_class
+        )
+        self._attr_assumed_state = static_info.assumed_state
 
     @property
     @esphome_state_property
@@ -77,13 +61,13 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
     @esphome_state_property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
-        return self._state.current_operation == CoverOperation.IS_OPENING
+        return self._state.current_operation is CoverOperation.IS_OPENING
 
     @property
     @esphome_state_property
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
-        return self._state.current_operation == CoverOperation.IS_CLOSING
+        return self._state.current_operation is CoverOperation.IS_CLOSING
 
     @property
     @esphome_state_property
@@ -101,35 +85,46 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
             return None
         return round(self._state.tilt * 100.0)
 
+    @convert_api_error_ha_error
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._client.cover_command(key=self._static_info.key, position=1.0)
+        self._client.cover_command(key=self._key, position=1.0)
 
+    @convert_api_error_ha_error
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self._client.cover_command(key=self._static_info.key, position=0.0)
+        self._client.cover_command(key=self._key, position=0.0)
 
+    @convert_api_error_ha_error
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self._client.cover_command(key=self._static_info.key, stop=True)
+        self._client.cover_command(key=self._key, stop=True)
 
+    @convert_api_error_ha_error
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self._client.cover_command(
-            key=self._static_info.key, position=kwargs[ATTR_POSITION] / 100
-        )
+        self._client.cover_command(key=self._key, position=kwargs[ATTR_POSITION] / 100)
 
+    @convert_api_error_ha_error
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        await self._client.cover_command(key=self._static_info.key, tilt=1.0)
+        self._client.cover_command(key=self._key, tilt=1.0)
 
+    @convert_api_error_ha_error
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
-        await self._client.cover_command(key=self._static_info.key, tilt=0.0)
+        self._client.cover_command(key=self._key, tilt=0.0)
 
+    @convert_api_error_ha_error
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         tilt_position: int = kwargs[ATTR_TILT_POSITION]
-        await self._client.cover_command(
-            key=self._static_info.key, tilt=tilt_position / 100
-        )
+        self._client.cover_command(key=self._key, tilt=tilt_position / 100)
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=CoverInfo,
+    entity_type=EsphomeCover,
+    state_type=CoverState,
+)

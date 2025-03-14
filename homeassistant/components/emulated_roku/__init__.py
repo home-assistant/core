@@ -1,4 +1,5 @@
 """Support for Roku API emulation."""
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -6,7 +7,7 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .binding import EmulatedRoku

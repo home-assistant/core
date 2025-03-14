@@ -1,0 +1,3 @@
+# This is correct and should not generate errors
+platform: non_adr_0007
+option1: abc

@@ -1,25 +1,25 @@
 """Support for interacting with Smappee Comport Plugs, Switches and Output Modules."""
+
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import SmappeeConfigEntry
 from .const import DOMAIN
 
 SWITCH_PREFIX = "Switch"
-ICON = "mdi:toggle-switch"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: SmappeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Smappee Comfort Plugs."""
-    smappee_base = hass.data[DOMAIN][config_entry.entry_id]
+    smappee_base = config_entry.runtime_data
 
     entities = []
     for service_location in smappee_base.smappee.service_locations.values():
@@ -36,24 +36,26 @@ async def async_setup_entry(
                     )
                 )
             elif actuator.type == "INFINITY_OUTPUT_MODULE":
-                for option in actuator.state_options:
-                    entities.append(
-                        SmappeeActuator(
-                            smappee_base,
-                            service_location,
-                            actuator.name,
-                            actuator_id,
-                            actuator.type,
-                            actuator.serialnumber,
-                            actuator_state_option=option,
-                        )
+                entities.extend(
+                    SmappeeActuator(
+                        smappee_base,
+                        service_location,
+                        actuator.name,
+                        actuator_id,
+                        actuator.type,
+                        actuator.serialnumber,
+                        actuator_state_option=option,
                     )
+                    for option in actuator.state_options
+                )
 
     async_add_entities(entities, True)
 
 
 class SmappeeActuator(SwitchEntity):
     """Representation of a Smappee Comport Plug."""
+
+    _attr_icon = "mdi:toggle-switch"
 
     def __init__(
         self,
@@ -73,10 +75,17 @@ class SmappeeActuator(SwitchEntity):
         self._actuator_type = actuator_type
         self._actuator_serialnumber = actuator_serialnumber
         self._actuator_state_option = actuator_state_option
-        self._state = self._service_location.actuators.get(actuator_id).state
-        self._connection_state = self._service_location.actuators.get(
+        self._state = service_location.actuators.get(actuator_id).state
+        self._connection_state = service_location.actuators.get(
             actuator_id
         ).connection_state
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, service_location.device_serial_number)},
+            manufacturer="Smappee",
+            model=service_location.device_model,
+            name=service_location.service_location_name,
+            sw_version=service_location.firmware_version,
+        )
 
     @property
     def name(self):
@@ -104,11 +113,6 @@ class SmappeeActuator(SwitchEntity):
 
         # Switch or comfort plug
         return self._state == "ON_ON"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return ICON
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on Comport Plug."""
@@ -155,17 +159,6 @@ class SmappeeActuator(SwitchEntity):
             f"{self._service_location.device_serial_number}-"
             f"{self._service_location.service_location_id}-actuator-"
             f"{self._actuator_id}"
-        )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info for this switch."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._service_location.device_serial_number)},
-            manufacturer="Smappee",
-            model=self._service_location.device_model,
-            name=self._service_location.service_location_name,
-            sw_version=self._service_location.firmware_version,
         )
 
     async def async_update(self) -> None:

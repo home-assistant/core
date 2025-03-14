@@ -1,4 +1,5 @@
 """Support for Gogogate2 garage Doors."""
+
 from __future__ import annotations
 
 from itertools import chain
@@ -11,17 +12,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import (
-    DeviceDataUpdateCoordinator,
-    GoGoGate2Entity,
-    get_data_update_coordinator,
-    sensor_unique_id,
-)
+from .common import get_data_update_coordinator, sensor_unique_id
+from .coordinator import DeviceDataUpdateCoordinator
+from .entity import GoGoGate2Entity
 
 SENSOR_ID_WIRED = "WIRE"
 
@@ -29,7 +26,7 @@ SENSOR_ID_WIRED = "WIRE"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the config entry."""
     data_update_coordinator = get_data_update_coordinator(hass, config_entry)
@@ -96,7 +93,7 @@ class DoorSensorTemperature(DoorSensorEntity):
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,

@@ -1,13 +1,13 @@
 """Config flow for Version integration."""
+
 from __future__ import annotations
 
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_SOURCE
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     ATTR_VERSION_SOURCE,
@@ -33,7 +33,7 @@ from .const import (
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class VersionConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Version."""
 
     VERSION = 1
@@ -45,7 +45,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial user step."""
         if user_input is None:
             self._entry_data = DEFAULT_CONFIGURATION.copy()
@@ -78,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_version_source(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the version_source step."""
         if user_input is None:
             if self._entry_data[CONF_SOURCE] in (

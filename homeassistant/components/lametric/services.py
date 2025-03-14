@@ -1,11 +1,11 @@
 """Support for LaMetric time services."""
-from __future__ import annotations
 
-from collections.abc import Sequence
+from __future__ import annotations
 
 from demetriek import (
     AlarmSound,
     Chart,
+    Goal,
     LaMetricError,
     Model,
     Notification,
@@ -19,8 +19,9 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_ICON
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.util.enum import try_parse_enum
 
 from .const import (
     CONF_CYCLES,
@@ -113,12 +114,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
 async def async_send_notification(
     coordinator: LaMetricDataUpdateCoordinator,
     call: ServiceCall,
-    frames: Sequence[Chart | Simple],
+    frames: list[Chart | Goal | Simple],
 ) -> None:
     """Send a notification to an LaMetric device."""
     sound = None
     if CONF_SOUND in call.data:
-        sound = Sound(id=call.data[CONF_SOUND], category=None)
+        snd: AlarmSound | NotificationSound | None
+        if (snd := try_parse_enum(AlarmSound, call.data[CONF_SOUND])) is None and (
+            snd := try_parse_enum(NotificationSound, call.data[CONF_SOUND])
+        ) is None:
+            raise ServiceValidationError("Unknown sound provided")
+        sound = Sound(sound=snd, category=None)
 
     notification = Notification(
         icon_type=NotificationIconType(call.data[CONF_ICON_TYPE]),

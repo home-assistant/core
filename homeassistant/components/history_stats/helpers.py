@@ -1,4 +1,5 @@
 """Helpers to make instant statistics about your history."""
+
 from __future__ import annotations
 
 import datetime
@@ -8,7 +9,7 @@ import math
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.template import Template
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +80,7 @@ def pretty_ratio(
     if len(period) != 2 or period[0] == period[1]:
         return 0.0
 
-    ratio = 100 * 3600 * value / (period[1] - period[0]).total_seconds()
+    ratio = 100 * value / (period[1] - period[0]).total_seconds()
     return round(ratio, 1)
 
 

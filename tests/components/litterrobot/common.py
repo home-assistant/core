@@ -1,4 +1,5 @@
 """Common utils for Litter-Robot tests."""
+
 from homeassistant.components.litterrobot import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
@@ -32,6 +33,7 @@ ROBOT_4_DATA = {
     "wifiRssi": -53.0,
     "unitPowerType": "AC",
     "catWeight": 12.0,
+    "displayCode": "DC_MODE_IDLE",
     "unitTimezone": "America/New_York",
     "unitTime": None,
     "cleanCycleWaitTime": 15,
@@ -65,7 +67,7 @@ ROBOT_4_DATA = {
     "isDFIResetPending": False,
     "DFINumberOfCycles": 104,
     "DFILevelPercent": 76,
-    "isDFIFull": True,
+    "isDFIFull": False,
     "DFIFullCounter": 3,
     "DFITriggerCount": 42,
     "litterLevel": 460,
@@ -88,6 +90,14 @@ ROBOT_4_DATA = {
     "isUSBPowerOn": True,
     "USBFaultStatus": "CLEAR",
     "isDFIPartialFull": True,
+    "isLaserDirty": False,
+    "surfaceType": "TILE",
+    "hopperStatus": None,
+    "scoopsSavedCount": 3769,
+    "isHopperRemoved": None,
+    "optimalLitterLevel": 450,
+    "litterLevelPercentage": 0.7,
+    "litterLevelState": "OPTIMAL",
 }
 FEEDER_ROBOT_DATA = {
     "id": 1,
@@ -139,6 +149,16 @@ FEEDER_ROBOT_DATA = {
             "meal_total_portions": 1,
         },
     ],
+}
+PET_DATA = {
+    "petId": "PET-123",
+    "userId": "1234567",
+    "createdAt": "2023-04-27T23:26:49.813Z",
+    "name": "Kitty",
+    "type": "CAT",
+    "gender": "FEMALE",
+    "lastWeightReading": 9.1,
+    "breeds": ["sphynx"],
 }
 
 VACUUM_ENTITY_ID = "vacuum.test_litter_box"

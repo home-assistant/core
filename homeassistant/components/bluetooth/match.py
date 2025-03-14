@@ -1,13 +1,15 @@
 """The bluetooth integration matchers."""
+
 from __future__ import annotations
 
+from collections import defaultdict
 from dataclasses import dataclass
 from fnmatch import translate
 from functools import lru_cache
 import re
-from typing import TYPE_CHECKING, Final, Generic, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Final, TypedDict
 
-from lru import LRU  # pylint: disable=no-name-in-module
+from lru import LRU
 
 from homeassistant.core import callback
 from homeassistant.loader import BluetoothMatcher, BluetoothMatcherOptional
@@ -15,8 +17,6 @@ from homeassistant.loader import BluetoothMatcher, BluetoothMatcherOptional
 from .models import BluetoothCallback, BluetoothServiceInfoBleak
 
 if TYPE_CHECKING:
-    from collections.abc import MutableMapping
-
     from bleak.backends.scanner import AdvertisementData
 
 
@@ -61,7 +61,7 @@ class BluetoothCallbackMatcherWithCallback(
     """Callback matcher for the bluetooth integration that stores the callback."""
 
 
-@dataclass(frozen=False)
+@dataclass(slots=True, frozen=False)
 class IntegrationMatchHistory:
     """Track which fields have been seen."""
 
@@ -92,15 +92,15 @@ def seen_all_fields(
 class IntegrationMatcher:
     """Integration matcher for the bluetooth integration."""
 
+    __slots__ = ("_index", "_integration_matchers", "_matched", "_matched_connectable")
+
     def __init__(self, integration_matchers: list[BluetoothMatcher]) -> None:
         """Initialize the matcher."""
         self._integration_matchers = integration_matchers
         # Some devices use a random address so we need to use
         # an LRU to avoid memory issues.
-        self._matched: MutableMapping[str, IntegrationMatchHistory] = LRU(
-            MAX_REMEMBER_ADDRESSES
-        )
-        self._matched_connectable: MutableMapping[str, IntegrationMatchHistory] = LRU(
+        self._matched: LRU[str, IntegrationMatchHistory] = LRU(MAX_REMEMBER_ADDRESSES)
+        self._matched_connectable: LRU[str, IntegrationMatchHistory] = LRU(
             MAX_REMEMBER_ADDRESSES
         )
         self._index = BluetoothMatcherIndex()
@@ -149,10 +149,9 @@ class IntegrationMatcher:
         return matched_domains
 
 
-_T = TypeVar("_T", BluetoothMatcher, BluetoothCallbackMatcherWithCallback)
-
-
-class BluetoothMatcherIndexBase(Generic[_T]):
+class BluetoothMatcherIndexBase[
+    _T: (BluetoothMatcher, BluetoothCallbackMatcherWithCallback)
+]:
     """Bluetooth matcher base for the bluetooth integration.
 
     The indexer puts each matcher in the bucket that it is most
@@ -163,12 +162,22 @@ class BluetoothMatcherIndexBase(Generic[_T]):
     any bucket and we can quickly reject the service info as not matching.
     """
 
+    __slots__ = (
+        "local_name",
+        "manufacturer_id",
+        "manufacturer_id_set",
+        "service_data_uuid",
+        "service_data_uuid_set",
+        "service_uuid",
+        "service_uuid_set",
+    )
+
     def __init__(self) -> None:
         """Initialize the matcher index."""
-        self.local_name: dict[str, list[_T]] = {}
-        self.service_uuid: dict[str, list[_T]] = {}
-        self.service_data_uuid: dict[str, list[_T]] = {}
-        self.manufacturer_id: dict[int, list[_T]] = {}
+        self.local_name: defaultdict[str, list[_T]] = defaultdict(list)
+        self.service_uuid: defaultdict[str, list[_T]] = defaultdict(list)
+        self.service_data_uuid: defaultdict[str, list[_T]] = defaultdict(list)
+        self.manufacturer_id: defaultdict[int, list[_T]] = defaultdict(list)
         self.service_uuid_set: set[str] = set()
         self.service_data_uuid_set: set[str] = set()
         self.manufacturer_id_set: set[int] = set()
@@ -182,26 +191,22 @@ class BluetoothMatcherIndexBase(Generic[_T]):
         """
         # Local name is the cheapest to match since its just a dict lookup
         if LOCAL_NAME in matcher:
-            self.local_name.setdefault(
-                _local_name_to_index_key(matcher[LOCAL_NAME]), []
-            ).append(matcher)
+            self.local_name[_local_name_to_index_key(matcher[LOCAL_NAME])].append(
+                matcher
+            )
             return True
 
         # Manufacturer data is 2nd cheapest since its all ints
         if MANUFACTURER_ID in matcher:
-            self.manufacturer_id.setdefault(matcher[MANUFACTURER_ID], []).append(
-                matcher
-            )
+            self.manufacturer_id[matcher[MANUFACTURER_ID]].append(matcher)
             return True
 
         if SERVICE_UUID in matcher:
-            self.service_uuid.setdefault(matcher[SERVICE_UUID], []).append(matcher)
+            self.service_uuid[matcher[SERVICE_UUID]].append(matcher)
             return True
 
         if SERVICE_DATA_UUID in matcher:
-            self.service_data_uuid.setdefault(matcher[SERVICE_DATA_UUID], []).append(
-                matcher
-            )
+            self.service_data_uuid[matcher[SERVICE_DATA_UUID]].append(matcher)
             return True
 
         return False
@@ -240,37 +245,53 @@ class BluetoothMatcherIndexBase(Generic[_T]):
 
     def match(self, service_info: BluetoothServiceInfoBleak) -> list[_T]:
         """Check for a match."""
-        matches = []
-        if service_info.name and len(service_info.name) >= LOCAL_NAME_MIN_MATCH_LENGTH:
-            for matcher in self.local_name.get(
-                service_info.name[:LOCAL_NAME_MIN_MATCH_LENGTH], []
-            ):
-                if ble_device_matches(matcher, service_info):
-                    matches.append(matcher)
+        matches: list[_T] = []
+        if (name := service_info.name) and (
+            local_name_matchers := self.local_name.get(
+                name[:LOCAL_NAME_MIN_MATCH_LENGTH]
+            )
+        ):
+            matches.extend(
+                matcher
+                for matcher in local_name_matchers
+                if ble_device_matches(matcher, service_info)
+            )
 
-        if self.service_data_uuid_set and service_info.service_data:
-            for service_data_uuid in self.service_data_uuid_set.intersection(
-                service_info.service_data
-            ):
-                for matcher in self.service_data_uuid[service_data_uuid]:
-                    if ble_device_matches(matcher, service_info):
-                        matches.append(matcher)
+        if (
+            (service_data_uuid_set := self.service_data_uuid_set)
+            and (service_data := service_info.service_data)
+            and (matched_uuids := service_data_uuid_set.intersection(service_data))
+        ):
+            matches.extend(
+                matcher
+                for service_data_uuid in matched_uuids
+                for matcher in self.service_data_uuid[service_data_uuid]
+                if ble_device_matches(matcher, service_info)
+            )
 
-        if self.manufacturer_id_set and service_info.manufacturer_data:
-            for manufacturer_id in self.manufacturer_id_set.intersection(
-                service_info.manufacturer_data
-            ):
-                for matcher in self.manufacturer_id[manufacturer_id]:
-                    if ble_device_matches(matcher, service_info):
-                        matches.append(matcher)
+        if (
+            (manufacturer_id_set := self.manufacturer_id_set)
+            and (manufacturer_data := service_info.manufacturer_data)
+            and (matched_ids := manufacturer_id_set.intersection(manufacturer_data))
+        ):
+            matches.extend(
+                matcher
+                for manufacturer_id in matched_ids
+                for matcher in self.manufacturer_id[manufacturer_id]
+                if ble_device_matches(matcher, service_info)
+            )
 
-        if self.service_uuid_set and service_info.service_uuids:
-            for service_uuid in self.service_uuid_set.intersection(
-                service_info.service_uuids
-            ):
-                for matcher in self.service_uuid[service_uuid]:
-                    if ble_device_matches(matcher, service_info):
-                        matches.append(matcher)
+        if (
+            (service_uuid_set := self.service_uuid_set)
+            and (service_uuids := service_info.service_uuids)
+            and (matched_uuids := service_uuid_set.intersection(service_uuids))
+        ):
+            matches.extend(
+                matcher
+                for service_uuid in matched_uuids
+                for matcher in self.service_uuid[service_uuid]
+                if ble_device_matches(matcher, service_info)
+            )
 
         return matches
 
@@ -282,12 +303,19 @@ class BluetoothMatcherIndex(BluetoothMatcherIndexBase[BluetoothMatcher]):
 class BluetoothCallbackMatcherIndex(
     BluetoothMatcherIndexBase[BluetoothCallbackMatcherWithCallback]
 ):
-    """Bluetooth matcher for the bluetooth integration that supports matching on addresses."""
+    """Bluetooth matcher for the bluetooth integration.
+
+    Supports matching on addresses.
+    """
+
+    __slots__ = ("address", "connectable")
 
     def __init__(self) -> None:
         """Initialize the matcher index."""
         super().__init__()
-        self.address: dict[str, list[BluetoothCallbackMatcherWithCallback]] = {}
+        self.address: defaultdict[str, list[BluetoothCallbackMatcherWithCallback]] = (
+            defaultdict(list)
+        )
         self.connectable: list[BluetoothCallbackMatcherWithCallback] = []
 
     def add_callback_matcher(
@@ -300,7 +328,7 @@ class BluetoothCallbackMatcherIndex(
         We put them in the bucket that they are most likely to match.
         """
         if ADDRESS in matcher:
-            self.address.setdefault(matcher[ADDRESS], []).append(matcher)
+            self.address[matcher[ADDRESS]].append(matcher)
             return
 
         if super().add(matcher):
@@ -352,11 +380,6 @@ def _local_name_to_index_key(local_name: str) -> str:
     if they try to setup a matcher that will is overly broad
     as would match too many devices and cause a performance hit.
     """
-    if len(local_name) < LOCAL_NAME_MIN_MATCH_LENGTH:
-        raise ValueError(
-            "Local name matchers must be at least "
-            f"{LOCAL_NAME_MIN_MATCH_LENGTH} characters long ({local_name})"
-        )
     match_part = local_name[:LOCAL_NAME_MIN_MATCH_LENGTH]
     if "*" in match_part or "[" in match_part:
         raise ValueError(
@@ -378,35 +401,29 @@ def ble_device_matches(
     if matcher.get(CONNECTABLE, True) and not service_info.connectable:
         return False
 
-    advertisement_data = service_info.advertisement
     if (
         service_uuid := matcher.get(SERVICE_UUID)
-    ) and service_uuid not in advertisement_data.service_uuids:
+    ) and service_uuid not in service_info.service_uuids:
         return False
 
     if (
         service_data_uuid := matcher.get(SERVICE_DATA_UUID)
-    ) and service_data_uuid not in advertisement_data.service_data:
+    ) and service_data_uuid not in service_info.service_data:
         return False
 
-    if manfacturer_id := matcher.get(MANUFACTURER_ID):
-        if manfacturer_id not in advertisement_data.manufacturer_data:
+    if (manufacturer_id := matcher.get(MANUFACTURER_ID)) is not None:
+        if manufacturer_id not in service_info.manufacturer_data:
             return False
+
         if manufacturer_data_start := matcher.get(MANUFACTURER_DATA_START):
-            manufacturer_data_start_bytes = bytearray(manufacturer_data_start)
-            if not any(
-                manufacturer_data.startswith(manufacturer_data_start_bytes)
-                for manufacturer_data in advertisement_data.manufacturer_data.values()
+            if not service_info.manufacturer_data[manufacturer_id].startswith(
+                bytes(manufacturer_data_start)
             ):
                 return False
 
-    if (local_name := matcher.get(LOCAL_NAME)) and (
-        (device_name := advertisement_data.local_name or service_info.device.name)
-        is None
-        or not _memorized_fnmatch(
-            device_name,
-            local_name,
-        )
+    if (local_name := matcher.get(LOCAL_NAME)) and not _memorized_fnmatch(
+        service_info.name,
+        local_name,
     ):
         return False
 

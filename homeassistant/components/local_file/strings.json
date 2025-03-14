@@ -1,0 +1,63 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "not_readable_path": "The provided path to the file can not be read"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "file_path": "File path"
+        },
+        "data_description": {
+          "name": "Name for the created entity.",
+          "file_path": "The full path to the image file to be displayed. Be sure the path of the file is in the allowed paths, you can read more about this in the documentation."
+        }
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "not_readable_path": "[%key:component::local_file::config::error::not_readable_path%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "file_path": "[%key:component::local_file::config::step::user::data::file_path%]"
+        },
+        "data_description": {
+          "file_path": "[%key:component::local_file::config::step::user::data_description::file_path%]"
+        }
+      }
+    }
+  },
+  "services": {
+    "update_file_path": {
+      "name": "Update file path",
+      "description": "Changes the file displayed by the camera.",
+      "fields": {
+        "file_path": {
+          "name": "File path",
+          "description": "[%key:component::local_file::config::step::user::data_description::file_path%]"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "file_path_not_accessible": {
+      "message": "Path {file_path} is not accessible"
+    }
+  },
+  "issues": {
+    "no_access_path": {
+      "title": "Incorrect file path",
+      "description": "While trying to import your configuration the provided file path {file_path} could not be read.\nPlease update your configuration to a correct file path and restart to fix this issue."
+    }
+  }
+}

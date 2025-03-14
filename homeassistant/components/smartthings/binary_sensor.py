@@ -1,100 +1,153 @@
 """Support for binary sensors through the SmartThings cloud API."""
+
 from __future__ import annotations
 
-from collections.abc import Sequence
+from dataclasses import dataclass
 
-from pysmartthings import Attribute, Capability
+from pysmartthings import Attribute, Capability, SmartThings
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SmartThingsEntity
-from .const import DATA_BROKERS, DOMAIN
+from . import FullDevice, SmartThingsConfigEntry
+from .const import MAIN
+from .entity import SmartThingsEntity
 
-CAPABILITY_TO_ATTRIB = {
-    Capability.acceleration_sensor: Attribute.acceleration,
-    Capability.contact_sensor: Attribute.contact,
-    Capability.filter_status: Attribute.filter_status,
-    Capability.motion_sensor: Attribute.motion,
-    Capability.presence_sensor: Attribute.presence,
-    Capability.sound_sensor: Attribute.sound,
-    Capability.tamper_alert: Attribute.tamper,
-    Capability.valve: Attribute.valve,
-    Capability.water_sensor: Attribute.water,
-}
-ATTRIB_TO_CLASS = {
-    Attribute.acceleration: BinarySensorDeviceClass.MOVING,
-    Attribute.contact: BinarySensorDeviceClass.OPENING,
-    Attribute.filter_status: BinarySensorDeviceClass.PROBLEM,
-    Attribute.motion: BinarySensorDeviceClass.MOTION,
-    Attribute.presence: BinarySensorDeviceClass.PRESENCE,
-    Attribute.sound: BinarySensorDeviceClass.SOUND,
-    Attribute.tamper: BinarySensorDeviceClass.PROBLEM,
-    Attribute.valve: BinarySensorDeviceClass.OPENING,
-    Attribute.water: BinarySensorDeviceClass.MOISTURE,
-}
-ATTRIB_TO_ENTTIY_CATEGORY = {
-    Attribute.tamper: EntityCategory.DIAGNOSTIC,
+
+@dataclass(frozen=True, kw_only=True)
+class SmartThingsBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describe a SmartThings binary sensor entity."""
+
+    is_on_key: str
+
+
+CAPABILITY_TO_SENSORS: dict[
+    Capability, dict[Attribute, SmartThingsBinarySensorEntityDescription]
+] = {
+    Capability.ACCELERATION_SENSOR: {
+        Attribute.ACCELERATION: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.ACCELERATION,
+            translation_key="acceleration",
+            device_class=BinarySensorDeviceClass.MOVING,
+            is_on_key="active",
+        )
+    },
+    Capability.CONTACT_SENSOR: {
+        Attribute.CONTACT: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.CONTACT,
+            device_class=BinarySensorDeviceClass.DOOR,
+            is_on_key="open",
+        )
+    },
+    Capability.FILTER_STATUS: {
+        Attribute.FILTER_STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.FILTER_STATUS,
+            translation_key="filter_status",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            is_on_key="replace",
+        )
+    },
+    Capability.MOTION_SENSOR: {
+        Attribute.MOTION: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.MOTION,
+            device_class=BinarySensorDeviceClass.MOTION,
+            is_on_key="active",
+        )
+    },
+    Capability.PRESENCE_SENSOR: {
+        Attribute.PRESENCE: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.PRESENCE,
+            device_class=BinarySensorDeviceClass.PRESENCE,
+            is_on_key="present",
+        )
+    },
+    Capability.SOUND_SENSOR: {
+        Attribute.SOUND: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.SOUND,
+            device_class=BinarySensorDeviceClass.SOUND,
+            is_on_key="detected",
+        )
+    },
+    Capability.TAMPER_ALERT: {
+        Attribute.TAMPER: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.TAMPER,
+            device_class=BinarySensorDeviceClass.TAMPER,
+            is_on_key="detected",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+    },
+    Capability.VALVE: {
+        Attribute.VALVE: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.VALVE,
+            translation_key="valve",
+            device_class=BinarySensorDeviceClass.OPENING,
+            is_on_key="open",
+        )
+    },
+    Capability.WATER_SENSOR: {
+        Attribute.WATER: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.WATER,
+            device_class=BinarySensorDeviceClass.MOISTURE,
+            is_on_key="wet",
+        )
+    },
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: SmartThingsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add binary sensors for a config entry."""
-    broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
-    sensors = []
-    for device in broker.devices.values():
-        for capability in broker.get_assigned(device.device_id, "binary_sensor"):
-            attrib = CAPABILITY_TO_ATTRIB[capability]
-            sensors.append(SmartThingsBinarySensor(device, attrib))
-    async_add_entities(sensors)
-
-
-def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
-    """Return all capabilities supported if minimum required are present."""
-    return [
-        capability for capability in CAPABILITY_TO_ATTRIB if capability in capabilities
-    ]
+    entry_data = entry.runtime_data
+    async_add_entities(
+        SmartThingsBinarySensor(
+            entry_data.client,
+            device,
+            description,
+            entry_data.rooms,
+            capability,
+            attribute,
+        )
+        for device in entry_data.devices.values()
+        for capability, attribute_map in CAPABILITY_TO_SENSORS.items()
+        if capability in device.status[MAIN]
+        for attribute, description in attribute_map.items()
+    )
 
 
 class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
     """Define a SmartThings Binary Sensor."""
 
-    def __init__(self, device, attribute):
+    entity_description: SmartThingsBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        client: SmartThings,
+        device: FullDevice,
+        entity_description: SmartThingsBinarySensorEntityDescription,
+        rooms: dict[str, str],
+        capability: Capability,
+        attribute: Attribute,
+    ) -> None:
         """Init the class."""
-        super().__init__(device)
+        super().__init__(client, device, rooms, {capability})
         self._attribute = attribute
+        self.capability = capability
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{device.device.device_id}.{attribute}"
 
     @property
-    def name(self) -> str:
-        """Return the name of the binary sensor."""
-        return f"{self._device.label} {self._attribute}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._device.device_id}.{self._attribute}"
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self._device.status.is_on(self._attribute)
-
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return ATTRIB_TO_CLASS[self._attribute]
-
-    @property
-    def entity_category(self):
-        """Return the entity category of this device."""
-        return ATTRIB_TO_ENTTIY_CATEGORY.get(self._attribute)
+        return (
+            self.get_attribute_value(self.capability, self._attribute)
+            == self.entity_description.is_on_key
+        )

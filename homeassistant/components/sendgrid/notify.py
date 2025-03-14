@@ -1,4 +1,7 @@
 """SendGrid notification service."""
+
+from __future__ import annotations
+
 from http import HTTPStatus
 import logging
 
@@ -8,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import (
@@ -17,7 +20,9 @@ from homeassistant.const import (
     CONF_SENDER,
     CONTENT_TYPE_TEXT_PLAIN,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,8 +30,7 @@ CONF_SENDER_NAME = "sender_name"
 
 DEFAULT_SENDER_NAME = "Home Assistant"
 
-# pylint: disable=no-value-for-parameter
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_SENDER): vol.Email(),
@@ -36,7 +40,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> SendgridNotificationService:
     """Get the SendGrid notification service."""
     return SendgridNotificationService(config)
 

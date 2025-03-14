@@ -1,4 +1,5 @@
 """Binary sensor to read Proxmox VE data."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -10,7 +11,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import COORDINATORS, DOMAIN, PROXMOX_CLIENTS, ProxmoxEntity
+from .const import COORDINATORS, DOMAIN, PROXMOX_CLIENTS
+from .entity import ProxmoxEntity
 
 
 async def async_setup_platform(
@@ -51,7 +53,13 @@ async def async_setup_platform(
     add_entities(sensors)
 
 
-def create_binary_sensor(coordinator, host_name, node_name, vm_id, name):
+def create_binary_sensor(
+    coordinator,
+    host_name: str,
+    node_name: str,
+    vm_id: int,
+    name: str,
+) -> ProxmoxBinarySensor:
     """Create a binary sensor based on the given data."""
     return ProxmoxBinarySensor(
         coordinator=coordinator,
@@ -72,20 +80,20 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        unique_id,
-        name,
-        icon,
-        host_name,
-        node_name,
-        vm_id,
-    ):
+        unique_id: str,
+        name: str,
+        icon: str,
+        host_name: str,
+        node_name: str,
+        vm_id: int,
+    ) -> None:
         """Create the binary sensor for vms or containers."""
         super().__init__(
             coordinator, unique_id, name, icon, host_name, node_name, vm_id
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         if (data := self.coordinator.data) is None:
             return None

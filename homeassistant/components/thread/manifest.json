@@ -1,0 +1,12 @@
+{
+  "domain": "thread",
+  "name": "Thread",
+  "codeowners": ["@home-assistant/core"],
+  "config_flow": true,
+  "dependencies": ["zeroconf"],
+  "documentation": "https://www.home-assistant.io/integrations/thread",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "requirements": ["python-otbr-api==2.7.0", "pyroute2==0.7.5"],
+  "zeroconf": ["_meshcop._udp.local."]
+}

@@ -1,20 +1,21 @@
 """Support for Denon Network Receivers."""
+
 from __future__ import annotations
 
 import logging
-import telnetlib
 
+import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -37,7 +38,7 @@ SUPPORT_MEDIA_MODES = (
     | MediaPlayerEntityFeature.PLAY
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -110,14 +111,14 @@ class DenonDevice(MediaPlayerEntity):
 
     def _setup_sources(self, telnet):
         # NSFRN - Network name
-        nsfrn = self.telnet_request(telnet, "NSFRN ?")[len("NSFRN ") :]
+        nsfrn = self.telnet_request(telnet, "NSFRN ?").removeprefix("NSFRN ")
         if nsfrn:
             self._name = nsfrn
 
         # SSFUN - Configured sources with (optional) names
         self._source_list = {}
         for line in self.telnet_request(telnet, "SSFUN ?", all_lines=True):
-            ssfun = line[len("SSFUN") :].split(" ", 1)
+            ssfun = line.removeprefix("SSFUN").split(" ", 1)
 
             source = ssfun[0]
             if len(ssfun) == 2 and ssfun[1]:
@@ -130,7 +131,7 @@ class DenonDevice(MediaPlayerEntity):
 
         # SSSOD - Deleted sources
         for line in self.telnet_request(telnet, "SSSOD ?", all_lines=True):
-            source, status = line[len("SSSOD") :].split(" ", 1)
+            source, status = line.removeprefix("SSSOD").split(" ", 1)
             if status == "DEL":
                 for pretty_name, name in self._source_list.items():
                     if source == name:
@@ -184,9 +185,9 @@ class DenonDevice(MediaPlayerEntity):
                 self._volume_max = int(line[len("MVMAX ") : len("MVMAX XX")])
                 continue
             if line.startswith("MV"):
-                self._volume = int(line[len("MV") :])
+                self._volume = int(line.removeprefix("MV"))
         self._muted = self.telnet_request(telnet, "MU?") == "MUON"
-        self._mediasource = self.telnet_request(telnet, "SI?")[len("SI") :]
+        self._mediasource = self.telnet_request(telnet, "SI?").removeprefix("SI")
 
         if self._mediasource in MEDIA_MODES.values():
             self._mediainfo = ""
@@ -202,7 +203,7 @@ class DenonDevice(MediaPlayerEntity):
                 "NSE8",
             ]
             for line in self.telnet_request(telnet, "NSE", all_lines=True):
-                self._mediainfo += f"{line[len(answer_codes.pop(0)) :]}\n"
+                self._mediainfo += f"{line.removeprefix(answer_codes.pop(0))}\n"
         else:
             self._mediainfo = self.source
 
@@ -252,11 +253,12 @@ class DenonDevice(MediaPlayerEntity):
         return SUPPORT_DENON
 
     @property
-    def source(self):
+    def source(self) -> str | None:
         """Return the current input source."""
         for pretty_name, name in self._source_list.items():
             if self._mediasource == name:
                 return pretty_name
+        return None
 
     def turn_off(self) -> None:
         """Turn off media player."""

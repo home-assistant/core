@@ -1,7 +1,9 @@
 """Fan representation of a Snooz device."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import timedelta
 from typing import Any
 
 from pysnooz.api import UnknownSnoozState
@@ -12,23 +14,58 @@ from pysnooz.commands import (
     turn_off,
     turn_on,
 )
+import voluptuous as vol
 
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import entity_platform
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN
+from .const import (
+    ATTR_DURATION,
+    ATTR_VOLUME,
+    DEFAULT_TRANSITION_DURATION,
+    DOMAIN,
+    SERVICE_TRANSITION_OFF,
+    SERVICE_TRANSITION_ON,
+)
 from .models import SnoozConfigurationData
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Snooz device from a config entry."""
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_TRANSITION_ON,
+        {
+            vol.Optional(ATTR_VOLUME): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            ),
+            vol.Optional(ATTR_DURATION, default=DEFAULT_TRANSITION_DURATION): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=300)
+            ),
+        },
+        "async_transition_on",
+    )
+    platform.async_register_entity_service(
+        SERVICE_TRANSITION_OFF,
+        {
+            vol.Optional(ATTR_DURATION, default=DEFAULT_TRANSITION_DURATION): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=300)
+            ),
+        },
+        "async_transition_off",
+    )
 
     data: SnoozConfigurationData = hass.data[DOMAIN][entry.entry_id]
 
@@ -38,15 +75,22 @@ async def async_setup_entry(
 class SnoozFan(FanEntity, RestoreEntity):
     """Fan representation of a Snooz device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+    _attr_should_poll = False
+    _is_on: bool | None = None
+    _percentage: int | None = None
+
     def __init__(self, data: SnoozConfigurationData) -> None:
         """Initialize a Snooz fan entity."""
         self._device = data.device
-        self._attr_name = data.title
         self._attr_unique_id = data.device.address
-        self._attr_supported_features = FanEntityFeature.SET_SPEED
-        self._attr_should_poll = False
-        self._is_on: bool | None = None
-        self._percentage: int | None = None
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, data.device.address)})
 
     @callback
     def _async_write_state_changed(self) -> None:
@@ -108,6 +152,18 @@ class SnoozFan(FanEntity, RestoreEntity):
             set_volume(percentage) if percentage > 0 else turn_off()
         )
 
+    async def async_transition_on(self, duration: int, **kwargs: Any) -> None:
+        """Transition on the device."""
+        await self._async_execute_command(
+            turn_on(volume=kwargs.get("volume"), duration=timedelta(seconds=duration))
+        )
+
+    async def async_transition_off(self, duration: int, **kwargs: Any) -> None:
+        """Transition off the device."""
+        await self._async_execute_command(
+            turn_off(duration=timedelta(seconds=duration))
+        )
+
     async def _async_execute_command(self, command: SnoozCommandData) -> None:
         result = await self._device.async_execute_command(command)
 
@@ -115,5 +171,6 @@ class SnoozFan(FanEntity, RestoreEntity):
             self._async_write_state_changed()
         elif result.status != SnoozCommandResultStatus.CANCELLED:
             raise HomeAssistantError(
-                f"Command {command} failed with status {result.status.name} after {result.duration}"
+                f"Command {command} failed with status {result.status.name} after"
+                f" {result.duration}"
             )

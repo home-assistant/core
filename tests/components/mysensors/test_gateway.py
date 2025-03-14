@@ -1,4 +1,5 @@
 """Test function in gateway.py."""
+
 from unittest.mock import patch
 
 import pytest
@@ -9,7 +10,7 @@ from homeassistant.core import HomeAssistant
 
 
 @pytest.mark.parametrize(
-    "port, expect_valid",
+    ("port", "expect_valid"),
     [
         ("COM5", True),
         ("asdf", False),

@@ -1,4 +1,5 @@
 """The Synology DSM component."""
+
 from __future__ import annotations
 
 from itertools import chain
@@ -6,15 +7,19 @@ import logging
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from synology_dsm.api.surveillance_station.camera import SynoCamera
+from synology_dsm.exceptions import SynologyDSMNotLoggedInException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_VERIFY_SSL
+from homeassistant.const import CONF_MAC, CONF_SCAN_INTERVAL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
-from .common import SynoApi
+from .common import SynoApi, raise_config_entry_auth_error
 from .const import (
+    CONF_BACKUP_PATH,
+    CONF_BACKUP_SHARE,
+    DATA_BACKUP_AGENT_LISTENERS,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     EXCEPTION_DETAILS,
@@ -31,16 +36,13 @@ from .coordinator import (
 from .models import SynologyDSMData
 from .service import async_setup_services
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
-
-
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Synology DSM sensors."""
 
-    # Migrate device indentifiers
+    # Migrate device identifiers
     dev_reg = dr.async_get(hass)
     devices: list[dr.DeviceEntry] = dr.async_entries_for_config_entry(
         dev_reg, entry.entry_id
@@ -61,18 +63,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL}
         )
+    if CONF_BACKUP_SHARE not in entry.options:
+        hass.config_entries.async_update_entry(
+            entry,
+            options={**entry.options, CONF_BACKUP_SHARE: None, CONF_BACKUP_PATH: None},
+        )
+    if CONF_SCAN_INTERVAL in entry.options:
+        current_options = {**entry.options}
+        current_options.pop(CONF_SCAN_INTERVAL)
+        hass.config_entries.async_update_entry(entry, options=current_options)
 
     # Continue setup
     api = SynoApi(hass, entry)
     try:
         await api.async_setup()
     except SYNOLOGY_AUTH_FAILED_EXCEPTIONS as err:
-        if err.args[0] and isinstance(err.args[0], dict):
-            details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
-        else:
-            details = EXCEPTION_UNKNOWN
-        raise ConfigEntryAuthFailed(f"reason: {details}") from err
-    except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
+        raise_config_entry_auth_error(err)
+    except (*SYNOLOGY_CONNECTION_EXCEPTIONS, SynologyDSMNotLoggedInException) as err:
+        # SynologyDSMNotLoggedInException may be raised even if the user is
+        # logged in because the session may have expired, and we need to retry
+        # the login later.
         if err.args[0] and isinstance(err.args[0], dict):
             details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
         else:
@@ -84,19 +94,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # For SSDP compat
     if not entry.data.get(CONF_MAC):
-        network = await hass.async_add_executor_job(getattr, api.dsm, "network")
         hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_MAC: network.macs}
+            entry, data={**entry.data, CONF_MAC: api.dsm.network.macs}
         )
 
-    # These all create executor jobs so we do not gather here
     coordinator_central = SynologyDSMCentralUpdateCoordinator(hass, entry, api)
-    await coordinator_central.async_config_entry_first_refresh()
 
     available_apis = api.dsm.apis
 
-    # The central coordinator needs to be refreshed first since
-    # the next two rely on data from it
     coordinator_cameras: SynologyDSMCameraUpdateCoordinator | None = None
     if api.surveillance_station is not None:
         coordinator_cameras = SynologyDSMCameraUpdateCoordinator(hass, entry, api)
@@ -106,6 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if (
         SynoSurveillanceStation.INFO_API_KEY in available_apis
         and SynoSurveillanceStation.HOME_MODE_API_KEY in available_apis
+        and api.surveillance_station is not None
     ):
         coordinator_switches = SynologyDSMSwitchUpdateCoordinator(hass, entry, api)
         await coordinator_switches.async_config_entry_first_refresh()
@@ -123,6 +129,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.unique_id] = synology_data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+    if entry.options[CONF_BACKUP_SHARE]:
+
+        def async_notify_backup_listeners() -> None:
+            for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
+                listener()
+
+        entry.async_on_unload(
+            entry.async_on_state_change(async_notify_backup_listeners)
+        )
 
     return True
 
@@ -147,10 +163,14 @@ async def async_remove_config_entry_device(
     """Remove synology_dsm config entry from a device."""
     data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
     api = data.api
+    assert api.information is not None
     serial = api.information.serial
     storage = api.storage
-    # get_all_cameras does not do I/O
-    all_cameras: list[SynoCamera] = api.surveillance_station.get_all_cameras()
+    assert storage is not None
+    all_cameras: list[SynoCamera] = []
+    if api.surveillance_station is not None:
+        # get_all_cameras does not do I/O
+        all_cameras = api.surveillance_station.get_all_cameras()
     device_ids = chain(
         (camera.id for camera in all_cameras),
         storage.volumes_ids,
@@ -161,6 +181,8 @@ async def async_remove_config_entry_device(
     return not device_entry.identifiers.intersection(
         (
             (DOMAIN, serial),  # Base device
-            *((DOMAIN, f"{serial}_{id}") for id in device_ids),  # Storage and cameras
+            *(
+                (DOMAIN, f"{serial}_{device_id}") for device_id in device_ids
+            ),  # Storage and cameras
         )
     )

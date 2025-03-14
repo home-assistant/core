@@ -1,10 +1,12 @@
 {
   "domain": "matter",
-  "name": "Matter (BETA)",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/matter",
-  "requirements": ["python-matter-server==1.0.7"],
-  "dependencies": ["websocket_api"],
+  "name": "Matter",
+  "after_dependencies": ["hassio"],
   "codeowners": ["@home-assistant/matter"],
-  "iot_class": "local_push"
+  "config_flow": true,
+  "dependencies": ["websocket_api"],
+  "documentation": "https://www.home-assistant.io/integrations/matter",
+  "iot_class": "local_push",
+  "requirements": ["python-matter-server==7.0.0"],
+  "zeroconf": ["_matter._tcp.local.", "_matterc._udp.local."]
 }

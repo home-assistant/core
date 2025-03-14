@@ -1,0 +1,20 @@
+{
+  "powerOnBehavior": 1,
+  "powerOnBrightness": 20,
+  "powerOnTemperature": 230,
+  "switchOnDurationMs": 100,
+  "switchOffDurationMs": 300,
+  "colorChangeDurationMs": 100,
+  "battery": {
+    "energySaving": {
+      "enable": 0,
+      "minimumBatteryLevel": 15.0,
+      "disableWifi": 0,
+      "adjustBrightness": {
+        "enable": 0,
+        "brightness": 10.0
+      }
+    },
+    "bypass": 0
+  }
+}

@@ -1,13 +1,18 @@
 {
   "domain": "modem_callerid",
   "name": "Phone Modem",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/modem_callerid",
-  "requirements": ["phone_modem==0.1.1"],
   "codeowners": ["@tkdrob"],
+  "config_flow": true,
   "dependencies": ["usb"],
+  "documentation": "https://www.home-assistant.io/integrations/modem_callerid",
+  "integration_type": "device",
   "iot_class": "local_polling",
-  "usb": [{ "vid": "0572", "pid": "1340" }],
   "loggers": ["phone_modem"],
-  "integration_type": "device"
+  "requirements": ["phone-modem==0.1.1"],
+  "usb": [
+    {
+      "vid": "0572",
+      "pid": "1340"
+    }
+  ]
 }

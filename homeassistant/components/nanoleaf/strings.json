@@ -5,11 +5,14 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Nanoleaf device."
         }
       },
       "link": {
         "title": "Link Nanoleaf",
-        "description": "Press and hold the power button on your Nanoleaf for 5 seconds until the button LEDs start flashing, then click **SUBMIT** within 30 seconds."
+        "description": "Press and hold the power button on your Nanoleaf for 5 seconds until the button LEDs start flashing, then select **Submit** within 30 seconds."
       }
     },
     "error": {
@@ -27,10 +30,33 @@
   },
   "device_automation": {
     "trigger_type": {
-      "swipe_up": "Swipe Up",
-      "swipe_down": "Swipe Down",
-      "swipe_left": "Swipe Left",
-      "swipe_right": "Swipe Right"
+      "swipe_up": "[%key:component::nanoleaf::entity::event::touch::state_attributes::event_type::state::swipe_up%]",
+      "swipe_down": "[%key:component::nanoleaf::entity::event::touch::state_attributes::event_type::state::swipe_down%]",
+      "swipe_left": "[%key:component::nanoleaf::entity::event::touch::state_attributes::event_type::state::swipe_left%]",
+      "swipe_right": "[%key:component::nanoleaf::entity::event::touch::state_attributes::event_type::state::swipe_right%]"
+    }
+  },
+  "entity": {
+    "event": {
+      "touch": {
+        "name": "Touch gesture",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "swipe_up": "Swipe up",
+              "swipe_down": "Swipe down",
+              "swipe_left": "Swipe left",
+              "swipe_right": "Swipe right"
+            }
+          }
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_device_trigger": {
+      "title": "Nanoleaf device trigger is deprecated",
+      "description": "The Nanoleaf device trigger is deprecated and will be removed in a future release. You can now use the gesture event entity to build automations."
     }
   }
 }

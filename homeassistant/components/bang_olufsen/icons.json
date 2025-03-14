@@ -1,0 +1,9 @@
+{
+  "services": {
+    "beolink_join": { "service": "mdi:location-enter" },
+    "beolink_expand": { "service": "mdi:location-enter" },
+    "beolink_unexpand": { "service": "mdi:location-exit" },
+    "beolink_leave": { "service": "mdi:close-circle-outline" },
+    "beolink_allstandby": { "service": "mdi:close-circle-multiple-outline" }
+  }
+}

@@ -1,4 +1,5 @@
 """Support for Velbus sensors."""
+
 from __future__ import annotations
 
 from velbusaio.channels import ButtonCounter, LightSensor, SensorNumber, Temperature
@@ -8,24 +9,24 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import VelbusConfigEntry
 from .entity import VelbusEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: VelbusConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Velbus switch based on config_entry."""
-    await hass.data[DOMAIN][entry.entry_id]["tsk"]
-    cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
+    await entry.runtime_data.scan_task
     entities = []
-    for channel in cntrl.get_all("sensor"):
+    for channel in entry.runtime_data.controller.get_all_sensor():
         entities.append(VelbusSensor(channel))
         if channel.is_counter_channel():
             entities.append(VelbusSensor(channel, True))
@@ -45,25 +46,18 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         """Initialize a sensor Velbus entity."""
         super().__init__(channel)
         self._is_counter: bool = counter
-        # define the unique id
         if self._is_counter:
-            self._attr_unique_id = f"{self._attr_unique_id}-counter"
-        # define the name
-        if self._is_counter:
-            self._attr_name = f"{self._attr_name}-counter"
-        # define the device class
-        if self._is_counter:
-            self._attr_device_class = SensorDeviceClass.POWER
-        elif channel.is_counter_channel():
             self._attr_device_class = SensorDeviceClass.ENERGY
+            self._attr_icon = "mdi:counter"
+            self._attr_name = f"{self._attr_name}-counter"
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+            self._attr_unique_id = f"{self._attr_unique_id}-counter"
+        elif channel.is_counter_channel():
+            self._attr_device_class = SensorDeviceClass.POWER
+            self._attr_state_class = SensorStateClass.MEASUREMENT
         elif channel.is_temperature():
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
-        # define the icon
-        if self._is_counter:
-            self._attr_icon = "mdi:counter"
-        # the state class
-        if self._is_counter:
-            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+            self._attr_state_class = SensorStateClass.MEASUREMENT
         else:
             self._attr_state_class = SensorStateClass.MEASUREMENT
         # unit

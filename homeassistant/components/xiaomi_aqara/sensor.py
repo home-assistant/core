@@ -1,4 +1,5 @@
 """Support for Xiaomi Aqara sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -14,22 +15,22 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_HPA,
-    TEMP_CELSIUS,
     UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import XiaomiDevice
 from .const import BATTERY_MODELS, DOMAIN, GATEWAYS_KEY, POWER_MODELS
+from .entity import XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "temperature": SensorEntityDescription(
         key="temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -42,7 +43,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "illumination": SensorEntityDescription(
         key="illumination",
         native_unit_of_measurement="lm",
-        device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "lux": SensorEntityDescription(
@@ -53,7 +53,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -85,7 +85,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
     entities: list[XiaomiSensor | XiaomiBatterySensor] = []

@@ -1,9 +1,10 @@
 """Test the Kuler Sky lights."""
+
+from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 import pykulersky
 import pytest
-from pytest import approx
 
 from homeassistant.components.kulersky.const import (
     DATA_ADDRESSES,
@@ -29,20 +30,23 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-async def mock_entry(hass):
+async def mock_entry() -> MockConfigEntry:
     """Create a mock light entity."""
     return MockConfigEntry(domain=DOMAIN)
 
 
 @pytest.fixture
-async def mock_light(hass, mock_entry):
+async def mock_light(
+    hass: HomeAssistant, mock_entry: MockConfigEntry
+) -> AsyncGenerator[MagicMock]:
     """Create a mock light entity."""
 
     light = MagicMock(spec=pykulersky.Light)
@@ -63,7 +67,7 @@ async def mock_light(hass, mock_entry):
         yield light
 
 
-async def test_init(hass, mock_light):
+async def test_init(hass: HomeAssistant, mock_light: MagicMock) -> None:
     """Test platform setup."""
     state = hass.states.get("light.bedroom")
     assert state.state == STATE_OFF
@@ -71,6 +75,12 @@ async def test_init(hass, mock_light):
         ATTR_FRIENDLY_NAME: "Bedroom",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
         ATTR_SUPPORTED_FEATURES: 0,
+        ATTR_COLOR_MODE: None,
+        ATTR_BRIGHTNESS: None,
+        ATTR_HS_COLOR: None,
+        ATTR_RGB_COLOR: None,
+        ATTR_XY_COLOR: None,
+        ATTR_RGBW_COLOR: None,
     }
 
     with patch.object(hass.loop, "stop"):
@@ -80,7 +90,9 @@ async def test_init(hass, mock_light):
     assert mock_light.disconnect.called
 
 
-async def test_remove_entry(hass, mock_light, mock_entry):
+async def test_remove_entry(
+    hass: HomeAssistant, mock_light: MagicMock, mock_entry: MockConfigEntry
+) -> None:
     """Test platform setup."""
     assert hass.data[DOMAIN][DATA_ADDRESSES] == {"AA:BB:CC:11:22:33"}
     assert DATA_DISCOVERY_SUBSCRIPTION in hass.data[DOMAIN]
@@ -91,7 +103,9 @@ async def test_remove_entry(hass, mock_light, mock_entry):
     assert DOMAIN not in hass.data
 
 
-async def test_remove_entry_exceptions_caught(hass, mock_light, mock_entry):
+async def test_remove_entry_exceptions_caught(
+    hass: HomeAssistant, mock_light: MagicMock, mock_entry: MockConfigEntry
+) -> None:
     """Assert that disconnect exceptions are caught."""
     mock_light.disconnect.side_effect = pykulersky.PykulerskyException("Mock error")
     await hass.config_entries.async_remove(mock_entry.entry_id)
@@ -99,7 +113,7 @@ async def test_remove_entry_exceptions_caught(hass, mock_light, mock_entry):
     assert mock_light.disconnect.called
 
 
-async def test_update_exception(hass, mock_light):
+async def test_update_exception(hass: HomeAssistant, mock_light: MagicMock) -> None:
     """Test platform setup."""
 
     mock_light.get_color.side_effect = pykulersky.PykulerskyException
@@ -109,7 +123,7 @@ async def test_update_exception(hass, mock_light):
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_light_turn_on(hass, mock_light):
+async def test_light_turn_on(hass: HomeAssistant, mock_light: MagicMock) -> None:
     """Test KulerSkyLight turn_on."""
     mock_light.get_color.return_value = (255, 255, 255, 255)
     await hass.services.async_call(
@@ -166,7 +180,7 @@ async def test_light_turn_on(hass, mock_light):
     mock_light.set_color.assert_called_with(50, 41, 0, 50)
 
 
-async def test_light_turn_off(hass, mock_light):
+async def test_light_turn_off(hass: HomeAssistant, mock_light: MagicMock) -> None:
     """Test KulerSkyLight turn_on."""
     mock_light.get_color.return_value = (0, 0, 0, 0)
     await hass.services.async_call(
@@ -179,7 +193,7 @@ async def test_light_turn_off(hass, mock_light):
     mock_light.set_color.assert_called_with(0, 0, 0, 0)
 
 
-async def test_light_update(hass, mock_light):
+async def test_light_update(hass: HomeAssistant, mock_light: MagicMock) -> None:
     """Test KulerSkyLight update."""
     utcnow = dt_util.utcnow()
 
@@ -189,6 +203,12 @@ async def test_light_update(hass, mock_light):
         ATTR_FRIENDLY_NAME: "Bedroom",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
         ATTR_SUPPORTED_FEATURES: 0,
+        ATTR_COLOR_MODE: None,
+        ATTR_BRIGHTNESS: None,
+        ATTR_HS_COLOR: None,
+        ATTR_RGB_COLOR: None,
+        ATTR_RGBW_COLOR: None,
+        ATTR_XY_COLOR: None,
     }
 
     # Test an exception during discovery
@@ -219,10 +239,10 @@ async def test_light_update(hass, mock_light):
         ATTR_SUPPORTED_FEATURES: 0,
         ATTR_COLOR_MODE: ColorMode.RGBW,
         ATTR_BRIGHTNESS: 255,
-        ATTR_HS_COLOR: (approx(212.571), approx(68.627)),
+        ATTR_HS_COLOR: (pytest.approx(212.571), pytest.approx(68.627)),
         ATTR_RGB_COLOR: (80, 160, 255),
         ATTR_RGBW_COLOR: (80, 160, 255, 0),
-        ATTR_XY_COLOR: (approx(0.17), approx(0.193)),
+        ATTR_XY_COLOR: (pytest.approx(0.17), pytest.approx(0.193)),
     }
 
     mock_light.get_color.side_effect = None
@@ -239,10 +259,10 @@ async def test_light_update(hass, mock_light):
         ATTR_SUPPORTED_FEATURES: 0,
         ATTR_COLOR_MODE: ColorMode.RGBW,
         ATTR_BRIGHTNESS: 255,
-        ATTR_HS_COLOR: (approx(199.701), approx(26.275)),
+        ATTR_HS_COLOR: (pytest.approx(199.701), pytest.approx(26.275)),
         ATTR_RGB_COLOR: (188, 233, 255),
         ATTR_RGBW_COLOR: (80, 160, 200, 255),
-        ATTR_XY_COLOR: (approx(0.259), approx(0.306)),
+        ATTR_XY_COLOR: (pytest.approx(0.259), pytest.approx(0.306)),
     }
 
     mock_light.get_color.side_effect = None
@@ -259,8 +279,8 @@ async def test_light_update(hass, mock_light):
         ATTR_SUPPORTED_FEATURES: 0,
         ATTR_COLOR_MODE: ColorMode.RGBW,
         ATTR_BRIGHTNESS: 240,
-        ATTR_HS_COLOR: (approx(200.0), approx(27.059)),
+        ATTR_HS_COLOR: (pytest.approx(200.0), pytest.approx(27.059)),
         ATTR_RGB_COLOR: (186, 232, 255),
         ATTR_RGBW_COLOR: (85, 170, 212, 255),
-        ATTR_XY_COLOR: (approx(0.257), approx(0.305)),
+        ATTR_XY_COLOR: (pytest.approx(0.257), pytest.approx(0.305)),
     }

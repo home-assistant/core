@@ -1,4 +1,5 @@
-"""This component provides support for Xiaomi Cameras."""
+"""Component providing support for Xiaomi Cameras."""
+
 from __future__ import annotations
 
 from ftplib import FTP, error_perm
@@ -8,7 +9,10 @@ from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
+    Camera,
+)
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import (
     CONF_HOST,
@@ -39,7 +43,7 @@ CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
 MODEL_YI = "yi"
 MODEL_XIAOFANG = "xiaofang"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.template,
@@ -76,7 +80,6 @@ class XiaomiCamera(Camera):
         self._manager = get_ffmpeg_manager(hass)
         self._name = config[CONF_NAME]
         self.host = config[CONF_HOST]
-        self.host.hass = hass
         self._model = config[CONF_MODEL]
         self.port = config[CONF_PORT]
         self.path = config[CONF_PATH]
@@ -137,7 +140,7 @@ class XiaomiCamera(Camera):
 
         videos = [v for v in ftp.nlst() if ".tmp" not in v]
         if not videos:
-            _LOGGER.info('Video folder "%s" is empty; delaying', latest_dir)
+            _LOGGER.debug('Video folder "%s" is empty; delaying', latest_dir)
             return False
 
         if self._model == MODEL_XIAOFANG:

@@ -1,451 +1,312 @@
 """Support for SmartThings Cloud."""
+
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Iterable
-from http import HTTPStatus
-import importlib
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
+from typing import TYPE_CHECKING, cast
 
-from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
-from pysmartapp.event import EVENT_TYPE_DEVICE
-from pysmartthings import Attribute, Capability, SmartThings
-from pysmartthings.device import DeviceEntity
-
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
+from aiohttp import ClientError
+from pysmartthings import (
+    Attribute,
+    Capability,
+    Device,
+    DeviceEvent,
+    Scene,
+    SmartThings,
+    SmartThingsAuthenticationFailedError,
+    SmartThingsSinkError,
+    Status,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 
-from .config_flow import SmartThingsFlowHandler  # noqa: F401
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_TOKEN,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
+
 from .const import (
-    CONF_APP_ID,
     CONF_INSTALLED_APP_ID,
     CONF_LOCATION_ID,
-    CONF_REFRESH_TOKEN,
-    DATA_BROKERS,
-    DATA_MANAGER,
+    CONF_SUBSCRIPTION_ID,
     DOMAIN,
     EVENT_BUTTON,
-    PLATFORMS,
-    SIGNAL_SMARTTHINGS_UPDATE,
-    TOKEN_REFRESH_INTERVAL,
-)
-from .smartapp import (
-    format_unique_id,
-    setup_smartapp,
-    setup_smartapp_endpoint,
-    smartapp_sync_subscriptions,
-    unload_smartapp_endpoint,
-    validate_installed_app,
-    validate_webhook_requirements,
+    MAIN,
+    OLD_DATA,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Initialize the SmartThings platform."""
-    await setup_smartapp_endpoint(hass)
-    return True
+@dataclass
+class SmartThingsData:
+    """Define an object to hold SmartThings data."""
+
+    devices: dict[str, FullDevice]
+    scenes: dict[str, Scene]
+    rooms: dict[str, str]
+    client: SmartThings
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Handle migration of a previous version config entry.
+@dataclass
+class FullDevice:
+    """Define an object to hold device data."""
 
-    A config entry created under a previous version must go through the
-    integration setup again so we can properly retrieve the needed data
-    elements. Force this by removing the entry and triggering a new flow.
-    """
-    # Remove the entry which will invoke the callback to delete the app.
-    hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-    # only create new flow if there isn't a pending one for SmartThings.
-    if not hass.config_entries.flow.async_progress_by_handler(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}
-            )
-        )
-
-    # Return False because it could not be migrated.
-    return False
+    device: Device
+    status: dict[str, dict[Capability | str, dict[Attribute | str, Status]]]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type SmartThingsConfigEntry = ConfigEntry[SmartThingsData]
+
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) -> bool:
     """Initialize config entry which represents an installed SmartApp."""
-    # For backwards compat
-    if entry.unique_id is None:
+    # The oauth smartthings entry will have a token, older ones are version 3
+    # after migration but still require reauthentication
+    if CONF_TOKEN not in entry.data:
+        raise ConfigEntryAuthFailed("Config entry missing token")
+    implementation = await async_get_config_entry_implementation(hass, entry)
+    session = OAuth2Session(hass, entry, implementation)
+
+    try:
+        await session.async_ensure_token_valid()
+    except ClientError as err:
+        raise ConfigEntryNotReady from err
+
+    client = SmartThings(session=async_get_clientsession(hass))
+
+    async def _refresh_token() -> str:
+        await session.async_ensure_token_valid()
+        token = session.token[CONF_ACCESS_TOKEN]
+        if TYPE_CHECKING:
+            assert isinstance(token, str)
+        return token
+
+    client.refresh_token_function = _refresh_token
+
+    def _handle_max_connections() -> None:
+        _LOGGER.debug("We hit the limit of max connections")
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    client.max_connections_reached_callback = _handle_max_connections
+
+    def _handle_new_subscription_identifier(identifier: str | None) -> None:
+        """Handle a new subscription identifier."""
         hass.config_entries.async_update_entry(
             entry,
-            unique_id=format_unique_id(
-                entry.data[CONF_APP_ID], entry.data[CONF_LOCATION_ID]
-            ),
+            data={
+                **entry.data,
+                CONF_SUBSCRIPTION_ID: identifier,
+            },
         )
-
-    if not validate_webhook_requirements(hass):
-        _LOGGER.warning(
-            "The 'base_url' of the 'http' integration must be configured and start with 'https://'"
-        )
-        return False
-
-    api = SmartThings(async_get_clientsession(hass), entry.data[CONF_ACCESS_TOKEN])
-
-    remove_entry = False
-    try:
-        # See if the app is already setup. This occurs when there are
-        # installs in multiple SmartThings locations (valid use-case)
-        manager = hass.data[DOMAIN][DATA_MANAGER]
-        smart_app = manager.smartapps.get(entry.data[CONF_APP_ID])
-        if not smart_app:
-            # Validate and setup the app.
-            app = await api.app(entry.data[CONF_APP_ID])
-            smart_app = setup_smartapp(hass, app)
-
-        # Validate and retrieve the installed app.
-        installed_app = await validate_installed_app(
-            api, entry.data[CONF_INSTALLED_APP_ID]
-        )
-
-        # Get scenes
-        scenes = await async_get_entry_scenes(entry, api)
-
-        # Get SmartApp token to sync subscriptions
-        token = await api.generate_tokens(
-            entry.data[CONF_CLIENT_ID],
-            entry.data[CONF_CLIENT_SECRET],
-            entry.data[CONF_REFRESH_TOKEN],
-        )
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_REFRESH_TOKEN: token.refresh_token}
-        )
-
-        # Get devices and their current status
-        devices = await api.devices(location_ids=[installed_app.location_id])
-
-        async def retrieve_device_status(device):
-            try:
-                await device.status.refresh()
-            except ClientResponseError:
-                _LOGGER.debug(
-                    "Unable to update status for device: %s (%s), the device will be excluded",
-                    device.label,
-                    device.device_id,
-                    exc_info=True,
-                )
-                devices.remove(device)
-
-        await asyncio.gather(*(retrieve_device_status(d) for d in devices.copy()))
-
-        # Sync device subscriptions
-        await smartapp_sync_subscriptions(
-            hass,
-            token.access_token,
-            installed_app.location_id,
-            installed_app.installed_app_id,
-            devices,
-        )
-
-        # Setup device broker
-        broker = DeviceBroker(hass, entry, token, smart_app, devices, scenes)
-        broker.connect()
-        hass.data[DOMAIN][DATA_BROKERS][entry.entry_id] = broker
-
-    except ClientResponseError as ex:
-        if ex.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
-            _LOGGER.exception(
-                "Unable to setup configuration entry '%s' - please reconfigure the integration",
-                entry.title,
-            )
-            remove_entry = True
+        if identifier is not None:
+            _LOGGER.debug("Updating subscription ID to %s", identifier)
         else:
-            _LOGGER.debug(ex, exc_info=True)
-            raise ConfigEntryNotReady from ex
-    except (ClientConnectionError, RuntimeWarning) as ex:
-        _LOGGER.debug(ex, exc_info=True)
-        raise ConfigEntryNotReady from ex
+            _LOGGER.debug("Removing subscription ID")
 
-    if remove_entry:
-        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        # only create new flow if there isn't a pending one for SmartThings.
-        if not hass.config_entries.flow.async_progress_by_handler(DOMAIN):
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}
+    client.new_subscription_id_callback = _handle_new_subscription_identifier
+
+    if (old_identifier := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
+        _LOGGER.debug("Trying to delete old subscription %s", old_identifier)
+        await client.delete_subscription(old_identifier)
+
+    _LOGGER.debug("Trying to create a new subscription")
+    try:
+        subscription = await client.create_subscription(
+            entry.data[CONF_LOCATION_ID],
+            entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
+        )
+    except SmartThingsSinkError as err:
+        _LOGGER.debug("Couldn't create a new subscription: %s", err)
+        raise ConfigEntryNotReady from err
+    subscription_id = subscription.subscription_id
+    _handle_new_subscription_identifier(subscription_id)
+
+    entry.async_create_background_task(
+        hass,
+        client.subscribe(
+            entry.data[CONF_LOCATION_ID],
+            entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
+            subscription,
+        ),
+        "smartthings_socket",
+    )
+
+    device_status: dict[str, FullDevice] = {}
+    try:
+        rooms = {
+            room.room_id: room.name
+            for room in await client.get_rooms(location_id=entry.data[CONF_LOCATION_ID])
+        }
+        devices = await client.get_devices()
+        for device in devices:
+            status = process_status(await client.get_device_status(device.device_id))
+            device_status[device.device_id] = FullDevice(device=device, status=status)
+    except SmartThingsAuthenticationFailedError as err:
+        raise ConfigEntryAuthFailed from err
+
+    device_registry = dr.async_get(hass)
+    for dev in device_status.values():
+        for component in dev.device.components:
+            if component.id == MAIN and Capability.BRIDGE in component.capabilities:
+                assert dev.device.hub
+                device_registry.async_get_or_create(
+                    config_entry_id=entry.entry_id,
+                    identifiers={(DOMAIN, dev.device.device_id)},
+                    connections=(
+                        {(dr.CONNECTION_NETWORK_MAC, dev.device.hub.mac_address)}
+                        if dev.device.hub.mac_address
+                        else set()
+                    ),
+                    name=dev.device.label,
+                    sw_version=dev.device.hub.firmware_version,
+                    model=dev.device.hub.hardware_type,
+                    suggested_area=(
+                        rooms.get(dev.device.room_id) if dev.device.room_id else None
+                    ),
                 )
+    scenes = {
+        scene.scene_id: scene
+        for scene in await client.get_scenes(location_id=entry.data[CONF_LOCATION_ID])
+    }
+
+    entry.runtime_data = SmartThingsData(
+        devices={
+            device_id: device
+            for device_id, device in device_status.items()
+            if MAIN in device.status
+        },
+        client=client,
+        scenes=scenes,
+        rooms=rooms,
+    )
+
+    def handle_button_press(event: DeviceEvent) -> None:
+        """Handle a button press."""
+        if (
+            event.capability is Capability.BUTTON
+            and event.attribute is Attribute.BUTTON
+        ):
+            hass.bus.async_fire(
+                EVENT_BUTTON,
+                {
+                    "component_id": event.component_id,
+                    "device_id": event.device_id,
+                    "location_id": event.location_id,
+                    "value": event.value,
+                    "name": entry.runtime_data.devices[event.device_id].device.label,
+                    "data": event.data,
+                },
             )
-        return False
+
+    entry.async_on_unload(
+        client.add_unspecified_device_event_listener(handle_button_press)
+    )
+
+    async def _handle_shutdown(_: Event) -> None:
+        """Handle shutdown."""
+        await client.delete_subscription(subscription_id)
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _handle_shutdown)
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    for device_entry in device_entries:
+        device_id = next(
+            identifier[1]
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        )
+        if device_id in device_status:
+            continue
+        device_registry.async_update_device(
+            device_entry.id, remove_config_entry_id=entry.entry_id
+        )
+
     return True
 
 
-async def async_get_entry_scenes(entry: ConfigEntry, api):
-    """Get the scenes within an integration."""
-    try:
-        return await api.scenes(location_id=entry.data[CONF_LOCATION_ID])
-    except ClientResponseError as ex:
-        if ex.status == HTTPStatus.FORBIDDEN:
-            _LOGGER.exception(
-                "Unable to load scenes for configuration entry '%s' because the access token does not have the required access",
-                entry.title,
-            )
-        else:
-            raise
-    return []
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: SmartThingsConfigEntry
+) -> bool:
     """Unload a config entry."""
-    broker = hass.data[DOMAIN][DATA_BROKERS].pop(entry.entry_id, None)
-    if broker:
-        broker.disconnect()
-
+    client = entry.runtime_data.client
+    if (subscription_id := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
+        await client.delete_subscription(subscription_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Perform clean-up when entry is being removed."""
-    api = SmartThings(async_get_clientsession(hass), entry.data[CONF_ACCESS_TOKEN])
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Handle config entry migration."""
 
-    # Remove the installed_app, which if already removed raises a HTTPStatus.FORBIDDEN error.
-    installed_app_id = entry.data[CONF_INSTALLED_APP_ID]
-    try:
-        await api.delete_installed_app(installed_app_id)
-    except ClientResponseError as ex:
-        if ex.status == HTTPStatus.FORBIDDEN:
-            _LOGGER.debug(
-                "Installed app %s has already been removed",
-                installed_app_id,
-                exc_info=True,
-            )
-        else:
-            raise
-    _LOGGER.debug("Removed installed app %s", installed_app_id)
-
-    # Remove the app if not referenced by other entries, which if already
-    # removed raises a HTTPStatus.FORBIDDEN error.
-    all_entries = hass.config_entries.async_entries(DOMAIN)
-    app_id = entry.data[CONF_APP_ID]
-    app_count = sum(1 for entry in all_entries if entry.data[CONF_APP_ID] == app_id)
-    if app_count > 1:
-        _LOGGER.debug(
-            "App %s was not removed because it is in use by other configuration entries",
-            app_id,
-        )
-        return
-    # Remove the app
-    try:
-        await api.delete_app(app_id)
-    except ClientResponseError as ex:
-        if ex.status == HTTPStatus.FORBIDDEN:
-            _LOGGER.debug("App %s has already been removed", app_id, exc_info=True)
-        else:
-            raise
-    _LOGGER.debug("Removed app %s", app_id)
-
-    if len(all_entries) == 1:
-        await unload_smartapp_endpoint(hass)
-
-
-class DeviceBroker:
-    """Manages an individual SmartThings config entry."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: ConfigEntry,
-        token,
-        smart_app,
-        devices: Iterable,
-        scenes: Iterable,
-    ):
-        """Create a new instance of the DeviceBroker."""
-        self._hass = hass
-        self._entry = entry
-        self._installed_app_id = entry.data[CONF_INSTALLED_APP_ID]
-        self._smart_app = smart_app
-        self._token = token
-        self._event_disconnect = None
-        self._regenerate_token_remove = None
-        self._assignments = self._assign_capabilities(devices)
-        self.devices = {device.device_id: device for device in devices}
-        self.scenes = {scene.scene_id: scene for scene in scenes}
-
-    def _assign_capabilities(self, devices: Iterable):
-        """Assign platforms to capabilities."""
-        assignments = {}
-        for device in devices:
-            capabilities = device.capabilities.copy()
-            slots = {}
-            for platform in PLATFORMS:
-                platform_module = importlib.import_module(
-                    f".{platform}", self.__module__
-                )
-                if not hasattr(platform_module, "get_capabilities"):
-                    continue
-                assigned = platform_module.get_capabilities(capabilities)
-                if not assigned:
-                    continue
-                # Draw-down capabilities and set slot assignment
-                for capability in assigned:
-                    if capability not in capabilities:
-                        continue
-                    capabilities.remove(capability)
-                    slots[capability] = platform
-            assignments[device.device_id] = slots
-        return assignments
-
-    def connect(self):
-        """Connect handlers/listeners for device/lifecycle events."""
-        # Setup interval to regenerate the refresh token on a periodic basis.
-        # Tokens expire in 30 days and once expired, cannot be recovered.
-        async def regenerate_refresh_token(now):
-            """Generate a new refresh token and update the config entry."""
-            await self._token.refresh(
-                self._entry.data[CONF_CLIENT_ID],
-                self._entry.data[CONF_CLIENT_SECRET],
-            )
-            self._hass.config_entries.async_update_entry(
-                self._entry,
-                data={
-                    **self._entry.data,
-                    CONF_REFRESH_TOKEN: self._token.refresh_token,
-                },
-            )
-            _LOGGER.debug(
-                "Regenerated refresh token for installed app: %s",
-                self._installed_app_id,
-            )
-
-        self._regenerate_token_remove = async_track_time_interval(
-            self._hass, regenerate_refresh_token, TOKEN_REFRESH_INTERVAL
+    if entry.version < 3:
+        # We keep the old data around, so we can use that to clean up the webhook in the future
+        hass.config_entries.async_update_entry(
+            entry, version=3, data={OLD_DATA: dict(entry.data)}
         )
 
-        # Connect handler to incoming device events
-        self._event_disconnect = self._smart_app.connect_event(self._event_handler)
-
-    def disconnect(self):
-        """Disconnects handlers/listeners for device/lifecycle events."""
-        if self._regenerate_token_remove:
-            self._regenerate_token_remove()
-        if self._event_disconnect:
-            self._event_disconnect()
-
-    def get_assigned(self, device_id: str, platform: str):
-        """Get the capabilities assigned to the platform."""
-        slots = self._assignments.get(device_id, {})
-        return [key for key, value in slots.items() if value == platform]
-
-    def any_assigned(self, device_id: str, platform: str):
-        """Return True if the platform has any assigned capabilities."""
-        slots = self._assignments.get(device_id, {})
-        return any(value for value in slots.values() if value == platform)
-
-    async def _event_handler(self, req, resp, app):
-        """Broker for incoming events."""
-        # Do not process events received from a different installed app
-        # under the same parent SmartApp (valid use-scenario)
-        if req.installed_app_id != self._installed_app_id:
-            return
-
-        updated_devices = set()
-        for evt in req.events:
-            if evt.event_type != EVENT_TYPE_DEVICE:
-                continue
-            if not (device := self.devices.get(evt.device_id)):
-                continue
-            device.status.apply_attribute_update(
-                evt.component_id,
-                evt.capability,
-                evt.attribute,
-                evt.value,
-                data=evt.data,
-            )
-
-            # Fire events for buttons
-            if (
-                evt.capability == Capability.button
-                and evt.attribute == Attribute.button
-            ):
-                data = {
-                    "component_id": evt.component_id,
-                    "device_id": evt.device_id,
-                    "location_id": evt.location_id,
-                    "value": evt.value,
-                    "name": device.label,
-                    "data": evt.data,
-                }
-                self._hass.bus.async_fire(EVENT_BUTTON, data)
-                _LOGGER.debug("Fired button event: %s", data)
-            else:
-                data = {
-                    "location_id": evt.location_id,
-                    "device_id": evt.device_id,
-                    "component_id": evt.component_id,
-                    "capability": evt.capability,
-                    "attribute": evt.attribute,
-                    "value": evt.value,
-                    "data": evt.data,
-                }
-                _LOGGER.debug("Push update received: %s", data)
-
-            updated_devices.add(device.device_id)
-
-        async_dispatcher_send(self._hass, SIGNAL_SMARTTHINGS_UPDATE, updated_devices)
+    return True
 
 
-class SmartThingsEntity(Entity):
-    """Defines a SmartThings entity."""
+KEEP_CAPABILITY_QUIRK: dict[
+    Capability | str, Callable[[dict[Attribute | str, Status]], bool]
+] = {
+    Capability.DRYER_OPERATING_STATE: (
+        lambda status: status[Attribute.SUPPORTED_MACHINE_STATES].value is not None
+    ),
+    Capability.WASHER_OPERATING_STATE: (
+        lambda status: status[Attribute.SUPPORTED_MACHINE_STATES].value is not None
+    ),
+    Capability.DEMAND_RESPONSE_LOAD_CONTROL: lambda _: True,
+}
 
-    _attr_should_poll = False
 
-    def __init__(self, device: DeviceEntity) -> None:
-        """Initialize the instance."""
-        self._device = device
-        self._dispatcher_remove = None
-
-    async def async_added_to_hass(self):
-        """Device added to hass."""
-
-        async def async_update_state(devices):
-            """Update device state."""
-            if self._device.device_id in devices:
-                await self.async_update_ha_state(True)
-
-        self._dispatcher_remove = async_dispatcher_connect(
-            self.hass, SIGNAL_SMARTTHINGS_UPDATE, async_update_state
+def process_status(
+    status: dict[str, dict[Capability | str, dict[Attribute | str, Status]]],
+) -> dict[str, dict[Capability | str, dict[Attribute | str, Status]]]:
+    """Remove disabled capabilities from status."""
+    if (main_component := status.get(MAIN)) is None:
+        return status
+    if (
+        disabled_capabilities_capability := main_component.get(
+            Capability.CUSTOM_DISABLED_CAPABILITIES
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect the device when removed."""
-        if self._dispatcher_remove:
-            self._dispatcher_remove()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Get attributes about the device."""
-        return DeviceInfo(
-            configuration_url="https://account.smartthings.com",
-            identifiers={(DOMAIN, self._device.device_id)},
-            manufacturer="Unavailable",
-            model=self._device.device_type_name,
-            name=self._device.label,
+    ) is not None:
+        disabled_capabilities = cast(
+            list[Capability | str],
+            disabled_capabilities_capability[Attribute.DISABLED_CAPABILITIES].value,
         )
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._device.label
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._device.device_id
+        if disabled_capabilities is not None:
+            for capability in disabled_capabilities:
+                if capability in main_component and (
+                    capability not in KEEP_CAPABILITY_QUIRK
+                    or not KEEP_CAPABILITY_QUIRK[capability](main_component[capability])
+                ):
+                    del main_component[capability]
+    return status

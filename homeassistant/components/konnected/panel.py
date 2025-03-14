@@ -1,4 +1,5 @@
 """Support for Konnected devices."""
+
 import asyncio
 import logging
 
@@ -122,7 +123,7 @@ class AlarmPanel:
             self.api_version = KONN_API_VERSIONS.get(
                 self.status.get("model", KONN_MODEL), KONN_API_VERSIONS[KONN_MODEL]
             )
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Connected to new %s device", self.status.get("model", "Konnected")
             )
             _LOGGER.debug(self.status)
@@ -144,9 +145,11 @@ class AlarmPanel:
 
         self.connect_attempts = 0
         self.connected = True
-        _LOGGER.info(
-            "Set up Konnected device %s. Open http://%s:%s in a "
-            "web browser to view device status",
+        _LOGGER.debug(
+            (
+                "Set up Konnected device %s. Open http://%s:%s in a "
+                "web browser to view device status"
+            ),
             self.device_id,
             self.host,
             self.port,
@@ -377,7 +380,7 @@ class AlarmPanel:
             self.async_desired_settings_payload()
             != self.async_current_settings_payload()
         ):
-            _LOGGER.info("Pushing settings to device %s", self.device_id)
+            _LOGGER.debug("Pushing settings to device %s", self.device_id)
             await self.client.put_settings(**self.async_desired_settings_payload())
 
 

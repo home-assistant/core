@@ -1,7 +1,6 @@
 """UptimeRobot sensor platform."""
-from __future__ import annotations
 
-from typing import TypedDict
+from __future__ import annotations
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -9,35 +8,27 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import UptimeRobotDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import UptimeRobotDataUpdateCoordinator
 from .entity import UptimeRobotEntity
 
-
-class StatusValue(TypedDict):
-    """Sensor details."""
-
-    value: str
-    icon: str
-
-
 SENSORS_INFO = {
-    0: StatusValue(value="pause", icon="mdi:television-pause"),
-    1: StatusValue(value="not_checked_yet", icon="mdi:television"),
-    2: StatusValue(value="up", icon="mdi:television-shimmer"),
-    8: StatusValue(value="seems_down", icon="mdi:television-off"),
-    9: StatusValue(value="down", icon="mdi:television-off"),
+    0: "pause",
+    1: "not_checked_yet",
+    2: "up",
+    8: "seems_down",
+    9: "down",
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the UptimeRobot sensors."""
     coordinator: UptimeRobotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -46,7 +37,6 @@ async def async_setup_entry(
             coordinator,
             SensorEntityDescription(
                 key=str(monitor.id),
-                name=monitor.friendly_name,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 device_class=SensorDeviceClass.ENUM,
                 options=["down", "not_checked_yet", "pause", "seems_down", "up"],
@@ -64,9 +54,4 @@ class UptimeRobotSensor(UptimeRobotEntity, SensorEntity):
     @property
     def native_value(self) -> str:
         """Return the status of the monitor."""
-        return SENSORS_INFO[self.monitor.status]["value"]
-
-    @property
-    def icon(self) -> str:
-        """Return the status of the monitor."""
-        return SENSORS_INFO[self.monitor.status]["icon"]
+        return SENSORS_INFO[self.monitor.status]

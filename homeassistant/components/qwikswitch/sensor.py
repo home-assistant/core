@@ -1,7 +1,9 @@
 """Support for Qwikswitch Sensors."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pyqwikswitch.qwikswitch import SENSORS
 
@@ -10,7 +12,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as QWIKSWITCH, QSEntity
+from . import DOMAIN as QWIKSWITCH
+from .entity import QSEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +37,7 @@ async def async_setup_platform(
 class QSSensor(QSEntity, SensorEntity):
     """Sensor based on a Qwikswitch relay/dimmer module."""
 
-    _val = None
+    _val: Any | None = None
 
     def __init__(self, sensor):
         """Initialize the sensor."""
@@ -45,9 +48,9 @@ class QSSensor(QSEntity, SensorEntity):
 
         self._decode, self.unit = SENSORS[sensor_type]
         # this cannot happen because it only happens in bool and this should be redirected to binary_sensor
-        assert not isinstance(
-            self.unit, type
-        ), f"boolean sensor id={sensor['id']} name={sensor['name']}"
+        assert not isinstance(self.unit, type), (
+            f"boolean sensor id={sensor['id']} name={sensor['name']}"
+        )
 
     @callback
     def update_packet(self, packet):
@@ -68,7 +71,7 @@ class QSSensor(QSEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the value of the sensor."""
-        return str(self._val)
+        return None if self._val is None else str(self._val)
 
     @property
     def unique_id(self):

@@ -1,7 +1,8 @@
 {
   "domain": "rpi_camera",
   "name": "Raspberry Pi Camera",
-  "documentation": "https://www.home-assistant.io/integrations/rpi_camera",
   "codeowners": [],
-  "iot_class": "local_polling"
+  "documentation": "https://www.home-assistant.io/integrations/rpi_camera",
+  "iot_class": "local_polling",
+  "quality_scale": "legacy"
 }

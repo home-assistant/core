@@ -1,18 +1,23 @@
 """Camera entity for PrusaLink."""
+
 from __future__ import annotations
+
+from pyprusalink.types import PrinterState
 
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, JobUpdateCoordinator, PrusaLinkEntity
+from .const import DOMAIN
+from .coordinator import JobUpdateCoordinator
+from .entity import PrusaLinkEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PrusaLink camera."""
     coordinator: JobUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]["job"]
@@ -24,7 +29,7 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
 
     last_path = ""
     last_image: bytes
-    _attr_name = "Job Preview"
+    _attr_translation_key = "job_preview"
 
     def __init__(self, coordinator: JobUpdateCoordinator) -> None:
         """Initialize a PrusaLink camera entity."""
@@ -35,7 +40,12 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
     @property
     def available(self) -> bool:
         """Get if camera is available."""
-        return super().available and self.coordinator.data.get("job") is not None
+        return (
+            super().available
+            and self.coordinator.data.get("state") != PrinterState.IDLE.value
+            and (file := self.coordinator.data.get("file"))
+            and file.get("refs", {}).get("thumbnail")
+        )
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -44,11 +54,11 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
         if not self.available:
             return None
 
-        path = self.coordinator.data["job"]["file"]["path"]
+        path = self.coordinator.data["file"]["refs"]["thumbnail"]
 
         if self.last_path == path:
             return self.last_image
 
-        self.last_image = await self.coordinator.api.get_large_thumbnail(path)
+        self.last_image = await self.coordinator.api.get_file(path)
         self.last_path = path
         return self.last_image

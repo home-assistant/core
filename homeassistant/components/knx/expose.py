@@ -1,27 +1,38 @@
 """Exposures to KNX bus."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 import logging
 
 from xknx import XKNX
-from xknx.devices import DateTime, ExposeSensor
+from xknx.devices import DateDevice, DateTimeDevice, ExposeSensor, TimeDevice
 from xknx.dpt import DPTNumeric, DPTString
 from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValueSensor
 
 from homeassistant.const import (
     CONF_ENTITY_ID,
+    CONF_VALUE_TEMPLATE,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.util import dt as dt_util
 
-from .const import KNX_ADDRESS
+from .const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from .schema import ExposeSchema
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,28 +43,25 @@ def create_knx_exposure(
     hass: HomeAssistant, xknx: XKNX, config: ConfigType
 ) -> KNXExposeSensor | KNXExposeTime:
     """Create exposures from config."""
-    address = config[KNX_ADDRESS]
+
     expose_type = config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
-    attribute = config.get(ExposeSchema.CONF_KNX_EXPOSE_ATTRIBUTE)
-    default = config.get(ExposeSchema.CONF_KNX_EXPOSE_DEFAULT)
 
     exposure: KNXExposeSensor | KNXExposeTime
     if (
         isinstance(expose_type, str)
         and expose_type.lower() in ExposeSchema.EXPOSE_TIME_TYPES
     ):
-        exposure = KNXExposeTime(xknx, expose_type, address)
+        exposure = KNXExposeTime(
+            xknx=xknx,
+            config=config,
+        )
     else:
-        entity_id = config[CONF_ENTITY_ID]
         exposure = KNXExposeSensor(
             hass,
-            xknx,
-            expose_type,
-            entity_id,
-            attribute,
-            default,
-            address,
+            xknx=xknx,
+            config=config,
         )
+    exposure.async_register()
     return exposure
 
 
@@ -64,41 +72,38 @@ class KNXExposeSensor:
         self,
         hass: HomeAssistant,
         xknx: XKNX,
-        expose_type: int | str,
-        entity_id: str,
-        attribute: str | None,
-        default: StateType,
-        address: str,
+        config: ConfigType,
     ) -> None:
         """Initialize of Expose class."""
         self.hass = hass
         self.xknx = xknx
-        self.type = expose_type
-        self.entity_id = entity_id
-        self.expose_attribute = attribute
-        self.expose_default = default
-        self.address = address
+
+        self.entity_id: str = config[CONF_ENTITY_ID]
+        self.expose_attribute: str | None = config.get(
+            ExposeSchema.CONF_KNX_EXPOSE_ATTRIBUTE
+        )
+        self.expose_default = config.get(ExposeSchema.CONF_KNX_EXPOSE_DEFAULT)
+        self.expose_type: int | str = config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
+        self.value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
+
         self._remove_listener: Callable[[], None] | None = None
-        self.device: ExposeSensor = self.async_register()
-        self._init_expose_state()
+        self.device: ExposeSensor = ExposeSensor(
+            xknx=self.xknx,
+            name=f"{self.entity_id}__{self.expose_attribute or 'state'}",
+            group_address=config[KNX_ADDRESS],
+            respond_to_read=config[CONF_RESPOND_TO_READ],
+            value_type=self.expose_type,
+            cooldown=config[ExposeSchema.CONF_KNX_EXPOSE_COOLDOWN],
+        )
 
     @callback
-    def async_register(self) -> ExposeSensor:
+    def async_register(self) -> None:
         """Register listener."""
-        if self.expose_attribute is not None:
-            _name = self.entity_id + "__" + self.expose_attribute
-        else:
-            _name = self.entity_id
-        device = ExposeSensor(
-            self.xknx,
-            name=_name,
-            group_address=self.address,
-            value_type=self.type,
-        )
         self._remove_listener = async_track_state_change_event(
             self.hass, [self.entity_id], self._async_entity_changed
         )
-        return device
+        self.xknx.devices.async_add(self.device)
+        self._init_expose_state()
 
     @callback
     def _init_expose_state(self) -> None:
@@ -111,49 +116,70 @@ class KNXExposeSensor:
             _LOGGER.exception("Error during sending of expose sensor value")
 
     @callback
-    def shutdown(self) -> None:
+    def async_remove(self) -> None:
         """Prepare for deletion."""
         if self._remove_listener is not None:
             self._remove_listener()
             self._remove_listener = None
-        self.device.shutdown()
+        self.xknx.devices.async_remove(self.device)
 
-    def _get_expose_value(self, state: State | None) -> StateType:
+    def _get_expose_value(self, state: State | None) -> bool | int | float | str | None:
         """Extract value from state."""
         if state is None or state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            if self.expose_default is None:
+                return None
             value = self.expose_default
+        elif self.expose_attribute is not None:
+            _attr = state.attributes.get(self.expose_attribute)
+            value = _attr if _attr is not None else self.expose_default
         else:
-            value = (
-                state.state
-                if self.expose_attribute is None
-                else state.attributes.get(self.expose_attribute, self.expose_default)
-            )
-        if self.type == "binary":
+            value = state.state
+
+        if self.value_template is not None:
+            try:
+                value = self.value_template.async_render_with_possible_json_value(
+                    value, error_value=None
+                )
+            except (TemplateError, TypeError, ValueError) as err:
+                _LOGGER.warning(
+                    "Error rendering value template for KNX expose %s %s: %s",
+                    self.device.name,
+                    self.value_template.template,
+                    err,
+                )
+                return None
+
+        if self.expose_type == "binary":
             if value in (1, STATE_ON, "True"):
                 return True
             if value in (0, STATE_OFF, "False"):
                 return False
-        if (
-            value is not None
-            and isinstance(self.device.sensor_value, RemoteValueSensor)
-            and issubclass(self.device.sensor_value.dpt_class, DPTNumeric)
+        if value is not None and (
+            isinstance(self.device.sensor_value, RemoteValueSensor)
         ):
-            return float(value)
-        if (
-            value is not None
-            and isinstance(self.device.sensor_value, RemoteValueSensor)
-            and issubclass(self.device.sensor_value.dpt_class, DPTString)
-        ):
-            # DPT 16.000 only allows up to 14 Bytes
-            return str(value)[:14]
-        return value
+            try:
+                if issubclass(self.device.sensor_value.dpt_class, DPTNumeric):
+                    return float(value)
+                if issubclass(self.device.sensor_value.dpt_class, DPTString):
+                    # DPT 16.000 only allows up to 14 Bytes
+                    return str(value)[:14]
+            except (ValueError, TypeError) as err:
+                _LOGGER.warning(
+                    'Could not expose %s %s value "%s" to KNX: Conversion failed: %s',
+                    self.entity_id,
+                    self.expose_attribute or "state",
+                    value,
+                    err,
+                )
+                return None
+        return value  # type: ignore[no-any-return]
 
-    async def _async_entity_changed(self, event: Event) -> None:
+    async def _async_entity_changed(self, event: Event[EventStateChangedData]) -> None:
         """Handle entity change."""
-        new_state = event.data.get("new_state")
+        new_state = event.data["new_state"]
         if (new_value := self._get_expose_value(new_state)) is None:
             return
-        old_state = event.data.get("old_state")
+        old_state = event.data["old_state"]
         # don't use default value for comparison on first state change (old_state is None)
         old_value = self._get_expose_value(old_state) if old_state is not None else None
         # don't send same value sequentially
@@ -164,32 +190,44 @@ class KNXExposeSensor:
         """Set new value on xknx ExposeSensor."""
         try:
             await self.device.set(value)
-        except ConversionError:
-            _LOGGER.exception("Error during sending of expose sensor value")
+        except ConversionError as err:
+            _LOGGER.warning(
+                'Could not expose %s %s value "%s" to KNX: %s',
+                self.entity_id,
+                self.expose_attribute or "state",
+                value,
+                err,
+            )
 
 
 class KNXExposeTime:
     """Object to Expose Time/Date object to KNX bus."""
 
-    def __init__(self, xknx: XKNX, expose_type: str, address: str) -> None:
+    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of Expose class."""
         self.xknx = xknx
-        self.expose_type = expose_type
-        self.address = address
-        self.device: DateTime = self.async_register()
-
-    @callback
-    def async_register(self) -> DateTime:
-        """Register listener."""
-        return DateTime(
+        expose_type = config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
+        xknx_device_cls: type[DateDevice | DateTimeDevice | TimeDevice]
+        match expose_type:
+            case ExposeSchema.CONF_DATE:
+                xknx_device_cls = DateDevice
+            case ExposeSchema.CONF_DATETIME:
+                xknx_device_cls = DateTimeDevice
+            case ExposeSchema.CONF_TIME:
+                xknx_device_cls = TimeDevice
+        self.device = xknx_device_cls(
             self.xknx,
-            name=self.expose_type.capitalize(),
-            broadcast_type=self.expose_type.upper(),
-            localtime=True,
-            group_address=self.address,
+            name=expose_type.capitalize(),
+            localtime=dt_util.get_default_time_zone(),
+            group_address=config[KNX_ADDRESS],
         )
 
     @callback
-    def shutdown(self) -> None:
+    def async_register(self) -> None:
+        """Register listener."""
+        self.xknx.devices.async_add(self.device)
+
+    @callback
+    def async_remove(self) -> None:
         """Prepare for deletion."""
-        self.device.shutdown()
+        self.xknx.devices.async_remove(self.device)

@@ -1,10 +1,14 @@
 """Code to handle a DenonAVR receiver."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
+import contextlib
 import logging
 
 from denonavr import DenonAVR
+from denonavr.exceptions import AvrProcessingError
+import httpx
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +23,9 @@ class ConnectDenonAVR:
         show_all_inputs: bool,
         zone2: bool,
         zone3: bool,
-        async_client_getter: Callable,
+        use_telnet: bool,
+        update_audyssey: bool,
+        async_client_getter: Callable[[], httpx.AsyncClient],
     ) -> None:
         """Initialize the class."""
         self._async_client_getter = async_client_getter
@@ -27,6 +33,8 @@ class ConnectDenonAVR:
         self._host = host
         self._show_all_inputs = show_all_inputs
         self._timeout = timeout
+        self._use_telnet = use_telnet
+        self._update_audyssey = update_audyssey
 
         self._zones: dict[str, str | None] = {}
         if zone2:
@@ -51,7 +59,10 @@ class ConnectDenonAVR:
             or self._receiver.receiver_type is None
         ):
             _LOGGER.error(
-                "Missing receiver information: manufacturer '%s', name '%s', model '%s', type '%s'",
+                (
+                    "Missing receiver information: manufacturer '%s', name '%s', model"
+                    " '%s', type '%s'"
+                ),
                 self._receiver.manufacturer,
                 self._receiver.name,
                 self._receiver.model_name,
@@ -82,5 +93,13 @@ class ConnectDenonAVR:
         # Use httpx.AsyncClient getter provided by Home Assistant
         receiver.set_async_client_getter(self._async_client_getter)
         await receiver.async_setup()
+        # Do an initial update if telnet is used.
+        if self._use_telnet:
+            for zone in receiver.zones.values():
+                with contextlib.suppress(AvrProcessingError):
+                    await zone.async_update()
+                if self._update_audyssey:
+                    await zone.async_update_audyssey()
+            await receiver.async_telnet_connect()
 
         self._receiver = receiver

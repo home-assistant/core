@@ -5,7 +5,12 @@
       "user": {
         "description": "Before setup, battery-powered devices must be woken up, you can now wake the device up using a button on it.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Shelly device to connect to.",
+          "port": "The TCP port of the Shelly device to connect to (Gen2+)."
         }
       },
       "credentials": {
@@ -22,19 +27,35 @@
       },
       "confirm_discovery": {
         "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
+      },
+      "reconfigure": {
+        "description": "Update configuration for {device_name}.\n\nBefore setup, battery-powered devices must be woken up, you can now wake the device up using a button on it.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::shelly::config::step::user::data_description::host%]",
+          "port": "[%key:component::shelly::config::step::user::data_description::port%]"
+        }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support"
+      "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
+      "custom_port_not_supported": "Gen1 device does not support custom port.",
+      "mac_address_mismatch": "The MAC address of the device does not match the one in the configuration, please reboot the device and try again."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "unsupported_firmware": "The device is using an unsupported firmware version.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again."
+      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
+      "ipv6_not_supported": "IPv6 is not supported.",
+      "mac_address_mismatch": "[%key:component::shelly::config::error::mac_address_mismatch%]"
     }
   },
   "device_automation": {
@@ -56,6 +77,7 @@
       "btn_up": "{subtype} button up",
       "single_push": "{subtype} single push",
       "double_push": "{subtype} double push",
+      "triple_push": "{subtype} triple push",
       "long_push": "{subtype} long push"
     }
   },
@@ -67,9 +89,99 @@
           "ble_scanner_mode": "Bluetooth scanner mode"
         }
       }
+    }
+  },
+  "selector": {
+    "ble_scanner_mode": {
+      "options": {
+        "disabled": "[%key:common::state::disabled%]",
+        "active": "[%key:common::state::active%]",
+        "passive": "Passive"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "gas": {
+        "state_attributes": {
+          "detected": {
+            "state": {
+              "unknown": "Unknown",
+              "none": "None",
+              "mild": "Mild",
+              "heavy": "Heavy",
+              "test": "Test"
+            }
+          }
+        }
+      }
     },
-    "abort": {
-      "ble_unsupported": "Bluetooth support requires firmware version {ble_min_version} or newer."
+    "event": {
+      "input": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "btn_down": "Button down",
+              "btn_up": "Button up",
+              "double_push": "Double push",
+              "double": "Double push",
+              "long_push": "Long push",
+              "long_single": "Long push and then short push",
+              "long": "Long push",
+              "single_long": "Short push and then long push",
+              "single_push": "Single push",
+              "single": "Single push",
+              "triple_push": "Triple push",
+              "triple": "Triple push"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "operation": {
+        "state": {
+          "unknown": "Unknown",
+          "warmup": "Warm-up",
+          "normal": "Normal",
+          "fault": "Fault"
+        },
+        "state_attributes": {
+          "self_test": {
+            "state": {
+              "not_completed": "Not completed",
+              "completed": "Completed",
+              "running": "Running",
+              "pending": "Pending"
+            }
+          }
+        }
+      },
+      "valve_status": {
+        "state": {
+          "checking": "Checking",
+          "closed": "[%key:common::state::closed%]",
+          "closing": "Closing",
+          "failure": "Failure",
+          "opened": "Opened",
+          "opening": "Opening",
+          "unknown": "[%key:component::shelly::entity::sensor::operation::state::unknown%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "device_not_calibrated": {
+      "title": "Shelly device {device_name} is not calibrated",
+      "description": "Shelly device {device_name} with IP address {ip_address} requires calibration. To calibrate the device, it must be rebooted after proper installation on the valve. You can reboot the device in its web panel, go to 'Settings' > 'Device Reboot'."
+    },
+    "push_update_failure": {
+      "title": "Shelly device {device_name} push update failure",
+      "description": "Home Assistant is not receiving push updates from the Shelly device {device_name} with IP address {ip_address}. Check the CoIoT configuration in the web panel of the device and your network configuration."
+    },
+    "unsupported_firmware": {
+      "title": "Unsupported firmware for device {device_name}",
+      "description": "Your Shelly device {device_name} with IP address {ip_address} is running an unsupported firmware. Please update the firmware.\n\nIf the device does not offer an update, check internet connectivity (gateway, DNS, time) and restart the device."
     }
   }
 }

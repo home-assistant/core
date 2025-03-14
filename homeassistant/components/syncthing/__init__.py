@@ -1,4 +1,5 @@
 """The syncthing integration."""
+
 import asyncio
 import logging
 
@@ -123,7 +124,7 @@ class SyncthingClient:
         while True:
             if await self._server_available():
                 if server_was_unavailable:
-                    _LOGGER.info(
+                    _LOGGER.warning(
                         "The syncthing server '%s' is back online", self._client.url
                     )
                     async_dispatcher_send(
@@ -152,8 +153,11 @@ class SyncthingClient:
                         event,
                     )
             except aiosyncthing.exceptions.SyncthingError:
-                _LOGGER.info(
-                    "The syncthing server '%s' is not available. Sleeping %i seconds and retrying",
+                _LOGGER.warning(
+                    (
+                        "The syncthing server '%s' is not available. Sleeping %i"
+                        " seconds and retrying"
+                    ),
                     self._client.url,
                     RECONNECT_INTERVAL.total_seconds(),
                 )
@@ -169,5 +173,5 @@ class SyncthingClient:
             await self._client.system.ping()
         except aiosyncthing.exceptions.SyncthingError:
             return False
-        else:
-            return True
+
+        return True

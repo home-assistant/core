@@ -1,4 +1,5 @@
 """Test EQ3 Max! Thermostats."""
+
 from datetime import timedelta
 
 from maxcube.cube import MaxCube
@@ -49,6 +50,8 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import utcnow
 
@@ -59,9 +62,10 @@ WALL_ENTITY_ID = "climate.testroom_testwallthermostat"
 VALVE_POSITION = "valve_position"
 
 
-async def test_setup_thermostat(hass, cube: MaxCube):
+async def test_setup_thermostat(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, cube: MaxCube
+) -> None:
     """Test a successful setup of a thermostat device."""
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_is_registered(ENTITY_ID)
     entity = entity_registry.async_get(ENTITY_ID)
     assert entity.unique_id == "AABBCCDD01"
@@ -86,7 +90,10 @@ async def test_setup_thermostat(hass, cube: MaxCube):
     assert state.attributes.get(ATTR_PRESET_MODE) == PRESET_NONE
     assert (
         state.attributes.get(ATTR_SUPPORTED_FEATURES)
-        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes.get(ATTR_MAX_TEMP) == MAX_TEMPERATURE
     assert state.attributes.get(ATTR_MIN_TEMP) == 5.0
@@ -95,9 +102,10 @@ async def test_setup_thermostat(hass, cube: MaxCube):
     assert state.attributes.get(VALVE_POSITION) == 25
 
 
-async def test_setup_wallthermostat(hass, cube: MaxCube):
+async def test_setup_wallthermostat(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, cube: MaxCube
+) -> None:
     """Test a successful setup of a wall thermostat device."""
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_is_registered(WALL_ENTITY_ID)
     entity = entity_registry.async_get(WALL_ENTITY_ID)
     assert entity.unique_id == "AABBCCDD02"
@@ -114,8 +122,8 @@ async def test_setup_wallthermostat(hass, cube: MaxCube):
 
 
 async def test_thermostat_set_hvac_mode_off(
-    hass, cube: MaxCube, thermostat: MaxThermostat
-):
+    hass: HomeAssistant, cube: MaxCube, thermostat: MaxThermostat
+) -> None:
     """Turn off thermostat."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -132,7 +140,7 @@ async def test_thermostat_set_hvac_mode_off(
     thermostat.valve_position = 0
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.OFF
@@ -145,8 +153,8 @@ async def test_thermostat_set_hvac_mode_off(
 
 
 async def test_thermostat_set_hvac_mode_heat(
-    hass, cube: MaxCube, thermostat: MaxThermostat
-):
+    hass: HomeAssistant, cube: MaxCube, thermostat: MaxThermostat
+) -> None:
     """Set hvac mode to heat."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -160,16 +168,16 @@ async def test_thermostat_set_hvac_mode_heat(
     thermostat.mode = MAX_DEVICE_MODE_MANUAL
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.HEAT
 
 
 async def test_thermostat_set_invalid_hvac_mode(
-    hass, cube: MaxCube, thermostat: MaxThermostat
-):
+    hass: HomeAssistant, cube: MaxCube, thermostat: MaxThermostat
+) -> None:
     """Set hvac mode to heat."""
     with pytest.raises(ValueError):
         await hass.services.async_call(
@@ -182,8 +190,8 @@ async def test_thermostat_set_invalid_hvac_mode(
 
 
 async def test_thermostat_set_temperature(
-    hass, cube: MaxCube, thermostat: MaxThermostat
-):
+    hass: HomeAssistant, cube: MaxCube, thermostat: MaxThermostat
+) -> None:
     """Set hvac mode to heat."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -196,7 +204,7 @@ async def test_thermostat_set_temperature(
     thermostat.valve_position = 0
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.AUTO
@@ -205,10 +213,10 @@ async def test_thermostat_set_temperature(
 
 
 async def test_thermostat_set_no_temperature(
-    hass, cube: MaxCube, thermostat: MaxThermostat
-):
+    hass: HomeAssistant, cube: MaxCube, thermostat: MaxThermostat
+) -> None:
     """Set hvac mode to heat."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -219,10 +227,12 @@ async def test_thermostat_set_no_temperature(
             },
             blocking=True,
         )
-        cube.set_temperature_mode.assert_not_called()
+    cube.set_temperature_mode.assert_not_called()
 
 
-async def test_thermostat_set_preset_on(hass, cube: MaxCube, thermostat: MaxThermostat):
+async def test_thermostat_set_preset_on(
+    hass: HomeAssistant, cube: MaxCube, thermostat: MaxThermostat
+) -> None:
     """Set preset mode to on."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -238,7 +248,7 @@ async def test_thermostat_set_preset_on(hass, cube: MaxCube, thermostat: MaxTher
     thermostat.target_temperature = ON_TEMPERATURE
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.HEAT
@@ -247,8 +257,8 @@ async def test_thermostat_set_preset_on(hass, cube: MaxCube, thermostat: MaxTher
 
 
 async def test_thermostat_set_preset_comfort(
-    hass, cube: MaxCube, thermostat: MaxThermostat
-):
+    hass: HomeAssistant, cube: MaxCube, thermostat: MaxThermostat
+) -> None:
     """Set preset mode to comfort."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -263,7 +273,7 @@ async def test_thermostat_set_preset_comfort(
     thermostat.target_temperature = thermostat.comfort_temperature
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.HEAT
@@ -272,8 +282,8 @@ async def test_thermostat_set_preset_comfort(
 
 
 async def test_thermostat_set_preset_eco(
-    hass, cube: MaxCube, thermostat: MaxThermostat
-):
+    hass: HomeAssistant, cube: MaxCube, thermostat: MaxThermostat
+) -> None:
     """Set preset mode to eco."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -288,7 +298,7 @@ async def test_thermostat_set_preset_eco(
     thermostat.target_temperature = thermostat.eco_temperature
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.HEAT
@@ -297,8 +307,8 @@ async def test_thermostat_set_preset_eco(
 
 
 async def test_thermostat_set_preset_away(
-    hass, cube: MaxCube, thermostat: MaxThermostat
-):
+    hass: HomeAssistant, cube: MaxCube, thermostat: MaxThermostat
+) -> None:
     """Set preset mode to away."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -313,7 +323,7 @@ async def test_thermostat_set_preset_away(
     thermostat.target_temperature = thermostat.eco_temperature
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.HEAT
@@ -322,8 +332,8 @@ async def test_thermostat_set_preset_away(
 
 
 async def test_thermostat_set_preset_boost(
-    hass, cube: MaxCube, thermostat: MaxThermostat
-):
+    hass: HomeAssistant, cube: MaxCube, thermostat: MaxThermostat
+) -> None:
     """Set preset mode to boost."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -338,7 +348,7 @@ async def test_thermostat_set_preset_boost(
     thermostat.target_temperature = thermostat.eco_temperature
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.AUTO
@@ -347,8 +357,8 @@ async def test_thermostat_set_preset_boost(
 
 
 async def test_thermostat_set_preset_none(
-    hass, cube: MaxCube, thermostat: MaxThermostat
-):
+    hass: HomeAssistant, cube: MaxCube, thermostat: MaxThermostat
+) -> None:
     """Set preset mode to boost."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -362,10 +372,10 @@ async def test_thermostat_set_preset_none(
 
 
 async def test_thermostat_set_invalid_preset(
-    hass, cube: MaxCube, thermostat: MaxThermostat
-):
+    hass: HomeAssistant, cube: MaxCube, thermostat: MaxThermostat
+) -> None:
     """Set hvac mode to heat."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
@@ -376,8 +386,8 @@ async def test_thermostat_set_invalid_preset(
 
 
 async def test_wallthermostat_set_hvac_mode_heat(
-    hass, cube: MaxCube, wallthermostat: MaxWallThermostat
-):
+    hass: HomeAssistant, cube: MaxCube, wallthermostat: MaxWallThermostat
+) -> None:
     """Set wall thermostat hvac mode to heat."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -391,7 +401,7 @@ async def test_wallthermostat_set_hvac_mode_heat(
     wallthermostat.target_temperature = MIN_TEMPERATURE
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(WALL_ENTITY_ID)
     assert state.state == HVACMode.HEAT
@@ -399,8 +409,8 @@ async def test_wallthermostat_set_hvac_mode_heat(
 
 
 async def test_wallthermostat_set_hvac_mode_auto(
-    hass, cube: MaxCube, wallthermostat: MaxWallThermostat
-):
+    hass: HomeAssistant, cube: MaxCube, wallthermostat: MaxWallThermostat
+) -> None:
     """Set wall thermostat hvac mode to auto."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -415,7 +425,7 @@ async def test_wallthermostat_set_hvac_mode_auto(
     wallthermostat.target_temperature = 23.0
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(WALL_ENTITY_ID)
     assert state.state == HVACMode.AUTO

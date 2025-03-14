@@ -5,6 +5,9 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Lyrion Music Server."
         }
       },
       "edit": {
@@ -13,7 +16,8 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "https": "Connect over https (requires reverse proxy)"
         }
       }
     },
@@ -26,6 +30,93 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_server_found": "No LMS server found."
+    }
+  },
+  "services": {
+    "call_method": {
+      "name": "Call method",
+      "description": "Calls a custom Squeezebox JSONRPC API.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "Command to pass to Lyrion Music Server (p0 in the CLI documentation)."
+        },
+        "parameters": {
+          "name": "Parameters",
+          "description": "Array of additional parameters to pass to Lyrion Music Server (p1, ..., pN in the CLI documentation)."
+        }
+      }
+    },
+    "call_query": {
+      "name": "Call query",
+      "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "[%key:component::squeezebox::services::call_method::fields::command::description%]"
+        },
+        "parameters": {
+          "name": "Parameters",
+          "description": "[%key:component::squeezebox::services::call_method::fields::parameters::description%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "rescan": {
+        "name": "Library rescan"
+      },
+      "needsrestart": {
+        "name": "Needs restart"
+      }
+    },
+    "sensor": {
+      "lastscan": {
+        "name": "Last scan"
+      },
+      "info_total_albums": {
+        "name": "Total albums",
+        "unit_of_measurement": "albums"
+      },
+      "info_total_artists": {
+        "name": "Total artists",
+        "unit_of_measurement": "artists"
+      },
+      "info_total_duration": {
+        "name": "Total duration"
+      },
+      "info_total_genres": {
+        "name": "Total genres",
+        "unit_of_measurement": "genres"
+      },
+      "info_total_songs": {
+        "name": "Total songs",
+        "unit_of_measurement": "songs"
+      },
+      "player_count": {
+        "name": "Player count",
+        "unit_of_measurement": "players"
+      },
+      "other_player_count": {
+        "name": "Player count off service",
+        "unit_of_measurement": "[%key:component::squeezebox::entity::sensor::player_count::unit_of_measurement%]"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "LMS Configuration",
+        "data": {
+          "browse_limit": "Browse limit",
+          "volume_step": "Volume step"
+        },
+        "data_description": {
+          "browse_limit": "Maximum number of items when browsing or in a playlist.",
+          "volume_step": "Amount to adjust the volume when turning volume up or down."
+        }
+      }
     }
   }
 }

@@ -1,11 +1,13 @@
 """Support for Oncue sensors."""
+
 from __future__ import annotations
 
 from aiooncue import OncueDevice, OncueSensor
 
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -14,12 +16,16 @@ from homeassistant.helpers.update_coordinator import (
 from .const import CONNECTION_ESTABLISHED_KEY, DOMAIN, VALUE_UNAVAILABLE
 
 
-class OncueEntity(CoordinatorEntity, Entity):
+class OncueEntity(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, OncueDevice]]], Entity
+):
     """Representation of an Oncue entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, OncueDevice]],
         device_id: str,
         device: OncueDevice,
         sensor: OncueSensor,
@@ -30,7 +36,7 @@ class OncueEntity(CoordinatorEntity, Entity):
         self.entity_description = description
         self._device_id = device_id
         self._attr_unique_id = f"{device_id}_{description.key}"
-        self._attr_name = f"{device.name} {sensor.display_name}"
+        self._attr_name = sensor.display_name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=device.name,
@@ -64,7 +70,8 @@ class OncueEntity(CoordinatorEntity, Entity):
                 return False
             # If the cloud is reporting that the generator is not connected
             # this also indicates the data is not available.
-            # The battery voltage sensor reports 0.0 rather than -- hence the purpose of this check.
+            # The battery voltage sensor reports 0.0 rather than
+            # -- hence the purpose of this check.
             device: OncueDevice = self.coordinator.data[self._device_id]
             conn_established: OncueSensor = device.sensors[CONNECTION_ESTABLISHED_KEY]
             if (

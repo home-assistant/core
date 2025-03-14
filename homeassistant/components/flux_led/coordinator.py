@@ -1,4 +1,5 @@
 """The Flux LED/MagicLight integration coordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -19,21 +20,25 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUEST_REFRESH_DELAY: Final = 2.0
 
+type FluxLedConfigEntry = ConfigEntry[FluxLedUpdateCoordinator]
 
-class FluxLedUpdateCoordinator(DataUpdateCoordinator):
+
+class FluxLedUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific flux_led device."""
 
+    config_entry: FluxLedConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, device: AIOWifiLedBulb, entry: ConfigEntry
+        self, hass: HomeAssistant, device: AIOWifiLedBulb, entry: FluxLedConfigEntry
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific device."""
         self.device = device
         self.title = entry.title
-        self.entry = entry
         self.force_next_update = False
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=self.device.ipaddr,
             update_interval=timedelta(seconds=10),
             # We don't want an immediate refresh since the device
@@ -41,6 +46,7 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
             request_refresh_debouncer=Debouncer(
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
+            always_update=False,
         )
 
     async def _async_update_data(self) -> None:

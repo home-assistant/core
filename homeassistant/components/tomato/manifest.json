@@ -1,7 +1,8 @@
 {
   "domain": "tomato",
   "name": "Tomato",
-  "documentation": "https://www.home-assistant.io/integrations/tomato",
   "codeowners": [],
-  "iot_class": "local_polling"
+  "documentation": "https://www.home-assistant.io/integrations/tomato",
+  "iot_class": "local_polling",
+  "quality_scale": "legacy"
 }

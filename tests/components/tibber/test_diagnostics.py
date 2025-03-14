@@ -1,19 +1,28 @@
 """Test the Netatmo diagnostics."""
+
 from unittest.mock import patch
 
+from homeassistant.components.recorder import Recorder
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .test_common import mock_get_homes
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(recorder_mock, hass, hass_client, config_entry):
+async def test_entry_diagnostics(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry,
+) -> None:
     """Test config entry diagnostics."""
     with patch(
         "tibber.Tibber.update_info",
         return_value=None,
-    ), patch("homeassistant.components.tibber.discovery.async_load_platform"):
+    ):
         assert await async_setup_component(hass, "tibber", {})
 
     await hass.async_block_till_done()

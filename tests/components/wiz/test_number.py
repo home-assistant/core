@@ -17,12 +17,13 @@ from . import (
 )
 
 
-async def test_speed_operation(hass: HomeAssistant) -> None:
+async def test_speed_operation(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test changing a speed."""
     bulb, _ = await async_setup_integration(hass, bulb_type=FAKE_DUAL_HEAD_RGBWW_BULB)
     await async_push_update(hass, bulb, {"mac": FAKE_MAC})
     entity_id = "number.mock_title_effect_speed"
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == f"{FAKE_MAC}_effect_speed"
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
@@ -40,12 +41,13 @@ async def test_speed_operation(hass: HomeAssistant) -> None:
     assert hass.states.get(entity_id).state == "30.0"
 
 
-async def test_ratio_operation(hass: HomeAssistant) -> None:
+async def test_ratio_operation(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test changing a dual head ratio."""
     bulb, _ = await async_setup_integration(hass, bulb_type=FAKE_DUAL_HEAD_RGBWW_BULB)
     await async_push_update(hass, bulb, {"mac": FAKE_MAC})
     entity_id = "number.mock_title_dual_head_ratio"
-    entity_registry = er.async_get(hass)
     assert (
         entity_registry.async_get(entity_id).unique_id == f"{FAKE_MAC}_dual_head_ratio"
     )

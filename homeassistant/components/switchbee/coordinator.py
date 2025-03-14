@@ -6,11 +6,12 @@ from collections.abc import Mapping
 from datetime import timedelta
 import logging
 
+from switchbee.api import CentralUnitPolling, CentralUnitWsRPC
 from switchbee.api.central_unit import SwitchBeeError
-from switchbee.api.polling import CentralUnitPolling
 from switchbee.device import DeviceType, SwitchBeeBaseDevice
 
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -20,26 +21,43 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SwitchBeeCoordinator(DataUpdateCoordinator[Mapping[int, SwitchBeeBaseDevice]]):
-    """Class to manage fetching Freedompro data API."""
+    """Class to manage fetching SwitchBee data API."""
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        swb_api: CentralUnitPolling,
+        config_entry: ConfigEntry,
+        swb_api: CentralUnitPolling | CentralUnitWsRPC,
     ) -> None:
         """Initialize."""
-        self.api: CentralUnitPolling = swb_api
+        self.api: CentralUnitPolling | CentralUnitWsRPC = swb_api
         self._reconnect_counts: int = 0
-        self.mac_formatted: str | None = (
-            None if self.api.mac is None else format_mac(self.api.mac)
+        assert self.api.mac is not None
+        self.unique_id = (
+            self.api.unique_id
+            if self.api.unique_id is not None
+            else format_mac(self.api.mac)
         )
-
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=SCAN_INTERVAL_SEC),
+            update_interval=timedelta(seconds=SCAN_INTERVAL_SEC[type(self.api)]),
         )
+
+        # Register callback for notification WsRPC
+        if isinstance(self.api, CentralUnitWsRPC):
+            self.api.subscribe_updates(self._async_handle_update)
+
+    @callback
+    def _async_handle_update(self, push_data: dict) -> None:
+        """Manually update data and notify listeners."""
+        assert isinstance(self.api, CentralUnitWsRPC)
+        _LOGGER.debug("Received update: %s", push_data)
+        self.async_set_updated_data(self.api.devices)
 
     async def _async_update_data(self) -> Mapping[int, SwitchBeeBaseDevice]:
         """Update data via library."""
@@ -66,14 +84,15 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[Mapping[int, SwitchBeeBaseDevic
                         DeviceType.Shutter,
                         DeviceType.Somfy,
                         DeviceType.Thermostat,
+                        DeviceType.VRFAC,
                     ]
                 )
             except SwitchBeeError as exp:
                 raise UpdateFailed(
                     f"Error communicating with API: {exp}"
                 ) from SwitchBeeError
-            else:
-                _LOGGER.debug("Loaded devices")
+
+            _LOGGER.debug("Loaded devices")
 
         # Get the state of the devices
         try:

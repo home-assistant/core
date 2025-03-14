@@ -1,8 +1,6 @@
 {
   "domain": "thermobeacon",
   "name": "ThermoBeacon",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/thermobeacon",
   "bluetooth": [
     {
       "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
@@ -18,6 +16,12 @@
     },
     {
       "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "manufacturer_id": 20,
+      "manufacturer_data_start": [0],
+      "connectable": false
+    },
+    {
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
       "manufacturer_id": 21,
       "manufacturer_data_start": [0],
       "connectable": false
@@ -28,10 +32,27 @@
       "manufacturer_data_start": [0],
       "connectable": false
     },
-    { "local_name": "ThermoBeacon", "connectable": false }
+    {
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "manufacturer_id": 27,
+      "manufacturer_data_start": [0],
+      "connectable": false
+    },
+    {
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "manufacturer_id": 48,
+      "manufacturer_data_start": [0],
+      "connectable": false
+    },
+    {
+      "local_name": "ThermoBeacon",
+      "connectable": false
+    }
   ],
-  "requirements": ["thermobeacon-ble==0.4.0"],
-  "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
-  "iot_class": "local_push"
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/thermobeacon",
+  "iot_class": "local_push",
+  "requirements": ["thermobeacon-ble==0.8.1"]
 }

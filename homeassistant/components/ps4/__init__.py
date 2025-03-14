@@ -1,4 +1,5 @@
 """Support for PlayStation 4 consoles."""
+
 import logging
 import os
 
@@ -23,11 +24,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import location
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util import location as location_util
+from homeassistant.util.json import JsonObjectType, load_json_object
 
 from .config_flow import PlayStation4FlowHandler  # noqa: F401
 from .const import (
@@ -51,6 +53,8 @@ PS4_COMMAND_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 class PS4Data:
@@ -99,53 +103,54 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Migrate Version 1 -> Version 2: New region codes.
     if version == 1:
-        loc = await location.async_detect_location_info(async_get_clientsession(hass))
+        loc = await location_util.async_detect_location_info(
+            async_get_clientsession(hass)
+        )
         if loc:
             country = COUNTRYCODE_NAMES.get(loc.country_code)
             if country in COUNTRIES:
                 for device in data["devices"]:
                     device[CONF_REGION] = country
-                version = entry.version = 2
-                config_entries.async_update_entry(entry, data=data)
-                _LOGGER.info(
-                    "PlayStation 4 Config Updated: \
-                    Region changed to: %s",
+                version = 2
+                config_entries.async_update_entry(entry, data=data, version=2)
+                _LOGGER.debug(
+                    "PlayStation 4 Config Updated: Region changed to: %s",
                     country,
                 )
 
     # Migrate Version 2 -> Version 3: Update identifier format.
     if version == 2:
         # Prevent changing entity_id. Updates entity registry.
-        registry = entity_registry.async_get(hass)
+        registry = er.async_get(hass)
 
-        for entity_id, e_entry in registry.entities.items():
-            if e_entry.config_entry_id == entry.entry_id:
-                unique_id = e_entry.unique_id
+        for e_entry in registry.entities.get_entries_for_config_entry_id(
+            entry.entry_id
+        ):
+            unique_id = e_entry.unique_id
+            entity_id = e_entry.entity_id
 
-                # Remove old entity entry.
-                registry.async_remove(entity_id)
+            # Remove old entity entry.
+            registry.async_remove(entity_id)
 
-                # Format old unique_id.
-                unique_id = format_unique_id(entry.data[CONF_TOKEN], unique_id)
+            # Format old unique_id.
+            unique_id = format_unique_id(entry.data[CONF_TOKEN], unique_id)
 
-                # Create new entry with old entity_id.
-                new_id = split_entity_id(entity_id)[1]
-                registry.async_get_or_create(
-                    "media_player",
-                    DOMAIN,
-                    unique_id,
-                    suggested_object_id=new_id,
-                    config_entry=entry,
-                    device_id=e_entry.device_id,
-                )
-                entry.version = 3
-                _LOGGER.info(
-                    "PlayStation 4 identifier for entity: %s \
-                    has changed",
-                    entity_id,
-                )
-                config_entries.async_update_entry(entry)
-                return True
+            # Create new entry with old entity_id.
+            new_id = split_entity_id(entity_id)[1]
+            registry.async_get_or_create(
+                "media_player",
+                DOMAIN,
+                unique_id,
+                suggested_object_id=new_id,
+                config_entry=entry,
+                device_id=e_entry.device_id,
+            )
+            _LOGGER.debug(
+                "PlayStation 4 identifier for entity: %s has changed",
+                entity_id,
+            )
+            config_entries.async_update_entry(entry, version=3)
+            return True
 
     msg = f"""{reason[version]} for the PlayStation 4 Integration.
             Please remove the PS4 Integration and re-configure
@@ -166,18 +171,14 @@ def format_unique_id(creds, mac_address):
     return f"{mac_address}_{suffix}"
 
 
-def load_games(hass: HomeAssistant, unique_id: str) -> dict:
+def load_games(hass: HomeAssistant, unique_id: str) -> JsonObjectType:
     """Load games for sources."""
     g_file = hass.config.path(GAMES_FILE.format(unique_id))
     try:
-        games = load_json(g_file)
+        games = load_json_object(g_file)
     except HomeAssistantError as error:
         games = {}
         _LOGGER.error("Failed to load games file: %s", error)
-
-    if not isinstance(games, dict):
-        _LOGGER.error("Games file was not parsed correctly")
-        games = {}
 
     # If file exists
     if os.path.isfile(g_file):

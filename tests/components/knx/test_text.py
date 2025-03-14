@@ -1,4 +1,5 @@
 """Test KNX number."""
+
 from homeassistant.components.knx.const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from homeassistant.components.knx.schema import TextSchema
 from homeassistant.const import CONF_NAME
@@ -9,7 +10,7 @@ from .conftest import KNXTestKit
 from tests.common import mock_restore_cache
 
 
-async def test_text(hass: HomeAssistant, knx: KNXTestKit):
+async def test_text(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX text."""
     test_address = "1/1/1"
     await knx.setup_integration(
@@ -58,7 +59,7 @@ async def test_text(hass: HomeAssistant, knx: KNXTestKit):
     assert state.state == "hallo"
 
 
-async def test_text_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit):
+async def test_text_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX text with passive_address, restoring state and respond_to_read."""
     test_address = "1/1/1"
     test_passive_address = "3/3/3"

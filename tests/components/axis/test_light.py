@@ -1,25 +1,28 @@
 """Axis light platform tests."""
 
-from copy import deepcopy
+from typing import Any
 from unittest.mock import patch
 
-from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
+from axis.models.api import CONTEXT
+import pytest
+import respx
+from syrupy import SnapshotAssertion
+
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
-    STATE_ON,
+    Platform,
 )
-from homeassistant.setup import async_setup_component
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .test_device import (
-    API_DISCOVERY_RESPONSE,
-    LIGHT_CONTROL_RESPONSE,
-    NAME,
-    setup_axis_integration,
-)
+from .conftest import ConfigEntryFactoryType, RtspEventMock
+from .const import DEFAULT_HOST, NAME
+
+from tests.common import snapshot_platform
 
 API_DISCOVERY_LIGHT_CONTROL = {
     "id": "light-control",
@@ -28,37 +31,54 @@ API_DISCOVERY_LIGHT_CONTROL = {
 }
 
 
-async def test_platform_manually_configured(hass):
-    """Test that nothing happens when platform is manually configured."""
-    assert await async_setup_component(
-        hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": AXIS_DOMAIN}}
+@pytest.fixture
+def light_control_items() -> list[dict[str, Any]]:
+    """Available lights."""
+    return [
+        {
+            "lightID": "led0",
+            "lightType": "IR",
+            "enabled": True,
+            "synchronizeDayNightMode": True,
+            "lightState": False,
+            "automaticIntensityMode": False,
+            "automaticAngleOfIlluminationMode": False,
+            "nrOfLEDs": 1,
+            "error": False,
+            "errorInfo": "",
+        }
+    ]
+
+
+@pytest.fixture(autouse=True)
+def light_control_fixture(light_control_items: list[dict[str, Any]]) -> None:
+    """Light control mock response."""
+    data = {
+        "apiVersion": "1.1",
+        "context": CONTEXT,
+        "method": "getLightInformation",
+        "data": {"items": light_control_items},
+    }
+    respx.post(
+        f"http://{DEFAULT_HOST}:80/axis-cgi/lightcontrol.cgi",
+        json={
+            "apiVersion": "1.1",
+            "context": CONTEXT,
+            "method": "getLightInformation",
+        },
+    ).respond(
+        json=data,
     )
 
-    assert AXIS_DOMAIN not in hass.data
 
-
-async def test_no_lights(hass):
-    """Test that no light events in Axis results in no light entities."""
-    await setup_axis_integration(hass)
-
-    assert not hass.states.async_entity_ids(LIGHT_DOMAIN)
-
-
+@pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_LIGHT_CONTROL])
+@pytest.mark.parametrize("light_control_items", [[]])
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_no_light_entity_without_light_control_representation(
-    hass, mock_rtsp_event
-):
+    hass: HomeAssistant,
+    mock_rtsp_event: RtspEventMock,
+) -> None:
     """Verify no lights entities get created without light control representation."""
-    api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
-    api_discovery["data"]["apiList"].append(API_DISCOVERY_LIGHT_CONTROL)
-
-    light_control = deepcopy(LIGHT_CONTROL_RESPONSE)
-    light_control["data"]["items"] = []
-
-    with patch.dict(API_DISCOVERY_RESPONSE, api_discovery), patch.dict(
-        LIGHT_CONTROL_RESPONSE, light_control
-    ):
-        await setup_axis_integration(hass)
-
     mock_rtsp_event(
         topic="tns1:Device/tnsaxis:Light/Status",
         data_type="state",
@@ -71,47 +91,70 @@ async def test_no_light_entity_without_light_control_representation(
     assert not hass.states.async_entity_ids(LIGHT_DOMAIN)
 
 
-async def test_lights(hass, mock_rtsp_event):
+@pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_LIGHT_CONTROL])
+async def test_lights(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_rtsp_event: RtspEventMock,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test that lights are loaded properly."""
-    api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
-    api_discovery["data"]["apiList"].append(API_DISCOVERY_LIGHT_CONTROL)
-
-    with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
-        await setup_axis_integration(hass)
-
     # Add light
-    with patch(
-        "axis.light_control.LightControl.get_current_intensity",
-        return_value={"data": {"intensity": 100}},
-    ), patch(
-        "axis.light_control.LightControl.get_valid_intensity",
-        return_value={"data": {"ranges": [{"high": 150}]}},
-    ):
-        mock_rtsp_event(
-            topic="tns1:Device/tnsaxis:Light/Status",
-            data_type="state",
-            data_value="ON",
-            source_name="id",
-            source_idx="0",
-        )
-        await hass.async_block_till_done()
+    respx.post(
+        f"http://{DEFAULT_HOST}:80/axis-cgi/lightcontrol.cgi",
+        json={
+            "apiVersion": "1.1",
+            "context": CONTEXT,
+            "method": "getCurrentIntensity",
+            "params": {"lightID": "led0"},
+        },
+    ).respond(
+        json={
+            "apiVersion": "1.1",
+            "context": "Axis library",
+            "method": "getCurrentIntensity",
+            "data": {"intensity": 100},
+        },
+    )
+    respx.post(
+        f"http://{DEFAULT_HOST}:80/axis-cgi/lightcontrol.cgi",
+        json={
+            "apiVersion": "1.1",
+            "context": CONTEXT,
+            "method": "getValidIntensity",
+            "params": {"lightID": "led0"},
+        },
+    ).respond(
+        json={
+            "apiVersion": "1.1",
+            "context": "Axis library",
+            "method": "getValidIntensity",
+            "data": {"ranges": [{"low": 0, "high": 150}]},
+        },
+    )
 
-    assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 1
+    with patch("homeassistant.components.axis.PLATFORMS", [Platform.LIGHT]):
+        config_entry = await config_entry_factory()
+
+    mock_rtsp_event(
+        topic="tns1:Device/tnsaxis:Light/Status",
+        data_type="state",
+        data_value="ON",
+        source_name="id",
+        source_idx="0",
+    )
+    await hass.async_block_till_done()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     entity_id = f"{LIGHT_DOMAIN}.{NAME}_ir_light_0"
 
-    light_0 = hass.states.get(entity_id)
-    assert light_0.state == STATE_ON
-    assert light_0.name == f"{NAME} IR Light 0"
-
     # Turn on, set brightness, light already on
-    with patch(
-        "axis.light_control.LightControl.activate_light"
-    ) as mock_activate, patch(
-        "axis.light_control.LightControl.set_manual_intensity"
-    ) as mock_set_intensity, patch(
-        "axis.light_control.LightControl.get_current_intensity",
-        return_value={"data": {"intensity": 100}},
+    with (
+        patch("axis.interfaces.vapix.LightHandler.activate_light") as mock_activate,
+        patch(
+            "axis.interfaces.vapix.LightHandler.set_manual_intensity"
+        ) as mock_set_intensity,
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -124,11 +167,8 @@ async def test_lights(hass, mock_rtsp_event):
 
     # Turn off
     with patch(
-        "axis.light_control.LightControl.deactivate_light"
-    ) as mock_deactivate, patch(
-        "axis.light_control.LightControl.get_current_intensity",
-        return_value={"data": {"intensity": 100}},
-    ):
+        "axis.interfaces.vapix.LightHandler.deactivate_light"
+    ) as mock_deactivate:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -151,13 +191,11 @@ async def test_lights(hass, mock_rtsp_event):
     assert light_0.state == STATE_OFF
 
     # Turn on, set brightness
-    with patch(
-        "axis.light_control.LightControl.activate_light"
-    ) as mock_activate, patch(
-        "axis.light_control.LightControl.set_manual_intensity"
-    ) as mock_set_intensity, patch(
-        "axis.light_control.LightControl.get_current_intensity",
-        return_value={"data": {"intensity": 100}},
+    with (
+        patch("axis.interfaces.vapix.LightHandler.activate_light") as mock_activate,
+        patch(
+            "axis.interfaces.vapix.LightHandler.set_manual_intensity"
+        ) as mock_set_intensity,
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -170,11 +208,8 @@ async def test_lights(hass, mock_rtsp_event):
 
     # Turn off, light already off
     with patch(
-        "axis.light_control.LightControl.deactivate_light"
-    ) as mock_deactivate, patch(
-        "axis.light_control.LightControl.get_current_intensity",
-        return_value={"data": {"intensity": 100}},
-    ):
+        "axis.interfaces.vapix.LightHandler.deactivate_light"
+    ) as mock_deactivate:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,

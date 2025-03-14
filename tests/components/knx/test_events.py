@@ -1,5 +1,9 @@
 """Test KNX events."""
 
+import logging
+
+import pytest
+
 from homeassistant.components.knx import CONF_EVENT, CONF_TYPE, KNX_ADDRESS
 from homeassistant.core import HomeAssistant
 
@@ -8,7 +12,11 @@ from .conftest import KNXTestKit
 from tests.common import async_capture_events
 
 
-async def test_knx_event(hass: HomeAssistant, knx: KNXTestKit):
+async def test_knx_event(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    knx: KNXTestKit,
+) -> None:
     """Test the `knx_event` event."""
     test_group_a = "0/4/*"
     test_address_a_1 = "0/4/0"
@@ -23,7 +31,6 @@ async def test_knx_event(hass: HomeAssistant, knx: KNXTestKit):
     events = async_capture_events(hass, "knx_event")
 
     async def test_event_data(address, payload, value=None):
-        await hass.async_block_till_done()
         assert len(events) == 1
         event = events.pop()
         assert event.data["data"] == payload
@@ -61,7 +68,6 @@ async def test_knx_event(hass: HomeAssistant, knx: KNXTestKit):
     )
 
     # no event received
-    await hass.async_block_till_done()
     assert len(events) == 0
 
     # receive telegrams for group addresses matching the filter
@@ -93,5 +99,17 @@ async def test_knx_event(hass: HomeAssistant, knx: KNXTestKit):
     await knx.receive_write("0/5/0", True)
     await knx.receive_write("1/7/0", True)
     await knx.receive_write("2/6/6", True)
-    await hass.async_block_till_done()
     assert len(events) == 0
+
+    # receive telegrams with wrong payload length
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        await knx.receive_write(test_address_a_1, (0x03, 0x2F, 0xFF))
+        assert len(caplog.messages) == 1
+        record = caplog.records[0]
+        assert record.levelname == "WARNING"
+        assert (
+            "Error in `knx_event` at decoding type "
+            "'DPT2ByteUnsigned' from telegram" in record.message
+        )
+    await test_event_data(test_address_a_1, (0x03, 0x2F, 0xFF), value=None)

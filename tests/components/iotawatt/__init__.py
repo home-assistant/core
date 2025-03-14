@@ -1,4 +1,5 @@
 """Tests for the IoTaWatt integration."""
+
 from iotawattpy.sensor import Sensor
 
 INPUT_SENSOR = Sensor(
@@ -21,28 +22,4 @@ OUTPUT_SENSOR = Sensor(
     begin="",
     mac_addr="mock-mac",
     fromStart=True,
-)
-
-INPUT_ACCUMULATED_SENSOR = Sensor(
-    channel="N/A",
-    base_name="My WattHour Accumulated Input Sensor",
-    suffix=".wh",
-    io_type="Input",
-    unit="WattHours",
-    value=500,
-    begin="",
-    mac_addr="mock-mac",
-    fromStart=False,
-)
-
-OUTPUT_ACCUMULATED_SENSOR = Sensor(
-    channel="N/A",
-    base_name="My WattHour Accumulated Output Sensor",
-    suffix=".wh",
-    io_type="Output",
-    unit="WattHours",
-    value=200,
-    begin="",
-    mac_addr="mock-mac",
-    fromStart=False,
 )

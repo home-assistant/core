@@ -1,13 +1,14 @@
 """Coordinator for radiotherm."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from socket import timeout
 from urllib.error import URLError
 
 from radiotherm.validate import RadiothermTstatError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -21,13 +22,21 @@ UPDATE_INTERVAL = timedelta(seconds=15)
 class RadioThermUpdateCoordinator(DataUpdateCoordinator[RadioThermUpdate]):
     """DataUpdateCoordinator to gather data for radio thermostats."""
 
-    def __init__(self, hass: HomeAssistant, init_data: RadioThermInitData) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        init_data: RadioThermInitData,
+    ) -> None:
         """Initialize DataUpdateCoordinator."""
         self.init_data = init_data
         self._description = f"{init_data.name} ({init_data.host})"
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"radiotherm {self.init_data.name}",
             update_interval=UPDATE_INTERVAL,
         )
@@ -39,9 +48,9 @@ class RadioThermUpdateCoordinator(DataUpdateCoordinator[RadioThermUpdate]):
         except RadiothermTstatError as ex:
             msg = f"{self._description} was busy (invalid value returned): {ex}"
             raise UpdateFailed(msg) from ex
+        except TimeoutError as ex:
+            msg = f"{self._description}) timed out waiting for a response: {ex}"
+            raise UpdateFailed(msg) from ex
         except (OSError, URLError) as ex:
             msg = f"{self._description} connection error: {ex}"
-            raise UpdateFailed(msg) from ex
-        except timeout as ex:
-            msg = f"{self._description}) timed out waiting for a response: {ex}"
             raise UpdateFailed(msg) from ex

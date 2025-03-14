@@ -1,16 +1,16 @@
 """The Picnic integration."""
 
-from python_picnic_api import PicnicAPI
+from python_picnic_api2 import PicnicAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY_CODE, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_API, CONF_COORDINATOR, CONF_COUNTRY_CODE, DOMAIN
+from .const import CONF_API, CONF_COORDINATOR, DOMAIN
 from .coordinator import PicnicUpdateCoordinator
 from .services import async_register_services
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.TODO]
 
 
 def create_picnic_client(entry: ConfigEntry):

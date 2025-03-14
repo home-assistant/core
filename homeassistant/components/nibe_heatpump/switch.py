@@ -1,27 +1,30 @@
 """The Nibe Heat Pump switch."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from nibe.coil import Coil
+from nibe.coil import Coil, CoilData
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, CoilEntity, Coordinator
+from .const import DOMAIN
+from .coordinator import CoilCoordinator
+from .entity import CoilEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up platform."""
 
-    coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: CoilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
         Switch(coordinator, coil)
@@ -35,13 +38,12 @@ class Switch(CoilEntity, SwitchEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
 
-    def __init__(self, coordinator: Coordinator, coil: Coil) -> None:
+    def __init__(self, coordinator: CoilCoordinator, coil: Coil) -> None:
         """Initialize entity."""
         super().__init__(coordinator, coil, ENTITY_ID_FORMAT)
-        self._attr_is_on = None
 
-    def _async_read_coil(self, coil: Coil) -> None:
-        self._attr_is_on = coil.value == "ON"
+    def _async_read_coil(self, data: CoilData) -> None:
+        self._attr_is_on = data.value == "ON"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

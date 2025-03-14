@@ -1,4 +1,5 @@
 """Support for ThinkingCleaner sensors."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,13 +9,13 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import CONF_HOST, PERCENTAGE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -65,7 +66,7 @@ STATES = {
     "st_unknown": "Unknown state",
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
 
 
 def setup_platform(
@@ -99,7 +100,9 @@ def setup_platform(
 class ThinkingCleanerSensor(SensorEntity):
     """Representation of a ThinkingCleaner Sensor."""
 
-    def __init__(self, tc_object, update_devices, description: SensorEntityDescription):
+    def __init__(
+        self, tc_object, update_devices, description: SensorEntityDescription
+    ) -> None:
         """Initialize the ThinkingCleaner."""
         self.entity_description = description
         self._tc_object = tc_object

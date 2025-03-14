@@ -1,4 +1,5 @@
 """GoodWe PV inverter selection settings entities."""
+
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -8,33 +9,26 @@ from goodwe import Inverter, InverterError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class GoodweButtonEntityDescriptionRequired:
-    """Required attributes of GoodweButtonEntityDescription."""
+@dataclass(frozen=True, kw_only=True)
+class GoodweButtonEntityDescription(ButtonEntityDescription):
+    """Class describing Goodwe button entities."""
 
     action: Callable[[Inverter], Awaitable[None]]
 
 
-@dataclass
-class GoodweButtonEntityDescription(
-    ButtonEntityDescription, GoodweButtonEntityDescriptionRequired
-):
-    """Class describing Goodwe button entities."""
-
-
 SYNCHRONIZE_CLOCK = GoodweButtonEntityDescription(
     key="synchronize_clock",
-    name="Synchronize inverter clock",
-    icon="mdi:clock-check-outline",
+    translation_key="synchronize_clock",
     entity_category=EntityCategory.CONFIG,
     action=lambda inv: inv.write_setting("time", datetime.now()),
 )
@@ -43,7 +37,7 @@ SYNCHRONIZE_CLOCK = GoodweButtonEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the inverter button entities from a config entry."""
     inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
@@ -65,6 +59,7 @@ class GoodweButtonEntity(ButtonEntity):
     """Entity representing the inverter clock synchronization button."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
     entity_description: GoodweButtonEntityDescription
 
     def __init__(

@@ -1,18 +1,11 @@
 # Describes the format for available HomeKit services
 
 reload:
-  name: Reload
-  description: Reload homekit and re-process YAML configuration
-
 reset_accessory:
-  name: Reset accessory
-  description: Reset a HomeKit accessory
   target:
     entity: {}
 
 unpair:
-  name: Unpair an accessory or bridge
-  description: Forcefully remove all pairings from an accessory to allow re-pairing. Use this service if the accessory is no longer responsive, and you want to avoid deleting and re-adding the entry. Room locations, and accessory preferences will be lost.
   target:
     device:
       integration: homekit

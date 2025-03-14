@@ -1,43 +1,45 @@
 """The tests for the Home Assistant HTTP component."""
-from http import HTTPStatus
 
-# pylint: disable=protected-access
+from http import HTTPStatus
 from ipaddress import ip_address
 import os
-from unittest.mock import Mock, mock_open, patch
+from unittest.mock import AsyncMock, Mock, mock_open, patch
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
 import pytest
 
-import homeassistant.components.http as http
-from homeassistant.components.http import KEY_AUTHENTICATED
+from homeassistant.components import http
+from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS
 from homeassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
-    IpBanManager,
+    process_success_login,
     setup_bans,
 )
 from homeassistant.components.http.view import request_handler_factory
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from . import mock_real_ip
+from tests.common import async_get_persistent_notifications
+from tests.test_util import mock_real_ip
+from tests.typing import ClientSessionGenerator
 
 SUPERVISOR_IP = "1.2.3.4"
 BANNED_IPS = ["200.201.202.203", "100.64.0.2"]
-BANNED_IPS_WITH_SUPERVISOR = BANNED_IPS + [SUPERVISOR_IP]
+BANNED_IPS_WITH_SUPERVISOR = [*BANNED_IPS, SUPERVISOR_IP]
 
 
 @pytest.fixture(name="hassio_env")
-def hassio_env_fixture():
+def hassio_env_fixture(supervisor_is_connected: AsyncMock):
     """Fixture to inject hassio env."""
-    with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
-        "homeassistant.components.hassio.HassIO.is_connected",
-        return_value={"result": "ok", "data": {}},
-    ), patch.dict(os.environ, {"SUPERVISOR_TOKEN": "123456"}):
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
+        patch.dict(os.environ, {"SUPERVISOR_TOKEN": "123456"}),
+    ):
         yield
 
 
@@ -51,10 +53,12 @@ def gethostbyaddr_mock():
         yield
 
 
-async def test_access_from_banned_ip(hass, aiohttp_client):
+async def test_access_from_banned_ip(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test accessing to server from banned IP. Both trusted and not."""
     app = web.Application()
-    app["hass"] = hass
+    app[KEY_HASS] = hass
     setup_bans(hass, app, 5)
     set_real_ip = mock_real_ip(app)
 
@@ -73,15 +77,17 @@ async def test_access_from_banned_ip(hass, aiohttp_client):
 
 
 async def test_access_from_banned_ip_with_partially_broken_yaml_file(
-    hass, aiohttp_client, caplog
-):
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test accessing to server from banned IP. Both trusted and not.
 
     We inject some garbage into the yaml file to make sure it can
     still load the bans.
     """
     app = web.Application()
-    app["hass"] = hass
+    app[KEY_HASS] = hass
     setup_bans(hass, app, 5)
     set_real_ip = mock_real_ip(app)
 
@@ -107,10 +113,12 @@ async def test_access_from_banned_ip_with_partially_broken_yaml_file(
     assert "Failed to load IP ban" in caplog.text
 
 
-async def test_no_ip_bans_file(hass, aiohttp_client):
+async def test_no_ip_bans_file(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test no ip bans file."""
     app = web.Application()
-    app["hass"] = hass
+    app[KEY_HASS] = hass
     setup_bans(hass, app, 5)
     set_real_ip = mock_real_ip(app)
 
@@ -125,10 +133,12 @@ async def test_no_ip_bans_file(hass, aiohttp_client):
     assert resp.status == HTTPStatus.NOT_FOUND
 
 
-async def test_failure_loading_ip_bans_file(hass, aiohttp_client):
+async def test_failure_loading_ip_bans_file(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Test failure loading ip bans file."""
     app = web.Application()
-    app["hass"] = hass
+    app[KEY_HASS] = hass
     setup_bans(hass, app, 5)
     set_real_ip = mock_real_ip(app)
 
@@ -143,10 +153,14 @@ async def test_failure_loading_ip_bans_file(hass, aiohttp_client):
     assert resp.status == HTTPStatus.NOT_FOUND
 
 
-async def test_ip_ban_manager_never_started(hass, aiohttp_client, caplog):
+async def test_ip_ban_manager_never_started(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test we handle the ip ban manager not being started."""
     app = web.Application()
-    app["hass"] = hass
+    app[KEY_HASS] = hass
     setup_bans(hass, app, 5)
     set_real_ip = mock_real_ip(app)
 
@@ -166,21 +180,28 @@ async def test_ip_ban_manager_never_started(hass, aiohttp_client, caplog):
 
 
 @pytest.mark.parametrize(
-    "remote_addr, bans, status",
+    ("remote_addr", "bans", "status"),
     list(
         zip(
             BANNED_IPS_WITH_SUPERVISOR,
             [1, 1, 0],
             [HTTPStatus.FORBIDDEN, HTTPStatus.FORBIDDEN, HTTPStatus.UNAUTHORIZED],
+            strict=False,
         )
     ),
 )
 async def test_access_from_supervisor_ip(
-    remote_addr, bans, status, hass, aiohttp_client, hassio_env
-):
+    remote_addr,
+    bans,
+    status,
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    hassio_env,
+    resolution_info: AsyncMock,
+) -> None:
     """Test accessing to server from supervisor IP."""
     app = web.Application()
-    app["hass"] = hass
+    app[KEY_HASS] = hass
 
     async def unauth_handler(request):
         """Return a mock web response."""
@@ -196,24 +217,15 @@ async def test_access_from_supervisor_ip(
     ):
         client = await aiohttp_client(app)
 
-    manager: IpBanManager = app[KEY_BAN_MANAGER]
+    manager = app[KEY_BAN_MANAGER]
 
-    with patch(
-        "homeassistant.components.hassio.HassIO.get_resolution_info",
-        return_value={
-            "unsupported": [],
-            "unhealthy": [],
-            "suggestions": [],
-            "issues": [],
-            "checks": [],
-        },
-    ):
-        assert await async_setup_component(hass, "hassio", {"hassio": {}})
+    assert await async_setup_component(hass, "hassio", {"hassio": {}})
 
     m_open = mock_open()
 
-    with patch.dict(os.environ, {"SUPERVISOR": SUPERVISOR_IP}), patch(
-        "homeassistant.components.http.ban.open", m_open, create=True
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": SUPERVISOR_IP}),
+        patch("homeassistant.components.http.ban.open", m_open, create=True),
     ):
         resp = await client.get("/")
         assert resp.status == HTTPStatus.UNAUTHORIZED
@@ -226,7 +238,7 @@ async def test_access_from_supervisor_ip(
         assert len(manager.ip_bans_lookup) == bans
 
 
-async def test_ban_middleware_not_loaded_by_config(hass):
+async def test_ban_middleware_not_loaded_by_config(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
     with patch("homeassistant.components.http.setup_bans") as mock_setup:
         await async_setup_component(
@@ -236,7 +248,7 @@ async def test_ban_middleware_not_loaded_by_config(hass):
     assert len(mock_setup.mock_calls) == 0
 
 
-async def test_ban_middleware_loaded_by_default(hass):
+async def test_ban_middleware_loaded_by_default(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
     with patch("homeassistant.components.http.setup_bans") as mock_setup:
         await async_setup_component(hass, "http", {"http": {}})
@@ -244,10 +256,14 @@ async def test_ban_middleware_loaded_by_default(hass):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_ip_bans_file_creation(hass, aiohttp_client, caplog):
+async def test_ip_bans_file_creation(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Testing if banned IP file created."""
     app = web.Application()
-    app["hass"] = hass
+    app[KEY_HASS] = hass
 
     async def unauth_handler(request):
         """Return a mock web response."""
@@ -265,7 +281,7 @@ async def test_ip_bans_file_creation(hass, aiohttp_client, caplog):
     ):
         client = await aiohttp_client(app)
 
-    manager: IpBanManager = app[KEY_BAN_MANAGER]
+    manager = app[KEY_BAN_MANAGER]
     m_open = mock_open()
 
     with patch("homeassistant.components.http.ban.open", m_open, create=True):
@@ -285,11 +301,10 @@ async def test_ip_bans_file_creation(hass, aiohttp_client, caplog):
         assert resp.status == HTTPStatus.FORBIDDEN
         assert m_open.call_count == 1
 
+        notifications = async_get_persistent_notifications(hass)
+        assert len(notifications) == 2
         assert (
-            len(notifications := hass.states.async_all("persistent_notification")) == 2
-        )
-        assert (
-            notifications[0].attributes["message"]
+            notifications["http-login"]["message"]
             == "Login attempt or request with invalid authentication from example.com (200.201.202.204). See the log for details."
         )
 
@@ -299,23 +314,32 @@ async def test_ip_bans_file_creation(hass, aiohttp_client, caplog):
         )
 
 
-async def test_failed_login_attempts_counter(hass, aiohttp_client):
+async def test_failed_login_attempts_counter(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Testing if failed login attempts counter increased."""
     app = web.Application()
-    app["hass"] = hass
+    app[KEY_HASS] = hass
 
     async def auth_handler(request):
         """Return 200 status code."""
         return None, 200
 
+    async def auth_true_handler(request):
+        """Return 200 status code."""
+        process_success_login(request)
+        return None, 200
+
     app.router.add_get(
-        "/auth_true", request_handler_factory(Mock(requires_auth=True), auth_handler)
+        "/auth_true",
+        request_handler_factory(hass, Mock(requires_auth=True), auth_true_handler),
     )
     app.router.add_get(
-        "/auth_false", request_handler_factory(Mock(requires_auth=True), auth_handler)
+        "/auth_false",
+        request_handler_factory(hass, Mock(requires_auth=True), auth_handler),
     )
     app.router.add_get(
-        "/", request_handler_factory(Mock(requires_auth=False), auth_handler)
+        "/", request_handler_factory(hass, Mock(requires_auth=False), auth_handler)
     )
 
     setup_bans(hass, app, 5)
@@ -351,4 +375,38 @@ async def test_failed_login_attempts_counter(hass, aiohttp_client):
     # We no longer support trusted networks.
     resp = await client.get("/auth_true")
     assert resp.status == HTTPStatus.OK
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 0
+
+    resp = await client.get("/auth_false")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
+
+    resp = await client.get("/auth_false")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
+
+
+async def test_single_ban_file_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test that only one item is added to ban file."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request):
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/example", unauth_handler)
+    setup_bans(hass, app, 2)
+    mock_real_ip(app)("200.201.202.204")
+
+    manager = app[KEY_BAN_MANAGER]
+    m_open = mock_open()
+
+    with patch("homeassistant.components.http.ban.open", m_open, create=True):
+        remote_ip = ip_address("200.201.202.204")
+        await manager.async_add_ban(remote_ip)
+        await manager.async_add_ban(remote_ip)
+
+    assert m_open.call_count == 1

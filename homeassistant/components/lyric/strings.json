@@ -12,16 +12,55 @@
     "abort": {
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
-  "issues": {
-    "removed_yaml": {
-      "title": "The Honeywell Lyric YAML configuration has been removed",
-      "description": "Configuring Honeywell Lyric using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+  "entity": {
+    "sensor": {
+      "indoor_temperature": {
+        "name": "Indoor temperature"
+      },
+      "indoor_humidity": {
+        "name": "Indoor humidity"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "outdoor_humidity": {
+        "name": "Outdoor humidity"
+      },
+      "next_period_time": {
+        "name": "Next period time"
+      },
+      "setpoint_status": {
+        "name": "Setpoint status"
+      },
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "room_humidity": {
+        "name": "Room humidity"
+      }
+    }
+  },
+  "services": {
+    "set_hold_time": {
+      "name": "Set hold time",
+      "description": "Sets the time period to keep the temperature and override the schedule.",
+      "fields": {
+        "time_period": {
+          "name": "Time period",
+          "description": "Duration for which to override the schedule."
+        }
+      }
     }
   }
 }

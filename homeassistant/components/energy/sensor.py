@@ -1,8 +1,9 @@
 """Helper sensor for calculating utility costs."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import copy
 from dataclasses import dataclass
 import logging
@@ -28,8 +29,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import unit_conversion
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, unit_conversion
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import DOMAIN
@@ -41,17 +41,20 @@ SUPPORTED_STATE_CLASSES = {
     SensorStateClass.TOTAL_INCREASING,
 }
 VALID_ENERGY_UNITS: set[str] = {
-    UnitOfEnergy.WATT_HOUR,
-    UnitOfEnergy.KILO_WATT_HOUR,
-    UnitOfEnergy.MEGA_WATT_HOUR,
     UnitOfEnergy.GIGA_JOULE,
+    UnitOfEnergy.KILO_WATT_HOUR,
+    UnitOfEnergy.MEGA_JOULE,
+    UnitOfEnergy.MEGA_WATT_HOUR,
+    UnitOfEnergy.WATT_HOUR,
 }
 VALID_ENERGY_UNITS_GAS = {
+    UnitOfVolume.CENTUM_CUBIC_FEET,
     UnitOfVolume.CUBIC_FEET,
     UnitOfVolume.CUBIC_METERS,
     *VALID_ENERGY_UNITS,
 }
 VALID_VOLUME_UNITS_WATER: set[str] = {
+    UnitOfVolume.CENTUM_CUBIC_FEET,
     UnitOfVolume.CUBIC_FEET,
     UnitOfVolume.CUBIC_METERS,
     UnitOfVolume.GALLONS,
@@ -71,7 +74,7 @@ async def async_setup_platform(
     await sensor_manager.async_start()
 
 
-@dataclass
+@dataclass(slots=True)
 class SourceAdapter:
     """Adapter to allow sources and their flows to be used as sensors."""
 
@@ -145,7 +148,7 @@ class SensorManager:
         async def finish() -> None:
             if to_add:
                 self.async_add_entities(to_add)
-                await asyncio.gather(*(ent.add_finished.wait() for ent in to_add))
+                await asyncio.wait(ent.add_finished for ent in to_add)
 
             for key, entity in to_remove.items():
                 self.current_entities.pop(key)
@@ -163,8 +166,7 @@ class SensorManager:
                 if adapter.flow_type is None:
                     self._process_sensor_data(
                         adapter,
-                        # Opting out of the type complexity because can't get it to work
-                        energy_source,  # type: ignore[arg-type]
+                        energy_source,
                         to_add,
                         to_remove,
                     )
@@ -173,8 +175,7 @@ class SensorManager:
                 for flow in energy_source[adapter.flow_type]:  # type: ignore[typeddict-item]
                     self._process_sensor_data(
                         adapter,
-                        # Opting out of the type complexity because can't get it to work
-                        flow,  # type: ignore[arg-type]
+                        flow,
                         to_add,
                         to_remove,
                     )
@@ -185,7 +186,7 @@ class SensorManager:
     def _process_sensor_data(
         self,
         adapter: SourceAdapter,
-        config: dict,
+        config: Mapping[str, Any],
         to_add: list[EnergyCostSensor],
         to_remove: dict[tuple[str, str | None, str], EnergyCostSensor],
     ) -> None:
@@ -215,6 +216,12 @@ class SensorManager:
         to_add.append(self.current_entities[key])
 
 
+def _set_result_unless_done(future: asyncio.Future[None]) -> None:
+    """Set the result of a future unless it is done."""
+    if not future.done():
+        future.set_result(None)
+
+
 class EnergyCostSensor(SensorEntity):
     """Calculate costs incurred by consuming energy.
 
@@ -223,13 +230,15 @@ class EnergyCostSensor(SensorEntity):
     """
 
     _attr_entity_registry_visible_default = False
+    _attr_should_poll = False
+
     _wrong_state_class_reported = False
     _wrong_unit_reported = False
 
     def __init__(
         self,
         adapter: SourceAdapter,
-        config: dict,
+        config: Mapping[str, Any],
     ) -> None:
         """Initialize the sensor."""
         super().__init__()
@@ -242,7 +251,9 @@ class EnergyCostSensor(SensorEntity):
         self._last_energy_sensor_state: State | None = None
         # add_finished is set when either of async_added_to_hass or add_to_platform_abort
         # is called
-        self.add_finished = asyncio.Event()
+        self.add_finished: asyncio.Future[None] = (
+            asyncio.get_running_loop().create_future()
+        )
 
     def _reset(self, energy_state: State) -> None:
         """Reset the cost sensor."""
@@ -312,6 +323,11 @@ class EnergyCostSensor(SensorEntity):
             try:
                 energy_price = float(energy_price_state.state)
             except ValueError:
+                if self._last_energy_sensor_state is None:
+                    # Initialize as it's the first time all required entities except
+                    # price are in place. This means that the cost will update the first
+                    # time the energy is updated after the price entity is in place.
+                    self._reset(energy_state)
                 return
 
             energy_price_unit: str | None = energy_price_state.attributes.get(
@@ -348,17 +364,15 @@ class EnergyCostSensor(SensorEntity):
             state_class != SensorStateClass.TOTAL_INCREASING
             and energy_state.attributes.get(ATTR_LAST_RESET)
             != self._last_energy_sensor_state.attributes.get(ATTR_LAST_RESET)
-        ):
-            # Energy meter was reset, reset cost sensor too
-            energy_state_copy = copy.copy(energy_state)
-            energy_state_copy.state = "0.0"
-            self._reset(energy_state_copy)
-        elif state_class == SensorStateClass.TOTAL_INCREASING and reset_detected(
-            self.hass,
-            cast(str, self._config[self._adapter.stat_energy_key]),
-            energy,
-            float(self._last_energy_sensor_state.state),
-            self._last_energy_sensor_state,
+        ) or (
+            state_class == SensorStateClass.TOTAL_INCREASING
+            and reset_detected(
+                self.hass,
+                cast(str, self._config[self._adapter.stat_energy_key]),
+                energy,
+                float(self._last_energy_sensor_state.state),
+                self._last_energy_sensor_state,
+            )
         ):
             # Energy meter was reset, reset cost sensor too
             energy_state_copy = copy.copy(energy_state)
@@ -372,11 +386,10 @@ class EnergyCostSensor(SensorEntity):
         if energy_price_unit is None:
             converted_energy_price = energy_price
         else:
-            if self._adapter.source_type == "grid":
-                converter: Callable[
-                    [float, str, str], float
-                ] = unit_conversion.EnergyConverter.convert
-            elif self._adapter.source_type in ("gas", "water"):
+            converter: Callable[[float, str, str], float]
+            if energy_unit in VALID_ENERGY_UNITS:
+                converter = unit_conversion.EnergyConverter.convert
+            else:
                 converter = unit_conversion.VolumeConverter.convert
 
             converted_energy_price = converter(
@@ -410,25 +423,26 @@ class EnergyCostSensor(SensorEntity):
             self._config[self._adapter.stat_energy_key]
         ] = self.entity_id
 
-        @callback
-        def async_state_changed_listener(*_: Any) -> None:
-            """Handle child updates."""
-            self._update_cost()
-            self.async_write_ha_state()
-
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
                 cast(str, self._config[self._adapter.stat_energy_key]),
-                async_state_changed_listener,
+                self._async_state_changed_listener,
             )
         )
-        self.add_finished.set()
+        _set_result_unless_done(self.add_finished)
+
+    @callback
+    def _async_state_changed_listener(self, *_: Any) -> None:
+        """Handle child updates."""
+        self._update_cost()
+        self.async_write_ha_state()
 
     @callback
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
-        self.add_finished.set()
+        _set_result_unless_done(self.add_finished)
+        super().add_to_platform_abort()
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removing from hass."""
@@ -438,7 +452,7 @@ class EnergyCostSensor(SensorEntity):
         await super().async_will_remove_from_hass()
 
     @callback
-    def update_config(self, config: dict) -> None:
+    def update_config(self, config: Mapping[str, Any]) -> None:
         """Update the config."""
         self._config = config
 

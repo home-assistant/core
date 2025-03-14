@@ -10,8 +10,18 @@ on:
       - dev
       - rc
     paths:
-      - "requirements.txt"
+      - ".github/workflows/wheels.yml"
+      - "homeassistant/package_constraints.txt"
       - "requirements_all.txt"
+      - "requirements.txt"
+      - "script/gen_requirements_all.py"
+
+env:
+  DEFAULT_PYTHON: "3.13"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name}}
+  cancel-in-progress: true
 
 jobs:
   init:
@@ -22,7 +32,22 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.2.0
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v5.4.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
+
+      - name: Create Python virtual environment
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          python --version
+          pip install "$(grep '^uv' < requirements.txt)"
+          uv pip install -r requirements.txt
 
       - name: Get information
         id: info
@@ -39,14 +64,8 @@ jobs:
       - name: Write env-file
         run: |
           (
-            echo "GRPC_BUILD_WITH_BORING_SSL_ASM=false"
             echo "GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=true"
             echo "GRPC_PYTHON_BUILD_WITH_CYTHON=true"
-            echo "GRPC_PYTHON_DISABLE_LIBC_COMPATIBILITY=true"
-            # GRPC on armv7 needs -lexecinfo (issue #56669) since home assistant installs
-            # execinfo-dev when building wheels. The setuptools build setup does not have an option for
-            # adding a single LDFLAG so copy all relevant linux flags here (as of 1.43.0)
-            echo "GRPC_PYTHON_LDFLAGS=-lpthread -Wl,-wrap,memcpy -static-libgcc -lexecinfo"
 
             # Fix out of memory issues with rust
             echo "CARGO_NET_GIT_FETCH_WITH_CLI=true"
@@ -54,95 +73,138 @@ jobs:
             # OpenCV headless installation
             echo "CI_BUILD=1"
             echo "ENABLE_HEADLESS=1"
+
+            # Use C-Extension for SQLAlchemy
+            echo "REQUIRE_SQLALCHEMY_CEXT=1"
+
+            # Add additional pip wheel build constraints
+            echo "PIP_CONSTRAINT=build_constraints.txt"
           ) > .env_file
 
+      - name: Write pip wheel build constraints
+        run: |
+          (
+            # ninja 1.11.1.2 + 1.11.1.3 seem to be broken on at least armhf
+            # this caused the numpy builds to fail
+            # https://github.com/scikit-build/ninja-python-distributions/issues/274
+            echo "ninja==1.11.1.1"
+          ) > build_constraints.txt
+
       - name: Upload env_file
-        uses: actions/upload-artifact@v3.1.1
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: env_file
           path: ./.env_file
+          include-hidden-files: true
+          overwrite: true
+
+      - name: Upload build_constraints
+        uses: actions/upload-artifact@v4.6.1
+        with:
+          name: build_constraints
+          path: ./build_constraints.txt
+          overwrite: true
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v3.1.1
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
+          overwrite: true
+
+      - name: Generate requirements
+        run: |
+          . venv/bin/activate
+          python -m script.gen_requirements_all ci
+
+      - name: Upload requirements_all_wheels
+        uses: actions/upload-artifact@v4.6.1
+        with:
+          name: requirements_all_wheels
+          path: ./requirements_all_wheels_*.txt
 
   core:
-    name: Build musllinux wheels with musllinux_1_2 / cp310 at ${{ matrix.arch }} for core
+    name: Build Core wheels ${{ matrix.abi }} for ${{ matrix.arch }} (musllinux_1_2)
     if: github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        abi: ["cp313"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.2.0
+        uses: actions/checkout@v4.2.2
 
       - name: Download env_file
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.9
         with:
           name: env_file
 
+      - name: Download build_constraints
+        uses: actions/download-artifact@v4.1.9
+        with:
+          name: build_constraints
+
       - name: Download requirements_diff
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.9
         with:
           name: requirements_diff
 
+      - name: Adjust build env
+        run: |
+          # Don't build wheels for uv as uv requires a greater version of rust as currently available on alpine
+          sed -i "/uv/d" requirements.txt
+          sed -i "/uv/d" requirements_diff.txt
+
       - name: Build wheels
-        uses: home-assistant/wheels@2022.10.1
+        uses: home-assistant/wheels@2025.02.0
         with:
-          abi: cp310
+          abi: ${{ matrix.abi }}
           tag: musllinux_1_2
           arch: ${{ matrix.arch }}
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
-          apk: "libffi-dev;openssl-dev;yaml-dev"
-          skip-binary: aiohttp
+          apk: "libffi-dev;openssl-dev;yaml-dev;nasm;zlib-ng-dev"
+          skip-binary: aiohttp;multidict;propcache;yarl;SQLAlchemy
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements.txt"
 
   integrations:
-    name: Build musllinux wheels with musllinux_1_2 / cp310 at ${{ matrix.arch }} for integrations
+    name: Build wheels ${{ matrix.abi }} for ${{ matrix.arch }}
     if: github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        abi: ["cp313"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.2.0
+        uses: actions/checkout@v4.2.2
 
       - name: Download env_file
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.9
         with:
           name: env_file
 
+      - name: Download build_constraints
+        uses: actions/download-artifact@v4.1.9
+        with:
+          name: build_constraints
+
       - name: Download requirements_diff
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.9
         with:
           name: requirements_diff
 
-      - name: Uncomment packages
-        run: |
-          requirement_files="requirements_all.txt requirements_diff.txt"
-          for requirement_file in ${requirement_files}; do
-            sed -i "s|# pybluez|pybluez|g" ${requirement_file}
-            sed -i "s|# beacontools|beacontools|g" ${requirement_file}
-            sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
-            sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
-            sed -i "s|# evdev|evdev|g" ${requirement_file}
-            sed -i "s|# pycups|pycups|g" ${requirement_file}
-            sed -i "s|# homekit|homekit|g" ${requirement_file}
-            sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
-            sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
-            sed -i "s|# opencv-python-headless|opencv-python-headless|g" ${requirement_file}
-          done
+      - name: Download requirements_all_wheels
+        uses: actions/download-artifact@v4.1.9
+        with:
+          name: requirements_all_wheels
 
       - name: Adjust build env
         run: |
@@ -150,26 +212,22 @@ jobs:
             echo "NPY_DISABLE_SVML=1" >> .env_file
           fi
 
-          (
-            # cmake > 3.22.2 have issue on arm
-            # Tested until 3.22.5
-            echo "cmake==3.22.2"
-          ) >> homeassistant/package_constraints.txt
-
           # Do not pin numpy in wheels building
           sed -i "/numpy/d" homeassistant/package_constraints.txt
+          # Don't build wheels for uv as uv requires a greater version of rust as currently available on alpine
+          sed -i "/uv/d" requirements.txt
+          sed -i "/uv/d" requirements_diff.txt
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.10.1
+        uses: home-assistant/wheels@2025.02.0
         with:
-          abi: cp310
+          abi: ${{ matrix.abi }}
           tag: musllinux_1_2
           arch: ${{ matrix.arch }}
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
-          apk: "libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev"
-          skip-binary: aiohttp;grpcio
-          legacy: true
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm;zlib-ng-dev"
+          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pymicro-vad;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txt"

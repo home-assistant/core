@@ -28,7 +28,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {
@@ -36,9 +37,10 @@
       "init": {
         "title": "Configure options",
         "data": {
-          "scan_interval": "How often to poll Risco (in seconds)",
-          "code_arm_required": "Require [%key:common::config_flow::data::pin%] to arm",
-          "code_disarm_required": "Require [%key:common::config_flow::data::pin%] to disarm"
+          "scan_interval": "How often to poll Risco Cloud (in seconds)",
+          "concurrency": "Maximum concurrent requests in Risco local",
+          "code_arm_required": "Require PIN to arm",
+          "code_disarm_required": "Require PIN to disarm"
         }
       },
       "risco_to_ha": {
@@ -62,6 +64,45 @@
           "armed_night": "Armed Night",
           "armed_custom_bypass": "Armed Custom Bypass"
         }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "alarmed": {
+        "name": "Alarmed"
+      },
+      "armed": {
+        "name": "Armed"
+      },
+      "low_battery_trouble": {
+        "name": "Low battery trouble"
+      },
+      "ac_trouble": {
+        "name": "A/C trouble"
+      },
+      "monitoring_station_1_trouble": {
+        "name": "Monitoring station 1 trouble"
+      },
+      "monitoring_station_2_trouble": {
+        "name": "Monitoring station 2 trouble"
+      },
+      "monitoring_station_3_trouble": {
+        "name": "Monitoring station 3 trouble"
+      },
+      "phone_line_trouble": {
+        "name": "Phone line trouble"
+      },
+      "clock_trouble": {
+        "name": "Clock trouble"
+      },
+      "box_tamper": {
+        "name": "Box tamper"
+      }
+    },
+    "switch": {
+      "bypassed": {
+        "name": "Bypassed"
       }
     }
   }

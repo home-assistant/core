@@ -1,10 +1,14 @@
 """Passive update coordinator for the Bluetooth integration."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    BaseCoordinatorEntity,
+    BaseDataUpdateCoordinatorProtocol,
+)
 
 from .update_coordinator import BasePassiveBluetoothCoordinator
 
@@ -15,7 +19,9 @@ if TYPE_CHECKING:
     from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 
 
-class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
+class PassiveBluetoothDataUpdateCoordinator(
+    BasePassiveBluetoothCoordinator, BaseDataUpdateCoordinatorProtocol
+):
     """Class to manage passive bluetooth advertisements.
 
     This coordinator is responsible for dispatching the bluetooth data
@@ -33,6 +39,11 @@ class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
         """Initialize PassiveBluetoothDataUpdateCoordinator."""
         super().__init__(hass, logger, address, mode, connectable)
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
+
+    @property
+    def available(self) -> bool:
+        """Return if device is available."""
+        return self._available
 
     @callback
     def async_update_listeners(self) -> None:
@@ -62,7 +73,7 @@ class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
         self._listeners[remove_listener] = (update_callback, context)
         return remove_listener
 
-    def async_contexts(self) -> Generator[Any, None, None]:
+    def async_contexts(self) -> Generator[Any]:
         """Return all registered contexts."""
         yield from (
             context for _, context in self._listeners.values() if context is not None
@@ -75,13 +86,16 @@ class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
+        self._available = True
         self.async_update_listeners()
 
 
-class PassiveBluetoothCoordinatorEntity(CoordinatorEntity):
+class PassiveBluetoothCoordinatorEntity[
+    _PassiveBluetoothDataUpdateCoordinatorT: PassiveBluetoothDataUpdateCoordinator = PassiveBluetoothDataUpdateCoordinator
+](  # pylint: disable=hass-enforce-class-module
+    BaseCoordinatorEntity[_PassiveBluetoothDataUpdateCoordinatorT]
+):
     """A class for entities using DataUpdateCoordinator."""
-
-    coordinator: PassiveBluetoothDataUpdateCoordinator
 
     async def async_update(self) -> None:
         """All updates are passive."""

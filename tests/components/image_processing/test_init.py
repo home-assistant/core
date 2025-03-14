@@ -1,37 +1,53 @@
 """The tests for the image_processing component."""
+
+from asyncio import AbstractEventLoop
+from collections.abc import Callable
 from unittest.mock import PropertyMock, patch
 
 import pytest
 
-import homeassistant.components.http as http
-import homeassistant.components.image_processing as ip
+from homeassistant.components import http, image_processing as ip
 from homeassistant.const import ATTR_ENTITY_PICTURE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from . import common
 
 from tests.common import assert_setup_component, async_capture_events
+from tests.test_util.aiohttp import AiohttpClientMocker
+
+
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture
-def aiohttp_unused_port(event_loop, aiohttp_unused_port, socket_enabled):
+def aiohttp_unused_port_factory(
+    event_loop: AbstractEventLoop,
+    unused_tcp_port_factory: Callable[[], int],
+    socket_enabled: None,
+) -> Callable[[], int]:
     """Return aiohttp_unused_port and allow opening sockets."""
-    return aiohttp_unused_port
+    return unused_tcp_port_factory
 
 
-def get_url(hass):
+def get_url(hass: HomeAssistant) -> str:
     """Return camera url."""
     state = hass.states.get("camera.demo_camera")
     return f"{hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
 
-async def setup_image_processing(hass, aiohttp_unused_port):
+async def setup_image_processing(
+    hass: HomeAssistant, aiohttp_unused_port_factory: Callable[[], int]
+) -> None:
     """Set up things to be run when tests are started."""
     await async_setup_component(
         hass,
         http.DOMAIN,
-        {http.DOMAIN: {http.CONF_SERVER_PORT: aiohttp_unused_port()}},
+        {http.DOMAIN: {http.CONF_SERVER_PORT: aiohttp_unused_port_factory()}},
     )
 
     config = {ip.DOMAIN: {"platform": "test"}, "camera": {"platform": "demo"}}
@@ -40,17 +56,7 @@ async def setup_image_processing(hass, aiohttp_unused_port):
     await hass.async_block_till_done()
 
 
-async def setup_image_processing_alpr(hass):
-    """Set up things to be run when tests are started."""
-    config = {ip.DOMAIN: {"platform": "demo"}, "camera": {"platform": "demo"}}
-
-    await async_setup_component(hass, ip.DOMAIN, config)
-    await hass.async_block_till_done()
-
-    return async_capture_events(hass, "image_processing.found_plate")
-
-
-async def setup_image_processing_face(hass):
+async def setup_image_processing_face(hass: HomeAssistant) -> None:
     """Set up things to be run when tests are started."""
     config = {ip.DOMAIN: {"platform": "demo"}, "camera": {"platform": "demo"}}
 
@@ -60,20 +66,22 @@ async def setup_image_processing_face(hass):
     return async_capture_events(hass, "image_processing.detect_face")
 
 
-async def test_setup_component(hass):
+async def test_setup_component(hass: HomeAssistant) -> None:
     """Set up demo platform on image_process component."""
     config = {ip.DOMAIN: {"platform": "demo"}}
 
     with assert_setup_component(1, ip.DOMAIN):
         assert await async_setup_component(hass, ip.DOMAIN, config)
+        await hass.async_block_till_done()
 
 
-async def test_setup_component_with_service(hass):
+async def test_setup_component_with_service(hass: HomeAssistant) -> None:
     """Set up demo platform on image_process component test service."""
     config = {ip.DOMAIN: {"platform": "demo"}}
 
     with assert_setup_component(1, ip.DOMAIN):
         assert await async_setup_component(hass, ip.DOMAIN, config)
+        await hass.async_block_till_done()
 
     assert hass.services.has_service(ip.DOMAIN, "scan")
 
@@ -82,11 +90,14 @@ async def test_setup_component_with_service(hass):
     "homeassistant.components.demo.camera.Path.read_bytes",
     return_value=b"Test",
 )
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_get_image_from_camera(
-    mock_camera_read, hass, aiohttp_unused_port, enable_custom_integrations
-):
+    mock_camera_read,
+    hass: HomeAssistant,
+    aiohttp_unused_port_factory: Callable[[], int],
+) -> None:
     """Grab an image from camera entity."""
-    await setup_image_processing(hass, aiohttp_unused_port)
+    await setup_image_processing(hass, aiohttp_unused_port_factory)
 
     common.async_scan(hass, entity_id="image_processing.test")
     await hass.async_block_till_done()
@@ -99,14 +110,17 @@ async def test_get_image_from_camera(
 
 
 @patch(
-    "homeassistant.components.camera.async_get_image",
+    "homeassistant.components.image_processing.async_get_image",
     side_effect=HomeAssistantError(),
 )
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_get_image_without_exists_camera(
-    mock_image, hass, aiohttp_unused_port, enable_custom_integrations
-):
+    mock_image,
+    hass: HomeAssistant,
+    aiohttp_unused_port_factory: Callable[[], int],
+) -> None:
     """Try to get image without exists camera."""
-    await setup_image_processing(hass, aiohttp_unused_port)
+    await setup_image_processing(hass, aiohttp_unused_port_factory)
 
     hass.states.async_remove("camera.demo_camera")
 
@@ -119,78 +133,9 @@ async def test_get_image_without_exists_camera(
     assert state.state == "0"
 
 
-async def test_alpr_event_single_call(hass, aioclient_mock):
-    """Set up and scan a picture and test plates from event."""
-    alpr_events = await setup_image_processing_alpr(hass)
-    aioclient_mock.get(get_url(hass), content=b"image")
-
-    common.async_scan(hass, entity_id="image_processing.demo_alpr")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("image_processing.demo_alpr")
-
-    assert len(alpr_events) == 4
-    assert state.state == "AC3829"
-
-    event_data = [
-        event.data for event in alpr_events if event.data.get("plate") == "AC3829"
-    ]
-    assert len(event_data) == 1
-    assert event_data[0]["plate"] == "AC3829"
-    assert event_data[0]["confidence"] == 98.3
-    assert event_data[0]["entity_id"] == "image_processing.demo_alpr"
-
-
-async def test_alpr_event_double_call(hass, aioclient_mock):
-    """Set up and scan a picture and test plates from event."""
-    alpr_events = await setup_image_processing_alpr(hass)
-    aioclient_mock.get(get_url(hass), content=b"image")
-
-    common.async_scan(hass, entity_id="image_processing.demo_alpr")
-    common.async_scan(hass, entity_id="image_processing.demo_alpr")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("image_processing.demo_alpr")
-
-    assert len(alpr_events) == 4
-    assert state.state == "AC3829"
-
-    event_data = [
-        event.data for event in alpr_events if event.data.get("plate") == "AC3829"
-    ]
-    assert len(event_data) == 1
-    assert event_data[0]["plate"] == "AC3829"
-    assert event_data[0]["confidence"] == 98.3
-    assert event_data[0]["entity_id"] == "image_processing.demo_alpr"
-
-
-@patch(
-    "homeassistant.components.demo.image_processing.DemoImageProcessingAlpr.confidence",
-    new_callable=PropertyMock(return_value=95),
-)
-async def test_alpr_event_single_call_confidence(confidence_mock, hass, aioclient_mock):
-    """Set up and scan a picture and test plates from event."""
-    alpr_events = await setup_image_processing_alpr(hass)
-    aioclient_mock.get(get_url(hass), content=b"image")
-
-    common.async_scan(hass, entity_id="image_processing.demo_alpr")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("image_processing.demo_alpr")
-
-    assert len(alpr_events) == 2
-    assert state.state == "AC3829"
-
-    event_data = [
-        event.data for event in alpr_events if event.data.get("plate") == "AC3829"
-    ]
-    assert len(event_data) == 1
-    assert event_data[0]["plate"] == "AC3829"
-    assert event_data[0]["confidence"] == 98.3
-    assert event_data[0]["entity_id"] == "image_processing.demo_alpr"
-
-
-async def test_face_event_call(hass, aioclient_mock):
+async def test_face_event_call(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Set up and scan a picture and test faces from event."""
     face_events = await setup_image_processing_face(hass)
     aioclient_mock.get(get_url(hass), content=b"image")
@@ -215,11 +160,12 @@ async def test_face_event_call(hass, aioclient_mock):
 
 
 @patch(
-    "homeassistant.components.demo.image_processing."
-    "DemoImageProcessingFace.confidence",
+    "homeassistant.components.demo.image_processing.DemoImageProcessingFace.confidence",
     new_callable=PropertyMock(return_value=None),
 )
-async def test_face_event_call_no_confidence(mock_config, hass, aioclient_mock):
+async def test_face_event_call_no_confidence(
+    mock_config, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Set up and scan a picture and test faces from event."""
     face_events = await setup_image_processing_face(hass)
     aioclient_mock.get(get_url(hass), content=b"image")
@@ -241,3 +187,22 @@ async def test_face_event_call_no_confidence(mock_config, hass, aioclient_mock):
     assert event_data[0]["confidence"] == 98.34
     assert event_data[0]["gender"] == "male"
     assert event_data[0]["entity_id"] == "image_processing.demo_face"
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_update_missing_camera(
+    hass: HomeAssistant,
+    aiohttp_unused_port_factory: Callable[[], int],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test when entity does not set camera."""
+    await setup_image_processing(hass, aiohttp_unused_port_factory)
+
+    with patch(
+        "custom_components.test.image_processing.TestImageProcessing.camera_entity",
+        new_callable=PropertyMock(return_value=None),
+    ):
+        common.async_scan(hass, entity_id="image_processing.test")
+        await hass.async_block_till_done()
+
+    assert "No camera entity id was set by the image processing entity" in caplog.text

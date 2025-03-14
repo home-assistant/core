@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "zone_status": {
+        "default": "mdi:shield-check"
+      }
+    }
+  }
+}

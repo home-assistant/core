@@ -1,0 +1,270 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_url": "Invalid URL",
+      "invalid_url_schema_override_rest_url": "Invalid REST URL scheme.\nThe URL should start with `http://` or `https://`.",
+      "invalid_url_schema_override_mqtt_url": "Invalid MQTT URL scheme.\nThe URL should start with `mqtt://` or `mqtts://`.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "auth": {
+        "data": {
+          "country": "Country",
+          "override_rest_url": "REST URL",
+          "override_mqtt_url": "MQTT URL",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_mqtt_certificate": "Verify MQTT SSL certificate"
+        },
+        "data_description": {
+          "override_rest_url": "Enter the REST URL of your self-hosted instance including the scheme (http/https).",
+          "override_mqtt_url": "Enter the MQTT URL of your self-hosted instance including the scheme (mqtt/mqtts)."
+        }
+      },
+      "user": {
+        "data": {
+          "mode": "[%key:common::config_flow::data::mode%]"
+        },
+        "data_description": {
+          "mode": "Select the mode you want to use to connect to Ecovacs. If you are unsure, select **Cloud**.\n\nSelect **Self-hosted** only if you have a working self-hosted instance."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "water_mop_attached": {
+        "name": "Mop attached"
+      }
+    },
+    "button": {
+      "relocate": {
+        "name": "Relocate"
+      },
+      "reset_lifespan_base_station_filter": {
+        "name": "Reset station filter lifespan"
+      },
+      "reset_lifespan_blade": {
+        "name": "Reset blade lifespan"
+      },
+      "reset_lifespan_brush": {
+        "name": "Reset main brush lifespan"
+      },
+      "reset_lifespan_filter": {
+        "name": "Reset filter lifespan"
+      },
+      "reset_lifespan_lens_brush": {
+        "name": "Reset lens brush lifespan"
+      },
+      "reset_lifespan_round_mop": {
+        "name": "Reset round mop lifespan"
+      },
+      "reset_lifespan_unit_care": {
+        "name": "Reset unit care lifespan"
+      },
+      "reset_lifespan_side_brush": {
+        "name": "Reset side brush lifespan"
+      },
+      "station_action_empty_dustbin": {
+        "name": "Empty dustbin"
+      }
+    },
+    "event": {
+      "last_job": {
+        "name": "Last job",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "finished": "Finished",
+              "finished_with_warnings": "Finished with warnings",
+              "manually_stopped": "Manually stopped"
+            }
+          }
+        }
+      }
+    },
+    "image": {
+      "map": {
+        "name": "Map"
+      }
+    },
+    "number": {
+      "clean_count": {
+        "name": "Clean count"
+      },
+      "cut_direction": {
+        "name": "Cut direction"
+      },
+      "volume": {
+        "name": "Volume"
+      }
+    },
+    "sensor": {
+      "error": {
+        "name": "Error",
+        "state_attributes": {
+          "description": {
+            "name": "Description"
+          }
+        }
+      },
+      "lifespan_base_station_filter": {
+        "name": "Station filter lifespan"
+      },
+      "lifespan_blade": {
+        "name": "Blade lifespan"
+      },
+      "lifespan_brush": {
+        "name": "Main brush lifespan"
+      },
+      "lifespan_filter": {
+        "name": "Filter lifespan"
+      },
+      "lifespan_lens_brush": {
+        "name": "Lens brush lifespan"
+      },
+      "lifespan_main_brush": {
+        "name": "[%key:component::ecovacs::entity::sensor::lifespan_brush::name%]"
+      },
+      "lifespan_side_brush": {
+        "name": "Side brush lifespan"
+      },
+      "lifespan_unit_care": {
+        "name": "Unit care lifespan"
+      },
+      "lifespan_round_mop": {
+        "name": "Round mop lifespan"
+      },
+      "network_ip": {
+        "name": "IP address"
+      },
+      "network_rssi": {
+        "name": "Wi-Fi RSSI"
+      },
+      "network_ssid": {
+        "name": "Wi-Fi SSID"
+      },
+      "station_state": {
+        "name": "Station state",
+        "state": {
+          "idle": "[%key:common::state::idle%]",
+          "emptying_dustbin": "Emptying dustbin"
+        }
+      },
+      "stats_area": {
+        "name": "Area cleaned"
+      },
+      "stats_time": {
+        "name": "Cleaning duration"
+      },
+      "total_stats_area": {
+        "name": "Total area cleaned"
+      },
+      "total_stats_cleanings": {
+        "name": "Total cleanings"
+      },
+      "total_stats_time": {
+        "name": "Total cleaning duration"
+      }
+    },
+    "select": {
+      "water_amount": {
+        "name": "Water flow level",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
+          "ultrahigh": "Ultrahigh"
+        }
+      },
+      "work_mode": {
+        "name": "Work mode",
+        "state": {
+          "mop": "Mop",
+          "mop_after_vacuum": "Mop after vacuum",
+          "vacuum": "Vacuum",
+          "vacuum_and_mop": "Vacuum & mop"
+        }
+      }
+    },
+    "switch": {
+      "advanced_mode": {
+        "name": "Advanced mode"
+      },
+      "border_switch": {
+        "name": "Border switch"
+      },
+      "carpet_auto_fan_boost": {
+        "name": "Carpet auto-boost suction"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "clean_preference": {
+        "name": "Clean preference"
+      },
+      "cross_map_border_warning": {
+        "name": "Cross map border warning"
+      },
+      "continuous_cleaning": {
+        "name": "Continuous cleaning"
+      },
+      "move_up_warning": {
+        "name": "Move up warning"
+      },
+      "safe_protect": {
+        "name": "Safe protect"
+      },
+      "true_detect": {
+        "name": "True detect"
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "max": "Max",
+              "max_plus": "Max+",
+              "normal": "Normal",
+              "quiet": "Quiet"
+            }
+          },
+          "rooms": {
+            "name": "Rooms"
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "vacuum_send_command_params_dict": {
+      "message": "Params must be a dictionary and not a list"
+    },
+    "vacuum_send_command_params_required": {
+      "message": "Params are required for the command: {command}"
+    },
+    "vacuum_raw_get_positions_not_supported": {
+      "message": "Retrieving the positions of the chargers and the device itself is not supported"
+    }
+  },
+  "selector": {
+    "installation_mode": {
+      "options": {
+        "cloud": "Cloud",
+        "self_hosted": "Self-hosted"
+      }
+    }
+  },
+  "services": {
+    "raw_get_positions": {
+      "name": "Get raw positions",
+      "description": "Retrieves a raw response containing the positions of the chargers and the device itself."
+    }
+  }
+}

@@ -1,87 +1,110 @@
 """Component for interacting with a Lutron RadioRA 2 system."""
+
+from dataclasses import dataclass
 import logging
 
-from pylutron import Button, Lutron
-import voluptuous as vol
+from pylutron import Button, Keypad, Led, Lutron, OccupancyGroup, Output
 
-from homeassistant.const import (
-    ATTR_ID,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import slugify
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-DOMAIN = "lutron"
+from .const import DOMAIN
 
 PLATFORMS = [
-    Platform.LIGHT,
-    Platform.COVER,
-    Platform.SWITCH,
-    Platform.SCENE,
     Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.EVENT,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SWITCH,
 ]
 
 _LOGGER = logging.getLogger(__name__)
 
-LUTRON_BUTTONS = "lutron_buttons"
-LUTRON_CONTROLLER = "lutron_controller"
-LUTRON_DEVICES = "lutron_devices"
-
 # Attribute on events that indicates what action was taken with the button.
 ATTR_ACTION = "action"
 ATTR_FULL_ID = "full_id"
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+ATTR_UUID = "uuid"
 
 
-def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
+@dataclass(slots=True, kw_only=True)
+class LutronData:
+    """Storage class for platform global data."""
+
+    client: Lutron
+    binary_sensors: list[tuple[str, OccupancyGroup]]
+    buttons: list[tuple[str, Keypad, Button]]
+    covers: list[tuple[str, Output]]
+    fans: list[tuple[str, Output]]
+    lights: list[tuple[str, Output]]
+    scenes: list[tuple[str, Keypad, Button, Led]]
+    switches: list[tuple[str, Output]]
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Lutron integration."""
-    hass.data[LUTRON_BUTTONS] = []
-    hass.data[LUTRON_CONTROLLER] = None
-    hass.data[LUTRON_DEVICES] = {
-        "light": [],
-        "cover": [],
-        "switch": [],
-        "scene": [],
-        "binary_sensor": [],
-    }
 
-    config = base_config[DOMAIN]
-    hass.data[LUTRON_CONTROLLER] = Lutron(
-        config[CONF_HOST], config[CONF_USERNAME], config[CONF_PASSWORD]
+    host = config_entry.data[CONF_HOST]
+    uid = config_entry.data[CONF_USERNAME]
+    pwd = config_entry.data[CONF_PASSWORD]
+
+    lutron_client = Lutron(host, uid, pwd)
+    await hass.async_add_executor_job(lutron_client.load_xml_db)
+    lutron_client.connect()
+    _LOGGER.debug("Connected to main repeater at %s", host)
+
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    entry_data = LutronData(
+        client=lutron_client,
+        binary_sensors=[],
+        buttons=[],
+        covers=[],
+        fans=[],
+        lights=[],
+        scenes=[],
+        switches=[],
     )
-
-    hass.data[LUTRON_CONTROLLER].load_xml_db()
-    hass.data[LUTRON_CONTROLLER].connect()
-    _LOGGER.info("Connected to main repeater at %s", config[CONF_HOST])
-
     # Sort our devices into types
-    for area in hass.data[LUTRON_CONTROLLER].areas:
+    _LOGGER.debug("Start adding devices")
+    for area in lutron_client.areas:
+        _LOGGER.debug("Working on area %s", area.name)
         for output in area.outputs:
+            platform = None
+            _LOGGER.debug("Working on output %s", output.type)
             if output.type == "SYSTEM_SHADE":
-                hass.data[LUTRON_DEVICES]["cover"].append((area.name, output))
+                entry_data.covers.append((area.name, output))
+                platform = Platform.COVER
+            elif output.type == "CEILING_FAN_TYPE":
+                entry_data.fans.append((area.name, output))
+                platform = Platform.FAN
             elif output.is_dimmable:
-                hass.data[LUTRON_DEVICES]["light"].append((area.name, output))
+                entry_data.lights.append((area.name, output))
+                platform = Platform.LIGHT
             else:
-                hass.data[LUTRON_DEVICES]["switch"].append((area.name, output))
+                entry_data.switches.append((area.name, output))
+                platform = Platform.SWITCH
+
+            _async_check_entity_unique_id(
+                hass,
+                entity_registry,
+                platform,
+                output.uuid,
+                output.legacy_uuid,
+                entry_data.client.guid,
+            )
+            _async_check_device_identifiers(
+                hass,
+                device_registry,
+                output.uuid,
+                output.legacy_uuid,
+                entry_data.client.guid,
+            )
+
         for keypad in area.keypads:
             for button in keypad.buttons:
                 # If the button has a function assigned to it, add it as a scene
@@ -96,97 +119,108 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
                         (led for led in keypad.leds if led.number == button.number),
                         None,
                     )
-                    hass.data[LUTRON_DEVICES]["scene"].append(
-                        (area.name, keypad.name, button, led)
-                    )
+                    entry_data.scenes.append((area.name, keypad, button, led))
 
-                hass.data[LUTRON_BUTTONS].append(
-                    LutronButton(hass, area.name, keypad, button)
-                )
+                    platform = Platform.SCENE
+                    _async_check_entity_unique_id(
+                        hass,
+                        entity_registry,
+                        platform,
+                        button.uuid,
+                        button.legacy_uuid,
+                        entry_data.client.guid,
+                    )
+                    if led is not None:
+                        platform = Platform.SWITCH
+                        _async_check_entity_unique_id(
+                            hass,
+                            entity_registry,
+                            platform,
+                            led.uuid,
+                            led.legacy_uuid,
+                            entry_data.client.guid,
+                        )
+                if button.button_type:
+                    entry_data.buttons.append((area.name, keypad, button))
         if area.occupancy_group is not None:
-            hass.data[LUTRON_DEVICES]["binary_sensor"].append(
-                (area.name, area.occupancy_group)
+            entry_data.binary_sensors.append((area.name, area.occupancy_group))
+            platform = Platform.BINARY_SENSOR
+            _async_check_entity_unique_id(
+                hass,
+                entity_registry,
+                platform,
+                area.occupancy_group.uuid,
+                area.occupancy_group.legacy_uuid,
+                entry_data.client.guid,
+            )
+            _async_check_device_identifiers(
+                hass,
+                device_registry,
+                area.occupancy_group.uuid,
+                area.occupancy_group.legacy_uuid,
+                entry_data.client.guid,
             )
 
-    for platform in PLATFORMS:
-        discovery.load_platform(hass, platform, DOMAIN, {}, base_config)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, lutron_client.guid)},
+        manufacturer="Lutron",
+        name="Main repeater",
+    )
+
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = entry_data
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
     return True
 
 
-class LutronDevice(Entity):
-    """Representation of a Lutron device entity."""
+def _async_check_entity_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    platform: str,
+    uuid: str,
+    legacy_uuid: str,
+    controller_guid: str,
+) -> None:
+    """If uuid becomes available update to use it."""
 
-    _attr_should_poll = False
+    if not uuid:
+        return
 
-    def __init__(self, area_name, lutron_device, controller):
-        """Initialize the device."""
-        self._lutron_device = lutron_device
-        self._controller = controller
-        self._area_name = area_name
+    unique_id = f"{controller_guid}_{legacy_uuid}"
+    entity_id = entity_registry.async_get_entity_id(
+        domain=platform, platform=DOMAIN, unique_id=unique_id
+    )
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self._lutron_device.subscribe(self._update_callback, None)
-
-    def _update_callback(self, _device, _context, _event, _params):
-        """Run when invoked by pylutron when the device state changes."""
-        self.schedule_update_ha_state()
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return f"{self._area_name} {self._lutron_device.name}"
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        # Temporary fix for https://github.com/thecynic/pylutron/issues/70
-        if self._lutron_device.uuid is None:
-            return None
-        return f"{self._controller.guid}_{self._lutron_device.uuid}"
+    if entity_id:
+        new_unique_id = f"{controller_guid}_{uuid}"
+        _LOGGER.debug("Updating entity id from %s to %s", unique_id, new_unique_id)
+        entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
 
-class LutronButton:
-    """Representation of a button on a Lutron keypad.
+def _async_check_device_identifiers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    uuid: str,
+    legacy_uuid: str,
+    controller_guid: str,
+) -> None:
+    """If uuid becomes available update to use it."""
 
-    This is responsible for firing events as keypad buttons are pressed
-    (and possibly released, depending on the button type). It is not
-    represented as an entity; it simply fires events.
-    """
+    if not uuid:
+        return
 
-    def __init__(self, hass, area_name, keypad, button):
-        """Register callback for activity on the button."""
-        name = f"{keypad.name}: {button.name}"
-        if button.name == "Unknown Button":
-            name += f" {button.number}"
-        self._hass = hass
-        self._has_release_event = (
-            button.button_type is not None and "RaiseLower" in button.button_type
+    unique_id = f"{controller_guid}_{legacy_uuid}"
+    device = device_registry.async_get_device(identifiers={(DOMAIN, unique_id)})
+    if device:
+        new_unique_id = f"{controller_guid}_{uuid}"
+        _LOGGER.debug("Updating device id from %s to %s", unique_id, new_unique_id)
+        device_registry.async_update_device(
+            device.id, new_identifiers={(DOMAIN, new_unique_id)}
         )
-        self._id = slugify(name)
-        self._keypad = keypad
-        self._area_name = area_name
-        self._button_name = button.name
-        self._button = button
-        self._event = "lutron_event"
-        self._full_id = slugify(f"{area_name} {name}")
 
-        button.subscribe(self.button_callback, None)
 
-    def button_callback(self, button, context, event, params):
-        """Fire an event about a button being pressed or released."""
-        # Events per button type:
-        #   RaiseLower -> pressed/released
-        #   SingleAction -> single
-        action = None
-        if self._has_release_event:
-            if event == Button.Event.PRESSED:
-                action = "pressed"
-            else:
-                action = "released"
-        elif event == Button.Event.PRESSED:
-            action = "single"
-
-        if action:
-            data = {ATTR_ID: self._id, ATTR_ACTION: action, ATTR_FULL_ID: self._full_id}
-            self._hass.bus.fire(self._event, data)
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Clean up resources and entities associated with the integration."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

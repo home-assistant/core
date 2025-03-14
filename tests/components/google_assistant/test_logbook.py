@@ -1,4 +1,5 @@
 """The tests for Google Assistant logbook."""
+
 from homeassistant.components.google_assistant.const import (
     DOMAIN,
     EVENT_COMMAND_RECEIVED,
@@ -6,17 +7,19 @@ from homeassistant.components.google_assistant.const import (
     SOURCE_LOCAL,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.components.logbook.common import MockRow, mock_humanify
 
 
-async def test_humanify_command_received(hass):
+async def test_humanify_command_received(hass: HomeAssistant) -> None:
     """Test humanifying command event."""
     hass.config.components.add("recorder")
     hass.config.components.add("frontend")
     hass.config.components.add("google_assistant")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     hass.states.async_set(
         "light.kitchen", "on", {ATTR_FRIENDLY_NAME: "The Kitchen Lights"}

@@ -1,4 +1,5 @@
 """Platform for Kostal Plenticore sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -15,36 +16,32 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .helper import PlenticoreDataFormatter, ProcessDataUpdateCoordinator
+from .coordinator import ProcessDataUpdateCoordinator
+from .helper import PlenticoreDataFormatter
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class PlenticoreRequiredKeysMixin:
-    """A class that describes required properties for plenticore sensor entities."""
+@dataclass(frozen=True, kw_only=True)
+class PlenticoreSensorEntityDescription(SensorEntityDescription):
+    """A class that describes plenticore sensor entities."""
 
     module_id: str
     formatter: str
-
-
-@dataclass
-class PlenticoreSensorEntityDescription(
-    SensorEntityDescription, PlenticoreRequiredKeysMixin
-):
-    """A class that describes plenticore sensor entities."""
 
 
 SENSOR_PROCESS_DATA = [
@@ -81,6 +78,7 @@ SENSOR_PROCESS_DATA = [
         name="Home Power from Battery",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         formatter="format_round",
     ),
     PlenticoreSensorEntityDescription(
@@ -231,7 +229,7 @@ SENSOR_PROCESS_DATA = [
         key="Cycles",
         name="Battery Cycles",
         icon="mdi:recycle",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_round",
     ),
     PlenticoreSensorEntityDescription(
@@ -321,31 +319,34 @@ SENSOR_PROCESS_DATA = [
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyHome:Day",
         name="Home Consumption Day",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyHome:Month",
         name="Home Consumption Month",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyHome:Year",
         name="Home Consumption Year",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyHome:Total",
         name="Home Consumption Total",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
@@ -354,31 +355,34 @@ SENSOR_PROCESS_DATA = [
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyHomeBat:Day",
         name="Home Consumption from Battery Day",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyHomeBat:Month",
         name="Home Consumption from Battery Month",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyHomeBat:Year",
         name="Home Consumption from Battery Year",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyHomeBat:Total",
         name="Home Consumption from Battery Total",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
@@ -387,31 +391,34 @@ SENSOR_PROCESS_DATA = [
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyHomeGrid:Day",
         name="Home Consumption from Grid Day",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyHomeGrid:Month",
         name="Home Consumption from Grid Month",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyHomeGrid:Year",
         name="Home Consumption from Grid Year",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyHomeGrid:Total",
         name="Home Consumption from Grid Total",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
@@ -420,31 +427,34 @@ SENSOR_PROCESS_DATA = [
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyHomePv:Day",
         name="Home Consumption from PV Day",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyHomePv:Month",
         name="Home Consumption from PV Month",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyHomePv:Year",
         name="Home Consumption from PV Year",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyHomePv:Total",
         name="Home Consumption from PV Total",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
@@ -453,31 +463,34 @@ SENSOR_PROCESS_DATA = [
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyPv1:Day",
         name="Energy PV1 Day",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyPv1:Month",
         name="Energy PV1 Month",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyPv1:Year",
         name="Energy PV1 Year",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyPv1:Total",
         name="Energy PV1 Total",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
@@ -486,31 +499,34 @@ SENSOR_PROCESS_DATA = [
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyPv2:Day",
         name="Energy PV2 Day",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyPv2:Month",
         name="Energy PV2 Month",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyPv2:Year",
         name="Energy PV2 Year",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyPv2:Total",
         name="Energy PV2 Total",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
@@ -519,31 +535,34 @@ SENSOR_PROCESS_DATA = [
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyPv3:Day",
         name="Energy PV3 Day",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyPv3:Month",
         name="Energy PV3 Month",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyPv3:Year",
         name="Energy PV3 Year",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyPv3:Total",
         name="Energy PV3 Total",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
@@ -552,32 +571,35 @@ SENSOR_PROCESS_DATA = [
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:Yield:Day",
         name="Energy Yield Day",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         entity_registry_enabled_default=True,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:Yield:Month",
         name="Energy Yield Month",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:Yield:Year",
         name="Energy Yield Year",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:Yield:Total",
         name="Energy Yield Total",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
@@ -586,31 +608,34 @@ SENSOR_PROCESS_DATA = [
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyChargeGrid:Day",
         name="Battery Charge from Grid Day",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyChargeGrid:Month",
         name="Battery Charge from Grid Month",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyChargeGrid:Year",
         name="Battery Charge from Grid Year",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyChargeGrid:Total",
         name="Battery Charge from Grid Total",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
@@ -619,31 +644,70 @@ SENSOR_PROCESS_DATA = [
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyChargePv:Day",
         name="Battery Charge from PV Day",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyChargePv:Month",
         name="Battery Charge from PV Month",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyChargePv:Year",
         name="Battery Charge from PV Year",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyChargePv:Total",
         name="Battery Charge from PV Total",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyDischarge:Day",
+        name="Battery Discharge Day",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyDischarge:Month",
+        name="Battery Discharge Month",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyDischarge:Year",
+        name="Battery Discharge Year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyDischarge:Total",
+        name="Battery Discharge Total",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
@@ -652,31 +716,89 @@ SENSOR_PROCESS_DATA = [
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyDischargeGrid:Day",
         name="Energy Discharge to Grid Day",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyDischargeGrid:Month",
         name="Energy Discharge to Grid Month",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyDischargeGrid:Year",
         name="Energy Discharge to Grid Year",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyDischargeGrid:Total",
         name="Energy Discharge to Grid Total",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:event",
+        key="Event:ActiveErrorCnt",
+        name="Active Alarms",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        icon="mdi:alert",
+        formatter="format_round",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="_virt_",
+        key="pv_P",
+        name="Sum power of all PV DC inputs",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True,
+        state_class=SensorStateClass.MEASUREMENT,
+        formatter="format_round",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="_virt_",
+        key="Statistic:EnergyGrid:Total",
+        name="Energy to Grid Total",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="_virt_",
+        key="Statistic:EnergyGrid:Year",
+        name="Energy to Grid Year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="_virt_",
+        key="Statistic:EnergyGrid:Month",
+        name="Energy to Grid Month",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="_virt_",
+        key="Statistic:EnergyGrid:Day",
+        name="Energy to Grid Day",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
@@ -685,7 +807,9 @@ SENSOR_PROCESS_DATA = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add kostal plenticore Sensors."""
     plenticore = hass.data[DOMAIN][entry.entry_id]
@@ -694,11 +818,7 @@ async def async_setup_entry(
 
     available_process_data = await plenticore.client.get_process_data()
     process_data_update_coordinator = ProcessDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        "Process Data",
-        timedelta(seconds=10),
-        plenticore,
+        hass, entry, _LOGGER, "Process Data", timedelta(seconds=10), plenticore
     )
     for description in SENSOR_PROCESS_DATA:
         module_id = description.module_id
@@ -725,7 +845,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
+class PlenticoreDataSensor(
+    CoordinatorEntity[ProcessDataUpdateCoordinator], SensorEntity
+):
     """Representation of a Plenticore data Sensor."""
 
     entity_description: PlenticoreSensorEntityDescription
@@ -742,16 +864,16 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self.entry_id = entry_id
-        self.platform_name = platform_name
         self.module_id = description.module_id
         self.data_id = description.key
 
-        self._sensor_name = description.name
         self._formatter: Callable[[str], Any] = PlenticoreDataFormatter.get_method(
             description.formatter
         )
 
-        self._device_info = device_info
+        self._attr_device_info = device_info
+        self._attr_unique_id = f"{entry_id}_{self.module_id}_{self.data_id}"
+        self._attr_name = f"{platform_name} {description.name}"
 
     @property
     def available(self) -> bool:
@@ -766,7 +888,9 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
-        self.coordinator.start_fetch_data(self.module_id, self.data_id)
+        self.async_on_remove(
+            self.coordinator.start_fetch_data(self.module_id, self.data_id)
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""
@@ -774,22 +898,7 @@ class PlenticoreDataSensor(CoordinatorEntity, SensorEntity):
         await super().async_will_remove_from_hass()
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return self._device_info
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of this Sensor Entity."""
-        return f"{self.entry_id}_{self.module_id}_{self.data_id}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of this Sensor Entity."""
-        return f"{self.platform_name} {self._sensor_name}"
-
-    @property
-    def native_value(self) -> Any | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             # None is translated to STATE_UNKNOWN

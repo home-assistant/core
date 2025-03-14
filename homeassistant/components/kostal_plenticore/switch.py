@@ -1,4 +1,5 @@
 """Platform for Kostal Plenticore switches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -8,20 +9,21 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .helper import SettingDataUpdateCoordinator
+from .coordinator import SettingDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class PlenticoreRequiredKeysMixin:
-    """A class that describes required properties for plenticore switch entities."""
+@dataclass(frozen=True, kw_only=True)
+class PlenticoreSwitchEntityDescription(SwitchEntityDescription):
+    """A class that describes plenticore switch entities."""
 
     module_id: str
     is_on: str
@@ -29,13 +31,6 @@ class PlenticoreRequiredKeysMixin:
     on_label: str
     off_value: str
     off_label: str
-
-
-@dataclass
-class PlenticoreSwitchEntityDescription(
-    SwitchEntityDescription, PlenticoreRequiredKeysMixin
-):
-    """A class that describes plenticore switch entities."""
 
 
 SWITCH_SETTINGS_DATA = [
@@ -53,7 +48,9 @@ SWITCH_SETTINGS_DATA = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add kostal plenticore Switch."""
     plenticore = hass.data[DOMAIN][entry.entry_id]
@@ -62,11 +59,7 @@ async def async_setup_entry(
 
     available_settings_data = await plenticore.client.get_settings()
     settings_data_update_coordinator = SettingDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        "Settings Data",
-        timedelta(seconds=30),
-        plenticore,
+        hass, entry, _LOGGER, "Settings Data", timedelta(seconds=30), plenticore
     )
     for description in SWITCH_SETTINGS_DATA:
         if (
@@ -115,7 +108,6 @@ class PlenticoreDataSwitch(
         """Create a new Switch Entity for Plenticore process data."""
         super().__init__(coordinator)
         self.entity_description = description
-        self.entry_id = entry_id
         self.platform_name = platform_name
         self.module_id = description.module_id
         self.data_id = description.key
@@ -128,7 +120,7 @@ class PlenticoreDataSwitch(
         self.off_label = description.off_label
         self._attr_unique_id = f"{entry_id}_{description.module_id}_{description.key}"
 
-        self._device_info = device_info
+        self._attr_device_info = device_info
 
     @property
     def available(self) -> bool:
@@ -143,7 +135,9 @@ class PlenticoreDataSwitch(
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
-        self.coordinator.start_fetch_data(self.module_id, self.data_id)
+        self.async_on_remove(
+            self.coordinator.start_fetch_data(self.module_id, self.data_id)
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""
@@ -167,11 +161,6 @@ class PlenticoreDataSwitch(
                 f"{self.platform_name} {self._name} {self.off_label}"
             )
             await self.coordinator.async_request_refresh()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return self._device_info
 
     @property
     def is_on(self) -> bool:

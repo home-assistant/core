@@ -1,11 +1,11 @@
 """The kraken integration."""
+
 from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 import krakenex
 import pykrakenapi
 
@@ -73,12 +73,13 @@ class KrakenData:
         once.
         """
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 return await self._hass.async_add_executor_job(self._get_kraken_data)
         except pykrakenapi.pykrakenapi.KrakenAPIError as error:
             if "Unknown asset pair" in str(error):
-                _LOGGER.info(
-                    "Kraken.com reported an unknown asset pair. Refreshing list of tradable asset pairs"
+                _LOGGER.warning(
+                    "Kraken.com reported an unknown asset pair. Refreshing list of"
+                    " tradable asset pairs"
                 )
                 await self._async_refresh_tradable_asset_pairs()
             else:
@@ -87,7 +88,8 @@ class KrakenData:
                 ) from error
         except pykrakenapi.pykrakenapi.CallRateLimitError:
             _LOGGER.warning(
-                "Exceeded the Kraken.com call rate limit. Increase the update interval to prevent this error"
+                "Exceeded the Kraken.com call rate limit. Increase the update interval"
+                " to prevent this error"
             )
         return None
 

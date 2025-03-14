@@ -1,8 +1,9 @@
 """The Meater Temperature Probe integration."""
+
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from meater import (
     AuthenticationError,
     MeaterApi,
@@ -47,9 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update_data() -> dict[str, MeaterProbe]:
         """Fetch data from API endpoint."""
         try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+            # Note: TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 devices: list[MeaterProbe] = await meater_api.get_all_devices()
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed("The API call wasn't authenticated") from err
@@ -63,6 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         # Name of the data. For logging purposes.
         name="meater_api",
         update_method=async_update_data,

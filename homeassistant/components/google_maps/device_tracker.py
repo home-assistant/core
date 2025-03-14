@@ -1,4 +1,5 @@
 """Support for Google Maps location sharing."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -9,7 +10,7 @@ from locationsharinglib.locationsharinglibexceptions import InvalidCookies
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as PLATFORM_SCHEMA_BASE,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     SeeCallback,
     SourceType,
 )
@@ -21,7 +22,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
@@ -39,7 +40,7 @@ CREDENTIALS_FILE = ".google_maps_location_sharing.cookies"
 
 # the parent "device_tracker" have marked the schemas as legacy, so this
 # need to be refactored as part of a bigger rewrite.
-PLATFORM_SCHEMA = PLATFORM_SCHEMA_BASE.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_MAX_GPS_ACCURACY, default=100000): vol.Coerce(float),
@@ -61,7 +62,9 @@ def setup_scanner(
 class GoogleMapsScanner:
     """Representation of an Google Maps location sharing account."""
 
-    def __init__(self, hass, config: ConfigType, see: SeeCallback) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config: ConfigType, see: SeeCallback
+    ) -> None:
         """Initialize the scanner."""
         self.see = see
         self.username = config[CONF_USERNAME]
@@ -80,7 +83,8 @@ class GoogleMapsScanner:
 
         except InvalidCookies:
             _LOGGER.error(
-                "The cookie file provided does not provide a valid session. Please create another one and try again"
+                "The cookie file provided does not provide a valid session. Please"
+                " create another one and try again"
             )
             self.success_init = False
 
@@ -96,9 +100,11 @@ class GoogleMapsScanner:
                 self.max_gps_accuracy is not None
                 and person.accuracy > self.max_gps_accuracy
             ):
-                _LOGGER.info(
-                    "Ignoring %s update because expected GPS "
-                    "accuracy %s is not met: %s",
+                _LOGGER.debug(
+                    (
+                        "Ignoring %s update because expected GPS "
+                        "accuracy %s is not met: %s"
+                    ),
                     person.nickname,
                     self.max_gps_accuracy,
                     person.accuracy,
@@ -107,12 +113,19 @@ class GoogleMapsScanner:
 
             last_seen = dt_util.as_utc(person.datetime)
             if last_seen < self._prev_seen.get(dev_id, last_seen):
-                _LOGGER.warning(
-                    "Ignoring %s update because timestamp "
-                    "is older than last timestamp",
+                _LOGGER.debug(
+                    "Ignoring %s update because timestamp is older than last timestamp",
                     person.nickname,
                 )
                 _LOGGER.debug("%s < %s", last_seen, self._prev_seen[dev_id])
+                continue
+            if last_seen == self._prev_seen.get(dev_id):
+                _LOGGER.debug(
+                    "Ignoring %s update because timestamp "
+                    "is the same as the last timestamp %s",
+                    person.nickname,
+                    last_seen,
+                )
                 continue
             self._prev_seen[dev_id] = last_seen
 

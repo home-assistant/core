@@ -1,4 +1,5 @@
 """Support for EnOcean sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -8,9 +9,9 @@ from enocean.utils import combine_hex
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -21,16 +22,15 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_CLOSED,
     STATE_OPEN,
-    TEMP_CELSIUS,
     UnitOfPower,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .device import EnOceanEntity
+from .entity import EnOceanEntity
 
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
@@ -45,25 +45,17 @@ SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
 
 
-@dataclass
-class EnOceanSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnOceanSensorEntityDescription(SensorEntityDescription):
+    """Describes EnOcean sensor entity."""
 
     unique_id: Callable[[list[int]], str | None]
-
-
-@dataclass
-class EnOceanSensorEntityDescription(
-    SensorEntityDescription, EnOceanSensorEntityDescriptionMixin
-):
-    """Describes EnOcean sensor entity."""
 
 
 SENSOR_DESC_TEMPERATURE = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_TEMPERATURE,
     name="Temperature",
-    native_unit_of_measurement=TEMP_CELSIUS,
-    icon="mdi:thermometer",
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
     unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_TEMPERATURE}",
@@ -73,7 +65,6 @@ SENSOR_DESC_HUMIDITY = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_HUMIDITY,
     name="Humidity",
     native_unit_of_measurement=PERCENTAGE,
-    icon="mdi:water-percent",
     device_class=SensorDeviceClass.HUMIDITY,
     state_class=SensorStateClass.MEASUREMENT,
     unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_HUMIDITY}",
@@ -83,7 +74,6 @@ SENSOR_DESC_POWER = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_POWER,
     name="Power",
     native_unit_of_measurement=UnitOfPower.WATT,
-    icon="mdi:power-plug",
     device_class=SensorDeviceClass.POWER,
     state_class=SensorStateClass.MEASUREMENT,
     unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_POWER}",
@@ -92,12 +82,12 @@ SENSOR_DESC_POWER = EnOceanSensorEntityDescription(
 SENSOR_DESC_WINDOWHANDLE = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_WINDOWHANDLE,
     name="WindowHandle",
-    icon="mdi:window-open-variant",
+    translation_key="window_handle",
     unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_WINDOWHANDLE}",
 )
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -117,16 +107,16 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an EnOcean sensor device."""
-    dev_id = config[CONF_ID]
-    dev_name = config[CONF_NAME]
-    sensor_type = config[CONF_DEVICE_CLASS]
+    dev_id: list[int] = config[CONF_ID]
+    dev_name: str = config[CONF_NAME]
+    sensor_type: str = config[CONF_DEVICE_CLASS]
 
     entities: list[EnOceanSensor] = []
     if sensor_type == SENSOR_TYPE_TEMPERATURE:
-        temp_min = config[CONF_MIN_TEMP]
-        temp_max = config[CONF_MAX_TEMP]
-        range_from = config[CONF_RANGE_FROM]
-        range_to = config[CONF_RANGE_TO]
+        temp_min: int = config[CONF_MIN_TEMP]
+        temp_max: int = config[CONF_MAX_TEMP]
+        range_from: int = config[CONF_RANGE_FROM]
+        range_to: int = config[CONF_RANGE_TO]
         entities = [
             EnOceanTemperatureSensor(
                 dev_id,
@@ -151,12 +141,17 @@ def setup_platform(
     add_entities(entities)
 
 
-class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
-    """Representation of an  EnOcean sensor device such as a power meter."""
+class EnOceanSensor(EnOceanEntity, RestoreSensor):
+    """Representation of an EnOcean sensor device such as a power meter."""
 
-    def __init__(self, dev_id, dev_name, description: EnOceanSensorEntityDescription):
+    def __init__(
+        self,
+        dev_id: list[int],
+        dev_name: str,
+        description: EnOceanSensorEntityDescription,
+    ) -> None:
         """Initialize the EnOcean sensor device."""
-        super().__init__(dev_id, dev_name)
+        super().__init__(dev_id)
         self.entity_description = description
         self._attr_name = f"{description.name} {dev_name}"
         self._attr_unique_id = description.unique_id(dev_id)
@@ -168,8 +163,8 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         if self._attr_native_value is not None:
             return
 
-        if (state := await self.async_get_last_state()) is not None:
-            self._attr_native_value = state.state
+        if (sensor_data := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = sensor_data.native_value
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
@@ -215,15 +210,15 @@ class EnOceanTemperatureSensor(EnOceanSensor):
 
     def __init__(
         self,
-        dev_id,
-        dev_name,
+        dev_id: list[int],
+        dev_name: str,
         description: EnOceanSensorEntityDescription,
         *,
-        scale_min,
-        scale_max,
-        range_from,
-        range_to,
-    ):
+        scale_min: int,
+        scale_max: int,
+        range_from: int,
+        range_to: int,
+    ) -> None:
         """Initialize the EnOcean temperature sensor device."""
         super().__init__(dev_id, dev_name, description)
         self._scale_min = scale_min

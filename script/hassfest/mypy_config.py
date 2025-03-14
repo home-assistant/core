@@ -1,4 +1,5 @@
 """Generate mypy config."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -11,12 +12,6 @@ from typing import Final
 from homeassistant.const import REQUIRED_PYTHON_VER
 
 from .model import Config, Integration
-
-# Modules which have type hints which known to be broken.
-# If you are an author of component listed here, please fix these errors and
-# remove your component from this list to enable type checks.
-# Do your best to not add anything new here.
-IGNORED_MODULES: Final[list[str]] = []
 
 # Component modules which should set no_implicit_reexport = true.
 NO_IMPLICIT_REEXPORT_MODULES: set[str] = {
@@ -37,20 +32,45 @@ HEADER: Final = """
 
 GENERAL_SETTINGS: Final[dict[str, str]] = {
     "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
+    "platform": "linux",
+    "plugins": ", ".join(  # noqa: FLY002
+        [
+            "pydantic.mypy",
+            "pydantic.v1.mypy",
+        ]
+    ),
     "show_error_codes": "true",
-    "follow_imports": "silent",
+    "follow_imports": "normal",
+    # "enable_incomplete_feature": ", ".join(
+    #     []
+    # ),
     # Enable some checks globally.
-    "ignore_missing_imports": "true",
+    "local_partial_types": "true",
     "strict_equality": "true",
+    "strict_bytes": "true",
     "no_implicit_optional": "true",
     "warn_incomplete_stub": "true",
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
-    "enable_error_code": ", ".join(["ignore-without-code"]),
-    "disable_error_code": ", ".join(["annotation-unchecked"]),
-    # Strict_concatenate breaks passthrough ParamSpec typing
-    "strict_concatenate": "false",
+    "enable_error_code": ", ".join(  # noqa: FLY002
+        [
+            "deprecated",
+            "ignore-without-code",
+            "redundant-self",
+            "truthy-iterable",
+        ]
+    ),
+    "disable_error_code": ", ".join(  # noqa: FLY002
+        [
+            "annotation-unchecked",
+            "import-not-found",
+            "import-untyped",
+        ]
+    ),
+    # Impractical in real code
+    # E.g. this breaks passthrough ParamSpec typing with Concatenate
+    "extra_checks": "false",
 }
 
 # This is basically the list of checks which is enabled for "strict=true".
@@ -77,23 +97,21 @@ STRICT_SETTINGS_CORE: Final[list[str]] = [
     "disallow_any_generics",
 ]
 
-
-def _strict_module_in_ignore_list(
-    module: str, ignored_modules_set: set[str]
-) -> str | None:
-    if module in ignored_modules_set:
-        return module
-    if module.endswith("*"):
-        module = module[:-1]
-        for ignored_module in ignored_modules_set:
-            if ignored_module.startswith(module):
-                return ignored_module
-    return None
+# Plugin specific settings
+# Bump mypy cache when updating! Some plugins don't invalidate the cache properly.
+# pydantic: https://docs.pydantic.dev/mypy_plugin/#plugin-settings
+PLUGIN_CONFIG: Final[dict[str, dict[str, str]]] = {
+    "pydantic-mypy": {
+        "init_forbid_extra": "true",
+        "init_typed": "true",
+        "warn_required_dynamic_aliases": "true",
+        "warn_untyped_fields": "true",
+    }
+}
 
 
 def _sort_within_sections(line_iter: Iterable[str]) -> Iterable[str]:
-    """
-    Sort lines within sections.
+    """Sort lines within sections.
 
     Sections are defined as anything not delimited by a blank line
     or an octothorpe-prefixed comment line.
@@ -144,27 +162,9 @@ def _generate_and_validate_mypy_config(config: Config) -> str:
         else:
             strict_core_modules.append(module)
 
-    ignored_modules_set: set[str] = set(IGNORED_MODULES)
-    for module in strict_modules:
-        if (
-            not module.startswith("homeassistant.components.")
-            and module != "homeassistant.components"
-        ):
-            config.add_error(
-                "mypy_config", f"Only components should be added: {module}"
-            )
-        if ignored_module := _strict_module_in_ignore_list(module, ignored_modules_set):
-            config.add_error(
-                "mypy_config",
-                f"Module '{ignored_module}' is in ignored list in mypy_config.py",
-            )
-
     # Validate that all modules exist.
     all_modules = (
-        strict_modules
-        + strict_core_modules
-        + IGNORED_MODULES
-        + list(NO_IMPLICIT_REEXPORT_MODULES)
+        strict_modules + strict_core_modules + list(NO_IMPLICIT_REEXPORT_MODULES)
     )
     for module in all_modules:
         if module.endswith(".*"):
@@ -192,6 +192,13 @@ def _generate_and_validate_mypy_config(config: Config) -> str:
         mypy_config.set(general_section, key, value)
     for key in STRICT_SETTINGS:
         mypy_config.set(general_section, key, "true")
+
+    for plugin_name, plugin_config in PLUGIN_CONFIG.items():
+        if not plugin_config:
+            continue
+        mypy_config.add_section(plugin_name)
+        for key, value in plugin_config.items():
+            mypy_config.set(plugin_name, key, value)
 
     # By default enable no_implicit_reexport only for homeassistant.*
     # Disable it afterwards for all components
@@ -232,11 +239,6 @@ def _generate_and_validate_mypy_config(config: Config) -> str:
     mypy_config.add_section(tests_section)
     for key in STRICT_SETTINGS:
         mypy_config.set(tests_section, key, "false")
-
-    for ignored_module in IGNORED_MODULES:
-        ignored_section = f"mypy-{ignored_module}"
-        mypy_config.add_section(ignored_section)
-        mypy_config.set(ignored_section, "ignore_errors", "true")
 
     with io.StringIO() as fp:
         mypy_config.write(fp)

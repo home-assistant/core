@@ -1,0 +1,60 @@
+{
+  "success": true,
+  "data": {
+    "api_user": "test-api-user",
+    "profile": { "name": "test-user" },
+    "stats": {
+      "buffs": {
+        "str": 26,
+        "int": 26,
+        "per": 26,
+        "con": 26,
+        "stealth": 0,
+        "streaks": false,
+        "seafoam": false,
+        "shinySeed": false,
+        "snowball": false,
+        "spookySparkles": false
+      },
+      "hp": 0,
+      "mp": 50.89999999999998,
+      "exp": 737,
+      "gp": 137.62587214609795,
+      "lvl": 38,
+      "class": "rogue",
+      "maxHealth": 50,
+      "maxMP": 166,
+      "toNextLevel": 880,
+      "points": 5,
+      "str": 15,
+      "con": 15,
+      "int": 15,
+      "per": 15
+    },
+    "preferences": {
+      "sleep": false,
+      "automaticAllocation": true,
+      "disableClasses": false,
+      "language": "en"
+    },
+    "flags": {
+      "classSelected": true
+    },
+    "needsCron": true,
+    "lastCron": "2024-09-21T22:01:55.586Z",
+    "items": {
+      "gear": {
+        "equipped": {
+          "weapon": "weapon_rogue_5",
+          "armor": "armor_rogue_5",
+          "head": "head_rogue_5",
+          "shield": "shield_rogue_5",
+          "back": "back_special_heroicAureole",
+          "headAccessory": "headAccessory_armoire_gogglesOfBookbinding",
+          "eyewear": "eyewear_armoire_plagueDoctorMask",
+          "body": "body_special_aetherAmulet"
+        }
+      }
+    }
+  }
+}

@@ -11,21 +11,13 @@
         }
       },
       "geography_by_name": {
-        "title": "Configure a Geography",
+        "title": "[%key:component::airvisual::config::step::geography_by_coords::title%]",
         "description": "Use the AirVisual cloud API to monitor a city/state/country.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "city": "City",
           "country": "Country",
-          "state": "state"
-        }
-      },
-      "node_pro": {
-        "title": "Configure an AirVisual Node/Pro",
-        "description": "Monitor a personal AirVisual unit. The password can be retrieved from the unit's UI.",
-        "data": {
-          "ip_address": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "state": "State"
         }
       },
       "reauth_confirm": {
@@ -40,20 +32,20 @@
       }
     },
     "error": {
-      "general_error": "[%key:common::config_flow::error::unknown%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "location_not_found": "Location not found",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%] or Node/Pro ID is already registered.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Configure AirVisual",
+        "title": "[%key:component::airvisual::config::step::user::title%]",
         "data": {
           "show_on_map": "Show monitored geography on the map"
         }
@@ -82,6 +74,12 @@
           "hazardous": "Hazardous"
         }
       }
+    }
+  },
+  "issues": {
+    "airvisual_pro_migration": {
+      "title": "{ip_address} is now part of the AirVisual Pro integration",
+      "description": "AirVisual Pro units are now their own Home Assistant integration (as opposed to be included with the original AirVisual integration that uses the AirVisual cloud API). The Pro device located at `{ip_address}` has automatically been migrated.\n\nAs part of that migration, the Pro's device ID has changed from `{old_device_id}` to `{new_device_id}`. Please update these automations to use the new device ID: {device_automations_string}."
     }
   }
 }

@@ -1,9 +1,8 @@
 """Test Supervisor diagnostics."""
 
 import os
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-from aiohttp import ClientSession
 import pytest
 
 from homeassistant.components.hassio import DOMAIN
@@ -12,15 +11,23 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock, request):
+def mock_all(
+    aioclient_mock: AiohttpClientMocker,
+    addon_installed: AsyncMock,
+    store_info: AsyncMock,
+    addon_stats: AsyncMock,
+    addon_changelog: AsyncMock,
+    resolution_info: AsyncMock,
+) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/info",
@@ -31,13 +38,6 @@ def mock_all(aioclient_mock, request):
                 "homeassistant": "0.110.0",
                 "hassos": "1.2.3",
             },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/store",
-        json={
-            "result": "ok",
-            "data": {"addons": [], "repositories": []},
         },
     )
     aioclient_mock.get(
@@ -110,7 +110,7 @@ def mock_all(aioclient_mock, request):
         },
     )
     aioclient_mock.get(
-        "http://127.0.0.1/addons/test/stats",
+        "http://127.0.0.1/core/stats",
         json={
             "result": "ok",
             "data": {
@@ -125,30 +125,32 @@ def mock_all(aioclient_mock, request):
             },
         },
     )
-    aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
     aioclient_mock.get(
-        "http://127.0.0.1/addons/test/info",
-        json={"result": "ok", "data": {"auto_update": True}},
-    )
-    aioclient_mock.get("http://127.0.0.1/addons/test2/changelog", text="")
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test2/info",
-        json={"result": "ok", "data": {"auto_update": False}},
+        "http://127.0.0.1/supervisor/stats",
+        json={
+            "result": "ok",
+            "data": {
+                "cpu_percent": 0.99,
+                "memory_usage": 182611968,
+                "memory_limit": 3977146368,
+                "memory_percent": 4.59,
+                "network_rx": 362570232,
+                "network_tx": 82374138,
+                "blk_read": 46010945536,
+                "blk_write": 15051526144,
+            },
+        },
     )
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
-    aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
     aioclient_mock.get(
-        "http://127.0.0.1/resolution/info",
+        "http://127.0.0.1/network/info",
         json={
             "result": "ok",
             "data": {
-                "unsupported": [],
-                "unhealthy": [],
-                "suggestions": [],
-                "issues": [],
-                "checks": [],
+                "host_internet": True,
+                "supervisor_internet": True,
             },
         },
     )
@@ -156,7 +158,7 @@ def mock_all(aioclient_mock, request):
 
 async def test_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test diagnostic information."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -179,5 +181,6 @@ async def test_diagnostics(
     assert "core" in diagnostics["coordinator_data"]
     assert "supervisor" in diagnostics["coordinator_data"]
     assert "os" in diagnostics["coordinator_data"]
+    assert "host" in diagnostics["coordinator_data"]
 
-    assert len(diagnostics["devices"]) == 5
+    assert len(diagnostics["devices"]) == 6

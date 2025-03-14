@@ -1,4 +1,5 @@
 """Fixtures for PVOutput integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -11,7 +12,7 @@ from homeassistant.components.pvoutput.const import CONF_SYSTEM_ID, DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -26,7 +27,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.pvoutput.async_setup_entry", return_value=True
@@ -35,40 +36,23 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_pvoutput_config_flow() -> Generator[None, MagicMock, None]:
+def mock_pvoutput() -> Generator[MagicMock]:
     """Return a mocked PVOutput client."""
-    with patch(
-        "homeassistant.components.pvoutput.config_flow.PVOutput", autospec=True
-    ) as pvoutput_mock:
-        yield pvoutput_mock.return_value
-
-
-@pytest.fixture
-def mock_pvoutput() -> Generator[None, MagicMock, None]:
-    """Return a mocked PVOutput client."""
-    status = Status(
-        reported_date="20211229",
-        reported_time="22:37",
-        energy_consumption=1000,
-        energy_generation=500,
-        normalized_output=0.5,
-        power_consumption=2500,
-        power_generation=1500,
-        temperature=20.2,
-        voltage=220.5,
-    )
-
-    system = System(
-        inverter_brand="Super Inverters Inc.",
-        system_name="Frenck's Solar Farm",
-    )
-
-    with patch(
-        "homeassistant.components.pvoutput.coordinator.PVOutput", autospec=True
-    ) as pvoutput_mock:
+    with (
+        patch(
+            "homeassistant.components.pvoutput.coordinator.PVOutput", autospec=True
+        ) as pvoutput_mock,
+        patch(
+            "homeassistant.components.pvoutput.config_flow.PVOutput", new=pvoutput_mock
+        ),
+    ):
         pvoutput = pvoutput_mock.return_value
-        pvoutput.status.return_value = status
-        pvoutput.system.return_value = system
+        pvoutput.status.return_value = Status.from_dict(
+            load_json_object_fixture("status.json", DOMAIN)
+        )
+        pvoutput.system.return_value = System.from_dict(
+            load_json_object_fixture("system.json", DOMAIN)
+        )
         yield pvoutput
 
 

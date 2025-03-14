@@ -1,11 +1,17 @@
 {
   "domain": "withings",
   "name": "Withings",
+  "after_dependencies": ["cloud"],
+  "codeowners": ["@joostlek"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/withings",
-  "requirements": ["withings-api==2.4.0"],
   "dependencies": ["application_credentials", "http", "webhook"],
-  "codeowners": ["@vangorra"],
-  "iot_class": "cloud_polling",
-  "loggers": ["withings_api"]
+  "dhcp": [
+    {
+      "macaddress": "0024E4*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/withings",
+  "iot_class": "cloud_push",
+  "loggers": ["aiowithings"],
+  "requirements": ["aiowithings==3.1.6"]
 }

@@ -1,4 +1,5 @@
 """Helpers for sun events."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -9,16 +10,19 @@ from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     import astral
     import astral.location
 
-DATA_LOCATION_CACHE = "astral_location_cache"
+DATA_LOCATION_CACHE: HassKey[
+    dict[tuple[str, str, str, float, float], astral.location.Location]
+] = HassKey("astral_location_cache")
 
 ELEVATION_AGNOSTIC_EVENTS = ("noon", "midnight")
 
-_AstralSunEventCallable = Callable[..., datetime.datetime]
+type _AstralSunEventCallable = Callable[..., datetime.datetime]
 
 
 @callback
@@ -82,7 +86,8 @@ def get_location_astral_event_next(
         kwargs["observer_elevation"] = elevation
 
     mod = -1
-    while True:
+    first_err = None
+    while mod < 367:
         try:
             next_dt = (
                 cast(_AstralSunEventCallable, getattr(location, event))(
@@ -94,9 +99,13 @@ def get_location_astral_event_next(
             )
             if next_dt > utc_point_in_time:
                 return next_dt
-        except ValueError:
-            pass
+        except ValueError as err:
+            if not first_err:
+                first_err = err
         mod += 1
+    raise ValueError(
+        f"Unable to find event after one year, initial ValueError: {first_err}"
+    ) from first_err
 
 
 @callback

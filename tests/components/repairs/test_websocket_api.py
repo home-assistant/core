@@ -1,12 +1,11 @@
 """Test the repairs websocket API."""
+
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock
 
-from aiohttp import ClientSession, ClientWebSocketResponse
-from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -15,10 +14,15 @@ from homeassistant.components.repairs import RepairsFlow
 from homeassistant.components.repairs.const import DOMAIN
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_platform
+from tests.common import MockUser, mock_platform
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 DEFAULT_ISSUES = [
     {
@@ -34,7 +38,11 @@ DEFAULT_ISSUES = [
 ]
 
 
-async def create_issues(hass, ws_client, issues=None):
+async def create_issues(
+    hass: HomeAssistant,
+    ws_client: MockHAClientWebSocket,
+    issues: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
     """Create issues."""
 
     def api_issue(issue):
@@ -51,7 +59,7 @@ async def create_issues(hass, ws_client, issues=None):
         issues = DEFAULT_ISSUES
 
     for issue in issues:
-        issue_registry.async_create_issue(
+        ir.async_create_issue(
             hass,
             issue["domain"],
             issue["issue_id"],
@@ -92,14 +100,14 @@ class MockFixFlow(RepairsFlow):
         assert self.issue_id in EXPECTED_DATA
         assert self.data == EXPECTED_DATA[self.issue_id]
 
-        return await (self.async_step_custom_step())
+        return await self.async_step_custom_step()
 
     async def async_step_custom_step(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle a custom_step step of a fix flow."""
         if user_input is not None:
-            return self.async_create_entry(title="", data={})
+            return self.async_create_entry(data={})
 
         return self.async_show_form(step_id="custom_step", data_schema=vol.Schema({}))
 
@@ -115,11 +123,15 @@ class MockFixFlowAbort(RepairsFlow):
 
 
 @pytest.fixture(autouse=True)
-async def mock_repairs_integration(hass):
+async def mock_repairs_integration(hass: HomeAssistant) -> None:
     """Mock a repairs integration."""
     hass.config.components.add("fake_integration")
 
-    def async_create_fix_flow(hass, issue_id, data):
+    def async_create_fix_flow(
+        hass: HomeAssistant,
+        issue_id: str,
+        data: dict[str, str | int | float | None] | None,
+    ) -> RepairsFlow:
         assert issue_id in EXPECTED_DATA
         assert data == EXPECTED_DATA[issue_id]
 
@@ -139,7 +151,10 @@ async def mock_repairs_integration(hass):
     )
 
 
-async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
+async def test_dismiss_issue(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can dismiss an issue."""
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -220,8 +235,11 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
     }
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
 async def test_fix_non_existing_issue(
-    hass: HomeAssistant, hass_client, hass_ws_client
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test trying to fix an issue that doesn't exist."""
     assert await async_setup_component(hass, "http", {})
@@ -265,16 +283,26 @@ async def test_fix_non_existing_issue(
 
 
 @pytest.mark.parametrize(
-    "domain, step, description_placeholders",
     (
-        ("fake_integration", "custom_step", None),
-        ("fake_integration_default_handler", "confirm", {"abc": "123"}),
+        "domain",
+        "step",
+        "description_placeholders",
+        "ignore_translations_for_mock_domains",
     ),
+    [
+        ("fake_integration", "custom_step", None, ["fake_integration"]),
+        (
+            "fake_integration_default_handler",
+            "confirm",
+            {"abc": "123"},
+            ["fake_integration_default_handler"],
+        ),
+    ],
 )
 async def test_fix_issue(
     hass: HomeAssistant,
-    hass_client,
-    hass_ws_client,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
     domain,
     step,
     description_placeholders,
@@ -310,6 +338,7 @@ async def test_fix_issue(
         "flow_id": ANY,
         "handler": domain,
         "last_step": None,
+        "preview": None,
         "step_id": step,
         "type": "form",
     }
@@ -334,9 +363,7 @@ async def test_fix_issue(
         "description_placeholders": None,
         "flow_id": flow_id,
         "handler": domain,
-        "title": "",
         "type": "create_entry",
-        "version": 1,
     }
 
     await ws_client.send_json({"id": 4, "type": "repairs/list_issues"})
@@ -347,7 +374,7 @@ async def test_fix_issue(
 
 
 async def test_fix_issue_unauth(
-    hass: HomeAssistant, hass_client, hass_admin_user
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_admin_user: MockUser
 ) -> None:
     """Test we can't query the result if not authorized."""
     assert await async_setup_component(hass, "http", {})
@@ -365,8 +392,12 @@ async def test_fix_issue_unauth(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
 async def test_get_progress_unauth(
-    hass: HomeAssistant, hass_client, hass_ws_client, hass_admin_user
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
 ) -> None:
     """Test we can't fix an issue if not authorized."""
     assert await async_setup_component(hass, "http", {})
@@ -393,8 +424,12 @@ async def test_get_progress_unauth(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
 async def test_step_unauth(
-    hass: HomeAssistant, hass_client, hass_ws_client, hass_admin_user
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
 ) -> None:
     """Test we can't fix an issue if not authorized."""
     assert await async_setup_component(hass, "http", {})
@@ -421,13 +456,18 @@ async def test_step_unauth(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-@freeze_time("2022-07-19 07:53:05")
-async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) -> None:
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
+@pytest.mark.freeze_time("2022-07-19 07:53:05")
+async def test_list_issues(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test we can list issues."""
 
     # Add an inactive issue, this should not be exposed in the list
-    hass_storage[issue_registry.STORAGE_KEY] = {
-        "version": issue_registry.STORAGE_VERSION_MAJOR,
+    hass_storage[ir.STORAGE_KEY] = {
+        "version": ir.STORAGE_VERSION_MAJOR,
         "data": {
             "issues": [
                 {
@@ -478,7 +518,7 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
     ]
 
     for issue in issues:
-        issue_registry.async_create_issue(
+        ir.async_create_issue(
             hass,
             issue["domain"],
             issue["issue_id"],
@@ -508,10 +548,11 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
     }
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
 async def test_fix_issue_aborted(
     hass: HomeAssistant,
-    hass_client: Callable[..., Awaitable[ClientSession]],
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test we can fix an issue."""
     assert await async_setup_component(hass, "http", {})
@@ -567,3 +608,81 @@ async def test_fix_issue_aborted(
     assert msg["success"]
     assert len(msg["result"]["issues"]) == 1
     assert msg["result"]["issues"][0] == first_issue
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
+@pytest.mark.freeze_time("2022-07-19 07:53:05")
+async def test_get_issue_data(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test we can get issue data."""
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    client = await hass_ws_client(hass)
+
+    issues = [
+        {
+            "breaks_in_ha_version": "2022.9",
+            "data": None,
+            "domain": "test",
+            "is_fixable": True,
+            "issue_id": "issue_1",
+            "issue_domain": None,
+            "learn_more_url": "https://theuselessweb.com",
+            "severity": "error",
+            "translation_key": "abc_123",
+            "translation_placeholders": {"abc": "123"},
+        },
+        {
+            "breaks_in_ha_version": "2022.8",
+            "data": {"key": "value"},
+            "domain": "test",
+            "is_fixable": False,
+            "issue_id": "issue_2",
+            "issue_domain": None,
+            "learn_more_url": "https://theuselessweb.com/abc",
+            "severity": "other",
+            "translation_key": "even_worse",
+            "translation_placeholders": {"def": "456"},
+        },
+    ]
+
+    for issue in issues:
+        ir.async_create_issue(
+            hass,
+            issue["domain"],
+            issue["issue_id"],
+            breaks_in_ha_version=issue["breaks_in_ha_version"],
+            data=issue["data"],
+            is_fixable=issue["is_fixable"],
+            is_persistent=False,
+            learn_more_url=issue["learn_more_url"],
+            severity=issue["severity"],
+            translation_key=issue["translation_key"],
+            translation_placeholders=issue["translation_placeholders"],
+        )
+
+    await client.send_json_auto_id(
+        {"type": "repairs/get_issue_data", "domain": "test", "issue_id": "issue_1"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"issue_data": None}
+
+    await client.send_json_auto_id(
+        {"type": "repairs/get_issue_data", "domain": "test", "issue_id": "issue_2"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"issue_data": {"key": "value"}}
+
+    await client.send_json_auto_id(
+        {"type": "repairs/get_issue_data", "domain": "test", "issue_id": "unknown"}
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "unknown_issue",
+        "message": "Issue 'unknown' not found",
+    }

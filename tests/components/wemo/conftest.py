@@ -1,13 +1,15 @@
 """Fixtures for pywemo."""
-import asyncio
+
+from collections.abc import Generator
 import contextlib
-from unittest.mock import create_autospec, patch
+from unittest.mock import MagicMock, create_autospec, patch
 
 import pytest
 import pywemo
 
 from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC
 from homeassistant.components.wemo.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -22,22 +24,20 @@ MOCK_INSIGHT_STATE_THRESHOLD_POWER = 8.0
 
 
 @pytest.fixture(name="pywemo_model")
-def pywemo_model_fixture():
+def pywemo_model_fixture() -> str:
     """Fixture containing a pywemo class name used by pywemo_device_fixture."""
     return "LightSwitch"
 
 
 @pytest.fixture(name="pywemo_registry", autouse=True)
-async def async_pywemo_registry_fixture():
+def async_pywemo_registry_fixture() -> Generator[MagicMock]:
     """Fixture for SubscriptionRegistry instances."""
     registry = create_autospec(pywemo.SubscriptionRegistry, instance=True)
 
     registry.callbacks = {}
-    registry.semaphore = asyncio.Semaphore(value=0)
 
     def on_func(device, type_filter, callback):
         registry.callbacks[device.name] = callback
-        registry.semaphore.release()
 
     registry.on.side_effect = on_func
     registry.is_subscribed.return_value = False
@@ -54,16 +54,19 @@ def pywemo_discovery_responder_fixture():
 
 
 @contextlib.contextmanager
-def create_pywemo_device(pywemo_registry, pywemo_model):
+def create_pywemo_device(
+    pywemo_registry: MagicMock, pywemo_model: str
+) -> pywemo.WeMoDevice:
     """Create a WeMoDevice instance."""
     cls = getattr(pywemo, pywemo_model)
     device = create_autospec(cls, instance=True)
     device.host = MOCK_HOST
     device.port = MOCK_PORT
     device.name = MOCK_NAME
-    device.serialnumber = MOCK_SERIAL_NUMBER
+    device.serial_number = MOCK_SERIAL_NUMBER
     device.model_name = pywemo_model.replace("LongPress", "")
-    device.udn = f"uuid:{device.model_name}-1_0-{device.serialnumber}"
+    device.model = device.model_name
+    device.udn = f"uuid:{device.model_name}-1_0-{device.serial_number}"
     device.firmware_version = MOCK_FIRMWARE_VERSION
     device.get_state.return_value = 0  # Default to Off
     device.supports_long_press.return_value = cls.supports_long_press()
@@ -84,35 +87,42 @@ def create_pywemo_device(pywemo_registry, pywemo_model):
         device.switch_state = 0
 
     url = f"http://{MOCK_HOST}:{MOCK_PORT}/setup.xml"
-    with patch("pywemo.setup_url_for_address", return_value=url), patch(
-        "pywemo.discovery.device_from_description", return_value=device
+    with (
+        patch("pywemo.setup_url_for_address", return_value=url),
+        patch("pywemo.discovery.device_from_description", return_value=device),
     ):
         yield device
 
 
 @pytest.fixture(name="pywemo_device")
-def pywemo_device_fixture(pywemo_registry, pywemo_model):
+def pywemo_device_fixture(
+    pywemo_registry: MagicMock, pywemo_model: str
+) -> Generator[pywemo.WeMoDevice]:
     """Fixture for WeMoDevice instances."""
     with create_pywemo_device(pywemo_registry, pywemo_model) as pywemo_device:
         yield pywemo_device
 
 
 @pytest.fixture(name="pywemo_dli_device")
-def pywemo_dli_device_fixture(pywemo_registry, pywemo_model):
+def pywemo_dli_device_fixture(
+    pywemo_registry: MagicMock, pywemo_model: str
+) -> Generator[pywemo.WeMoDevice]:
     """Fixture for Digital Loggers emulated instances."""
     with create_pywemo_device(pywemo_registry, pywemo_model) as pywemo_dli_device:
         pywemo_dli_device.model_name = "DLI emulated Belkin Socket"
-        pywemo_dli_device.serialnumber = "1234567891"
+        pywemo_dli_device.serial_number = "1234567891"
         yield pywemo_dli_device
 
 
 @pytest.fixture(name="wemo_entity_suffix")
-def wemo_entity_suffix_fixture():
+def wemo_entity_suffix_fixture() -> str:
     """Fixture to select a specific entity for wemo_entity."""
     return ""
 
 
-async def async_create_wemo_entity(hass, pywemo_device, wemo_entity_suffix):
+async def async_create_wemo_entity(
+    hass: HomeAssistant, pywemo_device: pywemo.WeMoDevice, wemo_entity_suffix: str
+) -> er.RegistryEntry | None:
     """Create a hass entity for a wemo device."""
     assert await async_setup_component(
         hass,
@@ -135,12 +145,16 @@ async def async_create_wemo_entity(hass, pywemo_device, wemo_entity_suffix):
 
 
 @pytest.fixture(name="wemo_entity")
-async def async_wemo_entity_fixture(hass, pywemo_device, wemo_entity_suffix):
+async def async_wemo_entity_fixture(
+    hass: HomeAssistant, pywemo_device: pywemo.WeMoDevice, wemo_entity_suffix: str
+) -> er.RegistryEntry | None:
     """Fixture for a Wemo entity in hass."""
     return await async_create_wemo_entity(hass, pywemo_device, wemo_entity_suffix)
 
 
 @pytest.fixture(name="wemo_dli_entity")
-async def async_wemo_dli_entity_fixture(hass, pywemo_dli_device, wemo_entity_suffix):
+async def async_wemo_dli_entity_fixture(
+    hass: HomeAssistant, pywemo_dli_device: pywemo.WeMoDevice, wemo_entity_suffix: str
+) -> er.RegistryEntry | None:
     """Fixture for a Wemo entity in hass."""
     return await async_create_wemo_entity(hass, pywemo_dli_device, wemo_entity_suffix)

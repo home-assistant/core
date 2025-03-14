@@ -1,24 +1,23 @@
 """Support for Washington State Department of Transportation (WSDOT) data."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 import logging
 import re
+from typing import Any
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_NAME,
-    CONF_API_KEY,
-    CONF_ID,
-    CONF_NAME,
-    TIME_MINUTES,
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
 )
+from homeassistant.const import ATTR_NAME, CONF_API_KEY, CONF_ID, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -44,7 +43,7 @@ RESOURCE = (
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_TRAVEL_TIMES): [
@@ -74,8 +73,7 @@ def setup_platform(
 
 
 class WashingtonStateTransportSensor(SensorEntity):
-    """
-    Sensor that reads the WSDOT web API.
+    """Sensor that reads the WSDOT web API.
 
     WSDOT provides ferry schedules, toll rates, weather conditions,
     mountain pass conditions, and more. Subclasses of this
@@ -106,7 +104,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     """Travel time sensor from WSDOT."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(self, name, access_code, travel_time_id):
         """Construct a travel time sensor."""
@@ -128,7 +126,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         self._state = self._data.get(ATTR_CURRENT_TIME)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return other details about the sensor state."""
         if self._data is not None:
             attrs = {}
@@ -143,6 +141,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
                 self._data.get(ATTR_TIME_UPDATED)
             )
             return attrs
+        return None
 
 
 def _parse_wsdot_timestamp(timestamp):

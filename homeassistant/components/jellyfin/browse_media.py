@@ -1,4 +1,5 @@
 """Support for media browsing."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,12 +7,21 @@ from typing import Any
 
 from jellyfin_apiclient_python import JellyfinClient
 
-from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
-from homeassistant.components.media_player.browse_media import BrowseMedia
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    MediaType,
+)
 from homeassistant.core import HomeAssistant
 
 from .client_wrapper import get_artwork_url
-from .const import CONTENT_TYPE_MAP, MEDIA_CLASS_MAP, MEDIA_TYPE_NONE
+from .const import (
+    CONTENT_TYPE_MAP,
+    MEDIA_CLASS_MAP,
+    MEDIA_TYPE_NONE,
+    SUPPORTED_COLLECTION_TYPES,
+)
 
 CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS: dict[str, str] = {
     MediaType.MUSIC: MediaClass.MUSIC,
@@ -21,8 +31,6 @@ CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS: dict[str, str] = {
     "collection": MediaClass.DIRECTORY,
     "library": MediaClass.DIRECTORY,
 }
-
-JF_SUPPORTED_LIBRARY_TYPES = ["movies", "music", "tvshows"]
 
 PLAYABLE_MEDIA_TYPES = [
     MediaType.EPISODE,
@@ -65,7 +73,7 @@ async def build_root_response(
     children = [
         await item_payload(hass, client, user_id, folder)
         for folder in folders["Items"]
-        if folder["CollectionType"] in JF_SUPPORTED_LIBRARY_TYPES
+        if folder["CollectionType"] in SUPPORTED_COLLECTION_TYPES
     ]
 
     return BrowseMedia(

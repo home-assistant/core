@@ -1,11 +1,17 @@
 """Test the init file of IFTTT."""
-from homeassistant import config_entries, data_entry_flow
+
+from homeassistant import config_entries
 from homeassistant.components import ifttt
-from homeassistant.config import async_process_ha_core_config
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.data_entry_flow import FlowResultType
+
+from tests.typing import ClientSessionGenerator
 
 
-async def test_config_flow_registers_webhook(hass, hass_client_no_auth):
+async def test_config_flow_registers_webhook(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
     """Test setting up IFTTT and sending webhook."""
     await async_process_ha_core_config(
         hass,
@@ -15,10 +21,10 @@ async def test_config_flow_registers_webhook(hass, hass_client_no_auth):
     result = await hass.config_entries.flow.async_init(
         "ifttt", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM, result
+    assert result["type"] is FlowResultType.FORM, result
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     webhook_id = result["result"].data["webhook_id"]
 
     ifttt_events = []

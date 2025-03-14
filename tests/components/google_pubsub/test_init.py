@@ -1,15 +1,17 @@
 """The tests for the Google Pub/Sub component."""
+
+from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import datetime
 import os
-import unittest.mock as mock
+from typing import Any
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-import homeassistant.components.google_pubsub as google_pubsub
+from homeassistant.components import google_pubsub
 from homeassistant.components.google_pubsub import DateTimeJSONEncoder as victim
-from homeassistant.const import EVENT_STATE_CHANGED
-from homeassistant.core import split_entity_id
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 GOOGLE_PUBSUB_PATH = "homeassistant.components.google_pubsub"
@@ -23,52 +25,51 @@ class FilterTest:
     should_pass: bool
 
 
-async def test_datetime():
+async def test_datetime() -> None:
     """Test datetime encoding."""
     time = datetime(2019, 1, 13, 12, 30, 5)
     assert victim().encode(time) == '"2019-01-13T12:30:05"'
 
 
-async def test_no_datetime():
+async def test_no_datetime() -> None:
     """Test integer encoding."""
     assert victim().encode(42) == "42"
 
 
-async def test_nested():
+async def test_nested() -> None:
     """Test dictionary encoding."""
     assert victim().encode({"foo": "bar"}) == '{"foo": "bar"}'
 
 
 @pytest.fixture(autouse=True, name="mock_client")
-def mock_client_fixture():
+def mock_client_fixture() -> Generator[MagicMock]:
     """Mock the pubsub client."""
-    with mock.patch(f"{GOOGLE_PUBSUB_PATH}.PublisherClient") as client:
+    with patch(f"{GOOGLE_PUBSUB_PATH}.PublisherClient") as client:
         setattr(
             client,
             "from_service_account_json",
-            mock.MagicMock(return_value=mock.MagicMock()),
+            MagicMock(return_value=MagicMock()),
         )
         yield client
 
 
 @pytest.fixture(autouse=True, name="mock_is_file")
-def mock_is_file_fixture():
+def mock_is_file_fixture() -> Generator[MagicMock]:
     """Mock os.path.isfile."""
-    with mock.patch(f"{GOOGLE_PUBSUB_PATH}.os.path.isfile") as is_file:
+    with patch(f"{GOOGLE_PUBSUB_PATH}.os.path.isfile") as is_file:
         is_file.return_value = True
         yield is_file
 
 
 @pytest.fixture(autouse=True)
-def mock_bus_and_json(hass, monkeypatch):
+def mock_json(monkeypatch: pytest.MonkeyPatch) -> None:
     """Mock the event bus listener and os component."""
-    hass.bus.listen = mock.MagicMock()
     monkeypatch.setattr(
-        f"{GOOGLE_PUBSUB_PATH}.json.dumps", mock.Mock(return_value=mock.MagicMock())
+        f"{GOOGLE_PUBSUB_PATH}.json.dumps", Mock(return_value=MagicMock())
     )
 
 
-async def test_minimal_config(hass, mock_client):
+async def test_minimal_config(hass: HomeAssistant, mock_client) -> None:
     """Test the minimal config and defaults of component."""
     config = {
         google_pubsub.DOMAIN: {
@@ -80,15 +81,13 @@ async def test_minimal_config(hass, mock_client):
     }
     assert await async_setup_component(hass, google_pubsub.DOMAIN, config)
     await hass.async_block_till_done()
-    assert hass.bus.listen.called
-    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
     assert mock_client.from_service_account_json.call_count == 1
     assert mock_client.from_service_account_json.call_args[0][0] == os.path.join(
         hass.config.config_dir, "creds"
     )
 
 
-async def test_full_config(hass, mock_client):
+async def test_full_config(hass: HomeAssistant, mock_client) -> None:
     """Test the full config of the component."""
     config = {
         google_pubsub.DOMAIN: {
@@ -107,28 +106,13 @@ async def test_full_config(hass, mock_client):
     }
     assert await async_setup_component(hass, google_pubsub.DOMAIN, config)
     await hass.async_block_till_done()
-    assert hass.bus.listen.called
-    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
     assert mock_client.from_service_account_json.call_count == 1
     assert mock_client.from_service_account_json.call_args[0][0] == os.path.join(
         hass.config.config_dir, "creds"
     )
 
 
-def make_event(entity_id):
-    """Make a mock event for test."""
-    domain = split_entity_id(entity_id)[0]
-    state = mock.MagicMock(
-        state="not blank",
-        domain=domain,
-        entity_id=entity_id,
-        object_id="entity",
-        attributes={},
-    )
-    return mock.MagicMock(data={"new_state": state}, time_fired=12345)
-
-
-async def _setup(hass, filter_config):
+async def _setup(hass: HomeAssistant, filter_config: dict[str, Any]) -> None:
     """Shared set up for filtering tests."""
     config = {
         google_pubsub.DOMAIN: {
@@ -140,12 +124,11 @@ async def _setup(hass, filter_config):
     }
     assert await async_setup_component(hass, google_pubsub.DOMAIN, config)
     await hass.async_block_till_done()
-    return hass.bus.listen.call_args_list[0][0][1]
 
 
-async def test_allowlist(hass, mock_client):
+async def test_allowlist(hass: HomeAssistant, mock_client) -> None:
     """Test an allowlist only config."""
-    handler_method = await _setup(
+    await _setup(
         hass,
         {
             "include_domains": ["light"],
@@ -165,17 +148,17 @@ async def test_allowlist(hass, mock_client):
     ]
 
     for test in tests:
-        event = make_event(test.id)
-        handler_method(event)
+        hass.states.async_set(test.id, "on")
+        await hass.async_block_till_done()
 
         was_called = publish_client.publish.call_count == 1
         assert test.should_pass == was_called
         publish_client.publish.reset_mock()
 
 
-async def test_denylist(hass, mock_client):
+async def test_denylist(hass: HomeAssistant, mock_client) -> None:
     """Test a denylist only config."""
-    handler_method = await _setup(
+    await _setup(
         hass,
         {
             "exclude_domains": ["climate"],
@@ -195,17 +178,17 @@ async def test_denylist(hass, mock_client):
     ]
 
     for test in tests:
-        event = make_event(test.id)
-        handler_method(event)
+        hass.states.async_set(test.id, "on")
+        await hass.async_block_till_done()
 
         was_called = publish_client.publish.call_count == 1
         assert test.should_pass == was_called
         publish_client.publish.reset_mock()
 
 
-async def test_filtered_allowlist(hass, mock_client):
+async def test_filtered_allowlist(hass: HomeAssistant, mock_client) -> None:
     """Test an allowlist config with a filtering denylist."""
-    handler_method = await _setup(
+    await _setup(
         hass,
         {
             "include_domains": ["light"],
@@ -226,17 +209,17 @@ async def test_filtered_allowlist(hass, mock_client):
     ]
 
     for test in tests:
-        event = make_event(test.id)
-        handler_method(event)
+        hass.states.async_set(test.id, "not blank")
+        await hass.async_block_till_done()
 
         was_called = publish_client.publish.call_count == 1
         assert test.should_pass == was_called
         publish_client.publish.reset_mock()
 
 
-async def test_filtered_denylist(hass, mock_client):
+async def test_filtered_denylist(hass: HomeAssistant, mock_client) -> None:
     """Test a denylist config with a filtering allowlist."""
-    handler_method = await _setup(
+    await _setup(
         hass,
         {
             "include_entities": ["climate.included", "sensor.excluded_test"],
@@ -257,8 +240,8 @@ async def test_filtered_denylist(hass, mock_client):
     ]
 
     for test in tests:
-        event = make_event(test.id)
-        handler_method(event)
+        hass.states.async_set(test.id, "not blank")
+        await hass.async_block_till_done()
 
         was_called = publish_client.publish.call_count == 1
         assert test.should_pass == was_called

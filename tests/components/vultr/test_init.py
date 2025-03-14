@@ -1,4 +1,5 @@
 """The tests for the Vultr component."""
+
 from copy import deepcopy
 import json
 from unittest.mock import patch
@@ -12,7 +13,7 @@ from .const import VALID_CONFIG
 from tests.common import load_fixture
 
 
-def test_setup(hass: HomeAssistant):
+def test_setup(hass: HomeAssistant) -> None:
     """Test successful setup."""
     with patch(
         "vultr.Vultr.server_list",
@@ -22,7 +23,7 @@ def test_setup(hass: HomeAssistant):
     assert response
 
 
-async def test_setup_no_api_key(hass: HomeAssistant):
+async def test_setup_no_api_key(hass: HomeAssistant) -> None:
     """Test failed setup with missing API Key."""
     conf = deepcopy(VALID_CONFIG)
     del conf["vultr"]["api_key"]

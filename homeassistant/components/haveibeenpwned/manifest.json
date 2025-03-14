@@ -1,7 +1,8 @@
 {
   "domain": "haveibeenpwned",
   "name": "HaveIBeenPwned",
-  "documentation": "https://www.home-assistant.io/integrations/haveibeenpwned",
   "codeowners": [],
-  "iot_class": "cloud_polling"
+  "documentation": "https://www.home-assistant.io/integrations/haveibeenpwned",
+  "iot_class": "cloud_polling",
+  "quality_scale": "legacy"
 }

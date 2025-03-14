@@ -1,4 +1,5 @@
 """Support for Vultr."""
+
 from datetime import timedelta
 import logging
 
@@ -8,7 +9,7 @@ from vultr import Vultr as VultrAPI
 from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
@@ -59,7 +60,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.error("Failed to make update API request because: %s", ex)
         persistent_notification.create(
             hass,
-            "Error: {}" "".format(ex),
+            f"Error: {ex}",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )

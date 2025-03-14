@@ -1,25 +1,39 @@
 {
   "domain": "zha",
   "name": "Zigbee Home Automation",
+  "after_dependencies": ["hassio", "onboarding", "usb"],
+  "codeowners": ["@dmulcahey", "@adminiuga", "@puddly", "@TheJulianJES"],
   "config_flow": true,
+  "dependencies": ["file_upload", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/zha",
-  "requirements": [
-    "bellows==0.34.5",
-    "pyserial==3.5",
-    "pyserial-asyncio==0.6",
-    "zha-quirks==0.0.89",
-    "zigpy-deconz==0.19.2",
-    "zigpy==0.52.3",
-    "zigpy-xbee==0.16.2",
-    "zigpy-zigate==0.10.3",
-    "zigpy-znp==0.9.2"
+  "iot_class": "local_polling",
+  "loggers": [
+    "aiosqlite",
+    "bellows",
+    "crccheck",
+    "pure_pcapy3",
+    "zhaquirks",
+    "zigpy",
+    "zigpy_deconz",
+    "zigpy_xbee",
+    "zigpy_zigate",
+    "zigpy_znp",
+    "zha",
+    "universal_silabs_flasher"
   ],
+  "requirements": ["zha==0.0.52"],
   "usb": [
     {
       "vid": "10C4",
       "pid": "EA60",
       "description": "*2652*",
       "known_devices": ["slae.sh cc2652rb stick"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*slzb-07*",
+      "known_devices": ["smlight slzb-07"]
     },
     {
       "vid": "1A86",
@@ -58,6 +72,12 @@
       "known_devices": ["Conbee II"]
     },
     {
+      "vid": "0403",
+      "pid": "6015",
+      "description": "*conbee*",
+      "known_devices": ["Conbee III"]
+    },
+    {
       "vid": "10C4",
       "pid": "8A2A",
       "description": "*zigbee*",
@@ -82,7 +102,6 @@
       "known_devices": ["Bitron Video AV2010/10"]
     }
   ],
-  "codeowners": ["@dmulcahey", "@adminiuga", "@puddly"],
   "zeroconf": [
     {
       "type": "_esphomelib._tcp.local.",
@@ -95,21 +114,26 @@
     {
       "type": "_zigstar_gw._tcp.local.",
       "name": "*zigstar*"
+    },
+    {
+      "type": "_uzg-01._tcp.local.",
+      "name": "uzg-01*"
+    },
+    {
+      "type": "_slzb-06._tcp.local.",
+      "name": "slzb-06*"
+    },
+    {
+      "type": "_xzg._tcp.local.",
+      "name": "xzg*"
+    },
+    {
+      "type": "_czc._tcp.local.",
+      "name": "czc*"
+    },
+    {
+      "type": "_zigbee-coordinator._tcp.local.",
+      "name": "*"
     }
-  ],
-  "dependencies": ["file_upload"],
-  "after_dependencies": ["onboarding", "usb", "zeroconf"],
-  "iot_class": "local_polling",
-  "loggers": [
-    "aiosqlite",
-    "bellows",
-    "crccheck",
-    "pure_pcapy3",
-    "zhaquirks",
-    "zigpy",
-    "zigpy_deconz",
-    "zigpy_xbee",
-    "zigpy_zigate",
-    "zigpy_znp"
   ]
 }

@@ -1,10 +1,9 @@
 {
   "domain": "spider",
   "name": "Itho Daalderop Spider",
+  "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/spider",
-  "requirements": ["spiderpy==1.6.1"],
-  "codeowners": ["@peternijssen"],
-  "config_flow": true,
+  "integration_type": "system",
   "iot_class": "cloud_polling",
-  "loggers": ["spiderpy"]
+  "requirements": []
 }

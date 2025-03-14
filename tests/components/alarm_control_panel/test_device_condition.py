@@ -1,106 +1,82 @@
 """The tests for Alarm control panel device conditions."""
-import pytest
 
-from homeassistant.components.alarm_control_panel import DOMAIN, const
-import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
+import pytest
+from pytest_unordered import unordered
+
+from homeassistant.components import automation
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN,
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_registry import RegistryEntryHider
+from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    assert_lists_same,
-    async_get_device_automations,
-    async_mock_service,
-    mock_device_registry,
-    mock_registry,
-)
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
-
-
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.mark.parametrize(
-    "set_state,features_reg,features_state,expected_condition_types",
+    ("set_state", "features_reg", "features_state", "expected_condition_types"),
     [
         (False, 0, 0, []),
-        (False, const.AlarmControlPanelEntityFeature.ARM_AWAY, 0, ["is_armed_away"]),
-        (False, const.AlarmControlPanelEntityFeature.ARM_HOME, 0, ["is_armed_home"]),
-        (False, const.AlarmControlPanelEntityFeature.ARM_NIGHT, 0, ["is_armed_night"]),
+        (False, AlarmControlPanelEntityFeature.ARM_AWAY, 0, ["is_armed_away"]),
+        (False, AlarmControlPanelEntityFeature.ARM_HOME, 0, ["is_armed_home"]),
+        (False, AlarmControlPanelEntityFeature.ARM_NIGHT, 0, ["is_armed_night"]),
         (
             False,
-            const.AlarmControlPanelEntityFeature.ARM_VACATION,
+            AlarmControlPanelEntityFeature.ARM_VACATION,
             0,
             ["is_armed_vacation"],
         ),
         (
             False,
-            const.AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+            AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
             0,
             ["is_armed_custom_bypass"],
         ),
         (True, 0, 0, []),
-        (True, 0, const.AlarmControlPanelEntityFeature.ARM_AWAY, ["is_armed_away"]),
-        (True, 0, const.AlarmControlPanelEntityFeature.ARM_HOME, ["is_armed_home"]),
-        (True, 0, const.AlarmControlPanelEntityFeature.ARM_NIGHT, ["is_armed_night"]),
+        (True, 0, AlarmControlPanelEntityFeature.ARM_AWAY, ["is_armed_away"]),
+        (True, 0, AlarmControlPanelEntityFeature.ARM_HOME, ["is_armed_home"]),
+        (True, 0, AlarmControlPanelEntityFeature.ARM_NIGHT, ["is_armed_night"]),
         (
             True,
             0,
-            const.AlarmControlPanelEntityFeature.ARM_VACATION,
+            AlarmControlPanelEntityFeature.ARM_VACATION,
             ["is_armed_vacation"],
         ),
         (
             True,
             0,
-            const.AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+            AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
             ["is_armed_custom_bypass"],
         ),
     ],
 )
 async def test_get_conditions(
-    hass,
-    device_reg,
-    entity_reg,
-    set_state,
-    features_reg,
-    features_state,
-    expected_condition_types,
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    set_state: bool,
+    features_reg: AlarmControlPanelEntityFeature,
+    features_state: AlarmControlPanelEntityFeature,
+    expected_condition_types: list[str],
+) -> None:
     """Test we get the expected conditions from a alarm_control_panel."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -121,7 +97,7 @@ async def test_get_conditions(
             "domain": DOMAIN,
             "type": condition,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for condition in basic_condition_types
@@ -132,7 +108,7 @@ async def test_get_conditions(
             "domain": DOMAIN,
             "type": condition,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for condition in expected_condition_types
@@ -140,33 +116,33 @@ async def test_get_conditions(
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert_lists_same(conditions, expected_conditions)
+    assert conditions == unordered(expected_conditions)
 
 
 @pytest.mark.parametrize(
-    "hidden_by,entity_category",
-    (
-        (RegistryEntryHider.INTEGRATION, None),
-        (RegistryEntryHider.USER, None),
+    ("hidden_by", "entity_category"),
+    [
+        (er.RegistryEntryHider.INTEGRATION, None),
+        (er.RegistryEntryHider.USER, None),
         (None, EntityCategory.CONFIG),
         (None, EntityCategory.DIAGNOSTIC),
-    ),
+    ],
 )
 async def test_get_conditions_hidden_auxiliary(
-    hass,
-    device_reg,
-    entity_reg,
-    hidden_by,
-    entity_category,
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hidden_by: er.RegistryEntryHider | None,
+    entity_category: EntityCategory | None,
+) -> None:
     """Test we get the expected conditions from a hidden or auxiliary entity."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -180,19 +156,34 @@ async def test_get_conditions_hidden_auxiliary(
             "domain": DOMAIN,
             "type": condition,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for condition in ["is_disarmed", "is_triggered"]
+        for condition in ("is_disarmed", "is_triggered")
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert_lists_same(conditions, expected_conditions)
+    assert conditions == unordered(expected_conditions)
 
 
-async def test_if_state(hass, calls):
+async def test_if_state(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
     """Test for all conditions."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -204,15 +195,19 @@ async def test_if_state(hass, calls):
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
-                            "entity_id": "alarm_control_panel.entity",
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
                             "type": "is_triggered",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_triggered - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_triggered "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -222,15 +217,19 @@ async def test_if_state(hass, calls):
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
-                            "entity_id": "alarm_control_panel.entity",
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
                             "type": "is_disarmed",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_disarmed - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_disarmed "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -240,15 +239,19 @@ async def test_if_state(hass, calls):
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
-                            "entity_id": "alarm_control_panel.entity",
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
                             "type": "is_armed_home",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_armed_home - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_armed_home "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -258,15 +261,19 @@ async def test_if_state(hass, calls):
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
-                            "entity_id": "alarm_control_panel.entity",
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
                             "type": "is_armed_away",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_armed_away - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_armed_away "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -276,15 +283,19 @@ async def test_if_state(hass, calls):
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
-                            "entity_id": "alarm_control_panel.entity",
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
                             "type": "is_armed_night",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_armed_night - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_armed_night "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -294,15 +305,19 @@ async def test_if_state(hass, calls):
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
-                            "entity_id": "alarm_control_panel.entity",
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
                             "type": "is_armed_vacation",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_armed_vacation - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_armed_vacation "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -312,22 +327,26 @@ async def test_if_state(hass, calls):
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
-                            "entity_id": "alarm_control_panel.entity",
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
                             "type": "is_armed_custom_bypass",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_armed_custom_bypass - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_armed_custom_bypass "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
             ]
         },
     )
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_TRIGGERED)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.TRIGGERED)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -336,10 +355,10 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event6")
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "is_triggered - event - test_event1"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "is_triggered - event - test_event1"
 
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_DISARMED)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.DISARMED)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -348,10 +367,10 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event6")
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "is_disarmed - event - test_event2"
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == "is_disarmed - event - test_event2"
 
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_HOME)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_HOME)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -360,10 +379,10 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event6")
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
-    assert len(calls) == 3
-    assert calls[2].data["some"] == "is_armed_home - event - test_event3"
+    assert len(service_calls) == 3
+    assert service_calls[2].data["some"] == "is_armed_home - event - test_event3"
 
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_AWAY)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_AWAY)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -372,10 +391,10 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event6")
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
-    assert len(calls) == 4
-    assert calls[3].data["some"] == "is_armed_away - event - test_event4"
+    assert len(service_calls) == 4
+    assert service_calls[3].data["some"] == "is_armed_away - event - test_event4"
 
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_NIGHT)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_NIGHT)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -384,10 +403,10 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event6")
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
-    assert len(calls) == 5
-    assert calls[4].data["some"] == "is_armed_night - event - test_event5"
+    assert len(service_calls) == 5
+    assert service_calls[4].data["some"] == "is_armed_night - event - test_event5"
 
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_VACATION)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_VACATION)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -396,10 +415,10 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event6")
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
-    assert len(calls) == 6
-    assert calls[5].data["some"] == "is_armed_vacation - event - test_event6"
+    assert len(service_calls) == 6
+    assert service_calls[5].data["some"] == "is_armed_vacation - event - test_event6"
 
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_CUSTOM_BYPASS)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_CUSTOM_BYPASS)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -408,5 +427,61 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event6")
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
-    assert len(calls) == 7
-    assert calls[6].data["some"] == "is_armed_custom_bypass - event - test_event7"
+    assert len(service_calls) == 7
+    assert (
+        service_calls[6].data["some"] == "is_armed_custom_bypass - event - test_event7"
+    )
+
+
+async def test_if_state_legacy(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test for all conditions."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": device_entry.id,
+                            "entity_id": entry.entity_id,
+                            "type": "is_triggered",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "is_triggered "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.TRIGGERED)
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "is_triggered - event - test_event1"

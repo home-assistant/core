@@ -1,8 +1,9 @@
 {
   "domain": "zestimate",
   "name": "Zestimate",
-  "documentation": "https://www.home-assistant.io/integrations/zestimate",
-  "requirements": ["xmltodict==0.13.0"],
   "codeowners": [],
-  "iot_class": "cloud_polling"
+  "documentation": "https://www.home-assistant.io/integrations/zestimate",
+  "iot_class": "cloud_polling",
+  "quality_scale": "legacy",
+  "requirements": ["xmltodict==0.13.0"]
 }

@@ -1,7 +1,8 @@
 """Constants for the AVM Fritz!Box call monitor integration."""
+
+from enum import StrEnum
 from typing import Final
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import Platform
 
 
@@ -14,12 +15,10 @@ class FritzState(StrEnum):
     DISCONNECT = "DISCONNECT"
 
 
-ICON_PHONE: Final = "mdi:phone"
-
 ATTR_PREFIXES = "prefixes"
 
 FRITZ_ATTR_NAME = "name"
-FRITZ_ATTR_SERIAL_NUMBER = "NewSerialNumber"
+FRITZ_ATTR_SERIAL_NUMBER = "Serial"
 
 UNKNOWN_NAME = "unknown"
 SERIAL_NUMBER = "serial_number"
@@ -39,5 +38,3 @@ DOMAIN: Final = "fritzbox_callmonitor"
 MANUFACTURER: Final = "AVM"
 
 PLATFORMS = [Platform.SENSOR]
-UNDO_UPDATE_LISTENER: Final = "undo_update_listener"
-FRITZBOX_PHONEBOOK: Final = "fritzbox_phonebook"

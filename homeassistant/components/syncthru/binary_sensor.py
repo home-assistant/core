@@ -1,4 +1,5 @@
 """Support for Samsung Printers with SyncThru web interface."""
+
 from __future__ import annotations
 
 from pysyncthru import SyncThru, SyncthruState
@@ -10,8 +11,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -34,13 +35,15 @@ SYNCTHRU_STATE_PROBLEM = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
 
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: DataUpdateCoordinator[SyncThru] = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
 
-    name = config_entry.data[CONF_NAME]
+    name: str = config_entry.data[CONF_NAME]
     entities = [
         SyncThruOnlineSensor(coordinator, name),
         SyncThruProblemSensor(coordinator, name),
@@ -49,14 +52,16 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SyncThruBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class SyncThruBinarySensor(
+    CoordinatorEntity[DataUpdateCoordinator[SyncThru]], BinarySensorEntity
+):
     """Implementation of an abstract Samsung Printer binary sensor platform."""
 
-    def __init__(self, coordinator, name):
+    def __init__(self, coordinator: DataUpdateCoordinator[SyncThru], name: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.syncthru: SyncThru = coordinator.data
-        self._name = name
+        self.syncthru = coordinator.data
+        self._attr_name = name
         self._id_suffix = ""
 
     @property
@@ -64,11 +69,6 @@ class SyncThruBinarySensor(CoordinatorEntity, BinarySensorEntity):
         """Return unique ID for the sensor."""
         serial = self.syncthru.serial_number()
         return f"{serial}{self._id_suffix}" if serial else None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -85,9 +85,9 @@ class SyncThruOnlineSensor(SyncThruBinarySensor):
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
-    def __init__(self, syncthru, name):
+    def __init__(self, coordinator: DataUpdateCoordinator[SyncThru], name: str) -> None:
         """Initialize the sensor."""
-        super().__init__(syncthru, name)
+        super().__init__(coordinator, name)
         self._id_suffix = "_online"
 
     @property

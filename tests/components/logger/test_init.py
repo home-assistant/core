@@ -1,11 +1,21 @@
 """The tests for the Logger component."""
+
 from collections import defaultdict
+import datetime
 import logging
+from typing import Any
 from unittest.mock import Mock, patch
+
+import pytest
 
 from homeassistant.components import logger
 from homeassistant.components.logger import LOGSEVERITY
+from homeassistant.components.logger.helpers import SAVE_DELAY_LONG
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+
+from tests.common import async_fire_time_changed
 
 HASS_NS = "unused.homeassistant"
 COMPONENTS_NS = f"{HASS_NS}.components"
@@ -17,7 +27,9 @@ INTEGRATION = "test_component"
 INTEGRATION_NS = f"homeassistant.components.{INTEGRATION}"
 
 
-async def test_log_filtering(hass, caplog):
+async def test_log_filtering(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test logging filters."""
 
     assert await async_setup_component(
@@ -85,7 +97,7 @@ async def test_log_filtering(hass, caplog):
     )
 
 
-async def test_setting_level(hass):
+async def test_setting_level(hass: HomeAssistant) -> None:
     """Test we set log levels."""
     mocks = defaultdict(Mock)
 
@@ -150,7 +162,7 @@ async def test_setting_level(hass):
     )
 
 
-async def test_can_set_level_from_yaml(hass):
+async def test_can_set_level_from_yaml(hass: HomeAssistant) -> None:
     """Test logger propagation."""
 
     assert await async_setup_component(
@@ -174,7 +186,9 @@ async def test_can_set_level_from_yaml(hass):
     _reset_logging()
 
 
-async def test_can_set_level_from_store(hass, hass_storage):
+async def test_can_set_level_from_store(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test setting up logs from store."""
     hass_storage["core.logger"] = {
         "data": {
@@ -212,7 +226,7 @@ async def test_can_set_level_from_store(hass, hass_storage):
     _reset_logging()
 
 
-async def _assert_log_levels(hass):
+async def _assert_log_levels(hass: HomeAssistant) -> None:
     assert logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
     assert logging.getLogger(UNCONFIG_NS).isEnabledFor(logging.CRITICAL) is True
     assert (
@@ -303,7 +317,9 @@ def _reset_logging():
     logging.getLogger(INTEGRATION_NS).orig_setLevel(logging.NOTSET)
 
 
-async def test_can_set_integration_level_from_store(hass, hass_storage):
+async def test_can_set_integration_level_from_store(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test setting up integration logs from store."""
     hass_storage["core.logger"] = {
         "data": {
@@ -326,7 +342,9 @@ async def test_can_set_integration_level_from_store(hass, hass_storage):
     _reset_logging()
 
 
-async def test_chattier_log_level_wins_1(hass, hass_storage):
+async def test_chattier_log_level_wins_1(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test chattier log level in store takes precedence."""
     hass_storage["core.logger"] = {
         "data": {
@@ -359,7 +377,9 @@ async def test_chattier_log_level_wins_1(hass, hass_storage):
     _reset_logging()
 
 
-async def test_chattier_log_level_wins_2(hass, hass_storage):
+async def test_chattier_log_level_wins_2(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test chattier log level in yaml takes precedence."""
     hass_storage["core.logger"] = {
         "data": {
@@ -384,9 +404,11 @@ async def test_chattier_log_level_wins_2(hass, hass_storage):
     _reset_logging()
 
 
-async def test_log_once_removed_from_store(hass, hass_storage):
+async def test_log_once_removed_from_store(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test logs with persistence "once" are removed from the store at startup."""
-    hass_storage["core.logger"] = {
+    store_contents = {
         "data": {
             "logs": {
                 ZONE_NS: {"type": "module", "level": "DEBUG", "persistence": "once"}
@@ -395,7 +417,15 @@ async def test_log_once_removed_from_store(hass, hass_storage):
         "key": "core.logger",
         "version": 1,
     }
+    hass_storage["core.logger"] = store_contents
 
     assert await async_setup_component(hass, "logger", {})
+
+    assert hass_storage["core.logger"]["data"] == store_contents["data"]
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + datetime.timedelta(seconds=SAVE_DELAY_LONG)
+    )
+    await hass.async_block_till_done()
 
     assert hass_storage["core.logger"]["data"] == {"logs": {}}

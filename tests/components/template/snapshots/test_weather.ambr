@@ -1,0 +1,100 @@
+# serializer version: 1
+# name: test_forecasts[config0-1-weather-get_forecasts]
+  dict({
+    'weather.forecast': dict({
+      'forecast': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config0-1-weather-get_forecasts].1
+  dict({
+    'weather.forecast': dict({
+      'forecast': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config0-1-weather-get_forecasts].2
+  dict({
+    'weather.forecast': dict({
+      'forecast': list([
+        dict({
+          'condition': 'fog',
+          'datetime': '2023-02-17T14:00:00+00:00',
+          'is_daytime': True,
+          'temperature': 14.2,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts[config0-1-weather-get_forecasts].3
+  dict({
+    'weather.forecast': dict({
+      'forecast': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_restore_weather_save_state
+  dict({
+    'last_apparent_temperature': None,
+    'last_cloud_coverage': None,
+    'last_dew_point': None,
+    'last_humidity': '25.0',
+    'last_ozone': None,
+    'last_pressure': None,
+    'last_temperature': '15.0',
+    'last_visibility': None,
+    'last_wind_bearing': None,
+    'last_wind_gust_speed': None,
+    'last_wind_speed': None,
+  })
+# ---
+# name: test_trigger_weather_services[config0-1-template-get_forecasts]
+  dict({
+    'weather.test': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2023-10-19T06:50:05-07:00',
+          'precipitation': 20.0,
+          'temperature': 20.0,
+          'templow': 15.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_trigger_weather_services[config0-1-template-get_forecasts].1
+  dict({
+    'weather.test': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2023-10-19T06:50:05-07:00',
+          'precipitation': 20.0,
+          'temperature': 20.0,
+          'templow': 15.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_trigger_weather_services[config0-1-template-get_forecasts].2
+  dict({
+    'weather.test': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2023-10-19T06:50:05-07:00',
+          'is_daytime': True,
+          'precipitation': 20.0,
+          'temperature': 20.0,
+          'templow': 15.0,
+        }),
+      ]),
+    }),
+  })
+# ---

@@ -1,6 +1,6 @@
 """Test UniFi Protect diagnostics."""
 
-from pyunifiprotect.data import NVR, Light
+from uiprotect.data import NVR, Light
 
 from homeassistant.components.unifiprotect.const import CONF_ALLOW_EA
 from homeassistant.core import HomeAssistant
@@ -8,11 +8,15 @@ from homeassistant.core import HomeAssistant
 from .utils import MockUFPFixture, init_entry
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, hass_client
-):
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    light: Light,
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test generating diagnostics for a config entry."""
 
     await init_entry(hass, ufp, [light])

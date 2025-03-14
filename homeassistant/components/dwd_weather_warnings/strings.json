@@ -1,0 +1,62 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "To identify the desired region, either the warncell ID / name or device tracker is required. The provided device tracker has to contain the attributes 'latitude' and 'longitude'.",
+        "data": {
+          "region_identifier": "Warncell ID or name",
+          "region_device_tracker": "Device tracker entity"
+        }
+      }
+    },
+    "error": {
+      "no_identifier": "Either the region identifier or device tracker is required.",
+      "ambiguous_identifier": "The region identifier and device tracker can not be specified together.",
+      "invalid_identifier": "The specified region identifier / device tracker is invalid.",
+      "entity_not_found": "The specified device tracker entity was not found.",
+      "attribute_not_found": "The required `latitude` or `longitude` attribute was not found in the specified device tracker."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_identifier": "[%key:component::dwd_weather_warnings::config::error::invalid_identifier%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_warning_level": {
+        "name": "Current warning level",
+        "state_attributes": {
+          "region_name": {
+            "name": "Region name"
+          },
+          "region_id": {
+            "name": "Region ID"
+          },
+          "last_update": {
+            "name": "Last update"
+          },
+          "warning_count": {
+            "name": "Warning count"
+          }
+        }
+      },
+      "advance_warning_level": {
+        "name": "Advance warning level",
+        "state_attributes": {
+          "region_name": {
+            "name": "[%key:component::dwd_weather_warnings::entity::sensor::current_warning_level::state_attributes::region_name::name%]"
+          },
+          "region_id": {
+            "name": "[%key:component::dwd_weather_warnings::entity::sensor::current_warning_level::state_attributes::region_id::name%]"
+          },
+          "last_update": {
+            "name": "[%key:component::dwd_weather_warnings::entity::sensor::current_warning_level::state_attributes::last_update::name%]"
+          },
+          "warning_count": {
+            "name": "[%key:component::dwd_weather_warnings::entity::sensor::current_warning_level::state_attributes::warning_count::name%]"
+          }
+        }
+      }
+    }
+  }
+}

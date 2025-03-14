@@ -1,30 +1,15 @@
 {
   "domain": "hue",
   "name": "Philips Hue",
+  "codeowners": ["@balloob", "@marcelveldt"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hue",
-  "requirements": ["aiohue==4.5.0"],
-  "ssdp": [
-    {
-      "manufacturer": "Royal Philips Electronics",
-      "modelName": "Philips hue bridge 2012"
-    },
-    {
-      "manufacturer": "Royal Philips Electronics",
-      "modelName": "Philips hue bridge 2015"
-    },
-    {
-      "manufacturer": "Signify",
-      "modelName": "Philips hue bridge 2015"
-    }
-  ],
   "homekit": {
     "models": ["BSB002"]
   },
-  "zeroconf": ["_hue._tcp.local."],
-  "codeowners": ["@balloob", "@marcelveldt"],
-  "quality_scale": "platinum",
-  "iot_class": "local_push",
   "integration_type": "hub",
-  "loggers": ["aiohue"]
+  "iot_class": "local_push",
+  "loggers": ["aiohue"],
+  "requirements": ["aiohue==4.7.4"],
+  "zeroconf": ["_hue._tcp.local."]
 }

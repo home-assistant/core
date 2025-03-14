@@ -1,41 +1,58 @@
 {
   "domain": "lifx",
   "name": "LIFX",
+  "codeowners": ["@Djelibeybi"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/lifx",
-  "requirements": [
-    "aiolifx==0.8.7",
-    "aiolifx_effects==0.3.1",
-    "aiolifx_themes==0.3.0"
-  ],
-  "quality_scale": "platinum",
   "dependencies": ["network"],
+  "dhcp": [
+    {
+      "macaddress": "D073D5*"
+    },
+    {
+      "registered_devices": true
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/lifx",
   "homekit": {
     "models": [
       "LIFX A19",
+      "LIFX A21",
       "LIFX Beam",
       "LIFX BR30",
       "LIFX Candle",
+      "LIFX Ceiling",
       "LIFX Clean",
       "LIFX Color",
+      "LIFX Colour",
       "LIFX DLCOL",
       "LIFX Dlight",
       "LIFX DLWW",
       "LIFX Downlight",
       "LIFX Filament",
       "LIFX GU10",
+      "LIFX Indoor Neon",
       "LIFX Lightstrip",
       "LIFX Mini",
+      "LIFX Neon",
       "LIFX Nightvision",
+      "LIFX PAR38",
+      "LIFX Permanent Outdoor",
       "LIFX Pls",
       "LIFX Plus",
+      "LIFX Round",
+      "LIFX Square",
+      "LIFX String",
       "LIFX Tile",
+      "LIFX Tube",
       "LIFX White",
       "LIFX Z"
     ]
   },
-  "dhcp": [{ "macaddress": "D073D5*" }, { "registered_devices": true }],
-  "codeowners": ["@bdraco", "@Djelibeybi"],
   "iot_class": "local_polling",
-  "loggers": ["aiolifx", "aiolifx_effects", "bitstring"]
+  "loggers": ["aiolifx", "aiolifx_effects", "bitstring"],
+  "requirements": [
+    "aiolifx==1.1.4",
+    "aiolifx-effects==0.3.2",
+    "aiolifx-themes==0.6.4"
+  ]
 }

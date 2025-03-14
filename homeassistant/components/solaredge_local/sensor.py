@@ -1,9 +1,9 @@
 """Support for SolarEdge-local Monitoring API."""
+
 from __future__ import annotations
 
 from contextlib import suppress
-from copy import copy
-from dataclasses import dataclass
+import dataclasses
 from datetime import timedelta
 import logging
 import statistics
@@ -13,7 +13,7 @@ from solaredge_local import SolarEdge
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -29,7 +29,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -51,7 +51,7 @@ INVERTER_MODES = (
 )
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class SolarEdgeLocalSensorEntityDescription(SensorEntityDescription):
     """Describes SolarEdge-local sensor entity."""
 
@@ -193,7 +193,7 @@ SENSOR_TYPES_ENERGY_EXPORT: tuple[SolarEdgeLocalSensorEntityDescription, ...] = 
     ),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Optional(CONF_NAME, default="SolarEdge"): cv.string,
@@ -231,10 +231,13 @@ def setup_platform(
     data = SolarEdgeData(hass, api)
 
     # Changing inverter temperature unit.
-    inverter_temp_description = copy(SENSOR_TYPE_INVERTER_TEMPERATURE)
-    if status.inverters.primary.temperature.units.farenheit:
-        inverter_temp_description.native_unit_of_measurement = (
-            UnitOfTemperature.FAHRENHEIT
+    inverter_temp_description = SENSOR_TYPE_INVERTER_TEMPERATURE
+    if (
+        status.inverters.primary.temperature.units.farenheit  # codespell:ignore farenheit
+    ):
+        inverter_temp_description = dataclasses.replace(
+            inverter_temp_description,
+            native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         )
 
     # Create entities
@@ -278,7 +281,7 @@ class SolarEdgeSensor(SensorEntity):
         platform_name,
         data,
         description: SolarEdgeLocalSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._platform_name = platform_name
@@ -290,7 +293,7 @@ class SolarEdgeSensor(SensorEntity):
         """Return the state attributes."""
         if extra_attr := self.entity_description.extra_attribute:
             try:
-                return {extra_attr: self._data.info[self.entity_description.key]}
+                return {extra_attr: self._data.info.get(self.entity_description.key)}
             except KeyError:
                 pass
         return None
@@ -298,7 +301,7 @@ class SolarEdgeSensor(SensorEntity):
     def update(self) -> None:
         """Get the latest data from the sensor and update the state."""
         self._data.update()
-        self._attr_native_value = self._data.data[self.entity_description.key]
+        self._attr_native_value = self._data.data.get(self.entity_description.key)
 
 
 class SolarEdgeData:

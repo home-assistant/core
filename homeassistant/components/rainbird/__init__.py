@@ -1,119 +1,245 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from pyrainbird import RainbirdController
-import voluptuous as vol
+import aiohttp
+from pyrainbird.async_client import AsyncRainbirdClient, AsyncRainbirdController
+from pyrainbird.exceptions import RainbirdApiException, RainbirdAuthException
 
-from homeassistant.components.binary_sensor import BinarySensorEntityDescription
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
-    CONF_FRIENDLY_NAME,
     CONF_HOST,
+    CONF_MAC,
     CONF_PASSWORD,
-    CONF_TRIGGER_TIME,
+    EVENT_HOMEASSISTANT_CLOSE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import format_mac
 
-CONF_ZONES = "zones"
-
-PLATFORMS = [Platform.SWITCH, Platform.SENSOR, Platform.BINARY_SENSOR]
+from .const import CONF_SERIAL_NUMBER
+from .coordinator import (
+    RainbirdScheduleUpdateCoordinator,
+    RainbirdUpdateCoordinator,
+    async_create_clientsession,
+)
+from .types import RainbirdConfigEntry, RainbirdData
 
 _LOGGER = logging.getLogger(__name__)
 
-RAINBIRD_CONTROLLER = "controller"
-DATA_RAINBIRD = "rainbird"
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CALENDAR,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+
+
 DOMAIN = "rainbird"
 
-SENSOR_TYPE_RAINDELAY = "raindelay"
-SENSOR_TYPE_RAINSENSOR = "rainsensor"
+
+def _async_register_clientsession_shutdown(
+    hass: HomeAssistant,
+    entry: RainbirdConfigEntry,
+    clientsession: aiohttp.ClientSession,
+) -> None:
+    """Register cleanup hooks for the clientsession."""
+
+    async def _async_close_websession(*_: Any) -> None:
+        """Close websession."""
+        await clientsession.close()
+
+    unsub = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_CLOSE, _async_close_websession
+    )
+    entry.async_on_unload(unsub)
+    entry.async_on_unload(_async_close_websession)
 
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key=SENSOR_TYPE_RAINSENSOR,
-        name="Rainsensor",
-        icon="mdi:water",
-    ),
-    SensorEntityDescription(
-        key=SENSOR_TYPE_RAINDELAY,
-        name="Raindelay",
-        icon="mdi:water-off",
-    ),
-)
+async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> bool:
+    """Set up the config entry for Rain Bird."""
 
-BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
-    BinarySensorEntityDescription(
-        key=SENSOR_TYPE_RAINSENSOR,
-        name="Rainsensor",
-        icon="mdi:water",
-    ),
-    BinarySensorEntityDescription(
-        key=SENSOR_TYPE_RAINDELAY,
-        name="Raindelay",
-        icon="mdi:water-off",
-    ),
-)
+    clientsession = async_create_clientsession()
+    _async_register_clientsession_shutdown(hass, entry, clientsession)
 
-TRIGGER_TIME_SCHEMA = vol.All(
-    cv.time_period, cv.positive_timedelta, lambda td: (td.total_seconds() // 60)
-)
-
-ZONE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Optional(CONF_TRIGGER_TIME): TRIGGER_TIME_SCHEMA,
-    }
-)
-CONTROLLER_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_TRIGGER_TIME): TRIGGER_TIME_SCHEMA,
-        vol.Optional(CONF_ZONES): vol.Schema({cv.positive_int: ZONE_SCHEMA}),
-    }
-)
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CONTROLLER_SCHEMA]))},
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Rain Bird component."""
-
-    hass.data[DATA_RAINBIRD] = []
-    success = False
-    for controller_config in config[DOMAIN]:
-        success = success or _setup_controller(hass, controller_config, config)
-
-    return success
-
-
-def _setup_controller(hass, controller_config, config):
-    """Set up a controller."""
-    server = controller_config[CONF_HOST]
-    password = controller_config[CONF_PASSWORD]
-    controller = RainbirdController(server, password)
-    position = len(hass.data[DATA_RAINBIRD])
-    try:
-        controller.get_serial_number()
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.error("Unable to setup controller: %s", exc)
-        return False
-    hass.data[DATA_RAINBIRD].append(controller)
-    _LOGGER.debug("Rain Bird Controller %d set to: %s", position, server)
-    for platform in PLATFORMS:
-        discovery.load_platform(
-            hass,
-            platform,
-            DOMAIN,
-            {RAINBIRD_CONTROLLER: position, **controller_config},
-            config,
+    controller = AsyncRainbirdController(
+        AsyncRainbirdClient(
+            clientsession,
+            entry.data[CONF_HOST],
+            entry.data[CONF_PASSWORD],
         )
+    )
+
+    if not (await _async_fix_unique_id(hass, controller, entry)):
+        return False
+    if mac_address := entry.data.get(CONF_MAC):
+        _async_fix_entity_unique_id(
+            er.async_get(hass),
+            entry.entry_id,
+            format_mac(mac_address),
+            str(entry.data[CONF_SERIAL_NUMBER]),
+        )
+        _async_fix_device_id(
+            dr.async_get(hass),
+            entry.entry_id,
+            format_mac(mac_address),
+            str(entry.data[CONF_SERIAL_NUMBER]),
+        )
+
+    try:
+        model_info = await controller.get_model_and_version()
+    except RainbirdAuthException as err:
+        raise ConfigEntryAuthFailed from err
+    except RainbirdApiException as err:
+        raise ConfigEntryNotReady from err
+
+    data = RainbirdData(
+        controller,
+        model_info,
+        coordinator=RainbirdUpdateCoordinator(hass, entry, controller, model_info),
+        schedule_coordinator=RainbirdScheduleUpdateCoordinator(hass, entry, controller),
+    )
+    await data.coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = data
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
+
+
+async def _async_fix_unique_id(
+    hass: HomeAssistant, controller: AsyncRainbirdController, entry: RainbirdConfigEntry
+) -> bool:
+    """Update the config entry with a unique id based on the mac address."""
+    _LOGGER.debug("Checking for migration of config entry (%s)", entry.unique_id)
+    if not (mac_address := entry.data.get(CONF_MAC)):
+        try:
+            wifi_params = await controller.get_wifi_params()
+        except RainbirdApiException as err:
+            _LOGGER.warning("Unable to fix missing unique id: %s", err)
+            return True
+
+        if (mac_address := wifi_params.mac_address) is None:
+            _LOGGER.warning("Unable to fix missing unique id (mac address was None)")
+            return True
+
+    new_unique_id = format_mac(mac_address)
+    if entry.unique_id == new_unique_id and CONF_MAC in entry.data:
+        _LOGGER.debug("Config entry already in correct state")
+        return True
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    for existing_entry in entries:
+        if existing_entry.unique_id == new_unique_id:
+            _LOGGER.warning(
+                "Unable to fix missing unique id (already exists); Removing duplicate entry"
+            )
+            hass.async_create_background_task(
+                hass.config_entries.async_remove(entry.entry_id),
+                "Remove rainbird config entry",
+            )
+            return False
+
+    _LOGGER.debug("Updating unique id to %s", new_unique_id)
+    hass.config_entries.async_update_entry(
+        entry,
+        unique_id=new_unique_id,
+        data={
+            **entry.data,
+            CONF_MAC: mac_address,
+        },
+    )
+    return True
+
+
+def _async_fix_entity_unique_id(
+    entity_registry: er.EntityRegistry,
+    config_entry_id: str,
+    mac_address: str,
+    serial_number: str,
+) -> None:
+    """Migrate existing entity if current one can't be found and an old one exists."""
+    entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
+    for entity_entry in entity_entries:
+        unique_id = str(entity_entry.unique_id)
+        if unique_id.startswith(mac_address):
+            continue
+        if (suffix := unique_id.removeprefix(str(serial_number))) != unique_id:
+            new_unique_id = f"{mac_address}{suffix}"
+            _LOGGER.debug("Updating unique id from %s to %s", unique_id, new_unique_id)
+            entity_registry.async_update_entity(
+                entity_entry.entity_id, new_unique_id=new_unique_id
+            )
+
+
+def _async_device_entry_to_keep(
+    old_entry: dr.DeviceEntry, new_entry: dr.DeviceEntry
+) -> dr.DeviceEntry:
+    """Determine which device entry to keep when there are duplicates.
+
+    As we transitioned to new unique ids, we did not update existing device entries
+    and as a result there are devices with both the old and new unique id format. We
+    have to pick which one to keep, and preferably this can repair things if the
+    user previously renamed devices.
+    """
+    # Prefer the new device if the user already gave it a name or area. Otherwise,
+    # do the same for the old entry. If no entries have been modified then keep the new one.
+    if new_entry.disabled_by is None and (
+        new_entry.area_id is not None or new_entry.name_by_user is not None
+    ):
+        return new_entry
+    if old_entry.disabled_by is None and (
+        old_entry.area_id is not None or old_entry.name_by_user is not None
+    ):
+        return old_entry
+    return new_entry if new_entry.disabled_by is None else old_entry
+
+
+def _async_fix_device_id(
+    device_registry: dr.DeviceRegistry,
+    config_entry_id: str,
+    mac_address: str,
+    serial_number: str,
+) -> None:
+    """Migrate existing device identifiers to the new format.
+
+    This will rename any device ids that are prefixed with the serial number to be prefixed
+    with the mac address. This also cleans up from a bug that allowed devices to exist
+    in both the old and new format.
+    """
+    device_entries = dr.async_entries_for_config_entry(device_registry, config_entry_id)
+    device_entry_map = {}
+    migrations = {}
+    for device_entry in device_entries:
+        unique_id = str(next(iter(device_entry.identifiers))[1])
+        device_entry_map[unique_id] = device_entry
+        if (suffix := unique_id.removeprefix(str(serial_number))) != unique_id:
+            migrations[unique_id] = f"{mac_address}{suffix}"
+
+    for unique_id, new_unique_id in migrations.items():
+        old_entry = device_entry_map[unique_id]
+        if (new_entry := device_entry_map.get(new_unique_id)) is not None:
+            # Device entries exist for both the old and new format and one must be removed
+            entry_to_keep = _async_device_entry_to_keep(old_entry, new_entry)
+            if entry_to_keep == new_entry:
+                _LOGGER.debug("Removing device entry %s", unique_id)
+                device_registry.async_remove_device(old_entry.id)
+                continue
+            # Remove new entry and update old entry to new id below
+            _LOGGER.debug("Removing device entry %s", new_unique_id)
+            device_registry.async_remove_device(new_entry.id)
+
+        _LOGGER.debug("Updating device id from %s to %s", unique_id, new_unique_id)
+        device_registry.async_update_device(
+            old_entry.id, new_identifiers={(DOMAIN, new_unique_id)}
+        )
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

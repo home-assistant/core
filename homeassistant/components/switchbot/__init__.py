@@ -19,14 +19,16 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
+    CONF_ENCRYPTION_KEY,
+    CONF_KEY_ID,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_RETRY_COUNT,
-    DOMAIN,
+    ENCRYPTED_MODELS,
     HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL,
     SupportedModels,
 )
-from .coordinator import SwitchbotDataUpdateCoordinator
+from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
     SupportedModels.BULB.value: [Platform.SENSOR, Platform.LIGHT],
@@ -40,9 +42,30 @@ PLATFORMS_BY_TYPE = {
         Platform.SENSOR,
     ],
     SupportedModels.HYGROMETER.value: [Platform.SENSOR],
+    SupportedModels.HYGROMETER_CO2.value: [Platform.SENSOR],
     SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.HUMIDIFIER.value: [Platform.HUMIDIFIER, Platform.SENSOR],
+    SupportedModels.LOCK.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
+    SupportedModels.LOCK_PRO.value: [
+        Platform.BINARY_SENSOR,
+        Platform.LOCK,
+        Platform.SENSOR,
+    ],
+    SupportedModels.BLIND_TILT.value: [
+        Platform.COVER,
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
+    SupportedModels.HUB2.value: [Platform.SENSOR],
+    SupportedModels.RELAY_SWITCH_1PM.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.RELAY_SWITCH_1.value: [Platform.SWITCH],
+    SupportedModels.LEAK.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.REMOTE.value: [Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -52,18 +75,22 @@ CLASS_BY_DEVICE = {
     SupportedModels.BULB.value: switchbot.SwitchbotBulb,
     SupportedModels.LIGHT_STRIP.value: switchbot.SwitchbotLightStrip,
     SupportedModels.HUMIDIFIER.value: switchbot.SwitchbotHumidifier,
+    SupportedModels.LOCK.value: switchbot.SwitchbotLock,
+    SupportedModels.LOCK_PRO.value: switchbot.SwitchbotLock,
+    SupportedModels.BLIND_TILT.value: switchbot.SwitchbotBlindTilt,
+    SupportedModels.RELAY_SWITCH_1PM.value: switchbot.SwitchbotRelaySwitch,
+    SupportedModels.RELAY_SWITCH_1.value: switchbot.SwitchbotRelaySwitch,
 }
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> bool:
     """Set up Switchbot from a config entry."""
     assert entry.unique_id is not None
-    hass.data.setdefault(DOMAIN, {})
     if CONF_ADDRESS not in entry.data and CONF_MAC in entry.data:
-        # Bleak uses addresses not mac addresses which are are actually
+        # Bleak uses addresses not mac addresses which are actually
         # UUIDs on some platforms (MacOS).
         mac = entry.data[CONF_MAC]
         if "-" not in mac:
@@ -84,6 +111,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # connectable means we can make connections to the device
     connectable = switchbot_model in CONNECTABLE_SUPPORTED_MODEL_TYPES
     address: str = entry.data[CONF_ADDRESS]
+
+    await switchbot.close_stale_connections_by_address(address)
+
     ble_device = bluetooth.async_ble_device_from_address(
         hass, address.upper(), connectable
     )
@@ -92,15 +122,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Could not find Switchbot {sensor_type} with address {address}"
         )
 
-    await switchbot.close_stale_connections(ble_device)
     cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)
-    device = cls(
-        device=ble_device,
-        password=entry.data.get(CONF_PASSWORD),
-        retry_count=entry.options[CONF_RETRY_COUNT],
-    )
+    if switchbot_model in ENCRYPTED_MODELS:
+        try:
+            device = cls(
+                device=ble_device,
+                key_id=entry.data.get(CONF_KEY_ID),
+                encryption_key=entry.data.get(CONF_ENCRYPTION_KEY),
+                retry_count=entry.options[CONF_RETRY_COUNT],
+                model=switchbot_model,
+            )
+        except ValueError as error:
+            raise ConfigEntryNotReady(
+                "Invalid encryption configuration provided"
+            ) from error
+    else:
+        device = cls(
+            device=ble_device,
+            password=entry.data.get(CONF_PASSWORD),
+            retry_count=entry.options[CONF_RETRY_COUNT],
+        )
 
-    coordinator = hass.data[DOMAIN][entry.entry_id] = SwitchbotDataUpdateCoordinator(
+    coordinator = entry.runtime_data = SwitchbotDataUpdateCoordinator(
         hass,
         _LOGGER,
         ble_device,
@@ -130,13 +173,6 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     sensor_type = entry.data[CONF_SENSOR_TYPE]
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    return await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS_BY_TYPE[sensor_type]
     )
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-        if not hass.config_entries.async_entries(DOMAIN):
-            hass.data.pop(DOMAIN)
-
-    return unload_ok

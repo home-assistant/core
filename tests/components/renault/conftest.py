@@ -1,8 +1,10 @@
 """Provide common Renault fixtures."""
+
+from collections.abc import Generator, Iterator
 import contextlib
 from types import MappingProxyType
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from renault_api.kamereon import exceptions, schemas
@@ -16,6 +18,15 @@ from homeassistant.helpers import aiohttp_client
 from .const import MOCK_ACCOUNT_ID, MOCK_CONFIG, MOCK_VEHICLES
 
 from tests.common import MockConfigEntry, load_fixture
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.renault.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture(name="vehicle_type", params=MOCK_VEHICLES.keys())
@@ -46,9 +57,12 @@ async def patch_renault_account(hass: HomeAssistant) -> RenaultAccount:
         MOCK_ACCOUNT_ID,
         websession=aiohttp_client.async_get_clientsession(hass),
     )
-    with patch("renault_api.renault_session.RenaultSession.login"), patch(
-        "renault_api.renault_client.RenaultClient.get_api_account",
-        return_value=renault_account,
+    with (
+        patch("renault_api.renault_session.RenaultSession.login"),
+        patch(
+            "renault_api.renault_client.RenaultClient.get_api_account",
+            return_value=renault_account,
+        ),
     ):
         yield renault_account
 
@@ -114,27 +128,35 @@ def patch_fixtures_with_data(vehicle_type: str):
     """Mock fixtures."""
     mock_fixtures = _get_fixtures(vehicle_type)
 
-    with patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_battery_status",
-        return_value=mock_fixtures["battery_status"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_charge_mode",
-        return_value=mock_fixtures["charge_mode"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_cockpit",
-        return_value=mock_fixtures["cockpit"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_hvac_status",
-        return_value=mock_fixtures["hvac_status"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_location",
-        return_value=mock_fixtures["location"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_lock_status",
-        return_value=mock_fixtures["lock_status"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_res_state",
-        return_value=mock_fixtures["res_state"],
+    with (
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_battery_status",
+            return_value=mock_fixtures["battery_status"],
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_charge_mode",
+            return_value=mock_fixtures["charge_mode"],
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_cockpit",
+            return_value=mock_fixtures["cockpit"],
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_hvac_status",
+            return_value=mock_fixtures["hvac_status"],
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_location",
+            return_value=mock_fixtures["location"],
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_lock_status",
+            return_value=mock_fixtures["lock_status"],
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_res_state",
+            return_value=mock_fixtures["res_state"],
+        ),
     ):
         yield
 
@@ -144,55 +166,71 @@ def patch_fixtures_with_no_data():
     """Mock fixtures."""
     mock_fixtures = _get_fixtures("")
 
-    with patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_battery_status",
-        return_value=mock_fixtures["battery_status"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_charge_mode",
-        return_value=mock_fixtures["charge_mode"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_cockpit",
-        return_value=mock_fixtures["cockpit"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_hvac_status",
-        return_value=mock_fixtures["hvac_status"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_location",
-        return_value=mock_fixtures["location"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_lock_status",
-        return_value=mock_fixtures["lock_status"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_res_state",
-        return_value=mock_fixtures["res_state"],
+    with (
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_battery_status",
+            return_value=mock_fixtures["battery_status"],
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_charge_mode",
+            return_value=mock_fixtures["charge_mode"],
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_cockpit",
+            return_value=mock_fixtures["cockpit"],
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_hvac_status",
+            return_value=mock_fixtures["hvac_status"],
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_location",
+            return_value=mock_fixtures["location"],
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_lock_status",
+            return_value=mock_fixtures["lock_status"],
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_res_state",
+            return_value=mock_fixtures["res_state"],
+        ),
     ):
         yield
 
 
 @contextlib.contextmanager
-def _patch_fixtures_with_side_effect(side_effect: Any):
+def _patch_fixtures_with_side_effect(side_effect: Any) -> Iterator[None]:
     """Mock fixtures."""
-    with patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_battery_status",
-        side_effect=side_effect,
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_charge_mode",
-        side_effect=side_effect,
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_cockpit",
-        side_effect=side_effect,
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_hvac_status",
-        side_effect=side_effect,
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_location",
-        side_effect=side_effect,
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_lock_status",
-        side_effect=side_effect,
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.get_res_state",
-        side_effect=side_effect,
+    with (
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_battery_status",
+            side_effect=side_effect,
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_charge_mode",
+            side_effect=side_effect,
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_cockpit",
+            side_effect=side_effect,
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_hvac_status",
+            side_effect=side_effect,
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_location",
+            side_effect=side_effect,
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_lock_status",
+            side_effect=side_effect,
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_res_state",
+            side_effect=side_effect,
+        ),
     ):
         yield
 

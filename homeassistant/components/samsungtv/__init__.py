@@ -1,16 +1,14 @@
 """The Samsung TV integration."""
+
 from __future__ import annotations
 
 from collections.abc import Coroutine, Mapping
 from functools import partial
-import socket
 from typing import Any
 from urllib.parse import urlparse
 
 import getmac
-import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,7 +16,6 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_METHOD,
     CONF_MODEL,
-    CONF_NAME,
     CONF_PORT,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
@@ -27,9 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.typing import ConfigType
 
 from .bridge import (
     SamsungTVBridge,
@@ -38,12 +33,9 @@ from .bridge import (
     model_requires_encryption,
 )
 from .const import (
-    CONF_ON_ACTION,
     CONF_SESSION_ID,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
-    DEFAULT_NAME,
-    DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
     LEGACY_PORT,
     LOGGER,
@@ -52,61 +44,9 @@ from .const import (
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
 )
+from .coordinator import SamsungTVConfigEntry, SamsungTVDataUpdateCoordinator
 
-
-def ensure_unique_hosts(value: dict[Any, Any]) -> dict[Any, Any]:
-    """Validate that all configs have a unique host."""
-    vol.Schema(vol.Unique("duplicate host entries found"))(
-        [entry[CONF_HOST] for entry in value]
-    )
-    return value
-
-
-PLATFORMS = [Platform.MEDIA_PLAYER]
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                cv.deprecated(CONF_PORT),
-                vol.Schema(
-                    {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                        vol.Optional(CONF_PORT): cv.port,
-                        vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-                    }
-                ),
-            ],
-            ensure_unique_hosts,
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Samsung TV integration."""
-    hass.data[DOMAIN] = {}
-    if DOMAIN not in config:
-        return True
-
-    for entry_config in config[DOMAIN]:
-        ip_address = await hass.async_add_executor_job(
-            socket.gethostbyname, entry_config[CONF_HOST]
-        )
-        hass.data[DOMAIN][ip_address] = {
-            CONF_ON_ACTION: entry_config.get(CONF_ON_ACTION)
-        }
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=entry_config,
-            )
-        )
-    return True
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 
 @callback
@@ -149,9 +89,9 @@ class DebouncedEntryReloader:
         await self._debounced_reload.async_call()
 
     @callback
-    def async_cancel(self) -> None:
+    def async_shutdown(self) -> None:
         """Cancel any pending reload."""
-        self._debounced_reload.async_cancel()
+        self._debounced_reload.async_shutdown()
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""
@@ -177,9 +117,8 @@ async def _async_update_ssdp_locations(hass: HomeAssistant, entry: ConfigEntry) 
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> bool:
     """Set up the Samsung TV platform."""
-
     # Initialize bridge
     if entry.data.get(CONF_METHOD) == METHOD_ENCRYPTED_WEBSOCKET:
         if not entry.data.get(CONF_TOKEN) or not entry.data.get(CONF_SESSION_ID):
@@ -187,6 +126,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "Token and session id are required in encrypted mode"
             )
     bridge = await _async_create_bridge_with_updated_data(hass, entry)
+
+    @callback
+    def _access_denied() -> None:
+        """Access denied callback."""
+        LOGGER.debug("Access denied in getting remote object")
+        entry.async_start_reauth(hass)
+
+    bridge.register_reauth_callback(_access_denied)
 
     # Ensure updates get saved against the config_entry
     @callback
@@ -196,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     bridge.register_update_config_entry_callback(_update_config_entry)
 
-    async def stop_bridge(event: Event) -> None:
+    async def stop_bridge(event: Event | None = None) -> None:
         """Stop SamsungTV bridge connection."""
         LOGGER.debug("Stopping SamsungTVBridge %s", bridge.host)
         await bridge.async_close_remote()
@@ -204,6 +151,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
     )
+    entry.async_on_unload(stop_bridge)
 
     await _async_update_ssdp_locations(hass, entry)
 
@@ -211,11 +159,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # will be a race where the config flow will see the entry
     # as not loaded and may reload it
     debounced_reloader = DebouncedEntryReloader(hass, entry)
-    entry.async_on_unload(debounced_reloader.async_cancel)
+    entry.async_on_unload(debounced_reloader.async_shutdown)
     entry.async_on_unload(entry.add_update_listener(debounced_reloader.async_call))
 
-    hass.data[DOMAIN][entry.entry_id] = bridge
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    coordinator = SamsungTVDataUpdateCoordinator(hass, entry, bridge)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -245,7 +195,7 @@ async def _async_create_bridge_with_updated_data(
                     "Failed to determine connection method, make sure the device is on."
                 )
 
-        LOGGER.info("Updated port to %s and method to %s for %s", port, method, host)
+        LOGGER.debug("Updated port to %s and method to %s for %s", port, method, host)
         updated_data[CONF_PORT] = port
         updated_data[CONF_METHOD] = method
 
@@ -253,10 +203,13 @@ async def _async_create_bridge_with_updated_data(
 
     mac: str | None = entry.data.get(CONF_MAC)
     model: str | None = entry.data.get(CONF_MODEL)
-    if (not mac or not model) and not load_info_attempted:
+    mac_is_incorrectly_formatted = mac and dr.format_mac(mac) != mac
+    if (
+        not mac or not model or mac_is_incorrectly_formatted
+    ) and not load_info_attempted:
         info = await bridge.async_device_info()
 
-    if not mac:
+    if not mac or mac_is_incorrectly_formatted:
         LOGGER.debug("Attempting to get mac for %s", host)
         if info:
             mac = mac_from_device_info(info)
@@ -266,24 +219,28 @@ async def _async_create_bridge_with_updated_data(
                 partial(getmac.get_mac_address, ip=host)
             )
 
-        if mac:
-            LOGGER.info("Updated mac to %s for %s", mac, host)
-            updated_data[CONF_MAC] = mac
+        if mac and mac != "none":
+            # Samsung sometimes returns a value of "none" for the mac address
+            # this should be ignored
+            LOGGER.debug("Updated mac to %s for %s", mac, host)
+            updated_data[CONF_MAC] = dr.format_mac(mac)
         else:
-            LOGGER.info("Failed to get mac for %s", host)
+            LOGGER.warning("Failed to get mac for %s", host)
 
     if not model:
         LOGGER.debug("Attempting to get model for %s", host)
         if info:
             model = info.get("device", {}).get("modelName")
             if model:
-                LOGGER.info("Updated model to %s for %s", model, host)
+                LOGGER.debug("Updated model to %s for %s", model, host)
                 updated_data[CONF_MODEL] = model
 
     if model_requires_encryption(model) and method != METHOD_ENCRYPTED_WEBSOCKET:
-        LOGGER.info(
-            "Detected model %s for %s. Some televisions from H and J series use "
-            "an encrypted protocol but you are using %s which may not be supported",
+        LOGGER.debug(
+            (
+                "Detected model %s for %s. Some televisions from H and J series use "
+                "an encrypted protocol but you are using %s which may not be supported"
+            ),
             model,
             host,
             method,
@@ -296,21 +253,17 @@ async def _async_create_bridge_with_updated_data(
     return bridge
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        bridge: SamsungTVBridge = hass.data[DOMAIN][entry.entry_id]
-        LOGGER.debug("Stopping SamsungTVBridge %s", bridge.host)
-        await bridge.async_close_remote()
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     version = config_entry.version
+    minor_version = config_entry.minor_version
 
-    LOGGER.debug("Migrating from version %s", version)
+    LOGGER.debug("Migrating from version %s.%s", version, minor_version)
 
     # 1 -> 2: Unique ID format changed, so delete and re-import:
     if version == 1:
@@ -320,8 +273,17 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         en_reg = er.async_get(hass)
         en_reg.async_clear_config_entry(config_entry.entry_id)
 
-        version = config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry)
-    LOGGER.debug("Migration to version %s successful", version)
+        version = 2
+        hass.config_entries.async_update_entry(config_entry, version=2)
+
+    if version == 2:
+        if minor_version < 2:
+            # Cleanup invalid MAC addresses - see #103512
+            # Reverted due to device registry collisions - see #119082 / #119249
+
+            minor_version = 2
+            hass.config_entries.async_update_entry(config_entry, minor_version=2)
+
+    LOGGER.debug("Migration to version %s.%s successful", version, minor_version)
 
     return True

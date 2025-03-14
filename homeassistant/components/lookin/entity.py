@@ -1,14 +1,21 @@
 """The lookin integration entity."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
 import logging
-from typing import cast
 
-from aiolookin import POWER_CMD, POWER_OFF_CMD, POWER_ON_CMD, Climate, Remote
+from aiolookin import (
+    POWER_CMD,
+    POWER_OFF_CMD,
+    POWER_ON_CMD,
+    Climate,
+    MeteoSensor,
+    Remote,
+)
 from aiolookin.models import Device, UDPCommandType, UDPEvent
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODEL_NAMES
@@ -53,7 +60,7 @@ class LookinDeviceMixIn:
 
 
 class LookinDeviceCoordinatorEntity(
-    LookinDeviceMixIn, CoordinatorEntity[LookinDataUpdateCoordinator]
+    LookinDeviceMixIn, CoordinatorEntity[LookinDataUpdateCoordinator[MeteoSensor]]
 ):
     """A lookin device entity on the device itself that uses the coordinator."""
 
@@ -86,7 +93,9 @@ class LookinEntityMixIn:
 
 
 class LookinCoordinatorEntity(
-    LookinDeviceMixIn, LookinEntityMixIn, CoordinatorEntity[LookinDataUpdateCoordinator]
+    LookinDeviceMixIn,
+    LookinEntityMixIn,
+    CoordinatorEntity[LookinDataUpdateCoordinator[Remote]],
 ):
     """A lookin device entity for an external device that uses the coordinator."""
 
@@ -95,7 +104,7 @@ class LookinCoordinatorEntity(
 
     def __init__(
         self,
-        coordinator: LookinDataUpdateCoordinator,
+        coordinator: LookinDataUpdateCoordinator[Remote],
         uuid: str,
         device: Remote | Climate,
         lookin_data: LookinData,
@@ -122,7 +131,7 @@ class LookinPowerEntity(LookinCoordinatorEntity):
 
     def __init__(
         self,
-        coordinator: LookinDataUpdateCoordinator,
+        coordinator: LookinDataUpdateCoordinator[Remote],
         uuid: str,
         device: Remote | Climate,
         lookin_data: LookinData,
@@ -142,7 +151,7 @@ class LookinPowerPushRemoteEntity(LookinPowerEntity):
 
     def __init__(
         self,
-        coordinator: LookinDataUpdateCoordinator,
+        coordinator: LookinDataUpdateCoordinator[Remote],
         uuid: str,
         device: Remote,
         lookin_data: LookinData,
@@ -154,7 +163,7 @@ class LookinPowerPushRemoteEntity(LookinPowerEntity):
 
     @property
     def _remote(self) -> Remote:
-        return cast(Remote, self.coordinator.data)
+        return self.coordinator.data
 
     @abstractmethod
     def _update_from_status(self, status: str) -> None:
@@ -174,6 +183,7 @@ class LookinPowerPushRemoteEntity(LookinPowerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
+        await super().async_added_to_hass()
         self.async_on_remove(
             self._lookin_udp_subs.subscribe_event(
                 self._lookin_device.id,

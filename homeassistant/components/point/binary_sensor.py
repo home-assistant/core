@@ -1,4 +1,5 @@
 """Support for Minut Point binary sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -6,17 +7,17 @@ import logging
 from pypoint import EVENTS
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MinutPointEntity
 from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK
+from .entity import MinutPointEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,13 +43,13 @@ DEVICES = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Point's binary sensors based on a config entry."""
 
     async def async_discover_sensor(device_id):
         """Discover and add a discovered sensor."""
-        client = hass.data[POINT_DOMAIN][config_entry.entry_id]
+        client = config_entry.runtime_data.client
         async_add_entities(
             (
                 MinutPointBinarySensor(client, device_id, device_name)
@@ -59,7 +60,9 @@ async def async_setup_entry(
         )
 
     async_dispatcher_connect(
-        hass, POINT_DISCOVERY_NEW.format(DOMAIN, POINT_DOMAIN), async_discover_sensor
+        hass,
+        POINT_DISCOVERY_NEW.format(BINARY_SENSOR_DOMAIN, POINT_DOMAIN),
+        async_discover_sensor,
     )
 
 
@@ -71,11 +74,13 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         super().__init__(
             point_client,
             device_id,
-            DEVICES[device_name].get("device_class"),
+            DEVICES[device_name].get("device_class", device_name),
         )
         self._device_name = device_name
         self._async_unsub_hook_dispatcher_connect = None
         self._events = EVENTS[device_name]
+        self._attr_unique_id = f"point.{device_id}-{device_name}"
+        self._attr_icon = DEVICES[self._device_name].get("icon")
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to HOme Assistant."""
@@ -96,7 +101,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
             return
         if self.device_class == BinarySensorDeviceClass.CONNECTIVITY:
             # connectivity is the other way around.
-            self._attr_is_on = not (self._events[0] in self.device.ongoing_events)
+            self._attr_is_on = self._events[0] not in self.device.ongoing_events
         else:
             self._attr_is_on = self._events[0] in self.device.ongoing_events
         self.async_write_ha_state()
@@ -124,18 +129,3 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         else:
             self._attr_is_on = _is_on
         self.async_write_ha_state()
-
-    @property
-    def name(self):
-        """Return the display name of this device."""
-        return f"{self._name} {self._device_name.capitalize()}"
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return DEVICES[self._device_name].get("icon")
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the sensor."""
-        return f"point.{self._id}-{self._device_name}"

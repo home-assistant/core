@@ -1,4 +1,7 @@
 """Constants for the HERE Travel Time integration."""
+
+from typing import Final
+
 DOMAIN = "here_travel_time"
 DEFAULT_SCAN_INTERVAL = 300
 
@@ -51,11 +54,11 @@ ICONS = {
     TRAVEL_MODE_TRUCK: ICON_TRUCK,
 }
 
-ATTR_DURATION = "duration"
-ATTR_DISTANCE = "distance"
-ATTR_ORIGIN = "origin"
-ATTR_DESTINATION = "destination"
+ATTR_DURATION: Final = "duration"
+ATTR_DISTANCE: Final = "distance"
+ATTR_ORIGIN: Final = "origin"
+ATTR_DESTINATION: Final = "destination"
 
-ATTR_DURATION_IN_TRAFFIC = "duration_in_traffic"
-ATTR_ORIGIN_NAME = "origin_name"
-ATTR_DESTINATION_NAME = "destination_name"
+ATTR_DURATION_IN_TRAFFIC: Final = "duration_in_traffic"
+ATTR_ORIGIN_NAME: Final = "origin_name"
+ATTR_DESTINATION_NAME: Final = "destination_name"

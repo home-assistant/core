@@ -1,5 +1,6 @@
 """Test the NEW_NAME config flow."""
-from unittest.mock import patch
+
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -10,29 +11,29 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-@pytest.mark.parametrize("platform", ("sensor",))
-async def test_config_flow(hass: HomeAssistant, platform) -> None:
+
+@pytest.mark.parametrize("platform", ["sensor"])
+async def test_config_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, platform
+) -> None:
     """Test the config flow."""
     input_sensor_entity_id = "sensor.input"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.NEW_DOMAIN.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"name": "My NEW_DOMAIN", "entity_id": input_sensor_entity_id},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"name": "My NEW_DOMAIN", "entity_id": input_sensor_entity_id},
+    )
+    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My NEW_DOMAIN"
     assert result["data"] == {}
     assert result["options"] == {
@@ -52,16 +53,16 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
 
 def get_suggested(schema, key):
     """Get suggested value for key in voluptuous schema."""
-    for k in schema.keys():
+    for k in schema:
         if k == key:
             if k.description is None or "suggested_value" not in k.description:
                 return None
             return k.description["suggested_value"]
     # Wanted key absent from schema
-    raise Exception
+    raise KeyError(f"Key `{key}` is missing from schema")
 
 
-@pytest.mark.parametrize("platform", ("sensor",))
+@pytest.mark.parametrize("platform", ["sensor"])
 async def test_options(hass: HomeAssistant, platform) -> None:
     """Test reconfiguring."""
     input_sensor_1_entity_id = "sensor.input1"
@@ -82,7 +83,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
     assert get_suggested(schema, "entity_id") == input_sensor_1_entity_id
@@ -93,7 +94,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
             "entity_id": input_sensor_2_entity_id,
         },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "entity_id": input_sensor_2_entity_id,
         "name": "My NEW_DOMAIN",

@@ -1,4 +1,5 @@
 """Support for Snips on-device ASR and NLU."""
+
 from datetime import timedelta
 import json
 import logging
@@ -90,12 +91,9 @@ SERVICE_SCHEMA_FEEDBACK = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Snips component."""
-    # Make sure MQTT is available and the entry is loaded
-    if not hass.config_entries.async_entries(
-        mqtt.DOMAIN
-    ) or not await hass.config_entries.async_wait_component(
-        hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    ):
+
+    # Make sure MQTT integration is enabled and the client is available
+    if not await mqtt.async_wait_for_mqtt_client(hass):
         _LOGGER.error("MQTT integration is not available")
         return False
 
@@ -142,7 +140,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         slots = {}
         for slot in request.get("slots", []):
             slots[slot["slotName"]] = {"value": resolve_slot_values(slot)}
-            slots["{}_raw".format(slot["slotName"])] = {"value": slot["rawValue"]}
+            slots[f"{slot['slotName']}_raw"] = {"value": slot["rawValue"]}
         slots["site_id"] = {"value": request.get("siteId")}
         slots["session_id"] = {"value": request.get("sessionId")}
         slots["confidenceScore"] = {"value": request["intent"]["confidenceScore"]}
@@ -179,7 +177,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await mqtt.async_publish(
             hass, "hermes/dialogueManager/startSession", json.dumps(notification)
         )
-        return
 
     async def snips_say_action(call: ServiceCall) -> None:
         """Send a Snips action message."""
@@ -196,7 +193,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await mqtt.async_publish(
             hass, "hermes/dialogueManager/startSession", json.dumps(notification)
         )
-        return
 
     async def feedback_on(call: ServiceCall) -> None:
         """Turn feedback sounds on."""

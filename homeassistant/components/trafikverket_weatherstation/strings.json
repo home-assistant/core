@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -15,6 +17,71 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "station": "Station"
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "station": "[%key:component::trafikverket_weatherstation::config::step::user::data::station%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "air_temperature": {
+        "name": "Air temperature"
+      },
+      "road_temperature": {
+        "name": "Road temperature"
+      },
+      "precipitation": {
+        "name": "Precipitation type",
+        "state": {
+          "no": "None",
+          "rain": "Rain",
+          "freezing_rain": "Freezing rain",
+          "snow": "Snow",
+          "sleet": "Sleet",
+          "yes": "Yes (unknown)"
+        }
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "wind_speed_max": {
+        "name": "Wind speed max"
+      },
+      "measure_time": {
+        "name": "Measure time"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "visible_distance": {
+        "name": "Visible distance"
+      },
+      "road_ice_depth": {
+        "name": "Ice depth on road"
+      },
+      "road_snow_depth": {
+        "name": "Snow depth on road"
+      },
+      "road_water_depth": {
+        "name": "Water depth on road"
+      },
+      "road_water_equivalent_depth": {
+        "name": "Water equivalent depth on road"
+      },
+      "wind_height": {
+        "name": "Wind measurement height"
+      },
+      "modified_time": {
+        "name": "Data modified time"
       }
     }
   }

@@ -1,4 +1,5 @@
 """Handle Hue Service calls."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,7 +9,7 @@ from aiohue import HueBridgeV1, HueBridgeV2
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import verify_domain_control
 
 from .bridge import HueBridge
@@ -133,8 +134,10 @@ async def hue_activate_scene_v2(
 ) -> bool:
     """Service for V2 bridge to call scene by name."""
     LOGGER.warning(
-        "Use of service_call '%s' is deprecated and will be removed "
-        "in a future release. Please use scene entities instead",
+        (
+            "Use of service_call '%s' is deprecated and will be removed "
+            "in a future release. Please use scene entities instead"
+        ),
         SERVICE_HUE_ACTIVATE_SCENE,
     )
     api: HueBridgeV2 = bridge.api

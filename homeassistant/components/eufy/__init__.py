@@ -1,4 +1,5 @@
-"""Support for Eufy devices."""
+"""Support for EufyHome devices."""
+
 import lakeside
 import voluptuous as vol
 
@@ -13,8 +14,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "eufy"
@@ -55,7 +55,7 @@ PLATFORMS = {
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Eufy devices."""
+    """Set up EufyHome devices."""
 
     if CONF_USERNAME in config[DOMAIN] and CONF_PASSWORD in config[DOMAIN]:
         data = lakeside.get_devices(

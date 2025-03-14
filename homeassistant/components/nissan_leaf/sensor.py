@@ -1,20 +1,19 @@
 """Battery Charge and Range Support for the Nissan Leaf."""
+
 from __future__ import annotations
 
 import logging
-
-from voluptuous.validators import Number
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE, UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import LeafDataStore, LeafEntity
+from . import LeafDataStore
 from .const import (
     DATA_BATTERY,
     DATA_CHARGING,
@@ -22,6 +21,7 @@ from .const import (
     DATA_RANGE_AC,
     DATA_RANGE_AC_OFF,
 )
+from .entity import LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,11 +63,11 @@ class LeafBatterySensor(LeafEntity, SensorEntity):
         return f"{self.car.leaf.nickname} Charge"
 
     @property
-    def native_value(self) -> Number | None:
+    def native_value(self) -> StateType:
         """Battery state percentage."""
         if self.car.data[DATA_BATTERY] is None:
             return None
-        return round(self.car.data[DATA_BATTERY])
+        return round(self.car.data[DATA_BATTERY])  # type: ignore[no-any-return]
 
     @property
     def icon(self) -> str:

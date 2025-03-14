@@ -1,12 +1,14 @@
 """Z-Wave JS trigger dispatcher."""
-from __future__ import annotations
 
-from types import ModuleType
-from typing import cast
+from __future__ import annotations
 
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import (
+    TriggerActionType,
+    TriggerInfo,
+    TriggerProtocol,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .triggers import event, value_updated
@@ -17,7 +19,7 @@ TRIGGERS = {
 }
 
 
-def _get_trigger_platform(config: ConfigType) -> ModuleType:
+def _get_trigger_platform(config: ConfigType) -> TriggerProtocol:
     """Return trigger platform."""
     platform_split = config[CONF_PLATFORM].split(".", maxsplit=1)
     if len(platform_split) < 2 or platform_split[1] not in TRIGGERS:
@@ -30,13 +32,7 @@ async def async_validate_trigger_config(
 ) -> ConfigType:
     """Validate config."""
     platform = _get_trigger_platform(config)
-    if hasattr(platform, "async_validate_trigger_config"):
-        return cast(
-            ConfigType,
-            await getattr(platform, "async_validate_trigger_config")(hass, config),
-        )
-    assert hasattr(platform, "TRIGGER_SCHEMA")
-    return cast(ConfigType, getattr(platform, "TRIGGER_SCHEMA")(config))
+    return await platform.async_validate_trigger_config(hass, config)
 
 
 async def async_attach_trigger(
@@ -47,10 +43,4 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach trigger of specified platform."""
     platform = _get_trigger_platform(config)
-    assert hasattr(platform, "async_attach_trigger")
-    return cast(
-        CALLBACK_TYPE,
-        await getattr(platform, "async_attach_trigger")(
-            hass, config, action, trigger_info
-        ),
-    )
+    return await platform.async_attach_trigger(hass, config, action, trigger_info)

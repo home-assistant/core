@@ -1,12 +1,18 @@
 """Test the Z-Wave JS binary sensor platform."""
+
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from .common import (
     DISABLED_LEGACY_BINARY_SENSOR,
@@ -20,7 +26,9 @@ from .common import (
 from tests.common import MockConfigEntry
 
 
-async def test_low_battery_sensor(hass, multisensor_6, integration):
+async def test_low_battery_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, multisensor_6, integration
+) -> None:
     """Test boolean binary sensor of type low battery."""
     state = hass.states.get(LOW_BATTERY_BINARY_SENSOR)
 
@@ -28,14 +36,15 @@ async def test_low_battery_sensor(hass, multisensor_6, integration):
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.BATTERY
 
-    registry = er.async_get(hass)
-    entity_entry = registry.async_get(LOW_BATTERY_BINARY_SENSOR)
+    entity_entry = entity_registry.async_get(LOW_BATTERY_BINARY_SENSOR)
 
     assert entity_entry
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
-async def test_enabled_legacy_sensor(hass, ecolink_door_sensor, integration):
+async def test_enabled_legacy_sensor(
+    hass: HomeAssistant, ecolink_door_sensor, integration
+) -> None:
     """Test enabled legacy boolean binary sensor."""
     node = ecolink_door_sensor
     # this node has Notification CC not (fully) implemented
@@ -93,28 +102,31 @@ async def test_enabled_legacy_sensor(hass, ecolink_door_sensor, integration):
     assert state.state == STATE_UNKNOWN
 
 
-async def test_disabled_legacy_sensor(hass, multisensor_6, integration):
+async def test_disabled_legacy_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, multisensor_6, integration
+) -> None:
     """Test disabled legacy boolean binary sensor."""
     # this node has Notification CC implemented so legacy binary sensor should be disabled
 
-    registry = er.async_get(hass)
     entity_id = DISABLED_LEGACY_BINARY_SENSOR
     state = hass.states.get(entity_id)
     assert state is None
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling legacy entity
-    updated_entry = registry.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
+    updated_entry = entity_registry.async_update_entity(
+        entry.entity_id, disabled_by=None
     )
     assert updated_entry != entry
     assert updated_entry.disabled is False
 
 
-async def test_notification_sensor(hass, multisensor_6, integration):
+async def test_notification_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, multisensor_6, integration
+) -> None:
     """Test binary sensor created from Notification CC."""
     state = hass.states.get(NOTIFICATION_MOTION_BINARY_SENSOR)
 
@@ -128,8 +140,7 @@ async def test_notification_sensor(hass, multisensor_6, integration):
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.TAMPER
 
-    registry = er.async_get(hass)
-    entity_entry = registry.async_get(TAMPER_SENSOR)
+    entity_entry = entity_registry.async_get(TAMPER_SENSOR)
 
     assert entity_entry
     assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
@@ -138,7 +149,7 @@ async def test_notification_sensor(hass, multisensor_6, integration):
 async def test_notification_off_state(
     hass: HomeAssistant,
     lock_popp_electric_strike_lock_control: Node,
-):
+) -> None:
     """Test the description off_state attribute of certain notification sensors."""
     node = lock_popp_electric_strike_lock_control
     # Remove all other values except the door state value.
@@ -167,7 +178,9 @@ async def test_notification_off_state(
     assert state.entity_id == "binary_sensor.node_62_window_door_is_open"
 
 
-async def test_property_sensor_door_status(hass, lock_august_pro, integration):
+async def test_property_sensor_door_status(
+    hass: HomeAssistant, lock_august_pro, integration
+) -> None:
     """Test property binary sensor with sensor mapping (doorStatus)."""
     node = lock_august_pro
 
@@ -244,3 +257,31 @@ async def test_property_sensor_door_status(hass, lock_august_pro, integration):
     state = hass.states.get(PROPERTY_DOOR_STATUS_BINARY_SENSOR)
     assert state
     assert state.state == STATE_UNKNOWN
+
+
+async def test_config_parameter_binary_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    climate_adc_t3000,
+    integration,
+) -> None:
+    """Test config parameter binary sensor is created."""
+    binary_sensor_entity_id = "binary_sensor.adc_t3000_system_configuration_override"
+    entity_entry = entity_registry.async_get(binary_sensor_entity_id)
+    assert entity_entry
+    assert entity_entry.disabled
+    assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
+
+    updated_entry = entity_registry.async_update_entity(
+        binary_sensor_entity_id, disabled_by=None
+    )
+    assert updated_entry != entity_entry
+    assert updated_entry.disabled is False
+
+    # reload integration and check if entity is correctly there
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(binary_sensor_entity_id)
+    assert state
+    assert state.state == STATE_OFF

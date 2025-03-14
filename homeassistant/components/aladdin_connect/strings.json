@@ -1,29 +1,8 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Aladdin Connect integration needs to re-authenticate your account",
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
-    },
-
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
-    },
-
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+  "issues": {
+    "integration_removed": {
+      "title": "The Aladdin Connect integration has been removed",
+      "description": "The Aladdin Connect integration has been removed from Home Assistant.\n\nTo resolve this issue, please remove the (now defunct) integration entries from your Home Assistant setup. [Click here to see your existing Aladdin Connect integration entries]({entries})."
     }
   }
 }

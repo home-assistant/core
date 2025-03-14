@@ -1,4 +1,5 @@
 """Support for HDMI CEC devices as media players."""
+
 from __future__ import annotations
 
 import logging
@@ -30,12 +31,14 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_NEW, DOMAIN, CecEntity
+from .const import ATTR_NEW, DOMAIN
+from .entity import CecEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,7 +96,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
 
     def clear_playlist(self) -> None:
         """Clear players playlist."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def turn_off(self) -> None:
         """Turn device off."""
@@ -105,9 +108,11 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
         self.send_keypress(KEY_STOP)
         self._attr_state = MediaPlayerState.IDLE
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Not supported."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def media_next_track(self) -> None:
         """Skip to next track."""
@@ -115,11 +120,11 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
 
     def media_seek(self, position: float) -> None:
         """Not supported."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def media_pause(self) -> None:
         """Pause playback."""
@@ -128,7 +133,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
 
     def select_source(self, source: str) -> None:
         """Not supported."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def media_play(self) -> None:
         """Start playback."""

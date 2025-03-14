@@ -1,4 +1,5 @@
 """Handle auto setup of IHC products from the ihc project file."""
+
 import logging
 import os.path
 
@@ -6,10 +7,9 @@ from defusedxml import ElementTree
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import CONF_TYPE, CONF_UNIT_OF_MEASUREMENT, TEMP_CELSIUS
+from homeassistant.const import CONF_TYPE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery
 
 from .const import (
     AUTO_SETUP_YAML,
@@ -63,7 +63,7 @@ AUTO_SETUP_SCHEMA = vol.Schema(
                         vol.Required(CONF_NODE): cv.string,
                         vol.Required(CONF_XPATH): cv.string,
                         vol.Optional(
-                            CONF_UNIT_OF_MEASUREMENT, default=TEMP_CELSIUS
+                            CONF_UNIT_OF_MEASUREMENT, default=UnitOfTemperature.CELSIUS
                         ): cv.string,
                     }
                 )

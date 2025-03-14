@@ -12,25 +12,26 @@ import pytest
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
-    DOMAIN,
+    DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.xiaomi_miio import UPDATE_INTERVAL
 from homeassistant.components.xiaomi_miio.const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
-    CONF_MAC,
     DOMAIN as XIAOMI_DOMAIN,
     MODEL_AIRFRESH_T2017,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_DEVICE,
     CONF_HOST,
+    CONF_MAC,
     CONF_MODEL,
     CONF_TOKEN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from . import TEST_MAC
 
@@ -45,12 +46,17 @@ async def setup_test(hass: HomeAssistant):
     mock_airfresh.status().display_orientation = DisplayOrientation.Portrait
     mock_airfresh.status().ptc_level = PtcLevel.Low
 
-    with patch(
-        "homeassistant.components.xiaomi_miio.get_platforms",
-        return_value=[
-            Platform.SELECT,
-        ],
-    ), patch("homeassistant.components.xiaomi_miio.AirFreshT2017") as mock_airfresh_cls:
+    with (
+        patch(
+            "homeassistant.components.xiaomi_miio.get_platforms",
+            return_value=[
+                Platform.SELECT,
+            ],
+        ),
+        patch(
+            "homeassistant.components.xiaomi_miio.AirFreshT2017"
+        ) as mock_airfresh_cls,
+    ):
         mock_airfresh_cls.return_value = mock_airfresh
         yield mock_airfresh
 
@@ -77,7 +83,7 @@ async def test_select_bad_attr(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "forward"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             "select",
             SERVICE_SELECT_OPTION,
@@ -135,9 +141,9 @@ async def test_select_coordinator_update(hass: HomeAssistant, setup_test) -> Non
     assert state.state == "left"
 
 
-async def setup_component(hass, entity_name):
+async def setup_component(hass: HomeAssistant, entity_name: str) -> str:
     """Set up component."""
-    entity_id = f"{DOMAIN}.{entity_name}"
+    entity_id = f"{SELECT_DOMAIN}.{entity_name}"
 
     config_entry = MockConfigEntry(
         domain=XIAOMI_DOMAIN,

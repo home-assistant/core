@@ -1,4 +1,5 @@
 """Offer zone automation rules."""
+
 from __future__ import annotations
 
 import logging
@@ -15,9 +16,9 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    EventStateChangedData,
     HassJob,
     HomeAssistant,
-    State,
     callback,
 )
 from homeassistant.helpers import (
@@ -78,23 +79,23 @@ async def async_attach_trigger(
     job = HassJob(action)
 
     @callback
-    def zone_automation_listener(zone_event: Event) -> None:
+    def zone_automation_listener(zone_event: Event[EventStateChangedData]) -> None:
         """Listen for state changes and calls action."""
-        entity = zone_event.data.get("entity_id")
-        from_s: State | None = zone_event.data.get("old_state")
-        to_s: State | None = zone_event.data.get("new_state")
+        entity = zone_event.data["entity_id"]
+        from_s = zone_event.data["old_state"]
+        to_s = zone_event.data["new_state"]
 
-        if (
-            from_s
-            and not location.has_location(from_s)
-            or to_s
-            and not location.has_location(to_s)
+        if (from_s and not location.has_location(from_s)) or (
+            to_s and not location.has_location(to_s)
         ):
             return
 
         if not (zone_state := hass.states.get(zone_entity_id)):
             _LOGGER.warning(
-                "Automation '%s' is referencing non-existing zone '%s' in a zone trigger",
+                (
+                    "Automation '%s' is referencing non-existing zone '%s' in a zone"
+                    " trigger"
+                ),
                 trigger_info["name"],
                 zone_entity_id,
             )
@@ -103,13 +104,8 @@ async def async_attach_trigger(
         from_match = condition.zone(hass, zone_state, from_s) if from_s else False
         to_match = condition.zone(hass, zone_state, to_s) if to_s else False
 
-        if (
-            event == EVENT_ENTER
-            and not from_match
-            and to_match
-            or event == EVENT_LEAVE
-            and from_match
-            and not to_match
+        if (event == EVENT_ENTER and not from_match and to_match) or (
+            event == EVENT_LEAVE and from_match and not to_match
         ):
             description = f"{entity} {_EVENT_DESCRIPTION[event]} {zone_state.attributes[ATTR_FRIENDLY_NAME]}"
             hass.async_run_hass_job(

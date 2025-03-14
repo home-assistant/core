@@ -1,4 +1,5 @@
 """Diagnostics support for Ridwell."""
+
 from __future__ import annotations
 
 import dataclasses
@@ -9,8 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import RidwellData
 from .const import DOMAIN
+from .coordinator import RidwellDataUpdateCoordinator
 
 CONF_TITLE = "title"
 
@@ -27,13 +28,15 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data: RidwellData = hass.data[DOMAIN][entry.entry_id]
+    coordinator: RidwellDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     return async_redact_data(
         {
             "entry": entry.as_dict(),
             "data": [
-                dataclasses.asdict(event) for event in data.coordinator.data.values()
+                dataclasses.asdict(event)
+                for events in coordinator.data.values()
+                for event in events
             ],
         },
         TO_REDACT,

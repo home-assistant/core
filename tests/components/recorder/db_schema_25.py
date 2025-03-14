@@ -1,4 +1,5 @@
 """Models for SQLAlchemy."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -6,7 +7,7 @@ import json
 import logging
 from typing import Any, TypedDict, cast, overload
 
-from fnvhash import fnv1a_32
+from fnv_hash_fast import fnv1a_32
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -23,7 +24,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql
 from sqlalchemy.engine.row import Row
-from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
@@ -37,10 +37,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 # SQLAlchemy Schema
-# pylint: disable=invalid-name
 Base = declarative_base()
 
 SCHEMA_VERSION = 25
@@ -322,16 +321,11 @@ class StatisticsBase:
 
     id = Column(Integer, Identity(), primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
-
-    @declared_attr  # type: ignore[misc]
-    def metadata_id(self) -> Column:
-        """Define the metadata_id column for sub classes."""
-        return Column(
-            Integer,
-            ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
-            index=True,
-        )
-
+    metadata_id = Column(
+        Integer,
+        ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
+        index=True,
+    )
     start = Column(DATETIME_TYPE, index=True)
     mean = Column(DOUBLE_TYPE)
     min = Column(DOUBLE_TYPE)
@@ -495,13 +489,11 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
 
 
 @overload
-def process_timestamp(ts: None) -> None:
-    ...
+def process_timestamp(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp(ts: datetime) -> datetime:
-    ...
+def process_timestamp(ts: datetime) -> datetime: ...
 
 
 def process_timestamp(ts: datetime | None) -> datetime | None:
@@ -515,13 +507,11 @@ def process_timestamp(ts: datetime | None) -> datetime | None:
 
 
 @overload
-def process_timestamp_to_utc_isoformat(ts: None) -> None:
-    ...
+def process_timestamp_to_utc_isoformat(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp_to_utc_isoformat(ts: datetime) -> str:
-    ...
+def process_timestamp_to_utc_isoformat(ts: datetime) -> str: ...
 
 
 def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
@@ -539,12 +529,12 @@ class LazyState(State):
     """A lazy version of core State."""
 
     __slots__ = [
-        "_row",
+        "_attr_cache",
         "_attributes",
+        "_context",
         "_last_changed",
         "_last_updated",
-        "_context",
-        "_attr_cache",
+        "_row",
     ]
 
     def __init__(  # pylint: disable=super-init-not-called
@@ -663,7 +653,7 @@ class LazyState(State):
             "last_updated": last_updated_isoformat,
         }
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Return the comparison."""
         return (
             other.__class__ in [self.__class__, State]

@@ -1,16 +1,23 @@
 """A pool for sqlite connections."""
+
+from __future__ import annotations
+
+import asyncio
 import logging
 import threading
 import traceback
 from typing import Any
 
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.pool import NullPool, SingletonThreadPool, StaticPool
+from sqlalchemy.pool import (
+    ConnectionPoolEntry,
+    NullPool,
+    SingletonThreadPool,
+    StaticPool,
+)
 
-from homeassistant.helpers.frame import report
-from homeassistant.util.async_ import check_loop
-
-from .const import DB_WORKER_PREFIX
+from homeassistant.helpers.frame import ReportBehavior, report_usage
+from homeassistant.util.loop import raise_for_blocking_call
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +32,7 @@ ADVISE_MSG = (
 )
 
 
-class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
+class RecorderPool(SingletonThreadPool, NullPool):
     """A hybrid of NullPool and SingletonThreadPool.
 
     When called from the creating thread or db executor acts like SingletonThreadPool
@@ -33,30 +40,45 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
     """
 
     def __init__(  # pylint: disable=super-init-not-called
-        self, *args: Any, **kw: Any
+        self,
+        creator: Any,
+        recorder_and_worker_thread_ids: set[int] | None = None,
+        **kw: Any,
     ) -> None:
         """Create the pool."""
         kw["pool_size"] = POOL_SIZE
-        SingletonThreadPool.__init__(self, *args, **kw)
+        assert recorder_and_worker_thread_ids is not None, (
+            "recorder_and_worker_thread_ids is required"
+        )
+        self.recorder_and_worker_thread_ids = recorder_and_worker_thread_ids
+        SingletonThreadPool.__init__(self, creator, **kw)
 
-    @property
-    def recorder_or_dbworker(self) -> bool:
-        """Check if the thread is a recorder or dbworker thread."""
-        thread_name = threading.current_thread().name
-        return bool(
-            thread_name == "Recorder" or thread_name.startswith(DB_WORKER_PREFIX)
+    def recreate(self) -> RecorderPool:
+        """Recreate the pool."""
+        self.logger.info("Pool recreating")
+        return self.__class__(
+            self._creator,
+            pool_size=self.size,
+            recycle=self._recycle,
+            echo=self.echo,
+            pre_ping=self._pre_ping,
+            logging_name=self._orig_logging_name,
+            reset_on_return=self._reset_on_return,
+            _dispatch=self.dispatch,
+            dialect=self._dialect,
+            recorder_and_worker_thread_ids=self.recorder_and_worker_thread_ids,
         )
 
-    # Any can be switched out for ConnectionPoolEntry in the next version of sqlalchemy
-    def _do_return_conn(self, conn: Any) -> Any:
-        if self.recorder_or_dbworker:
-            return super()._do_return_conn(conn)
-        conn.close()
+    def _do_return_conn(self, record: ConnectionPoolEntry) -> None:
+        if threading.get_ident() in self.recorder_and_worker_thread_ids:
+            super()._do_return_conn(record)
+            return
+        record.close()
 
     def shutdown(self) -> None:
         """Close the connection."""
         if (
-            self.recorder_or_dbworker
+            threading.get_ident() in self.recorder_and_worker_thread_ids
             and self._conn
             and hasattr(self._conn, "current")
             and (conn := self._conn.current())
@@ -65,32 +87,40 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
 
     def dispose(self) -> None:
         """Dispose of the connection."""
-        if self.recorder_or_dbworker:
+        if threading.get_ident() in self.recorder_and_worker_thread_ids:
             super().dispose()
 
-    # Any can be switched out for ConnectionPoolEntry in the next version of sqlalchemy
-    def _do_get(self) -> Any:
-        if self.recorder_or_dbworker:
+    def _do_get(self) -> ConnectionPoolEntry:  # type: ignore[return]
+        if threading.get_ident() in self.recorder_and_worker_thread_ids:
             return super()._do_get()
-        check_loop(
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            # Not in an event loop but not in the recorder or worker thread
+            # which is allowed but discouraged since its much slower
+            return self._do_get_db_connection_protected()
+        # In the event loop, raise an exception
+        raise_for_blocking_call(  # noqa: RET503
             self._do_get_db_connection_protected,
             strict=True,
             advise_msg=ADVISE_MSG,
         )
-        return self._do_get_db_connection_protected()
+        # raise_for_blocking_call will raise an exception
 
-    def _do_get_db_connection_protected(self) -> Any:
-        report(
-            "accesses the database without the database executor; "
-            f"{ADVISE_MSG} "
-            "for faster database operations",
+    def _do_get_db_connection_protected(self) -> ConnectionPoolEntry:
+        report_usage(
+            (
+                "accesses the database without the database executor; "
+                f"{ADVISE_MSG} "
+                "for faster database operations"
+            ),
             exclude_integrations={"recorder"},
-            error_if_core=False,
+            core_behavior=ReportBehavior.LOG,
         )
-        return super(NullPool, self)._create_connection()
+        return NullPool._create_connection(self)  # noqa: SLF001
 
 
-class MutexPool(StaticPool):  # type: ignore[misc]
+class MutexPool(StaticPool):
     """A pool which prevents concurrent accesses from multiple threads.
 
     This is used in tests to prevent unsafe concurrent accesses to in-memory SQLite
@@ -100,14 +130,14 @@ class MutexPool(StaticPool):  # type: ignore[misc]
     _reference_counter = 0
     pool_lock: threading.RLock
 
-    def _do_return_conn(self, conn: Any) -> None:
+    def _do_return_conn(self, record: ConnectionPoolEntry) -> None:
         if DEBUG_MUTEX_POOL_TRACE:
             trace = traceback.extract_stack()
             trace_msg = "\n" + "".join(traceback.format_list(trace[:-1]))
         else:
             trace_msg = ""
 
-        super()._do_return_conn(conn)
+        super()._do_return_conn(record)
         if DEBUG_MUTEX_POOL:
             self._reference_counter -= 1
             _LOGGER.debug(
@@ -118,8 +148,7 @@ class MutexPool(StaticPool):  # type: ignore[misc]
             )
         MutexPool.pool_lock.release()
 
-    def _do_get(self) -> Any:
-
+    def _do_get(self) -> ConnectionPoolEntry:
         if DEBUG_MUTEX_POOL_TRACE:
             trace = traceback.extract_stack()
             trace_msg = "".join(traceback.format_list(trace[:-1]))
@@ -129,7 +158,7 @@ class MutexPool(StaticPool):  # type: ignore[misc]
         if DEBUG_MUTEX_POOL:
             _LOGGER.debug("%s wait conn%s", threading.current_thread().name, trace_msg)
         # pylint: disable-next=consider-using-with
-        got_lock = MutexPool.pool_lock.acquire(timeout=1)
+        got_lock = MutexPool.pool_lock.acquire(timeout=10)
         if not got_lock:
             raise SQLAlchemyError
         conn = super()._do_get()

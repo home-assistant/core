@@ -1,10 +1,11 @@
 {
   "domain": "integration",
-  "integration_type": "helper",
-  "name": "Integration - Riemann sum integral",
-  "documentation": "https://www.home-assistant.io/integrations/integration",
+  "name": "Integral",
+  "after_dependencies": ["counter"],
   "codeowners": ["@dgomes"],
-  "quality_scale": "internal",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/integration",
+  "integration_type": "helper",
   "iot_class": "local_push",
-  "config_flow": true
+  "quality_scale": "internal"
 }

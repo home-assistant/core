@@ -1,4 +1,5 @@
 """Diagnostics support for IQVIA."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -35,7 +36,9 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinators: dict[str, DataUpdateCoordinator] = hass.data[DOMAIN][entry.entry_id]
+    coordinators: dict[str, DataUpdateCoordinator[dict[str, Any]]] = hass.data[DOMAIN][
+        entry.entry_id
+    ]
 
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),

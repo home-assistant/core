@@ -1,4 +1,5 @@
 """Support for MySensors covers."""
+
 from __future__ import annotations
 
 from enum import Enum, unique
@@ -6,14 +7,14 @@ from typing import Any
 
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .. import mysensors
+from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
-from .helpers import on_unload
+from .entity import MySensorsChildEntity
 
 
 @unique
@@ -29,13 +30,13 @@ class CoverState(Enum):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
 
     async def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors cover."""
-        mysensors.setup_mysensors_platform(
+        setup_mysensors_platform(
             hass,
             Platform.COVER,
             discovery_info,
@@ -43,9 +44,7 @@ async def async_setup_entry(
             async_add_entities=async_add_entities,
         )
 
-    on_unload(
-        hass,
-        config_entry.entry_id,
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             MYSENSORS_DISCOVERY.format(config_entry.entry_id, Platform.COVER),
@@ -54,7 +53,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
+class MySensorsCover(MySensorsChildEntity, CoverEntity):
     """Representation of the value of a MySensors Cover child node."""
 
     def get_cover_state(self) -> CoverState:
@@ -111,13 +110,6 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_UP, 1, ack=1
         )
-        if self.assumed_state:
-            # Optimistically assume that cover has changed state.
-            if set_req.V_DIMMER in self._values:
-                self._values[set_req.V_DIMMER] = 100
-            else:
-                self._values[set_req.V_LIGHT] = STATE_ON
-            self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Move the cover down."""
@@ -125,13 +117,6 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_DOWN, 1, ack=1
         )
-        if self.assumed_state:
-            # Optimistically assume that cover has changed state.
-            if set_req.V_DIMMER in self._values:
-                self._values[set_req.V_DIMMER] = 0
-            else:
-                self._values[set_req.V_LIGHT] = STATE_OFF
-            self.async_write_ha_state()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
@@ -140,10 +125,6 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_DIMMER, position, ack=1
         )
-        if self.assumed_state:
-            # Optimistically assume that cover has changed state.
-            self._values[set_req.V_DIMMER] = position
-            self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the device."""

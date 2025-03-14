@@ -1,13 +1,17 @@
 """Notification support for Homematic."""
+
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.template as template_helper
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, template as template_helper
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_ADDRESS,
@@ -19,7 +23,7 @@ from .const import (
     SERVICE_SET_DEVICE_VALUE,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
         vol.Required(ATTR_CHANNEL): vol.Coerce(int),
@@ -30,7 +34,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> HomematicNotificationService:
     """Get the Homematic notification service."""
     data = {
         ATTR_ADDRESS: config[ATTR_ADDRESS],

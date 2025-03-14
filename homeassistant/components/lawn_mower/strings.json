@@ -1,0 +1,29 @@
+{
+  "title": "Lawn mower",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::lawn_mower::title%]",
+      "state": {
+        "error": "Error",
+        "paused": "[%key:common::state::paused%]",
+        "mowing": "Mowing",
+        "docked": "Docked",
+        "returning": "Returning"
+      }
+    }
+  },
+  "services": {
+    "start_mowing": {
+      "name": "Start mowing",
+      "description": "Starts the mowing task."
+    },
+    "dock": {
+      "name": "Return to dock",
+      "description": "Stops the mowing task and returns to the dock."
+    },
+    "pause": {
+      "name": "Pause",
+      "description": "Pauses the mowing task."
+    }
+  }
+}

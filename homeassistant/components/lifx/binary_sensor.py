@@ -1,4 +1,5 @@
 """Binary sensor entities for LIFX integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -7,55 +8,49 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, HEV_CYCLE_STATE
-from .coordinator import LIFXSensorUpdateCoordinator, LIFXUpdateCoordinator
-from .entity import LIFXSensorEntity
+from .coordinator import LIFXUpdateCoordinator
+from .entity import LIFXEntity
 from .util import lifx_features
 
 HEV_CYCLE_STATE_SENSOR = BinarySensorEntityDescription(
     key=HEV_CYCLE_STATE,
-    name="Clean Cycle",
+    translation_key="clean_cycle",
     entity_category=EntityCategory.DIAGNOSTIC,
     device_class=BinarySensorDeviceClass.RUNNING,
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LIFX from a config entry."""
     coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     if lifx_features(coordinator.device)["hev"]:
         async_add_entities(
-            [
-                LIFXHevCycleBinarySensorEntity(
-                    coordinator=coordinator.sensor_coordinator,
-                    description=HEV_CYCLE_STATE_SENSOR,
-                )
-            ]
+            [LIFXHevCycleBinarySensorEntity(coordinator, HEV_CYCLE_STATE_SENSOR)]
         )
 
 
-class LIFXHevCycleBinarySensorEntity(LIFXSensorEntity, BinarySensorEntity):
+class LIFXHevCycleBinarySensorEntity(LIFXEntity, BinarySensorEntity):
     """LIFX HEV cycle state binary sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: LIFXSensorUpdateCoordinator,
+        coordinator: LIFXUpdateCoordinator,
         description: BinarySensorEntityDescription,
     ) -> None:
         """Initialise the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = description.name
-        self._attr_unique_id = f"{coordinator.parent.serial_number}_{description.key}"
+        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
         self._async_update_attrs()
 
     @callback

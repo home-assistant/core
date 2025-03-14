@@ -1,0 +1,62 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Schlage integration needs to re-authenticate your account",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "The user credentials provided do not match this Schlage account."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "keypad_disabled": {
+        "name": "Keypad disabled"
+      }
+    },
+    "select": {
+      "auto_lock_time": {
+        "name": "Auto-Lock time",
+        "state": {
+          "0": "Disabled",
+          "15": "15 seconds",
+          "30": "30 seconds",
+          "60": "1 minute",
+          "120": "2 minutes",
+          "240": "4 minutes",
+          "300": "5 minutes"
+        }
+      }
+    },
+    "switch": {
+      "beeper": {
+        "name": "Keypress Beep"
+      },
+      "lock_and_leave": {
+        "name": "1-Touch Locking"
+      }
+    }
+  },
+  "exceptions": {
+    "schlage_refresh_failed": {
+      "message": "Failed to refresh Schlage data"
+    }
+  }
+}

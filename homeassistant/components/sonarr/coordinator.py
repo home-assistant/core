@@ -1,8 +1,9 @@
 """Data update coordinator for the Sonarr integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import TypeVar, Union, cast
+from typing import TypeVar, cast
 
 from aiopyarr import (
     Command,
@@ -21,21 +22,21 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_UPCOMING_DAYS, CONF_WANTED_MAX_ITEMS, DOMAIN, LOGGER
 
 SonarrDataT = TypeVar(
     "SonarrDataT",
-    bound=Union[
-        list[SonarrCalendar],
-        list[Command],
-        list[Diskspace],
-        SonarrQueue,
-        list[SonarrSeries],
-        SystemStatus,
-        SonarrWantedMissing,
-    ],
+    bound=(
+        list[SonarrCalendar]
+        | list[Command]
+        | list[Diskspace]
+        | SonarrQueue
+        | list[SonarrSeries]
+        | SystemStatus
+        | SonarrWantedMissing
+    ),
 )
 
 
@@ -47,6 +48,7 @@ class SonarrDataUpdateCoordinator(DataUpdateCoordinator[SonarrDataT]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         host_configuration: PyArrHostConfiguration,
         api_client: SonarrClient,
     ) -> None:
@@ -54,6 +56,7 @@ class SonarrDataUpdateCoordinator(DataUpdateCoordinator[SonarrDataT]):
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )

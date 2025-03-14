@@ -1,9 +1,10 @@
 {
   "domain": "kaiterra",
   "name": "Kaiterra",
-  "documentation": "https://www.home-assistant.io/integrations/kaiterra",
-  "requirements": ["kaiterra-async-client==1.0.0"],
   "codeowners": ["@Michsior14"],
+  "documentation": "https://www.home-assistant.io/integrations/kaiterra",
   "iot_class": "cloud_polling",
-  "loggers": ["kaiterra_async_client"]
+  "loggers": ["kaiterra_async_client"],
+  "quality_scale": "legacy",
+  "requirements": ["kaiterra-async-client==1.0.0"]
 }

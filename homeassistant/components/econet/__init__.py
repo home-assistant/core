@@ -1,10 +1,12 @@
 """Support for EcoNet products."""
+
+import asyncio
 from datetime import timedelta
 import logging
 
 from aiohttp.client_exceptions import ClientError
 from pyeconet import EcoNetApiInterface
-from pyeconet.equipment import EquipmentType
+from pyeconet.equipment import Equipment, EquipmentType
 from pyeconet.errors import (
     GenericHTTPError,
     InvalidCredentialsError,
@@ -13,38 +15,33 @@ from pyeconet.errors import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, TEMP_FAHRENHEIT, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 
-from .const import API_CLIENT, DOMAIN, EQUIPMENT
+from .const import PUSH_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    Platform.CLIMATE,
     Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.WATER_HEATER,
 ]
-PUSH_UPDATE = "econet.push_update"
 
 INTERVAL = timedelta(minutes=60)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the EcoNet component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][API_CLIENT] = {}
-    hass.data[DOMAIN][EQUIPMENT] = {}
-    return True
+type EconetConfigEntry = ConfigEntry[dict[EquipmentType, list[Equipment]]]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: EconetConfigEntry
+) -> bool:
     """Set up EcoNet as config entry."""
 
     email = config_entry.data[CONF_EMAIL]
@@ -65,8 +62,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
     except (ClientError, GenericHTTPError, InvalidResponseFormat) as err:
         raise ConfigEntryNotReady from err
-    hass.data[DOMAIN][API_CLIENT][config_entry.entry_id] = api
-    hass.data[DOMAIN][EQUIPMENT][config_entry.entry_id] = equipment
+
+    config_entry.runtime_data = equipment
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -87,73 +84,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await hass.async_add_executor_job(api.unsubscribe)
         api.subscribe()
 
-    async def fetch_update(now):
-        """Fetch the latest changes from the API."""
+        # Refresh values
+        await asyncio.sleep(60)
         await api.refresh_equipment()
 
     config_entry.async_on_unload(async_track_time_interval(hass, resubscribe, INTERVAL))
-    config_entry.async_on_unload(
-        async_track_time_interval(hass, fetch_update, INTERVAL + timedelta(minutes=1))
-    )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EconetConfigEntry) -> bool:
     """Unload a EcoNet config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN][API_CLIENT].pop(entry.entry_id)
-        hass.data[DOMAIN][EQUIPMENT].pop(entry.entry_id)
-    return unload_ok
-
-
-class EcoNetEntity(Entity):
-    """Define a base EcoNet entity."""
-
-    _attr_should_poll = False
-
-    def __init__(self, econet):
-        """Initialize."""
-        self._econet = econet
-
-    async def async_added_to_hass(self):
-        """Subscribe to device events."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, PUSH_UPDATE, self.on_update_received)
-        )
-
-    @callback
-    def on_update_received(self):
-        """Update was pushed from the ecoent API."""
-        self.async_write_ha_state()
-
-    @property
-    def available(self):
-        """Return if the the device is online or not."""
-        return self._econet.connected
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device registry information for this entity."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._econet.device_id)},
-            manufacturer="Rheem",
-            name=self._econet.device_name,
-        )
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._econet.device_name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return f"{self._econet.device_id}_{self._econet.device_name}"
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

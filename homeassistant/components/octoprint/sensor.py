@@ -1,4 +1,5 @@
 """Support for monitoring OctoPrint sensors."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -12,9 +13,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OctoprintDataUpdateCoordinator
@@ -37,7 +38,7 @@ def _is_printer_printing(printer: OctoprintPrinterInfo) -> bool:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the available OctoPrint binary sensors."""
     coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN][
@@ -54,7 +55,7 @@ async def async_setup_entry(
         if not coordinator.data["printer"]:
             return
 
-        new_tools = []
+        new_tools: list[OctoPrintTemperatureSensor] = []
         for tool in [
             tool
             for tool in coordinator.data["printer"].temperatures
@@ -62,15 +63,15 @@ async def async_setup_entry(
         ]:
             assert device_id is not None
             known_tools.add(tool.name)
-            for temp_type in ("actual", "target"):
-                new_tools.append(
-                    OctoPrintTemperatureSensor(
-                        coordinator,
-                        tool.name,
-                        temp_type,
-                        device_id,
-                    )
+            new_tools.extend(
+                OctoPrintTemperatureSensor(
+                    coordinator,
+                    tool.name,
+                    temp_type,
+                    device_id,
                 )
+                for temp_type in ("actual", "target")
+            )
         async_add_entities(new_tools)
 
     config_entry.async_on_unload(coordinator.async_add_listener(async_add_tool_sensors))
@@ -104,11 +105,7 @@ class OctoPrintSensorBase(
         self._device_id = device_id
         self._attr_name = f"OctoPrint {sensor_type}"
         self._attr_unique_id = f"{sensor_type}-{device_id}"
-
-    @property
-    def device_info(self):
-        """Device info."""
-        return self.coordinator.device_info
+        self._attr_device_info = coordinator.device_info
 
 
 class OctoPrintStatusSensor(OctoPrintSensorBase):
@@ -224,7 +221,7 @@ class OctoPrintStartTimeSensor(OctoPrintSensorBase):
 class OctoPrintTemperatureSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
 
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_state_class = SensorStateClass.MEASUREMENT
 

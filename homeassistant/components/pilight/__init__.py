@@ -1,16 +1,15 @@
 """Component to create an interface to a Pilight daemon."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
 import functools
 import logging
-import socket
 import threading
 from typing import Any
 
 from pilight import pilight
-from typing_extensions import ParamSpec
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -22,12 +21,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
-
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +73,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     try:
         pilight_client = pilight.Client(host=host, port=port)
-    except (OSError, socket.timeout) as err:
+    except (OSError, TimeoutError) as err:
         _LOGGER.error("Unable to connect to %s on port %s: %s", host, port, err)
         return False
 
@@ -118,11 +115,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             {"protocol": data["protocol"], "uuid": data["uuid"]}, **data["message"]
         )
 
-        # No whitelist defined, put data on event bus
-        if not whitelist:
-            hass.bus.fire(EVENT, data)
-        # Check if data matches the defined whitelist
-        elif all(str(data[key]) in whitelist[key] for key in whitelist):
+        # No whitelist defined or data matches whitelist, put data on event bus
+        if not whitelist or all(str(data[key]) in whitelist[key] for key in whitelist):
             hass.bus.fire(EVENT, data)
 
     pilight_client.set_callback(handle_received_code)
@@ -142,7 +136,7 @@ class CallRateDelayThrottle:
     it should not block the mainloop.
     """
 
-    def __init__(self, hass, delay_seconds: float) -> None:
+    def __init__(self, hass: HomeAssistant, delay_seconds: float) -> None:
         """Initialize the delay handler."""
         self._delay = timedelta(seconds=max(0.0, delay_seconds))
         self._queue: list[Callable[[Any], None]] = []
@@ -151,7 +145,7 @@ class CallRateDelayThrottle:
         self._next_ts = dt_util.utcnow()
         self._schedule = functools.partial(track_point_in_utc_time, hass)
 
-    def limited(self, method: Callable[_P, Any]) -> Callable[_P, None]:
+    def limited[**_P](self, method: Callable[_P, Any]) -> Callable[_P, None]:
         """Decorate to delay calls on a certain method."""
 
         @functools.wraps(method)

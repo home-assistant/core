@@ -1,11 +1,13 @@
 """HTTP Support for Hass.io."""
+
 from __future__ import annotations
 
-import asyncio
 from http import HTTPStatus
 import logging
 import os
 import re
+from typing import TYPE_CHECKING
+from urllib.parse import quote, unquote
 
 import aiohttp
 from aiohttp import web
@@ -16,40 +18,120 @@ from aiohttp.hdrs import (
     CONTENT_ENCODING,
     CONTENT_LENGTH,
     CONTENT_TYPE,
+    RANGE,
     TRANSFER_ENCODING,
 )
 from aiohttp.web_exceptions import HTTPBadGateway
-from multidict import istr
 
-from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
+from homeassistant.components.http import (
+    KEY_AUTHENTICATED,
+    KEY_HASS,
+    KEY_HASS_USER,
+    HomeAssistantView,
+)
 from homeassistant.components.onboarding import async_is_onboarded
 
-from .const import X_HASS_IS_ADMIN, X_HASS_USER_ID
+from .const import X_HASS_SOURCE
 
 _LOGGER = logging.getLogger(__name__)
 
 MAX_UPLOAD_SIZE = 1024 * 1024 * 1024
 
-# pylint: disable=implicit-str-concat
 NO_TIMEOUT = re.compile(
     r"^(?:"
-    r"|homeassistant/update"
-    r"|hassos/update"
-    r"|hassos/update/cli"
-    r"|supervisor/update"
-    r"|addons/[^/]+/(?:update|install|rebuild)"
     r"|backups/.+/full"
     r"|backups/.+/partial"
     r"|backups/[^/]+/(?:upload|download)"
+    r"|audio/logs/(follow|boots/-?\d+(/follow)?)"
+    r"|cli/logs/(follow|boots/-?\d+(/follow)?)"
+    r"|core/logs/(follow|boots/-?\d+(/follow)?)"
+    r"|dns/logs/(follow|boots/-?\d+(/follow)?)"
+    r"|host/logs/(follow|boots/-?\d+(/follow)?)"
+    r"|multicast/logs/(follow|boots/-?\d+(/follow)?)"
+    r"|observer/logs/(follow|boots/-?\d+(/follow)?)"
+    r"|supervisor/logs/(follow|boots/-?\d+(/follow)?)"
+    r"|addons/[^/]+/logs/(follow|boots/-?\d+(/follow)?)"
     r")$"
 )
 
-NO_AUTH_ONBOARDING = re.compile(r"^(?:" r"|supervisor/logs" r"|backups/[^/]+/.+" r")$")
+# fmt: off
+# Onboarding can upload backups and restore it
+PATHS_NOT_ONBOARDED = re.compile(
+    r"^(?:"
+    r"|backups/[a-f0-9]{8}(/info|/new/upload|/download|/restore/full|/restore/partial)?"
+    r"|backups/new/upload"
+    r")$"
+)
 
-NO_AUTH = re.compile(r"^(?:" r"|app/.*" r"|[store\/]*addons/[^/]+/(logo|icon)" r")$")
+# Authenticated users manage backups + download logs, changelog and documentation
+PATHS_ADMIN = re.compile(
+    r"^(?:"
+    r"|backups/[a-f0-9]{8}(/info|/download|/restore/full|/restore/partial)?"
+    r"|backups/new/upload"
+    r"|audio/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|cli/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|core/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|dns/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|host/logs(/follow|/boots(/-?\d+(/follow)?)?)?"
+    r"|multicast/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|observer/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|supervisor/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|addons/[^/]+/(changelog|documentation)"
+    r"|addons/[^/]+/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r")$"
+)
 
-NO_STORE = re.compile(r"^(?:" r"|app/entrypoint.js" r")$")
-# pylint: enable=implicit-str-concat
+# Unauthenticated requests come in for Supervisor panel + add-on images
+PATHS_NO_AUTH = re.compile(
+    r"^(?:"
+    r"|app/.*"
+    r"|(store/)?addons/[^/]+/(logo|icon)"
+    r")$"
+)
+
+NO_STORE = re.compile(
+    r"^(?:"
+    r"|app/entrypoint.js"
+    r")$"
+)
+
+# Follow logs should not be compressed, to be able to get streamed by frontend
+NO_COMPRESS = re.compile(
+    r"^(?:"
+    r"|audio/logs/(follow|boots/-?\d+(/follow)?)"
+    r"|cli/logs/(follow|boots/-?\d+(/follow)?)"
+    r"|core/logs/(follow|boots/-?\d+(/follow)?)"
+    r"|dns/logs/(follow|boots/-?\d+(/follow)?)"
+    r"|host/logs/(follow|boots/-?\d+(/follow)?)"
+    r"|multicast/logs/(follow|boots/-?\d+(/follow)?)"
+    r"|observer/logs/(follow|boots/-?\d+(/follow)?)"
+    r"|supervisor/logs/(follow|boots/-?\d+(/follow)?)"
+    r"|addons/[^/]+/logs/(follow|boots/-?\d+(/follow)?)"
+    r")$"
+)
+
+PATHS_LOGS = re.compile(
+    r"^(?:"
+    r"|audio/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|cli/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|core/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|dns/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|host/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|multicast/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|observer/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|supervisor/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|addons/[^/]+/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r")$"
+)
+# fmt: on
+
+
+RESPONSE_HEADERS_FILTER = {
+    TRANSFER_ENCODING,
+    CONTENT_LENGTH,
+    CONTENT_TYPE,
+    CONTENT_ENCODING,
+}
 
 
 class HassIOView(HomeAssistantView):
@@ -64,40 +146,72 @@ class HassIOView(HomeAssistantView):
         self._host = host
         self._websession = websession
 
-    async def _handle(
-        self, request: web.Request, path: str
-    ) -> web.Response | web.StreamResponse:
-        """Route data to Hass.io."""
-        hass = request.app["hass"]
-        if _need_auth(hass, path) and not request[KEY_AUTHENTICATED]:
-            return web.Response(status=HTTPStatus.UNAUTHORIZED)
-
-        return await self._command_proxy(path, request)
-
-    delete = _handle
-    get = _handle
-    post = _handle
-
-    async def _command_proxy(
-        self, path: str, request: web.Request
-    ) -> web.StreamResponse:
+    async def _handle(self, request: web.Request, path: str) -> web.StreamResponse:
         """Return a client request with proxy origin for Hass.io supervisor.
 
-        This method is a coroutine.
+        Use cases:
+        - Onboarding allows restoring backups
+        - Load Supervisor panel and add-on logo unauthenticated
+        - User upload/restore backups
         """
-        headers = _init_header(request)
-        if path == "backups/new/upload":
-            # We need to reuse the full content type that includes the boundary
-            headers[
-                CONTENT_TYPE
-            ] = request._stored_content_type  # pylint: disable=protected-access
+        # No bullshit
+        if path != unquote(path):
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
+
+        hass = request.app[KEY_HASS]
+        is_admin = request[KEY_AUTHENTICATED] and request[KEY_HASS_USER].is_admin
+        authorized = is_admin
+
+        if is_admin:
+            allowed_paths = PATHS_ADMIN
+
+        elif not async_is_onboarded(hass):
+            allowed_paths = PATHS_NOT_ONBOARDED
+
+            # During onboarding we need the user to manage backups
+            authorized = True
+
+        else:
+            # Either unauthenticated or not an admin
+            allowed_paths = PATHS_NO_AUTH
+
+        no_auth_path = PATHS_NO_AUTH.match(path)
+        headers = {
+            X_HASS_SOURCE: "core.http",
+        }
+
+        if no_auth_path:
+            if request.method != "GET":
+                return web.Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
+
+        else:
+            if not allowed_paths.match(path):
+                return web.Response(status=HTTPStatus.UNAUTHORIZED)
+
+            if authorized:
+                headers[AUTHORIZATION] = (
+                    f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+                )
+
+            if request.method == "POST":
+                headers[CONTENT_TYPE] = request.content_type
+                # _stored_content_type is only computed once `content_type` is accessed
+                if path == "backups/new/upload":
+                    # We need to reuse the full content type that includes the boundary
+                    if TYPE_CHECKING:
+                        assert isinstance(request._stored_content_type, str)  # noqa: SLF001
+                    headers[CONTENT_TYPE] = request._stored_content_type  # noqa: SLF001
+
+            # forward range headers for logs
+            if PATHS_LOGS.match(path) and request.headers.get(RANGE):
+                headers[RANGE] = request.headers[RANGE]
 
         try:
             client = await self._websession.request(
                 method=request.method,
-                url=f"http://{self._host}/{path}",
+                url=f"http://{self._host}/{quote(path)}",
                 params=request.query,
-                data=request.content,
+                data=request.content if request.method != "GET" else None,
                 headers=headers,
                 timeout=_get_timeout(path),
             )
@@ -108,53 +222,36 @@ class HassIOView(HomeAssistantView):
             )
             response.content_type = client.content_type
 
+            if should_compress(response.content_type, path):
+                response.enable_compression()
             await response.prepare(request)
-            async for data in client.content.iter_chunked(4096):
+            # In testing iter_chunked, iter_any, and iter_chunks:
+            # iter_chunks was the best performing option since
+            # it does not have to do as much re-assembly
+            async for data, _ in client.content.iter_chunks():
                 await response.write(data)
-
-            return response
 
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on api %s request %s", path, err)
-
-        except asyncio.TimeoutError:
+            raise HTTPBadGateway from err
+        except TimeoutError as err:
             _LOGGER.error("Client timeout error on API request %s", path)
+            raise HTTPBadGateway from err
+        return response
 
-        raise HTTPBadGateway()
-
-
-def _init_header(request: web.Request) -> dict[istr, str]:
-    """Create initial header."""
-    headers = {
-        AUTHORIZATION: f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}",
-        CONTENT_TYPE: request.content_type,
-    }
-
-    # Add user data
-    if request.get("hass_user") is not None:
-        headers[istr(X_HASS_USER_ID)] = request["hass_user"].id
-        headers[istr(X_HASS_IS_ADMIN)] = str(int(request["hass_user"].is_admin))
-
-    return headers
+    get = _handle
+    post = _handle
 
 
 def _response_header(response: aiohttp.ClientResponse, path: str) -> dict[str, str]:
     """Create response header."""
-    headers = {}
-
-    for name, value in response.headers.items():
-        if name in (
-            TRANSFER_ENCODING,
-            CONTENT_LENGTH,
-            CONTENT_TYPE,
-            CONTENT_ENCODING,
-        ):
-            continue
-        headers[name] = value
-
+    headers = {
+        name: value
+        for name, value in response.headers.items()
+        if name not in RESPONSE_HEADERS_FILTER
+    }
     if NO_STORE.match(path):
         headers[CACHE_CONTROL] = "no-store, max-age=0"
-
     return headers
 
 
@@ -165,10 +262,16 @@ def _get_timeout(path: str) -> ClientTimeout:
     return ClientTimeout(connect=10, total=300)
 
 
-def _need_auth(hass, path: str) -> bool:
-    """Return if a path need authentication."""
-    if not async_is_onboarded(hass) and NO_AUTH_ONBOARDING.match(path):
+def should_compress(content_type: str, path: str | None = None) -> bool:
+    """Return if we should compress a response."""
+    if path is not None and NO_COMPRESS.match(path):
         return False
-    if NO_AUTH.match(path):
-        return False
-    return True
+    if content_type.startswith("image/"):
+        return "svg" in content_type
+    if content_type.startswith("application/"):
+        return (
+            "json" in content_type
+            or "xml" in content_type
+            or "javascript" in content_type
+        )
+    return not content_type.startswith(("video/", "audio/", "font/"))

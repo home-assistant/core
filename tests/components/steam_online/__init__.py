@@ -1,18 +1,25 @@
 """Tests for Steam integration."""
+
+import random
+import string
 from unittest.mock import patch
+import urllib.parse
 
 import steam
 
-from homeassistant.components.steam_online import DOMAIN
-from homeassistant.components.steam_online.const import CONF_ACCOUNT, CONF_ACCOUNTS
+from homeassistant.components.steam_online.const import (
+    CONF_ACCOUNT,
+    CONF_ACCOUNTS,
+    DOMAIN,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 API_KEY = "abc123"
-ACCOUNT_1 = "1234567890"
-ACCOUNT_2 = "1234567891"
+ACCOUNT_1 = "12345678901234567"
+ACCOUNT_2 = "12345678912345678"
 ACCOUNT_NAME_1 = "testaccount1"
 ACCOUNT_NAME_2 = "testaccount2"
 
@@ -29,6 +36,8 @@ CONF_OPTIONS_2 = {
         ACCOUNT_2: ACCOUNT_NAME_2,
     }
 }
+
+MAX_LENGTH_STEAM_IDS = 30
 
 
 def create_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -62,16 +71,32 @@ class MockedInterface(dict):
 
     def GetFriendList(self, steamid: str) -> dict:
         """Get friend list."""
-        return {"friendslist": {"friends": [{"steamid": ACCOUNT_2}]}}
+        fake_friends = [{"steamid": ACCOUNT_2}]
+        fake_friends.extend(
+            {"steamid": "".join(random.choices(string.digits, k=len(ACCOUNT_1)))}
+            for _ in range(4)
+        )
+        return {"friendslist": {"friends": fake_friends}}
 
-    def GetPlayerSummaries(self, steamids: str) -> dict:
+    def GetPlayerSummaries(self, steamids: str | list[str]) -> dict:
         """Get player summaries."""
+        assert len(urllib.parse.quote(str(steamids))) <= MAX_LENGTH_STEAM_IDS
         return {
             "response": {
                 "players": {
                     "player": [
-                        {"steamid": ACCOUNT_1, "personaname": ACCOUNT_NAME_1},
-                        {"steamid": ACCOUNT_2, "personaname": ACCOUNT_NAME_2},
+                        {
+                            "steamid": ACCOUNT_1,
+                            "personaname": ACCOUNT_NAME_1,
+                            "personastate": 1,
+                            "avatarmedium": "",
+                        },
+                        {
+                            "steamid": ACCOUNT_2,
+                            "personaname": ACCOUNT_NAME_2,
+                            "personastate": 2,
+                            "avatarmedium": "",
+                        },
                     ]
                 }
             }

@@ -1,4 +1,5 @@
 """Tests for the schema based data entry flows."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -23,12 +24,12 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 from homeassistant.util.decorator import Registry
 
-from tests.common import MockConfigEntry, mock_platform
+from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
 
 TEST_DOMAIN = "test"
 
 
-class TestSchemaConfigFlowHandler(SchemaConfigFlowHandler):
+class MockSchemaConfigFlowHandler(SchemaConfigFlowHandler):
     """Bare minimum SchemaConfigFlowHandler."""
 
     config_flow = {}
@@ -67,14 +68,15 @@ def manager_fixture():
             return result
 
     mgr = FlowManager(None)
+    # pylint: disable-next=attribute-defined-outside-init
     mgr.mock_created_entries = entries
+    # pylint: disable-next=attribute-defined-outside-init
     mgr.mock_reg_handler = handlers.register
     return mgr
 
 
-async def test_name(hass: HomeAssistant) -> None:
+async def test_name(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test the config flow name is copied from registry entry, with fallback to state."""
-    registry = er.async_get(hass)
     entity_id = "switch.ceiling"
 
     # No entry or state, use Object ID
@@ -86,7 +88,7 @@ async def test_name(hass: HomeAssistant) -> None:
 
     # Entity registered, use original name from registry entry
     hass.states.async_remove(entity_id)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "switch",
         "test",
         "unique",
@@ -99,15 +101,15 @@ async def test_name(hass: HomeAssistant) -> None:
     assert wrapped_entity_config_entry_title(hass, entry.id) == "Original Name"
 
     # Entity has customized name
-    registry.async_update_entity("switch.ceiling", name="Custom Name")
+    entity_registry.async_update_entity("switch.ceiling", name="Custom Name")
     assert wrapped_entity_config_entry_title(hass, entity_id) == "Custom Name"
     assert wrapped_entity_config_entry_title(hass, entry.id) == "Custom Name"
 
 
-@pytest.mark.parametrize("marker", (vol.Required, vol.Optional))
+@pytest.mark.parametrize("marker", [vol.Required, vol.Optional])
 async def test_config_flow_advanced_option(
     hass: HomeAssistant, manager: data_entry_flow.FlowManager, marker
-):
+) -> None:
     """Test handling of advanced options in config flow."""
     manager.hass = hass
 
@@ -128,7 +130,7 @@ async def test_config_flow_advanced_option(
     }
 
     @manager.mock_reg_handler("test")
-    class TestFlow(TestSchemaConfigFlowHandler):
+    class TestFlow(MockSchemaConfigFlowHandler):
         config_flow = CONFIG_FLOW
 
     # Start flow in basic mode
@@ -199,10 +201,10 @@ async def test_config_flow_advanced_option(
         assert isinstance(option, str)
 
 
-@pytest.mark.parametrize("marker", (vol.Required, vol.Optional))
+@pytest.mark.parametrize("marker", [vol.Required, vol.Optional])
 async def test_options_flow_advanced_option(
     hass: HomeAssistant, manager: data_entry_flow.FlowManager, marker
-):
+) -> None:
     """Test handling of advanced options in options flow."""
     manager.hass = hass
 
@@ -222,10 +224,12 @@ async def test_options_flow_advanced_option(
         "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
     }
 
-    class TestFlow(TestSchemaConfigFlowHandler, domain="test"):
+    class TestFlow(MockSchemaConfigFlowHandler, domain="test"):
         config_flow = {}
         options_flow = OPTIONS_FLOW
 
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
     config_entry = MockConfigEntry(
         data={},
         domain="test",
@@ -326,7 +330,7 @@ async def test_menu_step(hass: HomeAssistant) -> None:
         "option4": SchemaFlowFormStep(vol.Schema({})),
     }
 
-    class TestConfigFlow(TestSchemaConfigFlowHandler, domain=TEST_DOMAIN):
+    class TestConfigFlow(MockSchemaConfigFlowHandler, domain=TEST_DOMAIN):
         """Handle a config or options flow for Derivative."""
 
         config_flow = CONFIG_FLOW
@@ -375,7 +379,7 @@ async def test_schema_none(hass: HomeAssistant) -> None:
         "option3": SchemaFlowFormStep(vol.Schema({})),
     }
 
-    class TestConfigFlow(TestSchemaConfigFlowHandler, domain=TEST_DOMAIN):
+    class TestConfigFlow(MockSchemaConfigFlowHandler, domain=TEST_DOMAIN):
         """Handle a config or options flow for Derivative."""
 
         config_flow = CONFIG_FLOW
@@ -409,7 +413,7 @@ async def test_last_step(hass: HomeAssistant) -> None:
         "step3": SchemaFlowFormStep(vol.Schema({}), next_step=None),
     }
 
-    class TestConfigFlow(TestSchemaConfigFlowHandler, domain=TEST_DOMAIN):
+    class TestConfigFlow(MockSchemaConfigFlowHandler, domain=TEST_DOMAIN):
         """Handle a config or options flow for Derivative."""
 
         config_flow = CONFIG_FLOW
@@ -452,7 +456,7 @@ async def test_next_step_function(hass: HomeAssistant) -> None:
         "step2": SchemaFlowFormStep(vol.Schema({}), next_step=_step2_next_step),
     }
 
-    class TestConfigFlow(TestSchemaConfigFlowHandler, domain=TEST_DOMAIN):
+    class TestConfigFlow(MockSchemaConfigFlowHandler, domain=TEST_DOMAIN):
         """Handle a config or options flow for Derivative."""
 
         config_flow = CONFIG_FLOW
@@ -509,10 +513,12 @@ async def test_suggested_values(
         ),
     }
 
-    class TestFlow(TestSchemaConfigFlowHandler, domain="test"):
+    class TestFlow(MockSchemaConfigFlowHandler, domain="test"):
         config_flow = {}
         options_flow = OPTIONS_FLOW
 
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
     config_entry = MockConfigEntry(
         data={},
         domain="test",
@@ -620,10 +626,12 @@ async def test_options_flow_state(hass: HomeAssistant) -> None:
         ),
     }
 
-    class TestFlow(TestSchemaConfigFlowHandler, domain="test"):
+    class TestFlow(MockSchemaConfigFlowHandler, domain="test"):
         config_flow = {}
         options_flow = OPTIONS_FLOW
 
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
     config_entry = MockConfigEntry(
         data={},
         domain="test",
@@ -639,6 +647,10 @@ async def test_options_flow_state(hass: HomeAssistant) -> None:
     options_handler: SchemaOptionsFlowHandler
     options_handler = hass.config_entries.options._progress[result["flow_id"]]
     assert options_handler._common_handler.flow_state == {"idx": None}
+
+    # Ensure that self.options and self._common_handler.options refer to the
+    # same mutable copy of the options
+    assert options_handler.options is options_handler._common_handler.options
 
     # In step 1, flow state is updated with user input
     result = await hass.config_entries.options.async_configure(
@@ -658,4 +670,81 @@ async def test_options_flow_state(hass: HomeAssistant) -> None:
     assert result["data"] == {
         "idx_from_flow_state": "blublu",
         "option1": "blabla",
+    }
+
+
+async def test_options_flow_omit_optional_keys(
+    hass: HomeAssistant, manager: data_entry_flow.FlowManager
+) -> None:
+    """Test handling of advanced options in options flow."""
+    manager.hass = hass
+
+    OPTIONS_SCHEMA = vol.Schema(
+        {
+            vol.Optional("optional_no_default"): str,
+            vol.Optional("optional_default", default="a very reasonable default"): str,
+            vol.Optional("advanced_no_default", description={"advanced": True}): str,
+            vol.Optional(
+                "advanced_default",
+                default="a very reasonable default",
+                description={"advanced": True},
+            ): str,
+        }
+    )
+
+    OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
+        "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
+    }
+
+    class TestFlow(MockSchemaConfigFlowHandler, domain="test"):
+        config_flow = {}
+        options_flow = OPTIONS_FLOW
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    config_entry = MockConfigEntry(
+        data={},
+        domain="test",
+        options={
+            "optional_no_default": "abc123",
+            "optional_default": "not default",
+            "advanced_no_default": "abc123",
+            "advanced_default": "not default",
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    # Start flow in basic mode
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert list(result["data_schema"].schema.keys()) == [
+        "optional_no_default",
+        "optional_default",
+    ]
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "advanced_default": "not default",
+        "advanced_no_default": "abc123",
+        "optional_default": "a very reasonable default",
+    }
+
+    # Start flow in advanced mode
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": True}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert list(result["data_schema"].schema.keys()) == [
+        "optional_no_default",
+        "optional_default",
+        "advanced_no_default",
+        "advanced_default",
+    ]
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "advanced_default": "a very reasonable default",
+        "optional_default": "a very reasonable default",
     }

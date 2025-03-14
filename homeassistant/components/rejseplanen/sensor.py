@@ -1,9 +1,9 @@
-"""
-Support for Rejseplanen information from rejseplanen.dk.
+"""Support for Rejseplanen information from rejseplanen.dk.
 
 For more info on the API see:
 https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
 """
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -14,13 +14,16 @@ from operator import itemgetter
 import rjpl
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, TIME_MINUTES
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +46,7 @@ CONF_DIRECTION = "direction"
 CONF_DEPARTURE_TYPE = "departure_type"
 
 DEFAULT_NAME = "Next departure"
-ICON = "mdi:bus"
+
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -51,7 +54,7 @@ BUS_TYPES = ["BUS", "EXB", "TB"]
 TRAIN_TYPES = ["LET", "S", "REG", "IC", "LYN", "TOG"]
 METRO_TYPES = ["M"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_ID): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -99,6 +102,7 @@ class RejseplanenTransportSensor(SensorEntity):
     """Implementation of Rejseplanen transport sensor."""
 
     _attr_attribution = "Data provided by rejseplanen.dk"
+    _attr_icon = "mdi:bus"
 
     def __init__(self, data, stop_id, route, direction, name):
         """Initialize the sensor."""
@@ -142,12 +146,7 @@ class RejseplanenTransportSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return TIME_MINUTES
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
+        return UnitOfTime.MINUTES
 
     def update(self) -> None:
         """Get the latest data from rejseplanen.dk and update the states."""
@@ -243,9 +242,9 @@ class PublicTransportData:
                 }
 
                 if real_time_date is not None and real_time_time is not None:
-                    departure_data[
-                        ATTR_REAL_TIME_AT
-                    ] = f"{real_time_date} {real_time_time}"
+                    departure_data[ATTR_REAL_TIME_AT] = (
+                        f"{real_time_date} {real_time_time}"
+                    )
                 if item.get("rtTrack") is not None:
                     departure_data[ATTR_TRACK] = item.get("rtTrack")
 

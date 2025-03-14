@@ -1,4 +1,5 @@
 """Support for SleepIQ outlet lights."""
+
 import logging
 from typing import Any
 
@@ -7,11 +8,10 @@ from asyncsleepiq import SleepIQBed, SleepIQLight
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import SleepIQData
+from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
 from .entity import SleepIQBedEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ bed lights."""
     data: SleepIQData = hass.data[DOMAIN][entry.entry_id]
@@ -31,14 +31,17 @@ async def async_setup_entry(
     )
 
 
-class SleepIQLightEntity(SleepIQBedEntity, LightEntity):
+class SleepIQLightEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], LightEntity):
     """Representation of a light."""
 
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, bed: SleepIQBed, light: SleepIQLight
+        self,
+        coordinator: SleepIQDataUpdateCoordinator,
+        bed: SleepIQBed,
+        light: SleepIQLight,
     ) -> None:
         """Initialize the light."""
         self.light = light

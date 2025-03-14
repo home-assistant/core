@@ -1,4 +1,5 @@
 """Models to represent various Plex objects used in the integration."""
+
 import logging
 
 from homeassistant.components.media_player import MediaType
@@ -77,7 +78,10 @@ class PlexSession:
         elif media.librarySectionID and media.librarySectionID < 1:
             self.media_library_title = UNKNOWN_SECTION
             _LOGGER.warning(
-                "Unknown library section ID (%s) for title '%s', please create an issue",
+                (
+                    "Unknown library section ID (%s) for title '%s',"
+                    " please create an issue"
+                ),
                 media.librarySectionID,
                 media.title,
             )
@@ -92,7 +96,11 @@ class PlexSession:
             self.media_series_title = media.grandparentTitle
             if media.index is not None:
                 self.media_episode = media.index
-            self.sensor_title = f"{self.media_series_title} - {media.seasonEpisode} - {self.media_title}"
+            self.sensor_title = (
+                f"{self.media_series_title} -"
+                f" {media.seasonEpisode} -"
+                f" {self.media_title}"
+            )
         elif media.type == "movie":
             self.media_content_type = MediaType.MOVIE
             if media.year is not None and media.title is not None:

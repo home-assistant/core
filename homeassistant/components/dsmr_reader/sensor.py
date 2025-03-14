@@ -1,48 +1,24 @@
 """Support for DSMR Reader through MQTT."""
+
 from __future__ import annotations
 
 from homeassistant.components import mqtt
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .definitions import SENSORS, DSMRReaderSensorEntityDescription
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up DSMR Reader sensors via configuration.yaml and show deprecation warning."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2022.12.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
-
 async def async_setup_entry(
     _: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up DSMR Reader sensors from config entry."""
     async_add_entities(DSMRSensor(description, config_entry) for description in SENSORS)
@@ -51,6 +27,7 @@ async def async_setup_entry(
 class DSMRSensor(SensorEntity):
     """Representation of a DSMR sensor that is updated via MQTT."""
 
+    _attr_has_entity_name = True
     entity_description: DSMRReaderSensorEntityDescription
 
     def __init__(
@@ -69,13 +46,30 @@ class DSMRSensor(SensorEntity):
         @callback
         def message_received(message):
             """Handle new MQTT messages."""
-            if self.entity_description.state is not None:
+            if message.payload == "":
+                self._attr_native_value = None
+            elif self.entity_description.state is not None:
+                # Perform optional additional parsing
                 self._attr_native_value = self.entity_description.state(message.payload)
             else:
                 self._attr_native_value = message.payload
 
             self.async_write_ha_state()
 
-        await mqtt.async_subscribe(
-            self.hass, self.entity_description.key, message_received, 1
-        )
+        try:
+            await mqtt.async_subscribe(
+                self.hass, self.entity_description.key, message_received, 1
+            )
+        except HomeAssistantError:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"cannot_subscribe_mqtt_topic_{self.entity_description.key}",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="cannot_subscribe_mqtt_topic",
+                translation_placeholders={
+                    "topic": self.entity_description.key,
+                    "topic_title": self.entity_description.key.split("/")[-1],
+                },
+            )

@@ -1,21 +1,16 @@
 """The Z-Wave-Me WS integration."""
-import asyncio
-import logging
 
 from zwave_me_ws import ZWaveMe, ZWaveMeData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.device_registry import DeviceRegistry
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import DOMAIN, PLATFORMS, ZWaveMePlatform
 
-_LOGGER = logging.getLogger(__name__)
 ZWAVE_ME_PLATFORMS = [platform.value for platform in ZWaveMePlatform]
 
 
@@ -24,11 +19,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     controller = hass.data[DOMAIN][entry.entry_id] = ZWaveMeController(hass, entry)
     if await controller.async_establish_connection():
-        hass.async_create_task(async_setup_platforms(hass, entry, controller))
-        registry = device_registry.async_get(hass)
+        await async_setup_platforms(hass, entry, controller)
+        registry = dr.async_get(hass)
         controller.remove_stale_devices(registry)
         return True
-    raise ConfigEntryNotReady()
+    raise ConfigEntryNotReady
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -52,6 +47,8 @@ class ZWaveMeController:
         self.zwave_api = ZWaveMe(
             on_device_create=self.on_device_create,
             on_device_update=self.on_device_update,
+            on_device_remove=self.on_device_unavailable,
+            on_device_destroy=self.on_device_destroy,
             on_new_device=self.add_device,
             token=self.config.data[CONF_TOKEN],
             url=self.config.data[CONF_URL],
@@ -61,8 +58,7 @@ class ZWaveMeController:
 
     async def async_establish_connection(self):
         """Get connection status."""
-        is_connected = await self.zwave_api.get_connection()
-        return is_connected
+        return await self.zwave_api.get_connection()
 
     def add_device(self, device: ZWaveMeData) -> None:
         """Send signal to create device."""
@@ -84,11 +80,19 @@ class ZWaveMeController:
         """Send signal to update device."""
         dispatcher_send(self._hass, f"ZWAVE_ME_INFO_{new_info.id}", new_info)
 
-    def remove_stale_devices(self, registry: DeviceRegistry):
+    def on_device_unavailable(self, device_id: str) -> None:
+        """Send signal to set device unavailable."""
+        dispatcher_send(self._hass, f"ZWAVE_ME_UNAVAILABLE_{device_id}")
+
+    def on_device_destroy(self, device_id: str) -> None:
+        """Send signal to destroy device."""
+        dispatcher_send(self._hass, f"ZWAVE_ME_DESTROY_{device_id}")
+
+    def remove_stale_devices(self, registry: dr.DeviceRegistry):
         """Remove old-format devices in the registry."""
         for device_id in self.device_ids:
             device = registry.async_get_device(
-                {(DOMAIN, f"{self.config.unique_id}-{device_id}")}
+                identifiers={(DOMAIN, f"{self.config.unique_id}-{device_id}")}
             )
             if device is not None:
                 registry.async_remove_device(device.id)
@@ -98,52 +102,7 @@ async def async_setup_platforms(
     hass: HomeAssistant, entry: ConfigEntry, controller: ZWaveMeController
 ) -> None:
     """Set up platforms."""
-    await asyncio.gather(
-        *[
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-            for platform in PLATFORMS
-        ]
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     controller.platforms_inited = True
 
     await hass.async_add_executor_job(controller.zwave_api.get_devices)
-
-
-class ZWaveMeEntity(Entity):
-    """Representation of a ZWaveMe device."""
-
-    def __init__(self, controller, device):
-        """Initialize the device."""
-        self.controller = controller
-        self.device = device
-        self._attr_name = device.title
-        self._attr_unique_id: str = (
-            f"{self.controller.config.unique_id}-{self.device.id}"
-        )
-        self._attr_should_poll = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device specific attributes."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.device.deviceIdentifier)},
-            name=self._attr_name,
-            manufacturer=self.device.manufacturer,
-            sw_version=self.device.firmware,
-            suggested_area=self.device.locationName,
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Connect to an updater."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, f"ZWAVE_ME_INFO_{self.device.id}", self.get_new_data
-            )
-        )
-
-    @callback
-    def get_new_data(self, new_data):
-        """Update info in the HAss."""
-        self.device = new_data
-        self._attr_available = not new_data.isFailed
-        self.async_write_ha_state()

@@ -7,19 +7,19 @@ from pyipma import IPMAException
 from homeassistant.components.ipma import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
+from homeassistant.core import HomeAssistant
 
 from .test_weather import MockLocation
 
 from tests.common import MockConfigEntry
 
 
-async def test_async_setup_raises_entry_not_ready(hass):
+async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant) -> None:
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
 
     with patch(
         "pyipma.location.Location.get", side_effect=IPMAException("API unavailable")
     ):
-
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             title="Home",
@@ -33,7 +33,7 @@ async def test_async_setup_raises_entry_not_ready(hass):
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_config_entry(hass):
+async def test_unload_config_entry(hass: HomeAssistant) -> None:
     """Test entry unloading."""
 
     with patch(

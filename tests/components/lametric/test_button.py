@@ -1,4 +1,5 @@
 """Tests for the LaMetric button platform."""
+
 from unittest.mock import MagicMock
 
 from demetriek import LaMetricConnectionError, LaMetricError
@@ -8,31 +9,29 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRE
 from homeassistant.components.lametric.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
-from tests.common import MockConfigEntry
+pytestmark = [
+    pytest.mark.usefixtures("init_integration"),
+    pytest.mark.freeze_time("2022-09-19 12:07:30"),
+]
 
 
-@pytest.mark.freeze_time("2022-09-19 12:07:30")
 async def test_button_app_next(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the LaMetric next app button."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get("button.frenck_s_lametric_next_app")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:arrow-right-bold"
     assert state.state == STATE_UNKNOWN
 
     entry = entity_registry.async_get("button.frenck_s_lametric_next_app")
@@ -50,9 +49,10 @@ async def test_button_app_next(
     assert device_entry.entry_type is None
     assert device_entry.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device_entry.manufacturer == "LaMetric Inc."
-    assert device_entry.model == "LM 37X8"
+    assert device_entry.model_id == "LM 37X8"
     assert device_entry.name == "Frenck's LaMetric"
     assert device_entry.sw_version == "2.2.2"
+    assert device_entry.serial_number == "SA110405124500W00BS9"
     assert device_entry.hw_version is None
 
     await hass.services.async_call(
@@ -70,19 +70,15 @@ async def test_button_app_next(
     assert state.state == "2022-09-19T12:07:30+00:00"
 
 
-@pytest.mark.freeze_time("2022-09-19 12:07:30")
 async def test_button_app_previous(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the LaMetric previous app button."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get("button.frenck_s_lametric_previous_app")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:arrow-left-bold"
     assert state.state == STATE_UNKNOWN
 
     entry = entity_registry.async_get("button.frenck_s_lametric_previous_app")
@@ -100,7 +96,7 @@ async def test_button_app_previous(
     assert device_entry.entry_type is None
     assert device_entry.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device_entry.manufacturer == "LaMetric Inc."
-    assert device_entry.model == "LM 37X8"
+    assert device_entry.model_id == "LM 37X8"
     assert device_entry.name == "Frenck's LaMetric"
     assert device_entry.sw_version == "2.2.2"
     assert device_entry.hw_version is None
@@ -120,19 +116,15 @@ async def test_button_app_previous(
     assert state.state == "2022-09-19T12:07:30+00:00"
 
 
-@pytest.mark.freeze_time("2022-10-19 12:44:00")
 async def test_button_dismiss_current_notification(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the LaMetric dismiss current notification button."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get("button.frenck_s_lametric_dismiss_current_notification")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:bell-cancel"
     assert state.state == STATE_UNKNOWN
 
     entry = entity_registry.async_get(
@@ -152,7 +144,7 @@ async def test_button_dismiss_current_notification(
     assert device_entry.entry_type is None
     assert device_entry.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device_entry.manufacturer == "LaMetric Inc."
-    assert device_entry.model == "LM 37X8"
+    assert device_entry.model_id == "LM 37X8"
     assert device_entry.name == "Frenck's LaMetric"
     assert device_entry.sw_version == "2.2.2"
     assert device_entry.hw_version is None
@@ -169,22 +161,18 @@ async def test_button_dismiss_current_notification(
 
     state = hass.states.get("button.frenck_s_lametric_dismiss_current_notification")
     assert state
-    assert state.state == "2022-10-19T12:44:00+00:00"
+    assert state.state == "2022-09-19T12:07:30+00:00"
 
 
-@pytest.mark.freeze_time("2022-10-19 12:44:00")
 async def test_button_dismiss_all_notifications(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the LaMetric dismiss all notifications button."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get("button.frenck_s_lametric_dismiss_all_notifications")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:bell-cancel"
     assert state.state == STATE_UNKNOWN
 
     entry = entity_registry.async_get(
@@ -204,7 +192,7 @@ async def test_button_dismiss_all_notifications(
     assert device_entry.entry_type is None
     assert device_entry.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device_entry.manufacturer == "LaMetric Inc."
-    assert device_entry.model == "LM 37X8"
+    assert device_entry.model_id == "LM 37X8"
     assert device_entry.name == "Frenck's LaMetric"
     assert device_entry.sw_version == "2.2.2"
     assert device_entry.hw_version is None
@@ -221,13 +209,11 @@ async def test_button_dismiss_all_notifications(
 
     state = hass.states.get("button.frenck_s_lametric_dismiss_all_notifications")
     assert state
-    assert state.state == "2022-10-19T12:44:00+00:00"
+    assert state.state == "2022-09-19T12:07:30+00:00"
 
 
-@pytest.mark.freeze_time("2022-10-11 22:00:00")
 async def test_button_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test error handling of the LaMetric buttons."""
@@ -242,16 +228,14 @@ async def test_button_error(
             {ATTR_ENTITY_ID: "button.frenck_s_lametric_next_app"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("button.frenck_s_lametric_next_app")
     assert state
-    assert state.state == "2022-10-11T22:00:00+00:00"
+    assert state.state == "2022-09-19T12:07:30+00:00"
 
 
 async def test_button_connection_error(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test connection error handling of the LaMetric buttons."""
@@ -266,7 +250,6 @@ async def test_button_connection_error(
             {ATTR_ENTITY_ID: "button.frenck_s_lametric_next_app"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("button.frenck_s_lametric_next_app")
     assert state

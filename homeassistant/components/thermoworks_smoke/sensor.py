@@ -1,8 +1,8 @@
-"""
-Support for getting the state of a Thermoworks Smoke Thermometer.
+"""Support for getting the state of a Thermoworks Smoke Thermometer.
 
 Requires Smoke Gateway Wifi with an internet connection.
 """
+
 from __future__ import annotations
 
 import logging
@@ -14,7 +14,7 @@ import thermoworks_smoke
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -24,10 +24,10 @@ from homeassistant.const import (
     CONF_EXCLUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -57,7 +57,7 @@ SENSOR_TYPES = {
 # exclude these keys from thermoworks data
 EXCLUDE_KEYS = [FIRMWARE]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_EMAIL): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -86,22 +86,21 @@ def setup_platform(
 
     try:
         mgr = thermoworks_smoke.initialize_app(email, password, True, excluded)
-
-        # list of sensor devices
-        dev = []
-
-        # get list of registered devices
-        for serial in mgr.serials():
-            for variable in monitored_variables:
-                dev.append(ThermoworksSmokeSensor(variable, serial, mgr))
-
-        add_entities(dev, True)
     except HTTPError as error:
         msg = f"{error.strerror}"
         if "EMAIL_NOT_FOUND" in msg or "INVALID_PASSWORD" in msg:
             _LOGGER.error("Invalid email and password combination")
         else:
             _LOGGER.error(msg)
+    else:
+        add_entities(
+            (
+                ThermoworksSmokeSensor(variable, serial, mgr)
+                for serial in mgr.serials()
+                for variable in monitored_variables
+            ),
+            True,
+        )
 
 
 class ThermoworksSmokeSensor(SensorEntity):
@@ -112,10 +111,8 @@ class ThermoworksSmokeSensor(SensorEntity):
         self.type = sensor_type
         self.serial = serial
         self.mgr = mgr
-        self._attr_name = "{name} {sensor}".format(
-            name=mgr.name(serial), sensor=SENSOR_TYPES[sensor_type]
-        )
-        self._attr_native_unit_of_measurement = TEMP_FAHRENHEIT
+        self._attr_name = f"{mgr.name(serial)} {SENSOR_TYPES[sensor_type]}"
+        self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
         self._attr_unique_id = f"{serial}-{sensor_type}"
         self._attr_device_class = SensorDeviceClass.TEMPERATURE
         self.update_unit()
@@ -162,9 +159,9 @@ class ThermoworksSmokeSensor(SensorEntity):
                         if key and key not in EXCLUDE_KEYS:
                             self._attr_extra_state_attributes[key] = val
                 # store actual unit because attributes are not converted
-                self._attr_extra_state_attributes[
-                    "unit_of_min_max"
-                ] = self._attr_native_unit_of_measurement
+                self._attr_extra_state_attributes["unit_of_min_max"] = (
+                    self._attr_native_unit_of_measurement
+                )
 
         except (RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self.name)

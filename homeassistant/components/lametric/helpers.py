@@ -1,11 +1,11 @@
 """Helpers for LaMetric."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from typing import Any, TypeVar
+from typing import Any, Concatenate
 
 from demetriek import LaMetricConnectionError, LaMetricError
-from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -15,12 +15,9 @@ from .const import DOMAIN
 from .coordinator import LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 
-_LaMetricEntityT = TypeVar("_LaMetricEntityT", bound=LaMetricEntity)
-_P = ParamSpec("_P")
 
-
-def lametric_exception_handler(
-    func: Callable[Concatenate[_LaMetricEntityT, _P], Coroutine[Any, Any, Any]]
+def lametric_exception_handler[_LaMetricEntityT: LaMetricEntity, **_P](
+    func: Callable[Concatenate[_LaMetricEntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_LaMetricEntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate LaMetric calls to handle LaMetric exceptions.
 

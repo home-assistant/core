@@ -1,7 +1,7 @@
 """Media Source models."""
+
 from __future__ import annotations
 
-from abc import ABC
 from dataclasses import dataclass
 from typing import Any, cast
 
@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from .const import DOMAIN, URI_SCHEME, URI_SCHEME_REGEX
 
 
-@dataclass
+@dataclass(slots=True)
 class PlayMedia:
     """Represents a playable media."""
 
@@ -36,7 +36,7 @@ class BrowseMediaSource(BrowseMedia):
         self.identifier = identifier
 
 
-@dataclass
+@dataclass(slots=True)
 class MediaSourceItem:
     """A parsed media item."""
 
@@ -101,7 +101,7 @@ class MediaSourceItem:
         return cls(hass, domain, identifier, target_media_player)
 
 
-class MediaSource(ABC):
+class MediaSource:
     """Represents a source of media files."""
 
     name: str | None = None

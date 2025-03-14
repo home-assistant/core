@@ -1,5 +1,5 @@
 """Support for INSTEON Modems (PLM and Hub)."""
-import asyncio
+
 from contextlib import suppress
 import logging
 
@@ -11,7 +11,6 @@ from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import (
@@ -25,11 +24,9 @@ from .const import (
     CONF_X10,
     DOMAIN,
     INSTEON_PLATFORMS,
-    ON_OFF_EVENTS,
 )
-from .schemas import convert_yaml_to_config_flow
 from .utils import (
-    add_on_off_event_device,
+    add_insteon_events,
     async_register_services,
     get_device_platforms,
     register_new_device_callback,
@@ -41,7 +38,8 @@ OPTIONS = "options"
 
 async def async_get_device_config(hass, config_entry):
     """Initiate the connection and services."""
-    # Make a copy of addresses due to edge case where the list of devices could change during status update
+    # Make a copy of addresses due to edge case where the list of devices could
+    # change during status update
     # Cannot be done concurrently due to issues with the underlying protocol.
     for address in list(devices):
         if devices[address].is_battery:
@@ -51,7 +49,7 @@ async def async_get_device_config(hass, config_entry):
 
     load_aldb = 2 if devices.modem.aldb.read_write_mode == ReadWriteMode.UNKNOWN else 1
     await devices.async_load(id_devices=1, load_modem_aldb=load_aldb)
-    for addr in devices:
+    for addr in list(devices):
         device = devices[addr]
         flags = True
         for name in device.operating_flags:
@@ -76,33 +74,15 @@ async def close_insteon_connection(*args):
     await async_close()
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Insteon platform."""
-    hass.data[DOMAIN] = {}
-    if DOMAIN not in config:
-        return True
-
-    conf = dict(config[DOMAIN])
-    hass.data[DOMAIN][CONF_DEV_PATH] = conf.pop(CONF_DEV_PATH, None)
-
-    if not conf:
-        return True
-
-    data, options = convert_yaml_to_config_flow(conf)
-
-    if options:
-        hass.data[DOMAIN][OPTIONS] = options
-    # Create a config entry with the connection data
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
-        )
-    )
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Insteon entry."""
+
+    if dev_path := entry.options.get(CONF_DEV_PATH):
+        hass.data[DOMAIN] = {}
+        hass.data[DOMAIN][CONF_DEV_PATH] = dev_path
+
+    api.async_load_api(hass)
+    await api.async_register_insteon_frontend(hass)
 
     if not devices.modem:
         try:
@@ -159,8 +139,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for address in devices:
         device = devices[address]
         platforms = get_device_platforms(device)
-        if ON_OFF_EVENTS in platforms:
-            add_on_off_event_device(hass, device)
+        add_insteon_events(hass, device)
+        if not platforms:
             create_insteon_device(hass, device, entry.entry_id)
 
     _LOGGER.debug("Insteon device count: %s", len(devices))
@@ -169,10 +149,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     create_insteon_device(hass, devices.modem, entry.entry_id)
 
-    api.async_load_api(hass)
-    await api.async_register_insteon_frontend(hass)
-
-    asyncio.create_task(async_get_device_config(hass, entry))
+    entry.async_create_background_task(
+        hass, async_get_device_config(hass, entry), "insteon-get-device-config"
+    )
 
     return True
 

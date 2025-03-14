@@ -1,7 +1,9 @@
 """Tests for the diagnostics data provided by the KNX integration."""
-from unittest.mock import patch
 
-from aiohttp import ClientSession
+from typing import Any
+
+import pytest
+from syrupy import SnapshotAssertion
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 
 from homeassistant.components.knx.const import (
@@ -27,73 +29,58 @@ from .conftest import KNXTestKit
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.parametrize("hass_config", [{}])
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     knx: KNXTestKit,
-):
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test diagnostics."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
-    with patch("homeassistant.config.async_hass_config_yaml", return_value={}):
-        # Overwrite the version for this test since we don't want to change this with every library bump
-        knx.xknx.version = "1.0.0"
-        assert await get_diagnostics_for_config_entry(
-            hass, hass_client, mock_config_entry
-        ) == {
-            "config_entry_data": {
-                "connection_type": "automatic",
-                "individual_address": "0.0.240",
-                "multicast_group": "224.0.23.12",
-                "multicast_port": 3671,
-                "rate_limit": 0,
-                "state_updater": True,
-            },
-            "configuration_error": None,
-            "configuration_yaml": None,
-            "xknx": {"current_address": "0.0.0", "version": "1.0.0"},
-        }
+    # Overwrite the version for this test since we don't want to change this with every library bump
+    knx.xknx.version = "0.0.0"
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+        == snapshot
+    )
 
 
+@pytest.mark.parametrize("hass_config", [{"knx": {"wrong_key": {}}}])
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_diagnostic_config_error(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     knx: KNXTestKit,
-):
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test diagnostics."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
-    with patch(
-        "homeassistant.config.async_hass_config_yaml",
-        return_value={"knx": {"wrong_key": {}}},
-    ):
-        # Overwrite the version for this test since we don't want to change this with every library bump
-        knx.xknx.version = "1.0.0"
-        assert await get_diagnostics_for_config_entry(
-            hass, hass_client, mock_config_entry
-        ) == {
-            "config_entry_data": {
-                "connection_type": "automatic",
-                "individual_address": "0.0.240",
-                "multicast_group": "224.0.23.12",
-                "multicast_port": 3671,
-                "rate_limit": 0,
-                "state_updater": True,
-            },
-            "configuration_error": "extra keys not allowed @ data['knx']['wrong_key']",
-            "configuration_yaml": {"wrong_key": {}},
-            "xknx": {"current_address": "0.0.0", "version": "1.0.0"},
-        }
+    # Overwrite the version for this test since we don't want to change this with every library bump
+    knx.xknx.version = "0.0.0"
+    # the snapshot will contain 'configuration_error' key with the voluptuous error message
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+        == snapshot
+    )
 
 
+@pytest.mark.parametrize("hass_config", [{}])
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_diagnostic_redact(
     hass: HomeAssistant,
-    hass_client: ClientSession,
-):
+    hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test diagnostics redacting data."""
     mock_config_entry: MockConfigEntry = MockConfigEntry(
         title="KNX",
@@ -111,28 +98,32 @@ async def test_diagnostic_redact(
             CONF_KNX_ROUTING_BACKBONE_KEY: "bbaacc44bbaacc44bbaacc44bbaacc44",
         },
     )
-    knx: KNXTestKit = KNXTestKit(hass, mock_config_entry)
-    await knx.setup_integration({})
+    knx: KNXTestKit = KNXTestKit(hass, mock_config_entry, hass_storage)
+    await knx.setup_integration()
 
-    with patch("homeassistant.config.async_hass_config_yaml", return_value={}):
-        # Overwrite the version for this test since we don't want to change this with every library bump
-        knx.xknx.version = "1.0.0"
-        assert await get_diagnostics_for_config_entry(
-            hass, hass_client, mock_config_entry
-        ) == {
-            "config_entry_data": {
-                "connection_type": "automatic",
-                "individual_address": "0.0.240",
-                "multicast_group": "224.0.23.12",
-                "multicast_port": 3671,
-                "rate_limit": 0,
-                "state_updater": True,
-                "knxkeys_password": "**REDACTED**",
-                "user_password": "**REDACTED**",
-                "device_authentication": "**REDACTED**",
-                "backbone_key": "**REDACTED**",
-            },
-            "configuration_error": None,
-            "configuration_yaml": None,
-            "xknx": {"current_address": "0.0.0", "version": "1.0.0"},
-        }
+    # Overwrite the version for this test since we don't want to change this with every library bump
+    knx.xknx.version = "0.0.0"
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+        == snapshot
+    )
+
+
+@pytest.mark.parametrize("hass_config", [{}])
+@pytest.mark.usefixtures("mock_hass_config")
+async def test_diagnostics_project(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    knx: KNXTestKit,
+    load_knxproj: None,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test diagnostics."""
+    await knx.setup_integration()
+    knx.xknx.version = "0.0.0"
+    # snapshot will contain project specific fields in `project_info`
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+        == snapshot
+    )

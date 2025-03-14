@@ -1,4 +1,5 @@
 """Tests for the Mikrotik component."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -62,6 +63,14 @@ DEVICE_3_DHCP_NUMERIC_NAME = {
     "host-name": 123,
     "comment": "Mobile",
 }
+DEVICE_4_DHCP = {
+    ".id": "*F7",
+    "address": "0.0.0.4",
+    "mac-address": "00:00:00:00:00:04",
+    "active-address": "0.0.0.4",
+    "host-name": "Device_4",
+    "comment": "Wifiwave2 device",
+}
 DEVICE_1_WIRELESS = {
     ".id": "*264",
     "interface": "wlan1",
@@ -109,9 +118,27 @@ DEVICE_3_WIRELESS = {
     "mac-address": "00:00:00:00:00:03",
     "last-ip": "0.0.0.3",
 }
+
+DEVICE_4_WIFIWAVE2 = {
+    ".id": "*F7",
+    "interface": "wifi1",
+    "ssid": "test-ssid",
+    "mac-address": "00:00:00:00:00:04",
+    "uptime": "2d15h28m27s",
+    "signal": -47,
+    "tx-rate": 54000000,
+    "rx-rate": 54000000,
+    "packets": "17748,18516",
+    "bytes": "1851474,2037295",
+    "tx-bits-per-second": 0,
+    "rx-bits-per-second": 0,
+    "authorized": True,
+}
+
 DHCP_DATA = [DEVICE_1_DHCP, DEVICE_2_DHCP]
 
 WIRELESS_DATA = [DEVICE_1_WIRELESS]
+WIFIWAVE2_DATA = [DEVICE_4_WIFIWAVE2]
 
 ARP_DATA = [
     {
@@ -144,16 +171,27 @@ ARP_DATA = [
 async def setup_mikrotik_entry(hass: HomeAssistant, **kwargs: Any) -> None:
     """Set up Mikrotik integration successfully."""
     support_wireless: bool = kwargs.get("support_wireless", True)
+    support_wifiwave2: bool = kwargs.get("support_wifiwave2", False)
     dhcp_data: list[dict[str, Any]] = kwargs.get("dhcp_data", DHCP_DATA)
     wireless_data: list[dict[str, Any]] = kwargs.get("wireless_data", WIRELESS_DATA)
+    wifiwave2_data: list[dict[str, Any]] = kwargs.get("wifiwave2_data", WIFIWAVE2_DATA)
 
-    def mock_command(self, cmd: str, params: dict[str, Any] | None = None) -> Any:
+    def mock_command(
+        self,
+        cmd: str,
+        params: dict[str, Any] | None = None,
+        suppress_errors: bool = False,
+    ) -> Any:
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIRELESS]:
             return support_wireless
+        if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIFIWAVE2]:
+            return support_wifiwave2
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.DHCP]:
             return dhcp_data
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.WIRELESS]:
             return wireless_data
+        if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.WIFIWAVE2]:
+            return wifiwave2_data
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.ARP]:
             return ARP_DATA
         return {}
@@ -170,8 +208,9 @@ async def setup_mikrotik_entry(hass: HomeAssistant, **kwargs: Any) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch("librouteros.connect"), patch.object(
-        mikrotik.hub.MikrotikData, "command", new=mock_command
+    with (
+        patch("librouteros.connect"),
+        patch.object(mikrotik.coordinator.MikrotikData, "command", new=mock_command),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

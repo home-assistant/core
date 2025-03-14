@@ -1,7 +1,8 @@
 {
   "domain": "arest",
   "name": "aREST",
-  "documentation": "https://www.home-assistant.io/integrations/arest",
   "codeowners": [],
-  "iot_class": "local_polling"
+  "documentation": "https://www.home-assistant.io/integrations/arest",
+  "iot_class": "local_polling",
+  "quality_scale": "legacy"
 }

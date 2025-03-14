@@ -1,7 +1,9 @@
 """Test the SENZ config flow."""
+
 from unittest.mock import patch
 
 from aiosenz import AUTHORIZATION_ENDPOINT, TOKEN_ENDPOINT
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
@@ -13,15 +15,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
+
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Check full flow."""
     await async_setup_component(hass, DOMAIN, {})

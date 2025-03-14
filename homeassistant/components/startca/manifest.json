@@ -1,8 +1,9 @@
 {
   "domain": "startca",
   "name": "Start.ca",
-  "documentation": "https://www.home-assistant.io/integrations/startca",
-  "requirements": ["xmltodict==0.13.0"],
   "codeowners": [],
-  "iot_class": "cloud_polling"
+  "documentation": "https://www.home-assistant.io/integrations/startca",
+  "iot_class": "cloud_polling",
+  "quality_scale": "legacy",
+  "requirements": ["xmltodict==0.13.0"]
 }

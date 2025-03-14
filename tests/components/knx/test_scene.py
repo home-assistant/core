@@ -2,15 +2,16 @@
 
 from homeassistant.components.knx.const import KNX_ADDRESS
 from homeassistant.components.knx.schema import SceneSchema
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 
 from .conftest import KNXTestKit
 
 
-async def test_activate_knx_scene(hass: HomeAssistant, knx: KNXTestKit):
+async def test_activate_knx_scene(
+    hass: HomeAssistant, knx: KNXTestKit, entity_registry: er.EntityRegistry
+) -> None:
     """Test KNX scene."""
     await knx.setup_integration(
         {
@@ -24,10 +25,8 @@ async def test_activate_knx_scene(hass: HomeAssistant, knx: KNXTestKit):
             ]
         }
     )
-    assert len(hass.states.async_all()) == 1
 
-    registry = er.async_get(hass)
-    entity = registry.async_get("scene.test")
+    entity = entity_registry.async_get("scene.test")
     assert entity.entity_category is EntityCategory.DIAGNOSTIC
     assert entity.unique_id == "1/1/1_24"
 

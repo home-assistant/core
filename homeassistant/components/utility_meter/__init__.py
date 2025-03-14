@@ -1,8 +1,9 @@
 """Support for tracking consumption over given periods of time."""
-from datetime import timedelta
+
+from datetime import datetime, timedelta
 import logging
 
-from croniter import croniter
+from cronsim import CronSim, CronSimError
 import voluptuous as vol
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
@@ -10,8 +11,14 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import discovery, entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery,
+    entity_registry as er,
+)
+from homeassistant.helpers.device import (
+    async_remove_stale_devices_links_keep_entity_device,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
@@ -21,7 +28,9 @@ from .const import (
     CONF_METER_DELTA_VALUES,
     CONF_METER_NET_CONSUMPTION,
     CONF_METER_OFFSET,
+    CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
+    CONF_SENSOR_ALWAYS_AVAILABLE,
     CONF_SOURCE_SENSOR,
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
@@ -41,9 +50,12 @@ DEFAULT_OFFSET = timedelta(hours=0)
 
 def validate_cron_pattern(pattern):
     """Check that the pattern is well-formed."""
-    if croniter.is_valid(pattern):
-        return pattern
-    raise vol.Invalid("Invalid pattern")
+    try:
+        CronSim(pattern, datetime(2020, 1, 1))  # any date will do
+    except CronSimError as err:
+        _LOGGER.error("Invalid cron pattern %s: %s", pattern, err)
+        raise vol.Invalid("Invalid pattern") from err
+    return pattern
 
 
 def period_or_cron(config):
@@ -62,10 +74,10 @@ def period_or_cron(config):
 
 
 def max_28_days(config):
-    """Check that time period does not include more then 28 days."""
+    """Check that time period does not include more than 28 days."""
     if config.days >= 28:
         raise vol.Invalid(
-            "Unsupported offset of more then 28 days, please use a cron pattern."
+            "Unsupported offset of more than 28 days, please use a cron pattern."
         )
 
     return config
@@ -83,10 +95,12 @@ METER_CONFIG_SCHEMA = vol.Schema(
             ),
             vol.Optional(CONF_METER_DELTA_VALUES, default=False): cv.boolean,
             vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
+            vol.Optional(CONF_METER_PERIODICALLY_RESETTING, default=True): cv.boolean,
             vol.Optional(CONF_TARIFFS, default=[]): vol.All(
                 cv.ensure_list, vol.Unique(), [cv.string]
             ),
             vol.Optional(CONF_CRON_PATTERN): validate_cron_pattern,
+            vol.Optional(CONF_SENSOR_ALWAYS_AVAILABLE, default=False): cv.boolean,
         },
         period_or_cron,
     )
@@ -141,7 +155,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     DOMAIN,
                     {meter: {CONF_METER: meter}},
                     config,
-                )
+                ),
+                eager_start=True,
             )
         else:
             # create tariff selection
@@ -152,11 +167,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     DOMAIN,
                     {CONF_METER: meter, CONF_TARIFFS: conf[CONF_TARIFFS]},
                     config,
-                )
+                ),
+                eager_start=True,
             )
 
-            hass.data[DATA_UTILITY][meter][CONF_TARIFF_ENTITY] = "{}.{}".format(
-                SELECT_DOMAIN, meter
+            hass.data[DATA_UTILITY][meter][CONF_TARIFF_ENTITY] = (
+                f"{SELECT_DOMAIN}.{meter}"
             )
 
             # add one meter for each tariff
@@ -171,7 +187,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass, SENSOR_DOMAIN, DOMAIN, tariff_confs, config
-                )
+                ),
+                eager_start=True,
             )
 
     return True
@@ -179,8 +196,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Utility Meter from a config entry."""
+
+    async_remove_stale_devices_links_keep_entity_device(
+        hass, entry.entry_id, entry.options[CONF_SOURCE_SENSOR]
+    )
+
     entity_registry = er.async_get(hass)
-    hass.data[DATA_UTILITY][entry.entry_id] = {}
+    hass.data[DATA_UTILITY][entry.entry_id] = {
+        "source": entry.options[CONF_SOURCE_SENSOR],
+    }
     hass.data[DATA_UTILITY][entry.entry_id][DATA_TARIFF_SENSORS] = []
 
     try:
@@ -202,9 +226,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entity_entry = entity_registry.async_get_or_create(
             Platform.SELECT, DOMAIN, entry.entry_id, suggested_object_id=entry.title
         )
-        hass.data[DATA_UTILITY][entry.entry_id][
-            CONF_TARIFF_ENTITY
-        ] = entity_entry.entity_id
+        hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = (
+            entity_entry.entity_id
+        )
         await hass.config_entries.async_forward_entry_setups(
             entry, (Platform.SELECT, Platform.SENSOR)
         )
@@ -216,18 +240,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update listener, called when the config entry options are changed."""
+
     await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    platforms_to_unload = [Platform.SENSOR]
+    if entry.options.get(CONF_TARIFFS):
+        platforms_to_unload.append(Platform.SELECT)
+
     if unload_ok := await hass.config_entries.async_unload_platforms(
         entry,
-        (
-            Platform.SELECT,
-            Platform.SENSOR,
-        ),
+        platforms_to_unload,
     ):
         hass.data[DATA_UTILITY].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        new = {**config_entry.options}
+        new[CONF_METER_PERIODICALLY_RESETTING] = True
+        hass.config_entries.async_update_entry(config_entry, options=new, version=2)
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True

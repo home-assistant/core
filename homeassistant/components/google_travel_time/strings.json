@@ -3,21 +3,31 @@
   "config": {
     "step": {
       "user": {
-        "description": "When specifying the origin and destination, you can supply one or more locations separated by the pipe character, in the form of an address, latitude/longitude coordinates, or a Google place ID. When specifying the location using a Google place ID, the ID must be prefixed with `place_id:`.",
+        "description": "You can specify the origin and destination in the form of an address, latitude/longitude coordinates, or a Google place ID. When specifying the location using a Google place ID, the ID must be prefixed with `place_id:`.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "origin": "Origin",
           "destination": "Destination"
         }
+      },
+      "reconfigure": {
+        "description": "[%key:component::google_travel_time::config::step::user::description%]",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "origin": "[%key:component::google_travel_time::config::step::user::data::origin%]",
+          "destination": "[%key:component::google_travel_time::config::step::user::data::destination%]"
+        }
       }
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {
@@ -26,15 +36,68 @@
         "description": "You can optionally specify either a Departure Time or Arrival Time. If specifying a departure time, you can enter `now`, a Unix timestamp, or a 24 hour time string like `08:00:00`. If specifying an arrival time, you can use a Unix timestamp or a 24 hour time string like `08:00:00`",
         "data": {
           "mode": "Travel Mode",
-          "language": "Language",
+          "language": "[%key:common::config_flow::data::language%]",
           "time_type": "Time Type",
           "time": "Time",
           "avoid": "Avoid",
-          "traffic_mode": "Traffic Mode",
+          "traffic_model": "Traffic Model",
           "transit_mode": "Transit Mode",
           "transit_routing_preference": "Transit Routing Preference",
           "units": "Units"
         }
+      }
+    }
+  },
+  "selector": {
+    "mode": {
+      "options": {
+        "driving": "Driving",
+        "walking": "Walking",
+        "bicycling": "Bicycling",
+        "transit": "Transit"
+      }
+    },
+    "avoid": {
+      "options": {
+        "none": "Avoid nothing",
+        "tolls": "Tolls",
+        "highways": "Highways",
+        "ferries": "Ferries",
+        "indoor": "Indoor"
+      }
+    },
+    "units": {
+      "options": {
+        "metric": "Metric System",
+        "imperial": "Imperial System"
+      }
+    },
+    "time_type": {
+      "options": {
+        "arrival_time": "Arrival Time",
+        "departure_time": "Departure Time"
+      }
+    },
+    "traffic_model": {
+      "options": {
+        "best_guess": "Best Guess",
+        "pessimistic": "Pessimistic",
+        "optimistic": "Optimistic"
+      }
+    },
+    "transit_mode": {
+      "options": {
+        "bus": "Bus",
+        "subway": "Subway",
+        "train": "Train",
+        "tram": "Tram",
+        "rail": "Rail"
+      }
+    },
+    "transit_routing_preference": {
+      "options": {
+        "less_walking": "Less Walking",
+        "fewer_transfers": "Fewer Transfers"
       }
     }
   }

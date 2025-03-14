@@ -1,7 +1,8 @@
 {
   "domain": "flock",
   "name": "Flock",
-  "documentation": "https://www.home-assistant.io/integrations/flock",
   "codeowners": [],
-  "iot_class": "cloud_push"
+  "documentation": "https://www.home-assistant.io/integrations/flock",
+  "iot_class": "cloud_push",
+  "quality_scale": "legacy"
 }

@@ -1,21 +1,23 @@
 """Constants for the KNX integration."""
+
 from __future__ import annotations
 
-from enum import Enum
-from typing import Final, TypedDict
+from collections.abc import Awaitable, Callable
+from enum import Enum, StrEnum
+from typing import TYPE_CHECKING, Final, TypedDict
 
-from homeassistant.components.climate import (
-    PRESET_AWAY,
-    PRESET_COMFORT,
-    PRESET_ECO,
-    PRESET_NONE,
-    PRESET_SLEEP,
-    HVACAction,
-    HVACMode,
-)
+from xknx.dpt.dpt_20 import HVACControllerMode
+from xknx.telegram import Telegram
+
+from homeassistant.components.climate import FAN_AUTO, FAN_OFF, HVACAction, HVACMode
 from homeassistant.const import Platform
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import KNXModule
 
 DOMAIN: Final = "knx"
+KNX_MODULE_KEY: HassKey[KNXModule] = HassKey(DOMAIN)
 
 # Address is used for configuration and services by the same functions so the key has to match
 KNX_ADDRESS: Final = "address"
@@ -39,6 +41,7 @@ CONF_KNX_TUNNELING_TCP_SECURE: Final = "tunneling_tcp_secure"
 CONF_KNX_LOCAL_IP: Final = "local_ip"
 CONF_KNX_MCAST_GRP: Final = "multicast_group"
 CONF_KNX_MCAST_PORT: Final = "multicast_port"
+CONF_KNX_TUNNEL_ENDPOINT_IA: Final = "tunnel_endpoint_ia"
 
 CONF_KNX_RATE_LIMIT: Final = "rate_limit"
 CONF_KNX_ROUTE_BACK: Final = "route_back"
@@ -47,6 +50,10 @@ CONF_KNX_DEFAULT_STATE_UPDATER: Final = True
 CONF_KNX_DEFAULT_RATE_LIMIT: Final = 0
 
 DEFAULT_ROUTING_IA: Final = "0.0.240"
+
+CONF_KNX_TELEGRAM_LOG_SIZE: Final = "telegram_log_size"
+TELEGRAM_LOG_DEFAULT: Final = 1000
+TELEGRAM_LOG_MAX: Final = 25000  # ~10 MB or ~25 hours of reasonable bus load
 
 ##
 # Secure constants
@@ -60,15 +67,14 @@ CONF_KNX_SECURE_USER_PASSWORD: Final = "user_password"
 CONF_KNX_SECURE_DEVICE_AUTHENTICATION: Final = "device_authentication"
 
 
-CONF_PAYLOAD: Final = "payload"
+CONF_CONTEXT_TIMEOUT: Final = "context_timeout"
+CONF_IGNORE_INTERNAL_STATE: Final = "ignore_internal_state"
 CONF_PAYLOAD_LENGTH: Final = "payload_length"
 CONF_RESET_AFTER: Final = "reset_after"
 CONF_RESPOND_TO_READ: Final = "respond_to_read"
 CONF_STATE_ADDRESS: Final = "state_address"
 CONF_SYNC_STATE: Final = "sync_state"
 
-# yaml config merged with config entry data
-DATA_KNX_CONFIG: Final = "knx_config"
 # original hass yaml config
 DATA_HASS_CONFIG: Final = "knx_hass_config"
 
@@ -76,41 +82,69 @@ ATTR_COUNTER: Final = "counter"
 ATTR_SOURCE: Final = "source"
 
 
+type AsyncMessageCallbackType = Callable[[Telegram], Awaitable[None]]
+type MessageCallbackType = Callable[[Telegram], None]
+
+SERVICE_KNX_SEND: Final = "send"
+SERVICE_KNX_ATTR_PAYLOAD: Final = "payload"
+SERVICE_KNX_ATTR_TYPE: Final = "type"
+SERVICE_KNX_ATTR_RESPONSE: Final = "response"
+SERVICE_KNX_ATTR_REMOVE: Final = "remove"
+SERVICE_KNX_EVENT_REGISTER: Final = "event_register"
+SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
+SERVICE_KNX_READ: Final = "read"
+
+
 class KNXConfigEntryData(TypedDict, total=False):
     """Config entry for the KNX integration."""
 
     connection_type: str
     individual_address: str
-    local_ip: str | None
+    local_ip: str | None  # not required
     multicast_group: str
     multicast_port: int
-    route_back: bool
-    state_updater: bool
+    route_back: bool  # not required
+    host: str  # only required for tunnelling
+    port: int  # only required for tunnelling
+    tunnel_endpoint_ia: str | None  # tunnelling only - not required (use get())
+    # KNX secure
+    user_id: int | None  # not required
+    user_password: str | None  # not required
+    device_authentication: str | None  # not required
+    knxkeys_filename: str  # not required
+    knxkeys_password: str  # not required
+    backbone_key: str | None  # not required
+    sync_latency_tolerance: int | None  # not required
+    # OptionsFlow only
+    state_updater: bool  # default state updater: True -> expire 60; False -> init
     rate_limit: int
-    host: str
-    port: int
-
-    user_id: int | None
-    user_password: str | None
-    device_authentication: str | None
-    knxkeys_filename: str
-    knxkeys_password: str
-    backbone_key: str | None
-    sync_latency_tolerance: int | None
+    #   Integration only (not forwarded to xknx)
+    telegram_log_size: int  # not required
 
 
 class ColorTempModes(Enum):
     """Color temperature modes for config validation."""
 
-    ABSOLUTE = "DPT-7.600"
-    RELATIVE = "DPT-5.001"
+    # YAML uses Enum.name (with vol.Upper), UI uses Enum.value for lookup
+    ABSOLUTE = "7.600"
+    ABSOLUTE_FLOAT = "9"
+    RELATIVE = "5.001"
 
 
-SUPPORTED_PLATFORMS: Final = [
+class FanZeroMode(StrEnum):
+    """Enum for setting the fan zero mode."""
+
+    OFF = FAN_OFF
+    AUTO = FAN_AUTO
+
+
+SUPPORTED_PLATFORMS_YAML: Final = {
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.DATE,
+    Platform.DATETIME,
     Platform.FAN,
     Platform.LIGHT,
     Platform.NOTIFY,
@@ -120,18 +154,25 @@ SUPPORTED_PLATFORMS: Final = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TEXT,
+    Platform.TIME,
     Platform.WEATHER,
-]
+}
+
+SUPPORTED_PLATFORMS_UI: Final = {
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.SWITCH,
+}
 
 # Map KNX controller modes to HA modes. This list might not be complete.
 CONTROLLER_MODES: Final = {
     # Map DPT 20.105 HVAC control modes
-    "Auto": HVACMode.AUTO,
-    "Heat": HVACMode.HEAT,
-    "Cool": HVACMode.COOL,
-    "Off": HVACMode.OFF,
-    "Fan only": HVACMode.FAN_ONLY,
-    "Dry": HVACMode.DRY,
+    HVACControllerMode.AUTO: HVACMode.AUTO,
+    HVACControllerMode.HEAT: HVACMode.HEAT,
+    HVACControllerMode.COOL: HVACMode.COOL,
+    HVACControllerMode.OFF: HVACMode.OFF,
+    HVACControllerMode.FAN_ONLY: HVACMode.FAN_ONLY,
+    HVACControllerMode.DEHUMIDIFICATION: HVACMode.DRY,
 }
 
 CURRENT_HVAC_ACTIONS: Final = {
@@ -140,13 +181,4 @@ CURRENT_HVAC_ACTIONS: Final = {
     HVACMode.OFF: HVACAction.OFF,
     HVACMode.FAN_ONLY: HVACAction.FAN,
     HVACMode.DRY: HVACAction.DRYING,
-}
-
-PRESET_MODES: Final = {
-    # Map DPT 20.102 HVAC operating modes to HA presets
-    "Auto": PRESET_NONE,
-    "Frost Protection": PRESET_ECO,
-    "Night": PRESET_SLEEP,
-    "Standby": PRESET_AWAY,
-    "Comfort": PRESET_COMFORT,
 }

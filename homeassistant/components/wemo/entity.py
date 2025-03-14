@@ -1,4 +1,5 @@
 """Classes shared among Wemo entities."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -7,10 +8,10 @@ import logging
 
 from pywemo.exceptions import ActionException
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .wemo_device import DeviceCoordinator
+from .coordinator import DeviceCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
     @property
     def unique_id(self) -> str:
         """Return the id of this WeMo device."""
-        serial_number: str = self.wemo.serialnumber
+        serial_number: str = self.wemo.serial_number
         if suffix := self.unique_id_suffix:
             return f"{serial_number}_{suffix}"
         return serial_number
@@ -64,7 +65,7 @@ class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
         return self._device_info
 
     @contextlib.contextmanager
-    def _wemo_call_wrapper(self, message: str) -> Generator[None, None, None]:
+    def _wemo_call_wrapper(self, message: str) -> Generator[None]:
         """Wrap calls to the device that change its state.
 
         1. Takes care of making available=False when communications with the

@@ -1,8 +1,10 @@
 """Test helpers for Hue."""
+
 import asyncio
 from collections import deque
-import json
+from collections.abc import Generator
 import logging
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohue.v1 as aiohue_v1
@@ -12,24 +14,26 @@ import pytest
 
 from homeassistant.components import hue
 from homeassistant.components.hue.v1 import sensor_base as hue_sensor_base
+from homeassistant.components.hue.v2.device import async_setup_devices
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.json import JsonArrayType
 
-from tests.common import (
-    MockConfigEntry,
-    async_mock_service,
-    load_fixture,
-    mock_device_registry,
-)
+from .const import FAKE_BRIDGE, FAKE_BRIDGE_DEVICE
+
+from tests.common import MockConfigEntry, load_json_array_fixture
 
 
 @pytest.fixture(autouse=True)
-def no_request_delay():
+def no_request_delay() -> Generator[None]:
     """Make the request refresh delay 0 for instant tests."""
     with patch("homeassistant.components.hue.const.REQUEST_REFRESH_DELAY", 0):
         yield
 
 
-def create_mock_bridge(hass, api_version=1):
+def create_mock_bridge(hass: HomeAssistant, api_version: int = 1) -> Mock:
     """Create a mocked HueBridge instance."""
     bridge = Mock(
         hass=hass,
@@ -43,10 +47,10 @@ def create_mock_bridge(hass, api_version=1):
     bridge.logger = logging.getLogger(__name__)
 
     if bridge.api_version == 2:
-        bridge.api = create_mock_api_v2(hass)
+        bridge.api = create_mock_api_v2()
         bridge.mock_requests = bridge.api.mock_requests
     else:
-        bridge.api = create_mock_api_v1(hass)
+        bridge.api = create_mock_api_v1()
         bridge.sensor_manager = hue_sensor_base.SensorManager(bridge)
         bridge.mock_requests = bridge.api.mock_requests
         bridge.mock_light_responses = bridge.api.mock_light_responses
@@ -56,6 +60,8 @@ def create_mock_bridge(hass, api_version=1):
     async def async_initialize_bridge():
         if bridge.config_entry:
             hass.data.setdefault(hue.DOMAIN, {})[bridge.config_entry.entry_id] = bridge
+        if bridge.api_version == 2:
+            await async_setup_devices(bridge)
         return True
 
     bridge.async_initialize_bridge = async_initialize_bridge
@@ -76,18 +82,18 @@ def create_mock_bridge(hass, api_version=1):
 
 
 @pytest.fixture
-def mock_api_v1(hass):
+def mock_api_v1() -> Mock:
     """Mock the Hue V1 api."""
-    return create_mock_api_v1(hass)
+    return create_mock_api_v1()
 
 
 @pytest.fixture
-def mock_api_v2(hass):
+def mock_api_v2() -> Mock:
     """Mock the Hue V2 api."""
-    return create_mock_api_v2(hass)
+    return create_mock_api_v2()
 
 
-def create_mock_api_v1(hass):
+def create_mock_api_v1() -> Mock:
     """Create a mock V1 API."""
     api = Mock(spec=aiohue_v1.HueBridgeV1)
     api.initialize = AsyncMock()
@@ -130,32 +136,20 @@ def create_mock_api_v1(hass):
     return api
 
 
-@pytest.fixture(scope="session")
-def v2_resources_test_data():
+@pytest.fixture(scope="package")
+def v2_resources_test_data() -> JsonArrayType:
     """Load V2 resources mock data."""
-    return json.loads(load_fixture("hue/v2_resources.json"))
+    return load_json_array_fixture("hue/v2_resources.json")
 
 
-def create_mock_api_v2(hass):
+def create_mock_api_v2() -> Mock:
     """Create a mock V2 API."""
     api = Mock(spec=aiohue_v2.HueBridgeV2)
     api.initialize = AsyncMock()
-    api.config = Mock(
-        bridge_id="aabbccddeeffggh",
-        mac_address="00:17:88:01:aa:bb:fd:c7",
-        model_id="BSB002",
-        api_version="9.9.9",
-        software_version="1935144040",
-        bridge_device=Mock(
-            id="4a507550-8742-4087-8bf5-c2334f29891c",
-            product_data=Mock(manufacturer_name="Mock"),
-        ),
-        spec=aiohue_v2.ConfigController,
-    )
-    api.config.name = "Home"
     api.mock_requests = []
 
     api.logger = logging.getLogger(__name__)
+    api.config = aiohue_v2.ConfigController(api)
     api.events = aiohue_v2.EventStream(api)
     api.devices = aiohue_v2.DevicesController(api)
     api.lights = aiohue_v2.LightsController(api)
@@ -171,9 +165,13 @@ def create_mock_api_v2(hass):
 
     api.request = mock_request
 
-    async def load_test_data(data):
+    async def load_test_data(data: list[dict[str, Any]]):
         """Load test data into controllers."""
-        api.config = aiohue_v2.ConfigController(api)
+
+        # append default bridge if none explicitly given in test data
+        if not any(x for x in data if x["type"] == "bridge"):
+            data.append(FAKE_BRIDGE)
+            data.append(FAKE_BRIDGE_DEVICE)
 
         await asyncio.gather(
             api.config.initialize(data),
@@ -197,30 +195,32 @@ def create_mock_api_v2(hass):
 
 
 @pytest.fixture
-def mock_bridge_v1(hass):
+def mock_bridge_v1(hass: HomeAssistant) -> Mock:
     """Mock a Hue bridge with V1 api."""
     return create_mock_bridge(hass, api_version=1)
 
 
 @pytest.fixture
-def mock_bridge_v2(hass):
+def mock_bridge_v2(hass: HomeAssistant) -> Mock:
     """Mock a Hue bridge with V2 api."""
     return create_mock_bridge(hass, api_version=2)
 
 
 @pytest.fixture
-def mock_config_entry_v1(hass):
+def mock_config_entry_v1() -> MockConfigEntry:
     """Mock a config entry for a Hue V1 bridge."""
     return create_config_entry(api_version=1)
 
 
 @pytest.fixture
-def mock_config_entry_v2(hass):
+def mock_config_entry_v2() -> MockConfigEntry:
     """Mock a config entry."""
     return create_config_entry(api_version=2)
 
 
-def create_config_entry(api_version=1, host="mock-host"):
+def create_config_entry(
+    api_version: int = 1, host: str = "mock-host"
+) -> MockConfigEntry:
     """Mock a config entry for a Hue bridge."""
     return MockConfigEntry(
         domain=hue.DOMAIN,
@@ -229,7 +229,7 @@ def create_config_entry(api_version=1, host="mock-host"):
     )
 
 
-async def setup_component(hass):
+async def setup_component(hass: HomeAssistant) -> None:
     """Mock setup Hue component."""
     with patch.object(hue, "async_setup_entry", return_value=True):
         assert (
@@ -242,7 +242,9 @@ async def setup_component(hass):
         )
 
 
-async def setup_bridge(hass, mock_bridge, config_entry):
+async def setup_bridge(
+    hass: HomeAssistant, mock_bridge: Mock, config_entry: MockConfigEntry
+) -> None:
     """Load the Hue integration with the provided bridge."""
     mock_bridge.config_entry = config_entry
     with patch.object(
@@ -254,11 +256,11 @@ async def setup_bridge(hass, mock_bridge, config_entry):
 
 
 async def setup_platform(
-    hass,
-    mock_bridge,
-    platforms,
-    hostname=None,
-):
+    hass: HomeAssistant,
+    mock_bridge: Mock,
+    platforms: list[Platform] | tuple[Platform] | Platform,
+    hostname: str | None = None,
+) -> None:
     """Load the Hue integration with the provided bridge for given platform(s)."""
     if not isinstance(platforms, (list, tuple)):
         platforms = [platforms]
@@ -276,20 +278,8 @@ async def setup_platform(
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
     await hass.async_block_till_done()
 
-    for platform in platforms:
-        await hass.config_entries.async_forward_entry_setup(config_entry, platform)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    await hass.config_entries.async_forward_entry_setups(config_entry, platforms)
 
     # and make sure it completes before going further
     await hass.async_block_till_done()
-
-
-@pytest.fixture(name="device_reg")
-def get_device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture(name="calls")
-def track_calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")

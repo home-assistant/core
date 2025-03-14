@@ -5,7 +5,7 @@
 We as members, contributors, and leaders pledge to make participation in our
 community a harassment-free experience for everyone, regardless of age, body
 size, visible or invisible disability, ethnicity, sex characteristics, gender
-identity and expression, level of experience, education, socio-economic status,
+identity and expression, level of experience, education, socioeconomic status,
 nationality, personal appearance, race, religion, or sexual identity
 and orientation.
 
@@ -132,8 +132,8 @@ For answers to common questions about this code of conduct, see the FAQ at
 <https://www.contributor-covenant.org/faq>. Translations are available at
 <https://www.contributor-covenant.org/translations>.
 
-[coc-blog]: /blog/2017/01/21/home-assistant-governance/
-[coc2-blog]: /blog/2020/05/25/code-of-conduct-updated/
+[coc-blog]: https://www.home-assistant.io/blog/2017/01/21/home-assistant-governance/
+[coc2-blog]: https://www.home-assistant.io/blog/2020/05/25/code-of-conduct-updated/
 [email]: mailto:safety@home-assistant.io
 [homepage]: http://contributor-covenant.org
 [mozilla]: https://github.com/mozilla/diversity

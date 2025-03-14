@@ -1,4 +1,11 @@
 {
+  "entity": {
+    "binary_sensor": {
+      "wash_cycle": {
+        "name": "Cycle"
+      }
+    }
+  },
   "config": {
     "step": {
       "init": {
@@ -19,6 +26,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   }

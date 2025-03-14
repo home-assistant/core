@@ -1,12 +1,16 @@
 """Support for IBM Watson TTS integration."""
+
 import logging
 
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_watson import TextToSpeechV1
 import voluptuous as vol
 
-from homeassistant.components.tts import PLATFORM_SCHEMA, Provider
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.tts import (
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
+    Provider,
+)
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,9 +25,6 @@ CONF_TEXT_TYPE = "text"
 
 # List from https://tinyurl.com/watson-tts-docs
 SUPPORTED_VOICES = [
-    "ar-AR_OmarVoice",
-    "ar-MS_OmarVoice",
-    "cs-CZ_AlenaVoice",
     "de-DE_BirgitV2Voice",
     "de-DE_BirgitV3Voice",
     "de-DE_BirgitVoice",
@@ -31,11 +32,8 @@ SUPPORTED_VOICES = [
     "de-DE_DieterV3Voice",
     "de-DE_DieterVoice",
     "de-DE_ErikaV3Voice",
-    "en-AU_CraigVoice",
-    "en-AU_MadisonVoice",
-    "en-AU_SteveVoice",
-    "en-GB_KateV3Voice",
-    "en-GB_KateVoice",
+    "en-AU_HeidiExpressive",
+    "en-AU_JackExpressive",
     "en-GB_CharlotteV3Voice",
     "en-GB_JamesV3Voice",
     "en-GB_KateV3Voice",
@@ -74,33 +72,15 @@ SUPPORTED_VOICES = [
     "it-IT_FrancescaVoice",
     "ja-JP_EmiV3Voice",
     "ja-JP_EmiVoice",
-    "ko-KR_HyunjunVoice",
-    "ko-KR_SiWooVoice",
-    "ko-KR_YoungmiVoice",
-    "ko-KR_YunaVoice",
-    "nl-BE_AdeleVoice",
-    "nl-BE_BramVoice",
-    "nl-NL_EmmaVoice",
-    "nl-NL_LiamVoice",
+    "ko-KR_JinV3Voice",
+    "nl-NL_MerelV3Voice",
     "pt-BR_IsabelaV3Voice",
     "pt-BR_IsabelaVoice",
-    "sv-SE_IngridVoice",
-    "zh-CN_LiNaVoice",
-    "zh-CN_WangWeiVoice",
-    "zh-CN_ZhangJingVoice",
 ]
 
 DEPRECATED_VOICES = [
-    "ar-AR_OmarVoice",
-    "ar-MS_OmarVoice",
-    "cs-CZ_AlenaVoice",
     "de-DE_BirgitVoice",
     "de-DE_DieterVoice",
-    "en-AU_CraigVoice",
-    "en-AU_MadisonVoice",
-    "en-AU_SteveVoice",
-    "en-GB_KateVoice",
-    "en-GB_KateV3Voice",
     "en-US_AllisonVoice",
     "en-US_LisaVoice",
     "en-US_MichaelVoice",
@@ -111,19 +91,7 @@ DEPRECATED_VOICES = [
     "fr-FR_ReneeVoice",
     "it-IT_FrancescaVoice",
     "ja-JP_EmiVoice",
-    "ko-KR_HyunjunVoice",
-    "ko-KR_SiWooVoice",
-    "ko-KR_YoungmiVoice",
-    "ko-KR_YunaVoice",
-    "nl-BE_AdeleVoice",
-    "nl-BE_BramVoice",
-    "nl-NL_EmmaVoice",
-    "nl-NL_LiamVoice",
     "pt-BR_IsabelaVoice",
-    "sv-SE_IngridVoice",
-    "zh-CN_LiNaVoice",
-    "zh-CN_WangWeiVoice",
-    "zh-CN_ZhangJingVoice",
 ]
 
 SUPPORTED_OUTPUT_FORMATS = [
@@ -149,7 +117,7 @@ CONTENT_TYPE_EXTENSIONS = {
 DEFAULT_VOICE = "en-US_AllisonV3Voice"
 DEFAULT_OUTPUT_FORMAT = "audio/mp3"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_URL, default=DEFAULT_URL): cv.string,
         vol.Required(CONF_APIKEY): cv.string,
@@ -214,7 +182,7 @@ class WatsonTTSProvider(Provider):
         """Return a list of supported options."""
         return [CONF_VOICE]
 
-    def get_tts_audio(self, message, language=None, options=None):
+    def get_tts_audio(self, message, language, options):
         """Request TTS file from Watson TTS."""
         response = self.service.synthesize(
             text=message, accept=self.output_format, voice=options[CONF_VOICE]

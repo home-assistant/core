@@ -1,4 +1,5 @@
 """Support for recorder services."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -6,11 +7,15 @@ from typing import cast
 
 import voluptuous as vol
 
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
-from homeassistant.helpers.service import async_extract_entity_ids
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.service import (
+    async_extract_entity_ids,
+    async_register_admin_service,
+)
+from homeassistant.util import dt as dt_util
 
 from .const import ATTR_APPLY_FILTER, ATTR_KEEP_DAYS, ATTR_REPACK, DOMAIN
 from .core import Recorder
@@ -32,14 +37,28 @@ SERVICE_PURGE_SCHEMA = vol.Schema(
 ATTR_DOMAINS = "domains"
 ATTR_ENTITY_GLOBS = "entity_globs"
 
-SERVICE_PURGE_ENTITIES_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ENTITY_GLOBS, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
+SERVICE_PURGE_ENTITIES_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
+            vol.Optional(ATTR_DOMAINS, default=[]): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+            vol.Optional(ATTR_ENTITY_GLOBS, default=[]): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+            vol.Optional(ATTR_KEEP_DAYS, default=0): cv.positive_int,
+        }
+    ),
+    vol.Any(
+        vol.Schema({vol.Required(ATTR_ENTITY_ID): vol.IsTrue()}, extra=vol.ALLOW_EXTRA),
+        vol.Schema({vol.Required(ATTR_DOMAINS): vol.IsTrue()}, extra=vol.ALLOW_EXTRA),
+        vol.Schema(
+            {vol.Required(ATTR_ENTITY_GLOBS): vol.IsTrue()}, extra=vol.ALLOW_EXTRA
         ),
-    }
-).extend(cv.ENTITY_SERVICE_FIELDS)
+        msg="At least one of entity_id, domains, or entity_globs must have a value",
+    ),
+)
 
 SERVICE_ENABLE_SCHEMA = vol.Schema({})
 SERVICE_DISABLE_SCHEMA = vol.Schema({})
@@ -56,8 +75,12 @@ def _async_register_purge_service(hass: HomeAssistant, instance: Recorder) -> No
         purge_before = dt_util.utcnow() - timedelta(days=keep_days)
         instance.queue_task(PurgeTask(purge_before, repack, apply_filter))
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_PURGE, async_handle_purge_service, schema=SERVICE_PURGE_SCHEMA
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_PURGE,
+        async_handle_purge_service,
+        schema=SERVICE_PURGE_SCHEMA,
     )
 
 
@@ -69,11 +92,14 @@ def _async_register_purge_entities_service(
         """Handle calls to the purge entities service."""
         entity_ids = await async_extract_entity_ids(hass, service)
         domains = service.data.get(ATTR_DOMAINS, [])
+        keep_days = service.data.get(ATTR_KEEP_DAYS, 0)
         entity_globs = service.data.get(ATTR_ENTITY_GLOBS, [])
         entity_filter = generate_filter(domains, list(entity_ids), [], [], entity_globs)
-        instance.queue_task(PurgeEntitiesTask(entity_filter))
+        purge_before = dt_util.utcnow() - timedelta(days=keep_days)
+        instance.queue_task(PurgeEntitiesTask(entity_filter, purge_before))
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_PURGE_ENTITIES,
         async_handle_purge_entities_service,
@@ -86,7 +112,8 @@ def _async_register_enable_service(hass: HomeAssistant, instance: Recorder) -> N
     async def async_handle_enable_service(service: ServiceCall) -> None:
         instance.set_enable(True)
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_ENABLE,
         async_handle_enable_service,
@@ -99,7 +126,8 @@ def _async_register_disable_service(hass: HomeAssistant, instance: Recorder) -> 
     async def async_handle_disable_service(service: ServiceCall) -> None:
         instance.set_enable(False)
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_DISABLE,
         async_handle_disable_service,

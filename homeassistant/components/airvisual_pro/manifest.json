@@ -1,11 +1,11 @@
 {
   "domain": "airvisual_pro",
   "name": "AirVisual Pro",
+  "codeowners": ["@bachya"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airvisual_pro",
-  "requirements": ["pyairvisual==2022.12.1"],
-  "codeowners": ["@bachya"],
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pyairvisual", "pysmb"],
-  "integration_type": "device"
+  "requirements": ["pyairvisual==2023.08.1"]
 }

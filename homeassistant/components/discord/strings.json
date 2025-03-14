@@ -8,7 +8,7 @@
         }
       },
       "reauth_confirm": {
-        "description": "Refer to the documentation on getting your Discord bot key.\n\n{url}",
+        "description": "[%key:component::discord::config::step::user::description%]",
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"
         }

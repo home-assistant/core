@@ -20,16 +20,15 @@ async def test_full_user_flow(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={},
     )
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "CPU Speed"
     assert result2.get("data") == {}
 
@@ -50,8 +49,8 @@ async def test_already_configured(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "single_instance_allowed"
 
     assert len(mock_setup_entry.mock_calls) == 0
     assert len(mock_cpuinfo_config_flow.mock_calls) == 0
@@ -67,9 +66,8 @@ async def test_not_compatible(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
-    assert "flow_id" in result
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
 
     mock_cpuinfo_config_flow.return_value = {}
     result2 = await hass.config_entries.flow.async_configure(
@@ -77,7 +75,7 @@ async def test_not_compatible(
         user_input={},
     )
 
-    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("type") is FlowResultType.ABORT
     assert result2.get("reason") == "not_compatible"
 
     assert len(mock_setup_entry.mock_calls) == 0

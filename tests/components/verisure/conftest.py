@@ -1,4 +1,5 @@
 """Fixtures for Verisure integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -23,11 +24,12 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_GIID: "12345",
             CONF_PASSWORD: "SuperS3cr3t!",
         },
+        version=2,
     )
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.verisure.async_setup_entry", return_value=True
@@ -36,15 +38,29 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_verisure_config_flow() -> Generator[None, MagicMock, None]:
+def mock_verisure_config_flow() -> Generator[MagicMock]:
     """Return a mocked Tailscale client."""
     with patch(
         "homeassistant.components.verisure.config_flow.Verisure", autospec=True
     ) as verisure_mock:
         verisure = verisure_mock.return_value
         verisure.login.return_value = True
-        verisure.installations = [
-            {"giid": "12345", "alias": "ascending", "street": "12345th street"},
-            {"giid": "54321", "alias": "descending", "street": "54321th street"},
-        ]
+        verisure.get_installations.return_value = {
+            "data": {
+                "account": {
+                    "installations": [
+                        {
+                            "giid": "12345",
+                            "alias": "ascending",
+                            "address": {"street": "12345th street"},
+                        },
+                        {
+                            "giid": "54321",
+                            "alias": "descending",
+                            "address": {"street": "54321th street"},
+                        },
+                    ]
+                }
+            }
+        }
         yield verisure

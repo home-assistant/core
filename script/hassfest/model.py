@@ -1,44 +1,50 @@
 """Models for manifest validator."""
+
 from __future__ import annotations
 
+from dataclasses import dataclass, field
+from enum import IntEnum
 import json
 import pathlib
-from typing import Any
-
-import attr
+from typing import Any, Literal
 
 
-@attr.s
+@dataclass
 class Error:
     """Error validating an integration."""
 
-    plugin: str = attr.ib()
-    error: str = attr.ib()
-    fixable: bool = attr.ib(default=False)
+    plugin: str
+    error: str
+    fixable: bool = False
 
     def __str__(self) -> str:
         """Represent error as string."""
         return f"[{self.plugin.upper()}] {self.error}"
 
 
-@attr.s
+@dataclass
 class Config:
     """Config for the run."""
 
-    specific_integrations: list[pathlib.Path] | None = attr.ib()
-    root: pathlib.Path = attr.ib()
-    action: str = attr.ib()
-    requirements: bool = attr.ib()
-    errors: list[Error] = attr.ib(factory=list)
-    cache: dict[str, Any] = attr.ib(factory=dict)
-    plugins: set[str] = attr.ib(factory=set)
+    specific_integrations: list[pathlib.Path] | None
+    root: pathlib.Path
+    action: Literal["validate", "generate"]
+    requirements: bool
+    core_integrations_path: pathlib.Path = field(init=False)
+    errors: list[Error] = field(default_factory=list)
+    cache: dict[str, Any] = field(default_factory=dict)
+    plugins: set[str] = field(default_factory=set)
+
+    def __post_init__(self) -> None:
+        """Post init."""
+        self.core_integrations_path = self.root / "homeassistant/components"
 
     def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))
 
 
-@attr.s
+@dataclass
 class Brand:
     """Represent a brand in our validator."""
 
@@ -54,8 +60,8 @@ class Brand:
 
         return brands
 
-    path: pathlib.Path = attr.ib()
-    _brand: dict[str, Any] | None = attr.ib(default=None)
+    path: pathlib.Path
+    _brand: dict[str, Any] | None = None
 
     @property
     def brand(self) -> dict[str, Any]:
@@ -100,12 +106,12 @@ class Brand:
         self._brand = brand
 
 
-@attr.s
+@dataclass
 class Integration:
     """Represent an integration in our validator."""
 
     @classmethod
-    def load_dir(cls, path: pathlib.Path) -> dict[str, Integration]:
+    def load_dir(cls, path: pathlib.Path, config: Config) -> dict[str, Integration]:
         """Load all integrations in a directory."""
         assert path.is_dir()
         integrations: dict[str, Integration] = {}
@@ -123,17 +129,19 @@ class Integration:
                 )
                 continue
 
-            integration = cls(fil)
+            integration = cls(fil, config)
             integration.load_manifest()
             integrations[integration.domain] = integration
 
         return integrations
 
-    path: pathlib.Path = attr.ib()
-    _manifest: dict[str, Any] | None = attr.ib(default=None)
-    errors: list[Error] = attr.ib(factory=list)
-    warnings: list[Error] = attr.ib(factory=list)
-    translated_name: bool = attr.ib(default=False)
+    path: pathlib.Path
+    _config: Config
+    _manifest: dict[str, Any] | None = None
+    manifest_path: pathlib.Path | None = None
+    errors: list[Error] = field(default_factory=list)
+    warnings: list[Error] = field(default_factory=list)
+    translated_name: bool = False
 
     @property
     def manifest(self) -> dict[str, Any]:
@@ -149,7 +157,11 @@ class Integration:
     @property
     def core(self) -> bool:
         """Core integration."""
-        return self.path.as_posix().startswith("homeassistant/components")
+        return (
+            self.path.absolute()
+            .as_posix()
+            .startswith(self._config.core_integrations_path.as_posix())
+        )
 
     @property
     def disabled(self) -> str | None:
@@ -224,3 +236,13 @@ class Integration:
             return
 
         self._manifest = manifest
+        self.manifest_path = manifest_path
+
+
+class ScaledQualityScaleTiers(IntEnum):
+    """Supported manifest quality scales."""
+
+    BRONZE = 1
+    SILVER = 2
+    GOLD = 3
+    PLATINUM = 4

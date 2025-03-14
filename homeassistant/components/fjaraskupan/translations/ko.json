@@ -1,8 +1,0 @@
-{
-    "config": {
-        "abort": {
-            "no_devices_found": "\ub124\ud2b8\uc6cc\ud06c \uc548\uc5d0 \ubc1c\uacac\ub41c \ub514\ubc14\uc774\uc2a4 \uc5c6\uc74c",
-            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uc778\uc2a4\ud134\uc2a4\ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
-        }
-    }
-}

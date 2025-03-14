@@ -1,0 +1,39 @@
+# SpeakerHub service
+play_on_speaker_hub:
+  fields:
+    target_device:
+      required: true
+      selector:
+        device:
+          filter:
+            - integration: yolink
+              model: SpeakerHub
+    message:
+      required: true
+      example: hello, yolink
+      selector:
+        text:
+    tone:
+      default: "tip"
+      selector:
+        select:
+          options:
+            - "emergency"
+            - "alert"
+            - "warn"
+            - "tip"
+          translation_key: speaker_tone
+    volume:
+      default: 8
+      selector:
+        number:
+          min: 0
+          max: 15
+          step: 1
+    repeat:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 10
+          step: 1

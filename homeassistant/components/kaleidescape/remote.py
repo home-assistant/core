@@ -18,11 +18,13 @@ if TYPE_CHECKING:
 
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform from a config entry."""
     entities = [KaleidescapeRemote(hass.data[KALEIDESCAPE_DOMAIN][entry.entry_id])]
@@ -46,6 +48,8 @@ VALID_COMMANDS = {
 
 class KaleidescapeRemote(KaleidescapeEntity, RemoteEntity):
     """Representation of a Kaleidescape device."""
+
+    _attr_name = None
 
     @property
     def is_on(self) -> bool:

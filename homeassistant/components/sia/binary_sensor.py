@@ -1,4 +1,5 @@
 """Module for SIA Binary Sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -13,10 +14,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_ACCOUNT,
@@ -28,12 +28,12 @@ from .const import (
     KEY_SMOKE,
     SIA_HUB_ZONE,
 )
-from .sia_entity_base import SIABaseEntity, SIAEntityDescription
+from .entity import SIABaseEntity, SIAEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SIABinarySensorEntityDescription(
     BinarySensorEntityDescription,
     SIAEntityDescription,
@@ -105,7 +105,7 @@ def generate_binary_sensors(entry: ConfigEntry) -> Iterable[SIABinarySensor]:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SIA binary sensors from a config entry."""
     async_add_entities(generate_binary_sensors(entry))
@@ -131,7 +131,9 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
 
         Return True if the event was relevant for this entity.
         """
-        new_state = self.entity_description.code_consequences.get(sia_event.code)
+        new_state = None
+        if sia_event.code:
+            new_state = self.entity_description.code_consequences.get(sia_event.code)
         if new_state is None:
             return False
         _LOGGER.debug("New state will be %s", new_state)

@@ -1,141 +1,109 @@
-"""Test the update coordinator for HomeWizard."""
+"""Test the number entity for HomeWizard."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock
 
-from homewizard_energy.models import State
+from homewizard_energy.errors import DisabledError, RequestError
+from homewizard_energy.models import CombinedModels, Measurement, State, System
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import number
+from homeassistant.components.homewizard.const import UPDATE_INTERVAL
 from homeassistant.components.number import ATTR_VALUE, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
-from homeassistant.helpers import entity_registry as er
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
-from .generator import get_mock_device
+from tests.common import async_fire_time_changed
 
-
-async def test_number_entity_not_loaded_when_not_available(
-    hass, mock_config_entry_data, mock_config_entry
-):
-    """Test entity does not load number when brightness is not available."""
-
-    api = get_mock_device()
-
-    with patch(
-        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert (
-        hass.states.get("number.product_name_aabbccddeeff_status_light_brightness")
-        is None
-    )
+pytestmark = [
+    pytest.mark.usefixtures("init_integration"),
+]
 
 
-async def test_number_loads_entities(hass, mock_config_entry_data, mock_config_entry):
-    """Test entity does load number when brightness is available."""
+@pytest.mark.parametrize("device_fixture", ["HWE-SKT-11", "HWE-SKT-21"])
+async def test_number_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_homewizardenergy: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test number handles state changes correctly."""
+    assert (state := hass.states.get("number.device_status_light_brightness"))
+    assert snapshot == state
 
-    api = get_mock_device()
-    api.state = AsyncMock(return_value=State.from_dict({"brightness": 255}))
+    assert (entity_entry := entity_registry.async_get(state.entity_id))
+    assert snapshot == entity_entry
 
-    with patch(
-        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
+    assert entity_entry.device_id
+    assert (device_entry := device_registry.async_get(entity_entry.device_id))
+    assert snapshot == device_entry
 
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-
-    state = hass.states.get("number.product_name_aabbccddeeff_status_light_brightness")
-    assert state
+    # Test unknown handling
     assert state.state == "100"
-    assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Status light brightness"
+
+    mock_homewizardenergy.combined.return_value = CombinedModels(
+        device=None, measurement=Measurement(), system=System(), state=State()
     )
 
-    entry = entity_registry.async_get(
-        "number.product_name_aabbccddeeff_status_light_brightness"
+    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(state.entity_id))
+    assert state.state == STATE_UNKNOWN
+
+    # Test service methods
+    assert len(mock_homewizardenergy.state.mock_calls) == 0
+    await hass.services.async_call(
+        number.DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: state.entity_id,
+            ATTR_VALUE: 50,
+        },
+        blocking=True,
     )
-    assert entry
-    assert entry.unique_id == "aabbccddeeff_status_light_brightness"
-    assert not entry.disabled
 
+    assert len(mock_homewizardenergy.system.mock_calls) == 1
+    mock_homewizardenergy.system.assert_called_with(status_led_brightness_pct=50)
 
-async def test_brightness_level_set(hass, mock_config_entry_data, mock_config_entry):
-    """Test entity turns sets light level."""
-
-    api = get_mock_device()
-    api.state = AsyncMock(return_value=State.from_dict({"brightness": 255}))
-
-    def state_set(brightness):
-        api.state = AsyncMock(return_value=State.from_dict({"brightness": brightness}))
-
-    api.state_set = AsyncMock(side_effect=state_set)
-
-    with patch(
-        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
-        return_value=api,
+    mock_homewizardenergy.system.side_effect = RequestError
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"^An error occurred while communicating with HomeWizard device$",
     ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert (
-            hass.states.get(
-                "number.product_name_aabbccddeeff_status_light_brightness"
-            ).state
-            == "100"
-        )
-
-        # Set level halfway
         await hass.services.async_call(
             number.DOMAIN,
             SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.product_name_aabbccddeeff_status_light_brightness",
+                ATTR_ENTITY_ID: state.entity_id,
                 ATTR_VALUE: 50,
             },
             blocking=True,
         )
 
-        await hass.async_block_till_done()
-        assert (
-            hass.states.get(
-                "number.product_name_aabbccddeeff_status_light_brightness"
-            ).state
-            == "50"
-        )
-        assert len(api.state_set.mock_calls) == 1
-
-        # Turn off level
+    mock_homewizardenergy.system.side_effect = DisabledError
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"^The local API is disabled$",
+    ):
         await hass.services.async_call(
             number.DOMAIN,
             SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.product_name_aabbccddeeff_status_light_brightness",
-                ATTR_VALUE: 0,
+                ATTR_ENTITY_ID: state.entity_id,
+                ATTR_VALUE: 50,
             },
             blocking=True,
         )
 
-        await hass.async_block_till_done()
-        assert (
-            hass.states.get(
-                "number.product_name_aabbccddeeff_status_light_brightness"
-            ).state
-            == "0"
-        )
-        assert len(api.state_set.mock_calls) == 2
+
+@pytest.mark.parametrize(
+    "device_fixture", ["HWE-P1", "HWE-WTR", "SDM230", "SDM630", "HWE-KWH1", "HWE-KWH3"]
+)
+async def test_entities_not_created_for_device(hass: HomeAssistant) -> None:
+    """Does not load number when device has no support for it."""
+    assert not hass.states.get("number.device_status_light_brightness")

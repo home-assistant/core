@@ -1,13 +1,15 @@
 {
   "domain": "nanoleaf",
   "name": "Nanoleaf",
+  "codeowners": ["@milanmeu", "@joostlek"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nanoleaf",
-  "requirements": ["aionanoleaf==0.2.0"],
-  "zeroconf": ["_nanoleafms._tcp.local.", "_nanoleafapi._tcp.local."],
   "homekit": {
-    "models": ["NL29", "NL42", "NL47", "NL48", "NL52", "NL59"]
+    "models": ["NL29", "NL42", "NL47", "NL48", "NL52", "NL59", "NL69", "NL81"]
   },
+  "iot_class": "local_push",
+  "loggers": ["aionanoleaf"],
+  "requirements": ["aionanoleaf==0.2.1"],
   "ssdp": [
     {
       "st": "Nanoleaf_aurora:light"
@@ -20,9 +22,13 @@
     },
     {
       "st": "nanoleaf:nl52"
+    },
+    {
+      "st": "nanoleaf:nl69"
+    },
+    {
+      "st": "inanoleaf:nl81"
     }
   ],
-  "codeowners": ["@milanmeu"],
-  "iot_class": "local_push",
-  "loggers": ["aionanoleaf"]
+  "zeroconf": ["_nanoleafms._tcp.local.", "_nanoleafapi._tcp.local."]
 }

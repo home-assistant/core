@@ -5,15 +5,28 @@
       "user": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "above_horizon": "Above horizon",
-      "below_horizon": "Below horizon"
+      "name": "[%key:component::sun::title%]",
+      "state": {
+        "above_horizon": "Above horizon",
+        "below_horizon": "Below horizon"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_dawn": { "name": "Next dawn" },
+      "next_dusk": { "name": "Next dusk" },
+      "next_midnight": { "name": "Next midnight" },
+      "next_noon": { "name": "Next noon" },
+      "next_rising": { "name": "Next rising" },
+      "next_setting": { "name": "Next setting" },
+      "solar_azimuth": { "name": "Solar azimuth" },
+      "solar_elevation": { "name": "Solar elevation" },
+      "solar_rising": { "name": "Solar rising" }
     }
   }
 }

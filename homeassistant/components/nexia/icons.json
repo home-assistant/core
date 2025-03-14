@@ -1,0 +1,33 @@
+{
+  "entity": {
+    "number": {
+      "fan_speed": {
+        "default": "mdi:fan"
+      }
+    },
+    "scene": {
+      "automation": {
+        "default": "mdi:script-text-outline"
+      }
+    },
+    "switch": {
+      "hold": {
+        "default": "mdi:timer",
+        "state": {
+          "on": "mdi:timer-off"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_aircleaner_mode": {
+      "service": "mdi:air-filter"
+    },
+    "set_humidify_setpoint": {
+      "service": "mdi:water-percent"
+    },
+    "set_hvac_run_mode": {
+      "service": "mdi:hvac"
+    }
+  }
+}

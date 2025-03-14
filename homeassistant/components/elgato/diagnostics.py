@@ -1,21 +1,20 @@
 """Diagnostics support for Elgato."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import HomeAssistantElgatoData
-from .const import DOMAIN
+from .coordinator import ElgatoConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: ElgatoConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data: HomeAssistantElgatoData = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     return {
-        "info": data.info.dict(),
-        "state": data.coordinator.data.dict(),
+        "info": coordinator.data.info.to_dict(),
+        "state": coordinator.data.state.to_dict(),
     }

@@ -1,27 +1,26 @@
 """Support for pico and keypad buttons."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LutronCasetaDevice
-from .const import DOMAIN as CASETA_DOMAIN
 from .device_trigger import LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP
-from .models import LutronCasetaData
+from .entity import LutronCasetaEntity
+from .models import LutronCasetaConfigEntry, LutronCasetaData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: LutronCasetaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Lutron pico and keypad buttons."""
-    data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     bridge = data.bridge
     button_devices = bridge.get_buttons()
     all_devices = data.bridge.get_devices()
@@ -29,7 +28,6 @@ async def async_setup_entry(
     entities: list[LutronCasetaButton] = []
 
     for device in button_devices.values():
-
         parent_keypad = keypads[device["parent_device"]]
         parent_device_info = parent_keypad["device_info"]
 
@@ -53,8 +51,9 @@ async def async_setup_entry(
                 .title()
             )
 
-        # Append the child device name to the end of the parent keypad name to create the entity name
-        full_name = f'{parent_device_info.get("name")} {device_name}'
+        # Append the child device name to the end of the parent keypad
+        # name to create the entity name
+        full_name = f"{parent_device_info.get('name')} {device_name}"
         # Set the device_info to the same as the Parent Keypad
         # The entities will be nested inside the keypad device
         entities.append(
@@ -66,7 +65,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class LutronCasetaButton(LutronCasetaDevice, ButtonEntity):
+class LutronCasetaButton(LutronCasetaEntity, ButtonEntity):
     """Representation of a Lutron pico and keypad button."""
 
     def __init__(

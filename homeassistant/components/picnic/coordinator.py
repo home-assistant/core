@@ -1,11 +1,13 @@
 """Coordinator to fetch data from the Picnic API."""
+
+import asyncio
+from contextlib import suppress
 import copy
 from datetime import timedelta
 import logging
 
-import async_timeout
-from python_picnic_api import PicnicAPI
-from python_picnic_api.session import PicnicAuthError
+from python_picnic_api2 import PicnicAPI
+from python_picnic_api2.session import PicnicAuthError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -19,6 +21,8 @@ from .const import ADDRESS, CART_DATA, LAST_ORDER_DATA, NEXT_DELIVERY_DATA, SLOT
 class PicnicUpdateCoordinator(DataUpdateCoordinator):
     """The coordinator to fetch data from the Picnic API at a set interval."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -27,13 +31,13 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize the coordinator with the given Picnic API client."""
         self.picnic_api_client = picnic_api_client
-        self.config_entry = config_entry
         self._user_address = None
 
         logger = logging.getLogger(__name__)
         super().__init__(
             hass,
             logger,
+            config_entry=config_entry,
             name="Picnic coordinator",
             update_interval=timedelta(minutes=30),
         )
@@ -41,20 +45,20 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
         try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+            # Note: TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 data = await self.hass.async_add_executor_job(self.fetch_data)
 
             # Update the auth token in the config entry if applicable
             self._update_auth_token()
-
-            # Return the fetched data
-            return data
         except ValueError as error:
             raise UpdateFailed(f"API response was malformed: {error}") from error
         except PicnicAuthError as error:
             raise ConfigEntryAuthFailed from error
+
+        # Return the fetched data
+        return data
 
     def fetch_data(self):
         """Fetch the data from the Picnic API and return a flat dict with only needed sensor data."""
@@ -77,7 +81,10 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         """Get the address that identifies the Picnic service."""
         if self._user_address is None:
             address = self.picnic_api_client.get_user()["address"]
-            self._user_address = f'{address["street"]} {address["house_number"]}{address["house_number_ext"]}'
+            self._user_address = (
+                f"{address['street']} "
+                f"{address['house_number']}{address['house_number_ext']}"
+            )
 
         return self._user_address
 
@@ -120,13 +127,11 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         #  Get the next order's position details if there is an undelivered order
         delivery_position = {}
         if next_delivery and not next_delivery.get("delivery_time"):
-            try:
+            # ValueError: If no information yet can mean an empty response
+            with suppress(ValueError):
                 delivery_position = self.picnic_api_client.get_delivery_position(
                     next_delivery["delivery_id"]
                 )
-            except ValueError:
-                # No information yet can mean an empty response
-                pass
 
         # Determine the ETA, if available, the one from the delivery position API is more precise
         # but, it's only available shortly before the actual delivery.

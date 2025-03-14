@@ -1,7 +1,7 @@
 """Support for power sensors in WeMo Insight devices."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
@@ -13,21 +13,23 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, UnitOfPower
+from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN as WEMO_DOMAIN
+from . import async_wemo_dispatcher_connect
+from .coordinator import DeviceCoordinator
 from .entity import WemoEntity
-from .wemo_device import DeviceCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class AttributeSensorDescription(SensorEntityDescription):
     """SensorEntityDescription for WeMo AttributeSensor entities."""
 
+    # AttributeSensor does not support UNDEFINED,
+    # restrict the type to str | None.
+    name: str | None = None
     state_conversion: Callable[[StateType], StateType] | None = None
     unique_id_suffix: str | None = None
 
@@ -46,7 +48,7 @@ ATTRIBUTE_SENSORS = (
         name="Today Energy",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         key="today_kwh",
         unique_id_suffix="todaymw",
         state_conversion=lambda state: round(cast(float, state), 2),
@@ -56,8 +58,8 @@ ATTRIBUTE_SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    _config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WeMo sensors."""
 
@@ -69,14 +71,7 @@ async def async_setup_entry(
             if hasattr(coordinator.wemo, description.key)
         )
 
-    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.sensor", _discovered_wemo)
-
-    await asyncio.gather(
-        *(
-            _discovered_wemo(coordinator)
-            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("sensor")
-        )
-    )
+    await async_wemo_dispatcher_connect(hass, _discovered_wemo)
 
 
 class AttributeSensor(WemoEntity, SensorEntity):

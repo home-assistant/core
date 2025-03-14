@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""
-Quickly check if branch is up to PR standards.
+"""Quickly check if branch is up to PR standards.
 
 This is NOT a full CI/linting replacement, only a quick check during development.
 """
+
 import asyncio
 from collections import namedtuple
+from contextlib import suppress
+import itertools
 import os
+from pathlib import Path
 import re
 import shlex
 import sys
@@ -18,7 +21,7 @@ except ImportError:
 
 
 RE_ASCII = re.compile(r"\033\[[^m]*m")
-Error = namedtuple("Error", ["file", "line", "col", "msg", "skip"])
+Error = namedtuple("Error", ["file", "line", "col", "msg", "skip"])  # noqa: PYI024
 
 PASS = "green"
 FAIL = "bold_red"
@@ -39,7 +42,7 @@ def printc(the_color, *args):
 
 def validate_requirements_ok():
     """Validate requirements, returns True of ok."""
-    # pylint: disable=import-error,import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from gen_requirements_all import main as req_main
 
     return req_main(True) == 0
@@ -61,7 +64,7 @@ async def async_exec(*args, display=False):
     """Execute, return code & log."""
     argsp = []
     for arg in args:
-        if os.path.isfile(arg):
+        if Path(arg).is_file():
             argsp.append(f"\\\n  {shlex.quote(arg)}")
         else:
             argsp.append(shlex.quote(arg))
@@ -74,12 +77,12 @@ async def async_exec(*args, display=False):
         if display:
             kwargs["stderr"] = asyncio.subprocess.PIPE
         proc = await asyncio.create_subprocess_exec(*args, **kwargs)
-    except FileNotFoundError as err:
+    except FileNotFoundError:
         printc(FAIL, f"Could not execute {args[0]}. Did you install test requirements?")
-        raise err
+        raise
 
     if not display:
-        # Readin stdout into log
+        # Reading stdout into log
         stdout, _ = await proc.communicate()
     else:
         # read child's stdout/stderr concurrently (capture and display)
@@ -115,9 +118,9 @@ async def pylint(files):
     return res
 
 
-async def flake8(files):
-    """Exec flake8."""
-    _, log = await async_exec("pre-commit", "run", "flake8", "--files", *files)
+async def ruff(files):
+    """Exec ruff."""
+    _, log = await async_exec("pre-commit", "run", "ruff", "--files", *files)
     res = []
     for line in log.splitlines():
         line = line.split(":")
@@ -130,15 +133,20 @@ async def flake8(files):
 
 async def lint(files):
     """Perform lint."""
-    files = [file for file in files if os.path.isfile(file)]
-    fres, pres = await asyncio.gather(flake8(files), pylint(files))
-
-    res = fres + pres
-    res.sort(key=lambda item: item.file)
+    files = [file for file in files if Path(file).is_file()]
+    res = sorted(
+        itertools.chain(
+            *await asyncio.gather(
+                pylint(files),
+                ruff(files),
+            )
+        ),
+        key=lambda item: item.file,
+    )
     if res:
-        print("Pylint & Flake8 errors:")
+        print("Lint errors:")
     else:
-        printc(PASS, "Pylint and Flake8 passed")
+        printc(PASS, "Lint passed")
 
     lint_ok = True
     for err in res:
@@ -157,7 +165,7 @@ async def lint(files):
 async def main():
     """Run the main loop."""
     # Ensure we are in the homeassistant root
-    os.chdir(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+    os.chdir(Path(__file__).parent.parent)
 
     files = await git()
     if not files:
@@ -167,8 +175,7 @@ async def main():
         )
         return
 
-    pyfile = re.compile(r".+\.py$")
-    pyfiles = [file for file in files if pyfile.match(file)]
+    pyfiles = [file for file in files if file.endswith(".py")]
 
     print("=============================")
     printc("bold", "CHANGED FILES:\n", "\n ".join(pyfiles))
@@ -188,7 +195,7 @@ async def main():
             gen_req = True  # requirements script for components
         # Find test files...
         if fname.startswith("tests/"):
-            if "/test_" in fname and os.path.isfile(fname):
+            if "/test_" in fname and Path(fname).is_file():
                 # All test helpers should be excluded
                 test_files.add(fname)
         else:
@@ -201,7 +208,7 @@ async def main():
             else:
                 parts[-1] = f"test_{parts[-1]}"
             fname = "/".join(parts)
-            if os.path.isfile(fname):
+            if Path(fname).is_file():
                 test_files.add(fname)
 
     if gen_req:
@@ -218,7 +225,15 @@ async def main():
         return
 
     code, _ = await async_exec(
-        "pytest", "-vv", "--force-sugar", "--", *test_files, display=True
+        "python3",
+        "-b",
+        "-m",
+        "pytest",
+        "-vv",
+        "--force-sugar",
+        "--",
+        *test_files,
+        display=True,
     )
     print("=============================")
 
@@ -232,7 +247,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    try:
+    with suppress(FileNotFoundError, KeyboardInterrupt):
         asyncio.run(main())
-    except (FileNotFoundError, KeyboardInterrupt):
-        pass

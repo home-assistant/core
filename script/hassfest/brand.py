@@ -1,4 +1,5 @@
 """Brand validation."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -11,9 +12,13 @@ BRAND_SCHEMA = vol.Schema(
         vol.Required("domain"): str,
         vol.Required("name"): str,
         vol.Optional("integrations"): [str],
-        vol.Optional("iot_standards"): [vol.Any("homekit", "zigbee", "zwave")],
+        vol.Optional("iot_standards"): [
+            vol.Any("homekit", "matter", "zigbee", "zwave")
+        ],
     }
 )
+
+BRAND_EXCEPTIONS = ["u_tec"]
 
 
 def _validate_brand(
@@ -35,10 +40,14 @@ def _validate_brand(
             f"Domain '{brand.domain}' does not match file name {brand.path.name}",
         )
 
-    if not brand.integrations and not brand.iot_standards:
+    if (
+        len(brand.integrations) < 2
+        and not brand.iot_standards
+        and brand.domain not in BRAND_EXCEPTIONS
+    ):
         config.add_error(
             "brand",
-            f"{brand.path.name}: At least one of integrations or "
+            f"{brand.path.name}: At least two integrations or "
             "iot_standards must be non-empty",
         )
 

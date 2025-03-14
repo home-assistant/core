@@ -1,4 +1,5 @@
 """Tests for the LaMetric services."""
+
 from unittest.mock import MagicMock
 
 from demetriek import (
@@ -29,16 +30,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+pytestmark = pytest.mark.usefixtures("init_integration")
 
 
 async def test_service_chart(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test the LaMetric chart service."""
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("button.frenck_s_lametric_next_app")
     assert entry
@@ -122,11 +122,10 @@ async def test_service_chart(
 
 async def test_service_message(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     mock_lametric: MagicMock,
 ) -> None:
     """Test the LaMetric message service."""
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("button.frenck_s_lametric_next_app")
     assert entry
@@ -191,7 +190,7 @@ async def test_service_message(
     assert len(notification.model.frames) == 1
     frame = notification.model.frames[0]
     assert type(frame) is Simple
-    assert frame.icon == 6916
+    assert frame.icon == "6916"
     assert frame.text == "Meow!"
 
     mock_lametric.notify.side_effect = LaMetricError

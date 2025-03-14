@@ -1,4 +1,5 @@
 """Support for media metadata handling."""
+
 from __future__ import annotations
 
 import datetime
@@ -43,7 +44,7 @@ DURATION_SECONDS = "duration_in_s"
 POSITION_SECONDS = "position_in_s"
 
 
-def _timespan_secs(timespan: str | None) -> None | int:
+def _timespan_secs(timespan: str | None) -> int | None:
     """Parse a time-span into number of seconds."""
     if timespan in UNAVAILABLE_VALUES:
         return None
@@ -102,7 +103,7 @@ class SonosMedia:
 
     @soco_error()
     def poll_track_info(self) -> dict[str, Any]:
-        """Poll the speaker for current track info, add converted position values, and return."""
+        """Poll the speaker for current track info, add converted position values."""
         track_info: dict[str, Any] = self.soco.get_current_track_info()
         track_info[DURATION_SECONDS] = _timespan_secs(track_info.get("duration"))
         track_info[POSITION_SECONDS] = _timespan_secs(track_info.get("position"))

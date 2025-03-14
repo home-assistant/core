@@ -1,32 +1,31 @@
 """Fully Kiosk Browser number entity."""
+
 from __future__ import annotations
 
 from contextlib import suppress
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_SECONDS
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import FullyKioskConfigEntry
 from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
 ENTITY_TYPES: tuple[NumberEntityDescription, ...] = (
     NumberEntityDescription(
         key="timeToScreensaverV2",
-        name="Screensaver timer",
+        translation_key="screensaver_time",
         native_max_value=9999,
         native_step=1,
         native_min_value=0,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.CONFIG,
     ),
     NumberEntityDescription(
         key="screensaverBrightness",
-        name="Screensaver brightness",
+        translation_key="screensaver_brightness",
         native_max_value=255,
         native_step=1,
         native_min_value=0,
@@ -34,30 +33,31 @@ ENTITY_TYPES: tuple[NumberEntityDescription, ...] = (
     ),
     NumberEntityDescription(
         key="timeToScreenOffV2",
-        name="Screen off timer",
+        translation_key="screen_off_time",
         native_max_value=9999,
         native_step=1,
         native_min_value=0,
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.CONFIG,
     ),
     NumberEntityDescription(
         key="screenBrightness",
-        name="Screen brightness",
+        translation_key="screen_brightness",
         native_max_value=255,
         native_step=1,
         native_min_value=0,
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FullyKioskConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fully Kiosk Browser number entities."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         FullyNumberEntity(coordinator, entity)

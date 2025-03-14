@@ -1,4 +1,5 @@
 """Test Local Media Source."""
+
 import logging
 from unittest.mock import AsyncMock, Mock, call
 
@@ -73,18 +74,19 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
-async def setup_media_source(hass) -> None:
+async def setup_media_source(hass: HomeAssistant) -> None:
     """Set up media source."""
     assert await async_setup_component(hass, "media_source", {})
 
 
-async def test_async_browse_media_success(hass: HomeAssistant) -> None:
+async def test_async_browse_media_success(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test successful browse media."""
 
     client = create_mock_motioneye_client()
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -127,9 +129,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
         "title": "http://test:8766",
         "media_class": "directory",
         "media_content_type": "",
-        "media_content_id": (
-            "media-source://motioneye/74565ad414754616000674c87bdc876c"
-        ),
+        "media_content_id": "media-source://motioneye/74565ad414754616000674c87bdc876c",
         "can_play": False,
         "can_expand": True,
         "children_media_class": "directory",
@@ -297,13 +297,14 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
     }
 
 
-async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
+async def test_async_browse_media_images_success(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test successful browse media of images."""
 
     client = create_mock_motioneye_client()
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -348,14 +349,15 @@ async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
     }
 
 
-async def test_async_resolve_media_success(hass: HomeAssistant) -> None:
+async def test_async_resolve_media_success(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test successful resolve media."""
 
     client = create_mock_motioneye_client()
 
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -365,10 +367,7 @@ async def test_async_resolve_media_success(hass: HomeAssistant) -> None:
     client.get_movie_url = Mock(return_value="http://movie-url")
     media = await async_resolve_media(
         hass,
-        (
-            f"{URI_SCHEME}{DOMAIN}"
-            f"/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/foo.mp4"
-        ),
+        f"{URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/foo.mp4",
         None,
     )
     assert media == PlayMedia(url="http://movie-url", mime_type="video/mp4")
@@ -378,24 +377,22 @@ async def test_async_resolve_media_success(hass: HomeAssistant) -> None:
     client.get_image_url = Mock(return_value="http://image-url")
     media = await async_resolve_media(
         hass,
-        (
-            f"{URI_SCHEME}{DOMAIN}"
-            f"/{TEST_CONFIG_ENTRY_ID}#{device.id}#images#/foo.jpg"
-        ),
+        f"{URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#{device.id}#images#/foo.jpg",
         None,
     )
     assert media == PlayMedia(url="http://image-url", mime_type="image/jpeg")
     assert client.get_image_url.call_args == call(TEST_CAMERA_ID, "/foo.jpg")
 
 
-async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
+async def test_async_resolve_media_failure(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test failed resolve media calls."""
 
     client = create_mock_motioneye_client()
 
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -460,10 +457,7 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
     with pytest.raises(Unresolvable):
         await async_resolve_media(
             hass,
-            (
-                f"{URI_SCHEME}{DOMAIN}"
-                f"/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/foo.mp4"
-            ),
+            f"{URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/foo.mp4",
             None,
         )
 
@@ -472,10 +466,7 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
     with pytest.raises(MediaSourceError):
         await async_resolve_media(
             hass,
-            (
-                f"{URI_SCHEME}{DOMAIN}"
-                f"/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#foo.mp4"
-            ),
+            f"{URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#foo.mp4",
             None,
         )
 
@@ -491,7 +482,7 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
         "media_class": "directory",
         "media_content_type": "video",
         "media_content_id": (
-            f"media-source://motioneye"
+            "media-source://motioneye"
             f"/74565ad414754616000674c87bdc876c#{device.id}#movies"
         ),
         "can_play": False,

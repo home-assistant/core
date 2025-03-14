@@ -1,15 +1,20 @@
 """Support for MQTT room presence detection."""
+
 from __future__ import annotations
 
 from datetime import timedelta
-import json
+from functools import lru_cache
 import logging
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ID,
@@ -20,10 +25,11 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt, slugify
+from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util.json import json_loads
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +43,7 @@ DEFAULT_NAME = "Room Sensor"
 DEFAULT_TIMEOUT = 5
 DEFAULT_TOPIC = "room_presence"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_DEVICE_ID): cv.string,
         vol.Required(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
@@ -45,11 +51,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
-).extend(mqtt.config.MQTT_RO_SCHEMA.schema)
+).extend(mqtt.MQTT_RO_SCHEMA.schema)
+
+
+@lru_cache(maxsize=256)
+def _slugify_upper(string: str) -> str:
+    """Return a slugified version of string, uppercased."""
+    return slugify(string).upper()
+
 
 MQTT_PAYLOAD = vol.Schema(
     vol.All(
-        json.loads,
+        json_loads,
         vol.Schema(
             {
                 vol.Required(ATTR_ID): cv.string,
@@ -68,6 +81,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MQTT room Sensor."""
+    # Make sure MQTT integration is enabled and the client is available
+    # We cannot count on dependencies as the sensor platform setup
+    # also will be triggered when mqtt is loading the `sensor` platform
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        return
     async_add_entities(
         [
             MQTTRoomSensor(
@@ -100,7 +119,7 @@ class MQTTRoomSensor(SensorEntity):
         self._state = STATE_NOT_HOME
         self._name = name
         self._state_topic = f"{state_topic}/+"
-        self._device_id = slugify(device_id).upper()
+        self._device_id = _slugify_upper(device_id)
         self._timeout = timeout
         self._consider_home = (
             timedelta(seconds=consider_home) if consider_home else None
@@ -116,7 +135,7 @@ class MQTTRoomSensor(SensorEntity):
             """Update the sensor state."""
             self._state = room
             self._distance = distance
-            self._updated = dt.utcnow()
+            self._updated = dt_util.utcnow()
 
             self.async_write_ha_state()
 
@@ -138,7 +157,7 @@ class MQTTRoomSensor(SensorEntity):
                     # device is in the same room OR
                     # device is closer to another room OR
                     # last update from other room was too long ago
-                    timediff = dt.utcnow() - self._updated
+                    timediff = dt_util.utcnow() - self._updated
                     if (
                         device.get(ATTR_ROOM) == self._state
                         or device.get(ATTR_DISTANCE) < self._distance
@@ -168,16 +187,15 @@ class MQTTRoomSensor(SensorEntity):
         if (
             self._updated
             and self._consider_home
-            and dt.utcnow() - self._updated > self._consider_home
+            and dt_util.utcnow() - self._updated > self._consider_home
         ):
             self._state = STATE_NOT_HOME
 
 
-def _parse_update_data(topic, data):
+def _parse_update_data(topic: str, data: dict[str, Any]) -> dict[str, Any]:
     """Parse the room presence update."""
     parts = topic.split("/")
     room = parts[-1]
-    device_id = slugify(data.get(ATTR_ID)).upper()
+    device_id = _slugify_upper(data.get(ATTR_ID))
     distance = data.get("distance")
-    parsed_data = {ATTR_DEVICE_ID: device_id, ATTR_ROOM: room, ATTR_DISTANCE: distance}
-    return parsed_data
+    return {ATTR_DEVICE_ID: device_id, ATTR_ROOM: room, ATTR_DISTANCE: distance}

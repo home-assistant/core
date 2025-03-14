@@ -1,4 +1,5 @@
 """Support for Renault services."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -9,11 +10,14 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
-from .renault_hub import RenaultHub
 from .renault_vehicle import RenaultVehicleProxy
+
+if TYPE_CHECKING:
+    from . import RenaultConfigEntry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -43,13 +47,15 @@ SERVICE_CHARGE_SET_SCHEDULE_SCHEMA = vol.Schema(
     {
         vol.Required("id"): cv.positive_int,
         vol.Optional("activated"): cv.boolean,
-        vol.Optional("monday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("tuesday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("wednesday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("thursday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("friday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("saturday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("sunday"): vol.Schema(SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("monday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("tuesday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("wednesday"): vol.Any(
+            None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA
+        ),
+        vol.Optional("thursday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("friday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("saturday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("sunday"): vol.Any(None, SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA),
     }
 )
 SERVICE_CHARGE_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
@@ -60,15 +66,42 @@ SERVICE_CHARGE_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
     }
 )
 
+SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA = vol.Schema(
+    {
+        vol.Required("readyAtTime"): cv.string,
+    }
+)
+
+SERVICE_AC_SET_SCHEDULE_SCHEMA = vol.Schema(
+    {
+        vol.Required("id"): cv.positive_int,
+        vol.Optional("activated"): cv.boolean,
+        vol.Optional("monday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("tuesday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("wednesday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("thursday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("friday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("saturday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
+        vol.Optional("sunday"): vol.Any(None, SERVICE_AC_SET_SCHEDULE_DAY_SCHEMA),
+    }
+)
+SERVICE_AC_SET_SCHEDULES_SCHEMA = SERVICE_VEHICLE_SCHEMA.extend(
+    {
+        vol.Required(ATTR_SCHEDULES): vol.All(
+            cv.ensure_list, [SERVICE_AC_SET_SCHEDULE_SCHEMA]
+        ),
+    }
+)
+
 SERVICE_AC_CANCEL = "ac_cancel"
 SERVICE_AC_START = "ac_start"
 SERVICE_CHARGE_SET_SCHEDULES = "charge_set_schedules"
-SERVICE_CHARGE_START = "charge_start"
+SERVICE_AC_SET_SCHEDULES = "ac_set_schedules"
 SERVICES = [
     SERVICE_AC_CANCEL,
     SERVICE_AC_START,
     SERVICE_CHARGE_SET_SCHEDULES,
-    SERVICE_CHARGE_START,
+    SERVICE_AC_SET_SCHEDULES,
 ]
 
 
@@ -80,7 +113,7 @@ def setup_services(hass: HomeAssistant) -> None:
         proxy = get_vehicle_proxy(service_call.data)
 
         LOGGER.debug("A/C cancel attempt")
-        result = await proxy.vehicle.set_ac_stop()
+        result = await proxy.set_ac_stop()
         LOGGER.debug("A/C cancel result: %s", result)
 
     async def ac_start(service_call: ServiceCall) -> None:
@@ -90,41 +123,45 @@ def setup_services(hass: HomeAssistant) -> None:
         proxy = get_vehicle_proxy(service_call.data)
 
         LOGGER.debug("A/C start attempt: %s / %s", temperature, when)
-        result = await proxy.vehicle.set_ac_start(temperature, when)
+        result = await proxy.set_ac_start(temperature, when)
         LOGGER.debug("A/C start result: %s", result.raw_data)
 
     async def charge_set_schedules(service_call: ServiceCall) -> None:
         """Set charge schedules."""
         schedules: list[dict[str, Any]] = service_call.data[ATTR_SCHEDULES]
         proxy = get_vehicle_proxy(service_call.data)
-        charge_schedules = await proxy.vehicle.get_charging_settings()
+        charge_schedules = await proxy.get_charging_settings()
         for schedule in schedules:
             charge_schedules.update(schedule)
 
         if TYPE_CHECKING:
             assert charge_schedules.schedules is not None
         LOGGER.debug("Charge set schedules attempt: %s", schedules)
-        result = await proxy.vehicle.set_charge_schedules(charge_schedules.schedules)
+        result = await proxy.set_charge_schedules(charge_schedules.schedules)
+
         LOGGER.debug("Charge set schedules result: %s", result)
         LOGGER.debug(
             "It may take some time before these changes are reflected in your vehicle"
         )
 
-    async def charge_start(service_call: ServiceCall) -> None:
-        """Start charge."""
-        # The Renault start charge service has been replaced by a
-        # dedicated button entity and marked as deprecated
-        LOGGER.warning(
-            "The 'renault.charge_start' service is deprecated and "
-            "replaced by a dedicated start charge button entity; please "
-            "use that entity to start the charge instead"
-        )
-
+    async def ac_set_schedules(service_call: ServiceCall) -> None:
+        """Set A/C schedules."""
+        schedules: list[dict[str, Any]] = service_call.data[ATTR_SCHEDULES]
         proxy = get_vehicle_proxy(service_call.data)
+        hvac_schedules = await proxy.get_hvac_settings()
 
-        LOGGER.debug("Charge start attempt")
-        result = await proxy.vehicle.set_charge_start()
-        LOGGER.debug("Charge start result: %s", result)
+        for schedule in schedules:
+            hvac_schedules.update(schedule)
+
+        if TYPE_CHECKING:
+            assert hvac_schedules.schedules is not None
+        LOGGER.debug("HVAC set schedules attempt: %s", schedules)
+        result = await proxy.set_hvac_schedules(hvac_schedules.schedules)
+
+        LOGGER.debug("HVAC set schedules result: %s", result)
+        LOGGER.debug(
+            "It may take some time before these changes are reflected in your vehicle"
+        )
 
     def get_vehicle_proxy(service_call_data: Mapping) -> RenaultVehicleProxy:
         """Get vehicle from service_call data."""
@@ -132,14 +169,26 @@ def setup_services(hass: HomeAssistant) -> None:
         device_id = service_call_data[ATTR_VEHICLE]
         device_entry = device_registry.async_get(device_id)
         if device_entry is None:
-            raise ValueError(f"Unable to find device with id: {device_id}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_device_id",
+                translation_placeholders={"device_id": device_id},
+            )
 
-        proxy: RenaultHub
-        for proxy in hass.data[DOMAIN].values():
-            for vin, vehicle in proxy.vehicles.items():
+        loaded_entries: list[RenaultConfigEntry] = [
+            entry
+            for entry in hass.config_entries.async_loaded_entries(DOMAIN)
+            if entry.entry_id in device_entry.config_entries
+        ]
+        for entry in loaded_entries:
+            for vin, vehicle in entry.runtime_data.vehicles.items():
                 if (DOMAIN, vin) in device_entry.identifiers:
                     return vehicle
-        raise ValueError(f"Unable to find vehicle with VIN: {device_entry.identifiers}")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_config_entry_for_device",
+            translation_placeholders={"device_id": device_entry.name or device_id},
+        )
 
     hass.services.async_register(
         DOMAIN,
@@ -161,13 +210,7 @@ def setup_services(hass: HomeAssistant) -> None:
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_CHARGE_START,
-        charge_start,
-        schema=SERVICE_VEHICLE_SCHEMA,
+        SERVICE_AC_SET_SCHEDULES,
+        ac_set_schedules,
+        schema=SERVICE_AC_SET_SCHEDULES_SCHEMA,
     )
-
-
-def unload_services(hass: HomeAssistant) -> None:
-    """Unload Renault services."""
-    for service in SERVICES:
-        hass.services.async_remove(DOMAIN, service)

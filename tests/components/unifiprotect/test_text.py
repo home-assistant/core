@@ -1,10 +1,10 @@
 """Test the UniFi Protect text platform."""
-# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
 
-from pyunifiprotect.data import Camera, DoorbellMessageType, LCDMessage
+from uiprotect.data import Camera, DoorbellMessageType, LCDMessage
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.text import CAMERA
@@ -24,7 +24,7 @@ from .utils import (
 
 async def test_text_camera_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
-):
+) -> None:
     """Test removing and re-adding a camera device."""
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -37,8 +37,11 @@ async def test_text_camera_remove(
 
 
 async def test_text_camera_setup(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
     """Test text entity setup for camera devices."""
 
     doorbell.lcd_message = LCDMessage(
@@ -46,8 +49,6 @@ async def test_text_camera_setup(
     )
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.TEXT, 1, 1)
-
-    entity_registry = er.async_get(hass)
 
     description = CAMERA[0]
     unique_id, entity_id = ids_from_device_description(
@@ -66,7 +67,7 @@ async def test_text_camera_setup(
 
 async def test_text_camera_set(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-):
+) -> None:
     """Test text entity setting value camera devices."""
 
     await init_entry(hass, ufp, [doorbell])
@@ -77,7 +78,7 @@ async def test_text_camera_set(
         Platform.TEXT, doorbell, description
     )
 
-    doorbell.__fields__["set_lcd_text"] = Mock(final=False)
+    doorbell.__pydantic_fields__["set_lcd_text"] = Mock(final=False, frozen=False)
     doorbell.set_lcd_text = AsyncMock()
 
     await hass.services.async_call(

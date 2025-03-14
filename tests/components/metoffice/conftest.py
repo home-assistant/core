@@ -1,11 +1,12 @@
 """Fixtures for Met Office weather integration tests."""
+
 from unittest.mock import patch
 
 from datapoint.exceptions import APIException
 import pytest
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_simple_manager_fail():
     """Mock datapoint Manager with default values for testing in config_flow."""
     with patch("datapoint.Manager") as mock_manager:

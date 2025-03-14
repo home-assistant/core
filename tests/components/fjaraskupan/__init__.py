@@ -1,11 +1,8 @@
 """Tests for the Fjäråskupan integration."""
 
-
-from bleak.backends.device import BLEDevice
-
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
-from tests.components.bluetooth import generate_advertisement_data
+from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 COOKER_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="COOKERHOOD_FJAR",
@@ -15,8 +12,9 @@ COOKER_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_uuids=[],
     service_data={},
     source="local",
-    device=BLEDevice(address="AA:BB:CC:DD:EE:FF", name="COOKERHOOD_FJAR"),
+    device=generate_ble_device(address="AA:BB:CC:DD:EE:FF", name="COOKERHOOD_FJAR"),
     advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,
+    tx_power=-127,
 )

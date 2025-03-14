@@ -1,19 +1,21 @@
 """motionEye Media Source Implementation."""
+
 from __future__ import annotations
 
 import logging
 from pathlib import PurePath
-from typing import Optional, cast
+from typing import cast
 
 from motioneye_client.const import KEY_MEDIA_LIST, KEY_MIME_TYPE, KEY_PATH
 
 from homeassistant.components.media_player import MediaClass, MediaType
-from homeassistant.components.media_source.error import MediaSourceError, Unresolvable
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
+    MediaSourceError,
     MediaSourceItem,
     PlayMedia,
+    Unresolvable,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -90,7 +92,7 @@ class MotionEyeMediaSource(MediaSource):
         base = [None] * 4
         data = identifier.split("#", 3)
         return cast(
-            tuple[Optional[str], Optional[str], Optional[str], Optional[str]],
+            tuple[str | None, str | None, str | None, str | None],
             tuple(data + base)[:4],  # type: ignore[operator]
         )
 

@@ -1,26 +1,28 @@
 """Support for Abode Security System switches."""
+
 from __future__ import annotations
 
 from typing import Any, cast
 
-from abodepy.devices.switch import CONST, AbodeSwitch as AbodeSW
+from jaraco.abode.devices.switch import Switch
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AbodeAutomation, AbodeDevice, AbodeSystem
+from . import AbodeSystem
 from .const import DOMAIN
+from .entity import AbodeAutomation, AbodeDevice
 
-DEVICE_TYPES = [CONST.TYPE_SWITCH, CONST.TYPE_VALVE]
-
-ICON = "mdi:robot"
+DEVICE_TYPES = ["switch", "valve"]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode switch devices."""
     data: AbodeSystem = hass.data[DOMAIN]
@@ -42,7 +44,8 @@ async def async_setup_entry(
 class AbodeSwitch(AbodeDevice, SwitchEntity):
     """Representation of an Abode switch."""
 
-    _device: AbodeSW
+    _device: Switch
+    _attr_name = None
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
@@ -61,7 +64,7 @@ class AbodeSwitch(AbodeDevice, SwitchEntity):
 class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
     """A switch implementation for Abode automations."""
 
-    _attr_icon = ICON
+    _attr_translation_key = "automation"
 
     async def async_added_to_hass(self) -> None:
         """Set up trigger automation service."""
@@ -87,4 +90,4 @@ class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the automation is enabled."""
-        return bool(self._automation.is_enabled)
+        return bool(self._automation.enabled)

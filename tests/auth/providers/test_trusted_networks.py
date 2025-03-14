@@ -1,4 +1,5 @@
 """Test the Trusted Networks auth provider."""
+
 from ipaddress import ip_address, ip_network
 from unittest.mock import Mock, patch
 
@@ -10,18 +11,23 @@ from homeassistant import auth
 from homeassistant.auth import auth_store
 from homeassistant.auth.providers import trusted_networks as tn_auth
 from homeassistant.components.http import CONF_TRUSTED_PROXIES, CONF_USE_X_FORWARDED_FOR
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
-def store(hass):
+async def store(hass: HomeAssistant) -> auth_store.AuthStore:
     """Mock store."""
-    return auth_store.AuthStore(hass)
+    store = auth_store.AuthStore(hass)
+    await store.async_load()
+    return store
 
 
 @pytest.fixture
-def provider(hass, store):
+def provider(
+    hass: HomeAssistant, store: auth_store.AuthStore
+) -> tn_auth.TrustedNetworksAuthProvider:
     """Mock provider."""
     return tn_auth.TrustedNetworksAuthProvider(
         hass,
@@ -41,7 +47,9 @@ def provider(hass, store):
 
 
 @pytest.fixture
-def provider_with_user(hass, store):
+def provider_with_user(
+    hass: HomeAssistant, store: auth_store.AuthStore
+) -> tn_auth.TrustedNetworksAuthProvider:
     """Mock provider with trusted users config."""
     return tn_auth.TrustedNetworksAuthProvider(
         hass,
@@ -67,7 +75,9 @@ def provider_with_user(hass, store):
 
 
 @pytest.fixture
-def provider_bypass_login(hass, store):
+def provider_bypass_login(
+    hass: HomeAssistant, store: auth_store.AuthStore
+) -> tn_auth.TrustedNetworksAuthProvider:
     """Mock provider with allow_bypass_login config."""
     return tn_auth.TrustedNetworksAuthProvider(
         hass,
@@ -88,13 +98,21 @@ def provider_bypass_login(hass, store):
 
 
 @pytest.fixture
-def manager(hass, store, provider):
+def manager(
+    hass: HomeAssistant,
+    store: auth_store.AuthStore,
+    provider: tn_auth.TrustedNetworksAuthProvider,
+) -> auth.AuthManager:
     """Mock manager."""
     return auth.AuthManager(hass, store, {(provider.type, provider.id): provider}, {})
 
 
 @pytest.fixture
-def manager_with_user(hass, store, provider_with_user):
+def manager_with_user(
+    hass: HomeAssistant,
+    store: auth_store.AuthStore,
+    provider_with_user: tn_auth.TrustedNetworksAuthProvider,
+) -> auth.AuthManager:
     """Mock manager with trusted user."""
     return auth.AuthManager(
         hass,
@@ -105,7 +123,11 @@ def manager_with_user(hass, store, provider_with_user):
 
 
 @pytest.fixture
-def manager_bypass_login(hass, store, provider_bypass_login):
+def manager_bypass_login(
+    hass: HomeAssistant,
+    store: auth_store.AuthStore,
+    provider_bypass_login: tn_auth.TrustedNetworksAuthProvider,
+) -> auth.AuthManager:
     """Mock manager with allow bypass login."""
     return auth.AuthManager(
         hass,
@@ -115,7 +137,35 @@ def manager_bypass_login(hass, store, provider_bypass_login):
     )
 
 
-async def test_trusted_networks_credentials(manager, provider):
+async def test_config_schema() -> None:
+    """Test CONFIG_SCHEMA."""
+    # Valid configuration
+    tn_auth.CONFIG_SCHEMA(
+        {
+            "type": "trusted_networks",
+            "trusted_networks": ["192.168.0.1"],
+            "trusted_users": {
+                "192.168.0.1": [
+                    "a1ab982744b64757bf80515589258924",
+                    {"group": "system-group"},
+                ]
+            },
+        }
+    )
+    # Wrong user id format
+    with pytest.raises(vol.Invalid):
+        tn_auth.CONFIG_SCHEMA(
+            {
+                "type": "trusted_networks",
+                "trusted_networks": ["192.168.0.1"],
+                "trusted_users": {"192.168.0.1": ["abcde"]},
+            }
+        )
+
+
+async def test_trusted_networks_credentials(
+    manager: auth.AuthManager, provider: tn_auth.TrustedNetworksAuthProvider
+) -> None:
     """Test trusted_networks credentials related functions."""
     owner = await manager.async_create_user("test-owner")
     tn_owner_cred = await provider.async_get_or_create_credentials({"user": owner.id})
@@ -132,22 +182,24 @@ async def test_trusted_networks_credentials(manager, provider):
         await provider.async_get_or_create_credentials({"user": "invalid-user"})
 
 
-async def test_validate_access(provider):
+async def test_validate_access(provider: tn_auth.TrustedNetworksAuthProvider) -> None:
     """Test validate access from trusted networks."""
     provider.async_validate_access(ip_address("192.168.0.1"))
     provider.async_validate_access(ip_address("192.168.128.10"))
     provider.async_validate_access(ip_address("::1"))
     provider.async_validate_access(ip_address("fd01:db8::ff00:42:8329"))
 
-    with pytest.raises(tn_auth.InvalidAuthError):
+    with pytest.raises(auth.InvalidAuthError):
         provider.async_validate_access(ip_address("192.168.0.2"))
-    with pytest.raises(tn_auth.InvalidAuthError):
+    with pytest.raises(auth.InvalidAuthError):
         provider.async_validate_access(ip_address("127.0.0.1"))
-    with pytest.raises(tn_auth.InvalidAuthError):
+    with pytest.raises(auth.InvalidAuthError):
         provider.async_validate_access(ip_address("2001:db8::ff00:42:8329"))
 
 
-async def test_validate_access_proxy(hass, provider):
+async def test_validate_access_proxy(
+    hass: HomeAssistant, provider: tn_auth.TrustedNetworksAuthProvider
+) -> None:
     """Test validate access from trusted networks are blocked from proxy."""
 
     await async_setup_component(
@@ -162,15 +214,17 @@ async def test_validate_access_proxy(hass, provider):
     )
     provider.async_validate_access(ip_address("192.168.128.2"))
     provider.async_validate_access(ip_address("fd00::2"))
-    with pytest.raises(tn_auth.InvalidAuthError):
+    with pytest.raises(auth.InvalidAuthError):
         provider.async_validate_access(ip_address("192.168.128.0"))
-    with pytest.raises(tn_auth.InvalidAuthError):
+    with pytest.raises(auth.InvalidAuthError):
         provider.async_validate_access(ip_address("192.168.128.1"))
-    with pytest.raises(tn_auth.InvalidAuthError):
+    with pytest.raises(auth.InvalidAuthError):
         provider.async_validate_access(ip_address("fd00::1"))
 
 
-async def test_validate_access_cloud(hass, provider):
+async def test_validate_access_cloud(
+    hass: HomeAssistant, provider: tn_auth.TrustedNetworksAuthProvider
+) -> None:
     """Test validate access from trusted networks are blocked from cloud."""
     await async_setup_component(
         hass,
@@ -187,21 +241,25 @@ async def test_validate_access_cloud(hass, provider):
     provider.async_validate_access(ip_address("192.168.128.2"))
 
     remote.is_cloud_request.set(True)
-    with pytest.raises(tn_auth.InvalidAuthError):
+    with pytest.raises(auth.InvalidAuthError):
         provider.async_validate_access(ip_address("192.168.128.2"))
 
 
-async def test_validate_refresh_token(provider):
+async def test_validate_refresh_token(
+    provider: tn_auth.TrustedNetworksAuthProvider,
+) -> None:
     """Verify re-validation of refresh token."""
     with patch.object(provider, "async_validate_access") as mock:
-        with pytest.raises(tn_auth.InvalidAuthError):
+        with pytest.raises(auth.InvalidAuthError):
             provider.async_validate_refresh_token(Mock(), None)
 
         provider.async_validate_refresh_token(Mock(), "127.0.0.1")
         mock.assert_called_once_with(ip_address("127.0.0.1"))
 
 
-async def test_login_flow(manager, provider):
+async def test_login_flow(
+    manager: auth.AuthManager, provider: tn_auth.TrustedNetworksAuthProvider
+) -> None:
     """Test login flow."""
     owner = await manager.async_create_user("test-owner")
     user = await manager.async_create_user("test-user")
@@ -228,7 +286,10 @@ async def test_login_flow(manager, provider):
     assert step["data"]["user"] == user.id
 
 
-async def test_trusted_users_login(manager_with_user, provider_with_user):
+async def test_trusted_users_login(
+    manager_with_user: auth.AuthManager,
+    provider_with_user: tn_auth.TrustedNetworksAuthProvider,
+) -> None:
     """Test available user list changed per different IP."""
     owner = await manager_with_user.async_create_user("test-owner")
     sys_user = await manager_with_user.async_create_system_user(
@@ -308,7 +369,10 @@ async def test_trusted_users_login(manager_with_user, provider_with_user):
         assert schema({"user": sys_user.id})
 
 
-async def test_trusted_group_login(manager_with_user, provider_with_user):
+async def test_trusted_group_login(
+    manager_with_user: auth.AuthManager,
+    provider_with_user: tn_auth.TrustedNetworksAuthProvider,
+) -> None:
     """Test config trusted_user with group_id."""
     owner = await manager_with_user.async_create_user("test-owner")
     # create a user in user group
@@ -361,7 +425,10 @@ async def test_trusted_group_login(manager_with_user, provider_with_user):
     assert schema({"user": user.id})
 
 
-async def test_bypass_login_flow(manager_bypass_login, provider_bypass_login):
+async def test_bypass_login_flow(
+    manager_bypass_login: auth.AuthManager,
+    provider_bypass_login: tn_auth.TrustedNetworksAuthProvider,
+) -> None:
     """Test login flow can be bypass if only one user available."""
     owner = await manager_bypass_login.async_create_user("test-owner")
 

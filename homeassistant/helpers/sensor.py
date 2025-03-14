@@ -1,11 +1,12 @@
 """Common functions related to sensor device management."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 from homeassistant import const
 
-from .entity import DeviceInfo
+from .device_registry import DeviceInfo
 
 if TYPE_CHECKING:
     # `sensor_state_data` is a second-party library (i.e. maintained by Home Assistant
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
 def sensor_device_info_to_hass_device_info(
     sensor_device_info: SensorDeviceInfo,
 ) -> DeviceInfo:
-    """Convert a sensor_state_data sensor device info to a Home Assistant device info."""
+    """Convert a sensor_state_data sensor device info to a HA device info."""
     device_info = DeviceInfo()
     if sensor_device_info.name is not None:
         device_info[const.ATTR_NAME] = sensor_device_info.name

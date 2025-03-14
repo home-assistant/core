@@ -1,12 +1,13 @@
 """Helpers to help coordinate updates."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiohttp import ServerDisconnectedError
+from aiohttp import ClientConnectorError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.enums import EventName, ExecutionState, Protocol
 from pyoverkiz.exceptions import (
@@ -25,7 +26,10 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.decorator import Registry
 
-from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
+if TYPE_CHECKING:
+    from . import OverkizDataConfigEntry
+
+from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, LOGGER, UPDATE_INTERVAL
 
 EVENT_HANDLERS: Registry[
     str, Callable[[OverkizDataUpdateCoordinator, Event], Coroutine[Any, Any, None]]
@@ -35,35 +39,41 @@ EVENT_HANDLERS: Registry[
 class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Class to manage fetching data from Overkiz platform."""
 
+    config_entry: OverkizDataConfigEntry
+    _default_update_interval: timedelta
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: OverkizDataConfigEntry,
         logger: logging.Logger,
         *,
-        name: str,
         client: OverkizClient,
         devices: list[Device],
-        places: Place,
-        update_interval: timedelta | None = None,
-        config_entry_id: str,
+        places: Place | None,
     ) -> None:
         """Initialize global data updater."""
         super().__init__(
             hass,
             logger,
-            name=name,
-            update_interval=update_interval,
+            config_entry=config_entry,
+            name="device events",
+            update_interval=UPDATE_INTERVAL,
         )
 
         self.data = {}
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
-        self.is_stateless = all(
-            device.protocol in (Protocol.RTS, Protocol.INTERNAL) for device in devices
-        )
         self.executions: dict[str, dict[str, str]] = {}
         self.areas = self._places_to_area(places) if places else None
-        self.config_entry_id = config_entry_id
+        self._default_update_interval = UPDATE_INTERVAL
+
+        self.is_stateless = all(
+            device.protocol in (Protocol.RTS, Protocol.INTERNAL)
+            for device in devices
+            if device.widget not in IGNORED_OVERKIZ_DEVICES
+            and device.ui_class not in IGNORED_OVERKIZ_DEVICES
+        )
 
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch Overkiz data via event listener."""
@@ -79,7 +89,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             raise UpdateFailed("Server is down for maintenance.") from exception
         except InvalidEventListenerIdException as exception:
             raise UpdateFailed(exception) from exception
-        except TimeoutError as exception:
+        except (TimeoutError, ClientConnectorError) as exception:
             raise UpdateFailed("Failed to connect.") from exception
         except (ServerDisconnectedError, NotAuthenticatedException):
             self.executions = {}
@@ -101,8 +111,9 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             if event_handler := EVENT_HANDLERS.get(event.name):
                 await event_handler(self, event)
 
+        # Restore the default update interval if no executions are pending
         if not self.executions:
-            self.update_interval = UPDATE_INTERVAL
+            self.update_interval = self._default_update_interval
 
         return self.devices
 
@@ -122,6 +133,11 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 areas.update(self._places_to_area(sub_place))
 
         return areas
+
+    def set_update_interval(self, update_interval: timedelta) -> None:
+        """Set the update interval and store this value."""
+        self.update_interval = update_interval
+        self._default_update_interval = update_interval
 
 
 @EVENT_HANDLERS.register(EventName.DEVICE_AVAILABLE)
@@ -150,7 +166,7 @@ async def on_device_created_updated(
 ) -> None:
     """Handle device unavailable / disabled event."""
     coordinator.hass.async_create_task(
-        coordinator.hass.config_entries.async_reload(coordinator.config_entry_id)
+        coordinator.hass.config_entries.async_reload(coordinator.config_entry.entry_id)
     )
 
 
@@ -178,7 +194,9 @@ async def on_device_removed(
     base_device_url = event.device_url.split("#")[0]
     registry = dr.async_get(coordinator.hass)
 
-    if registered_device := registry.async_get_device({(DOMAIN, base_device_url)}):
+    if registered_device := registry.async_get_device(
+        identifiers={(DOMAIN, base_device_url)}
+    ):
         registry.async_remove_device(registered_device.id)
 
     if event.device_url:

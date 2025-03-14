@@ -1,12 +1,9 @@
 {
   "domain": "lyric",
   "name": "Honeywell Lyric",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/lyric",
-  "dependencies": ["application_credentials"],
-  "requirements": ["aiolyric==1.0.9"],
   "codeowners": ["@timmo001"],
-  "quality_scale": "silver",
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
   "dhcp": [
     {
       "hostname": "lyric-*",
@@ -21,6 +18,8 @@
       "macaddress": "00D02D*"
     }
   ],
+  "documentation": "https://www.home-assistant.io/integrations/lyric",
   "iot_class": "cloud_polling",
-  "loggers": ["aiolyric"]
+  "loggers": ["aiolyric"],
+  "requirements": ["aiolyric==2.0.1"]
 }

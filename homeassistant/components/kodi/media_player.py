@@ -1,4 +1,5 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -6,16 +7,15 @@ from datetime import timedelta
 from functools import wraps
 import logging
 import re
-from typing import Any, TypeVar
+from typing import Any, Concatenate
 
 from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from pykodi import CannotConnectError
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     BrowseError,
     BrowseMedia,
     MediaPlayerEntity,
@@ -27,6 +27,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_DEVICE_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -34,21 +35,25 @@ from homeassistant.const import (
     CONF_PROXY_SSL,
     CONF_SSL,
     CONF_TIMEOUT,
+    CONF_TYPE,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry,
+    device_registry as dr,
     entity_platform,
 )
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
+from homeassistant.util import dt as dt_util
 
 from .browse_media import (
     build_item_response,
@@ -68,9 +73,6 @@ from .const import (
     EVENT_TURN_OFF,
     EVENT_TURN_ON,
 )
-
-_KodiEntityT = TypeVar("_KodiEntityT", bound="KodiEntity")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,7 +121,7 @@ MAP_KODI_MEDIA_TYPES: dict[MediaType | str, str] = {
 }
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME): cv.string,
@@ -148,7 +150,7 @@ ATTR_MEDIA_ID = "media_id"
 ATTR_METHOD = "method"
 
 
-KODI_ADD_MEDIA_SCHEMA = {
+KODI_ADD_MEDIA_SCHEMA: VolDictType = {
     vol.Required(ATTR_MEDIA_TYPE): cv.string,
     vol.Optional(ATTR_MEDIA_ID): cv.string,
     vol.Optional(ATTR_MEDIA_NAME): cv.string,
@@ -207,7 +209,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Kodi media player platform."""
     platform = entity_platform.async_get_current_platform()
@@ -229,8 +231,8 @@ async def async_setup_entry(
     async_add_entities([entity])
 
 
-def cmd(
-    func: Callable[Concatenate[_KodiEntityT, _P], Awaitable[Any]]
+def cmd[_KodiEntityT: KodiEntity, **_P](
+    func: Callable[Concatenate[_KodiEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_KodiEntityT, _P], Coroutine[Any, Any, None]]:
     """Catch command exceptions."""
 
@@ -258,6 +260,9 @@ def cmd(
 class KodiEntity(MediaPlayerEntity):
     """Representation of a XBMC/Kodi device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_translation_key = "media_player"
     _attr_supported_features = (
         MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.NEXT_TRACK
@@ -279,7 +284,8 @@ class KodiEntity(MediaPlayerEntity):
         """Initialize the Kodi entity."""
         self._connection = connection
         self._kodi = kodi
-        self._unique_id = uid
+        self._attr_unique_id = uid
+        self._device_id = None
         self._players = None
         self._properties = {}
         self._item = {}
@@ -288,7 +294,11 @@ class KodiEntity(MediaPlayerEntity):
         self._media_position = None
         self._connect_error = False
 
-        self._attr_name = name
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, uid)},
+            manufacturer="Kodi",
+            name=name,
+        )
 
     def _reset_state(self, players=None):
         self._players = players
@@ -337,6 +347,20 @@ class KodiEntity(MediaPlayerEntity):
         self._app_properties["muted"] = data["muted"]
         self.async_write_ha_state()
 
+    @callback
+    def async_on_key_press(self, sender, data):
+        """Handle a incoming key press notification."""
+        self.hass.bus.async_fire(
+            f"{DOMAIN}_keypress",
+            {
+                CONF_TYPE: "keypress",
+                CONF_DEVICE_ID: self._device_id,
+                ATTR_ENTITY_ID: self.entity_id,
+                "sender": sender,
+                "data": data,
+            },
+        )
+
     async def async_on_quit(self, sender, data):
         """Reset the player state on quit action."""
         await self._clear_connection()
@@ -346,20 +370,6 @@ class KodiEntity(MediaPlayerEntity):
         self.async_write_ha_state()
         if close:
             await self._connection.close()
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the device."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="Kodi",
-            name=self.name,
-        )
 
     @property
     def state(self) -> MediaPlayerState:
@@ -396,7 +406,7 @@ class KodiEntity(MediaPlayerEntity):
 
         # If Home Assistant is already in a running state, start the watchdog
         # immediately, else trigger it after Home Assistant has finished starting.
-        if self.hass.state == CoreState.running:
+        if self.hass.state is CoreState.running:
             await start_watchdog()
         else:
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_watchdog)
@@ -408,9 +418,10 @@ class KodiEntity(MediaPlayerEntity):
 
         version = (await self._kodi.get_application_properties(["version"]))["version"]
         sw_version = f"{version['major']}.{version['minor']}"
-        dev_reg = device_registry.async_get(self.hass)
-        device = dev_reg.async_get_device({(DOMAIN, self.unique_id)})
+        dev_reg = dr.async_get(self.hass)
+        device = dev_reg.async_get_device(identifiers={(DOMAIN, self.unique_id)})
         dev_reg.async_update_device(device.id, sw_version=sw_version)
+        self._device_id = device.id
 
         self.async_schedule_update_ha_state(True)
 
@@ -458,6 +469,7 @@ class KodiEntity(MediaPlayerEntity):
         self._connection.server.Application.OnVolumeChanged = (
             self.async_on_volume_changed
         )
+        self._connection.server.Other.OnKeyPress = self.async_on_key_press
         self._connection.server.System.OnQuit = self.async_on_quit
         self._connection.server.System.OnRestart = self.async_on_quit
         self._connection.server.System.OnSleep = self.async_on_quit
@@ -469,7 +481,13 @@ class KodiEntity(MediaPlayerEntity):
             self._reset_state()
             return
 
-        self._players = await self._kodi.get_players()
+        try:
+            self._players = await self._kodi.get_players()
+        except (TransportError, ProtocolError):
+            if not self._connection.can_subscribe:
+                self._reset_state()
+                return
+            raise
 
         if self._kodi_is_off:
             self._reset_state()
@@ -502,6 +520,7 @@ class KodiEntity(MediaPlayerEntity):
                     "album",
                     "season",
                     "episode",
+                    "streamdetails",
                 ],
             )
         else:
@@ -513,10 +532,11 @@ class KodiEntity(MediaPlayerEntity):
         return not self._connection.can_subscribe
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         if "volume" in self._app_properties:
             return int(self._app_properties["volume"]) / 100.0
+        return None
 
     @property
     def is_volume_muted(self):
@@ -617,6 +637,21 @@ class KodiEntity(MediaPlayerEntity):
             return artists[0]
 
         return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str | None]:
+        """Return the state attributes."""
+        state_attr: dict[str, str | None] = {}
+        if self.state == MediaPlayerState.OFF:
+            return state_attr
+
+        state_attr["dynamic_range"] = "sdr"
+        if (video_details := self._item.get("streamdetails", {}).get("video")) and (
+            hdr_type := video_details[0].get("hdrtype")
+        ):
+            state_attr["dynamic_range"] = hdr_type
+
+        return state_attr
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
@@ -885,7 +920,9 @@ class KodiEntity(MediaPlayerEntity):
         return sorted(out, key=lambda out: out[1], reverse=True)
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         is_internal = is_internal_request(self.hass)
@@ -927,7 +964,7 @@ class KodiEntity(MediaPlayerEntity):
 
     async def async_get_browse_image(
         self,
-        media_content_type: str,
+        media_content_type: MediaType | str,
         media_content_id: str,
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:

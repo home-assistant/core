@@ -1,4 +1,5 @@
 """The pushbullet component."""
+
 from __future__ import annotations
 
 import logging
@@ -14,7 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
 from .api import PushBulletNotificationProvider
@@ -23,6 +24,8 @@ from .const import DATA_HASS_CONFIG, DOMAIN
 PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

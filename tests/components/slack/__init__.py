@@ -1,4 +1,5 @@
 """Tests for the Slack integration."""
+
 from __future__ import annotations
 
 import json
@@ -11,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-AUTH_URL = "https://www.slack.com/api/auth.test"
+AUTH_URL = "https://slack.com/api/auth.test"
 
 TOKEN = "abc123"
 TEAM_NAME = "Test Team"

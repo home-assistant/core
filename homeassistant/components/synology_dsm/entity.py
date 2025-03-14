@@ -1,44 +1,43 @@
 """Entities for Synology DSM."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .common import SynoApi
 from .const import ATTRIBUTION, DOMAIN
+from .coordinator import (
+    SynologyDSMCentralUpdateCoordinator,
+    SynologyDSMUpdateCoordinator,
+)
 
 
-@dataclass
-class SynologyDSMRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class SynologyDSMEntityDescription(EntityDescription):
+    """Generic Synology DSM entity description."""
 
     api_key: str
 
 
-@dataclass
-class SynologyDSMEntityDescription(EntityDescription, SynologyDSMRequiredKeysMixin):
-    """Generic Synology DSM entity description."""
-
-
-class SynologyDSMBaseEntity(
-    CoordinatorEntity[DataUpdateCoordinator[dict[str, dict[str, Any]]]]
+class SynologyDSMBaseEntity[_CoordinatorT: SynologyDSMUpdateCoordinator[Any]](
+    CoordinatorEntity[_CoordinatorT]
 ):
     """Representation of a Synology NAS entry."""
 
     entity_description: SynologyDSMEntityDescription
     unique_id: str
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         api: SynoApi,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        coordinator: _CoordinatorT,
         description: SynologyDSMEntityDescription,
     ) -> None:
         """Initialize the Synology DSM entity."""
@@ -46,17 +45,21 @@ class SynologyDSMBaseEntity(
         self.entity_description = description
 
         self._api = api
-        self._attr_name = f"{api.network.hostname} {description.name}"
+        information = api.information
+        network = api.network
+        assert information is not None
+        assert network is not None
+
         self._attr_unique_id: str = (
-            f"{api.information.serial}_{description.api_key}:{description.key}"
+            f"{information.serial}_{description.api_key}:{description.key}"
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._api.information.serial)},
-            name=self._api.network.hostname,
+            identifiers={(DOMAIN, information.serial)},
+            name=network.hostname,
             manufacturer="Synology",
-            model=self._api.information.model,
-            sw_version=self._api.information.version_string,
-            configuration_url=self._api.config_url,
+            model=information.model,
+            sw_version=information.version_string,
+            configuration_url=api.config_url,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -67,13 +70,15 @@ class SynologyDSMBaseEntity(
         await super().async_added_to_hass()
 
 
-class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
+class SynologyDSMDeviceEntity(
+    SynologyDSMBaseEntity[SynologyDSMCentralUpdateCoordinator]
+):
     """Representation of a Synology NAS disk or volume entry."""
 
     def __init__(
         self,
         api: SynoApi,
-        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        coordinator: SynologyDSMCentralUpdateCoordinator,
         description: SynologyDSMEntityDescription,
         device_id: str | None = None,
     ) -> None:
@@ -85,14 +90,22 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
         self._device_model: str | None = None
         self._device_firmware: str | None = None
         self._device_type = None
+        storage = api.storage
+        information = api.information
+        network = api.network
+        assert information is not None
+        assert storage is not None
+        assert network is not None
 
         if "volume" in description.key:
-            volume = self._api.storage.get_volume(self._device_id)
+            assert self._device_id is not None
+            volume = storage.get_volume(self._device_id)
+            assert volume is not None
             # Volume does not have a name
             self._device_name = volume["id"].replace("_", " ").capitalize()
             self._device_manufacturer = "Synology"
-            self._device_model = self._api.information.model
-            self._device_firmware = self._api.information.version_string
+            self._device_model = information.model
+            self._device_firmware = information.version_string
             self._device_type = (
                 volume["device_type"]
                 .replace("_", " ")
@@ -100,23 +113,22 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
                 .replace("shr", "SHR")
             )
         elif "disk" in description.key:
-            disk = self._api.storage.get_disk(self._device_id)
+            assert self._device_id is not None
+            disk = storage.get_disk(self._device_id)
+            assert disk is not None
             self._device_name = disk["name"]
             self._device_manufacturer = disk["vendor"]
             self._device_model = disk["model"].strip()
             self._device_firmware = disk["firm"]
             self._device_type = disk["diskType"]
 
-        self._attr_name = (
-            f"{self._api.network.hostname} ({self._device_name}) {description.name}"
-        )
         self._attr_unique_id += f"_{self._device_id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self._api.information.serial}_{self._device_id}")},
-            name=f"{self._api.network.hostname} ({self._device_name})",
+            identifiers={(DOMAIN, f"{information.serial}_{self._device_id}")},
+            name=f"{network.hostname} ({self._device_name})",
             manufacturer=self._device_manufacturer,
             model=self._device_model,
             sw_version=self._device_firmware,
-            via_device=(DOMAIN, self._api.information.serial),
+            via_device=(DOMAIN, information.serial),
             configuration_url=self._api.config_url,
         )

@@ -1,4 +1,5 @@
 """Support led_brightness for Mi Air Humidifier."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -15,6 +16,7 @@ from miio.integrations.airpurifier.zhimi.airfresh import (
 )
 from miio.integrations.airpurifier.zhimi.airpurifier import (
     LedBrightness as AirpurifierLedBrightness,
+    OperationMode as AirpurifierOperationMode,
 )
 from miio.integrations.airpurifier.zhimi.airpurifier_miot import (
     LedBrightness as AirpurifierMiotLedBrightness,
@@ -28,13 +30,11 @@ from miio.integrations.humidifier.zhimi.airhumidifier_miot import (
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL
+from homeassistant.const import CONF_DEVICE, CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     DOMAIN,
     KEY_COORDINATOR,
@@ -52,7 +52,9 @@ from .const import (
     MODEL_AIRPURIFIER_4_PRO,
     MODEL_AIRPURIFIER_M1,
     MODEL_AIRPURIFIER_M2,
+    MODEL_AIRPURIFIER_MA2,
     MODEL_AIRPURIFIER_PROH,
+    MODEL_AIRPURIFIER_PROH_EU,
     MODEL_AIRPURIFIER_ZA1,
     MODEL_FAN_SA1,
     MODEL_FAN_V2,
@@ -61,17 +63,17 @@ from .const import (
     MODEL_FAN_ZA3,
     MODEL_FAN_ZA4,
 )
-from .device import XiaomiCoordinatedMiioEntity
+from .entity import XiaomiCoordinatedMiioEntity
 
 ATTR_DISPLAY_ORIENTATION = "display_orientation"
 ATTR_LED_BRIGHTNESS = "led_brightness"
 ATTR_PTC_LEVEL = "ptc_level"
-
+ATTR_MODE = "mode"
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioSelectDescription(SelectEntityDescription):
     """A class that describes select entities."""
 
@@ -111,6 +113,7 @@ MODEL_TO_ATTR_MAP: dict[str, list] = {
     MODEL_AIRHUMIDIFIER_V1: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirhumidifierLedBrightness)
     ],
+    MODEL_AIRPURIFIER_MA2: [AttributeEnumMapping(ATTR_MODE, AirpurifierOperationMode)],
     MODEL_AIRPURIFIER_3: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
     ],
@@ -133,6 +136,9 @@ MODEL_TO_ATTR_MAP: dict[str, list] = {
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierLedBrightness)
     ],
     MODEL_AIRPURIFIER_PROH: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
+    MODEL_AIRPURIFIER_PROH_EU: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
     ],
     MODEL_FAN_SA1: [AttributeEnumMapping(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
@@ -158,6 +164,17 @@ SELECTOR_TYPES = (
         icon="mdi:tablet",
         translation_key="display_orientation",
         options=["forward", "left", "right"],
+        entity_category=EntityCategory.CONFIG,
+    ),
+    XiaomiMiioSelectDescription(
+        key=ATTR_MODE,
+        attr_name=ATTR_MODE,
+        name="Mode",
+        set_method="set_mode",
+        set_method_error_message="Setting the mode of the fan failed.",
+        icon="mdi:fan",
+        translation_key="airpurifier_mode",
+        options=["silent", "auto", "favorite"],
         entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSelectDescription(
@@ -188,37 +205,34 @@ SELECTOR_TYPES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Selectors from a config entry."""
-    if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+    if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
         return
 
     model = config_entry.data[CONF_MODEL]
     if model not in MODEL_TO_ATTR_MAP:
         return
 
-    entities = []
     unique_id = config_entry.unique_id
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
     attributes = MODEL_TO_ATTR_MAP[model]
 
-    for description in SELECTOR_TYPES:
-        for attribute in attributes:
-            if description.key == attribute.attr_name:
-                entities.append(
-                    XiaomiGenericSelector(
-                        device,
-                        config_entry,
-                        f"{description.key}_{unique_id}",
-                        coordinator,
-                        description,
-                        attribute.enum_class,
-                    )
-                )
-
-    async_add_entities(entities)
+    async_add_entities(
+        XiaomiGenericSelector(
+            device,
+            config_entry,
+            f"{description.key}_{unique_id}",
+            coordinator,
+            description,
+            attribute.enum_class,
+        )
+        for description in SELECTOR_TYPES
+        for attribute in attributes
+        if description.key == attribute.attr_name
+    )
 
 
 class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):

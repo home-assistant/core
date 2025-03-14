@@ -1,4 +1,5 @@
 """Support for Azure Event Hubs."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,6 +7,7 @@ from collections.abc import Callable
 from datetime import datetime
 import json
 import logging
+from types import MappingProxyType
 from typing import Any
 
 from azure.eventhub import EventData, EventDataBatch
@@ -17,12 +19,13 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import FILTER_SCHEMA
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
+from homeassistant.util.hass_dict import HassKey
 
 from .client import AzureEventHubClient
 from .const import (
@@ -34,12 +37,12 @@ from .const import (
     CONF_FILTER,
     CONF_MAX_DELAY,
     CONF_SEND_INTERVAL,
-    DATA_FILTER,
-    DATA_HUB,
     DEFAULT_MAX_DELAY,
     DOMAIN,
     FILTER_STATES,
 )
+
+type AzureEventHubConfigEntry = ConfigEntry[AzureEventHub]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +63,7 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+DATA_COMPONENT: HassKey[EntityFilter] = HassKey(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
@@ -70,17 +74,18 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     If config is empty after getting the filter, return, otherwise emit
     deprecated warning and pass the rest to the config flow.
     """
-    hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
     if DOMAIN not in yaml_config:
+        hass.data[DATA_COMPONENT] = FILTER_SCHEMA({})
         return True
-    hass.data[DOMAIN][DATA_FILTER] = yaml_config[DOMAIN].pop(CONF_FILTER)
+    hass.data[DATA_COMPONENT] = yaml_config[DOMAIN].pop(CONF_FILTER)
 
     if not yaml_config[DOMAIN]:
         return True
     _LOGGER.warning(
-        "Loading Azure Event Hub completely via yaml config is deprecated; Only the \
-        Filter can be set in yaml, the rest is done through a config flow and has \
-        been imported, all other keys but filter can be deleted from configuration.yaml"
+        "Loading Azure Event Hub completely via yaml config is deprecated; Only the"
+        " Filter can be set in yaml, the rest is done through a config flow and has"
+        " been imported, all other keys but filter can be deleted from"
+        " configuration.yaml"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -90,33 +95,37 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: AzureEventHubConfigEntry
+) -> bool:
     """Do the setup based on the config entry and the filter from yaml."""
-    hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
     hub = AzureEventHub(
         hass,
         entry,
-        hass.data[DOMAIN][DATA_FILTER],
+        hass.data[DATA_COMPONENT],
     )
     try:
         await hub.async_test_connection()
     except EventHubError as err:
         raise ConfigEntryNotReady("Could not connect to Azure Event Hub") from err
-    hass.data[DOMAIN][DATA_HUB] = hub
+    entry.runtime_data = hub
+    entry.async_on_unload(hub.async_stop)
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
     await hub.async_start()
     return True
 
 
-async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_update_listener(
+    hass: HomeAssistant, entry: AzureEventHubConfigEntry
+) -> None:
     """Update listener for options."""
-    hass.data[DOMAIN][DATA_HUB].update_options(entry.options)
+    entry.runtime_data.update_options(entry.options)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: AzureEventHubConfigEntry
+) -> bool:
     """Unload a config entry."""
-    hub = hass.data[DOMAIN].pop(DATA_HUB)
-    await hub.async_stop()
     return True
 
 
@@ -127,7 +136,7 @@ class AzureEventHub:
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
-        entities_filter: vol.Schema,
+        entities_filter: EntityFilter,
     ) -> None:
         """Initialize the listener."""
         self.hass = hass
@@ -154,7 +163,6 @@ class AzureEventHub:
         Suppress the INFO and below logging on the underlying packages,
         they are very verbose, even at INFO.
         """
-        logging.getLogger("uamqp").setLevel(logging.WARNING)
         logging.getLogger("azure.eventhub").setLevel(logging.WARNING)
         self._listener_remover = self.hass.bus.async_listen(
             MATCH_ALL, self.async_listen
@@ -171,7 +179,7 @@ class AzureEventHub:
         await self.async_send(None)
         await self._queue.join()
 
-    def update_options(self, new_options: dict[str, Any]) -> None:
+    def update_options(self, new_options: MappingProxyType[str, Any]) -> None:
         """Update options."""
         self._send_interval = new_options[CONF_SEND_INTERVAL]
 

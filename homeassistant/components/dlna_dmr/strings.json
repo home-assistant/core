@@ -17,7 +17,7 @@
         }
       },
       "import_turn_on": {
-        "description": "Please turn on the device and click submit to continue migration"
+        "description": "Please turn on the device and select **Submit** to continue migration"
       },
       "confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
@@ -27,14 +27,13 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "alternative_integration": "Device is better supported by another integration",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "discovery_error": "Failed to discover a matching DLNA device",
       "incomplete_config": "Configuration is missing a required variable",
       "non_unique_id": "Multiple devices found with the same unique ID",
       "not_dmr": "Device is not a supported Digital Media Renderer"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "not_dmr": "Device is not a supported Digital Media Renderer"
+      "not_dmr": "[%key:component::dlna_dmr::config::abort::not_dmr%]"
     }
   },
   "options": {

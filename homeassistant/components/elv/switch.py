@@ -1,4 +1,5 @@
 """Support for PCA 301 smart switch."""
+
 from __future__ import annotations
 
 import logging
@@ -87,7 +88,7 @@ class SmartPlugSwitch(SwitchEntity):
             self._state = self._pca.get_state(self._device_id)
             self._available = True
 
-        except (OSError) as ex:
+        except OSError as ex:
             if self._available:
                 _LOGGER.warning("Could not read state for %s: %s", self.name, ex)
                 self._available = False

@@ -1,12 +1,13 @@
 """Provides device automations for Philips Hue events in V1 bridge/api."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.device_automation.exceptions import (
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
@@ -119,7 +120,7 @@ def _get_hue_event_from_device_id(hass, device_id):
 
 
 async def async_validate_trigger_config(
-    bridge: "HueBridge", device_entry: DeviceEntry, config: ConfigType
+    bridge: HueBridge, device_entry: DeviceEntry, config: ConfigType
 ) -> ConfigType:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
@@ -144,7 +145,7 @@ async def async_validate_trigger_config(
 
 
 async def async_attach_trigger(
-    bridge: "HueBridge",
+    bridge: HueBridge,
     device_entry: DeviceEntry,
     config: ConfigType,
     action: TriggerActionType,

@@ -1,4 +1,5 @@
 """nuki integration helpers."""
+
 from homeassistant import exceptions
 
 
@@ -13,3 +14,7 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class NukiWebhookException(exceptions.HomeAssistantError):
+    """Error to indicate there was an issue with the webhook."""

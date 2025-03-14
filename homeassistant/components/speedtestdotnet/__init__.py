@@ -1,81 +1,61 @@
 """Support for testing internet speed via Speedtest.net."""
+
 from __future__ import annotations
 
-from datetime import timedelta
 from functools import partial
 
 import speedtest
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_SCAN_INTERVAL,
-    EVENT_HOMEASSISTANT_STARTED,
-    Platform,
-)
-from homeassistant.core import CoreState, Event, HomeAssistant
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.start import async_at_started
 
-from .const import CONF_MANUAL, DEFAULT_SCAN_INTERVAL, DOMAIN
-from .coordinator import SpeedTestDataCoordinator
+from .coordinator import SpeedTestConfigEntry, SpeedTestDataCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: SpeedTestConfigEntry
+) -> bool:
     """Set up the Speedtest.net component."""
     try:
         api = await hass.async_add_executor_job(
             partial(speedtest.Speedtest, secure=True)
         )
         coordinator = SpeedTestDataCoordinator(hass, config_entry, api)
-        await hass.async_add_executor_job(coordinator.update_servers)
     except speedtest.SpeedtestException as err:
         raise ConfigEntryNotReady from err
 
-    async def _enable_scheduled_speedtests(event: Event | None = None) -> None:
-        """Activate the data update coordinator."""
-        coordinator.update_interval = timedelta(
-            minutes=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        )
-        await coordinator.async_refresh()
+    config_entry.runtime_data = coordinator
 
-    if not config_entry.options.get(CONF_MANUAL, False):
-        if hass.state == CoreState.running:
-            await _enable_scheduled_speedtests()
+    async def _async_finish_startup(hass: HomeAssistant) -> None:
+        """Run this only when HA has finished its startup."""
+        if config_entry.state is ConfigEntryState.LOADED:
+            await coordinator.async_refresh()
         else:
-            # Running a speed test during startup can prevent
-            # integrations from being able to setup because it
-            # can saturate the network interface.
-            hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STARTED, _enable_scheduled_speedtests
-            )
+            await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN] = coordinator
+    # Don't start a speedtest during startup
+    async_at_started(hass, _async_finish_startup)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(options_updated_listener)
-    )
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: SpeedTestConfigEntry
+) -> bool:
     """Unload SpeedTest Entry from config_entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    ):
-        hass.data.pop(DOMAIN)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
-async def options_updated_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(
+    hass: HomeAssistant, config_entry: SpeedTestConfigEntry
+) -> None:
     """Handle options update."""
-    coordinator: SpeedTestDataCoordinator = hass.data[DOMAIN]
-    if entry.options[CONF_MANUAL]:
-        coordinator.update_interval = None
-        return
-
-    coordinator.update_interval = timedelta(minutes=entry.options[CONF_SCAN_INTERVAL])
-    await coordinator.async_request_refresh()
+    await hass.config_entries.async_reload(config_entry.entry_id)

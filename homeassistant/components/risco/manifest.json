@@ -1,11 +1,10 @@
 {
   "domain": "risco",
   "name": "Risco",
+  "codeowners": ["@OnFreund"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/risco",
-  "requirements": ["pyrisco==0.5.7"],
-  "codeowners": ["@OnFreund"],
-  "quality_scale": "platinum",
   "iot_class": "local_push",
-  "loggers": ["pyrisco"]
+  "loggers": ["pyrisco"],
+  "requirements": ["pyrisco==0.6.7"]
 }

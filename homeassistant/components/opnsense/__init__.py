@@ -1,4 +1,5 @@
 """Support for OPNSense Routers."""
+
 import logging
 
 from pyopnsense import diagnostics
@@ -7,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType
 
@@ -49,7 +50,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     tracker_interfaces = conf[CONF_TRACKER_INTERFACE]
 
     interfaces_client = diagnostics.InterfaceClient(
-        api_key, api_secret, url, verify_ssl
+        api_key, api_secret, url, verify_ssl, timeout=20
     )
     try:
         interfaces_client.get_arp()
@@ -60,7 +61,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid
         netinsight_client = diagnostics.NetworkInsightClient(
-            api_key, api_secret, url, verify_ssl
+            api_key, api_secret, url, verify_ssl, timeout=20
         )
         interfaces = list(netinsight_client.get_interfaces().values())
         for interface in tracker_interfaces:

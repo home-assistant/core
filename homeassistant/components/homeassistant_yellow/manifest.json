@@ -1,9 +1,11 @@
 {
   "domain": "homeassistant_yellow",
   "name": "Home Assistant Yellow",
-  "config_flow": false,
-  "documentation": "https://www.home-assistant.io/integrations/homeassistant_yellow",
-  "dependencies": ["hardware", "hassio", "homeassistant_hardware"],
+  "after_dependencies": ["hassio"],
   "codeowners": ["@home-assistant/core"],
-  "integration_type": "hardware"
+  "config_flow": false,
+  "dependencies": ["hardware", "homeassistant_hardware"],
+  "documentation": "https://www.home-assistant.io/integrations/homeassistant_yellow",
+  "integration_type": "hardware",
+  "single_config_entry": true
 }

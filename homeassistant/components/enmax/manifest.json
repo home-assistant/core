@@ -1,0 +1,6 @@
+{
+  "domain": "enmax",
+  "name": "Enmax Energy",
+  "integration_type": "virtual",
+  "supported_by": "opower"
+}

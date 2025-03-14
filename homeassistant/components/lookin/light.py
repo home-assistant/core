@@ -1,16 +1,15 @@
 """The lookin integration light platform."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from aiolookin import Remote
-
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, TYPE_TO_PLATFORM
 from .entity import LookinPowerPushRemoteEntity
@@ -22,7 +21,7 @@ LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the light platform for lookin from a config entry."""
     lookin_data: LookinData = hass.data[DOMAIN][config_entry.entry_id]
@@ -33,7 +32,7 @@ async def async_setup_entry(
             continue
         uuid = remote["UUID"]
         coordinator = lookin_data.device_coordinators[uuid]
-        device: Remote = coordinator.data
+        device = coordinator.data
         entities.append(
             LookinLightEntity(
                 coordinator=coordinator,

@@ -1,4 +1,5 @@
 """The iCloud component."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,7 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
@@ -67,8 +68,6 @@ SERVICE_SCHEMA_LOST_DEVICE = vol.Schema(
         vol.Required(ATTR_LOST_DEVICE_MESSAGE): cv.string,
     }
 )
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -154,7 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     icloud_account = account
 
         if icloud_account is None:
-            raise Exception(
+            raise ValueError(
                 f"No iCloud account with username or name {account_identifier}"
             )
         return icloud_account

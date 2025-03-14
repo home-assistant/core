@@ -1,11 +1,12 @@
 {
   "domain": "google_assistant_sdk",
   "name": "Google Assistant SDK",
-  "config_flow": true,
-  "dependencies": ["application_credentials"],
-  "documentation": "https://www.home-assistant.io/integrations/google_assistant_sdk/",
-  "requirements": ["gassist-text==0.0.4"],
   "codeowners": ["@tronikos"],
+  "config_flow": true,
+  "dependencies": ["application_credentials", "http"],
+  "documentation": "https://www.home-assistant.io/integrations/google_assistant_sdk",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
-  "integration_type": "service"
+  "requirements": ["gassist-text==0.0.11"],
+  "single_config_entry": true
 }

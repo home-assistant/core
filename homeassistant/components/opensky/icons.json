@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "flights": {
+        "default": "mdi:airplane"
+      }
+    }
+  }
+}

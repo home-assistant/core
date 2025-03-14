@@ -1,4 +1,5 @@
 """Support for openSenseMap Air Quality data."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,25 +9,27 @@ from opensensemap_api import OpenSenseMap
 from opensensemap_api.exceptions import OpenSenseMapError
 import voluptuous as vol
 
-from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
+from homeassistant.components.air_quality import (
+    PLATFORM_SCHEMA as AIR_QUALITY_PLATFORM_SCHEMA,
+    AirQualityEntity,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by openSenseMap"
 
 CONF_STATION_ID = "station_id"
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_STATION_ID): cv.string, vol.Optional(CONF_NAME): cv.string}
 )
 
@@ -59,6 +62,8 @@ async def async_setup_platform(
 class OpenSenseMapQuality(AirQualityEntity):
     """Implementation of an openSenseMap air quality entity."""
 
+    _attr_attribution = "Data provided by openSenseMap"
+
     def __init__(self, name, osm):
         """Initialize the air quality entity."""
         self._name = name
@@ -78,11 +83,6 @@ class OpenSenseMapQuality(AirQualityEntity):
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
         return self._osm.api.pm10
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
 
     async def async_update(self):
         """Get the latest data from the openSenseMap API."""

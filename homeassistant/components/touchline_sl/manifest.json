@@ -1,0 +1,10 @@
+{
+  "domain": "touchline_sl",
+  "name": "Roth Touchline SL",
+  "codeowners": ["@jnsgruk"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/touchline_sl",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "requirements": ["pytouchlinesl==0.3.0"]
+}

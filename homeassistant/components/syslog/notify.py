@@ -1,4 +1,7 @@
 """Syslog notification service."""
+
+from __future__ import annotations
+
 import syslog
 
 import voluptuous as vol
@@ -6,9 +9,11 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_FACILITY = "facility"
 CONF_OPTION = "option"
@@ -54,7 +59,7 @@ SYSLOG_PRIORITY = {
     -2: "LOG_DEBUG",
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_FACILITY, default="syslog"): vol.In(SYSLOG_FACILITY.keys()),
         vol.Optional(CONF_OPTION, default="pid"): vol.In(SYSLOG_OPTION.keys()),
@@ -63,12 +68,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> SyslogNotificationService:
     """Get the syslog notification service."""
 
-    facility = getattr(syslog, SYSLOG_FACILITY[config.get(CONF_FACILITY)])
-    option = getattr(syslog, SYSLOG_OPTION[config.get(CONF_OPTION)])
-    priority = getattr(syslog, SYSLOG_PRIORITY[config.get(CONF_PRIORITY)])
+    facility = getattr(syslog, SYSLOG_FACILITY[config[CONF_FACILITY]])
+    option = getattr(syslog, SYSLOG_OPTION[config[CONF_OPTION]])
+    priority = getattr(syslog, SYSLOG_PRIORITY[config[CONF_PRIORITY]])
 
     return SyslogNotificationService(facility, option, priority)
 

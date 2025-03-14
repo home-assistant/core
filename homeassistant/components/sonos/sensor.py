@@ -1,15 +1,15 @@
 """Entity representing a Sonos battery level."""
+
 from __future__ import annotations
 
 import logging
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     SONOS_CREATE_AUDIO_FORMAT_SENSOR,
@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sonos from a config entry."""
 
@@ -80,7 +80,6 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_name = "Battery"
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, speaker: SonosSpeaker) -> None:
@@ -107,8 +106,7 @@ class SonosAudioInputFormatSensorEntity(SonosPollingEntity, SensorEntity):
     """Representation of a Sonos audio import format sensor entity."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_icon = "mdi:import"
-    _attr_name = "Audio input format"
+    _attr_translation_key = "audio_input_format"
     _attr_should_poll = True
 
     def __init__(self, speaker: SonosSpeaker, audio_format: str) -> None:
@@ -136,8 +134,8 @@ class SonosFavoritesEntity(SensorEntity):
     """Representation of a Sonos favorites info entity."""
 
     _attr_entity_registry_enabled_default = False
-    _attr_icon = "mdi:star"
     _attr_name = "Sonos favorites"
+    _attr_translation_key = "favorites"
     _attr_native_unit_of_measurement = "items"
     _attr_should_poll = False
 

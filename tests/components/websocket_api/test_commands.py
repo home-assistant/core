@@ -1,12 +1,16 @@
 """Tests for WebSocket API commands."""
-from copy import deepcopy
-import datetime
-from unittest.mock import ANY, patch
 
-from async_timeout import timeout
+import asyncio
+from copy import deepcopy
+import logging
+from typing import Any
+from unittest.mock import ANY, AsyncMock, Mock, patch
+
 import pytest
 import voluptuous as vol
 
+from homeassistant import loader
+from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -14,16 +18,30 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
-from homeassistant.core import Context, HomeAssistant, State, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity
+from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.json import json_loads
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.loader import async_get_integration
-from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
+from homeassistant.setup import async_setup_component
+from homeassistant.util.json import json_loads
 
-from tests.common import MockEntity, MockEntityPlatform, async_mock_service
+from tests.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockUser,
+    async_mock_service,
+    mock_platform,
+)
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 STATE_KEY_SHORT_NAMES = {
     "entity_id": "e",
@@ -34,6 +52,25 @@ STATE_KEY_SHORT_NAMES = {
     "attributes": "a",
 }
 STATE_KEY_LONG_NAMES = {v: k for k, v in STATE_KEY_SHORT_NAMES.items()}
+
+
+@pytest.fixture
+def fake_integration(hass: HomeAssistant):
+    """Set up a mock integration with device automation support."""
+    DOMAIN = "fake_integration"
+
+    hass.config.components.add(DOMAIN)
+
+    mock_platform(
+        hass,
+        f"{DOMAIN}.device_action",
+        Mock(
+            ACTION_SCHEMA=toggle_entity.ACTION_SCHEMA.extend(
+                {vol.Required("domain"): DOMAIN}
+            ),
+            spec=["ACTION_SCHEMA"],
+        ),
+    )
 
 
 def _apply_entities_changes(state_dict: dict, change_dict: dict) -> None:
@@ -58,7 +95,9 @@ def _apply_entities_changes(state_dict: dict, change_dict: dict) -> None:
             del state_dict[STATE_KEY_LONG_NAMES[key]][item]
 
 
-async def test_fire_event(hass, websocket_client):
+async def test_fire_event(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
     """Test fire event command."""
     runs = []
 
@@ -87,7 +126,9 @@ async def test_fire_event(hass, websocket_client):
     assert runs[0].data == {"hello": "world"}
 
 
-async def test_fire_event_without_data(hass, websocket_client):
+async def test_fire_event_without_data(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
     """Test fire event command."""
     runs = []
 
@@ -115,7 +156,9 @@ async def test_fire_event_without_data(hass, websocket_client):
     assert runs[0].data == {}
 
 
-async def test_call_service(hass, websocket_client):
+async def test_call_service(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
     """Test call service command."""
     calls = async_mock_service(hass, "domain_test", "test_service")
 
@@ -143,12 +186,76 @@ async def test_call_service(hass, websocket_client):
     assert call.context.as_dict() == msg["result"]["context"]
 
 
-@pytest.mark.parametrize("command", ("call_service", "call_service_action"))
-async def test_call_service_blocking(hass, websocket_client, command):
+async def test_return_response_error(hass: HomeAssistant, websocket_client) -> None:
+    """Test return_response=True errors when service has no response."""
+    hass.services.async_register(
+        "domain_test", "test_service_with_no_response", lambda x: None
+    )
+    await websocket_client.send_json(
+        {
+            "id": 8,
+            "type": "call_service",
+            "domain": "domain_test",
+            "service": "test_service_with_no_response",
+            "service_data": {"hello": "world"},
+            "return_response": True,
+        },
+    )
+    msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 8
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == "service_validation_error"
+
+
+@pytest.mark.parametrize("command", ["call_service", "call_service_action"])
+async def test_call_service_blocking(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket, command
+) -> None:
     """Test call service commands block, except for homeassistant restart / stop."""
+    async_mock_service(
+        hass,
+        "domain_test",
+        "test_service",
+        response={"hello": "world"},
+        supports_response=SupportsResponse.OPTIONAL,
+    )
     with patch(
         "homeassistant.core.ServiceRegistry.async_call", autospec=True
     ) as mock_call:
+        mock_call.return_value = {"foo": "bar"}
+        await websocket_client.send_json(
+            {
+                "id": 4,
+                "type": "call_service",
+                "domain": "domain_test",
+                "service": "test_service",
+                "service_data": {"hello": "world"},
+                "return_response": True,
+            },
+        )
+        msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 4
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"]["response"] == {"foo": "bar"}
+    mock_call.assert_called_once_with(
+        ANY,
+        "domain_test",
+        "test_service",
+        {"hello": "world"},
+        blocking=True,
+        context=ANY,
+        target=ANY,
+        return_response=True,
+    )
+
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_call", autospec=True
+    ) as mock_call:
+        mock_call.return_value = None
         await websocket_client.send_json(
             {
                 "id": 5,
@@ -171,11 +278,14 @@ async def test_call_service_blocking(hass, websocket_client, command):
         blocking=True,
         context=ANY,
         target=ANY,
+        return_response=False,
     )
 
+    async_mock_service(hass, "homeassistant", "test_service")
     with patch(
         "homeassistant.core.ServiceRegistry.async_call", autospec=True
     ) as mock_call:
+        mock_call.return_value = None
         await websocket_client.send_json(
             {
                 "id": 6,
@@ -197,11 +307,14 @@ async def test_call_service_blocking(hass, websocket_client, command):
         blocking=True,
         context=ANY,
         target=ANY,
+        return_response=False,
     )
 
+    async_mock_service(hass, "homeassistant", "restart")
     with patch(
         "homeassistant.core.ServiceRegistry.async_call", autospec=True
     ) as mock_call:
+        mock_call.return_value = None
         await websocket_client.send_json(
             {
                 "id": 7,
@@ -216,11 +329,20 @@ async def test_call_service_blocking(hass, websocket_client, command):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     mock_call.assert_called_once_with(
-        ANY, "homeassistant", "restart", ANY, blocking=True, context=ANY, target=ANY
+        ANY,
+        "homeassistant",
+        "restart",
+        ANY,
+        blocking=True,
+        context=ANY,
+        target=ANY,
+        return_response=False,
     )
 
 
-async def test_call_service_target(hass, websocket_client):
+async def test_call_service_target(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
     """Test call service command with target."""
     calls = async_mock_service(hass, "domain_test", "test_service")
 
@@ -256,7 +378,9 @@ async def test_call_service_target(hass, websocket_client):
     assert call.context.as_dict() == msg["result"]["context"]
 
 
-async def test_call_service_target_template(hass, websocket_client):
+async def test_call_service_target_template(
+    hass: HomeAssistant, websocket_client
+) -> None:
     """Test call service command with target does not allow template."""
     await websocket_client.send_json(
         {
@@ -278,7 +402,9 @@ async def test_call_service_target_template(hass, websocket_client):
     assert msg["error"]["code"] == const.ERR_INVALID_FORMAT
 
 
-async def test_call_service_not_found(hass, websocket_client):
+async def test_call_service_not_found(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
     """Test call service command."""
     await websocket_client.send_json(
         {
@@ -295,9 +421,18 @@ async def test_call_service_not_found(hass, websocket_client):
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
     assert msg["error"]["code"] == const.ERR_NOT_FOUND
+    assert msg["error"]["message"] == "Service domain_test.test_service not found."
+    assert msg["error"]["translation_placeholders"] == {
+        "domain": "domain_test",
+        "service": "test_service",
+    }
+    assert msg["error"]["translation_key"] == "service_not_found"
+    assert msg["error"]["translation_domain"] == "homeassistant"
 
 
-async def test_call_service_child_not_found(hass, websocket_client):
+async def test_call_service_child_not_found(
+    hass: HomeAssistant, websocket_client
+) -> None:
     """Test not reporting not found errors if it's not the called service."""
 
     async def serv_handler(call):
@@ -320,11 +455,23 @@ async def test_call_service_child_not_found(hass, websocket_client):
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
     assert msg["error"]["code"] == const.ERR_HOME_ASSISTANT_ERROR
+    assert (
+        msg["error"]["message"] == "Service non.existing called service "
+        "domain_test.test_service which was not found."
+    )
+    assert msg["error"]["translation_placeholders"] == {
+        "domain": "domain_test",
+        "service": "test_service",
+        "child_domain": "non",
+        "child_service": "existing",
+    }
+    assert msg["error"]["translation_key"] == "child_service_not_found"
+    assert msg["error"]["translation_domain"] == "websocket_api"
 
 
 async def test_call_service_schema_validation_error(
     hass: HomeAssistant, websocket_client
-):
+) -> None:
     """Test call service command with invalid service data."""
 
     calls = []
@@ -393,14 +540,33 @@ async def test_call_service_schema_validation_error(
     assert len(calls) == 0
 
 
-async def test_call_service_error(hass, websocket_client):
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
+async def test_call_service_error(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
     """Test call service command with error."""
 
     @callback
     def ha_error_call(_):
-        raise HomeAssistantError("error_message")
+        raise HomeAssistantError(
+            "error_message",
+            translation_domain="test",
+            translation_key="custom_error",
+            translation_placeholders={"option": "bla"},
+        )
 
     hass.services.async_register("domain_test", "ha_error", ha_error_call)
+
+    @callback
+    def service_error_call(_):
+        raise ServiceValidationError(
+            "error_message",
+            translation_domain="test",
+            translation_key="custom_error",
+            translation_placeholders={"option": "bla"},
+        )
+
+    hass.services.async_register("domain_test", "service_error", service_error_call)
 
     async def unknown_error_call(_):
         raise ValueError("value_error")
@@ -422,13 +588,16 @@ async def test_call_service_error(hass, websocket_client):
     assert msg["success"] is False
     assert msg["error"]["code"] == "home_assistant_error"
     assert msg["error"]["message"] == "error_message"
+    assert msg["error"]["translation_placeholders"] == {"option": "bla"}
+    assert msg["error"]["translation_key"] == "custom_error"
+    assert msg["error"]["translation_domain"] == "test"
 
     await websocket_client.send_json(
         {
             "id": 6,
             "type": "call_service",
             "domain": "domain_test",
-            "service": "unknown_error",
+            "service": "service_error",
         }
     )
 
@@ -436,11 +605,32 @@ async def test_call_service_error(hass, websocket_client):
     assert msg["id"] == 6
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"] is False
+    assert msg["error"]["code"] == "service_validation_error"
+    assert msg["error"]["message"] == "Validation error: error_message"
+    assert msg["error"]["translation_placeholders"] == {"option": "bla"}
+    assert msg["error"]["translation_key"] == "custom_error"
+    assert msg["error"]["translation_domain"] == "test"
+
+    await websocket_client.send_json(
+        {
+            "id": 7,
+            "type": "call_service",
+            "domain": "domain_test",
+            "service": "unknown_error",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"] is False
     assert msg["error"]["code"] == "unknown_error"
     assert msg["error"]["message"] == "value_error"
 
 
-async def test_subscribe_unsubscribe_events(hass, websocket_client):
+async def test_subscribe_unsubscribe_events(
+    hass: HomeAssistant, websocket_client
+) -> None:
     """Test subscribe/unsubscribe events command."""
     init_count = sum(hass.bus.async_listeners().values())
 
@@ -460,7 +650,7 @@ async def test_subscribe_unsubscribe_events(hass, websocket_client):
     hass.bus.async_fire("test_event", {"hello": "world"})
     hass.bus.async_fire("ignore_event")
 
-    async with timeout(3):
+    async with asyncio.timeout(3):
         msg = await websocket_client.receive_json()
 
     assert msg["id"] == 5
@@ -484,7 +674,9 @@ async def test_subscribe_unsubscribe_events(hass, websocket_client):
     assert sum(hass.bus.async_listeners().values()) == init_count
 
 
-async def test_get_states(hass, websocket_client):
+async def test_get_states(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
     """Test get_states command."""
     hass.states.async_set("greeting.hello", "world")
     hass.states.async_set("greeting.bye", "universe")
@@ -496,25 +688,28 @@ async def test_get_states(hass, websocket_client):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
-    states = []
-    for state in hass.states.async_all():
-        states.append(state.as_dict())
+    states = [state.as_dict() for state in hass.states.async_all()]
 
     assert msg["result"] == states
 
 
-async def test_get_services(hass, websocket_client):
+async def test_get_services(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
     """Test get_services command."""
-    await websocket_client.send_json({"id": 5, "type": "get_services"})
+    for id_ in (5, 6):
+        await websocket_client.send_json({"id": id_, "type": "get_services"})
 
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 5
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"] == hass.services.async_services()
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == id_
+        assert msg["type"] == const.TYPE_RESULT
+        assert msg["success"]
+        assert msg["result"].keys() == hass.services.async_services().keys()
 
 
-async def test_get_config(hass, websocket_client):
+async def test_get_config(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
     """Test get_config command."""
     await websocket_client.send_json({"id": 5, "type": "get_config"})
 
@@ -523,25 +718,24 @@ async def test_get_config(hass, websocket_client):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
-    if "components" in msg["result"]:
-        msg["result"]["components"] = set(msg["result"]["components"])
-    if "whitelist_external_dirs" in msg["result"]:
-        msg["result"]["whitelist_external_dirs"] = set(
-            msg["result"]["whitelist_external_dirs"]
-        )
-    if "allowlist_external_dirs" in msg["result"]:
-        msg["result"]["allowlist_external_dirs"] = set(
-            msg["result"]["allowlist_external_dirs"]
-        )
-    if "allowlist_external_urls" in msg["result"]:
-        msg["result"]["allowlist_external_urls"] = set(
-            msg["result"]["allowlist_external_urls"]
-        )
+    result = msg["result"]
+    ignore_order_keys = (
+        "components",
+        "allowlist_external_dirs",
+        "whitelist_external_dirs",
+        "allowlist_external_urls",
+    )
+    config = hass.config.as_dict()
 
-    assert msg["result"] == hass.config.as_dict()
+    for key in ignore_order_keys:
+        if key in result:
+            result[key] = set(result[key])
+            config[key] = set(config[key])
+
+    assert result == config
 
 
-async def test_ping(websocket_client):
+async def test_ping(websocket_client: MockHAClientWebSocket) -> None:
     """Test get_panels command."""
     await websocket_client.send_json({"id": 5, "type": "ping"})
 
@@ -551,8 +745,10 @@ async def test_ping(websocket_client):
 
 
 async def test_call_service_context_with_user(
-    hass, hass_client_no_auth, hass_access_token
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    hass_access_token: str,
+) -> None:
     """Test that the user is set in the service call context."""
     assert await async_setup_component(hass, "websocket_api", {})
 
@@ -581,7 +777,7 @@ async def test_call_service_context_with_user(
         msg = await ws.receive_json()
         assert msg["success"]
 
-        refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+        refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
         assert len(calls) == 1
         call = calls[0]
@@ -591,7 +787,9 @@ async def test_call_service_context_with_user(
         assert call.context.user_id == refresh_token.user.id
 
 
-async def test_subscribe_requires_admin(websocket_client, hass_admin_user):
+async def test_subscribe_requires_admin(
+    websocket_client: MockHAClientWebSocket, hass_admin_user: MockUser
+) -> None:
     """Test subscribing events without being admin."""
     hass_admin_user.groups = []
     await websocket_client.send_json(
@@ -603,8 +801,11 @@ async def test_subscribe_requires_admin(websocket_client, hass_admin_user):
     assert msg["error"]["code"] == const.ERR_UNAUTHORIZED
 
 
-async def test_states_filters_visible(hass, hass_admin_user, websocket_client):
+async def test_states_filters_visible(
+    hass: HomeAssistant, hass_admin_user: MockUser, websocket_client
+) -> None:
     """Test we only get entities that we're allowed to see."""
+    hass_admin_user.groups = []
     hass_admin_user.mock_policy({"entities": {"entity_ids": {"test.entity": True}}})
     hass.states.async_set("test.entity", "hello")
     hass.states.async_set("test.not_visible_entity", "invisible")
@@ -619,7 +820,9 @@ async def test_states_filters_visible(hass, hass_admin_user, websocket_client):
     assert msg["result"][0]["entity_id"] == "test.entity"
 
 
-async def test_get_states_not_allows_nan(hass, websocket_client):
+async def test_get_states_not_allows_nan(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
     """Test get_states command converts NaN to None."""
     hass.states.async_set("greeting.hello", "world")
     hass.states.async_set("greeting.bad", "data", {"hello": float("NaN")})
@@ -642,8 +845,10 @@ async def test_get_states_not_allows_nan(hass, websocket_client):
 
 
 async def test_subscribe_unsubscribe_events_whitelist(
-    hass, websocket_client, hass_admin_user
-):
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
     """Test subscribe/unsubscribe events on whitelist."""
     hass_admin_user.groups = []
 
@@ -668,7 +873,7 @@ async def test_subscribe_unsubscribe_events_whitelist(
 
     hass.bus.async_fire("themes_updated")
 
-    async with timeout(3):
+    async with asyncio.timeout(3):
         msg = await websocket_client.receive_json()
 
     assert msg["id"] == 6
@@ -679,8 +884,10 @@ async def test_subscribe_unsubscribe_events_whitelist(
 
 
 async def test_subscribe_unsubscribe_events_state_changed(
-    hass, websocket_client, hass_admin_user
-):
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
     """Test subscribe/unsubscribe state_changed events."""
     hass_admin_user.groups = []
     hass_admin_user.mock_policy({"entities": {"entity_ids": {"light.permitted": True}}})
@@ -705,14 +912,16 @@ async def test_subscribe_unsubscribe_events_state_changed(
 
 
 async def test_subscribe_entities_with_unserializable_state(
-    hass, websocket_client, hass_admin_user
-):
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
     """Test subscribe entities with an unserializeable state."""
 
     class CannotSerializeMe:
         """Cannot serialize this."""
 
-        def __init__(self):
+        def __init__(self) -> None:
             """Init cannot serialize this."""
 
     hass.states.async_set("light.permitted", "off", {"color": "red"})
@@ -821,7 +1030,11 @@ async def test_subscribe_entities_with_unserializable_state(
     }
 
 
-async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin_user):
+async def test_subscribe_unsubscribe_entities(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
     """Test subscribe/unsubscribe entities."""
 
     hass.states.async_set("light.permitted", "off", {"color": "red"})
@@ -837,6 +1050,7 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
     }
     hass_admin_user.groups = []
     hass_admin_user.mock_policy({"entities": {"entity_ids": {"light.permitted": True}}})
+    assert not hass_admin_user.is_admin
 
     await websocket_client.send_json({"id": 7, "type": "subscribe_entities"})
 
@@ -986,8 +1200,10 @@ async def test_subscribe_unsubscribe_entities(hass, websocket_client, hass_admin
 
 
 async def test_subscribe_unsubscribe_entities_specific_entities(
-    hass, websocket_client, hass_admin_user
-):
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
     """Test subscribe/unsubscribe entities with a list of entity ids."""
 
     hass.states.async_set("light.permitted", "off", {"color": "red"})
@@ -1047,7 +1263,57 @@ async def test_subscribe_unsubscribe_entities_specific_entities(
     }
 
 
-async def test_render_template_renders_template(hass, websocket_client):
+async def test_subscribe_unsubscribe_entities_with_filter(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test subscribe/unsubscribe entities with an entity filter."""
+    hass.states.async_set("switch.not_included", "off")
+    hass.states.async_set("light.include", "off")
+    await websocket_client.send_json(
+        {"id": 7, "type": "subscribe_entities", "include": {"domains": ["light"]}}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "a": {
+            "light.include": {
+                "a": {},
+                "c": ANY,
+                "lc": ANY,
+                "s": "off",
+            }
+        }
+    }
+    hass.states.async_set("switch.not_included", "on")
+    hass.states.async_set("light.include", "on")
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {
+            "light.include": {
+                "+": {
+                    "c": ANY,
+                    "lc": ANY,
+                    "s": "on",
+                }
+            }
+        }
+    }
+
+
+async def test_render_template_renders_template(
+    hass: HomeAssistant, websocket_client
+) -> None:
     """Test simple template is rendered and updated."""
     hass.states.async_set("light.test", "on")
 
@@ -1094,7 +1360,9 @@ async def test_render_template_renders_template(hass, websocket_client):
     }
 
 
-async def test_render_template_with_timeout_and_variables(hass, websocket_client):
+async def test_render_template_with_timeout_and_variables(
+    hass: HomeAssistant, websocket_client
+) -> None:
     """Test a template with a timeout and variables renders without error."""
     await websocket_client.send_json(
         {
@@ -1127,8 +1395,8 @@ async def test_render_template_with_timeout_and_variables(hass, websocket_client
 
 
 async def test_render_template_manual_entity_ids_no_longer_needed(
-    hass, websocket_client
-):
+    hass: HomeAssistant, websocket_client
+) -> None:
     """Test that updates to specified entity ids cause a template rerender."""
     hass.states.async_set("light.test", "on")
 
@@ -1175,44 +1443,292 @@ async def test_render_template_manual_entity_ids_no_longer_needed(
     }
 
 
+EMPTY_LISTENERS = {"all": False, "entities": [], "domains": [], "time": False}
+
+ERR_MSG = {"type": "result", "success": False}
+
+EVENT_UNDEFINED_FUNC_1 = {
+    "error": "'my_unknown_func' is undefined",
+    "level": "ERROR",
+}
+EVENT_UNDEFINED_FUNC_2 = {
+    "error": "UndefinedError: 'my_unknown_func' is undefined",
+    "level": "ERROR",
+}
+
+EVENT_UNDEFINED_VAR_WARN = {
+    "error": "'my_unknown_var' is undefined",
+    "level": "WARNING",
+}
+EVENT_UNDEFINED_VAR_ERR = {
+    "error": "UndefinedError: 'my_unknown_var' is undefined",
+    "level": "ERROR",
+}
+
+EVENT_UNDEFINED_FILTER = {
+    "error": "TemplateAssertionError: No filter named 'unknown_filter'.",
+    "level": "ERROR",
+}
+
+
 @pytest.mark.parametrize(
-    "template",
+    ("template", "expected_events"),
     [
-        "{{ my_unknown_func() + 1 }}",
-        "{{ my_unknown_var }}",
-        "{{ my_unknown_var + 1 }}",
-        "{{ now() | unknown_filter }}",
+        (
+            "{{ my_unknown_func() + 1 }}",
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_1},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_2},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_1},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_2},
+            ],
+        ),
+        (
+            "{{ my_unknown_var }}",
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_WARN},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_WARN},
+                {
+                    "type": "event",
+                    "event": {"result": "", "listeners": EMPTY_LISTENERS},
+                },
+            ],
+        ),
+        (
+            "{{ my_unknown_var + 1 }}",
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_ERR},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_ERR},
+            ],
+        ),
+        (
+            "{{ now() | unknown_filter }}",
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_FILTER},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_FILTER},
+            ],
+        ),
     ],
 )
-async def test_render_template_with_error(hass, websocket_client, caplog, template):
+async def test_render_template_with_error(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+    template: str,
+    expected_events: list[dict[str, str]],
+) -> None:
     """Test a template with an error."""
+    caplog.set_level(logging.INFO)
     await websocket_client.send_json(
-        {"id": 5, "type": "render_template", "template": template, "strict": True}
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": template,
+            "report_errors": True,
+        }
     )
 
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 5
-    assert msg["type"] == const.TYPE_RESULT
-    assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
+    for expected_event in expected_events:
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 5
+        for key, value in expected_event.items():
+            assert msg[key] == value
 
     assert "Template variable error" not in caplog.text
+    assert "Template variable warning" not in caplog.text
     assert "TemplateError" not in caplog.text
 
 
 @pytest.mark.parametrize(
-    "template",
+    ("template", "expected_events"),
     [
-        "{{ my_unknown_func() + 1 }}",
-        "{{ my_unknown_var }}",
-        "{{ my_unknown_var + 1 }}",
-        "{{ now() | unknown_filter }}",
+        (
+            "{{ my_unknown_func() + 1 }}",
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_1},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_2},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_1},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_2},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_1},
+            ],
+        ),
+        (
+            "{{ my_unknown_var }}",
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_WARN},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_WARN},
+                {
+                    "type": "event",
+                    "event": {"result": "", "listeners": EMPTY_LISTENERS},
+                },
+            ],
+        ),
+        (
+            "{{ my_unknown_var + 1 }}",
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_ERR},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_ERR},
+            ],
+        ),
+        (
+            "{{ now() | unknown_filter }}",
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_FILTER},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_FILTER},
+            ],
+        ),
     ],
 )
 async def test_render_template_with_timeout_and_error(
-    hass, websocket_client, caplog, template
-):
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+    template: str,
+    expected_events: list[dict[str, str]],
+) -> None:
     """Test a template with an error with a timeout."""
+    caplog.set_level(logging.INFO)
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": template,
+            "timeout": 5,
+            "report_errors": True,
+        }
+    )
+
+    for expected_event in expected_events:
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 5
+        for key, value in expected_event.items():
+            assert msg[key] == value
+
+    assert "Template variable error" not in caplog.text
+    assert "Template variable warning" not in caplog.text
+    assert "TemplateError" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("template", "expected_events"),
+    [
+        (
+            "{{ my_unknown_func() + 1 }}",
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_2},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_FUNC_2},
+            ],
+        ),
+        (
+            "{{ my_unknown_var }}",
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_ERR},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_ERR},
+            ],
+        ),
+        (
+            "{{ my_unknown_var + 1 }}",
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_ERR},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_VAR_ERR},
+            ],
+        ),
+        (
+            "{{ now() | unknown_filter }}",
+            [
+                {"type": "event", "event": EVENT_UNDEFINED_FILTER},
+                {"type": "result", "success": True, "result": None},
+                {"type": "event", "event": EVENT_UNDEFINED_FILTER},
+            ],
+        ),
+    ],
+)
+async def test_render_template_strict_with_timeout_and_error(
+    hass: HomeAssistant,
+    websocket_client,
+    caplog: pytest.LogCaptureFixture,
+    template: str,
+    expected_events: list[dict[str, str]],
+) -> None:
+    """Test a template with an error with a timeout.
+
+    In this test report_errors is enabled.
+    """
+    caplog.set_level(logging.INFO)
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": template,
+            "timeout": 5,
+            "strict": True,
+            "report_errors": True,
+        }
+    )
+
+    for expected_event in expected_events:
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 5
+        for key, value in expected_event.items():
+            assert msg[key] == value
+
+    assert "Template variable error" not in caplog.text
+    assert "Template variable warning" not in caplog.text
+    assert "TemplateError" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("template", "expected_events"),
+    [
+        (
+            "{{ my_unknown_func() + 1 }}",
+            [
+                {"type": "result", "success": True, "result": None},
+            ],
+        ),
+        (
+            "{{ my_unknown_var }}",
+            [
+                {"type": "result", "success": True, "result": None},
+            ],
+        ),
+        (
+            "{{ my_unknown_var + 1 }}",
+            [
+                {"type": "result", "success": True, "result": None},
+            ],
+        ),
+        (
+            "{{ now() | unknown_filter }}",
+            [
+                {"type": "result", "success": True, "result": None},
+            ],
+        ),
+    ],
+)
+async def test_render_template_strict_with_timeout_and_error_2(
+    hass: HomeAssistant,
+    websocket_client,
+    caplog: pytest.LogCaptureFixture,
+    template: str,
+    expected_events: list[dict[str, str]],
+) -> None:
+    """Test a template with an error with a timeout.
+
+    In this test report_errors is disabled.
+    """
+    caplog.set_level(logging.INFO)
     await websocket_client.send_json(
         {
             "id": 5,
@@ -1223,33 +1739,180 @@ async def test_render_template_with_timeout_and_error(
         }
     )
 
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 5
-    assert msg["type"] == const.TYPE_RESULT
-    assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
+    for expected_event in expected_events:
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 5
+        for key, value in expected_event.items():
+            assert msg[key] == value
 
-    assert "Template variable error" not in caplog.text
-    assert "TemplateError" not in caplog.text
+    assert "TemplateError" in caplog.text
 
 
-async def test_render_template_error_in_template_code(hass, websocket_client, caplog):
-    """Test a template that will throw in template.py."""
+@pytest.mark.parametrize(
+    ("template", "expected_events_1", "expected_events_2"),
+    [
+        (
+            "{{ now() | random }}",
+            [
+                {
+                    "type": "event",
+                    "event": {
+                        "error": "TypeError: object of type 'datetime.datetime' has no len()",
+                        "level": "ERROR",
+                    },
+                },
+                {"type": "result", "success": True, "result": None},
+                {
+                    "type": "event",
+                    "event": {
+                        "error": "TypeError: object of type 'datetime.datetime' has no len()",
+                        "level": "ERROR",
+                    },
+                },
+            ],
+            [],
+        ),
+        (
+            "{{ float(states.sensor.foo.state) + 1 }}",
+            [
+                {
+                    "type": "event",
+                    "event": {
+                        "error": "UndefinedError: 'None' has no attribute 'state'",
+                        "level": "ERROR",
+                    },
+                },
+                {"type": "result", "success": True, "result": None},
+                {
+                    "type": "event",
+                    "event": {
+                        "error": "UndefinedError: 'None' has no attribute 'state'",
+                        "level": "ERROR",
+                    },
+                },
+            ],
+            [
+                {
+                    "type": "event",
+                    "event": {
+                        "result": 3.0,
+                        "listeners": EMPTY_LISTENERS | {"entities": ["sensor.foo"]},
+                    },
+                },
+            ],
+        ),
+    ],
+)
+async def test_render_template_error_in_template_code(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+    template: str,
+    expected_events_1: list[dict[str, str]],
+    expected_events_2: list[dict[str, str]],
+) -> None:
+    """Test a template that will throw in template.py.
+
+    In this test report_errors is enabled.
+    """
     await websocket_client.send_json(
-        {"id": 5, "type": "render_template", "template": "{{ now() | random }}"}
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": template,
+            "report_errors": True,
+        }
     )
 
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 5
-    assert msg["type"] == const.TYPE_RESULT
-    assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
+    for expected_event in expected_events_1:
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 5
+        for key, value in expected_event.items():
+            assert msg[key] == value
 
+    hass.states.async_set("sensor.foo", "2")
+
+    for expected_event in expected_events_2:
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 5
+        for key, value in expected_event.items():
+            assert msg[key] == value
+
+    assert "Template variable error" not in caplog.text
+    assert "Template variable warning" not in caplog.text
     assert "TemplateError" not in caplog.text
 
 
-async def test_render_template_with_delayed_error(hass, websocket_client, caplog):
-    """Test a template with an error that only happens after a state change."""
+@pytest.mark.parametrize(
+    ("template", "expected_events_1", "expected_events_2"),
+    [
+        (
+            "{{ now() | random }}",
+            [
+                {"type": "result", "success": True, "result": None},
+            ],
+            [],
+        ),
+        (
+            "{{ float(states.sensor.foo.state) + 1 }}",
+            [
+                {"type": "result", "success": True, "result": None},
+            ],
+            [
+                {
+                    "type": "event",
+                    "event": {
+                        "result": 3.0,
+                        "listeners": EMPTY_LISTENERS | {"entities": ["sensor.foo"]},
+                    },
+                },
+            ],
+        ),
+    ],
+)
+async def test_render_template_error_in_template_code_2(
+    hass: HomeAssistant,
+    websocket_client,
+    caplog: pytest.LogCaptureFixture,
+    template: str,
+    expected_events_1: list[dict[str, str]],
+    expected_events_2: list[dict[str, str]],
+) -> None:
+    """Test a template that will throw in template.py.
+
+    In this test report_errors is disabled.
+    """
+    await websocket_client.send_json(
+        {"id": 5, "type": "render_template", "template": template}
+    )
+
+    for expected_event in expected_events_1:
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 5
+        for key, value in expected_event.items():
+            assert msg[key] == value
+
+    hass.states.async_set("sensor.foo", "2")
+
+    for expected_event in expected_events_2:
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 5
+        for key, value in expected_event.items():
+            assert msg[key] == value
+
+    assert "TemplateError" in caplog.text
+
+
+async def test_render_template_with_delayed_error(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a template with an error that only happens after a state change.
+
+    In this test report_errors is enabled.
+    """
+    caplog.set_level(logging.INFO)
     hass.states.async_set("sensor.test", "on")
     await hass.async_block_till_done()
 
@@ -1262,12 +1925,16 @@ async def test_render_template_with_delayed_error(hass, websocket_client, caplog
     """
 
     await websocket_client.send_json(
-        {"id": 5, "type": "render_template", "template": template_str}
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": template_str,
+            "report_errors": True,
+        }
     )
     await hass.async_block_till_done()
 
     msg = await websocket_client.receive_json()
-
     assert msg["id"] == 5
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
@@ -1291,14 +1958,82 @@ async def test_render_template_with_delayed_error(hass, websocket_client, caplog
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5
-    assert msg["type"] == const.TYPE_RESULT
-    assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event["error"] == "'None' has no attribute 'state'"
 
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event == {
+        "error": "UndefinedError: 'explode' is undefined",
+        "level": "ERROR",
+    }
+
+    assert "Template variable error" not in caplog.text
+    assert "Template variable warning" not in caplog.text
     assert "TemplateError" not in caplog.text
 
 
-async def test_render_template_with_timeout(hass, websocket_client, caplog):
+async def test_render_template_with_delayed_error_2(
+    hass: HomeAssistant, websocket_client, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a template with an error that only happens after a state change.
+
+    In this test report_errors is disabled.
+    """
+    hass.states.async_set("sensor.test", "on")
+    await hass.async_block_till_done()
+
+    template_str = """
+{% if states.sensor.test.state %}
+   on
+{% else %}
+   {{ explode + 1 }}
+{% endif %}
+    """
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "render_template",
+            "template": template_str,
+            "report_errors": False,
+        }
+    )
+    await hass.async_block_till_done()
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    hass.states.async_remove("sensor.test")
+    await hass.async_block_till_done()
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == "event"
+    event = msg["event"]
+    assert event == {
+        "result": "on",
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": ["sensor.test"],
+            "time": False,
+        },
+    }
+
+    assert "Template variable warning" in caplog.text
+
+
+async def test_render_template_with_timeout(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test a template that will timeout."""
 
     slow_template_str = """
@@ -1327,7 +2062,9 @@ async def test_render_template_with_timeout(hass, websocket_client, caplog):
     assert "TemplateError" not in caplog.text
 
 
-async def test_render_template_returns_with_match_all(hass, websocket_client):
+async def test_render_template_returns_with_match_all(
+    hass: HomeAssistant, websocket_client
+) -> None:
     """Test that a template that would match with all entities still return success."""
     await websocket_client.send_json(
         {"id": 5, "type": "render_template", "template": "State is: {{ 42 }}"}
@@ -1339,7 +2076,9 @@ async def test_render_template_returns_with_match_all(hass, websocket_client):
     assert msg["success"]
 
 
-async def test_manifest_list(hass, websocket_client):
+async def test_manifest_list(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
     """Test loading manifests."""
     http = await async_get_integration(hass, "http")
     websocket_api = await async_get_integration(hass, "websocket_api")
@@ -1356,7 +2095,9 @@ async def test_manifest_list(hass, websocket_client):
     ]
 
 
-async def test_manifest_list_specific_integrations(hass, websocket_client):
+async def test_manifest_list_specific_integrations(
+    hass: HomeAssistant, websocket_client
+) -> None:
     """Test loading manifests for specific integrations."""
     websocket_api = await async_get_integration(hass, "websocket_api")
 
@@ -1375,7 +2116,9 @@ async def test_manifest_list_specific_integrations(hass, websocket_client):
     ]
 
 
-async def test_manifest_get(hass, websocket_client):
+async def test_manifest_get(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
     """Test getting a manifest."""
     hue = await async_get_integration(hass, "hue")
 
@@ -1401,7 +2144,11 @@ async def test_manifest_get(hass, websocket_client):
     assert msg["error"]["code"] == "not_found"
 
 
-async def test_entity_source_admin(hass, websocket_client, hass_admin_user):
+async def test_entity_source_admin(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
     """Check that we fetch sources correctly."""
     platform = MockEntityPlatform(hass)
 
@@ -1417,75 +2164,9 @@ async def test_entity_source_admin(hass, websocket_client, hass_admin_user):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {
-        "test_domain.entity_1": {
-            "custom_component": False,
-            "domain": "test_platform",
-            "source": entity.SOURCE_PLATFORM_CONFIG,
-        },
-        "test_domain.entity_2": {
-            "custom_component": False,
-            "domain": "test_platform",
-            "source": entity.SOURCE_PLATFORM_CONFIG,
-        },
+        "test_domain.entity_1": {"domain": "test_platform"},
+        "test_domain.entity_2": {"domain": "test_platform"},
     }
-
-    # Fetch one
-    await websocket_client.send_json(
-        {"id": 7, "type": "entity/source", "entity_id": ["test_domain.entity_2"]}
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 7
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"] == {
-        "test_domain.entity_2": {
-            "custom_component": False,
-            "domain": "test_platform",
-            "source": entity.SOURCE_PLATFORM_CONFIG,
-        },
-    }
-
-    # Fetch two
-    await websocket_client.send_json(
-        {
-            "id": 8,
-            "type": "entity/source",
-            "entity_id": ["test_domain.entity_2", "test_domain.entity_1"],
-        }
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 8
-    assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"] == {
-        "test_domain.entity_1": {
-            "custom_component": False,
-            "domain": "test_platform",
-            "source": entity.SOURCE_PLATFORM_CONFIG,
-        },
-        "test_domain.entity_2": {
-            "custom_component": False,
-            "domain": "test_platform",
-            "source": entity.SOURCE_PLATFORM_CONFIG,
-        },
-    }
-
-    # Fetch non existing
-    await websocket_client.send_json(
-        {
-            "id": 9,
-            "type": "entity/source",
-            "entity_id": ["test_domain.entity_2", "test_domain.non_existing"],
-        }
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 9
-    assert msg["type"] == const.TYPE_RESULT
-    assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_NOT_FOUND
 
     # Mock policy
     hass_admin_user.groups = []
@@ -1501,26 +2182,13 @@ async def test_entity_source_admin(hass, websocket_client, hass_admin_user):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {
-        "test_domain.entity_2": {
-            "custom_component": False,
-            "domain": "test_platform",
-            "source": entity.SOURCE_PLATFORM_CONFIG,
-        },
+        "test_domain.entity_2": {"domain": "test_platform"},
     }
 
-    # Fetch unauthorized
-    await websocket_client.send_json(
-        {"id": 11, "type": "entity/source", "entity_id": ["test_domain.entity_1"]}
-    )
 
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 11
-    assert msg["type"] == const.TYPE_RESULT
-    assert not msg["success"]
-    assert msg["error"]["code"] == const.ERR_UNAUTHORIZED
-
-
-async def test_subscribe_trigger(hass, websocket_client):
+async def test_subscribe_trigger(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
     """Test subscribing to a trigger."""
     init_count = sum(hass.bus.async_listeners().values())
 
@@ -1547,7 +2215,7 @@ async def test_subscribe_trigger(hass, websocket_client):
     hass.bus.async_fire("test_event", {"hello": "world"}, context=context)
     hass.bus.async_fire("ignore_event")
 
-    async with timeout(3):
+    async with asyncio.timeout(3):
         msg = await websocket_client.receive_json()
 
     assert msg["id"] == 5
@@ -1574,7 +2242,9 @@ async def test_subscribe_trigger(hass, websocket_client):
     assert sum(hass.bus.async_listeners().values()) == init_count
 
 
-async def test_test_condition(hass, websocket_client):
+async def test_test_condition(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
     """Test testing a condition."""
     hass.states.async_set("hello.world", "paulus")
 
@@ -1634,9 +2304,13 @@ async def test_test_condition(hass, websocket_client):
     assert msg["result"]["result"] is False
 
 
-async def test_execute_script(hass, websocket_client):
+async def test_execute_script(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
     """Test testing a condition."""
-    calls = async_mock_service(hass, "domain_test", "test_service")
+    calls = async_mock_service(
+        hass, "domain_test", "test_service", response={"hello": "world"}
+    )
 
     await websocket_client.send_json(
         {
@@ -1646,7 +2320,9 @@ async def test_execute_script(hass, websocket_client):
                 {
                     "service": "domain_test.test_service",
                     "data": {"hello": "world"},
-                }
+                    "response_variable": "service_result",
+                },
+                {"stop": "done", "response_variable": "service_result"},
             ],
         }
     )
@@ -1655,6 +2331,7 @@ async def test_execute_script(hass, websocket_client):
     assert msg_no_var["id"] == 5
     assert msg_no_var["type"] == const.TYPE_RESULT
     assert msg_no_var["success"]
+    assert msg_no_var["result"]["response"] == {"hello": "world"}
 
     await websocket_client.send_json(
         {
@@ -1691,9 +2368,159 @@ async def test_execute_script(hass, websocket_client):
     assert call.context.as_dict() == msg_var["result"]["context"]
 
 
+@pytest.mark.parametrize(
+    ("raise_exception", "err_code"),
+    [
+        (
+            HomeAssistantError(
+                "Some error",
+                translation_domain="test",
+                translation_key="test_error",
+                translation_placeholders={"option": "bla"},
+            ),
+            "home_assistant_error",
+        ),
+        (
+            ServiceValidationError(
+                "Some error",
+                translation_domain="test",
+                translation_key="test_error",
+                translation_placeholders={"option": "bla"},
+            ),
+            "service_validation_error",
+        ),
+    ],
+)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
+async def test_execute_script_err_localization(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    raise_exception: HomeAssistantError,
+    err_code: str,
+) -> None:
+    """Test testing a condition."""
+    async_mock_service(
+        hass, "domain_test", "test_service", raise_exception=raise_exception
+    )
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "execute_script",
+            "sequence": [
+                {
+                    "service": "domain_test.test_service",
+                    "data": {"hello": "world"},
+                },
+                {"stop": "done", "response_variable": "service_result"},
+            ],
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"] is False
+    assert msg["error"]["code"] == err_code
+    assert msg["error"]["message"] == "Some error"
+    assert msg["error"]["translation_key"] == "test_error"
+    assert msg["error"]["translation_domain"] == "test"
+    assert msg["error"]["translation_placeholders"] == {"option": "bla"}
+
+
+async def test_execute_script_complex_response(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test testing a condition."""
+    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "execute_script",
+            "sequence": [
+                {
+                    "service": "calendar.get_events",
+                    "data": {"duration": {"hours": 24, "minutes": 0, "seconds": 0}},
+                    "target": {"entity_id": "calendar.calendar_1"},
+                    "response_variable": "service_result",
+                },
+                {"stop": "done", "response_variable": "service_result"},
+            ],
+        }
+    )
+
+    msg_no_var = await ws_client.receive_json()
+    assert msg_no_var["type"] == const.TYPE_RESULT
+    assert msg_no_var["success"]
+    assert msg_no_var["result"]["response"] == {
+        "calendar.calendar_1": {
+            "events": [
+                {
+                    "start": ANY,
+                    "end": ANY,
+                    "summary": "Future Event",
+                    "description": "Future Description",
+                    "location": "Future Location",
+                }
+            ]
+        }
+    }
+
+
+async def test_execute_script_with_dynamically_validated_action(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    fake_integration,
+) -> None:
+    """Test executing a script with an action which is dynamically validated."""
+
+    ws_client = await hass_ws_client(hass)
+
+    module_cache = hass.data[loader.DATA_COMPONENTS]
+    module = module_cache["fake_integration.device_action"]
+    module.async_call_action_from_config = AsyncMock()
+    module.async_validate_action_config = AsyncMock(
+        side_effect=lambda hass, config: config
+    )
+
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "execute_script",
+            "sequence": [
+                {
+                    "device_id": device_entry.id,
+                    "domain": "fake_integration",
+                },
+            ],
+        }
+    )
+
+    msg_no_var = await ws_client.receive_json()
+    assert msg_no_var["type"] == const.TYPE_RESULT
+    assert msg_no_var["success"]
+    assert msg_no_var["result"]["response"] is None
+
+    module.async_validate_action_config.assert_awaited_once()
+    module.async_call_action_from_config.assert_awaited_once()
+
+
 async def test_subscribe_unsubscribe_bootstrap_integrations(
-    hass, websocket_client, hass_admin_user
-):
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
     """Test subscribe/unsubscribe bootstrap_integrations."""
     await websocket_client.send_json(
         {"id": 7, "type": "subscribe_bootstrap_integrations"}
@@ -1713,15 +2540,22 @@ async def test_subscribe_unsubscribe_bootstrap_integrations(
     assert msg["event"] == message
 
 
-async def test_integration_setup_info(hass, websocket_client, hass_admin_user):
+async def test_integration_setup_info(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
     """Test subscribe/unsubscribe bootstrap_integrations."""
-    hass.data[DATA_SETUP_TIME] = {
-        "august": datetime.timedelta(seconds=12.5),
-        "isy994": datetime.timedelta(seconds=12.8),
-    }
-    await websocket_client.send_json({"id": 7, "type": "integration/setup_info"})
+    with patch(
+        "homeassistant.components.websocket_api.commands.async_get_setup_timings",
+        return_value={
+            "august": 12.5,
+            "isy994": 12.8,
+        },
+    ):
+        await websocket_client.send_json({"id": 7, "type": "integration/setup_info"})
+        msg = await websocket_client.receive_json()
 
-    msg = await websocket_client.receive_json()
     assert msg["id"] == 7
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
@@ -1732,63 +2566,100 @@ async def test_integration_setup_info(hass, websocket_client, hass_admin_user):
 
 
 @pytest.mark.parametrize(
-    "key,config",
-    (
-        ("trigger", {"platform": "event", "event_type": "hello"}),
+    ("key", "config"),
+    [
+        ("triggers", {"platform": "event", "event_type": "hello"}),
+        ("triggers", [{"platform": "event", "event_type": "hello"}]),
         (
-            "condition",
+            "conditions",
             {"condition": "state", "entity_id": "hello.world", "state": "paulus"},
         ),
-        ("action", {"service": "domain_test.test_service"}),
-    ),
+        (
+            "conditions",
+            [{"condition": "state", "entity_id": "hello.world", "state": "paulus"}],
+        ),
+        ("actions", {"service": "domain_test.test_service"}),
+        ("actions", [{"service": "domain_test.test_service"}]),
+    ],
 )
-async def test_validate_config_works(websocket_client, key, config):
+async def test_validate_config_works(
+    websocket_client: MockHAClientWebSocket,
+    key: str,
+    config: dict[str, Any] | list[dict[str, Any]],
+) -> None:
     """Test config validation."""
-    await websocket_client.send_json({"id": 7, "type": "validate_config", key: config})
+    await websocket_client.send_json_auto_id({"type": "validate_config", key: config})
 
     msg = await websocket_client.receive_json()
-    assert msg["id"] == 7
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {key: {"valid": True, "error": None}}
 
 
 @pytest.mark.parametrize(
-    "key,config,error",
-    (
+    ("key", "config", "error"),
+    [
+        # Raises vol.Invalid
         (
-            "trigger",
+            "triggers",
             {"platform": "non_existing", "event_type": "hello"},
-            "Invalid platform 'non_existing' specified",
+            "Invalid trigger 'non_existing' specified",
         ),
+        # Raises vol.Invalid
         (
-            "condition",
+            "conditions",
             {
                 "condition": "non_existing",
                 "entity_id": "hello.world",
                 "state": "paulus",
             },
-            "Unexpected value for condition: 'non_existing'. Expected and, device, not, numeric_state, or, state, sun, template, time, trigger, zone",
+            (
+                "Unexpected value for condition: 'non_existing'. Expected and, device,"
+                " not, numeric_state, or, state, sun, template, time, trigger, zone "
+                "@ data[0]"
+            ),
         ),
+        # Raises HomeAssistantError
         (
-            "action",
+            "conditions",
+            {
+                "above": 50,
+                "condition": "device",
+                "device_id": "a51a57e5af051eb403d56eb9e6fd691c",
+                "domain": "sensor",
+                "entity_id": "7d18a157b7c00adbf2982ea7de0d0362",
+                "type": "is_carbon_dioxide",
+            },
+            "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
+        ),
+        # Raises vol.Invalid
+        (
+            "actions",
             {"non_existing": "domain_test.test_service"},
             "Unable to determine action @ data[0]",
         ),
-    ),
+    ],
 )
-async def test_validate_config_invalid(websocket_client, key, config, error):
+async def test_validate_config_invalid(
+    websocket_client: MockHAClientWebSocket,
+    key: str,
+    config: dict[str, Any],
+    error: str,
+) -> None:
     """Test config validation."""
-    await websocket_client.send_json({"id": 7, "type": "validate_config", key: config})
+    await websocket_client.send_json_auto_id({"type": "validate_config", key: config})
 
     msg = await websocket_client.receive_json()
-    assert msg["id"] == 7
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {key: {"valid": False, "error": error}}
 
 
-async def test_message_coalescing(hass, websocket_client, hass_admin_user):
+async def test_message_coalescing(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
     """Test enabling message coalescing."""
     await websocket_client.send_json(
         {
@@ -1859,8 +2730,10 @@ async def test_message_coalescing(hass, websocket_client, hass_admin_user):
 
 
 async def test_message_coalescing_not_supported_by_websocket_client(
-    hass, websocket_client, hass_admin_user
-):
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
     """Test enabling message coalescing not supported by websocket client."""
     await websocket_client.send_json({"id": 7, "type": "subscribe_entities"})
 
@@ -1900,7 +2773,11 @@ async def test_message_coalescing_not_supported_by_websocket_client(
     await hass.async_block_till_done()
 
 
-async def test_client_message_coalescing(hass, websocket_client, hass_admin_user):
+async def test_client_message_coalescing(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
     """Test client message coalescing."""
     await websocket_client.send_json(
         [
@@ -1971,7 +2848,9 @@ async def test_client_message_coalescing(hass, websocket_client, hass_admin_user
     await hass.async_block_till_done()
 
 
-async def test_integration_descriptions(hass, hass_ws_client):
+async def test_integration_descriptions(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can get integration descriptions."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
@@ -1986,3 +2865,54 @@ async def test_integration_descriptions(hass, hass_ws_client):
 
     assert response["success"]
     assert response["result"]
+
+
+async def test_subscribe_entities_chained_state_change(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test chaining state changed events.
+
+    Ensure the websocket sends the off state after
+    the on state.
+    """
+
+    @callback
+    def auto_off_listener(event):
+        hass.states.async_set("light.permitted", "off")
+
+    async_track_state_change_event(hass, ["light.permitted"], auto_off_listener)
+
+    await websocket_client.send_json({"id": 7, "type": "subscribe_entities"})
+
+    data = await websocket_client.receive_str()
+    msg = json_loads(data)
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    data = await websocket_client.receive_str()
+    msg = json_loads(data)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {"a": {}}
+
+    hass.states.async_set("light.permitted", "on")
+    data = await websocket_client.receive_str()
+    msg = json_loads(data)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "a": {"light.permitted": {"a": {}, "c": ANY, "lc": ANY, "s": "on"}}
+    }
+    data = await websocket_client.receive_str()
+    msg = json_loads(data)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {"light.permitted": {"+": {"c": ANY, "lc": ANY, "s": "off"}}}
+    }
+
+    await websocket_client.close()
+    await hass.async_block_till_done()

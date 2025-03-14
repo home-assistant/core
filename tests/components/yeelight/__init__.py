@@ -1,6 +1,7 @@
 """Tests for the Yeelight integration."""
-import asyncio
+
 from datetime import timedelta
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.search import SsdpSearchListener
@@ -8,7 +9,6 @@ from async_upnp_client.utils import CaseInsensitiveDict
 from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
 
-from homeassistant.components import zeroconf
 from homeassistant.components.yeelight import (
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
@@ -20,6 +20,7 @@ from homeassistant.components.yeelight import (
 )
 from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 FAIL_TO_BIND_IP = "1.2.3.4"
 
@@ -33,16 +34,18 @@ CAPABILITIES = {
     "model": MODEL,
     "fw_ver": FW_VER,
     "location": f"yeelight://{IP_ADDRESS}",
-    "support": "get_prop set_default set_power toggle set_bright start_cf stop_cf"
-    " set_scene cron_add cron_get cron_del set_ct_abx set_rgb",
+    "support": (
+        "get_prop set_default set_power toggle set_bright start_cf stop_cf"
+        " set_scene cron_add cron_get cron_del set_ct_abx set_rgb"
+    ),
     "name": "",
 }
 
 ID_DECIMAL = f"{int(ID, 16):08d}"
 
-ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
-    host=IP_ADDRESS,
-    addresses=[IP_ADDRESS],
+ZEROCONF_DATA = ZeroconfServiceInfo(
+    ip_address=ip_address(IP_ADDRESS),
+    ip_addresses=[ip_address(IP_ADDRESS)],
     port=54321,
     hostname=f"yeelink-light-strip1_miio{ID_DECIMAL}.local.",
     type="_miio._udp.local.",
@@ -106,12 +109,13 @@ CONFIG_ENTRY_DATA = {CONF_ID: ID}
 class MockAsyncBulb:
     """A mock for yeelight.aio.AsyncBulb."""
 
-    def __init__(self, model, bulb_type, cannot_connect):
+    def __init__(self, model, bulb_type, cannot_connect) -> None:
         """Init the mock."""
         self.model = model
         self.bulb_type = bulb_type
         self._async_callback = None
         self._cannot_connect = cannot_connect
+        self.capabilities = None
 
     async def async_listen(self, callback):
         """Mock the listener."""
@@ -129,6 +133,7 @@ class MockAsyncBulb:
 
 
 def _mocked_bulb(cannot_connect=False):
+    # pylint: disable=attribute-defined-outside-init
     bulb = MockAsyncBulb(MODEL, BulbType.Color, cannot_connect)
     type(bulb).async_get_properties = AsyncMock(
         side_effect=BulbException if cannot_connect else None
@@ -164,12 +169,12 @@ def _patched_ssdp_listener(info: CaseInsensitiveDict, *args, **kwargs):
     async def _async_callback(*_):
         if kwargs["source"][0] == FAIL_TO_BIND_IP:
             raise OSError
-        await listener.async_connect_callback()
+        listener.connect_callback()
 
     @callback
     def _async_search(*_):
         if info:
-            asyncio.create_task(listener.async_callback(info))
+            listener.callback(info)
 
     listener.async_start = _async_callback
     listener.async_search = _async_search

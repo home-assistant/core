@@ -1,0 +1,516 @@
+{
+  "accounts": [
+    {
+      "id": "900000000",
+      "displayName": "Brokerage",
+      "syncDisabled": false,
+      "deactivatedAt": null,
+      "isHidden": false,
+      "isAsset": true,
+      "mask": "0189",
+      "createdAt": "2021-10-15T01:32:33.809450+00:00",
+      "updatedAt": "2022-05-26T00:56:41.322045+00:00",
+      "displayLastUpdatedAt": "2022-05-26T00:56:41.321928+00:00",
+      "currentBalance": 1000.5,
+      "displayBalance": 1000.5,
+      "includeInNetWorth": true,
+      "hideFromList": true,
+      "hideTransactionsFromReports": false,
+      "includeBalanceInNetWorth": false,
+      "includeInGoalBalance": false,
+      "dataProvider": "plaid",
+      "dataProviderAccountId": "testProviderAccountId",
+      "isManual": false,
+      "transactionsCount": 0,
+      "holdingsCount": 0,
+      "manualInvestmentsTrackingMethod": null,
+      "order": 11,
+      "icon": "trending-up",
+      "logoUrl": "base64Nonce",
+      "type": {
+        "name": "brokerage",
+        "display": "Investments",
+        "__typename": "AccountType"
+      },
+      "subtype": {
+        "name": "brokerage",
+        "display": "Brokerage",
+        "__typename": "AccountSubtype"
+      },
+      "credential": {
+        "id": "900000001",
+        "updateRequired": false,
+        "disconnectedFromDataProviderAt": null,
+        "dataProvider": "PLAID",
+        "institution": {
+          "id": "700000000",
+          "plaidInstitutionId": "ins_0",
+          "name": "Rando Brokerage",
+          "status": "DEGRADED",
+          "logo": "base64Nonce",
+          "__typename": "Institution"
+        },
+        "__typename": "Credential"
+      },
+      "institution": {
+        "id": "700000000",
+        "name": "Rando Brokerage",
+        "logo": "base64Nonce",
+        "primaryColor": "#0075a3",
+        "url": "https://rando.brokerage/",
+        "__typename": "Institution"
+      },
+      "__typename": "Account"
+    },
+    {
+      "id": "900000002",
+      "displayName": "Checking",
+      "syncDisabled": false,
+      "deactivatedAt": null,
+      "isHidden": false,
+      "isAsset": true,
+      "mask": "2602",
+      "createdAt": "2021-10-15T01:32:33.900521+00:00",
+      "updatedAt": "2024-02-17T11:21:05.228959+00:00",
+      "displayLastUpdatedAt": "2024-02-17T11:21:05.228721+00:00",
+      "currentBalance": 1000.02,
+      "displayBalance": 1000.02,
+      "includeInNetWorth": true,
+      "hideFromList": false,
+      "hideTransactionsFromReports": false,
+      "includeBalanceInNetWorth": true,
+      "includeInGoalBalance": true,
+      "dataProvider": "plaid",
+      "dataProviderAccountId": "testProviderAccountId",
+      "isManual": false,
+      "transactionsCount": 1403,
+      "holdingsCount": 0,
+      "manualInvestmentsTrackingMethod": null,
+      "order": 0,
+      "icon": "dollar-sign",
+      "logoUrl": "data:image/png;base64,base64Nonce",
+      "type": {
+        "name": "depository",
+        "display": "Cash",
+        "__typename": "AccountType"
+      },
+      "subtype": {
+        "name": "checking",
+        "display": "Checking",
+        "__typename": "AccountSubtype"
+      },
+      "credential": {
+        "id": "900000003",
+        "updateRequired": false,
+        "disconnectedFromDataProviderAt": null,
+        "dataProvider": "PLAID",
+        "institution": {
+          "id": "7000000002",
+          "plaidInstitutionId": "ins_01",
+          "name": "Rando Bank",
+          "status": "DEGRADED",
+          "logo": "base64Nonce",
+          "__typename": "Institution"
+        },
+        "__typename": "Credential"
+      },
+      "institution": {
+        "id": "7000000005",
+        "name": "Rando Bank",
+        "logo": "base64Nonce",
+        "primaryColor": "#0075a3",
+        "url": "https://rando.bank/",
+        "__typename": "Institution"
+      },
+      "__typename": "Account"
+    },
+
+    {
+      "id": "121212192626186051",
+      "displayName": "2050 Toyota RAV8",
+      "syncDisabled": false,
+      "deactivatedAt": null,
+      "isHidden": false,
+      "isAsset": true,
+      "mask": null,
+      "createdAt": "2024-08-16T17:37:21.885036+00:00",
+      "updatedAt": "2024-08-16T17:37:21.885057+00:00",
+      "displayLastUpdatedAt": "2024-08-16T17:37:21.885057+00:00",
+      "currentBalance": 11075.58,
+      "displayBalance": 11075.58,
+      "includeInNetWorth": true,
+      "hideFromList": false,
+      "hideTransactionsFromReports": false,
+      "includeBalanceInNetWorth": true,
+      "includeInGoalBalance": false,
+      "dataProvider": "vin_audit",
+      "dataProviderAccountId": "1111111v5cw252004",
+      "isManual": false,
+      "transactionsCount": 0,
+      "holdingsCount": 0,
+      "manualInvestmentsTrackingMethod": null,
+      "order": 0,
+      "logoUrl": "https://api.monarchmoney.com/cdn-cgi/image/width=128/images/institution/159427559853802644",
+      "type": {
+        "name": "vehicle",
+        "display": "Vehicles",
+        "__typename": "AccountType"
+      },
+      "subtype": {
+        "name": "car",
+        "display": "Car",
+        "__typename": "AccountSubtype"
+      },
+      "credential": null,
+      "institution": {
+        "id": "123456789853802644",
+        "name": "VinAudit",
+        "primaryColor": "#74ab16",
+        "url": "https://www.vinaudit.com/",
+        "__typename": "Institution"
+      },
+      "__typename": "Account"
+    },
+    {
+      "id": "9000000007",
+      "displayName": "Credit Card",
+      "syncDisabled": true,
+      "deactivatedAt": null,
+      "isHidden": true,
+      "isAsset": false,
+      "mask": "3542",
+      "createdAt": "2021-10-15T01:33:46.646459+00:00",
+      "updatedAt": "2022-12-10T18:17:06.129456+00:00",
+      "displayLastUpdatedAt": "2022-10-15T08:34:34.815239+00:00",
+      "currentBalance": -200.0,
+      "displayBalance": -200.0,
+      "includeInNetWorth": true,
+      "hideFromList": false,
+      "hideTransactionsFromReports": false,
+      "includeBalanceInNetWorth": false,
+      "includeInGoalBalance": true,
+      "dataProvider": "finicity",
+      "dataProviderAccountId": "50001",
+      "isManual": false,
+      "transactionsCount": 1138,
+      "holdingsCount": 0,
+      "manualInvestmentsTrackingMethod": null,
+      "order": 1,
+      "icon": "credit-card",
+      "logoUrl": "data:image/png;base64,base64Nonce",
+      "type": {
+        "name": "credit",
+        "display": "Credit Cards",
+        "__typename": "AccountType"
+      },
+      "subtype": {
+        "name": "credit_card",
+        "display": "Credit Card",
+        "__typename": "AccountSubtype"
+      },
+      "credential": {
+        "id": "9000000009",
+        "updateRequired": true,
+        "disconnectedFromDataProviderAt": null,
+        "dataProvider": "FINICITY",
+        "institution": {
+          "id": "7000000002",
+          "plaidInstitutionId": "ins_9",
+          "name": "Rando Credit",
+          "status": null,
+          "logo": "base64Nonce",
+          "__typename": "Institution"
+        },
+        "__typename": "Credential"
+      },
+      "institution": {
+        "id": "70000000010",
+        "name": "Rando Credit",
+        "logo": "base64Nonce",
+        "primaryColor": "#004966",
+        "url": "https://rando.credit/",
+        "__typename": "Institution"
+      },
+      "__typename": "Account"
+    },
+    {
+      "id": "900000000012",
+      "displayName": "Roth IRA",
+      "syncDisabled": false,
+      "deactivatedAt": null,
+      "isHidden": false,
+      "isAsset": true,
+      "mask": "1052",
+      "createdAt": "2021-10-15T01:35:59.299450+00:00",
+      "updatedAt": "2024-02-17T13:32:21.072711+00:00",
+      "displayLastUpdatedAt": "2024-02-17T13:32:21.072453+00:00",
+      "currentBalance": 10000.43,
+      "displayBalance": 10000.43,
+      "includeInNetWorth": true,
+      "hideFromList": false,
+      "hideTransactionsFromReports": false,
+      "includeBalanceInNetWorth": true,
+      "includeInGoalBalance": false,
+      "dataProvider": "plaid",
+      "dataProviderAccountId": "testProviderAccountId",
+      "isManual": false,
+      "transactionsCount": 28,
+      "holdingsCount": 24,
+      "manualInvestmentsTrackingMethod": null,
+      "order": 4,
+      "icon": "trending-up",
+      "logoUrl": "data:image/png;base64,base64Nonce",
+      "type": {
+        "name": "brokerage",
+        "display": "Investments",
+        "__typename": "AccountType"
+      },
+      "subtype": {
+        "name": "roth",
+        "display": "Roth IRA",
+        "__typename": "AccountSubtype"
+      },
+      "credential": {
+        "id": "90000000014",
+        "updateRequired": false,
+        "disconnectedFromDataProviderAt": null,
+        "dataProvider": "PLAID",
+        "institution": {
+          "id": "70000000016",
+          "plaidInstitutionId": "ins_02",
+          "name": "Rando Investments",
+          "status": null,
+          "logo": "base64Nonce",
+          "__typename": "Institution"
+        },
+        "__typename": "Credential"
+      },
+      "institution": {
+        "id": "70000000018",
+        "name": "Rando Investments",
+        "logo": "base64Nonce",
+        "primaryColor": "#40a829",
+        "url": "https://rando.investments/",
+        "__typename": "Institution"
+      },
+      "__typename": "Account"
+    },
+    {
+      "id": "90000000020",
+      "displayName": "House",
+      "syncDisabled": false,
+      "deactivatedAt": null,
+      "isHidden": false,
+      "isAsset": true,
+      "mask": null,
+      "createdAt": "2021-10-15T01:39:29.370279+00:00",
+      "updatedAt": "2024-02-12T09:00:25.451425+00:00",
+      "displayLastUpdatedAt": "2024-02-12T09:00:25.451425+00:00",
+      "currentBalance": 123000.0,
+      "displayBalance": 123000.0,
+      "includeInNetWorth": true,
+      "hideFromList": false,
+      "hideTransactionsFromReports": false,
+      "includeBalanceInNetWorth": true,
+      "includeInGoalBalance": false,
+      "dataProvider": "zillow",
+      "dataProviderAccountId": "testProviderAccountId",
+      "isManual": false,
+      "transactionsCount": 0,
+      "holdingsCount": 0,
+      "manualInvestmentsTrackingMethod": null,
+      "order": 2,
+      "icon": "home",
+      "logoUrl": "data:image/png;base64,base64Nonce",
+      "type": {
+        "name": "real_estate",
+        "display": "Real Estate",
+        "__typename": "AccountType"
+      },
+      "subtype": {
+        "name": "primary_home",
+        "display": "Primary Home",
+        "__typename": "AccountSubtype"
+      },
+      "credential": null,
+      "institution": {
+        "id": "800000000",
+        "name": "Zillow",
+        "logo": "base64Nonce",
+        "primaryColor": "#006AFF",
+        "url": "https://www.zillow.com/",
+        "__typename": "Institution"
+      },
+      "__typename": "Account"
+    },
+    {
+      "id": "90000000022",
+      "displayName": "401.k",
+      "syncDisabled": false,
+      "deactivatedAt": null,
+      "isHidden": false,
+      "isAsset": true,
+      "mask": null,
+      "createdAt": "2021-10-15T01:41:54.593239+00:00",
+      "updatedAt": "2024-02-17T08:13:10.554296+00:00",
+      "displayLastUpdatedAt": "2024-02-17T08:13:10.554029+00:00",
+      "currentBalance": 100000.35,
+      "displayBalance": 100000.35,
+      "includeInNetWorth": true,
+      "hideFromList": false,
+      "hideTransactionsFromReports": false,
+      "includeBalanceInNetWorth": true,
+      "includeInGoalBalance": false,
+      "dataProvider": "finicity",
+      "dataProviderAccountId": "testProviderAccountId",
+      "isManual": false,
+      "transactionsCount": 0,
+      "holdingsCount": 100,
+      "manualInvestmentsTrackingMethod": null,
+      "order": 3,
+      "icon": "trending-up",
+      "logoUrl": "data:image/png;base64,base64Nonce",
+      "type": {
+        "name": "brokerage",
+        "display": "Investments",
+        "__typename": "AccountType"
+      },
+      "subtype": {
+        "name": "st_401k",
+        "display": "401k",
+        "__typename": "AccountSubtype"
+      },
+      "credential": {
+        "id": "90000000024",
+        "updateRequired": false,
+        "disconnectedFromDataProviderAt": null,
+        "dataProvider": "FINICITY",
+        "institution": {
+          "id": "70000000026",
+          "plaidInstitutionId": "ins_03",
+          "name": "Rando Employer Investments",
+          "status": "HEALTHY",
+          "logo": "base64Nonce",
+          "__typename": "Institution"
+        },
+        "__typename": "Credential"
+      },
+      "institution": {
+        "id": "70000000028",
+        "name": "Rando Employer Investments",
+        "logo": "base64Nonce",
+        "primaryColor": "#408800",
+        "url": "https://rando-employer.investments/",
+        "__typename": "Institution"
+      },
+      "__typename": "Account"
+    },
+    {
+      "id": "90000000030",
+      "displayName": "Mortgage",
+      "syncDisabled": true,
+      "deactivatedAt": "2023-08-15",
+      "isHidden": true,
+      "isAsset": false,
+      "mask": "0973",
+      "createdAt": "2021-10-15T01:45:25.244570+00:00",
+      "updatedAt": "2023-08-16T01:41:36.115588+00:00",
+      "displayLastUpdatedAt": "2023-08-15T18:11:09.134874+00:00",
+      "currentBalance": 0.0,
+      "displayBalance": -0.0,
+      "includeInNetWorth": true,
+      "hideFromList": false,
+      "hideTransactionsFromReports": false,
+      "includeBalanceInNetWorth": false,
+      "includeInGoalBalance": false,
+      "dataProvider": "plaid",
+      "dataProviderAccountId": "testProviderAccountId",
+      "isManual": false,
+      "transactionsCount": 0,
+      "holdingsCount": 0,
+      "manualInvestmentsTrackingMethod": null,
+      "order": 1,
+      "icon": "home",
+      "logoUrl": "data:image/png;base64,base64Nonce",
+      "type": {
+        "name": "loan",
+        "display": "Loans",
+        "__typename": "AccountType"
+      },
+      "subtype": {
+        "name": "mortgage",
+        "display": "Mortgage",
+        "__typename": "AccountSubtype"
+      },
+      "credential": {
+        "id": "90000000032",
+        "updateRequired": false,
+        "disconnectedFromDataProviderAt": null,
+        "dataProvider": "PLAID",
+        "institution": {
+          "id": "70000000034",
+          "plaidInstitutionId": "ins_04",
+          "name": "Rando Mortgage",
+          "status": "HEALTHY",
+          "logo": "base64Nonce",
+          "__typename": "Institution"
+        },
+        "__typename": "Credential"
+      },
+      "institution": {
+        "id": "70000000036",
+        "name": "Rando Mortgage",
+        "logo": "base64Nonce",
+        "primaryColor": "#095aa6",
+        "url": "https://rando.mortgage/",
+        "__typename": "Institution"
+      },
+      "__typename": "Account"
+    },
+    {
+      "id": "186321412999033223",
+      "displayName": "Wallet",
+      "syncDisabled": false,
+      "deactivatedAt": null,
+      "isHidden": false,
+      "isAsset": true,
+      "mask": null,
+      "createdAt": "2024-08-16T14:22:10.440514+00:00",
+      "updatedAt": "2024-08-16T14:22:10.512731+00:00",
+      "displayLastUpdatedAt": "2024-08-16T14:22:10.512731+00:00",
+      "currentBalance": 20.0,
+      "displayBalance": 20.0,
+      "includeInNetWorth": true,
+      "hideFromList": false,
+      "hideTransactionsFromReports": false,
+      "includeBalanceInNetWorth": true,
+      "includeInGoalBalance": true,
+      "dataProvider": "",
+      "dataProviderAccountId": null,
+      "isManual": true,
+      "transactionsCount": 0,
+      "holdingsCount": 0,
+      "manualInvestmentsTrackingMethod": null,
+      "order": 14,
+      "logoUrl": null,
+      "type": {
+        "name": "depository",
+        "display": "Cash",
+        "__typename": "AccountType"
+      },
+      "subtype": {
+        "name": "prepaid",
+        "display": "Prepaid",
+        "__typename": "AccountSubtype"
+      },
+      "credential": null,
+      "institution": null,
+      "__typename": "Account"
+    }
+  ],
+  "householdPreferences": {
+    "id": "900000000022",
+    "accountGroupOrder": [],
+    "__typename": "HouseholdPreferences"
+  }
+}

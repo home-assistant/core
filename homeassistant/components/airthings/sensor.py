@@ -1,4 +1,5 @@
 """Support for Airthings sensors."""
+
 from __future__ import annotations
 
 from airthings import AirthingsDevice
@@ -9,113 +10,115 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
-    PRESSURE_MBAR,
     SIGNAL_STRENGTH_DECIBELS,
-    TEMP_CELSIUS,
+    EntityCategory,
+    UnitOfPressure,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import AirthingsConfigEntry, AirthingsDataCoordinatorType
 from .const import DOMAIN
 
 SENSORS: dict[str, SensorEntityDescription] = {
     "radonShortTermAvg": SensorEntityDescription(
         key="radonShortTermAvg",
         native_unit_of_measurement="Bq/m³",
-        name="Radon",
+        translation_key="radon",
     ),
     "temp": SensorEntityDescription(
         key="temp",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
-        name="Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "humidity": SensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
-        name="Humidity",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
-        device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_MBAR,
-        name="Pressure",
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.MBAR,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "battery": SensorEntityDescription(
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Battery",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "co2": SensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        name="CO2",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "voc": SensorEntityDescription(
         key="voc",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
-        name="VOC",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "light": SensorEntityDescription(
         key="light",
         native_unit_of_measurement=PERCENTAGE,
-        name="Light",
+        translation_key="light",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "virusRisk": SensorEntityDescription(
         key="virusRisk",
-        name="Virus Risk",
+        translation_key="virus_risk",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "mold": SensorEntityDescription(
         key="mold",
-        name="Mold",
+        translation_key="mold",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "rssi": SensorEntityDescription(
         key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        name="RSSI",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "pm1": SensorEntityDescription(
         key="pm1",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM1,
-        name="PM1",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "pm25": SensorEntityDescription(
         key="pm25",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
-        name="PM25",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: AirthingsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Airthings sensor."""
 
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities = [
         AirthingsHeaterEnergySensor(
             coordinator,
@@ -129,14 +132,17 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AirthingsHeaterEnergySensor(CoordinatorEntity, SensorEntity):
+class AirthingsHeaterEnergySensor(
+    CoordinatorEntity[AirthingsDataCoordinatorType], SensorEntity
+):
     """Representation of a Airthings Sensor device."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: AirthingsDataCoordinatorType,
         airthings_device: AirthingsDevice,
         entity_description: SensorEntityDescription,
     ) -> None:
@@ -145,17 +151,27 @@ class AirthingsHeaterEnergySensor(CoordinatorEntity, SensorEntity):
 
         self.entity_description = entity_description
 
-        self._attr_name = f"{airthings_device.name} {entity_description.name}"
         self._attr_unique_id = f"{airthings_device.device_id}_{entity_description.key}"
         self._id = airthings_device.device_id
         self._attr_device_info = DeviceInfo(
-            configuration_url="https://dashboard.airthings.com/",
+            configuration_url=(
+                f"https://dashboard.airthings.com/devices/{airthings_device.device_id}"
+            ),
             identifiers={(DOMAIN, airthings_device.device_id)},
             name=airthings_device.name,
             manufacturer="Airthings",
+            model=airthings_device.product_name,
         )
 
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.coordinator.data[self._id].sensors[self.entity_description.key]
+        return self.coordinator.data[self._id].sensors[self.entity_description.key]  # type: ignore[no-any-return]
+
+    @property
+    def available(self) -> bool:
+        """Check if device and sensor is available in data."""
+        return (
+            super().available
+            and self.entity_description.key in self.coordinator.data[self._id].sensors
+        )

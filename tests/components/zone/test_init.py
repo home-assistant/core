@@ -1,4 +1,6 @@
 """Test zone component."""
+
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -14,15 +16,16 @@ from homeassistant.const import (
     ATTR_PERSONS,
     SERVICE_RELOAD,
 )
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockUser
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None):
@@ -57,7 +60,7 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-async def test_setup_no_zones_still_adds_home_zone(hass):
+async def test_setup_no_zones_still_adds_home_zone(hass: HomeAssistant) -> None:
     """Test if no config is passed in we still get the home zone."""
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": None})
     assert len(hass.states.async_entity_ids("zone")) == 1
@@ -68,7 +71,7 @@ async def test_setup_no_zones_still_adds_home_zone(hass):
     assert not state.attributes.get("passive", False)
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test a successful setup."""
     info = {
         "name": "Test Zone",
@@ -88,7 +91,7 @@ async def test_setup(hass):
     assert info["passive"] == state.attributes["passive"]
 
 
-async def test_setup_zone_skips_home_zone(hass):
+async def test_setup_zone_skips_home_zone(hass: HomeAssistant) -> None:
     """Test that zone named Home should override hass home zone."""
     info = {"name": "Home", "latitude": 1.1, "longitude": -2.2}
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": info})
@@ -98,14 +101,14 @@ async def test_setup_zone_skips_home_zone(hass):
     assert info["name"] == state.name
 
 
-async def test_setup_name_can_be_same_on_multiple_zones(hass):
+async def test_setup_name_can_be_same_on_multiple_zones(hass: HomeAssistant) -> None:
     """Test that zone named Home should override hass home zone."""
     info = {"name": "Test Zone", "latitude": 1.1, "longitude": -2.2}
     assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": [info, info]})
     assert len(hass.states.async_entity_ids("zone")) == 3
 
 
-async def test_active_zone_skips_passive_zones(hass):
+async def test_active_zone_skips_passive_zones(hass: HomeAssistant) -> None:
     """Test active and passive zones."""
     assert await setup.async_setup_component(
         hass,
@@ -127,7 +130,7 @@ async def test_active_zone_skips_passive_zones(hass):
     assert active is None
 
 
-async def test_active_zone_skips_passive_zones_2(hass):
+async def test_active_zone_skips_passive_zones_2(hass: HomeAssistant) -> None:
     """Test active and passive zones."""
     assert await setup.async_setup_component(
         hass,
@@ -148,7 +151,9 @@ async def test_active_zone_skips_passive_zones_2(hass):
     assert active.entity_id == "zone.active_zone"
 
 
-async def test_active_zone_prefers_smaller_zone_if_same_distance(hass):
+async def test_active_zone_prefers_smaller_zone_if_same_distance(
+    hass: HomeAssistant,
+) -> None:
     """Test zone size preferences."""
     latitude = 32.880600
     longitude = -117.237561
@@ -177,7 +182,9 @@ async def test_active_zone_prefers_smaller_zone_if_same_distance(hass):
     assert active.entity_id == "zone.small_zone"
 
 
-async def test_active_zone_prefers_smaller_zone_if_same_distance_2(hass):
+async def test_active_zone_prefers_smaller_zone_if_same_distance_2(
+    hass: HomeAssistant,
+) -> None:
     """Test zone size preferences."""
     latitude = 32.880600
     longitude = -117.237561
@@ -200,7 +207,7 @@ async def test_active_zone_prefers_smaller_zone_if_same_distance_2(hass):
     assert active.entity_id == "zone.smallest_zone"
 
 
-async def test_in_zone_works_for_passive_zones(hass):
+async def test_in_zone_works_for_passive_zones(hass: HomeAssistant) -> None:
     """Test working in passive zones."""
     latitude = 32.880600
     longitude = -117.237561
@@ -223,7 +230,47 @@ async def test_in_zone_works_for_passive_zones(hass):
     assert zone.in_zone(hass.states.get("zone.passive_zone"), latitude, longitude)
 
 
-async def test_core_config_update(hass):
+async def test_async_active_zone_with_non_zero_radius(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_active_zone with a non-zero radius."""
+    latitude = 32.880600
+    longitude = -117.237561
+
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            "zone": [
+                {
+                    "name": "Small Zone",
+                    "latitude": 32.980600,
+                    "longitude": -117.137561,
+                    "radius": 50000,
+                },
+                {
+                    "name": "Big Zone",
+                    "latitude": 32.980600,
+                    "longitude": -117.137561,
+                    "radius": 100000,
+                },
+            ]
+        },
+    )
+
+    home_state = hass.states.get("zone.home")
+    assert home_state.attributes["radius"] == 100
+    assert home_state.attributes["latitude"] == 32.87336
+    assert home_state.attributes["longitude"] == -117.22743
+
+    active = zone.async_active_zone(hass, latitude, longitude, 5000)
+    assert active.entity_id == "zone.home"
+
+    active = zone.async_active_zone(hass, latitude, longitude, 0)
+    assert active.entity_id == "zone.small_zone"
+
+
+async def test_core_config_update(hass: HomeAssistant) -> None:
     """Test updating core config will update home zone."""
     assert await setup.async_setup_component(hass, "zone", {})
 
@@ -242,10 +289,14 @@ async def test_core_config_update(hass):
     assert home_updated.attributes["longitude"] == 20
 
 
-async def test_reload(hass, hass_admin_user, hass_read_only_user):
+async def test_reload(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
-    ent_reg = er.async_get(hass)
 
     assert await setup.async_setup_component(
         hass,
@@ -271,7 +322,7 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert state_2.attributes["latitude"] == 3
     assert state_2.attributes["longitude"] == 4
     assert state_3 is None
-    assert len(ent_reg.entities) == 0
+    assert len(entity_registry.entities) == 0
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -313,7 +364,7 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert state_3.attributes["longitude"] == 6
 
 
-async def test_load_from_storage(hass, storage_setup):
+async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
@@ -322,7 +373,7 @@ async def test_load_from_storage(hass, storage_setup):
     assert state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_editable_state_attribute(hass, storage_setup):
+async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
     """Test editable attribute."""
     assert await storage_setup(
         config={DOMAIN: [{"name": "yaml option", "latitude": 3, "longitude": 4}]}
@@ -338,7 +389,9 @@ async def test_editable_state_attribute(hass, storage_setup):
     assert not state.attributes.get(ATTR_EDITABLE)
 
 
-async def test_ws_list(hass, hass_ws_client, storage_setup):
+async def test_ws_list(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
     """Test listing via WS."""
     assert await storage_setup(
         config={DOMAIN: [{"name": "yaml option", "latitude": 3, "longitude": 4}]}
@@ -360,17 +413,21 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     assert result[storage_ent][ATTR_NAME] == "from storage"
 
 
-async def test_ws_delete(hass, hass_ws_client, storage_setup):
+async def test_ws_delete(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    storage_setup,
+) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
 
     client = await hass_ws_client(hass)
 
@@ -382,10 +439,15 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 
     state = hass.states.get(input_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
 
-async def test_update(hass, hass_ws_client, storage_setup):
+async def test_update(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    storage_setup,
+) -> None:
     """Test updating min/max updates the state."""
 
     items = [
@@ -402,12 +464,11 @@ async def test_update(hass, hass_ws_client, storage_setup):
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state.attributes["latitude"] == 1
     assert state.attributes["longitude"] == 2
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
 
     client = await hass_ws_client(hass)
 
@@ -430,17 +491,21 @@ async def test_update(hass, hass_ws_client, storage_setup):
     assert state.attributes["passive"] is True
 
 
-async def test_ws_create(hass, hass_ws_client, storage_setup):
+async def test_ws_create(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    storage_setup,
+) -> None:
     """Test create WS."""
     assert await storage_setup(items=[])
 
     input_id = "new_input"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
     client = await hass_ws_client(hass)
 
@@ -464,7 +529,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
     assert state.attributes["passive"] is True
 
 
-async def test_import_config_entry(hass):
+async def test_import_config_entry(hass: HomeAssistant) -> None:
     """Test we import config entry and then delete it."""
     entry = MockConfigEntry(
         domain="zone",
@@ -491,12 +556,12 @@ async def test_import_config_entry(hass):
     assert state.attributes[ATTR_ICON] == "mdi:from-config-entry"
 
 
-async def test_zone_empty_setup(hass):
+async def test_zone_empty_setup(hass: HomeAssistant) -> None:
     """Set up zone with empty config."""
     assert await setup.async_setup_component(hass, DOMAIN, {"zone": {}})
 
 
-async def test_unavailable_zone(hass):
+async def test_unavailable_zone(hass: HomeAssistant) -> None:
     """Test active zone with unavailable zones."""
     assert await setup.async_setup_component(hass, DOMAIN, {"zone": {}})
     hass.states.async_set("zone.bla", "unavailable", {"restored": True})
@@ -506,7 +571,7 @@ async def test_unavailable_zone(hass):
     assert zone.in_zone(hass.states.get("zone.bla"), 0, 0) is False
 
 
-async def test_state(hass):
+async def test_state(hass: HomeAssistant) -> None:
     """Test the state of a zone."""
     info = {
         "name": "Test Zone",

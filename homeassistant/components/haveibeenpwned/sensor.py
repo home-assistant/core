@@ -1,23 +1,25 @@
 """Support for haveibeenpwned (email breaches) sensor."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 from http import HTTPStatus
 import logging
 
-from aiohttp.hdrs import USER_AGENT
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_API_KEY, CONF_EMAIL
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
-import homeassistant.util.dt as dt_util
+from homeassistant.util import Throttle, dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +32,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 URL = "https://haveibeenpwned.com/api/v3/breachedaccount/"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_EMAIL): vol.All(cv.ensure_list, [cv.string]),
         vol.Required(CONF_API_KEY): cv.string,
@@ -49,11 +51,7 @@ def setup_platform(
     api_key = config[CONF_API_KEY]
     data = HaveIBeenPwnedData(emails, api_key)
 
-    devices = []
-    for email in emails:
-        devices.append(HaveIBeenPwnedSensor(data, email))
-
-    add_entities(devices)
+    add_entities(HaveIBeenPwnedSensor(data, email) for email in emails)
 
 
 class HaveIBeenPwnedSensor(SensorEntity):
@@ -160,7 +158,7 @@ class HaveIBeenPwnedData:
         """Get the latest data for current email from REST service."""
         try:
             url = f"{URL}{self._email}?truncateResponse=false"
-            header = {USER_AGENT: HA_USER_AGENT, "hibp-api-key": self._api_key}
+            header = {"User-Agent": HA_USER_AGENT, "hibp-api-key": self._api_key}
             _LOGGER.debug("Checking for breaches for email: %s", self._email)
             req = requests.get(url, headers=header, allow_redirects=True, timeout=5)
 

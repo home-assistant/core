@@ -1,4 +1,5 @@
 """Support for Bbox Bouygues Modem Router."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -9,7 +10,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -17,7 +18,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_MONITORED_VARIABLES, CONF_NAME, UnitOfDataRate
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -79,7 +80,7 @@ SENSOR_TYPES_UPTIME: tuple[SensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in (*SENSOR_TYPES, *SENSOR_TYPES_UPTIME)]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MONITORED_VARIABLES): vol.All(
             cv.ensure_list, [vol.In(SENSOR_KEYS)]
@@ -130,7 +131,7 @@ class BboxUptimeSensor(SensorEntity):
     _attr_attribution = ATTRIBUTION
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
-    def __init__(self, bbox_data, name, description: SensorEntityDescription):
+    def __init__(self, bbox_data, name, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"
@@ -149,7 +150,7 @@ class BboxSensor(SensorEntity):
 
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, bbox_data, name, description: SensorEntityDescription):
+    def __init__(self, bbox_data, name, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"
@@ -184,7 +185,7 @@ class BboxSensor(SensorEntity):
 class BboxData:
     """Get data from the Bbox."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the data object."""
         self.data = None
         self.router_infos = None

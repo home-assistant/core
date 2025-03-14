@@ -2,6 +2,7 @@
 
 Sending HOTP through notify service
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -26,7 +27,7 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.7.0"]
+REQUIREMENTS = ["pyotp==2.8.0"]
 
 CONF_MESSAGE = "message"
 
@@ -87,7 +88,7 @@ class NotifySetting:
     target: str | None = attr.ib(default=None)
 
 
-_UsersDict = dict[str, NotifySetting]
+type _UsersDict = dict[str, NotifySetting]
 
 
 @MULTI_FACTOR_AUTH_MODULES.register("notify")
@@ -152,7 +153,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         """Return list of notify services."""
         unordered_services = set()
 
-        for service in self.hass.services.async_services().get("notify", {}):
+        for service in self.hass.services.async_services_for_domain("notify"):
             if service not in self._exclude:
                 unordered_services.add(service)
 
@@ -161,7 +162,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
         return sorted(unordered_services)
 
-    async def async_setup_flow(self, user_id: str) -> SetupFlow:
+    async def async_setup_flow(self, user_id: str) -> NotifySetupFlow:
         """Return a data entry flow handler for setup module.
 
         Mfa module should extend SetupFlow
@@ -267,7 +268,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         await self.hass.services.async_call("notify", notify_service, data)
 
 
-class NotifySetupFlow(SetupFlow):
+class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
     """Handler for the setup flow."""
 
     def __init__(
@@ -279,8 +280,6 @@ class NotifySetupFlow(SetupFlow):
     ) -> None:
         """Initialize the setup flow."""
         super().__init__(auth_module, setup_schema, user_id)
-        # to fix typing complaint
-        self._auth_module: NotifyAuthModule = auth_module
         self._available_notify_services = available_notify_services
         self._secret: str | None = None
         self._count: int | None = None

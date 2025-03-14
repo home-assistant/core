@@ -1,20 +1,18 @@
 """Test discovery helpers."""
+
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant import setup
 from homeassistant.const import Platform
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from tests.common import (
-    MockModule,
-    MockPlatform,
-    mock_entity_platform,
-    mock_integration,
-)
+from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
 
 
 @pytest.fixture
@@ -24,7 +22,7 @@ def mock_setup_component():
         yield mock
 
 
-async def test_listen(hass, mock_setup_component):
+async def test_listen(hass: HomeAssistant, mock_setup_component) -> None:
     """Test discovery listen/discover combo."""
     calls_single = []
 
@@ -50,7 +48,7 @@ async def test_listen(hass, mock_setup_component):
     assert calls_single[0] == ("test service", "discovery info")
 
 
-async def test_platform(hass, mock_setup_component):
+async def test_platform(hass: HomeAssistant, mock_setup_component) -> None:
     """Test discover platform method."""
     calls = []
 
@@ -104,7 +102,7 @@ async def test_platform(hass, mock_setup_component):
     assert len(calls) == 1
 
 
-async def test_circular_import(hass):
+async def test_circular_import(hass: HomeAssistant) -> None:
     """Test we don't break doing circular import.
 
     This test will have test_component discover the switch.test_circular
@@ -119,7 +117,7 @@ async def test_circular_import(hass):
     component_calls = []
     platform_calls = []
 
-    def component_setup(hass, config):
+    def component_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Set up mock component."""
         discovery.load_platform(
             hass, Platform.SWITCH, "test_circular", {"key": "value"}, config
@@ -127,7 +125,12 @@ async def test_circular_import(hass):
         component_calls.append(1)
         return True
 
-    def setup_platform(hass, config, add_entities_callback, discovery_info=None):
+    def setup_platform(
+        hass: HomeAssistant,
+        config: ConfigType,
+        add_entities_callback: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
         """Set up mock platform."""
         platform_calls.append("disc" if discovery_info else "component")
 
@@ -136,7 +139,9 @@ async def test_circular_import(hass):
     # dependencies are only set in component level
     # since we are using manifest to hold them
     mock_integration(hass, MockModule("test_circular", dependencies=["test_component"]))
-    mock_entity_platform(hass, "switch.test_circular", MockPlatform(setup_platform))
+    mock_platform(
+        hass, "test_circular.switch", MockPlatform(setup_platform=setup_platform)
+    )
 
     await setup.async_setup_component(
         hass,
@@ -155,7 +160,7 @@ async def test_circular_import(hass):
     assert "switch" in hass.config.components
 
 
-async def test_1st_discovers_2nd_component(hass):
+async def test_1st_discovers_2nd_component(hass: HomeAssistant) -> None:
     """Test that we don't break if one component discovers the other.
 
     If the first component fires a discovery event to set up the
@@ -164,15 +169,14 @@ async def test_1st_discovers_2nd_component(hass):
     """
     component_calls = []
 
-    async def component1_setup(hass, config):
+    async def component1_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Set up mock component."""
-        print("component1 setup")
         await discovery.async_discover(
             hass, "test_component2", {}, "test_component2", {}
         )
         return True
 
-    def component2_setup(hass, config):
+    def component2_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Set up mock component."""
         component_calls.append(1)
         return True

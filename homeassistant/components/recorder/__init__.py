@@ -1,4 +1,5 @@
 """Support for recording details."""
+
 from __future__ import annotations
 
 import logging
@@ -6,9 +7,14 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_EXCLUDE, EVENT_STATE_CHANGED
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    CONF_EXCLUDE,
+    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,  # noqa: F401
+    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,  # noqa: F401
+    EVENT_STATE_CHANGED,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
@@ -17,18 +23,26 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
+from homeassistant.helpers.recorder import DATA_INSTANCE
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.event_type import EventType
 
-from . import statistics, websocket_api
+# Pre-import backup to avoid it being imported
+# later when the import executor is busy and delaying
+# startup
+from . import (
+    backup,  # noqa: F401
+    entity_registry,
+    websocket_api,
+)
 from .const import (  # noqa: F401
     CONF_DB_INTEGRITY_CHECK,
-    DATA_INSTANCE,
     DOMAIN,
-    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
-    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
-    EXCLUDE_ATTRIBUTES,
+    INTEGRATION_PLATFORM_COMPILE_STATISTICS,
+    INTEGRATION_PLATFORM_METHODS,
     SQLITE_URL_PREFIX,
+    SupportedDialect,
 )
 from .core import Recorder
 from .services import async_register_services
@@ -43,7 +57,7 @@ DEFAULT_DB_FILE = "home-assistant_v2.db"
 DEFAULT_DB_INTEGRITY_CHECK = True
 DEFAULT_DB_MAX_RETRIES = 10
 DEFAULT_DB_RETRY_WAIT = 3
-DEFAULT_COMMIT_INTERVAL = 1
+DEFAULT_COMMIT_INTERVAL = 5
 
 CONF_AUTO_PURGE = "auto_purge"
 CONF_AUTO_REPACK = "auto_repack"
@@ -120,34 +134,29 @@ def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
 
     Async friendly.
     """
-    if DATA_INSTANCE not in hass.data:
-        return False
     instance = get_instance(hass)
-    return instance.entity_filter(entity_id)
+    return instance.entity_filter is None or instance.entity_filter(entity_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
-    exclude_attributes_by_domain: dict[str, set[str]] = {}
-    hass.data[EXCLUDE_ATTRIBUTES] = exclude_attributes_by_domain
     conf = config[DOMAIN]
-    entity_filter = convert_include_exclude_filter(conf)
+    _filter = convert_include_exclude_filter(conf)
+    entity_filter = None if _filter.empty_filter else _filter.get_filter()
     auto_purge = conf[CONF_AUTO_PURGE]
     auto_repack = conf[CONF_AUTO_REPACK]
     keep_days = conf[CONF_PURGE_KEEP_DAYS]
     commit_interval = conf[CONF_COMMIT_INTERVAL]
     db_max_retries = conf[CONF_DB_MAX_RETRIES]
     db_retry_wait = conf[CONF_DB_RETRY_WAIT]
-    db_url = conf.get(CONF_DB_URL) or DEFAULT_URL.format(
-        hass_config_path=hass.config.path(DEFAULT_DB_FILE)
-    )
+    db_url = conf.get(CONF_DB_URL) or get_default_url(hass)
     exclude = conf[CONF_EXCLUDE]
-    exclude_t = exclude.get(CONF_EVENT_TYPES, [])
-    if EVENT_STATE_CHANGED in exclude_t:
-        _LOGGER.warning(
-            "State change events are excluded, recorder will not record state changes."
-            "This will become an error in Home Assistant Core 2022.2"
-        )
+    exclude_event_types: set[EventType[Any] | str] = set(
+        exclude.get(CONF_EVENT_TYPES, [])
+    )
+    if EVENT_STATE_CHANGED in exclude_event_types:
+        _LOGGER.error("State change events cannot be excluded, use a filter instead")
+        exclude_event_types.remove(EVENT_STATE_CHANGED)
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
         auto_purge=auto_purge,
@@ -158,23 +167,39 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         db_max_retries=db_max_retries,
         db_retry_wait=db_retry_wait,
         entity_filter=entity_filter,
-        exclude_t=exclude_t,
-        exclude_attributes_by_domain=exclude_attributes_by_domain,
+        exclude_event_types=exclude_event_types,
     )
+    get_instance.cache_clear()
     instance.async_initialize()
     instance.async_register()
     instance.start()
     async_register_services(hass, instance)
-    statistics.async_setup(hass)
     websocket_api.async_setup(hass)
-    await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)
+    entity_registry.async_setup(hass)
+
+    await _async_setup_integration_platform(hass, instance)
 
     return await instance.async_db_ready
 
 
-async def _process_recorder_platform(
-    hass: HomeAssistant, domain: str, platform: Any
+async def _async_setup_integration_platform(
+    hass: HomeAssistant, instance: Recorder
 ) -> None:
-    """Process a recorder platform."""
-    instance = get_instance(hass)
-    instance.queue_task(AddRecorderPlatformTask(domain, platform))
+    """Set up a recorder integration platform."""
+
+    @callback
+    def _process_recorder_platform(
+        hass: HomeAssistant, domain: str, platform: Any
+    ) -> None:
+        """Process a recorder platform."""
+        # If the platform has a compile_statistics method, we need to
+        # add it to the recorder queue to be processed.
+        if any(hasattr(platform, _attr) for _attr in INTEGRATION_PLATFORM_METHODS):
+            instance.queue_task(AddRecorderPlatformTask(domain, platform))
+
+    await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)
+
+
+def get_default_url(hass: HomeAssistant) -> str:
+    """Return the default URL."""
+    return DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))

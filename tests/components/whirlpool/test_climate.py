@@ -1,4 +1,5 @@
 """Test the Whirlpool Sixth Sense climate domain."""
+
 from unittest.mock import MagicMock
 
 from attr import dataclass
@@ -43,6 +44,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
@@ -51,35 +53,38 @@ from . import init_integration
 async def update_ac_state(
     hass: HomeAssistant,
     entity_id: str,
-    mock_aircon_api_instances: MagicMock,
-    mock_instance_idx: int,
+    mock_aircon_api_instance: MagicMock,
 ):
     """Simulate an update trigger from the API."""
-    update_ha_state_cb = mock_aircon_api_instances.call_args_list[
-        mock_instance_idx
-    ].args[3]
-    update_ha_state_cb()
-    await hass.async_block_till_done()
+    for call in mock_aircon_api_instance.register_attr_callback.call_args_list:
+        update_ha_state_cb = call[0][0]
+        update_ha_state_cb()
+        await hass.async_block_till_done()
     return hass.states.get(entity_id)
 
 
 async def test_no_appliances(
     hass: HomeAssistant, mock_appliances_manager_api: MagicMock
-):
+) -> None:
     """Test the setup of the climate entities when there are no appliances available."""
     mock_appliances_manager_api.return_value.aircons = []
+    mock_appliances_manager_api.return_value.washer_dryers = []
     await init_integration(hass)
     assert len(hass.states.async_all()) == 0
 
 
-async def test_static_attributes(hass: HomeAssistant, mock_aircon1_api: MagicMock):
+async def test_static_attributes(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test static climate attributes."""
     await init_integration(hass)
 
-    for entity_id in ("climate.said1", "climate.said2"):
-        entry = er.async_get(hass).async_get(entity_id)
+    for said in ("said1", "said2"):
+        entity_id = f"climate.{said}"
+        entry = entity_registry.async_get(entity_id)
         assert entry
-        assert entry.unique_id == entity_id.split(".")[1]
+        assert entry.unique_id == said
 
         state = hass.states.get(entity_id)
         assert state is not None
@@ -87,13 +92,15 @@ async def test_static_attributes(hass: HomeAssistant, mock_aircon1_api: MagicMoc
         assert state.state == HVACMode.COOL
 
         attributes = state.attributes
-        assert attributes[ATTR_FRIENDLY_NAME] == "TestZone"
+        assert attributes[ATTR_FRIENDLY_NAME] == f"Aircon {said}"
 
         assert (
             attributes[ATTR_SUPPORTED_FEATURES]
             == ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.SWING_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         assert attributes[ATTR_HVAC_MODES] == [
             HVACMode.COOL,
@@ -116,10 +123,9 @@ async def test_static_attributes(hass: HomeAssistant, mock_aircon1_api: MagicMoc
 
 async def test_dynamic_attributes(
     hass: HomeAssistant,
-    mock_aircon_api_instances: MagicMock,
     mock_aircon1_api: MagicMock,
     mock_aircon2_api: MagicMock,
-):
+) -> None:
     """Test dynamic attributes."""
     await init_integration(hass)
 
@@ -137,81 +143,56 @@ async def test_dynamic_attributes(
     ):
         entity_id = clim_test_instance.entity_id
         mock_instance = clim_test_instance.mock_instance
-        mock_instance_idx = clim_test_instance.mock_instance_idx
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == HVACMode.COOL
 
         mock_instance.get_power_on.return_value = False
-        state = await update_ac_state(
-            hass, entity_id, mock_aircon_api_instances, mock_instance_idx
-        )
+        state = await update_ac_state(hass, entity_id, mock_instance)
         assert state.state == HVACMode.OFF
 
         mock_instance.get_online.return_value = False
-        state = await update_ac_state(
-            hass, entity_id, mock_aircon_api_instances, mock_instance_idx
-        )
+        state = await update_ac_state(hass, entity_id, mock_instance)
         assert state.state == STATE_UNAVAILABLE
 
         mock_instance.get_power_on.return_value = True
         mock_instance.get_online.return_value = True
-        state = await update_ac_state(
-            hass, entity_id, mock_aircon_api_instances, mock_instance_idx
-        )
+        state = await update_ac_state(hass, entity_id, mock_instance)
         assert state.state == HVACMode.COOL
 
         mock_instance.get_mode.return_value = whirlpool.aircon.Mode.Heat
-        state = await update_ac_state(
-            hass, entity_id, mock_aircon_api_instances, mock_instance_idx
-        )
+        state = await update_ac_state(hass, entity_id, mock_instance)
         assert state.state == HVACMode.HEAT
 
         mock_instance.get_mode.return_value = whirlpool.aircon.Mode.Fan
-        state = await update_ac_state(
-            hass, entity_id, mock_aircon_api_instances, mock_instance_idx
-        )
+        state = await update_ac_state(hass, entity_id, mock_instance)
         assert state.state == HVACMode.FAN_ONLY
 
         mock_instance.get_fanspeed.return_value = whirlpool.aircon.FanSpeed.Auto
-        state = await update_ac_state(
-            hass, entity_id, mock_aircon_api_instances, mock_instance_idx
-        )
+        state = await update_ac_state(hass, entity_id, mock_instance)
         assert state.attributes[ATTR_FAN_MODE] == HVACMode.AUTO
 
         mock_instance.get_fanspeed.return_value = whirlpool.aircon.FanSpeed.Low
-        state = await update_ac_state(
-            hass, entity_id, mock_aircon_api_instances, mock_instance_idx
-        )
+        state = await update_ac_state(hass, entity_id, mock_instance)
         assert state.attributes[ATTR_FAN_MODE] == FAN_LOW
 
         mock_instance.get_fanspeed.return_value = whirlpool.aircon.FanSpeed.Medium
-        state = await update_ac_state(
-            hass, entity_id, mock_aircon_api_instances, mock_instance_idx
-        )
+        state = await update_ac_state(hass, entity_id, mock_instance)
         assert state.attributes[ATTR_FAN_MODE] == FAN_MEDIUM
 
         mock_instance.get_fanspeed.return_value = whirlpool.aircon.FanSpeed.High
-        state = await update_ac_state(
-            hass, entity_id, mock_aircon_api_instances, mock_instance_idx
-        )
+        state = await update_ac_state(hass, entity_id, mock_instance)
         assert state.attributes[ATTR_FAN_MODE] == FAN_HIGH
 
         mock_instance.get_fanspeed.return_value = whirlpool.aircon.FanSpeed.Off
-        state = await update_ac_state(
-            hass, entity_id, mock_aircon_api_instances, mock_instance_idx
-        )
+        state = await update_ac_state(hass, entity_id, mock_instance)
         assert state.attributes[ATTR_FAN_MODE] == FAN_OFF
 
         mock_instance.get_current_temp.return_value = 15
         mock_instance.get_temp.return_value = 20
         mock_instance.get_current_humidity.return_value = 80
         mock_instance.get_h_louver_swing.return_value = True
-        attributes = (
-            await update_ac_state(
-                hass, entity_id, mock_aircon_api_instances, mock_instance_idx
-            )
-        ).attributes
+        attributes = (await update_ac_state(hass, entity_id, mock_instance)).attributes
         assert attributes[ATTR_CURRENT_TEMPERATURE] == 15
         assert attributes[ATTR_TEMPERATURE] == 20
         assert attributes[ATTR_CURRENT_HUMIDITY] == 80
@@ -221,11 +202,7 @@ async def test_dynamic_attributes(
         mock_instance.get_temp.return_value = 21
         mock_instance.get_current_humidity.return_value = 70
         mock_instance.get_h_louver_swing.return_value = False
-        attributes = (
-            await update_ac_state(
-                hass, entity_id, mock_aircon_api_instances, mock_instance_idx
-            )
-        ).attributes
+        attributes = (await update_ac_state(hass, entity_id, mock_instance)).attributes
         assert attributes[ATTR_CURRENT_TEMPERATURE] == 16
         assert attributes[ATTR_TEMPERATURE] == 21
         assert attributes[ATTR_CURRENT_HUMIDITY] == 70
@@ -233,8 +210,10 @@ async def test_dynamic_attributes(
 
 
 async def test_service_calls(
-    hass: HomeAssistant, mock_aircon1_api: MagicMock, mock_aircon2_api: MagicMock
-):
+    hass: HomeAssistant,
+    mock_aircon1_api: MagicMock,
+    mock_aircon2_api: MagicMock,
+) -> None:
     """Test controlling the entity through service calls."""
     await init_integration(hass)
 
@@ -283,10 +262,10 @@ async def test_service_calls(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
+            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 16},
             blocking=True,
         )
-        mock_instance.set_temp.assert_called_once_with(15)
+        mock_instance.set_temp.assert_called_once_with(16)
 
         mock_instance.set_mode.reset_mock()
         await hass.services.async_call(
@@ -361,7 +340,7 @@ async def test_service_calls(
 
         mock_instance.set_fanspeed.reset_mock()
         # FAN_MIDDLE is not supported
-        with pytest.raises(ValueError):
+        with pytest.raises(ServiceValidationError):
             await hass.services.async_call(
                 CLIMATE_DOMAIN,
                 SERVICE_SET_FAN_MODE,

@@ -1,17 +1,18 @@
 """Platform for beewi_smartclim integration."""
+
 from __future__ import annotations
 
-from beewi_smartclim import BeewiSmartClimPoller  # pylint: disable=import-error
+from beewi_smartclim import BeewiSmartClimPoller
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.const import CONF_MAC, CONF_NAME, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import CONF_MAC, CONF_NAME, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -20,12 +21,12 @@ DEFAULT_NAME = "BeeWi SmartClim"
 
 # Sensor config
 SENSOR_TYPES = [
-    [SensorDeviceClass.TEMPERATURE, "Temperature", TEMP_CELSIUS],
+    [SensorDeviceClass.TEMPERATURE, "Temperature", UnitOfTemperature.CELSIUS],
     [SensorDeviceClass.HUMIDITY, "Humidity", PERCENTAGE],
     [SensorDeviceClass.BATTERY, "Battery", PERCENTAGE],
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

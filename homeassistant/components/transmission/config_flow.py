@@ -1,4 +1,5 @@
-"""Config flow for Transmission Bittorent Client."""
+"""Config flow for Transmission Bittorrent Client."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -6,17 +7,22 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
+    CONF_SSL,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from . import get_api
 from .const import (
@@ -25,8 +31,9 @@ from .const import (
     DEFAULT_LIMIT,
     DEFAULT_NAME,
     DEFAULT_ORDER,
+    DEFAULT_PATH,
     DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SSL,
     DOMAIN,
     SUPPORTED_ORDER_MODES,
 )
@@ -34,8 +41,9 @@ from .errors import AuthenticationError, CannotConnect, UnknownError
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
         vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PATH, default=DEFAULT_PATH): str,
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
@@ -43,35 +51,30 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle Tansmission config flow."""
 
     VERSION = 1
-    _reauth_entry: config_entries.ConfigEntry | None
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> TransmissionOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return TransmissionOptionsFlowHandler(config_entry)
+        return TransmissionOptionsFlowHandler()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
         if user_input is not None:
-
-            for entry in self._async_current_entries():
-                if (
-                    entry.data[CONF_HOST] == user_input[CONF_HOST]
-                    and entry.data[CONF_PORT] == user_input[CONF_PORT]
-                ):
-                    return self.async_abort(reason="already_configured")
-                if entry.data[CONF_NAME] == user_input[CONF_NAME]:
-                    errors[CONF_NAME] = "name_exists"
-                    break
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
             try:
                 await get_api(self.hass, user_input)
 
@@ -83,7 +86,8 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=DEFAULT_NAME,
+                    data=user_input,
                 )
 
         return self.async_show_form(
@@ -92,21 +96,20 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors = {}
-        assert self._reauth_entry
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            user_input = {**self._reauth_entry.data, **user_input}
+            user_input = {**reauth_entry.data, **user_input}
             try:
                 await get_api(self.hass, user_input)
 
@@ -115,15 +118,12 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except (CannotConnect, UnknownError):
                 errors["base"] = "cannot_connect"
             else:
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=user_input
-                )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(reauth_entry, data=user_input)
 
         return self.async_show_form(
             description_placeholders={
-                CONF_USERNAME: self._reauth_entry.data[CONF_USERNAME]
+                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
+                CONF_NAME: reauth_entry.title,
             },
             step_id="reauth_confirm",
             data_schema=vol.Schema(
@@ -135,25 +135,17 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class TransmissionOptionsFlowHandler(config_entries.OptionsFlow):
+class TransmissionOptionsFlowHandler(OptionsFlow):
     """Handle Transmission client options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize Transmission options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the Transmission options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
         options = {
-            vol.Optional(
-                CONF_SCAN_INTERVAL,
-                default=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
-            ): int,
             vol.Optional(
                 CONF_LIMIT,
                 default=self.config_entry.options.get(CONF_LIMIT, DEFAULT_LIMIT),

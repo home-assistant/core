@@ -1,6 +1,8 @@
 """The Honeywell Lyric integration."""
+
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -8,9 +10,6 @@ import logging
 from aiohttp.client_exceptions import ClientResponseError
 from aiolyric import Lyric
 from aiolyric.exceptions import LyricAuthenticationException, LyricException
-from aiolyric.objects.device import LyricDevice
-from aiolyric.objects.location import LyricLocation
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -20,16 +19,8 @@ from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
     config_validation as cv,
-    device_registry as dr,
 )
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import (
     ConfigEntryLyricClient,
@@ -38,27 +29,11 @@ from .api import (
 )
 from .const import DOMAIN
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Honeywell Lyric integration."""
-    if DOMAIN in config:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "removed_yaml",
-            breaks_in_ha_version="2022.8.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="removed_yaml",
-        )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -69,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
     if not isinstance(implementation, LyricLocalOAuth2Implementation):
-        raise ValueError("Unexpected auth implementation; can't find oauth client id")
+        raise TypeError("Unexpected auth implementation; can't find oauth client id")
 
     session = aiohttp_client.async_get_clientsession(hass)
     oauth_session = OAuth2SessionLyric(hass, entry, implementation)
@@ -92,9 +67,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise UpdateFailed(exception) from exception
 
         try:
-            async with async_timeout.timeout(60):
+            async with asyncio.timeout(60):
                 await lyric.get_locations()
-            return lyric
+                await asyncio.gather(
+                    *(
+                        lyric.get_thermostat_rooms(
+                            location.location_id, device.device_id
+                        )
+                        for location in lyric.locations
+                        for device in location.devices
+                        if device.device_class == "Thermostat"
+                        and device.device_id.startswith("LCC")
+                    )
+                )
+
         except LyricAuthenticationException as exception:
             # Attempt to refresh the token before failing.
             # Honeywell appear to have issues keeping tokens saved.
@@ -104,10 +90,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryAuthFailed from exception
         except (LyricException, ClientResponseError) as exception:
             raise UpdateFailed(exception) from exception
+        return lyric
 
-    coordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator[Lyric](
         hass,
         _LOGGER,
+        config_entry=entry,
         # Name of the data. For logging purposes.
         name="lyric_coordinator",
         update_method=async_update_data,
@@ -131,50 +119,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class LyricEntity(CoordinatorEntity):
-    """Defines a base Honeywell Lyric entity."""
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        location: LyricLocation,
-        device: LyricDevice,
-        key: str,
-    ) -> None:
-        """Initialize the Honeywell Lyric entity."""
-        super().__init__(coordinator)
-        self._key = key
-        self._location = location
-        self._mac_id = device.macID
-        self._update_thermostat = coordinator.data.update_thermostat
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self._key
-
-    @property
-    def location(self) -> LyricLocation:
-        """Get the Lyric Location."""
-        return self.coordinator.data.locations_dict[self._location.locationID]
-
-    @property
-    def device(self) -> LyricDevice:
-        """Get the Lyric Device."""
-        return self.location.devices_dict[self._mac_id]
-
-
-class LyricDeviceEntity(LyricEntity):
-    """Defines a Honeywell Lyric device entity."""
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this Honeywell Lyric instance."""
-        return DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
-            manufacturer="Honeywell",
-            model=self.device.deviceModel,
-            name=self.device.name,
-        )

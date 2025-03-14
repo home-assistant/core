@@ -1,4 +1,5 @@
 """Config flow for WiZ Platform."""
+
 from __future__ import annotations
 
 import logging
@@ -9,10 +10,11 @@ from pywizlight.discovery import DiscoveredBulb
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 import voluptuous as vol
 
-from homeassistant.components import dhcp, onboarding
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.components import onboarding
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.util.network import is_ip_address
 
 from .const import DEFAULT_NAME, DISCOVER_SCAN_TIMEOUT, DOMAIN, WIZ_CONNECT_EXCEPTIONS
@@ -36,7 +38,9 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, DiscoveredBulb] = {}
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         self._discovered_device = DiscoveredBulb(
             discovery_info.ip, discovery_info.macaddress
@@ -45,14 +49,14 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_integration_discovery(
         self, discovery_info: dict[str, str]
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle integration discovery."""
         self._discovered_device = DiscoveredBulb(
             discovery_info["ip_address"], discovery_info["mac_address"]
         )
         return await self._async_handle_discovery()
 
-    async def _async_handle_discovery(self) -> FlowResult:
+    async def _async_handle_discovery(self) -> ConfigFlowResult:
         """Handle any discovery."""
         device = self._discovered_device
         _LOGGER.debug("Discovered device: %s", device)
@@ -81,7 +85,7 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         ip_address = self._discovered_device.ip_address
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
@@ -104,7 +108,7 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_pick_device(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the step to pick discovered device."""
         if user_input is not None:
             device = self._discovered_devices[user_input[CONF_DEVICE]]
@@ -114,11 +118,11 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
                 bulbtype = await bulb.get_bulbtype()
             except WIZ_CONNECT_EXCEPTIONS:
                 return self.async_abort(reason="cannot_connect")
-            else:
-                return self.async_create_entry(
-                    title=name_from_bulb_type_and_mac(bulbtype, device.mac_address),
-                    data={CONF_HOST: device.ip_address},
-                )
+
+            return self.async_create_entry(
+                title=name_from_bulb_type_and_mac(bulbtype, device.mac_address),
+                data={CONF_HOST: device.ip_address},
+            )
 
         current_unique_ids = self._async_current_ids()
         current_hosts = {
@@ -146,7 +150,7 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -165,7 +169,7 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
                 except WizLightConnectionError:
                     errors["base"] = "no_wiz_light"
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:

@@ -1,20 +1,25 @@
 """Sensor for Risco Events."""
+
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
+from datetime import datetime
 from typing import Any
+
+from pyrisco.cloud.event import Event
 
 from homeassistant.components.binary_sensor import DOMAIN as BS_DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from . import RiscoEventsDataUpdateCoordinator, is_local
+from . import is_local
 from .const import DOMAIN, EVENTS_COORDINATOR
+from .coordinator import RiscoEventsDataUpdateCoordinator
 from .entity import zone_unique_id
 
 CATEGORIES = {
@@ -41,7 +46,7 @@ EVENT_ATTRIBUTES = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
     if is_local(config_entry):
@@ -52,8 +57,8 @@ async def async_setup_entry(
         config_entry.entry_id
     ][EVENTS_COORDINATOR]
     sensors = [
-        RiscoSensor(coordinator, id, [], name, config_entry.entry_id)
-        for id, name in CATEGORIES.items()
+        RiscoSensor(coordinator, category_id, [], name, config_entry.entry_id)
+        for category_id, name in CATEGORIES.items()
     ]
     sensors.append(
         RiscoSensor(
@@ -63,30 +68,36 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class RiscoSensor(CoordinatorEntity, SensorEntity):
+class RiscoSensor(CoordinatorEntity[RiscoEventsDataUpdateCoordinator], SensorEntity):
     """Sensor for Risco events."""
 
-    def __init__(self, coordinator, category_id, excludes, name, entry_id) -> None:
+    _entity_registry: er.EntityRegistry
+
+    def __init__(
+        self,
+        coordinator: RiscoEventsDataUpdateCoordinator,
+        category_id: int | None,
+        excludes: Collection[int],
+        name: str,
+        entry_id: str,
+    ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator)
-        self._event = None
+        self._event: Event | None = None
         self._category_id = category_id
         self._excludes = excludes
         self._name = name
         self._entry_id = entry_id
-        self._entity_registry: er.EntityRegistry | None = None
         self._attr_unique_id = f"events_{name}_{self.coordinator.risco.site_uuid}"
         self._attr_name = f"Risco {self.coordinator.risco.site_name} {name} Events"
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
+        await super().async_added_to_hass()
         self._entity_registry = er.async_get(self.hass)
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._refresh_from_coordinator)
-        )
 
-    def _refresh_from_coordinator(self):
+    def _handle_coordinator_update(self) -> None:
         events = self.coordinator.data
         for event in reversed(events):
             if event.category_id in self._excludes:
@@ -98,14 +109,14 @@ class RiscoSensor(CoordinatorEntity, SensorEntity):
             self.async_write_ha_state()
 
     @property
-    def native_value(self):
+    def native_value(self) -> datetime | None:
         """Value of sensor."""
         if self._event is None:
             return None
 
-        return dt_util.parse_datetime(self._event.time).replace(
-            tzinfo=dt_util.DEFAULT_TIME_ZONE
-        )
+        if res := dt_util.parse_datetime(self._event.time):
+            return res.replace(tzinfo=dt_util.get_default_time_zone())
+        return None
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:

@@ -1,18 +1,22 @@
 """API for persistent storage for the frontend."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from functools import wraps
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
+from homeassistant.util.hass_dict import HassKey
 
-DATA_STORAGE = "frontend_storage"
+DATA_STORAGE: HassKey[tuple[dict[str, Store], dict[str, dict]]] = HassKey(
+    "frontend_storage"
+)
 STORAGE_VERSION_USER_DATA = 1
 
 
@@ -50,12 +54,19 @@ async def async_user_store(
     return store, data[user_id]
 
 
-def with_store(orig_func: Callable) -> Callable:
+def with_store(
+    orig_func: Callable[
+        [HomeAssistant, ActiveConnection, dict[str, Any], Store, dict[str, Any]],
+        Coroutine[Any, Any, None],
+    ],
+) -> Callable[
+    [HomeAssistant, ActiveConnection, dict[str, Any]], Coroutine[Any, Any, None]
+]:
     """Decorate function to provide data."""
 
     @wraps(orig_func)
     async def with_store_func(
-        hass: HomeAssistant, connection: ActiveConnection, msg: dict
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
     ) -> None:
         """Provide user specific data and store to function."""
         user_id = connection.user.id

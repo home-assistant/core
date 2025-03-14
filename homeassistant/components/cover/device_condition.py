@@ -1,10 +1,10 @@
 """Provides device automations for Cover."""
+
 from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ABOVE,
     CONF_BELOW,
     CONF_CONDITION,
@@ -12,24 +12,18 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import condition, config_validation as cv, entity_registry
+from homeassistant.helpers import (
+    condition,
+    config_validation as cv,
+    entity_registry as er,
+)
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import (
-    DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-)
+from . import DOMAIN, CoverEntityFeature, CoverState
 
 # mypy: disallow-any-generics
 
@@ -39,7 +33,7 @@ STATE_CONDITION_TYPES = {"is_open", "is_closed", "is_opening", "is_closing"}
 POSITION_CONDITION_SCHEMA = vol.All(
     DEVICE_CONDITION_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             vol.Required(CONF_TYPE): vol.In(POSITION_CONDITION_TYPES),
             vol.Optional(CONF_ABOVE): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=100)
@@ -54,7 +48,7 @@ POSITION_CONDITION_SCHEMA = vol.All(
 
 STATE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_TYPE): vol.In(STATE_CONDITION_TYPES),
     }
 )
@@ -66,32 +60,34 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Cover devices."""
-    registry = entity_registry.async_get(hass)
+    registry = er.async_get(hass)
     conditions: list[dict[str, str]] = []
 
     # Get all the integrations entities for this device
-    for entry in entity_registry.async_entries_for_device(registry, device_id):
+    for entry in er.async_entries_for_device(registry, device_id):
         if entry.domain != DOMAIN:
             continue
 
         supported_features = get_supported_features(hass, entry.entity_id)
-        supports_open_close = supported_features & (SUPPORT_OPEN | SUPPORT_CLOSE)
+        supports_open_close = supported_features & (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        )
 
         # Add conditions for each entity that belongs to this integration
         base_condition = {
             CONF_CONDITION: "device",
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_ENTITY_ID: entry.entity_id,
+            CONF_ENTITY_ID: entry.id,
         }
 
         if supports_open_close:
             conditions += [
                 {**base_condition, CONF_TYPE: cond} for cond in STATE_CONDITION_TYPES
             ]
-        if supported_features & SUPPORT_SET_POSITION:
+        if supported_features & CoverEntityFeature.SET_POSITION:
             conditions.append({**base_condition, CONF_TYPE: "is_position"})
-        if supported_features & SUPPORT_SET_TILT_POSITION:
+        if supported_features & CoverEntityFeature.SET_TILT_POSITION:
             conditions.append({**base_condition, CONF_TYPE: "is_tilt_position"})
 
     return conditions
@@ -123,19 +119,22 @@ def async_condition_from_config(
     hass: HomeAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
+    registry = er.async_get(hass)
+    entity_id = er.async_resolve_entity_id(registry, config[CONF_ENTITY_ID])
+
     if config[CONF_TYPE] in STATE_CONDITION_TYPES:
         if config[CONF_TYPE] == "is_open":
-            state = STATE_OPEN
+            state = CoverState.OPEN
         elif config[CONF_TYPE] == "is_closed":
-            state = STATE_CLOSED
+            state = CoverState.CLOSED
         elif config[CONF_TYPE] == "is_opening":
-            state = STATE_OPENING
+            state = CoverState.OPENING
         elif config[CONF_TYPE] == "is_closing":
-            state = STATE_CLOSING
+            state = CoverState.CLOSING
 
         def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
             """Test if an entity is a certain state."""
-            return condition.state(hass, config[ATTR_ENTITY_ID], state)
+            return condition.state(hass, entity_id, state)
 
         return test_is_state
 
@@ -152,7 +151,7 @@ def async_condition_from_config(
     ) -> bool:
         """Return whether the criteria are met."""
         return condition.async_numeric_state(
-            hass, config[ATTR_ENTITY_ID], max_pos, min_pos, attribute=position_attr
+            hass, entity_id, max_pos, min_pos, attribute=position_attr
         )
 
     return check_numeric_state

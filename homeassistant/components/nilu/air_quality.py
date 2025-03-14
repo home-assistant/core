@@ -1,4 +1,5 @@
 """Sensor for checking the air quality around Norway."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -22,7 +23,10 @@ from niluclient import (
 )
 import voluptuous as vol
 
-from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
+from homeassistant.components.air_quality import (
+    PLATFORM_SCHEMA as AIR_QUALITY_PLATFORM_SCHEMA,
+    AirQualityEntity,
+)
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -30,7 +34,7 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -39,7 +43,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_AREA = "area"
 ATTR_POLLUTION_INDEX = "nilu_pollution_index"
-ATTRIBUTION = "Data provided by luftkvalitet.info and nilu.no"
 
 CONF_AREA = "area"
 CONF_STATION = "stations"
@@ -86,7 +89,7 @@ CONF_ALLOWED_AREAS = [
     "Ålesund",
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
     {
         vol.Inclusive(
             CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
@@ -97,16 +100,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Exclusive(
             CONF_AREA,
             "station_collection",
-            "Can only configure one specific station or "
-            "stations in a specific area pr sensor. "
-            "Please only configure station or area.",
+            (
+                "Can only configure one specific station or "
+                "stations in a specific area pr sensor. "
+                "Please only configure station or area."
+            ),
         ): vol.All(cv.string, vol.In(CONF_ALLOWED_AREAS)),
         vol.Exclusive(
             CONF_STATION,
             "station_collection",
-            "Can only configure one specific station or "
-            "stations in a specific area pr sensor. "
-            "Please only configure station or area.",
+            (
+                "Can only configure one specific station or "
+                "stations in a specific area pr sensor. "
+                "Please only configure station or area."
+            ),
         ): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
@@ -169,6 +176,8 @@ class NiluData:
 class NiluSensor(AirQualityEntity):
     """Single nilu station air sensor."""
 
+    _attr_attribution = "Data provided by luftkvalitet.info and nilu.no"
+
     def __init__(self, api_data: NiluData, name: str, show_on_map: bool) -> None:
         """Initialize the sensor."""
         self._api = api_data
@@ -179,11 +188,6 @@ class NiluSensor(AirQualityEntity):
         if show_on_map:
             self._attrs[CONF_LATITUDE] = api_data.data.latitude
             self._attrs[CONF_LONGITUDE] = api_data.data.longitude
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
 
     @property
     def extra_state_attributes(self) -> dict:

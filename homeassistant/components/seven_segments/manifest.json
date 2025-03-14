@@ -1,8 +1,9 @@
 {
   "domain": "seven_segments",
   "name": "Seven Segments OCR",
-  "documentation": "https://www.home-assistant.io/integrations/seven_segments",
-  "requirements": ["pillow==9.3.0"],
   "codeowners": ["@fabaff"],
-  "iot_class": "local_polling"
+  "documentation": "https://www.home-assistant.io/integrations/seven_segments",
+  "iot_class": "local_polling",
+  "quality_scale": "legacy",
+  "requirements": ["Pillow==11.1.0"]
 }

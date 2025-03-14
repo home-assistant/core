@@ -1,9 +1,10 @@
 """Fixtures for Samsung TV."""
+
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from datetime import datetime
-from socket import AddressFamily
+from socket import AddressFamily  # pylint: disable=no-name-in-module
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -20,29 +21,35 @@ from samsungtvws.exceptions import ResponseError
 from samsungtvws.remote import ChannelEmitCommand
 
 from homeassistant.components.samsungtv.const import WEBSOCKET_SSL_PORT
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import SAMPLE_DEVICE_INFO_UE48JU6400, SAMPLE_DEVICE_INFO_WIFI
 
 
-@pytest.fixture(autouse=True)
-async def silent_ssdp_scanner(hass):
-    """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
-    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
-        "homeassistant.components.ssdp.Scanner.async_scan"
-    ), patch(
-        "homeassistant.components.ssdp.Server._async_start_upnp_servers"
-    ), patch(
-        "homeassistant.components.ssdp.Server._async_stop_upnp_servers"
+        "homeassistant.components.samsungtv.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture(autouse=True)
+def silent_ssdp_scanner() -> Generator[None]:
+    """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
+    with (
+        patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner.async_scan"),
+        patch(
+            "homeassistant.components.ssdp.Server._async_start_upnp_servers",
+        ),
+        patch(
+            "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
+        ),
     ):
         yield
-
-
-@pytest.fixture(autouse=True)
-def samsungtv_mock_get_source_ip(mock_get_source_ip):
-    """Mock network util's async_get_source_ip."""
 
 
 @pytest.fixture(autouse=True)
@@ -172,7 +179,7 @@ def rest_api_fixture_non_ssl_only() -> Mock:
     class MockSamsungTVAsyncRest:
         """Mock for a MockSamsungTVAsyncRest."""
 
-        def __init__(self, host, session, port, timeout):
+        def __init__(self, host, session, port, timeout) -> None:
             """Mock a MockSamsungTVAsyncRest."""
             self.port = port
             self.host = host
@@ -221,7 +228,7 @@ def remotews_fixture() -> Mock:
     remotews.app_list_data = None
 
     async def _start_listening(
-        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None
+        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None,
     ):
         remotews.ws_event_callback = ws_event_callback
 
@@ -260,7 +267,7 @@ def remoteencws_fixture() -> Mock:
     remoteencws.__aexit__ = AsyncMock()
 
     def _start_listening(
-        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None
+        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None,
     ):
         remoteencws.ws_event_callback = ws_event_callback
 
@@ -276,15 +283,6 @@ def remoteencws_fixture() -> Mock:
     ) as remotews_class:
         remotews_class.return_value = remoteencws
         yield remoteencws
-
-
-@pytest.fixture(name="delay")
-def delay_fixture() -> Mock:
-    """Patch the delay script function."""
-    with patch(
-        "homeassistant.components.samsungtv.media_player.Script.async_run"
-    ) as delay:
-        yield delay
 
 
 @pytest.fixture

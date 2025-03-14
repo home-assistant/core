@@ -1,4 +1,5 @@
 """Fixtures for MJPEG IP Camera integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -43,7 +44,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.mjpeg.async_setup_entry", return_value=True
@@ -52,18 +53,18 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_reload_entry() -> Generator[AsyncMock, None, None]:
+def mock_reload_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch("homeassistant.components.mjpeg.async_reload_entry") as mock_reload:
         yield mock_reload
 
 
 @pytest.fixture
-def mock_mjpeg_requests(requests_mock: Mocker) -> Generator[Mocker, None, None]:
+def mock_mjpeg_requests(requests_mock: Mocker) -> Mocker:
     """Fixture to provide a requests mocker."""
     requests_mock.get("https://example.com/mjpeg", text="resp")
     requests_mock.get("https://example.com/still", text="resp")
-    yield requests_mock
+    return requests_mock
 
 
 @pytest.fixture

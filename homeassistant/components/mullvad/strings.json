@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -10,6 +7,13 @@
     "step": {
       "user": {
         "description": "Set up the Mullvad VPN integration?"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "exit_ip": {
+        "name": "Exit IP"
       }
     }
   }

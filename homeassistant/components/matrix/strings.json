@@ -1,0 +1,22 @@
+{
+  "services": {
+    "send_message": {
+      "name": "Send message",
+      "description": "Sends message to target room(s).",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "The message to be sent."
+        },
+        "target": {
+          "name": "Target",
+          "description": "A list of room(s) to send the message to."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Extended information of notification. Supports list of images. Supports message format. Optional."
+        }
+      }
+    }
+  }
+}

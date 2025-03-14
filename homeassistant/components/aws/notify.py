@@ -1,4 +1,7 @@
 """AWS platform for notify component."""
+
+from __future__ import annotations
+
 import asyncio
 import base64
 import json
@@ -20,7 +23,9 @@ from homeassistant.const import (
     CONF_PROFILE_NAME,
     CONF_SERVICE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_CONTEXT, CONF_CREDENTIAL_NAME, CONF_REGION, DATA_SESSIONS
 
@@ -33,7 +38,11 @@ async def get_available_regions(hass, service):
     return await session.get_available_regions(service)
 
 
-async def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> AWSNotify | None:
     """Get the AWS notification service."""
     if discovery_info is None:
         _LOGGER.error("Please config aws notify platform in aws component")
@@ -146,15 +155,14 @@ class AWSLambda(AWSNotify):
         async with self.session.create_client(
             self.service, **self.aws_config
         ) as client:
-            tasks = []
-            for target in kwargs.get(ATTR_TARGET, []):
-                tasks.append(
-                    client.invoke(
-                        FunctionName=target,
-                        Payload=json_payload,
-                        ClientContext=self.context,
-                    )
+            tasks = [
+                client.invoke(
+                    FunctionName=target,
+                    Payload=json_payload,
+                    ClientContext=self.context,
                 )
+                for target in kwargs.get(ATTR_TARGET, [])
+            ]
 
             if tasks:
                 await asyncio.gather(*tasks)
@@ -183,16 +191,15 @@ class AWSSNS(AWSNotify):
         async with self.session.create_client(
             self.service, **self.aws_config
         ) as client:
-            tasks = []
-            for target in kwargs.get(ATTR_TARGET, []):
-                tasks.append(
-                    client.publish(
-                        TargetArn=target,
-                        Message=message,
-                        Subject=subject,
-                        MessageAttributes=message_attributes,
-                    )
+            tasks = [
+                client.publish(
+                    TargetArn=target,
+                    Message=message,
+                    Subject=subject,
+                    MessageAttributes=message_attributes,
                 )
+                for target in kwargs.get(ATTR_TARGET, [])
+            ]
 
             if tasks:
                 await asyncio.gather(*tasks)
@@ -223,15 +230,14 @@ class AWSSQS(AWSNotify):
         async with self.session.create_client(
             self.service, **self.aws_config
         ) as client:
-            tasks = []
-            for target in kwargs.get(ATTR_TARGET, []):
-                tasks.append(
-                    client.send_message(
-                        QueueUrl=target,
-                        MessageBody=json_body,
-                        MessageAttributes=message_attributes,
-                    )
+            tasks = [
+                client.send_message(
+                    QueueUrl=target,
+                    MessageBody=json_body,
+                    MessageAttributes=message_attributes,
                 )
+                for target in kwargs.get(ATTR_TARGET, [])
+            ]
 
             if tasks:
                 await asyncio.gather(*tasks)
@@ -256,7 +262,6 @@ class AWSEventBridge(AWSNotify):
         async with self.session.create_client(
             self.service, **self.aws_config
         ) as client:
-            tasks = []
             entries = []
             for target in kwargs.get(ATTR_TARGET, [None]):
                 entry = {
@@ -269,10 +274,10 @@ class AWSEventBridge(AWSNotify):
                     entry["EventBusName"] = target
 
                 entries.append(entry)
-            for i in range(0, len(entries), 10):
-                tasks.append(
-                    client.put_events(Entries=entries[i : min(i + 10, len(entries))])
-                )
+            tasks = [
+                client.put_events(Entries=entries[i : min(i + 10, len(entries))])
+                for i in range(0, len(entries), 10)
+            ]
 
             if tasks:
                 results = await asyncio.gather(*tasks)

@@ -1,10 +1,13 @@
 """UniFi Network services."""
 
+from collections.abc import Mapping
+from typing import Any
+
 from aiounifi.models.client import ClientReconnectRequest, ClientRemoveRequest
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
@@ -25,7 +28,7 @@ SERVICE_TO_SCHEMA = {
 
 
 @callback
-def async_setup_services(hass) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for UniFi integration."""
 
     services = {
@@ -46,14 +49,7 @@ def async_setup_services(hass) -> None:
         )
 
 
-@callback
-def async_unload_services(hass) -> None:
-    """Unload UniFi Network services."""
-    for service in SUPPORTED_SERVICES:
-        hass.services.async_remove(UNIFI_DOMAIN, service)
-
-
-async def async_reconnect_client(hass, data) -> None:
+async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
     """Try to get wireless client to reconnect to Wi-Fi."""
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(data[ATTR_DEVICE_ID])
@@ -70,33 +66,31 @@ async def async_reconnect_client(hass, data) -> None:
     if mac == "":
         return
 
-    for controller in hass.data[UNIFI_DOMAIN].values():
+    for config_entry in hass.config_entries.async_loaded_entries(UNIFI_DOMAIN):
         if (
-            not controller.available
-            or (client := controller.api.clients.get(mac)) is None
+            (not (hub := config_entry.runtime_data).available)
+            or (client := hub.api.clients.get(mac)) is None
             or client.is_wired
         ):
             continue
 
-        await controller.api.request(ClientReconnectRequest.create(mac))
+        await hub.api.request(ClientReconnectRequest.create(mac))
 
 
-async def async_remove_clients(hass, data) -> None:
-    """Remove select clients from controller.
+async def async_remove_clients(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
+    """Remove select clients from UniFi Network.
 
     Validates based on:
     - Total time between first seen and last seen is less than 15 minutes.
     - Neither IP, hostname nor name is configured.
     """
-    for controller in hass.data[UNIFI_DOMAIN].values():
-
-        if not controller.available:
+    for config_entry in hass.config_entries.async_loaded_entries(UNIFI_DOMAIN):
+        if not (hub := config_entry.runtime_data).available:
             continue
 
         clients_to_remove = []
 
-        for client in controller.api.clients_all.values():
-
+        for client in hub.api.clients_all.values():
             if (
                 client.last_seen
                 and client.first_seen
@@ -110,4 +104,4 @@ async def async_remove_clients(hass, data) -> None:
             clients_to_remove.append(client.mac)
 
         if clients_to_remove:
-            await controller.api.request(ClientRemoveRequest.create(clients_to_remove))
+            await hub.api.request(ClientRemoveRequest.create(clients_to_remove))

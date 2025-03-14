@@ -15,34 +15,35 @@
         "UnitType": 17
       }
     },
-    "Ozone": {
-      "Value": 32,
-      "Category": "Good",
-      "CategoryValue": 1
+    "AirQuality": {
+      "Value": 0,
+      "Category": "good",
+      "CategoryValue": 1,
+      "Type": "Ozone"
     },
     "Grass": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Mold": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Ragweed": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Tree": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "UVIndex": {
       "Value": 5,
-      "Category": "Moderate",
+      "Category": "moderate",
       "CategoryValue": 2
     },
     "TemperatureMin": {
@@ -75,6 +76,7 @@
       "Unit": "C",
       "UnitType": 17
     },
+    "RelativeHumidityDay": { "Average": 60 },
     "IconDay": 17,
     "IconPhraseDay": "Partly sunny w/ t-storms",
     "HasPrecipitationDay": true,
@@ -136,6 +138,11 @@
     "HoursOfSnowDay": 0.0,
     "HoursOfIceDay": 0.0,
     "CloudCoverDay": 58,
+    "SolarIrradianceDay": {
+      "Value": 7447.1,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
     "IconNight": 41,
     "IconPhraseNight": "Partly cloudy w/ t-storms",
     "HasPrecipitationNight": true,
@@ -196,7 +203,12 @@
     "HoursOfRainNight": 1.0,
     "HoursOfSnowNight": 0.0,
     "HoursOfIceNight": 0.0,
-    "CloudCoverNight": 65
+    "CloudCoverNight": 65,
+    "SolarIrradianceNight": {
+      "Value": 271.6,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    }
   },
   {
     "Date": "2020-07-27T07:00:00+02:00",
@@ -214,34 +226,35 @@
         "UnitType": 17
       }
     },
-    "Ozone": {
-      "Value": 39,
-      "Category": "Good",
-      "CategoryValue": 1
+    "AirQuality": {
+      "Value": 0,
+      "Category": "good",
+      "CategoryValue": 1,
+      "Type": "Ozone"
     },
     "Grass": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Mold": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Ragweed": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Tree": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "UVIndex": {
       "Value": 7,
-      "Category": "High",
+      "Category": "high",
       "CategoryValue": 3
     },
     "TemperatureMin": {
@@ -274,6 +287,7 @@
       "Unit": "C",
       "UnitType": 17
     },
+    "RelativeHumidityDay": { "Average": 58 },
     "IconDay": 4,
     "IconPhraseDay": "Intermittent clouds",
     "HasPrecipitationDay": false,
@@ -333,6 +347,11 @@
     "HoursOfSnowDay": 0.0,
     "HoursOfIceDay": 0.0,
     "CloudCoverDay": 52,
+    "SolarIrradianceDay": {
+      "Value": 7447.1,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
     "IconNight": 36,
     "IconPhraseNight": "Intermittent clouds",
     "HasPrecipitationNight": false,
@@ -391,7 +410,12 @@
     "HoursOfRainNight": 0.0,
     "HoursOfSnowNight": 0.0,
     "HoursOfIceNight": 0.0,
-    "CloudCoverNight": 63
+    "CloudCoverNight": 63,
+    "SolarIrradianceNight": {
+      "Value": 271.6,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    }
   },
   {
     "Date": "2020-07-28T07:00:00+02:00",
@@ -409,34 +433,35 @@
         "UnitType": 17
       }
     },
-    "Ozone": {
-      "Value": 29,
-      "Category": "Good",
-      "CategoryValue": 1
+    "AirQuality": {
+      "Value": 0,
+      "Category": "good",
+      "CategoryValue": 1,
+      "Type": "Ozone"
     },
     "Grass": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Mold": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Ragweed": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Tree": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "UVIndex": {
       "Value": 7,
-      "Category": "High",
+      "Category": "high",
       "CategoryValue": 3
     },
     "TemperatureMin": {
@@ -469,6 +494,7 @@
       "Unit": "C",
       "UnitType": 17
     },
+    "RelativeHumidityDay": { "Average": 52 },
     "IconDay": 4,
     "IconPhraseDay": "Intermittent clouds",
     "HasPrecipitationDay": false,
@@ -528,6 +554,11 @@
     "HoursOfSnowDay": 0.0,
     "HoursOfIceDay": 0.0,
     "CloudCoverDay": 65,
+    "SolarIrradianceDay": {
+      "Value": 7447.1,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
     "IconNight": 36,
     "IconPhraseNight": "Intermittent clouds",
     "HasPrecipitationNight": false,
@@ -586,7 +617,12 @@
     "HoursOfRainNight": 0.0,
     "HoursOfSnowNight": 0.0,
     "HoursOfIceNight": 0.0,
-    "CloudCoverNight": 53
+    "CloudCoverNight": 53,
+    "SolarIrradianceNight": {
+      "Value": 271.6,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    }
   },
   {
     "Date": "2020-07-29T07:00:00+02:00",
@@ -604,34 +640,35 @@
         "UnitType": 17
       }
     },
-    "Ozone": {
-      "Value": 18,
-      "Category": "Good",
-      "CategoryValue": 1
+    "AirQuality": {
+      "Value": 0,
+      "Category": "good",
+      "CategoryValue": 1,
+      "Type": "Ozone"
     },
     "Grass": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Mold": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Ragweed": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Tree": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "UVIndex": {
       "Value": 6,
-      "Category": "High",
+      "Category": "high",
       "CategoryValue": 3
     },
     "TemperatureMin": {
@@ -664,6 +701,7 @@
       "Unit": "C",
       "UnitType": 17
     },
+    "RelativeHumidityDay": { "Average": 65 },
     "IconDay": 3,
     "IconPhraseDay": "Partly sunny",
     "HasPrecipitationDay": false,
@@ -723,6 +761,11 @@
     "HoursOfSnowDay": 0.0,
     "HoursOfIceDay": 0.0,
     "CloudCoverDay": 45,
+    "SolarIrradianceDay": {
+      "Value": 7447.1,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
     "IconNight": 34,
     "IconPhraseNight": "Mostly clear",
     "HasPrecipitationNight": false,
@@ -781,7 +824,12 @@
     "HoursOfRainNight": 0.0,
     "HoursOfSnowNight": 0.0,
     "HoursOfIceNight": 0.0,
-    "CloudCoverNight": 27
+    "CloudCoverNight": 27,
+    "SolarIrradianceNight": {
+      "Value": 7447.1,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    }
   },
   {
     "Date": "2020-07-30T07:00:00+02:00",
@@ -799,34 +847,35 @@
         "UnitType": 17
       }
     },
-    "Ozone": {
-      "Value": 14,
-      "Category": "Good",
-      "CategoryValue": 1
+    "AirQuality": {
+      "Value": 0,
+      "Category": "good",
+      "CategoryValue": 1,
+      "Type": "Ozone"
     },
     "Grass": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Mold": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Ragweed": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "Tree": {
       "Value": 0,
-      "Category": "Low",
+      "Category": "low",
       "CategoryValue": 1
     },
     "UVIndex": {
       "Value": 7,
-      "Category": "High",
+      "Category": "high",
       "CategoryValue": 3
     },
     "TemperatureMin": {
@@ -859,6 +908,7 @@
       "Unit": "C",
       "UnitType": 17
     },
+    "RelativeHumidityDay": { "Average": 55 },
     "IconDay": 4,
     "IconPhraseDay": "Intermittent clouds",
     "HasPrecipitationDay": false,
@@ -918,6 +968,11 @@
     "HoursOfSnowDay": 0.0,
     "HoursOfIceDay": 0.0,
     "CloudCoverDay": 50,
+    "SolarIrradianceDay": {
+      "Value": 7447.1,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    },
     "IconNight": 34,
     "IconPhraseNight": "Mostly clear",
     "HasPrecipitationNight": false,
@@ -976,6 +1031,11 @@
     "HoursOfRainNight": 0.0,
     "HoursOfSnowNight": 0.0,
     "HoursOfIceNight": 0.0,
-    "CloudCoverNight": 13
+    "CloudCoverNight": 13,
+    "SolarIrradianceNight": {
+      "Value": 276.1,
+      "Unit": "W/m\u00b2",
+      "UnitType": 33
+    }
   }
 ]

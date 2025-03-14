@@ -1,38 +1,52 @@
 """Define fixtures for PurpleAir tests."""
+
+from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiopurpleair.endpoints.sensors import NearbySensorResult
 from aiopurpleair.models.sensors import GetSensorsResponse
 import pytest
 
-from homeassistant.components.purpleair import DOMAIN
-from homeassistant.setup import async_setup_component
+from homeassistant.components.purpleair.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
+TEST_API_KEY = "abcde12345"
+TEST_SENSOR_INDEX1 = 123456
+TEST_SENSOR_INDEX2 = 567890
+
 
 @pytest.fixture(name="api")
-def api_fixture(check_api_key, get_nearby_sensors, get_sensors):
-    """Define a fixture to return a mocked aiopurple API object."""
-    api = Mock(async_check_api_key=check_api_key)
-    api.sensors.async_get_nearby_sensors = get_nearby_sensors
-    api.sensors.async_get_sensors = get_sensors
-    return api
-
-
-@pytest.fixture(name="check_api_key")
-def check_api_key_fixture():
-    """Define a fixture to mock the method to check an API key's validity."""
-    return AsyncMock()
+def api_fixture(get_sensors_response: GetSensorsResponse) -> Mock:
+    """Define a fixture to return a mocked aiopurpleair API object."""
+    return Mock(
+        async_check_api_key=AsyncMock(),
+        get_map_url=Mock(return_value="http://example.com"),
+        sensors=Mock(
+            async_get_nearby_sensors=AsyncMock(
+                return_value=[
+                    NearbySensorResult(sensor=sensor, distance=1.0)
+                    for sensor in get_sensors_response.data.values()
+                ]
+            ),
+            async_get_sensors=AsyncMock(return_value=get_sensors_response),
+        ),
+    )
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config_entry_data, config_entry_options):
+def config_entry_fixture(
+    hass: HomeAssistant,
+    config_entry_data: dict[str, Any],
+    config_entry_options: dict[str, Any],
+) -> MockConfigEntry:
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="abcde",
-        unique_id="abcde12345",
+        unique_id=TEST_API_KEY,
         data=config_entry_data,
         options=config_entry_options,
     )
@@ -41,56 +55,43 @@ def config_entry_fixture(hass, config_entry_data, config_entry_options):
 
 
 @pytest.fixture(name="config_entry_data")
-def config_entry_data_fixture():
+def config_entry_data_fixture() -> dict[str, Any]:
     """Define a config entry data fixture."""
     return {
-        "api_key": "abcde12345",
+        "api_key": TEST_API_KEY,
     }
 
 
 @pytest.fixture(name="config_entry_options")
-def config_entry_options_fixture():
+def config_entry_options_fixture() -> dict[str, Any]:
     """Define a config entry options fixture."""
     return {
-        "sensor_indices": [123456],
+        "sensor_indices": [TEST_SENSOR_INDEX1],
     }
 
 
-@pytest.fixture(name="get_nearby_sensors")
-def get_nearby_sensors_fixture(get_sensors_response):
-    """Define a mocked API.sensors.async_get_nearby_sensors."""
-    return AsyncMock(
-        return_value=[
-            NearbySensorResult(sensor=sensor, distance=1.0)
-            for sensor in get_sensors_response.data.values()
-        ]
-    )
-
-
-@pytest.fixture(name="get_sensors")
-def get_sensors_fixture(get_sensors_response):
-    """Define a mocked API.sensors.async_get_sensors."""
-    return AsyncMock(return_value=get_sensors_response)
-
-
 @pytest.fixture(name="get_sensors_response", scope="package")
-def get_sensors_response_fixture():
+def get_sensors_response_fixture() -> GetSensorsResponse:
     """Define a fixture to mock an aiopurpleair GetSensorsResponse object."""
-    return GetSensorsResponse.parse_raw(
+    return GetSensorsResponse.model_validate_json(
         load_fixture("get_sensors_response.json", "purpleair")
     )
 
 
-@pytest.fixture(name="setup_purpleair")
-async def setup_purpleair_fixture(hass, api, config_entry_data):
-    """Define a fixture to set up PurpleAir."""
-    with patch(
-        "homeassistant.components.purpleair.config_flow.API", return_value=api
-    ), patch(
-        "homeassistant.components.purpleair.coordinator.API", return_value=api
-    ), patch(
-        "homeassistant.components.purpleair.PLATFORMS", []
+@pytest.fixture(name="mock_aiopurpleair")
+def mock_aiopurpleair_fixture(api: Mock) -> Generator[Mock]:
+    """Define a fixture to patch aiopurpleair."""
+    with (
+        patch("homeassistant.components.purpleair.config_flow.API", return_value=api),
+        patch("homeassistant.components.purpleair.coordinator.API", return_value=api),
     ):
-        assert await async_setup_component(hass, DOMAIN, config_entry_data)
-        await hass.async_block_till_done()
-        yield
+        yield api
+
+
+@pytest.fixture(name="setup_config_entry")
+async def setup_config_entry_fixture(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_aiopurpleair: Mock
+) -> None:
+    """Define a fixture to set up purpleair."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()

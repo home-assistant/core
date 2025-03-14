@@ -1,4 +1,5 @@
 """Xbox Media Player Support."""
+
 from __future__ import annotations
 
 import re
@@ -22,13 +23,13 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ConsoleData, XboxUpdateCoordinator
 from .browse_media import build_item_response
 from .const import DOMAIN
+from .coordinator import ConsoleData, XboxUpdateCoordinator
 
 SUPPORT_XBOX = (
     MediaPlayerEntityFeature.TURN_ON
@@ -55,7 +56,9 @@ XBOX_STATE_MAP: dict[PlaybackState | PowerState, MediaPlayerState | None] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox media_player from a config entry."""
     client: XboxLiveClient = hass.data[DOMAIN][entry.entry_id]["client"]
@@ -205,7 +208,7 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         )
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Launch an app on the Xbox."""
         if media_id == "Home":

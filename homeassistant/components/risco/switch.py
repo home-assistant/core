@@ -1,23 +1,27 @@
 """Support for bypassing Risco alarm zones."""
+
 from __future__ import annotations
+
+from typing import Any
 
 from pyrisco.common import Zone
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LocalData, RiscoDataUpdateCoordinator, is_local
+from . import LocalData, is_local
 from .const import DATA_COORDINATOR, DOMAIN
+from .coordinator import RiscoDataUpdateCoordinator
 from .entity import RiscoCloudZoneEntity, RiscoLocalZoneEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Risco switch."""
     if is_local(config_entry):
@@ -40,6 +44,7 @@ class RiscoCloudSwitch(RiscoCloudZoneEntity, SwitchEntity):
     """Representation of a bypass switch for a Risco cloud zone."""
 
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "bypassed"
 
     def __init__(
         self, coordinator: RiscoDataUpdateCoordinator, zone_id: int, zone: Zone
@@ -47,7 +52,6 @@ class RiscoCloudSwitch(RiscoCloudZoneEntity, SwitchEntity):
         """Init the zone."""
         super().__init__(
             coordinator=coordinator,
-            name="Bypassed",
             suffix="_bypassed",
             zone_id=zone_id,
             zone=zone,
@@ -58,11 +62,11 @@ class RiscoCloudSwitch(RiscoCloudZoneEntity, SwitchEntity):
         """Return true if the zone is bypassed."""
         return self._zone.bypassed
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._bypass(True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._bypass(False)
 
@@ -76,12 +80,12 @@ class RiscoLocalSwitch(RiscoLocalZoneEntity, SwitchEntity):
     """Representation of a bypass switch for a Risco local zone."""
 
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "bypassed"
 
     def __init__(self, system_id: str, zone_id: int, zone: Zone) -> None:
         """Init the zone."""
         super().__init__(
             system_id=system_id,
-            name="Bypassed",
             suffix="_bypassed",
             zone_id=zone_id,
             zone=zone,
@@ -92,11 +96,11 @@ class RiscoLocalSwitch(RiscoLocalZoneEntity, SwitchEntity):
         """Return true if the zone is bypassed."""
         return self._zone.bypassed
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._bypass(True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._bypass(False)
 

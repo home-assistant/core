@@ -1,4 +1,5 @@
 """Support for HomeMatic sensors."""
+
 from __future__ import annotations
 
 from copy import copy
@@ -15,18 +16,17 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_HPA,
-    TEMP_CELSIUS,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
     UnitOfPrecipitationDepth,
+    UnitOfPressure,
     UnitOfSpeed,
+    UnitOfTemperature,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
@@ -64,13 +64,13 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "ACTUAL_TEMPERATURE": SensorEntityDescription(
         key="ACTUAL_TEMPERATURE",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "TEMPERATURE": SensorEntityDescription(
         key="TEMPERATURE",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -136,13 +136,13 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "ENERGY_COUNTER": SensorEntityDescription(
         key="ENERGY_COUNTER",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "IEC_ENERGY_COUNTER": SensorEntityDescription(
         key="IEC_ENERGY_COUNTER",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -156,7 +156,6 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         key="GAS_POWER",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     "GAS_ENERGY_COUNTER": SensorEntityDescription(
         key="GAS_ENERGY_COUNTER",
@@ -178,6 +177,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "WIND_DIRECTION": SensorEntityDescription(
         key="WIND_DIRECTION",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     "WIND_DIRECTION_RANGE": SensorEntityDescription(
         key="WIND_DIRECTION_RANGE",
@@ -189,7 +189,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "AIR_PRESSURE": SensorEntityDescription(
         key="AIR_PRESSURE",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -309,7 +309,10 @@ def setup_platform(
         if (entity_desc := SENSOR_DESCRIPTIONS.get(state)) is None:
             name = conf.get(ATTR_NAME)
             _LOGGER.warning(
-                "Sensor (%s) entity description is missing. Sensor state (%s) needs to be maintained",
+                (
+                    "Sensor (%s) entity description is missing. Sensor state (%s) needs"
+                    " to be maintained"
+                ),
                 name,
                 state,
             )

@@ -1,0 +1,62 @@
+{
+  "entity": {
+    "sensor": {
+      "audio_connections": {
+        "default": "mdi:speaker"
+      },
+      "battery_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "light": {
+        "default": "mdi:flashlight"
+      },
+      "motion": {
+        "default": "mdi:run"
+      },
+      "pressure": {
+        "default": "mdi:gauge"
+      },
+      "proximity": {
+        "default": "mdi:map-marker-radius"
+      },
+      "sound": {
+        "default": "mdi:speaker"
+      },
+      "video_connections": {
+        "default": "mdi:eye"
+      }
+    },
+    "switch": {
+      "exposure_lock": {
+        "default": "mdi:camera"
+      },
+      "ffc": {
+        "default": "mdi:camera-front-variant"
+      },
+      "focus": {
+        "default": "mdi:image-filter-center-focus"
+      },
+      "gps_active": {
+        "default": "mdi:crosshairs-gps"
+      },
+      "motion_detect": {
+        "default": "mdi:flash"
+      },
+      "night_vision": {
+        "default": "mdi:weather-night"
+      },
+      "overlay": {
+        "default": "mdi:monitor"
+      },
+      "torch": {
+        "default": "mdi:white-balance-sunny"
+      },
+      "whitebalance_lock": {
+        "default": "mdi:white-balance-auto"
+      },
+      "video_recording": {
+        "default": "mdi:record-rec"
+      }
+    }
+  }
+}

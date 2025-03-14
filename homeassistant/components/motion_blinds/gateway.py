@@ -1,4 +1,5 @@
 """Code to handle a Motion Gateway."""
+
 import contextlib
 import logging
 import socket
@@ -41,16 +42,21 @@ class ConnectMotionGateway:
         for blind in self.gateway_device.device_list.values():
             blind.Update_from_cache()
 
-    async def async_connect_gateway(self, host, key):
+    async def async_connect_gateway(
+        self,
+        host: str,
+        key: str,
+        blind_type_list: dict[str, int] | None = None,
+    ) -> bool:
         """Connect to the Motion Gateway."""
         _LOGGER.debug("Initializing with host %s (key %s)", host, key[:3])
         self._gateway_device = MotionGateway(
-            ip=host, key=key, multicast=self._multicast
+            ip=host, key=key, multicast=self._multicast, blind_type_list=blind_type_list
         )
         try:
             # update device info and get the connected sub devices
             await self._hass.async_add_executor_job(self.update_gateway)
-        except socket.timeout:
+        except TimeoutError:
             _LOGGER.error(
                 "Timeout trying to connect to Motion Gateway with host %s", host
             )
@@ -100,7 +106,7 @@ class ConnectMotionGateway:
         interfaces = await self.async_get_interfaces()
         for interface in interfaces:
             _LOGGER.debug(
-                "Checking Motion Blinds interface '%s' with host %s", interface, host
+                "Checking Motionblinds interface '%s' with host %s", interface, host
             )
             # initialize multicast listener
             check_multicast = AsyncMotionMulticast(interface=interface)
@@ -126,14 +132,17 @@ class ConnectMotionGateway:
             if result:
                 # successfully received multicast
                 _LOGGER.debug(
-                    "Success using Motion Blinds interface '%s' with host %s",
+                    "Success using Motionblinds interface '%s' with host %s",
                     interface,
                     host,
                 )
                 return interface
 
         _LOGGER.error(
-            "Could not find working interface for Motion Blinds host %s, using interface '%s'",
+            (
+                "Could not find working interface for Motionblinds host %s, using"
+                " interface '%s'"
+            ),
             host,
             self._interface,
         )

@@ -1,4 +1,5 @@
 """Support for Sonarr sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,16 +23,16 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import SonarrDataT, SonarrDataUpdateCoordinator
 from .entity import SonarrEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class SonarrSensorEntityDescriptionMixIn(Generic[SonarrDataT]):
     """Mixin for Sonarr sensor."""
 
@@ -39,7 +40,7 @@ class SonarrSensorEntityDescriptionMixIn(Generic[SonarrDataT]):
     value_fn: Callable[[SonarrDataT], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SonarrSensorEntityDescription(
     SensorEntityDescription, SonarrSensorEntityDescriptionMixIn[SonarrDataT]
 ):
@@ -53,9 +54,9 @@ def get_disk_space_attr(disks: list[Diskspace]) -> dict[str, str]:
         free = disk.freeSpace / 1024**3
         total = disk.totalSpace / 1024**3
         usage = free / total * 100
-        attrs[
-            disk.path
-        ] = f"{free:.2f}/{total:.2f}{UnitOfInformation.GIGABYTES} ({usage:.2f}%)"
+        attrs[disk.path] = (
+            f"{free:.2f}/{total:.2f}{UnitOfInformation.GIGABYTES} ({usage:.2f}%)"
+        )
     return attrs
 
 
@@ -66,7 +67,7 @@ def get_queue_attr(queue: SonarrQueue) -> dict[str, str]:
         remaining = 1 if item.size == 0 else item.sizeleft / item.size
         remaining_pct = 100 * (1 - remaining)
         identifier = (
-            f"S{item.episode.seasonNumber:02d}E{item.episode. episodeNumber:02d}"
+            f"S{item.episode.seasonNumber:02d}E{item.episode.episodeNumber:02d}"
         )
         attrs[f"{item.series.title} {identifier}"] = f"{remaining_pct:.2f}%"
     return attrs
@@ -88,17 +89,14 @@ def get_wanted_attr(wanted: SonarrWantedMissing) -> dict[str, str]:
 SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     "commands": SonarrSensorEntityDescription[list[Command]](
         key="commands",
-        name="Commands",
-        icon="mdi:code-braces",
-        native_unit_of_measurement="Commands",
+        translation_key="commands",
         entity_registry_enabled_default=False,
         value_fn=len,
         attributes_fn=lambda data: {c.name: c.status for c in data},
     ),
     "diskspace": SonarrSensorEntityDescription[list[Diskspace]](
         key="diskspace",
-        name="Disk space",
-        icon="mdi:harddisk",
+        translation_key="diskspace",
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
@@ -107,30 +105,27 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     ),
     "queue": SonarrSensorEntityDescription[SonarrQueue](
         key="queue",
-        name="Queue",
-        icon="mdi:download",
-        native_unit_of_measurement="Episodes",
+        translation_key="queue",
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.totalRecords,
         attributes_fn=get_queue_attr,
     ),
     "series": SonarrSensorEntityDescription[list[SonarrSeries]](
         key="series",
-        name="Shows",
-        icon="mdi:television",
-        native_unit_of_measurement="Series",
+        translation_key="series",
         entity_registry_enabled_default=False,
         value_fn=len,
         attributes_fn=lambda data: {
-            i.title: f"{getattr(i.statistics,'episodeFileCount', 0)}/{getattr(i.statistics, 'episodeCount', 0)} Episodes"
+            i.title: (
+                f"{getattr(i.statistics, 'episodeFileCount', 0)}/"
+                f"{getattr(i.statistics, 'episodeCount', 0)} Episodes"
+            )
             for i in data
         },
     ),
     "upcoming": SonarrSensorEntityDescription[list[SonarrCalendar]](
         key="upcoming",
-        name="Upcoming",
-        icon="mdi:television",
-        native_unit_of_measurement="Episodes",
+        translation_key="upcoming",
         value_fn=len,
         attributes_fn=lambda data: {
             e.series.title: f"S{e.seasonNumber:02d}E{e.episodeNumber:02d}" for e in data
@@ -138,9 +133,7 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     ),
     "wanted": SonarrSensorEntityDescription[SonarrWantedMissing](
         key="wanted",
-        name="Wanted",
-        icon="mdi:television",
-        native_unit_of_measurement="Episodes",
+        translation_key="wanted",
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.totalRecords,
         attributes_fn=get_wanted_attr,
@@ -151,7 +144,7 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sonarr sensors based on a config entry."""
     coordinators: dict[str, SonarrDataUpdateCoordinator[Any]] = hass.data[DOMAIN][
