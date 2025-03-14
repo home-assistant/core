@@ -42,8 +42,6 @@ from .speaker import SonosMedia, SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
-# type GetBrowseImageUrlType = Callable[[str, str, str | None, MusicServiceItem | None], str]
-
 
 class GetBrowseImageUrlType(Protocol):
     """Type for callable function."""
