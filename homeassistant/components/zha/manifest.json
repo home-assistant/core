@@ -100,6 +100,12 @@
       "pid": "8B34",
       "description": "*bv 2010/10*",
       "known_devices": ["Bitron Video AV2010/10"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*sonoff*max*",
+      "known_devices": ["SONOFF Dongle Max MG24"]
     }
   ],
   "zeroconf": [
@@ -134,6 +140,10 @@
     {
       "type": "_zigbee-coordinator._tcp.local.",
       "name": "*"
+    },
+    {
+      "type": "_sonoff-dongle._tcp.local.",
+      "name": "dongle-m*"
     }
   ]
 }
