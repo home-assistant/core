@@ -48,9 +48,9 @@ class GetBrowseImageUrlType(Protocol):
 
     def __call__(
         self,
-        media_type: str,
-        content_id: str,
-        image_id: str | None = None,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: str | None = None,
         item: MusicServiceItem | None = None,
     ) -> str:
         """Define method signature."""
