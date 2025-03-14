@@ -98,6 +98,7 @@ async def _async_reproduce_state(
                 {**service_data, ATTR_POSITION: target_position},
             )
         else:
+            # Requested a position but the cover doesn't support it
             set_position = False
 
     if not tilt_position_matches and target_tilt_position is not None:
@@ -118,6 +119,7 @@ async def _async_reproduce_state(
                 {**service_data, ATTR_TILT_POSITION: target_tilt_position},
             )
         else:
+            # Requested a tilt position but the cover doesn't support it
             set_tilt = False
 
     # Open/Close
