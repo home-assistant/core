@@ -129,11 +129,10 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             OverkizState.IO_AWAY_MODE_DURATION
         )
         # away_mode_duration can be either a string or an int of 0 to 7 days
-        if cast(str, away_mode_duration) == OverkizCommandParam.ALWAYS:
-            return True
-
-        away_mode_duration_int = cast(int, away_mode_duration)
-        if isinstance(away_mode_duration_int, int) and away_mode_duration_int > 0:
+        if (
+            isinstance(away_mode_duration, str)
+            and away_mode_duration == OverkizCommandParam.ALWAYS
+        ) or (isinstance(away_mode_duration, int) and away_mode_duration > 0):
             return True
 
         # operating_mode can be a dict or a Literal[DHWP_AWAY_MODES]
