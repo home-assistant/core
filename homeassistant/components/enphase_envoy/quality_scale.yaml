@@ -22,13 +22,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: |
-      merged to dev for switch platform, pr https://github.com/home-assistant/core/pull/136837
-      pending for select platform, pr https://github.com/home-assistant/core/pull/136698
-      pending for number platform, pr https://github.com/home-assistant/core/pull/136812
-      replaced by above HA pr:  dependency pr https://github.com/pyenphase/pyenphase/pull/194
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
