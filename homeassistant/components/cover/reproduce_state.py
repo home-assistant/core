@@ -60,13 +60,15 @@ async def _async_reproduce_state(
         return
 
     current_position = cur_state.attributes.get(ATTR_CURRENT_POSITION)
-    requested_position = state.attributes.get(ATTR_CURRENT_POSITION)
-    position_matches = current_position == requested_position
+    target_position = state.attributes.get(ATTR_CURRENT_POSITION)
+    position_matches = current_position == target_position
 
-    requested_tilt_position = state.attributes.get(ATTR_CURRENT_TILT_POSITION)
+    target_tilt_position = state.attributes.get(ATTR_CURRENT_TILT_POSITION)
     current_tilt_position = cur_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
-    tilt_position_matches = current_tilt_position == requested_tilt_position
-    state_matches = cur_state.state == state.state
+    tilt_position_matches = current_tilt_position == target_tilt_position
+
+    target_state = state.state
+    state_matches = cur_state.state == target_state
     # Return if we are already at the right state.
     if state_matches and position_matches and tilt_position_matches:
         return
@@ -84,31 +86,29 @@ async def _async_reproduce_state(
         context=context,
         blocking=True,
     )
-    if not position_matches and requested_position is not None:
-        if requested_position == 0 and CoverEntityFeature.CLOSE in supported_features:
+    if not position_matches and target_position is not None:
+        if target_position == 0 and CoverEntityFeature.CLOSE in supported_features:
             await _service_call(SERVICE_CLOSE_COVER, service_data)
             set_position = True
-        elif (
-            requested_position == 100 and CoverEntityFeature.OPEN in supported_features
-        ):
+        elif target_position == 100 and CoverEntityFeature.OPEN in supported_features:
             await _service_call(SERVICE_OPEN_COVER, service_data)
             set_position = True
         elif CoverEntityFeature.SET_POSITION in supported_features:
             await _service_call(
                 SERVICE_SET_COVER_POSITION,
-                {**service_data, ATTR_POSITION: requested_position},
+                {**service_data, ATTR_POSITION: target_position},
             )
             set_position = True
 
-    if not tilt_position_matches and requested_tilt_position is not None:
+    if not tilt_position_matches and target_tilt_position is not None:
         if (
-            requested_tilt_position == 0
+            target_tilt_position == 0
             and CoverEntityFeature.CLOSE_TILT in supported_features
         ):
             await _service_call(SERVICE_CLOSE_COVER_TILT, service_data)
             set_tilt = True
         elif (
-            requested_tilt_position == 100
+            target_tilt_position == 100
             and CoverEntityFeature.OPEN_TILT in supported_features
         ):
             await _service_call(SERVICE_OPEN_COVER_TILT, service_data)
@@ -116,17 +116,17 @@ async def _async_reproduce_state(
         elif CoverEntityFeature.SET_TILT_POSITION in supported_features:
             await _service_call(
                 SERVICE_SET_COVER_TILT_POSITION,
-                {**service_data, ATTR_TILT_POSITION: requested_tilt_position},
+                {**service_data, ATTR_TILT_POSITION: target_tilt_position},
             )
             set_tilt = True
 
     # Open/Close
-    if state.state in {CoverState.CLOSED, CoverState.CLOSING}:
+    if target_state in {CoverState.CLOSED, CoverState.CLOSING}:
         if not set_position and CoverEntityFeature.CLOSE in supported_features:
             await _service_call(SERVICE_CLOSE_COVER, service_data)
         if not set_tilt and CoverEntityFeature.CLOSE_TILT in supported_features:
             await _service_call(SERVICE_CLOSE_COVER_TILT, service_data)
-    elif state.state in {CoverState.OPEN, CoverState.OPENING}:
+    elif target_state in {CoverState.OPEN, CoverState.OPENING}:
         if not set_position and CoverEntityFeature.OPEN in supported_features:
             await _service_call(SERVICE_OPEN_COVER, service_data)
         if not set_tilt and CoverEntityFeature.OPEN_TILT in supported_features:
