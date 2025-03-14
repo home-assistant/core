@@ -17,6 +17,12 @@ SCOPES = [
     "sse",
 ]
 
+REQUESTED_SCOPES = [
+    *SCOPES,
+    "r:installedapps",
+    "w:installedapps",
+]
+
 CONF_APP_ID = "app_id"
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 CONF_INSTALLED_APP_ID = "installed_app_id"
@@ -26,3 +32,6 @@ CONF_REFRESH_TOKEN = "refresh_token"
 
 MAIN = "main"
 OLD_DATA = "old_data"
+
+CONF_SUBSCRIPTION_ID = "subscription_id"
+EVENT_BUTTON = "smartthings.button"

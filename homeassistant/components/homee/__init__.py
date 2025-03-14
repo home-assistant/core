@@ -19,6 +19,7 @@ PLATFORMS = [
     Platform.COVER,
     Platform.LIGHT,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.VALVE,
