@@ -63,10 +63,7 @@ async def test_form_auth_issues(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     # Set Authorize to fail.
-    with patch(
-        "homeassistant.components.snoo.config_flow.Snoo.authorize",
-        side_effect=exception,
-    ):
+    bypass_api.authorize.side_effect = exception
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -77,10 +74,7 @@ async def test_form_auth_issues(
     # Reset auth back to the original
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": error_msg}
-    with patch(
-        "homeassistant.components.snoo.config_flow.Snoo.authorize",
-        return_value=MOCKED_AUTH,
-    ):
+    bypass_api.authorize.side_effect = None
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -88,7 +82,6 @@ async def test_form_auth_issues(
                 CONF_PASSWORD: "test-password",
             },
         )
-        await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
