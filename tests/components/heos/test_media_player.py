@@ -158,7 +158,6 @@ async def test_updates_from_connection_event(
     state = hass.states.get("media_player.test_player")
     assert state is not None
     assert state.state == STATE_IDLE
-    assert controller.load_players.call_count == 1
 
     # Disconnected
     controller.load_players.reset_mock()
@@ -170,11 +169,8 @@ async def test_updates_from_connection_event(
     state = hass.states.get("media_player.test_player")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-    assert controller.load_players.call_count == 0
 
-    # Connected handles refresh failure
-    controller.load_players.reset_mock()
-    controller.load_players.side_effect = CommandFailedError("", "Failure", 1)
+    # Reconnect and state updates
     player.available = True
     await controller.dispatcher.wait_send(
         SignalType.HEOS_EVENT, SignalHeosEvent.CONNECTED
@@ -183,38 +179,6 @@ async def test_updates_from_connection_event(
     state = hass.states.get("media_player.test_player")
     assert state is not None
     assert state.state == STATE_IDLE
-    assert controller.load_players.call_count == 1
-    assert "Unable to refresh players" in caplog.text
-
-
-async def test_updates_from_connection_event_new_player_ids(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    config_entry: MockConfigEntry,
-    controller: MockHeos,
-    change_data_mapped_ids: PlayerUpdateResult,
-) -> None:
-    """Test player ids changed after reconnection updates ids."""
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-
-    # Assert current IDs
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "1")})
-    assert entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "1")
-
-    # Send event which will result in updated IDs.
-    controller.load_players.return_value = change_data_mapped_ids
-    await controller.dispatcher.wait_send(
-        SignalType.HEOS_EVENT, SignalHeosEvent.CONNECTED
-    )
-    await hass.async_block_till_done()
-
-    # Assert updated IDs and previous don't exist
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "1")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "101")})
-    assert not entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "1")
-    assert entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "101")
 
 
 async def test_updates_from_sources_updated(

@@ -3,7 +3,6 @@
 import copy
 from datetime import timedelta
 from http import HTTPStatus
-import io
 from unittest.mock import patch
 
 from PIL import Image
@@ -109,39 +108,6 @@ async def test_floorplan_image_failed_parse(
         async_fire_time_changed(hass, now)
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
     assert not resp.ok
-
-
-async def test_load_stored_image(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    setup_entry: MockConfigEntry,
-) -> None:
-    """Test that we correctly load an image from storage when it already exists."""
-    img_byte_arr = io.BytesIO()
-    MAP_DATA.image.data.save(img_byte_arr, format="PNG")
-    img_bytes = img_byte_arr.getvalue()
-
-    # Load the image on demand, which should queue it to be cached on disk
-    client = await hass_client()
-    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-    assert resp.status == HTTPStatus.OK
-
-    with patch(
-        "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
-    ) as parse_map:
-        # Reload the config entry so that the map is saved in storage and entities exist.
-        await hass.config_entries.async_reload(setup_entry.entry_id)
-        await hass.async_block_till_done()
-        assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
-        client = await hass_client()
-        resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-        # Test that we can get the image and it correctly serialized and unserialized.
-        assert resp.status == HTTPStatus.OK
-        body = await resp.read()
-        assert body == img_bytes
-
-        # Ensure that we never tried to update the map, and only used the cached image.
-        assert parse_map.call_count == 0
 
 
 async def test_fail_to_save_image(

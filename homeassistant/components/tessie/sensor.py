@@ -148,7 +148,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         key="drive_state_shift_state",
         options=["p", "d", "r", "n"],
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda x: x.lower() if isinstance(x, str) else x,
+        value_fn=lambda x: x.lower() if isinstance(x, str) else "p",
     ),
     TessieSensorEntityDescription(
         key="vehicle_state_odometer",

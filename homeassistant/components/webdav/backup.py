@@ -169,6 +169,7 @@ class WebDavBackupAgent(BackupAgent):
             await open_stream(),
             f"{self._backup_path}/{filename_tar}",
             timeout=BACKUP_TIMEOUT,
+            content_length=backup.size,
         )
 
         _LOGGER.debug(

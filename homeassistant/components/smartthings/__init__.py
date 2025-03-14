@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, cast
@@ -11,15 +12,22 @@ from pysmartthings import (
     Attribute,
     Capability,
     Device,
+    DeviceEvent,
     Scene,
     SmartThings,
     SmartThingsAuthenticationFailedError,
+    SmartThingsSinkError,
     Status,
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_TOKEN,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -28,7 +36,15 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 
-from .const import CONF_INSTALLED_APP_ID, CONF_LOCATION_ID, DOMAIN, MAIN, OLD_DATA
+from .const import (
+    CONF_INSTALLED_APP_ID,
+    CONF_LOCATION_ID,
+    CONF_SUBSCRIPTION_ID,
+    DOMAIN,
+    EVENT_BUTTON,
+    MAIN,
+    OLD_DATA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,6 +107,54 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     client.refresh_token_function = _refresh_token
 
+    def _handle_max_connections() -> None:
+        _LOGGER.debug("We hit the limit of max connections")
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    client.max_connections_reached_callback = _handle_max_connections
+
+    def _handle_new_subscription_identifier(identifier: str | None) -> None:
+        """Handle a new subscription identifier."""
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                CONF_SUBSCRIPTION_ID: identifier,
+            },
+        )
+        if identifier is not None:
+            _LOGGER.debug("Updating subscription ID to %s", identifier)
+        else:
+            _LOGGER.debug("Removing subscription ID")
+
+    client.new_subscription_id_callback = _handle_new_subscription_identifier
+
+    if (old_identifier := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
+        _LOGGER.debug("Trying to delete old subscription %s", old_identifier)
+        await client.delete_subscription(old_identifier)
+
+    _LOGGER.debug("Trying to create a new subscription")
+    try:
+        subscription = await client.create_subscription(
+            entry.data[CONF_LOCATION_ID],
+            entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
+        )
+    except SmartThingsSinkError as err:
+        _LOGGER.debug("Couldn't create a new subscription: %s", err)
+        raise ConfigEntryNotReady from err
+    subscription_id = subscription.subscription_id
+    _handle_new_subscription_identifier(subscription_id)
+
+    entry.async_create_background_task(
+        hass,
+        client.subscribe(
+            entry.data[CONF_LOCATION_ID],
+            entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
+            subscription,
+        ),
+        "smartthings_socket",
+    )
+
     device_status: dict[str, FullDevice] = {}
     try:
         rooms = {
@@ -140,12 +204,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         rooms=rooms,
     )
 
-    entry.async_create_background_task(
-        hass,
-        client.subscribe(
-            entry.data[CONF_LOCATION_ID], entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID]
-        ),
-        "smartthings_webhook",
+    def handle_button_press(event: DeviceEvent) -> None:
+        """Handle a button press."""
+        if (
+            event.capability is Capability.BUTTON
+            and event.attribute is Attribute.BUTTON
+        ):
+            hass.bus.async_fire(
+                EVENT_BUTTON,
+                {
+                    "component_id": event.component_id,
+                    "device_id": event.device_id,
+                    "location_id": event.location_id,
+                    "value": event.value,
+                    "name": entry.runtime_data.devices[event.device_id].device.label,
+                    "data": event.data,
+                },
+            )
+
+    entry.async_on_unload(
+        client.add_unspecified_device_event_listener(handle_button_press)
+    )
+
+    async def _handle_shutdown(_: Event) -> None:
+        """Handle shutdown."""
+        await client.delete_subscription(subscription_id)
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _handle_shutdown)
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -170,6 +256,9 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: SmartThingsConfigEntry
 ) -> bool:
     """Unload a config entry."""
+    client = entry.runtime_data.client
+    if (subscription_id := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
+        await client.delete_subscription(subscription_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -185,26 +274,39 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+KEEP_CAPABILITY_QUIRK: dict[
+    Capability | str, Callable[[dict[Attribute | str, Status]], bool]
+] = {
+    Capability.DRYER_OPERATING_STATE: (
+        lambda status: status[Attribute.SUPPORTED_MACHINE_STATES].value is not None
+    ),
+    Capability.WASHER_OPERATING_STATE: (
+        lambda status: status[Attribute.SUPPORTED_MACHINE_STATES].value is not None
+    ),
+    Capability.DEMAND_RESPONSE_LOAD_CONTROL: lambda _: True,
+}
+
+
 def process_status(
     status: dict[str, dict[Capability | str, dict[Attribute | str, Status]]],
 ) -> dict[str, dict[Capability | str, dict[Attribute | str, Status]]]:
     """Remove disabled capabilities from status."""
-    if (main_component := status.get("main")) is None or (
+    if (main_component := status.get(MAIN)) is None:
+        return status
+    if (
         disabled_capabilities_capability := main_component.get(
             Capability.CUSTOM_DISABLED_CAPABILITIES
         )
-    ) is None:
-        return status
-    disabled_capabilities = cast(
-        list[Capability | str],
-        disabled_capabilities_capability[Attribute.DISABLED_CAPABILITIES].value,
-    )
-    if disabled_capabilities is not None:
-        for capability in disabled_capabilities:
-            # We still need to make sure the climate entity can work without this capability
-            if (
-                capability in main_component
-                and capability != Capability.DEMAND_RESPONSE_LOAD_CONTROL
-            ):
-                del main_component[capability]
+    ) is not None:
+        disabled_capabilities = cast(
+            list[Capability | str],
+            disabled_capabilities_capability[Attribute.DISABLED_CAPABILITIES].value,
+        )
+        if disabled_capabilities is not None:
+            for capability in disabled_capabilities:
+                if capability in main_component and (
+                    capability not in KEEP_CAPABILITY_QUIRK
+                    or not KEEP_CAPABILITY_QUIRK[capability](main_component[capability])
+                ):
+                    del main_component[capability]
     return status
