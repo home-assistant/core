@@ -242,8 +242,6 @@ class TeslemetryStreamingClimateEntity(
         | ClimateEntityFeature.PRESET_MODE
     )
 
-    side: TeslemetryClimateSide
-
     def __init__(
         self,
         data: TeslemetryVehicleData,
