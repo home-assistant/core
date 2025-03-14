@@ -1,7 +1,5 @@
 """Base entity for Coolmaster integration."""
 
-from pycoolmasternet_async.coolmasternet import CoolMasterNetUnit
-
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -19,18 +17,17 @@ class CoolmasterEntity(CoordinatorEntity[CoolmasterDataUpdateCoordinator]):
         self,
         coordinator: CoolmasterDataUpdateCoordinator,
         unit_id: str,
-        info: dict[str, str],
     ) -> None:
         """Initiate CoolmasterEntity."""
         super().__init__(coordinator)
         self._unit_id: str = unit_id
-        self._unit: CoolMasterNetUnit = coordinator.data[self._unit_id]
+        self._unit = coordinator.data[self._unit_id]
         self._attr_device_info: DeviceInfo = DeviceInfo(
             identifiers={(DOMAIN, unit_id)},
             manufacturer="CoolAutomation",
             model="CoolMasterNet",
             name=unit_id,
-            sw_version=info["version"],
+            sw_version=coordinator.info["version"],
         )
         if hasattr(self, "entity_description"):
             self._attr_unique_id: str = f"{unit_id}-{self.entity_description.key}"

@@ -6,7 +6,7 @@ from mcstatus import JavaServer
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.minecraft_server.const import DEFAULT_NAME, DOMAIN
+from homeassistant.components.minecraft_server.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_PORT
@@ -22,6 +22,8 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry
+
+DEFAULT_NAME = "Minecraft Server"
 
 TEST_UNIQUE_ID = f"{TEST_HOST}-{TEST_PORT}"
 

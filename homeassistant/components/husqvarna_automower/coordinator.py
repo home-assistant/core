@@ -6,17 +6,17 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from aioautomower.exceptions import (
-    ApiException,
-    AuthException,
+    ApiError,
+    AuthError,
+    HusqvarnaTimeoutError,
     HusqvarnaWSServerHandshakeError,
-    TimeoutException,
 )
 from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -24,13 +24,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
-if TYPE_CHECKING:
-    from . import AutomowerConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
 MAX_WS_RECONNECT_TIME = 600
 SCAN_INTERVAL = timedelta(minutes=8)
 DEFAULT_RECONNECT_TIME = 2  # Define a default reconnect time
+
+type AutomowerConfigEntry = ConfigEntry[AutomowerDataUpdateCoordinator]
 
 
 class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttributes]]):
@@ -38,11 +37,17 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
 
     config_entry: AutomowerConfigEntry
 
-    def __init__(self, hass: HomeAssistant, api: AutomowerSession) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: AutomowerConfigEntry,
+        api: AutomowerSession,
+    ) -> None:
         """Initialize data updater."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
@@ -64,9 +69,9 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
             self.ws_connected = True
         try:
             data = await self.api.get_status()
-        except ApiException as err:
+        except ApiError as err:
             raise UpdateFailed(err) from err
-        except AuthException as err:
+        except AuthError as err:
             raise ConfigEntryAuthFailed(err) from err
 
         self._async_add_remove_devices(data)
@@ -100,7 +105,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
                 "Failed to connect to websocket. Trying to reconnect: %s",
                 err,
             )
-        except TimeoutException as err:
+        except HusqvarnaTimeoutError as err:
             _LOGGER.debug(
                 "Failed to listen to websocket. Trying to reconnect: %s",
                 err,

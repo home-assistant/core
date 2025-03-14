@@ -10,9 +10,9 @@ from webio_api import Output as NASwebOutput
 
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH, SwitchEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     BaseCoordinatorEntity,
@@ -38,7 +38,7 @@ def _get_output(coordinator: NASwebCoordinator, index: int) -> NASwebOutput | No
 async def async_setup_entry(
     hass: HomeAssistant,
     config: NASwebConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up switch platform."""

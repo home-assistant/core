@@ -42,11 +42,11 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from .. import subscription
 from ..config import MQTT_RW_SCHEMA

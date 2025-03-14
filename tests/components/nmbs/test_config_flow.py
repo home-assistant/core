@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.nmbs.config_flow import CONF_EXCLUDE_VIAS
 from homeassistant.components.nmbs.const import (
     CONF_STATION_FROM,
     CONF_STATION_LIVE,
@@ -120,11 +121,28 @@ async def test_abort_if_exists(
     assert result["reason"] == "already_configured"
 
 
+async def test_dont_abort_if_exists_when_vias_differs(
+    hass: HomeAssistant, mock_nmbs_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test aborting the flow if the entry already exists."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
+            CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
+            CONF_EXCLUDE_VIAS: True,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_unavailable_api(
     hass: HomeAssistant, mock_nmbs_client: AsyncMock
 ) -> None:
     """Test starting a flow by user and api is unavailable."""
-    mock_nmbs_client.get_stations.return_value = -1
+    mock_nmbs_client.get_stations.return_value = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -158,7 +176,10 @@ async def test_import(
         CONF_STATION_LIVE: "BE.NMBS.008813003",
         CONF_STATION_TO: "BE.NMBS.008814001",
     }
-    assert result["result"].unique_id == "BE.NMBS.008812005_BE.NMBS.008814001"
+    assert (
+        result["result"].unique_id
+        == f"{DUMMY_DATA['STAT_BRUSSELS_NORTH']}_{DUMMY_DATA['STAT_BRUSSELS_SOUTH']}"
+    )
 
 
 async def test_step_import_abort_if_already_setup(
@@ -182,7 +203,7 @@ async def test_unavailable_api_import(
     hass: HomeAssistant, mock_nmbs_client: AsyncMock
 ) -> None:
     """Test starting a flow by import and api is unavailable."""
-    mock_nmbs_client.get_stations.return_value = -1
+    mock_nmbs_client.get_stations.return_value = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},

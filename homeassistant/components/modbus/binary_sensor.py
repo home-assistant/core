@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 from typing import Any
 
@@ -104,17 +103,13 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
         if state := await self.async_get_last_state():
             self._attr_is_on = state.state == STATE_ON
 
-    async def async_update(self, now: datetime | None = None) -> None:
+    async def _async_update(self) -> None:
         """Update the state of the sensor."""
 
         # do not allow multiple active calls to the same platform
-        if self._call_active:
-            return
-        self._call_active = True
         result = await self._hub.async_pb_call(
             self._slave, self._address, self._count, self._input_type
         )
-        self._call_active = False
         if result is None:
             self._attr_available = False
             self._result = []
@@ -126,7 +121,6 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
                 self._result = result.registers
             self._attr_is_on = bool(self._result[0] & 1)
 
-        self.async_write_ha_state()
         if self._coordinator:
             self._coordinator.async_set_updated_data(self._result)
 
@@ -159,7 +153,6 @@ class SlaveSensor(
         """Handle entity which will be added."""
         if state := await self.async_get_last_state():
             self._attr_is_on = state.state == STATE_ON
-            self.async_write_ha_state()
         await super().async_added_to_hass()
 
     @callback

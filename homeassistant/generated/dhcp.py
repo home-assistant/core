@@ -62,6 +62,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "E82725*",
     },
     {
+        "domain": "balboa",
+        "registered_devices": True,
+    },
+    {
+        "domain": "balboa",
+        "macaddress": "001527*",
+    },
+    {
         "domain": "blink",
         "hostname": "blink*",
         "macaddress": "B85F98*",
@@ -252,6 +260,15 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "hunterdouglas_powerview",
         "hostname": "hunter*",
         "macaddress": "002674*",
+    },
+    {
+        "domain": "incomfort",
+        "hostname": "rfgateway",
+        "macaddress": "0004A3*",
+    },
+    {
+        "domain": "incomfort",
+        "registered_devices": True,
     },
     {
         "domain": "insteon",
@@ -598,6 +615,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "smartthings",
         "hostname": "hub*",
         "macaddress": "286D97*",
+    },
+    {
+        "domain": "smlight",
+        "registered_devices": True,
     },
     {
         "domain": "solaredge",

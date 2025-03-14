@@ -15,10 +15,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PegelOnlineConfigEntry
-from .coordinator import PegelOnlineDataUpdateCoordinator
+from .coordinator import PegelOnlineConfigEntry, PegelOnlineDataUpdateCoordinator
 from .entity import PegelOnlineEntity
 
 
@@ -94,7 +93,7 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PegelOnlineConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the PEGELONLINE sensor."""
     coordinator = entry.runtime_data

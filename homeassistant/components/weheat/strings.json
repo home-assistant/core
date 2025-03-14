@@ -37,7 +37,7 @@
         "name": "Indoor unit water pump"
       },
       "indoor_unit_auxiliary_pump_state": {
-        "name": "Indoor unit auxilary water pump"
+        "name": "Indoor unit auxiliary water pump"
       },
       "indoor_unit_dhw_valve_or_pump_state": {
         "name": "Indoor unit DHW valve or water pump"

@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.notify import NotifyEntity
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
@@ -20,7 +20,7 @@ from .entity import KnxYamlEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up notify(s) for KNX platform."""
     knx_module = hass.data[KNX_MODULE_KEY]

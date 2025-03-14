@@ -11,7 +11,7 @@ from homeassistant.components.light import ColorMode
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import color
+from homeassistant.util import color as color_util
 
 from .conftest import create_config_entry
 
@@ -167,10 +167,10 @@ LIGHT_RAW = {
     },
     "swversion": "66009461",
 }
-LIGHT_GAMUT = color.GamutType(
-    color.XYPoint(0.704, 0.296),
-    color.XYPoint(0.2151, 0.7106),
-    color.XYPoint(0.138, 0.08),
+LIGHT_GAMUT = color_util.GamutType(
+    color_util.XYPoint(0.704, 0.296),
+    color_util.XYPoint(0.2151, 0.7106),
+    color_util.XYPoint(0.138, 0.08),
 )
 LIGHT_GAMUT_TYPE = "A"
 
@@ -770,7 +770,7 @@ def test_hs_color() -> None:
         rooms={},
     )
 
-    assert light.hs_color == color.color_xy_to_hs(0.4, 0.5, LIGHT_GAMUT)
+    assert light.hs_color == color_util.color_xy_to_hs(0.4, 0.5, LIGHT_GAMUT)
 
 
 async def test_group_features(

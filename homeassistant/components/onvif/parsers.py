@@ -381,6 +381,9 @@ _TAPO_EVENT_TEMPLATES: dict[str, Event] = {
     "IsPeople": Event(
         uid="", name="Person Detection", platform="binary_sensor", device_class="motion"
     ),
+    "IsPet": Event(
+        uid="", name="Pet Detection", platform="binary_sensor", device_class="motion"
+    ),
     "IsLineCross": Event(
         uid="",
         name="Line Detector Crossed",

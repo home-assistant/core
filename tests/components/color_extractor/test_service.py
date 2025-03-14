@@ -25,7 +25,7 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker

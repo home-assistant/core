@@ -23,8 +23,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.check_config import async_check_ha_config_file
-from homeassistant.util.yaml import Secrets
-import homeassistant.util.yaml.loader as yaml_loader
+from homeassistant.util.yaml import Secrets, loader as yaml_loader
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 

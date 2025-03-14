@@ -1,0 +1,222 @@
+{
+  "components": {
+    "main": {
+      "mediaPlayback": {
+        "supportedPlaybackCommands": {
+          "value": ["play", "pause", "stop"],
+          "timestamp": "2025-03-08T12:06:24.496Z"
+        },
+        "playbackStatus": {
+          "value": "stopped",
+          "timestamp": "2025-03-08T12:06:24.496Z"
+        }
+      },
+      "audioVolume": {
+        "volume": {
+          "value": 52,
+          "unit": "%",
+          "timestamp": "2025-03-08T12:08:00.153Z"
+        }
+      },
+      "mediaInputSource": {
+        "supportedInputSources": {
+          "value": null
+        },
+        "inputSource": {
+          "value": null
+        }
+      },
+      "audioTrackAddressing": {},
+      "samsungim.networkAudioGroupInfo": {
+        "groupName": {
+          "value": "",
+          "timestamp": "2025-03-08T12:06:24.628Z"
+        },
+        "role": {
+          "value": "",
+          "timestamp": "2025-03-08T12:06:24.628Z"
+        },
+        "channel": {
+          "value": "",
+          "timestamp": "2025-03-08T12:06:24.628Z"
+        },
+        "stereoType": {
+          "value": "A",
+          "timestamp": "2025-03-08T12:06:24.628Z"
+        },
+        "masterDi": {
+          "value": "",
+          "timestamp": "2025-03-08T12:06:24.628Z"
+        },
+        "acmMode": {
+          "value": "",
+          "timestamp": "2025-03-08T12:06:24.628Z"
+        },
+        "status": {
+          "value": "single",
+          "timestamp": "2025-03-08T12:06:24.628Z"
+        },
+        "masterName": {
+          "value": "",
+          "timestamp": "2025-03-08T12:06:24.628Z"
+        }
+      },
+      "refresh": {},
+      "audioNotification": {},
+      "execute": {
+        "data": {
+          "value": null
+        }
+      },
+      "samsungim.networkAudioMode": {
+        "mode": {
+          "value": "wifi",
+          "timestamp": "2025-03-08T12:06:24.573Z"
+        }
+      },
+      "mediaPlaybackRepeat": {
+        "playbackRepeatMode": {
+          "value": "off",
+          "timestamp": "2025-03-08T12:06:24.519Z"
+        }
+      },
+      "musicPlayer": {
+        "trackDescription": {
+          "value": null
+        },
+        "level": {
+          "value": null
+        },
+        "mute": {
+          "value": null
+        },
+        "trackData": {
+          "value": null
+        },
+        "status": {
+          "value": null
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": "V310XXU1AWK1",
+          "timestamp": "2025-03-08T12:06:18.931Z"
+        },
+        "mnhw": {
+          "value": "1.0",
+          "timestamp": "2025-03-08T12:06:18.931Z"
+        },
+        "di": {
+          "value": "c9276e43-fe3c-88c3-1dcc-2eb79e292b8c",
+          "timestamp": "2025-03-08T12:06:18.931Z"
+        },
+        "mnsl": {
+          "value": null
+        },
+        "dmv": {
+          "value": "IoTivity1.2.1",
+          "timestamp": "2025-03-08T12:06:18.942Z"
+        },
+        "n": {
+          "value": "Galaxy Home Mini (MQVL)",
+          "timestamp": "2025-03-08T12:06:18.931Z"
+        },
+        "mnmo": {
+          "value": "SM-V310",
+          "timestamp": "2025-03-08T12:06:18.931Z"
+        },
+        "vid": {
+          "value": "IM-SPEAKER-AI-0001",
+          "timestamp": "2025-03-08T12:06:18.931Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2025-03-08T12:06:18.931Z"
+        },
+        "mnml": {
+          "value": null
+        },
+        "mnpv": {
+          "value": "4.0.0.1",
+          "timestamp": "2025-03-08T12:06:18.931Z"
+        },
+        "mnos": {
+          "value": "Tizen",
+          "timestamp": "2025-03-08T12:06:18.931Z"
+        },
+        "pi": {
+          "value": "c9276e43-fe3c-88c3-1dcc-2eb79e292b8c",
+          "timestamp": "2025-03-08T12:06:18.931Z"
+        },
+        "icv": {
+          "value": "core0.0.1",
+          "timestamp": "2025-03-08T12:06:18.942Z"
+        }
+      },
+      "samsungim.announcement": {
+        "enableState": {
+          "value": null
+        },
+        "supportedCategories": {
+          "value": null
+        },
+        "supportedTypes": {
+          "value": null
+        },
+        "supportedMimes": {
+          "value": null
+        }
+      },
+      "samsungim.bixbyContent": {
+        "supportedModes": {
+          "value": ["news", "weather", "music", "search_all"],
+          "timestamp": "2025-03-08T12:06:24.817Z"
+        }
+      },
+      "mediaPlaybackShuffle": {
+        "playbackShuffle": {
+          "value": "disabled",
+          "timestamp": "2025-03-08T12:06:24.592Z"
+        }
+      },
+      "audioMute": {
+        "mute": {
+          "value": "unmuted",
+          "timestamp": "2025-03-08T12:06:24.478Z"
+        }
+      },
+      "mediaTrackControl": {
+        "supportedTrackControlCommands": {
+          "value": null
+        }
+      },
+      "speechSynthesis": {},
+      "samsungim.networkAudioTrackData": {
+        "appName": {
+          "value": null
+        },
+        "source": {
+          "value": "wifi",
+          "timestamp": "2025-03-08T12:06:24.540Z"
+        }
+      },
+      "audioTrackData": {
+        "totalTime": {
+          "value": null
+        },
+        "audioTrackData": {
+          "value": null
+        },
+        "elapsedTime": {
+          "value": null
+        }
+      }
+    }
+  }
+}

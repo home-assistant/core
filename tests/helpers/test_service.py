@@ -36,11 +36,11 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import (
     area_registry as ar,
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     service,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import parse_yaml

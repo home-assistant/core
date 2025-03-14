@@ -9,7 +9,7 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IRON_OS_KEY, IronOSConfigEntry, IronOSLiveDataCoordinator
 from .coordinator import IronOSFirmwareUpdateCoordinator
@@ -26,7 +26,7 @@ UPDATE_DESCRIPTION = UpdateEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IronOSConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up IronOS update platform."""
 
