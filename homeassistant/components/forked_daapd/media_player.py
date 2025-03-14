@@ -7,7 +7,6 @@ from collections import defaultdict
 import logging
 from typing import Any
 
-from pyforked_daapd import ForkedDaapdAPI
 from pylibrespot_java import LibrespotJavaAPI
 
 from homeassistant.components import media_source
@@ -28,8 +27,7 @@ from homeassistant.components.spotify import (
     resolve_spotify_media_type,
     spotify_uri_from_media_browser_url,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -55,9 +53,7 @@ from .const import (
     DEFAULT_TTS_PAUSE_TIME,
     DEFAULT_TTS_VOLUME,
     DEFAULT_UNMUTE_VOLUME,
-    DOMAIN,
     FD_NAME,
-    HASS_DATA_UPDATER_KEY,
     KNOWN_PIPES,
     PIPE_FUNCTION_MAP,
     SIGNAL_ADD_ZONES,
@@ -74,23 +70,21 @@ from .const import (
     SUPPORTED_FEATURES_ZONE,
     TTS_TIMEOUT,
 )
-from .coordinator import ForkedDaapdUpdater
+from .coordinator import ForkedDaapdConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ForkedDaapdConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up forked-daapd from a config entry."""
+    forked_daapd_updater = config_entry.runtime_data
+
     host: str = config_entry.data[CONF_HOST]
-    port: int = config_entry.data[CONF_PORT]
-    password: str = config_entry.data[CONF_PASSWORD]
-    forked_daapd_api = ForkedDaapdAPI(
-        async_get_clientsession(hass), host, port, password
-    )
+    forked_daapd_api = forked_daapd_updater.api
     forked_daapd_master = ForkedDaapdMaster(
         clientsession=async_get_clientsession(hass),
         api=forked_daapd_api,
@@ -111,20 +105,12 @@ async def async_setup_entry(
     )
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
-    if not hass.data.get(DOMAIN):
-        hass.data[DOMAIN] = {config_entry.entry_id: {}}
-
     async_add_entities([forked_daapd_master], False)
-    forked_daapd_updater = ForkedDaapdUpdater(
-        hass, forked_daapd_api, config_entry.entry_id
-    )
-    hass.data[DOMAIN][config_entry.entry_id][HASS_DATA_UPDATER_KEY] = (
-        forked_daapd_updater
-    )
+
     await forked_daapd_updater.async_init()
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: ForkedDaapdConfigEntry) -> None:
     """Handle options update."""
     async_dispatcher_send(
         hass, SIGNAL_CONFIG_OPTIONS_UPDATE.format(entry.entry_id), entry.options

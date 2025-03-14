@@ -66,6 +66,9 @@
           "max_charge": "Max charge",
           "paused": "Paused"
         }
+      },
+      "vehicle": {
+        "name": "Vehicle"
       }
     },
     "sensor": {
@@ -74,7 +77,7 @@
         "state": {
           "unplugged": "Unplugged",
           "plugged_in": "Plugged in",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "paused": "[%key:common::state::paused%]",
           "pending_approval": "Pending approval",
           "finished": "Finished charging"
@@ -85,6 +88,9 @@
       },
       "vehicle_battery": {
         "name": "Vehicle battery"
+      },
+      "slot_list": {
+        "name": "Charge slots"
       }
     },
     "switch": {

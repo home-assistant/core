@@ -132,6 +132,7 @@ async def mock_async_browse(
     child_types = {
         "favorites": "favorites",
         "new music": "album",
+        "album artists": "artists",
         "albums": "album",
         "album": "track",
         "genres": "genre",
@@ -142,6 +143,9 @@ async def mock_async_browse(
         "title": "title",
         "playlists": "playlist",
         "playlist": "title",
+        "apps": "app",
+        "radios": "app",
+        "app-fakecommand": "track",
     }
     fake_items = [
         {
@@ -152,15 +156,19 @@ async def mock_async_browse(
             "item_type": child_types[media_type],
             "artwork_track_id": "b35bb9e9",
             "url": "file:///var/lib/squeezeboxserver/music/track_1.mp3",
+            "cmd": "fakecommand",
+            "icon": "plugins/Qobuz/html/images/qobuz.png",
         },
         {
             "title": "Fake Item 2",
             "id": FAKE_VALID_ITEM_ID + "_2",
             "hasitems": media_type == "favorites",
-            "isaudio": True,
+            "isaudio": False,
             "item_type": child_types[media_type],
             "image_url": "http://lms.internal:9000/html/images/favorites.png",
             "url": "file:///var/lib/squeezeboxserver/music/track_2.mp3",
+            "cmd": "fakecommand",
+            "icon": "plugins/Qobuz/html/images/qobuz.png",
         },
         {
             "title": "Fake Item 3",
@@ -169,6 +177,19 @@ async def mock_async_browse(
             "isaudio": True,
             "album_id": FAKE_VALID_ITEM_ID if media_type == "favorites" else None,
             "url": "file:///var/lib/squeezeboxserver/music/track_3.mp3",
+            "cmd": "fakecommand",
+            "icon": "plugins/Qobuz/html/images/qobuz.png",
+        },
+        {
+            "title": "Fake Invalid Item 1",
+            "id": FAKE_VALID_ITEM_ID + "invalid_3",
+            "hasitems": media_type == "favorites",
+            "isaudio": True,
+            "album_id": FAKE_VALID_ITEM_ID if media_type == "favorites" else None,
+            "url": "file:///var/lib/squeezeboxserver/music/track_3.mp3",
+            "cmd": "fakecommand",
+            "icon": "plugins/Qobuz/html/images/qobuz.png",
+            "type": "text",
         },
     ]
 
@@ -198,7 +219,10 @@ async def mock_async_browse(
                 "items": fake_items,
             }
         return None
-    if media_type in MEDIA_TYPE_TO_SQUEEZEBOX.values():
+    if (
+        media_type in MEDIA_TYPE_TO_SQUEEZEBOX.values()
+        or media_type == "app-fakecommand"
+    ):
         return {
             "title": media_type,
             "items": fake_items,
@@ -231,6 +255,9 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         mock_player.set_announce_timeout = MagicMock(return_value=True)
         mock_player.async_play_announcement = AsyncMock(
             side_effect=mock_async_play_announcement
+        )
+        mock_player.generate_image_url = MagicMock(
+            return_value="http://lms.internal:9000/html/images/favorites.png"
         )
         mock_player.name = TEST_PLAYER_NAME
         mock_player.player_id = uuid

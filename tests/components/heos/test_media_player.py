@@ -22,7 +22,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.heos.const import DOMAIN, SERVICE_GROUP_VOLUME_SET
+from homeassistant.components.heos.const import (
+    DOMAIN,
+    SERVICE_GROUP_VOLUME_DOWN,
+    SERVICE_GROUP_VOLUME_SET,
+    SERVICE_GROUP_VOLUME_UP,
+)
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
@@ -153,7 +158,6 @@ async def test_updates_from_connection_event(
     state = hass.states.get("media_player.test_player")
     assert state is not None
     assert state.state == STATE_IDLE
-    assert controller.load_players.call_count == 1
 
     # Disconnected
     controller.load_players.reset_mock()
@@ -165,11 +169,8 @@ async def test_updates_from_connection_event(
     state = hass.states.get("media_player.test_player")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-    assert controller.load_players.call_count == 0
 
-    # Connected handles refresh failure
-    controller.load_players.reset_mock()
-    controller.load_players.side_effect = CommandFailedError("", "Failure", 1)
+    # Reconnect and state updates
     player.available = True
     await controller.dispatcher.wait_send(
         SignalType.HEOS_EVENT, SignalHeosEvent.CONNECTED
@@ -178,38 +179,6 @@ async def test_updates_from_connection_event(
     state = hass.states.get("media_player.test_player")
     assert state is not None
     assert state.state == STATE_IDLE
-    assert controller.load_players.call_count == 1
-    assert "Unable to refresh players" in caplog.text
-
-
-async def test_updates_from_connection_event_new_player_ids(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    config_entry: MockConfigEntry,
-    controller: MockHeos,
-    change_data_mapped_ids: PlayerUpdateResult,
-) -> None:
-    """Test player ids changed after reconnection updates ids."""
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-
-    # Assert current IDs
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "1")})
-    assert entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "1")
-
-    # Send event which will result in updated IDs.
-    controller.load_players.return_value = change_data_mapped_ids
-    await controller.dispatcher.wait_send(
-        SignalType.HEOS_EVENT, SignalHeosEvent.CONNECTED
-    )
-    await hass.async_block_till_done()
-
-    # Assert updated IDs and previous don't exist
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "1")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "101")})
-    assert not entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "1")
-    assert entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "101")
 
 
 async def test_updates_from_sources_updated(
@@ -778,6 +747,64 @@ async def test_group_volume_set_not_grouped_error(
             blocking=True,
         )
     controller.set_group_volume.assert_not_called()
+
+
+async def test_group_volume_down(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test the group volume down service."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GROUP_VOLUME_DOWN,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
+    controller.group_volume_down.assert_called_with(999)
+
+
+async def test_group_volume_up(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test the group volume up service."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GROUP_VOLUME_UP,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
+    controller.group_volume_up.assert_called_with(999)
+
+
+@pytest.mark.parametrize(
+    "service", [SERVICE_GROUP_VOLUME_DOWN, SERVICE_GROUP_VOLUME_UP]
+)
+async def test_group_volume_down_up_ungrouped_raises(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    service: str,
+) -> None:
+    """Test the group volume down and up service raise if player ungrouped."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    player = controller.players[1]
+    player.group_id = None
+    with pytest.raises(
+        ServiceValidationError,
+        match=re.escape("Entity media_player.test_player is not joined to a group"),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "media_player.test_player"},
+            blocking=True,
+        )
+    controller.group_volume_down.assert_not_called()
+    controller.group_volume_up.assert_not_called()
 
 
 async def test_select_favorite(

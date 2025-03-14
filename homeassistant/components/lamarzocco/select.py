@@ -88,6 +88,7 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
             MachineModel.GS3_AV,
             MachineModel.LINEA_MICRA,
             MachineModel.LINEA_MINI,
+            MachineModel.LINEA_MINI_R,
         ),
     ),
     LaMarzoccoSelectEntityDescription(
@@ -138,7 +139,7 @@ async def async_setup_entry(
     ]
 
     if (
-        coordinator.device.model == MachineModel.LINEA_MINI
+        coordinator.device.model in (MachineModel.LINEA_MINI, MachineModel.LINEA_MINI_R)
         and coordinator.device.config.scale
     ):
         entities.extend(

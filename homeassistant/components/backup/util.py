@@ -104,12 +104,15 @@ def read_backup(backup_path: Path) -> AgentBackup:
                 bool, homeassistant.get("exclude_database", False)
             )
 
+        extra_metadata = cast(dict[str, bool | str], data.get("extra", {}))
+        date = extra_metadata.get("supervisor.backup_request_date", data["date"])
+
         return AgentBackup(
             addons=addons,
             backup_id=cast(str, data["slug"]),
             database_included=database_included,
-            date=cast(str, data["date"]),
-            extra_metadata=cast(dict[str, bool | str], data.get("extra", {})),
+            date=cast(str, date),
+            extra_metadata=extra_metadata,
             folders=folders,
             homeassistant_included=homeassistant_included,
             homeassistant_version=homeassistant_version,
