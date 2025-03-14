@@ -2333,7 +2333,7 @@ thermobeacon-ble==0.8.1
 thermopro-ble==0.11.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==1.0.4
+thinqconnect==1.0.5
 
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3
