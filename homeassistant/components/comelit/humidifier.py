@@ -125,7 +125,10 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         self._active_action = active_action
         self._set_command = set_command
         self._update_attributes()
+        self._update_attributes()
 
+    def _update_attributes(self) -> None:
+        """Update class attributes."""
     def _update_attributes(self) -> None:
         """Update class attributes."""
         device = self.coordinator.data[CLIMATE][self._device.index]
@@ -158,7 +161,7 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attributes()
-        super()._handle_coordinator_update()
+        self.async_write_ha_state()
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
