@@ -56,12 +56,15 @@ async def _async_reproduce_state(
         _LOGGER.warning("Invalid state specified for %s: %s", entity_id, target_state)
         return
 
-    current_position = cur_state.attributes.get(ATTR_CURRENT_POSITION)
-    target_position = state.attributes.get(ATTR_CURRENT_POSITION)
+    current_attrs = cur_state.attributes
+    target_attrs = state.attributes
+
+    current_position = current_attrs.get(ATTR_CURRENT_POSITION)
+    target_position = target_attrs.get(ATTR_CURRENT_POSITION)
     position_matches = current_position == target_position
 
-    target_tilt_position = state.attributes.get(ATTR_CURRENT_TILT_POSITION)
-    current_tilt_position = cur_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
+    current_tilt_position = current_attrs.get(ATTR_CURRENT_TILT_POSITION)
+    target_tilt_position = target_attrs.get(ATTR_CURRENT_TILT_POSITION)
     tilt_position_matches = current_tilt_position == target_tilt_position
 
     state_matches = cur_state.state == target_state
@@ -70,7 +73,7 @@ async def _async_reproduce_state(
         return
 
     features = try_parse_enum(
-        CoverEntityFeature, cur_state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        CoverEntityFeature, current_attrs.get(ATTR_SUPPORTED_FEATURES)
     ) or CoverEntityFeature(0)
     set_position = not position_matches and target_position is not None
     service_data = {ATTR_ENTITY_ID: entity_id}
