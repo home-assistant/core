@@ -13,7 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import create_entry
-from .const import MOCKED_AUTH
 
 
 async def test_config_flow_success(
@@ -76,7 +75,6 @@ async def test_form_auth_issues(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": error_msg}
     bypass_api.authorize.side_effect = None
-    bypass_api.authorize.return_value = MOCKED_AUTH
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {

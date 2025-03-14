@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from . import async_init_integration, find_update_callback
