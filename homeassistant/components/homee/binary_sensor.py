@@ -146,7 +146,7 @@ BINARY_SENSOR_DESCRIPTIONS: dict[AttributeType, BinarySensorEntityDescription] =
     ),
     AttributeType.WATER_ALARM: BinarySensorEntityDescription(
         key="water",
-        device_class=BinarySensorDeviceClass.PROBLEM,
+        device_class=BinarySensorDeviceClass.MOISTURE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }

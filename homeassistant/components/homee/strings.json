@@ -30,9 +30,6 @@
       "blackout_alarm": {
         "name": "Blackout"
       },
-      "carbon_monoxide": {
-        "name": "[%key:component::binary_sensor::entity_component::carbon_monoxide::name%]"
-      },
       "carbon_dioxide": {
         "name": "Carbon dioxide"
       },
@@ -96,7 +93,7 @@
         "name": "Voltage drop"
       },
       "water": {
-        "name": "[%key:component::binary_sensor::entity_component::moisture::name%]"
+        "name": "Water"
       }
     },
     "button": {

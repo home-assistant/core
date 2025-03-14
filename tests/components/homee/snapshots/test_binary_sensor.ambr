@@ -622,54 +622,6 @@
     'state': 'off',
   })
 # ---
-# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_moisture-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_binary_sensor_moisture',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Moisture',
-    'platform': 'homee',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'water',
-    'unique_id': '00055511EECC-1-29',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_moisture-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Moisture',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_binary_sensor_moisture',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_sensor_snapshot[binary_sensor.test_binary_sensor_motion-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1384,6 +1336,54 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_binary_sensor_voltage_drop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_water-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_binary_sensor_water',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': 'Water',
+    'platform': 'homee',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'water',
+    'unique_id': '00055511EECC-1-29',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moisture',
+      'friendly_name': 'Test Binary Sensor Water',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_binary_sensor_water',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
