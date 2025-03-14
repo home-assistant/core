@@ -109,7 +109,7 @@ async def _async_reproduce_state(
             await _service_call(SERVICE_CLOSE_COVER, service_data)
         elif target_position == 100 and CoverEntityFeature.OPEN in features:
             await _service_call(SERVICE_OPEN_COVER, service_data)
-        elif target_position and CoverEntityFeature.SET_POSITION in features:
+        elif CoverEntityFeature.SET_POSITION in features:
             await _service_call(
                 SERVICE_SET_COVER_POSITION,
                 service_data | {ATTR_POSITION: target_position},
@@ -123,7 +123,7 @@ async def _async_reproduce_state(
             await _service_call(SERVICE_CLOSE_COVER_TILT, service_data)
         elif target_tilt_position == 100 and CoverEntityFeature.OPEN_TILT in features:
             await _service_call(SERVICE_OPEN_COVER_TILT, service_data)
-        elif target_tilt_position and CoverEntityFeature.SET_TILT_POSITION in features:
+        elif CoverEntityFeature.SET_TILT_POSITION in features:
             await _service_call(
                 SERVICE_SET_COVER_TILT_POSITION,
                 service_data | {ATTR_TILT_POSITION: target_tilt_position},
