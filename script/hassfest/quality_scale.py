@@ -1406,7 +1406,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "energenie_power_sockets",
     "energy",
     "energyzero",
-    "enigma2",
     "enphase_envoy",
     "enocean",
     "entur_public_transport",
