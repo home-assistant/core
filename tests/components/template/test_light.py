@@ -1385,7 +1385,6 @@ async def test_level_action_no_template(
     [
         (ConfigurationStyle.LEGACY, "level_template"),
         (ConfigurationStyle.MODERN, "level"),
-        (ConfigurationStyle.TRIGGER, "level"),
     ],
 )
 @pytest.mark.parametrize(
@@ -1408,18 +1407,60 @@ async def test_level_template(
     hass: HomeAssistant,
     expected_level: Any,
     expected_color_mode: ColorMode,
-    style: ConfigurationStyle,
     setup_single_attribute_light,
 ) -> None:
     """Test the template for the level."""
-    if style == ConfigurationStyle.TRIGGER:
-        hass.states.async_set("light.test_state", STATE_ON)
-        await hass.async_block_till_done()
-
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("brightness") == expected_level
     assert state.state == STATE_ON
+
     assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
+    assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize(
+    ("count", "extra_config"), [(1, OPTIMISTIC_BRIGHTNESS_LIGHT_CONFIG)]
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.TRIGGER, "level"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("expected_level", "attribute_template", "expected_color_mode", "trigger_state"),
+    [
+        (255, "{{255}}", ColorMode.BRIGHTNESS, STATE_ON),
+        (None, "{{256}}", ColorMode.BRIGHTNESS, STATE_ON),
+        (None, "{{x - 12}}", None, STATE_UNAVAILABLE),
+        (None, "{{ none }}", ColorMode.BRIGHTNESS, STATE_ON),
+        (None, "", ColorMode.BRIGHTNESS, STATE_ON),
+        (
+            None,
+            "{{ state_attr('light.nolight', 'brightness') }}",
+            ColorMode.BRIGHTNESS,
+            STATE_ON,
+        ),
+        (None, "{{'one'}}", ColorMode.BRIGHTNESS, STATE_ON),
+    ],
+)
+async def test_trigger_level_template(
+    hass: HomeAssistant,
+    expected_level: Any,
+    expected_color_mode: ColorMode,
+    trigger_state: str,
+    setup_single_attribute_light,
+) -> None:
+    """Test the template for the level."""
+    hass.states.async_set("light.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes.get("brightness") == expected_level
+    assert state.state == trigger_state
+
+    assert state.attributes.get("color_mode") == expected_color_mode
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
@@ -1432,7 +1473,6 @@ async def test_level_template(
     [
         (ConfigurationStyle.LEGACY, "temperature_template"),
         (ConfigurationStyle.MODERN, "temperature"),
-        (ConfigurationStyle.TRIGGER, "temperature"),
     ],
 )
 @pytest.mark.parametrize(
@@ -1451,17 +1491,53 @@ async def test_temperature_template(
     hass: HomeAssistant,
     expected_temp: Any,
     expected_color_mode: ColorMode,
-    style: ConfigurationStyle,
     setup_single_attribute_light,
 ) -> None:
     """Test the template for the temperature."""
-    if style == ConfigurationStyle.TRIGGER:
-        hass.states.async_set("light.test_state", STATE_ON)
-        await hass.async_block_till_done()
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("color_temp") == expected_temp
     assert state.state == STATE_ON
-    assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes.get("color_mode") == expected_color_mode
+    assert state.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
+    assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize(
+    ("count", "extra_config"), [(1, OPTIMISTIC_COLOR_TEMP_LIGHT_CONFIG)]
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.TRIGGER, "temperature"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("expected_temp", "attribute_template", "expected_color_mode", "expected_state"),
+    [
+        (500, "{{500}}", ColorMode.COLOR_TEMP, STATE_ON),
+        (None, "{{501}}", ColorMode.COLOR_TEMP, STATE_ON),
+        (None, "{{x - 12}}", None, STATE_UNAVAILABLE),
+        (None, "None", ColorMode.COLOR_TEMP, STATE_ON),
+        (None, "{{ none }}", ColorMode.COLOR_TEMP, STATE_ON),
+        (None, "", ColorMode.COLOR_TEMP, STATE_ON),
+        (None, "{{ 'one' }}", ColorMode.COLOR_TEMP, STATE_ON),
+    ],
+)
+async def test_trigger_temperature_template(
+    hass: HomeAssistant,
+    expected_temp: Any,
+    expected_color_mode: ColorMode,
+    expected_state: str,
+    setup_single_attribute_light,
+) -> None:
+    """Test the template for the temperature."""
+    hass.states.async_set("light.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes.get("color_temp") == expected_temp
+    assert state.state == expected_state
+    assert state.attributes.get("color_mode") == expected_color_mode
     assert state.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
     assert state.attributes["supported_features"] == 0
 
@@ -1879,7 +1955,6 @@ async def test_legacy_color_template(
     [
         (ConfigurationStyle.LEGACY, "hs_template"),
         (ConfigurationStyle.MODERN, "hs"),
-        (ConfigurationStyle.TRIGGER, "hs"),
     ],
 )
 @pytest.mark.parametrize(
@@ -1905,14 +1980,53 @@ async def test_hs_template(
     setup_single_attribute_light,
 ) -> None:
     """Test the template for the color."""
-    if style == ConfigurationStyle.TRIGGER:
-        hass.states.async_set("light.test_state", STATE_ON)
-        await hass.async_block_till_done()
-
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("hs_color") == expected_hs
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes["supported_color_modes"] == [ColorMode.HS]
+    assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize(
+    ("count", "extra_config"), [(1, OPTIMISTIC_HS_COLOR_LIGHT_CONFIG)]
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.TRIGGER, "hs"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("expected_hs", "attribute_template", "expected_color_mode", "expected_state"),
+    [
+        ((360, 100), "{{(360, 100)}}", ColorMode.HS, STATE_ON),
+        ((360, 100), "(360, 100)", ColorMode.HS, STATE_ON),
+        ((359.9, 99.9), "{{(359.9, 99.9)}}", ColorMode.HS, STATE_ON),
+        (None, "{{(361, 100)}}", ColorMode.HS, STATE_ON),
+        (None, "{{(360, 101)}}", ColorMode.HS, STATE_ON),
+        (None, "[{{(360)}},{{null}}]", ColorMode.HS, STATE_ON),
+        (None, "{{x - 12}}", None, STATE_UNAVAILABLE),
+        (None, "", ColorMode.HS, STATE_ON),
+        (None, "{{ none }}", ColorMode.HS, STATE_ON),
+        (None, "{{('one','two')}}", ColorMode.HS, STATE_ON),
+    ],
+)
+async def test_trigger_hs_template(
+    hass: HomeAssistant,
+    expected_hs,
+    expected_color_mode,
+    expected_state: str,
+    setup_single_attribute_light,
+) -> None:
+    """Test the template for the color."""
+    hass.states.async_set("light.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes.get("hs_color") == expected_hs
+    assert state.state == expected_state
+    assert state.attributes.get("color_mode") == expected_color_mode
     assert state.attributes["supported_color_modes"] == [ColorMode.HS]
     assert state.attributes["supported_features"] == 0
 
@@ -1925,7 +2039,6 @@ async def test_hs_template(
     [
         (ConfigurationStyle.LEGACY, "rgb_template"),
         (ConfigurationStyle.MODERN, "rgb"),
-        (ConfigurationStyle.TRIGGER, "rgb"),
     ],
 )
 @pytest.mark.parametrize(
@@ -1952,14 +2065,54 @@ async def test_rgb_template(
     setup_single_attribute_light,
 ) -> None:
     """Test the template for the color."""
-    if style == ConfigurationStyle.TRIGGER:
-        hass.states.async_set("light.test_state", STATE_ON)
-        await hass.async_block_till_done()
-
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("rgb_color") == expected_rgb
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes["supported_color_modes"] == [ColorMode.RGB]
+    assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize(
+    ("count", "extra_config"), [(1, OPTIMISTIC_RGB_COLOR_LIGHT_CONFIG)]
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.TRIGGER, "rgb"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("expected_rgb", "attribute_template", "expected_color_mode", "expected_state"),
+    [
+        ((160, 78, 192), "{{(160, 78, 192)}}", ColorMode.RGB, STATE_ON),
+        ((160, 78, 192), "{{[160, 78, 192]}}", ColorMode.RGB, STATE_ON),
+        ((160, 78, 192), "(160, 78, 192)", ColorMode.RGB, STATE_ON),
+        ((159, 77, 191), "{{(159.9, 77.9, 191.9)}}", ColorMode.RGB, STATE_ON),
+        (None, "{{(256, 100, 100)}}", ColorMode.RGB, STATE_ON),
+        (None, "{{(100, 256, 100)}}", ColorMode.RGB, STATE_ON),
+        (None, "{{(100, 100, 256)}}", ColorMode.RGB, STATE_ON),
+        (None, "{{x - 12}}", None, STATE_UNAVAILABLE),
+        (None, "", ColorMode.RGB, STATE_ON),
+        (None, "{{ none }}", ColorMode.RGB, STATE_ON),
+        (None, "{{('one','two','tree')}}", ColorMode.RGB, STATE_ON),
+    ],
+)
+async def test_trigger_rgb_template(
+    hass: HomeAssistant,
+    expected_rgb,
+    expected_color_mode,
+    expected_state: str,
+    setup_single_attribute_light,
+) -> None:
+    """Test the template for the color."""
+    hass.states.async_set("light.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes.get("rgb_color") == expected_rgb
+    assert state.state == expected_state
+    assert state.attributes.get("color_mode") == expected_color_mode
     assert state.attributes["supported_color_modes"] == [ColorMode.RGB]
     assert state.attributes["supported_features"] == 0
 
@@ -1972,7 +2125,6 @@ async def test_rgb_template(
     [
         (ConfigurationStyle.LEGACY, "rgbw_template"),
         (ConfigurationStyle.MODERN, "rgbw"),
-        (ConfigurationStyle.TRIGGER, "rgbw"),
     ],
 )
 @pytest.mark.parametrize(
@@ -1996,18 +2148,63 @@ async def test_rgbw_template(
     hass: HomeAssistant,
     expected_rgbw,
     expected_color_mode,
-    style: ConfigurationStyle,
     setup_single_attribute_light,
 ) -> None:
     """Test the template for the color."""
-    if style == ConfigurationStyle.TRIGGER:
-        hass.states.async_set("light.test_state", STATE_ON)
-        await hass.async_block_till_done()
-
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("rgbw_color") == expected_rgbw
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes["supported_color_modes"] == [ColorMode.RGBW]
+    assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize(
+    ("count", "extra_config"), [(1, OPTIMISTIC_RGBW_COLOR_LIGHT_CONFIG)]
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.TRIGGER, "rgbw"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("expected_rgbw", "attribute_template", "expected_color_mode", "expected_state"),
+    [
+        ((160, 78, 192, 25), "{{(160, 78, 192, 25)}}", ColorMode.RGBW, STATE_ON),
+        ((160, 78, 192, 25), "{{[160, 78, 192, 25]}}", ColorMode.RGBW, STATE_ON),
+        ((160, 78, 192, 25), "(160, 78, 192, 25)", ColorMode.RGBW, STATE_ON),
+        (
+            (159, 77, 191, 24),
+            "{{(159.9, 77.9, 191.9, 24.9)}}",
+            ColorMode.RGBW,
+            STATE_ON,
+        ),
+        (None, "{{(256, 100, 100, 100)}}", ColorMode.RGBW, STATE_ON),
+        (None, "{{(100, 256, 100, 100)}}", ColorMode.RGBW, STATE_ON),
+        (None, "{{(100, 100, 256, 100)}}", ColorMode.RGBW, STATE_ON),
+        (None, "{{(100, 100, 100, 256)}}", ColorMode.RGBW, STATE_ON),
+        (None, "{{x - 12}}", None, STATE_UNAVAILABLE),
+        (None, "", ColorMode.RGBW, STATE_ON),
+        (None, "{{ none }}", ColorMode.RGBW, STATE_ON),
+        (None, "{{('one','two','tree','four')}}", ColorMode.RGBW, STATE_ON),
+    ],
+)
+async def test_trigger_rgbw_template(
+    hass: HomeAssistant,
+    expected_rgbw,
+    expected_color_mode,
+    expected_state: str,
+    setup_single_attribute_light,
+) -> None:
+    """Test the template for the color."""
+    hass.states.async_set("light.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes.get("rgbw_color") == expected_rgbw
+    assert state.state == expected_state
+    assert state.attributes.get("color_mode") == expected_color_mode
     assert state.attributes["supported_color_modes"] == [ColorMode.RGBW]
     assert state.attributes["supported_features"] == 0
 
@@ -2020,7 +2217,6 @@ async def test_rgbw_template(
     [
         (ConfigurationStyle.LEGACY, "rgbww_template"),
         (ConfigurationStyle.MODERN, "rgbww"),
-        (ConfigurationStyle.TRIGGER, "rgbww"),
     ],
 )
 @pytest.mark.parametrize(
@@ -2049,18 +2245,74 @@ async def test_rgbww_template(
     hass: HomeAssistant,
     expected_rgbww,
     expected_color_mode,
-    style: ConfigurationStyle,
     setup_single_attribute_light,
 ) -> None:
     """Test the template for the color."""
-    if style == ConfigurationStyle.TRIGGER:
-        hass.states.async_set("light.test_state", STATE_ON)
-        await hass.async_block_till_done()
-
     state = hass.states.get("light.test_template_light")
     assert state.attributes.get("rgbww_color") == expected_rgbww
     assert state.state == STATE_ON
     assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes["supported_color_modes"] == [ColorMode.RGBWW]
+    assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize(
+    ("count", "extra_config"), [(1, OPTIMISTIC_RGBWW_COLOR_LIGHT_CONFIG)]
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.TRIGGER, "rgbww"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("expected_rgbww", "attribute_template", "expected_color_mode", "expected_state"),
+    [
+        (
+            (160, 78, 192, 25, 55),
+            "{{(160, 78, 192, 25, 55)}}",
+            ColorMode.RGBWW,
+            STATE_ON,
+        ),
+        ((160, 78, 192, 25, 55), "(160, 78, 192, 25, 55)", ColorMode.RGBWW, STATE_ON),
+        (
+            (160, 78, 192, 25, 55),
+            "{{[160, 78, 192, 25, 55]}}",
+            ColorMode.RGBWW,
+            STATE_ON,
+        ),
+        (
+            (159, 77, 191, 24, 54),
+            "{{(159.9, 77.9, 191.9, 24.9, 54.9)}}",
+            ColorMode.RGBWW,
+            STATE_ON,
+        ),
+        (None, "{{(256, 100, 100, 100, 100)}}", ColorMode.RGBWW, STATE_ON),
+        (None, "{{(100, 256, 100, 100, 100)}}", ColorMode.RGBWW, STATE_ON),
+        (None, "{{(100, 100, 256, 100, 100)}}", ColorMode.RGBWW, STATE_ON),
+        (None, "{{(100, 100, 100, 256, 100)}}", ColorMode.RGBWW, STATE_ON),
+        (None, "{{(100, 100, 100, 100, 256)}}", ColorMode.RGBWW, STATE_ON),
+        (None, "{{x - 12}}", None, STATE_UNAVAILABLE),
+        (None, "", ColorMode.RGBWW, STATE_ON),
+        (None, "{{ none }}", ColorMode.RGBWW, STATE_ON),
+        (None, "{{('one','two','tree','four','five')}}", ColorMode.RGBWW, STATE_ON),
+    ],
+)
+async def test_trigger_rgbww_template(
+    hass: HomeAssistant,
+    expected_rgbww,
+    expected_color_mode,
+    expected_state: str,
+    setup_single_attribute_light,
+) -> None:
+    """Test the template for the color."""
+    hass.states.async_set("light.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes.get("rgbww_color") == expected_rgbww
+    assert state.state == expected_state
+    assert state.attributes.get("color_mode") == expected_color_mode
     assert state.attributes["supported_color_modes"] == [ColorMode.RGBWW]
     assert state.attributes["supported_features"] == 0
 
@@ -2308,10 +2560,17 @@ async def test_effect_action(
     hass: HomeAssistant,
     effect: str,
     expected: Any,
+    style: ConfigurationStyle,
     setup_light_with_effects,
     calls: list[ServiceCall],
 ) -> None:
     """Test setting valid effect with template."""
+
+    if style == ConfigurationStyle.TRIGGER:
+        # Ensures the trigger template entity updates
+        hass.states.async_set("light.test_state", STATE_ON)
+        await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
     assert state is not None
 
@@ -2501,9 +2760,17 @@ async def test_max_mireds_template(
     ],
 )
 async def test_supports_transition_template(
-    hass: HomeAssistant, expected_supports_transition, setup_single_attribute_light
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    expected_supports_transition,
+    setup_single_attribute_light,
 ) -> None:
     """Test the template for the supports transition."""
+    if style == ConfigurationStyle.TRIGGER:
+        # Ensures the trigger template entity updates
+        hass.states.async_set("light.test_state", STATE_ON)
+        await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
 
     expected_value = 1
@@ -2525,7 +2792,7 @@ async def test_supports_transition_template(
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_supports_transition_template_updates(
-    hass: HomeAssistant, setup_light_with_transition_template
+    hass: HomeAssistant, style: ConfigurationStyle, setup_light_with_transition_template
 ) -> None:
     """Test the template for the supports transition dynamically."""
     state = hass.states.get("light.test_template_light")
@@ -2533,12 +2800,24 @@ async def test_supports_transition_template_updates(
 
     hass.states.async_set("sensor.test", 0)
     await hass.async_block_till_done()
+
+    if style == ConfigurationStyle.TRIGGER:
+        # Ensures the trigger template entity updates
+        hass.states.async_set("light.test_state", STATE_ON)
+        await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
     supported_features = state.attributes.get("supported_features")
     assert supported_features == LightEntityFeature.EFFECT
 
     hass.states.async_set("sensor.test", 1)
     await hass.async_block_till_done()
+
+    if style == ConfigurationStyle.TRIGGER:
+        # Ensures the trigger template entity updates
+        hass.states.async_set("light.test_state", STATE_OFF)
+        await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
     supported_features = state.attributes.get("supported_features")
     assert (
@@ -2547,6 +2826,12 @@ async def test_supports_transition_template_updates(
 
     hass.states.async_set("sensor.test", 0)
     await hass.async_block_till_done()
+
+    if style == ConfigurationStyle.TRIGGER:
+        # Ensures the trigger template entity updates
+        hass.states.async_set("light.test_state", STATE_ON)
+        await hass.async_block_till_done()
+
     state = hass.states.get("light.test_template_light")
     supported_features = state.attributes.get("supported_features")
     assert supported_features == LightEntityFeature.EFFECT
@@ -2571,12 +2856,17 @@ async def test_supports_transition_template_updates(
     ],
 )
 async def test_available_template_with_entities(
-    hass: HomeAssistant, setup_single_attribute_light
+    hass: HomeAssistant, style: ConfigurationStyle, setup_single_attribute_light
 ) -> None:
     """Test availability templates with values from other entities."""
     # When template returns true..
     hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, STATE_ON)
     await hass.async_block_till_done()
+
+    if style == ConfigurationStyle.TRIGGER:
+        # Ensures the trigger template entity updates
+        hass.states.async_set("light.test_state", STATE_ON)
+        await hass.async_block_till_done()
 
     # Device State should not be unavailable
     assert hass.states.get("light.test_template_light").state != STATE_UNAVAILABLE
@@ -2584,6 +2874,11 @@ async def test_available_template_with_entities(
     # When Availability template returns false
     hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, STATE_OFF)
     await hass.async_block_till_done()
+
+    if style == ConfigurationStyle.TRIGGER:
+        # Ensures the trigger template entity updates
+        hass.states.async_set("light.test_state", STATE_OFF)
+        await hass.async_block_till_done()
 
     # device state should be unavailable
     assert hass.states.get("light.test_template_light").state == STATE_UNAVAILABLE
@@ -2604,11 +2899,12 @@ async def test_available_template_with_entities(
     [
         (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
-        (ConfigurationStyle.TRIGGER, "availability"),
     ],
 )
 async def test_invalid_availability_template_keeps_component_available(
-    hass: HomeAssistant, setup_single_attribute_light, caplog_setup_text
+    hass: HomeAssistant,
+    setup_single_attribute_light,
+    caplog_setup_text,
 ) -> None:
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get("light.test_template_light").state != STATE_UNAVAILABLE
