@@ -76,8 +76,7 @@ async def _async_reproduce_state(
     supported_features = try_parse_enum(
         CoverEntityFeature, cur_state.attributes.get(ATTR_SUPPORTED_FEATURES)
     ) or CoverEntityFeature(0)
-    set_position: bool = False
-    set_tilt: bool = False
+    set_position = not position_matches and target_position is not None
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
     _service_call = partial(
@@ -86,8 +85,7 @@ async def _async_reproduce_state(
         context=context,
         blocking=True,
     )
-    if not position_matches and target_position is not None:
-        set_position = True
+    if set_position := not position_matches and target_position is not None:
         if target_position == 0 and CoverEntityFeature.CLOSE in supported_features:
             await _service_call(SERVICE_CLOSE_COVER, service_data)
         elif target_position == 100 and CoverEntityFeature.OPEN in supported_features:
@@ -101,7 +99,7 @@ async def _async_reproduce_state(
             # Requested a position but the cover doesn't support it
             set_position = False
 
-    if not tilt_position_matches and target_tilt_position is not None:
+    if set_tilt := not tilt_position_matches and target_tilt_position is not None:
         set_tilt = True
         if (
             target_tilt_position == 0
