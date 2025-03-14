@@ -77,33 +77,71 @@ async def _async_reproduce_state(
     set_tilt: bool = False
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
-    if (
-        not position_matches
-        and requested_position is not None
-        and CoverEntityFeature.SET_POSITION in supported_features
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_COVER_POSITION,
-            {**service_data, ATTR_POSITION: requested_position},
-            context=context,
-            blocking=True,
-        )
-        set_position = True
+    if not position_matches and requested_position is not None:
+        if requested_position == 0 and CoverEntityFeature.CLOSE in supported_features:
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_CLOSE_COVER,
+                service_data,
+                context=context,
+                blocking=True,
+            )
+            set_position = True
+        elif (
+            requested_position == 100 and CoverEntityFeature.OPEN in supported_features
+        ):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_OPEN_COVER,
+                service_data,
+                context=context,
+                blocking=True,
+            )
+            set_position = True
+        elif CoverEntityFeature.SET_POSITION in supported_features:
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_SET_COVER_POSITION,
+                {**service_data, ATTR_POSITION: requested_position},
+                context=context,
+                blocking=True,
+            )
+            set_position = True
 
-    if (
-        not tilt_position_matches
-        and requested_tilt_position is not None
-        and CoverEntityFeature.SET_TILT_POSITION in supported_features
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_COVER_TILT_POSITION,
-            {**service_data, ATTR_TILT_POSITION: requested_tilt_position},
-            context=context,
-            blocking=True,
-        )
-        set_tilt = True
+    if not tilt_position_matches and requested_tilt_position is not None:
+        if (
+            requested_tilt_position == 0
+            and CoverEntityFeature.CLOSE_TILT in supported_features
+        ):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_CLOSE_COVER_TILT,
+                service_data,
+                context=context,
+                blocking=True,
+            )
+            set_tilt = True
+        elif (
+            requested_tilt_position == 100
+            and CoverEntityFeature.OPEN_TILT in supported_features
+        ):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_OPEN_COVER_TILT,
+                service_data,
+                context=context,
+                blocking=True,
+            )
+            set_tilt = True
+        elif CoverEntityFeature.SET_TILT_POSITION in supported_features:
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_SET_COVER_TILT_POSITION,
+                {**service_data, ATTR_TILT_POSITION: requested_tilt_position},
+                context=context,
+                blocking=True,
+            )
+            set_tilt = True
 
     if set_position and set_tilt:
         return
