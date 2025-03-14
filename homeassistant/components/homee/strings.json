@@ -26,7 +26,104 @@
     }
   },
   "entity": {
+    "button": {
+      "automatic_mode": {
+        "name": "Automatic mode"
+      },
+      "briefly_open": {
+        "name": "Briefly open"
+      },
+      "identification_mode": {
+        "name": "Identification mode"
+      },
+      "impulse_instance": {
+        "name": "Impulse {instance}"
+      },
+      "light": {
+        "name": "Light"
+      },
+      "light_instance": {
+        "name": "Light {instance}"
+      },
+      "open_partial": {
+        "name": "Open partially"
+      },
+      "permanently_open": {
+        "name": "Open permanently"
+      },
+      "reset_meter": {
+        "name": "Reset meter"
+      },
+      "reset_meter_instance": {
+        "name": "Reset meter {instance}"
+      },
+      "ventilate": {
+        "name": "Ventilate"
+      }
+    },
+    "light": {
+      "light_instance": {
+        "name": "Light {instance}"
+      }
+    },
+    "number": {
+      "down_position": {
+        "name": "Down position"
+      },
+      "down_slat_position": {
+        "name": "Down slat position"
+      },
+      "down_time": {
+        "name": "Down-movement duration"
+      },
+      "endposition_configuration": {
+        "name": "End position"
+      },
+      "motion_alarm_cancelation_delay": {
+        "name": "Motion alarm delay"
+      },
+      "open_window_detection_sensibility": {
+        "name": "Window open sensibility"
+      },
+      "polling_interval": {
+        "name": "Polling interval"
+      },
+      "shutter_slat_time": {
+        "name": "Slat turn duration"
+      },
+      "slat_max_angle": {
+        "name": "Maximum slat angle"
+      },
+      "slat_min_angle": {
+        "name": "Minimum slat angle"
+      },
+      "slat_steps": {
+        "name": "Slat steps"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
+      },
+      "up_time": {
+        "name": "Up-movement duration"
+      },
+      "wake_up_interval": {
+        "name": "Wake-up interval"
+      }
+    },
+    "select": {
+      "repeater_mode": {
+        "name": "Repeater mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "level1": "Level 1",
+          "level2": "Level 2"
+        }
+      }
+    },
     "sensor": {
+      "brightness": {
+        "name": "Illuminance"
+      },
       "brightness_instance": {
         "name": "Illuminance {instance}"
       },
@@ -151,11 +248,30 @@
           "tilted": "Tilted"
         }
       }
+    },
+    "switch": {
+      "external_binary_input": {
+        "name": "Child lock"
+      },
+      "manual_operation": {
+        "name": "Manual operation"
+      },
+      "on_off_instance": {
+        "name": "Switch {instance}"
+      },
+      "watchdog": {
+        "name": "Watchdog"
+      }
+    },
+    "valve": {
+      "valve_position": {
+        "name": "Valve position"
+      }
     }
   },
   "exceptions": {
     "connection_closed": {
-      "message": "Could not connect to Homee while setting attribute"
+      "message": "Could not connect to Homee while setting attribute."
     }
   }
 }

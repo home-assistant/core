@@ -10,7 +10,10 @@ from homeassistant.components.homeassistant_hardware import (
     firmware_config_flow,
     silabs_multiprotocol_addon,
 )
-from homeassistant.components.homeassistant_hardware.util import ApplicationType
+from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
+    FirmwareInfo,
+)
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryBaseFlow,
@@ -118,7 +121,7 @@ class HomeAssistantSkyConnectConfigFlow(
         """Create the config entry."""
         assert self._usb_info is not None
         assert self._hw_variant is not None
-        assert self._probed_firmware_type is not None
+        assert self._probed_firmware_info is not None
 
         return self.async_create_entry(
             title=self._hw_variant.full_name,
@@ -130,7 +133,7 @@ class HomeAssistantSkyConnectConfigFlow(
                 "description": self._usb_info.description,  # For backwards compatibility
                 "product": self._usb_info.description,
                 "device": self._usb_info.device,
-                "firmware": self._probed_firmware_type.value,
+                "firmware": self._probed_firmware_info.firmware_type.value,
             },
         )
 
@@ -203,18 +206,26 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
         self._hardware_name = self._hw_variant.full_name
         self._device = self._usb_info.device
 
+        self._probed_firmware_info = FirmwareInfo(
+            device=self._device,
+            firmware_type=ApplicationType(self.config_entry.data["firmware"]),
+            firmware_version=None,
+            source="guess",
+            owners=[],
+        )
+
         # Regenerate the translation placeholders
         self._get_translation_placeholders()
 
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
-        assert self._probed_firmware_type is not None
+        assert self._probed_firmware_info is not None
 
         self.hass.config_entries.async_update_entry(
             entry=self.config_entry,
             data={
                 **self.config_entry.data,
-                "firmware": self._probed_firmware_type.value,
+                "firmware": self._probed_firmware_info.firmware_type.value,
             },
             options=self.config_entry.options,
         )

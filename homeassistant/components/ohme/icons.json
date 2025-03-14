@@ -6,6 +6,9 @@
       }
     },
     "number": {
+      "preconditioning_duration": {
+        "default": "mdi:fan-clock"
+      },
       "target_percentage": {
         "default": "mdi:battery-heart"
       }
@@ -13,6 +16,9 @@
     "select": {
       "charge_mode": {
         "default": "mdi:play-box"
+      },
+      "vehicle": {
+        "default": "mdi:car"
       }
     },
     "sensor": {
@@ -28,6 +34,9 @@
       },
       "ct_current": {
         "default": "mdi:gauge"
+      },
+      "slot_list": {
+        "default": "mdi:calendar-clock"
       }
     },
     "switch": {

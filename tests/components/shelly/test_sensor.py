@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
-from aioshelly.const import MODEL_BLU_GATEWAY_GEN3
+from aioshelly.const import MODEL_BLU_GATEWAY_G3
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -1416,7 +1416,7 @@ async def test_blu_trv_sensor_entity(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test BLU TRV sensor entity."""
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     for entity in ("battery", "signal_strength", "valve_position"):
         entity_id = f"{SENSOR_DOMAIN}.trv_name_{entity}"

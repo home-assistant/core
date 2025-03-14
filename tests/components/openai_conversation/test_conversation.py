@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from httpx import Response
-from openai import RateLimitError
+from openai import AuthenticationError, RateLimitError
 from openai.types.chat.chat_completion_chunk import (
     ChatCompletionChunk,
     Choice,
@@ -94,23 +94,42 @@ async def test_entity(
     )
 
 
+@pytest.mark.parametrize(
+    ("exception", "message"),
+    [
+        (
+            RateLimitError(
+                response=Response(status_code=429, request=""), body=None, message=None
+            ),
+            "Rate limited or insufficient funds",
+        ),
+        (
+            AuthenticationError(
+                response=Response(status_code=401, request=""), body=None, message=None
+            ),
+            "Error talking to OpenAI",
+        ),
+    ],
+)
 async def test_error_handling(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    exception,
+    message,
 ) -> None:
     """Test that we handle errors when calling completion API."""
     with patch(
         "openai.resources.chat.completions.AsyncCompletions.create",
         new_callable=AsyncMock,
-        side_effect=RateLimitError(
-            response=Response(status_code=None, request=""), body=None, message=None
-        ),
+        side_effect=exception,
     ):
         result = await conversation.async_converse(
             hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
         )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
-    assert result.response.error_code == "unknown", result
+    assert result.response.speech["plain"]["speech"] == message, result.response.speech
 
 
 async def test_conversation_agent(

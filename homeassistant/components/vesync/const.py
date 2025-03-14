@@ -22,6 +22,7 @@ exceeds the quota of 7700.
 VS_DEVICES = "devices"
 VS_COORDINATOR = "coordinator"
 VS_MANAGER = "manager"
+VS_LISTENERS = "listeners"
 VS_NUMBERS = "numbers"
 
 VS_HUMIDIFIER_MODE_AUTO = "auto"
@@ -63,6 +64,7 @@ SKU_TO_BASE_DEVICE = {
     # Air Purifiers
     "LV-PUR131S": "LV-PUR131S",
     "LV-RH131S": "LV-PUR131S",  # Alt ID Model LV-PUR131S
+    "LV-RH131S-WM": "LV-PUR131S",  # Alt ID Model LV-PUR131S
     "Core200S": "Core200S",
     "LAP-C201S-AUSR": "Core200S",  # Alt ID Model Core200S
     "LAP-C202S-WUSR": "Core200S",  # Alt ID Model Core200S
