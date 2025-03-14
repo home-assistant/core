@@ -53,7 +53,8 @@ async def _async_reproduce_state(
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
-    if state.state not in VALID_STATES:
+    target_state = state.state
+    if target_state not in VALID_STATES:
         _LOGGER.warning(
             "Invalid state specified for %s: %s", state.entity_id, state.state
         )
@@ -67,7 +68,6 @@ async def _async_reproduce_state(
     current_tilt_position = cur_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
     tilt_position_matches = current_tilt_position == target_tilt_position
 
-    target_state = state.state
     state_matches = cur_state.state == target_state
     # Return if we are already at the right state.
     if state_matches and position_matches and tilt_position_matches:
