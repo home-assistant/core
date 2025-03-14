@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import OhmeConfigEntry
 
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: OhmeConfigEntry
 ) -> dict[str, Any]:
