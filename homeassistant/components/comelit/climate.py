@@ -115,11 +115,10 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         # because no serial number or mac is available
         self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
         self._attr_device_info = coordinator.platform_device_info(device, device.type)
-        self._handle_coordinator_update()
+        self._update_attributes()
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _update_attributes(self) -> None:
+        """Update class attributes."""
         device = self.coordinator.data[CLIMATE][self._device.index]
         if not isinstance(device.val, list):
             raise HomeAssistantError("Invalid clima data")
@@ -152,6 +151,12 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
             self._attr_hvac_mode = API_STATUS[_mode]["hvac_mode"]
 
         self._attr_target_temperature = values[4] / 10
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_attributes()
+        self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
