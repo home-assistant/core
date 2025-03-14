@@ -176,35 +176,44 @@ class TriggerBaseEntity(Entity):
                 extra_state_attributes[attr] = last_state.attributes[attr]
             self._rendered[CONF_ATTRIBUTES] = extra_state_attributes
 
-    def _render_templates(self, variables: dict[str, Any]) -> None:
-        """Render templates."""
+    def _render_single_template(
+        self, key: str, variables: dict[str, Any], is_complex: bool
+    ) -> Any:
+        """Render a single template."""
         try:
-            rendered = dict(self._static_rendered)
+            if is_complex:
+                return render_complex(self._config[key], variables)
 
-            for key in self._to_render_simple:
-                rendered[key] = self._config[key].async_render(
-                    variables,
-                    parse_result=key in self._parse_result,
-                )
-
-            for key in self._to_render_complex:
-                rendered[key] = render_complex(
-                    self._config[key],
-                    variables,
-                )
-
-            if CONF_ATTRIBUTES in self._config:
-                rendered[CONF_ATTRIBUTES] = render_complex(
-                    self._config[CONF_ATTRIBUTES],
-                    variables,
-                )
-
-            self._rendered = rendered
+            return self._config[key].async_render(
+                variables,
+                parse_result=key in self._parse_result,
+            )
         except TemplateError as err:
             logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
-                "Error rendering %s template for %s: %s", key, self.entity_id, err
+                "Error rendering %s template for %s: %s",
+                key,
+                self.entity_id,
+                err,
             )
-            self._rendered = self._static_rendered
+
+        return None
+
+    def _render_templates(self, variables: dict[str, Any]) -> None:
+        """Render templates."""
+        rendered = dict(self._static_rendered)
+
+        for key in self._to_render_simple:
+            rendered[key] = self._render_single_template(key, variables, False)
+
+        for key in self._to_render_complex:
+            rendered[key] = self._render_single_template(key, variables, True)
+
+        if CONF_ATTRIBUTES in self._config:
+            rendered[CONF_ATTRIBUTES] = self._render_single_template(
+                CONF_ATTRIBUTES, variables, True
+            )
+
+        self._rendered = rendered
 
 
 class ManualTriggerEntity(TriggerBaseEntity):
