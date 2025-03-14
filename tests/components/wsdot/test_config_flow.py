@@ -71,4 +71,4 @@ async def test_integration_already_exists(
     )
 
     assert result[CONF_TYPE] is FlowResultType.ABORT
-    assert result[CONF_REASON] == "already_configured"
+    assert result[CONF_REASON] == "single_instance_allowed"

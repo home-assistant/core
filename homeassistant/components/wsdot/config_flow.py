@@ -40,12 +40,6 @@ class WSDOTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             #except InvalidApiKeyError:
                 #errors[DIALOG_API_KEY] = "invalid_api_key"
             else:
-                await self.async_set_unique_id(
-                    "+".join(travel_time_routes.keys()),
-                    raise_on_progress=False
-                )
-                self._abort_if_unique_id_configured()
-
                 return self.async_create_entry(
                     title=user_input[DIALOG_NAME],
                     data={
