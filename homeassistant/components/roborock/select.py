@@ -136,7 +136,7 @@ class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
 class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
     """A class to let you set the selected map on Roborock vacuum."""
 
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "selected_map"
 
     async def async_select_option(self, option: str) -> None:
