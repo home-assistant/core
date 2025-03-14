@@ -45,7 +45,7 @@
     },
     "set_price_cap": {
       "name": "Set price cap",
-      "description": "Only charge when electricity costs are below a certain amount.",
+      "description": "Prevents charging when the electricity price exceeds a defined threshold.",
       "fields": {
         "config_entry": {
           "name": "Ohme account",
@@ -53,7 +53,7 @@
         },
         "price_cap": {
           "name": "Price cap",
-          "description": "The price cap amount. This is in 1/100ths of your local currency."
+          "description": "Threshold in 1/100ths of your local currency."
         }
       }
     }
