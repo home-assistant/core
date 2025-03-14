@@ -118,7 +118,7 @@
       "step": {
         "availability": {
           "title": "Availability options",
-          "description": "The availability feature allows a device to reported its availability.",
+          "description": "The availability feature allows a device to report it's availability.",
           "data": {
             "availability_topic": "Availability topic",
             "availability_template": "Availability template",
