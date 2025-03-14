@@ -47,7 +47,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
     CONF_BRIGHTNESS,
-    CONF_COLOR_TEMP
+    CONF_COLOR_TEMP,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
