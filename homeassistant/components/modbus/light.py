@@ -6,30 +6,24 @@ import asyncio
 from typing import Any
 
 from homeassistant.components.light import ColorMode, LightEntity
-from homeassistant.const import (
-    CONF_LIGHTS,
-    CONF_NAME,
-    CONF_BRIGHTNESS,
-    CONF_SLAVE,
-    CONF_COLOR_TEMP,
-)
+from homeassistant.const import CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_LIGHTS, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
 from .const import (
+    CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_WRITE_REGISTER,
     CONF_COLOR_TEMP_KELVIN,
-    DEFAULT_MIN_KELVIN,
+    CONF_MAX_TEMP,
+    CONF_MIN_TEMP,
+    DEFAULT_BRIGHTNESS,
     DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     MAX_BRIGHTNESS,
     MODBUS_MAX,
     MODBUS_MIN,
-    CONF_MIN_TEMP,
-    CONF_MAX_TEMP,
-    DEFAULT_BRIGHTNESS,
-    CALL_TYPE_WRITE_REGISTER,
-    CALL_TYPE_REGISTER_HOLDING,
 )
 from .entity import BaseSwitch
 from .modbus import ModbusHub
@@ -56,14 +50,15 @@ class ModbusLight(BaseSwitch, LightEntity):
     def __init__(
         self, hass: HomeAssistant, hub: ModbusHub, config: dict[str, Any]
     ) -> None:
+        """Initialize the Modbus light entity."""
         super().__init__(hass, hub, config)
-        self._state: bool = False
         self._brightness: int = DEFAULT_BRIGHTNESS
+        self._brightness_address: int | None = config.get(CONF_BRIGHTNESS)
+        self._color_temp_address: int | None = config.get(CONF_COLOR_TEMP)
         self._color_temp_kelvin: int | None = None
-        self.config = config
 
         # Determine color mode dynamically
-        self._attr_color_mode = self._detect_color_mode()
+        self._attr_color_mode = self._detect_color_mode(config=config)
         self._attr_supported_color_modes = {self._attr_color_mode}
 
         # Set min/max kelvin values if the mode is COLOR_TEMP
@@ -75,11 +70,12 @@ class ModbusLight(BaseSwitch, LightEntity):
                 CONF_MAX_TEMP, DEFAULT_MAX_KELVIN
             )
 
-    def _detect_color_mode(self) -> ColorMode:
+    @staticmethod
+    def _detect_color_mode(config: dict[str, any]) -> ColorMode:
         """Determine the appropriate color mode for the light based on configuration."""
-        if CONF_COLOR_TEMP in self.config:
+        if CONF_COLOR_TEMP in config:
             return ColorMode.COLOR_TEMP
-        if CONF_BRIGHTNESS in self.config:
+        if CONF_BRIGHTNESS in config:
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
 
@@ -107,25 +103,19 @@ class ModbusLight(BaseSwitch, LightEntity):
                 kwargs.get(CONF_COLOR_TEMP_KELVIN, self._color_temp_kelvin)
             )
 
-        self._state = True
-
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         await self.async_turn(self._command_off)
-        self._state = False
 
     async def async_set_brightness(self, brightness: int) -> None:
         """Set the brightness of the light."""
-        address = int(self.config.get(CONF_BRIGHTNESS))
-        slave = int(self.config.get(CONF_SLAVE))
-
-        if address:
+        if self._brightness_address:
             conv_brightness = await self._convert_brightness_to_modbus(
                 brightness=brightness
             )
             await self._hub.async_pb_call(
-                unit=slave,
-                address=address,
+                unit=self._slave,
+                address=self._brightness_address,
                 value=conv_brightness,
                 use_call=CALL_TYPE_WRITE_REGISTER,
             )
@@ -134,15 +124,13 @@ class ModbusLight(BaseSwitch, LightEntity):
 
     async def async_set_color_temp(self, color_temp_kelvin: int) -> None:
         """Send Modbus command to set color temperature."""
-        address = int(self.config.get(CONF_COLOR_TEMP))
-        slave = int(self.config.get(CONF_SLAVE))
-        if address:
+        if self._color_temp_address:
             conv_color_temp_kelvin = await self._convert_color_temp_to_modbus(
                 kelvin=color_temp_kelvin
             )
             await self._hub.async_pb_call(
-                unit=slave,
-                address=address,
+                unit=self._slave,
+                address=self._color_temp_address,
                 value=conv_color_temp_kelvin,
                 use_call=CALL_TYPE_WRITE_REGISTER,
             )
@@ -151,14 +139,11 @@ class ModbusLight(BaseSwitch, LightEntity):
     async def _async_update(self) -> None:
         await super()._async_update()
         """Update the entity state, including brightness and color temperature."""
-        slave = int(self.config.get(CONF_SLAVE))
-
-        brightness_address = int(self.config.get(CONF_BRIGHTNESS))
-        if brightness_address:
+        if self._brightness_address:
             brightness_result = await self._hub.async_pb_call(
-                unit=slave,
+                unit=self._slave,
                 value=1,
-                address=brightness_address,
+                address=self._brightness_address,
                 use_call=CALL_TYPE_REGISTER_HOLDING,
             )
             if brightness_result.registers:
@@ -166,12 +151,11 @@ class ModbusLight(BaseSwitch, LightEntity):
                     brightness_result.registers[0]
                 )
 
-        color_address = int(self.config.get(CONF_COLOR_TEMP))
-        if color_address:
+        if self._color_temp_address:
             color_result = await self._hub.async_pb_call(
-                unit=slave,
+                unit=self._slave,
                 value=1,
-                address=color_address,
+                address=self._color_temp_address,
                 use_call=CALL_TYPE_REGISTER_HOLDING,
             )
             if color_result.registers:
@@ -181,11 +165,11 @@ class ModbusLight(BaseSwitch, LightEntity):
 
     @staticmethod
     async def percent_to_brightness(percent: int) -> int:
-        """Converts Modbus scale (0-100) to the brightness (0-255)."""
+        """Convert Modbus scale (0-100) to the brightness (0-255)."""
         return round(percent / MODBUS_MAX * MAX_BRIGHTNESS)
 
     async def percent_to_temperature(self, percent: int) -> int:
-        """Converts Modbus scale (0-100) to the color temperature in Kelvin (2000-7000 К)."""
+        """Convert Modbus scale (0-100) to the color temperature in Kelvin (2000-7000 К)."""
         return round(
             self._attr_min_color_temp_kelvin
             + (
@@ -197,12 +181,12 @@ class ModbusLight(BaseSwitch, LightEntity):
 
     @staticmethod
     async def _convert_brightness_to_modbus(brightness: int) -> int:
-        """Converts brightness (0-255) to Modbus scale (0-100)."""
+        """Convert brightness (0-255) to Modbus scale (0-100)."""
         return round(brightness / MAX_BRIGHTNESS * MODBUS_MAX)
 
     @staticmethod
     async def _convert_color_temp_to_modbus(kelvin: int) -> int:
-        """Converts color temperature from Kelvin to the Modbus scale (0-100)."""
+        """Convert color temperature from Kelvin to the Modbus scale (0-100)."""
         return round(
             MODBUS_MIN
             + (kelvin - DEFAULT_MIN_KELVIN)
