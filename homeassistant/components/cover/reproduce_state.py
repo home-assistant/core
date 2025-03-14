@@ -100,7 +100,6 @@ async def _async_reproduce_state(
             set_position = False
 
     if set_tilt := not tilt_position_matches and target_tilt_position is not None:
-        set_tilt = True
         if (
             target_tilt_position == 0
             and CoverEntityFeature.CLOSE_TILT in supported_features
