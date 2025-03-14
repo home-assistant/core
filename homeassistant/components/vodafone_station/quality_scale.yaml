@@ -10,9 +10,7 @@ rules:
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions:
-    status: todo
-    comment: include the proper docs snippet
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -42,7 +40,7 @@ rules:
   discovery:
     status: exempt
     comment: device not discoverable
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations:
     status: exempt
