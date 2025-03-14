@@ -31,6 +31,7 @@ SWITCH_AFTER_OPTIONS = {
     "turn_off": [{"event": "test_template_switch", "event_data": {"event": "off"}}],
     "turn_on": [{"event": "test_template_switch", "event_data": {"event": "on"}}],
     "state": "{{ now().minute % 2 == 0 }}",
+    "value_template": "{{ now().minute % 2 == 0 }}",
 }
 
 SENSOR_OPTIONS = {
@@ -1523,3 +1524,20 @@ async def test_migrate_config_entry(
     assert dict(config_entry.options) == expected_options
     assert config_entry.version == expected_version
     assert config_entry.minor_version == expected_minor_version
+
+
+async def test_migrate_config_entry_from_future_version(hass: HomeAssistant) -> None:
+    """Test migrating a config entry."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options=SWITCH_BEFORE_OPTIONS,
+        title="My Template",
+        version=2,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state == config_entries.ConfigEntryState.MIGRATION_ERROR

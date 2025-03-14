@@ -190,9 +190,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if entry.version == 1 and entry.minor_version < 2:
         # Migrate switch value_template to state.
-        if options.get("template_type") == SWITCH_DOMAIN:
-            if options.get(CONF_VALUE_TEMPLATE) is not None:
-                options[CONF_STATE] = options.pop(CONF_VALUE_TEMPLATE)
+        if (
+            options.get("template_type") == SWITCH_DOMAIN
+            and options.get(CONF_VALUE_TEMPLATE) is not None
+        ):
+            options[CONF_STATE] = options[CONF_VALUE_TEMPLATE]
 
         hass.config_entries.async_update_entry(
             entry,
