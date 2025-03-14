@@ -203,7 +203,7 @@ class LoggerSettings:
         else:
             loggers = {domain}
 
-        combined_logs = {logger: LOGSEVERITY[settings.level] for logger in loggers}
+        combined_logs = dict.fromkeys(loggers, LOGSEVERITY[settings.level])
         # Don't override the log levels with the ones from YAML
         # since we want whatever the user is asking for to be honored.
 
