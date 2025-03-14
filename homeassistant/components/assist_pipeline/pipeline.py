@@ -649,6 +649,7 @@ class PipelineRun:
             data["runner_data"] = self.runner_data
         if self.tts_stream:
             data["tts_output"] = {
+                "token": self.tts_stream.token,
                 "url": self.tts_stream.url,
                 "mime_type": self.tts_stream.content_type,
             }
@@ -1295,6 +1296,7 @@ class PipelineRun:
 
         tts_output = {
             "media_id": tts_media_id,
+            "token": self.tts_stream.token,
             "url": self.tts_stream.url,
             "mime_type": self.tts_stream.content_type,
         }

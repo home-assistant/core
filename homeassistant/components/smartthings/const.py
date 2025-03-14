@@ -33,4 +33,5 @@ CONF_REFRESH_TOKEN = "refresh_token"
 MAIN = "main"
 OLD_DATA = "old_data"
 
+CONF_SUBSCRIPTION_ID = "subscription_id"
 EVENT_BUTTON = "smartthings.button"

@@ -5,9 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
-from pysmartthings import Attribute, Capability, SmartThings
+from pysmartthings import Attribute, Capability, SmartThings, Status
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -131,6 +131,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     unique_id_separator: str = "."
     capability_ignore_list: list[set[Capability]] | None = None
     options_attribute: Attribute | None = None
+    exists_fn: Callable[[Status], bool] | None = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -571,6 +572,9 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.OVEN_SETPOINT,
                 translation_key="oven_setpoint",
+                device_class=SensorDeviceClass.TEMPERATURE,
+                native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+                value_fn=lambda value: value if value != 0 else None,
             )
         ]
     },
@@ -583,6 +587,10 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["energy"] / 1000,
                 suggested_display_precision=2,
+                exists_fn=lambda status: (
+                    (value := cast(dict | None, status.value)) is not None
+                    and "energy" in value
+                ),
             ),
             SmartThingsSensorEntityDescription(
                 key="power_meter",
@@ -592,6 +600,10 @@ CAPABILITY_TO_SENSORS: dict[
                 value_fn=lambda value: value["power"],
                 extra_state_attributes_fn=power_attributes,
                 suggested_display_precision=2,
+                exists_fn=lambda status: (
+                    (value := cast(dict | None, status.value)) is not None
+                    and "power" in value
+                ),
             ),
             SmartThingsSensorEntityDescription(
                 key="deltaEnergy_meter",
@@ -601,6 +613,10 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["deltaEnergy"] / 1000,
                 suggested_display_precision=2,
+                exists_fn=lambda status: (
+                    (value := cast(dict | None, status.value)) is not None
+                    and "deltaEnergy" in value
+                ),
             ),
             SmartThingsSensorEntityDescription(
                 key="powerEnergy_meter",
@@ -610,6 +626,10 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["powerEnergy"] / 1000,
                 suggested_display_precision=2,
+                exists_fn=lambda status: (
+                    (value := cast(dict | None, status.value)) is not None
+                    and "powerEnergy" in value
+                ),
             ),
             SmartThingsSensorEntityDescription(
                 key="energySaved_meter",
@@ -619,6 +639,10 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["energySaved"] / 1000,
                 suggested_display_precision=2,
+                exists_fn=lambda status: (
+                    (value := cast(dict | None, status.value)) is not None
+                    and "energySaved" in value
+                ),
             ),
         ]
     },
@@ -979,6 +1003,10 @@ async def async_setup_entry(
                 all(capability in device.status[MAIN] for capability in capability_list)
                 for capability_list in description.capability_ignore_list
             )
+        )
+        and (
+            not description.exists_fn
+            or description.exists_fn(device.status[MAIN][capability][attribute])
         )
     )
 

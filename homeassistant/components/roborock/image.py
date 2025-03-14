@@ -26,6 +26,7 @@ from .const import (
     DRAWABLES,
     IMAGE_CACHE_INTERVAL,
     MAP_FILE_FORMAT,
+    MAP_SCALE,
     MAP_SLEEP,
 )
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
@@ -47,7 +48,11 @@ async def async_setup_entry(
         if config_entry.options.get(DRAWABLES, {}).get(drawable, default_value)
     ]
     parser = RoborockMapDataParser(
-        ColorsPalette(), Sizes(), drawables, ImageConfig(), []
+        ColorsPalette(),
+        Sizes({k: v * MAP_SCALE for k, v in Sizes.SIZES.items()}),
+        drawables,
+        ImageConfig(scale=MAP_SCALE),
+        [],
     )
 
     def parse_image(map_bytes: bytes) -> bytes | None:
@@ -112,19 +117,6 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         """Return if this map is the currently selected map."""
         return self.map_flag == self.coordinator.current_map
 
-    def is_map_valid(self) -> bool:
-        """Update the map if it is valid.
-
-        Update this map if it is the currently active map, and the
-        vacuum is cleaning, or if it has never been set at all.
-        """
-        return self.cached_map == b"" or (
-            self.is_selected
-            and self.image_last_updated is not None
-            and self.coordinator.roborock_device_info.props.status is not None
-            and bool(self.coordinator.roborock_device_info.props.status.in_cleaning)
-        )
-
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass load any previously cached maps from disk."""
         await super().async_added_to_hass()
@@ -137,15 +129,22 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         # Bump last updated every third time the coordinator runs, so that async_image
         # will be called and we will evaluate on the new coordinator data if we should
         # update the cache.
-        if (
-            dt_util.utcnow() - self.image_last_updated
-        ).total_seconds() > IMAGE_CACHE_INTERVAL and self.is_map_valid():
+        if self.is_selected and (
+            (
+                (dt_util.utcnow() - self.image_last_updated).total_seconds()
+                > IMAGE_CACHE_INTERVAL
+                and self.coordinator.roborock_device_info.props.status is not None
+                and bool(self.coordinator.roborock_device_info.props.status.in_cleaning)
+            )
+            or self.cached_map == b""
+        ):
+            # This will tell async_image it should update.
             self._attr_image_last_updated = dt_util.utcnow()
         super()._handle_coordinator_update()
 
     async def async_image(self) -> bytes | None:
         """Update the image if it is not cached."""
-        if self.is_map_valid():
+        if self.is_selected:
             response = await asyncio.gather(
                 *(
                     self.cloud_api.get_map_v1(),

@@ -10,6 +10,7 @@ from homeassistant.components.smartthings.const import (
     CONF_INSTALLED_APP_ID,
     CONF_LOCATION_ID,
     CONF_REFRESH_TOKEN,
+    CONF_SUBSCRIPTION_ID,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -508,6 +509,7 @@ async def test_migration(
             "installed_app_id": "123123123-2be1-4e40-b257-e4ef59083324",
         },
         CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
+        CONF_SUBSCRIPTION_ID: "f5768ce8-c9e5-4507-9020-912c0c60e0ab",
     }
     assert mock_old_config_entry.unique_id == "397678e5-9995-4a39-9d9f-ae6ba310236c"
     assert mock_old_config_entry.version == 3
