@@ -12,6 +12,8 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_PORT, DOMAIN, LEGACY_PORT
 
+_LOGGER = logging.getLogger(__name__)
+
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -21,7 +23,7 @@ DATA_SCHEMA = vol.Schema(
 
 async def async_find_box_port(host: str) -> int:
     """Find port box uses for communication."""
-    logging.debug("Attempting to find port to connect to %s on", host)
+    _LOGGER.debug("Attempting to find port to connect to %s on", host)
     remote = RemoteControl(host, DEFAULT_PORT)
     try:
         await remote.check_connectable()
@@ -46,12 +48,12 @@ class SkyRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            logging.debug("user_input: %s", user_input)
+            _LOGGER.debug("user_input: %s", user_input)
             self._async_abort_entries_match(user_input)
             try:
                 port = await async_find_box_port(user_input[CONF_HOST])
             except SkyBoxConnectionError:
-                logging.exception("while finding port of skybox")
+                _LOGGER.exception("While finding port of skybox")
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
