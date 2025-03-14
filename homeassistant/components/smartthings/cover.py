@@ -125,6 +125,10 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
             self._attr_current_cover_position = self.get_attribute_value(
                 Capability.SWITCH_LEVEL, Attribute.LEVEL
             )
+        elif self.supports_capability(Capability.WINDOW_SHADE_LEVEL):
+            self._attr_current_cover_position = self.get_attribute_value(
+                Capability.WINDOW_SHADE_LEVEL, Attribute.SHADE_LEVEL
+            )
 
         self._attr_extra_state_attributes = {}
         if self.supports_capability(Capability.BATTERY):

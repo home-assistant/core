@@ -201,7 +201,7 @@
     },
     "effect_morph": {
       "name": "Morph effect",
-      "description": "Starts the firmware-based Morph effect on LIFX Tiles on Candle.",
+      "description": "Starts the firmware-based Morph effect on LIFX Tiles or Candle.",
       "fields": {
         "speed": {
           "name": "Speed",
@@ -223,23 +223,23 @@
     },
     "effect_sky": {
       "name": "Sky effect",
-      "description": "Starts the firmware-based Sky effect on LIFX Ceiling.",
+      "description": "Starts a firmware-based effect on LIFX Ceiling lights that animates a sky scene across the device.",
       "fields": {
         "speed": {
           "name": "Speed",
-          "description": "How long the Sunrise and Sunset sky types will take to complete. For the Cloud sky type, it is the speed of the clouds across the device."
+          "description": "How long the Sunrise and Sunset sky types will take to complete. For the Clouds sky type, it is the speed of the clouds across the device."
         },
         "sky_type": {
           "name": "Sky type",
           "description": "The style of sky that will be animated by the effect."
         },
         "cloud_saturation_min": {
-          "name": "Cloud saturation Minimum",
-          "description": "Minimum cloud saturation."
+          "name": "Cloud saturation minimum",
+          "description": "The minimum cloud saturation for the Clouds sky type."
         },
         "cloud_saturation_max": {
-          "name": "Cloud Saturation maximum",
-          "description": "Maximum cloud saturation."
+          "name": "Cloud saturation maximum",
+          "description": "The maximum cloud saturation for the Clouds sky type."
         },
         "palette": {
           "name": "Palette",
