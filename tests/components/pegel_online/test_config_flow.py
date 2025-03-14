@@ -36,7 +36,7 @@ IGNORED_TRANSLATIONS = [
 ]
 
 
-@pytest.mark.parametrize("ignore_translations", [IGNORED_TRANSLATIONS])
+@pytest.mark.parametrize("ignore_missing_translations", [IGNORED_TRANSLATIONS])
 async def test_user(hass: HomeAssistant) -> None:
     """Test starting a flow by user."""
     result = await hass.config_entries.flow.async_init(
@@ -72,7 +72,7 @@ async def test_user(hass: HomeAssistant) -> None:
     assert mock_setup_entry.called
 
 
-@pytest.mark.parametrize("ignore_translations", [IGNORED_TRANSLATIONS])
+@pytest.mark.parametrize("ignore_missing_translations", [IGNORED_TRANSLATIONS])
 async def test_user_already_configured(hass: HomeAssistant) -> None:
     """Test starting a flow by user with an already configured statioon."""
     mock_config = MockConfigEntry(
@@ -105,7 +105,7 @@ async def test_user_already_configured(hass: HomeAssistant) -> None:
         assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize("ignore_translations", [IGNORED_TRANSLATIONS])
+@pytest.mark.parametrize("ignore_missing_translations", [IGNORED_TRANSLATIONS])
 async def test_connection_error(hass: HomeAssistant) -> None:
     """Test connection error during user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -151,7 +151,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     assert mock_setup_entry.called
 
 
-@pytest.mark.parametrize("ignore_translations", [IGNORED_TRANSLATIONS])
+@pytest.mark.parametrize("ignore_missing_translations", [IGNORED_TRANSLATIONS])
 async def test_user_no_stations(hass: HomeAssistant) -> None:
     """Test starting a flow by user which does not find any station."""
     result = await hass.config_entries.flow.async_init(
