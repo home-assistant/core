@@ -41,7 +41,15 @@ TEST_POTS = [
         "balance": 134578,
         "currency": "GBP",
         "type": "instant_access",
-    }
+    },
+    {
+        "id": "pot_transport",
+        "name": "Transport",
+        "style": "savings",
+        "balance": 123,
+        "currency": "GBP",
+        "type": "instant_access",
+    },
 ]
 TITLE = "jake"
 USER_ID = 12345
