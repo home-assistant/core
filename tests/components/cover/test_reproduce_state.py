@@ -33,29 +33,83 @@ async def test_reproducing_states(
     hass.states.async_set(
         "cover.entity_close_attr",
         CoverState.CLOSED,
-        {ATTR_CURRENT_POSITION: 0, ATTR_CURRENT_TILT_POSITION: 0},
+        {
+            ATTR_CURRENT_POSITION: 0,
+            ATTR_CURRENT_TILT_POSITION: 0,
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.SET_TILT_POSITION
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.OPEN,
+        },
     )
     hass.states.async_set(
-        "cover.entity_close_tilt", CoverState.CLOSED, {ATTR_CURRENT_TILT_POSITION: 50}
+        "cover.entity_close_tilt",
+        CoverState.CLOSED,
+        {
+            ATTR_CURRENT_TILT_POSITION: 50,
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.SET_TILT_POSITION,
+        },
     )
-    hass.states.async_set("cover.entity_open", CoverState.OPEN, {})
     hass.states.async_set(
-        "cover.entity_slightly_open", CoverState.OPEN, {ATTR_CURRENT_POSITION: 50}
+        "cover.entity_open",
+        CoverState.OPEN,
+        {ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN},
+    )
+    hass.states.async_set(
+        "cover.entity_slightly_open",
+        CoverState.OPEN,
+        {
+            ATTR_CURRENT_POSITION: 50,
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE
+            | CoverEntityFeature.OPEN
+            | CoverEntityFeature.SET_POSITION,
+        },
     )
     hass.states.async_set(
         "cover.entity_open_attr",
         CoverState.OPEN,
-        {ATTR_CURRENT_POSITION: 100, ATTR_CURRENT_TILT_POSITION: 0},
+        {
+            ATTR_CURRENT_POSITION: 100,
+            ATTR_CURRENT_TILT_POSITION: 0,
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.SET_TILT_POSITION
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.OPEN,
+        },
     )
     hass.states.async_set(
         "cover.entity_open_tilt",
         CoverState.OPEN,
-        {ATTR_CURRENT_POSITION: 50, ATTR_CURRENT_TILT_POSITION: 50},
+        {
+            ATTR_CURRENT_POSITION: 50,
+            ATTR_CURRENT_TILT_POSITION: 50,
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.SET_TILT_POSITION
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.OPEN,
+        },
     )
     hass.states.async_set(
         "cover.entity_entirely_open",
         CoverState.OPEN,
-        {ATTR_CURRENT_POSITION: 100, ATTR_CURRENT_TILT_POSITION: 100},
+        {
+            ATTR_CURRENT_POSITION: 100,
+            ATTR_CURRENT_TILT_POSITION: 100,
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.SET_TILT_POSITION
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.OPEN,
+        },
     )
     hass.states.async_set(
         "cover.tilt_only_open",
@@ -79,7 +133,8 @@ async def test_reproducing_states(
         {
             ATTR_CURRENT_TILT_POSITION: 100,
             ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE_TILT
-            | CoverEntityFeature.OPEN_TILT,
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.SET_TILT_POSITION,
         },
     )
     hass.states.async_set(
@@ -88,7 +143,8 @@ async def test_reproducing_states(
         {
             ATTR_CURRENT_TILT_POSITION: 0,
             ATTR_SUPPORTED_FEATURES: CoverEntityFeature.CLOSE_TILT
-            | CoverEntityFeature.OPEN_TILT,
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.SET_TILT_POSITION,
         },
     )
     close_calls = async_mock_service(hass, "cover", SERVICE_CLOSE_COVER)
