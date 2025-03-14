@@ -8,6 +8,7 @@
       'options': list([
         'idle',
         'create_backup',
+        'blocked',
         'receive_backup',
         'restore_backup',
       ]),
@@ -48,6 +49,7 @@
       'options': list([
         'idle',
         'create_backup',
+        'blocked',
         'receive_backup',
         'restore_backup',
       ]),
