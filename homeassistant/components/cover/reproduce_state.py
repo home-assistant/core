@@ -49,15 +49,14 @@ async def _async_reproduce_state(
     reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce a single state."""
-    if (cur_state := hass.states.get(state.entity_id)) is None:
-        _LOGGER.warning("Unable to find entity %s", state.entity_id)
+    entity_id = state.entity_id
+    if (cur_state := hass.states.get(entity_id)) is None:
+        _LOGGER.warning("Unable to find entity %s", entity_id)
         return
 
     target_state = state.state
     if target_state not in VALID_STATES:
-        _LOGGER.warning(
-            "Invalid state specified for %s: %s", state.entity_id, state.state
-        )
+        _LOGGER.warning("Invalid state specified for %s: %s", entity_id, target_state)
         return
 
     current_position = cur_state.attributes.get(ATTR_CURRENT_POSITION)
@@ -77,7 +76,7 @@ async def _async_reproduce_state(
         CoverEntityFeature, cur_state.attributes.get(ATTR_SUPPORTED_FEATURES)
     ) or CoverEntityFeature(0)
     set_position = not position_matches and target_position is not None
-    service_data = {ATTR_ENTITY_ID: state.entity_id}
+    service_data = {ATTR_ENTITY_ID: entity_id}
 
     _service_call = partial(
         hass.services.async_call,
