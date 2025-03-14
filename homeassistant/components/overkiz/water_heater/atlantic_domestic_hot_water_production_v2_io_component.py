@@ -70,7 +70,6 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             float,
             self.executor.select_state(
                 OverkizState.IO_MIDDLE_WATER_TEMPERATURE,
-                OverkizState.MODBUSLINK_MIDDLE_WATER_TEMPERATURE,
             ),
         )
 
