@@ -414,7 +414,7 @@ def mock_ws_server():
 
 
 @pytest.fixture
-def events(hass: HomeAssistant) -> None:
+def events(hass: HomeAssistant):
     """Yield caught shelly.click events."""
     return async_capture_events(hass, EVENT_SHELLY_CLICK)
 

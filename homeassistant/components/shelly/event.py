@@ -105,7 +105,7 @@ async def async_setup_entry(
             ent_reg = er.async_get(hass)
             entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
             for entry in entries:
-                if entry.domain != "event":
+                if entry.domain != EVENT_DOMAIN:
                     continue
 
                 # Only smoke sensors can have a test event entity
