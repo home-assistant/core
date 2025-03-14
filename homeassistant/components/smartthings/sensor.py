@@ -572,6 +572,9 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.OVEN_SETPOINT,
                 translation_key="oven_setpoint",
+                device_class=SensorDeviceClass.TEMPERATURE,
+                native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+                value_fn=lambda value: value if value != 0 else None,
             )
         ]
     },
