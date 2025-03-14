@@ -76,6 +76,7 @@ async def _async_reproduce_state(
     ) or CoverEntityFeature(0)
     set_position = False
     set_tilt = False
+    service_data = {ATTR_ENTITY_ID: state.entity_id}
 
     if (
         not position_matches
@@ -85,10 +86,7 @@ async def _async_reproduce_state(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_COVER_POSITION,
-            {
-                ATTR_ENTITY_ID: state.entity_id,
-                ATTR_POSITION: state.attributes[ATTR_CURRENT_POSITION],
-            },
+            {**service_data, ATTR_POSITION: requested_position},
             context=context,
             blocking=True,
         )
@@ -102,10 +100,7 @@ async def _async_reproduce_state(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_COVER_TILT_POSITION,
-            {
-                ATTR_ENTITY_ID: state.entity_id,
-                ATTR_TILT_POSITION: state.attributes[ATTR_CURRENT_TILT_POSITION],
-            },
+            {**service_data, ATTR_TILT_POSITION: requested_tilt_position},
             context=context,
             blocking=True,
         )
@@ -121,17 +116,25 @@ async def _async_reproduce_state(
             service = SERVICE_CLOSE_COVER
         elif CoverEntityFeature.CLOSE_TILT in supported_features:
             service = SERVICE_CLOSE_COVER_TILT
+        elif ATTR_CURRENT_POSITION in state.attributes:
+            service = SERVICE_CLOSE_COVER
+        elif ATTR_CURRENT_TILT_POSITION in state.attributes:
+            service = SERVICE_CLOSE_COVER_TILT
     elif state.state in {CoverState.OPEN, CoverState.OPENING}:
         if CoverEntityFeature.OPEN in supported_features:
             service = SERVICE_OPEN_COVER
         elif CoverEntityFeature.OPEN_TILT in supported_features:
+            service = SERVICE_OPEN_COVER_TILT
+        elif ATTR_CURRENT_POSITION in state.attributes:
+            service = SERVICE_OPEN_COVER
+        elif ATTR_CURRENT_TILT_POSITION in state.attributes:
             service = SERVICE_OPEN_COVER_TILT
 
     if service:
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: state.entity_id},
+            service_data,
             context=context,
             blocking=True,
         )
