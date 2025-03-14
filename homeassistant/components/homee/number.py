@@ -19,6 +19,7 @@ from . import HomeeConfigEntry
 from .const import HOMEE_UNIT_TO_HA_UNIT
 from .entity import HomeeEntity
 
+PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class HomeeNumberEntityDescription(NumberEntityDescription):
@@ -26,7 +27,6 @@ class HomeeNumberEntityDescription(NumberEntityDescription):
 
     native_value_fn: Callable[[float], float] = lambda value: value
     set_native_value_fn: Callable[[float], float] = lambda value: value
-
 
 NUMBER_DESCRIPTIONS = {
     AttributeType.DOWN_POSITION: HomeeNumberEntityDescription(

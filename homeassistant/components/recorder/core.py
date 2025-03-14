@@ -123,8 +123,6 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_URL = "sqlite:///{hass_config_path}"
-
 # Controls how often we clean up
 # States and Events objects
 EXPIRE_AFTER_COMMITS = 120
