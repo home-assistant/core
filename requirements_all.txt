@@ -2346,7 +2346,7 @@ pysqueezebox==0.12.0
 pystiebeleltron==0.0.1.dev2
 
 # homeassistant.components.suez_water
-pysuezV2==2.0.3
+pysuezV2==2.0.4
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
@@ -2872,7 +2872,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.9.12
+tesla-fleet-api==0.9.13
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -2977,7 +2977,7 @@ unifiled==0.11
 universal-silabs-flasher==0.0.29
 
 # homeassistant.components.upb
-upb-lib==0.6.0
+upb-lib==0.6.1
 
 # homeassistant.components.upcloud
 upcloud-api==2.6.0
@@ -3000,7 +3000,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2025.3.0
+velbus-aio==2025.3.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -3091,7 +3091,7 @@ xiaomi-ble==0.33.0
 xknx==3.6.0
 
 # homeassistant.components.knx
-xknxproject==3.8.1
+xknxproject==3.8.2
 
 # homeassistant.components.fritz
 # homeassistant.components.rest
