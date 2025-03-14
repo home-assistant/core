@@ -69,6 +69,10 @@ class SimpleMediaPlayer(mp.MediaPlayerEntity):
         """Put device in standby."""
         self._state = STATE_STANDBY
 
+    def idle(self):
+        """Put device in idle."""
+        self._state = STATE_IDLE
+
 
 class ExtendedMediaPlayer(SimpleMediaPlayer):
     """Media player test class."""
@@ -89,10 +93,6 @@ class ExtendedMediaPlayer(SimpleMediaPlayer):
             self._state = STATE_PAUSED
         else:
             self._state = STATE_PLAYING
-
-    def idle(self):
-        """Put device in idle."""
-        self._state = STATE_IDLE
 
     def toggle(self):
         """Toggle the power on the media player."""
