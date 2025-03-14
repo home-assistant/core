@@ -9,12 +9,14 @@ import pytest
 from wolf_comm import (
     EnergyParameter,
     HoursParameter,
+    ListItem,
     ListItemParameter,
     PercentageParameter,
     PowerParameter,
     Pressure,
     SimpleParameter,
     Temperature,
+    Value,
 )
 
 from homeassistant.components.wolflink.const import (
@@ -70,7 +72,7 @@ def mock_wolflink() -> Generator[MagicMock]:
                 8002800000,
                 "List Item Parameter",
                 "Heating",
-                (["Pump", 0], ["Heating", 1]),
+                [ListItem("0", "Aus"), ListItem("1", "Ein")],
                 8005200000,
             ),
             PowerParameter(5002800000, "Power Parameter", "Heating", 5005200000),
@@ -81,6 +83,17 @@ def mock_wolflink() -> Generator[MagicMock]:
             ),
             HoursParameter(7002800000, "Hours Parameter", "Heating", 7005200000),
             SimpleParameter(1002800000, "Simple Parameter", "DHW", 1005200000),
+        ]
+
+        wolflink.fetch_value.return_value = [
+            Value(6002800000, "183", 1),
+            Value(8002800000, "1", 1),
+            Value(5002800000, "50", 1),
+            Value(4002800000, "3", 1),
+            Value(3002800000, "65", 1),
+            Value(2002800000, "20", 1),
+            Value(7002800000, "10", 1),
+            Value(1002800000, "12", 1),
         ]
 
         yield wolflink

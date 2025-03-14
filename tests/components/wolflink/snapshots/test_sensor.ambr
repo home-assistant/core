@@ -81,7 +81,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '183',
   })
 # ---
 # name: test_sensors[sensor.hours_parameter-entry]
@@ -133,7 +133,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '10',
   })
 # ---
 # name: test_sensors[sensor.list_item_parameter-entry]
@@ -183,7 +183,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'ein',
   })
 # ---
 # name: test_sensors[sensor.percentage_parameter-entry]
@@ -234,7 +234,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '20',
   })
 # ---
 # name: test_sensors[sensor.power_parameter-entry]
@@ -286,7 +286,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '50',
   })
 # ---
 # name: test_sensors[sensor.pressure_parameter-entry]
@@ -338,7 +338,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '3',
   })
 # ---
 # name: test_sensors[sensor.simple_parameter-entry]
@@ -388,7 +388,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '12',
   })
 # ---
 # name: test_sensors[sensor.temperature_parameter-entry]
@@ -440,6 +440,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '65',
   })
 # ---
