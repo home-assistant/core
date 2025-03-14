@@ -122,26 +122,16 @@ async def _async_reproduce_state(
         return
 
     # Open/Close
-    services: list[str] = []
     if state.state in {CoverState.CLOSED, CoverState.CLOSING}:
         if not set_position and CoverEntityFeature.CLOSE in supported_features:
-            services.append(SERVICE_CLOSE_COVER)
+            await _service_call(SERVICE_CLOSE_COVER, service_data)
         if not set_tilt and CoverEntityFeature.CLOSE_TILT in supported_features:
-            services.append(SERVICE_CLOSE_COVER_TILT)
+            await _service_call(SERVICE_CLOSE_COVER_TILT, service_data)
     elif state.state in {CoverState.OPEN, CoverState.OPENING}:
         if not set_position and CoverEntityFeature.OPEN in supported_features:
-            services.append(SERVICE_OPEN_COVER)
+            await _service_call(SERVICE_OPEN_COVER, service_data)
         if not set_tilt and CoverEntityFeature.OPEN_TILT in supported_features:
-            services.append(SERVICE_OPEN_COVER_TILT)
-
-    for service in services:
-        await hass.services.async_call(
-            DOMAIN,
-            service,
-            service_data,
-            context=context,
-            blocking=True,
-        )
+            await _service_call(SERVICE_OPEN_COVER_TILT, service_data)
 
 
 async def async_reproduce_states(
