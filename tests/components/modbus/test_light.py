@@ -375,7 +375,9 @@ async def test_brightness_control(hass: HomeAssistant, mock_modbus) -> None:
     """Test setting brightness."""
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID, "brightness": 128}
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: ENTITY_ID, "brightness": 128},
     )
     await hass.async_block_till_done()
     assert mock_modbus.write_register.called
@@ -402,10 +404,10 @@ async def test_brightness_color_temp_control(hass: HomeAssistant, mock_modbus) -
     """Test setting brightness and color temperature."""
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: ENTITY_ID, "brightness": 128, "color_temp": 300}
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: ENTITY_ID, "brightness": 128, "color_temp": 300},
     )
     await hass.async_block_till_done()
     assert mock_modbus.write_register.call_count == 2
     assert hass.states.get(ENTITY_ID).state == STATE_ON
-
