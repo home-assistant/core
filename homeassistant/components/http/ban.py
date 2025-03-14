@@ -52,7 +52,6 @@ NOTIFICATION_ID_BAN: Final = "ip-ban"
 NOTIFICATION_ID_LOGIN: Final = "http-login"
 
 IP_BANS_FILE: Final = "ip_bans.yaml"
-NETWORK_BANS_FILE: Final = "network_bans.yaml"
 
 ATTR_BANNED_AT: Final = "banned_at"
 KEY_BANNED_NETWORKS: Final = "networks"
@@ -260,7 +259,6 @@ class IpBanManager:
         """Init the ban manager."""
         self.hass = hass
         self.path = hass.config.path(IP_BANS_FILE)
-        self.banned_networks_path = hass.config.path(NETWORK_BANS_FILE)
         self.ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] = {}
         self.banned_networks: list[ip_network] = []
         self.notify_bans: bool = True
@@ -291,10 +289,9 @@ class IpBanManager:
                     self.banned_networks.append(network_ip_network)
             except (AddressValueError, NetmaskValueError, ValueError) as err:
                 _LOGGER.error(
-                    "Error in banned network %s: %s. Check %s",
+                    "Error in banned network %s: %s. Check configuration",
                     network,
                     str(err),
-                    self.banned_networks_path,
                 )
         _LOGGER.info(
             "Banned networks: %s, log %s, notify %s",
