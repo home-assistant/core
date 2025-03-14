@@ -35,18 +35,6 @@
         }
       }
     },
-    "fan": {
-      "filter": {
-        "state_attributes": {
-          "preset_mode": {
-            "state": {
-              "bio_mode": "Bio mode",
-              "pulse_mode": "Pulse mode"
-            }
-          }
-        }
-      }
-    },
     "light": {
       "channel": {
         "name": "Channel {channel_id}",
@@ -56,6 +44,22 @@
               "daycl_mode": "Daycycle mode"
             }
           }
+        }
+      }
+    },
+    "sensor": {
+      "current_speed": {
+        "name": "Current speed"
+      },
+      "service_hours": {
+        "name": "Remaining hours until service"
+      },
+      "error_code": {
+        "name": "Error code",
+        "state": {
+          "no_error": "No error",
+          "rotor_stuck": "Rotor stuck",
+          "air_in_filter": "Air in filter"
         }
       }
     }

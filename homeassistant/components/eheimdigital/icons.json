@@ -1,10 +1,10 @@
 {
   "entity": {
-    "fan": {
-      "filter": {
-        "default": "mdi:pump",
+    "sensor": {
+      "error_code": {
+        "default": "mdi:alert-octagon",
         "state": {
-          "off": "mdi:pump-off"
+          "no_error": "mdi:check-circle"
         }
       }
     }

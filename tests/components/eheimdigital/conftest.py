@@ -9,6 +9,7 @@ from eheimdigital.heater import EheimDigitalHeater
 from eheimdigital.hub import EheimDigitalHub
 from eheimdigital.types import (
     EheimDeviceType,
+    FilterErrorCode,
     FilterMode,
     HeaterMode,
     HeaterUnit,
@@ -78,6 +79,7 @@ def classic_vario_mock():
     classic_vario_mock.current_speed = 75
     classic_vario_mock.is_active = True
     classic_vario_mock.filter_mode = FilterMode.MANUAL
+    classic_vario_mock.error_code = FilterErrorCode.NO_ERROR
     return classic_vario_mock
 
 
