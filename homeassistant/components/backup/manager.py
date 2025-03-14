@@ -236,7 +236,7 @@ class BackupPlatformEvent:
     domain: str
 
 
-      @dataclass(frozen=True, kw_only=True, slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class BlockedEvent(ManagerStateEvent):
     """Backup manager blocked, Home Assistant is starting."""
 
