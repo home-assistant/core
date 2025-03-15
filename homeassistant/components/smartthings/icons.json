@@ -1,0 +1,13 @@
+{
+  "entity": {
+    "switch": {
+      "light": {
+        "default": "mdi:lightbulb",
+        "state": {
+          "on": "mdi:lightbulb-on",
+          "off": "mdi:lightbulb-off"
+        }
+      }
+    }
+  }
+}

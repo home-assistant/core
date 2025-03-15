@@ -49,8 +49,9 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         key=Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING,
         translation_key="light",
         status_attribute=Attribute.LIGHTING,
-        exists_fn=lambda status: status[Attribute.SUPPORTED_LIGHTING_LEVELS].value
-        == ["on", "off"],
+        exists_fn=lambda status: (
+            status[Attribute.SUPPORTED_LIGHTING_LEVELS].value == ["on", "off"]
+        ),
     )
 }
 
