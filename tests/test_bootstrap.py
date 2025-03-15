@@ -1546,10 +1546,11 @@ def test_should_rollover_is_always_false() -> None:
 async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> None:
     """Verify stage 0 not load base platforms before recorder.
 
-    If a stage 0 integration has a base platform in its dependencies and
-    it loads before the recorder, it may load integrations that expect
-    the recorder to be loaded. We need to ensure that no stage 0 integration
-    has a base platform in its dependencies that loads before the recorder.
+    If a stage 0 integration implements base platforms or has a base
+    platform in its dependencies and it loads before the recorder,
+    because of platform-based YAML schema, it may inadvertently
+    load integrations that expect the recorder to already be loaded.
+    We need to ensure that doesn't happen.
     """
     IGNORE_BASE_PLATFORM_FILES = {
         # config/scene.py is not a platform
@@ -1565,6 +1566,8 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
         integrations_before_recorder |= integrations
         if "recorder" in integrations:
             break
+    else:
+        pytest.fail("recorder not in stage 0")
 
     integrations_or_excs = await loader.async_get_integrations(
         hass, integrations_before_recorder
@@ -1591,7 +1594,9 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
         )
         if domain_with_base_platforms_deps:
             problems[domain] = domain_with_base_platforms_deps
-    assert not problems, f"Integrations have base platforms in dependencies: {problems}"
+    assert not problems, (
+        f"Integrations that are setup before recorder have base platforms in their dependencies: {problems}"
+    )
 
     base_platform_py_files = {f"{base_platform}.py" for base_platform in BASE_PLATFORMS}
 
@@ -1604,5 +1609,5 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
         if integration_base_platforms_files:
             problems[domain] = integration_base_platforms_files
     assert not problems, (
-        f"Integrations have base platform files in top level files: {problems}"
+        f"Integrations that are setup before recorder implement base platforms: {problems}"
     )
