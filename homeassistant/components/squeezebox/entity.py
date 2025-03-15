@@ -4,7 +4,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN_SERVER, STATUS_QUERY_UUID
+from .const import DOMAIN, STATUS_QUERY_UUID
 from .coordinator import LMSStatusDataUpdateCoordinator
 
 
@@ -27,5 +27,5 @@ class LMSStatusEntity(CoordinatorEntity[LMSStatusDataUpdateCoordinator]):
         )
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN_SERVER, coordinator.data[STATUS_QUERY_UUID])},
+            identifiers={(DOMAIN, coordinator.data[STATUS_QUERY_UUID])},
         )

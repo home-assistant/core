@@ -297,6 +297,8 @@ def mock_pysqueezebox_server(
 
         mock_lms.uuid = uuid
         mock_lms.name = TEST_SERVER_NAME
+        mock_lms.host = "1.2.3.4"
+        mock_lms.port = 9000
         mock_lms.async_query = AsyncMock(return_value={"uuid": format_mac(uuid)})
         mock_lms.async_status = AsyncMock(return_value={"uuid": format_mac(uuid)})
         return mock_lms
