@@ -1,17 +1,24 @@
 """Tests for Mill config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.mill.const import CLOUD, CONNECTION_TYPE, DOMAIN, LOCAL
+from homeassistant.components.recorder import Recorder
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-async def test_show_config_form(hass: HomeAssistant) -> None:
+
+async def test_show_config_form(
+    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -21,7 +28,9 @@ async def test_show_config_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_create_entry(hass: HomeAssistant) -> None:
+async def test_create_entry(
+    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test create entry from user input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -56,7 +65,9 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     }
 
 
-async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
+async def test_flow_entry_already_exists(
+    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test user input for config_entry that already exists."""
 
     test_data = {
@@ -96,7 +107,9 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_connection_error(hass: HomeAssistant) -> None:
+async def test_connection_error(
+    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -125,7 +138,9 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_local_create_entry(hass: HomeAssistant) -> None:
+async def test_local_create_entry(
+    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test create entry from user input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -165,7 +180,9 @@ async def test_local_create_entry(hass: HomeAssistant) -> None:
     assert result["data"] == test_data
 
 
-async def test_local_flow_entry_already_exists(hass: HomeAssistant) -> None:
+async def test_local_flow_entry_already_exists(
+    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test user input for config_entry that already exists."""
 
     test_data = {
@@ -215,7 +232,9 @@ async def test_local_flow_entry_already_exists(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_local_connection_error(hass: HomeAssistant) -> None:
+async def test_local_connection_error(
+    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test connection error."""
 
     result = await hass.config_entries.flow.async_init(
