@@ -80,6 +80,16 @@ class IRobotEntity(Entity):
             return None
         return dt_util.utc_from_timestamp(ts)
 
+    @property
+    def last_command(self):
+        """Return last command."""
+        return self.vacuum_state.get("lastCommand", {}).get("command")
+
+    @property
+    def last_command_attrs(self):
+        """Return last command parameters."""
+        return {"parameters": self.vacuum_state.get("lastCommand", {})}
+
     async def async_added_to_hass(self) -> None:
         """Register callback function."""
         self.vacuum.register_on_message_callback(self.on_message)
