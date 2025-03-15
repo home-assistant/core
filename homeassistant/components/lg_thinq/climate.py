@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Coroutine
 import logging
 from typing import Any
 
@@ -19,10 +20,16 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfTemperature,
+)
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.temperature import display_temp
+from homeassistant.helpers.event import async_track_state_change_event
 
 from . import ThinqConfigEntry
 from .coordinator import DeviceDataUpdateCoordinator
@@ -113,7 +120,6 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         self._attr_temperature_unit = (
             self._get_unit_of_measurement(self.data.unit) or UnitOfTemperature.CELSIUS
         )
-        self._requested_hvac_mode: str | None = None
 
         # Set up HVAC modes.
         for mode in self.data.hvac_modes:
@@ -142,6 +148,8 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             self._attr_swing_horizontal_modes = [SWING_ON, SWING_OFF]
             self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
 
+        self._waiting_state: dict[str, Coroutine[Any, Any, None] | None] = {}
+
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -157,7 +165,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             )
 
         if self.data.is_on:
-            hvac_mode = self._requested_hvac_mode or self.data.hvac_mode
+            hvac_mode = self.data.hvac_mode
             if hvac_mode in STR_TO_HVAC:
                 self._attr_hvac_mode = STR_TO_HVAC.get(hvac_mode)
                 self._attr_preset_mode = None
@@ -167,7 +175,6 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_preset_mode = None
 
-        self.reset_requested_hvac_mode()
         self._attr_current_humidity = self.data.humidity
         self._attr_current_temperature = self.data.current_temp
 
@@ -202,10 +209,6 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             self.target_temperature_step,
         )
 
-    def reset_requested_hvac_mode(self) -> None:
-        """Cancel request to set hvac mode."""
-        self._requested_hvac_mode = None
-
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         _LOGGER.debug(
@@ -219,35 +222,6 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             "[%s:%s] async_turn_off", self.coordinator.device_name, self.property_id
         )
         await self.async_call_api(self.coordinator.api.async_turn_off(self.property_id))
-
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set new target hvac mode."""
-        if hvac_mode == HVACMode.OFF:
-            await self.async_turn_off()
-            return
-
-        # If device is off, turn on first.
-        if not self.data.is_on:
-            await self.async_turn_on()
-
-        # When we request hvac mode while turning on the device, the previously set
-        # hvac mode is displayed first and then switches to the requested hvac mode.
-        # To prevent this, set the requested hvac mode here so that it will be set
-        # immediately on the next update.
-        self._requested_hvac_mode = HVAC_TO_STR.get(hvac_mode)
-
-        _LOGGER.debug(
-            "[%s:%s] async_set_hvac_mode: %s",
-            self.coordinator.device_name,
-            self.property_id,
-            hvac_mode,
-        )
-        await self.async_call_api(
-            self.coordinator.api.async_set_hvac_mode(
-                self.property_id, self._requested_hvac_mode
-            ),
-            self.reset_requested_hvac_mode,
-        )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -301,59 +275,140 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             )
         )
 
-    def _round_by_step(self, temperature: float) -> float:
-        """Round the value by step."""
-        if (
-            target_temp := display_temp(
-                self.coordinator.hass,
-                temperature,
-                self.coordinator.hass.config.units.temperature_unit,
-                self.target_temperature_step or 1,
-            )
-        ) is not None:
-            return target_temp
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        if hvac_mode == HVACMode.OFF:
+            await self.async_turn_off()
+            return
 
-        return temperature
+        # If device is off, turn on first.
+        if not self.data.is_on:
+            await self.async_turn_on()
+            self._waiting_state[STATE_ON] = self.async_set_hvac_mode(hvac_mode)
+            return
+
+        _LOGGER.debug(
+            "[%s:%s] async_set_hvac_mode: %s",
+            self.coordinator.device_name,
+            self.property_id,
+            hvac_mode,
+        )
+        await self.async_call_api(
+            self.coordinator.api.async_set_hvac_mode(
+                self.property_id, HVAC_TO_STR.get(hvac_mode)
+            )
+        )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
+            if hvac_mode == HVACMode.OFF:
+                await self.async_turn_off()
+                return
+
+            # If device is off, turn on first.
+            if not self.data.is_on:
+                await self.async_turn_on()
+                self._waiting_state[STATE_ON] = self.async_set_temperature(**kwargs)
+                return
+
         _LOGGER.debug(
             "[%s:%s] async_set_temperature: %s",
             self.coordinator.device_name,
             self.property_id,
             kwargs,
         )
-        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
-            await self.async_set_hvac_mode(HVACMode(hvac_mode))
-            if hvac_mode == HVACMode.OFF:
-                return
+        if (
+            hvac_mode := kwargs.get(ATTR_HVAC_MODE)
+        ) is not None and hvac_mode != self.hvac_mode:
+            await self.async_call_api(
+                self.coordinator.api.async_set_hvac_mode(
+                    self.property_id, HVAC_TO_STR.get(hvac_mode)
+                )
+            )
+            self._waiting_state[hvac_mode] = self.async_set_temperature(**kwargs)
+            return
 
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            if (
-                target_temp := self._round_by_step(temperature)
-            ) != self.target_temperature:
+            if self.data.step >= 1:
+                temperature = int(temperature)
+            if temperature != self.target_temperature:
                 await self.async_call_api(
                     self.coordinator.api.async_set_target_temperature(
-                        self.property_id, target_temp
+                        self.property_id,
+                        temperature,
                     )
                 )
 
         if (temperature_low := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None:
-            if (
-                target_temp_low := self._round_by_step(temperature_low)
-            ) != self.target_temperature_low:
+            if self.data.step >= 1:
+                temperature_low = int(temperature_low)
+            if temperature_low != self.target_temperature_low:
                 await self.async_call_api(
                     self.coordinator.api.async_set_target_temperature_low(
-                        self.property_id, target_temp_low
+                        self.property_id,
+                        temperature_low,
                     )
                 )
 
         if (temperature_high := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None:
-            if (
-                target_temp_high := self._round_by_step(temperature_high)
-            ) != self.target_temperature_high:
+            if self.data.step >= 1:
+                temperature_high = int(temperature_high)
+            if temperature_high != self.target_temperature_high:
                 await self.async_call_api(
                     self.coordinator.api.async_set_target_temperature_high(
-                        self.property_id, target_temp_high
+                        self.property_id,
+                        temperature_high,
                     )
                 )
+
+    async def async_added_to_hass(self) -> None:
+        """Handle added to Hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.coordinator.hass,
+                self.entity_id,
+                self._async_state_changed,
+            )
+        )
+
+    async def _async_state_changed(self, event: Event[EventStateChangedData]) -> None:
+        """Handle state changes."""
+        if (
+            event.data["new_state"] is None
+            or event.data["old_state"] is None
+            or not self._waiting_state
+        ):
+            return
+        new_state = event.data["new_state"].state
+        old_state = event.data["old_state"].state
+        _LOGGER.debug(
+            "state_changed old: %s, new: %s, self._waiting_state: %s",
+            old_state,
+            new_state,
+            self._waiting_state,
+        )
+
+        if new_state in [HVACMode.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN]:
+            self._waiting_state = {}
+            return
+
+        if (
+            (task := self._waiting_state.get(STATE_ON)) is not None
+            and old_state == HVACMode.OFF
+            and new_state != HVACMode.OFF
+        ):
+            self._waiting_state[STATE_ON] = None
+            await self.coordinator.hass.async_create_task(task)
+            return
+
+        for mode in HVAC_TO_STR:
+            if (
+                (task := self._waiting_state.get(mode)) is not None
+                and old_state != mode
+                and new_state == mode
+            ):
+                self._waiting_state[mode] = None
+                await self.coordinator.hass.async_create_task(task)
+                return
