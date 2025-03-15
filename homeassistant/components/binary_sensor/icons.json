@@ -48,6 +48,12 @@
         "on": "mdi:garage-open"
       }
     },
+    "sliding_door": {
+      "default": "mdi:door-sliding",
+      "state": {
+        "on": "mdi:door-sliding-open"
+      }
+    },
     "gas": {
       "default": "mdi:check-circle",
       "state": {
