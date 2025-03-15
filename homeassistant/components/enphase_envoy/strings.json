@@ -422,8 +422,8 @@
   },
   "services": {
     "get_raw_tariff": {
-      "name": "Tariff details",
-      "description": "Full tariff information from cache.",
+      "name": "Get tariff details",
+      "description": "Retrieves full tariff information from the internal cache holding last collected data.",
       "fields": {
         "config_entry_id": {
           "name": "Envoy entry",
