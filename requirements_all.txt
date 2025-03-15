@@ -84,7 +84,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.56.1
+PySwitchbot==0.57.1
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -201,7 +201,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2025.1.1
+aioautomower==2025.3.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.6.0
+aioesphomeapi==29.7.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -371,7 +371,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.3.0
+aioshelly==13.4.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -640,7 +640,7 @@ bluetooth-auto-recovery==1.4.5
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.26.0
+bluetooth-data-tools==1.26.1
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -1105,11 +1105,14 @@ ha-iotawattpy==0.1.2
 # homeassistant.components.philips_js
 ha-philipsjs==3.2.2
 
+# homeassistant.components.homeassistant_hardware
+ha-silabs-firmware-client==0.2.0
+
 # homeassistant.components.habitica
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.27.0
+habluetooth==3.32.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.94.0
@@ -1483,7 +1486,7 @@ nettigo-air-monitor==4.1.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==2.2.2
+nexia==2.4.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -2199,7 +2202,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.16.2
+pyoverkiz==1.16.3
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -2467,7 +2470,7 @@ python-roborock==2.12.2
 python-smarttub==0.0.39
 
 # homeassistant.components.snoo
-python-snoo==0.6.1
+python-snoo==0.6.3
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -2974,7 +2977,7 @@ unifi_ap==0.0.2
 unifiled==0.11
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==0.0.29
+universal-silabs-flasher==0.0.30
 
 # homeassistant.components.upb
 upb-lib==0.6.1
