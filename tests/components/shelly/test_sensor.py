@@ -1,7 +1,6 @@
 """Tests for Shelly sensor platform."""
 
 from copy import deepcopy
-from typing import Any
 from unittest.mock import Mock
 
 from aioshelly.const import MODEL_BLU_GATEWAY_G3
@@ -361,7 +360,7 @@ async def test_block_sensor_unknown_value(
     initial_state: str,
     block_id: int,
     attribute: str,
-    value: Any,
+    value: str | None,
 ) -> None:
     """Test block sensor unknown value."""
     entity_id = f"{SENSOR_DOMAIN}.{entity}"
