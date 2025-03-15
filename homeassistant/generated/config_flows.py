@@ -80,6 +80,7 @@ FLOWS = {
         "azure_devops",
         "azure_event_hub",
         "azure_storage",
+        "backup_sftp",
         "baf",
         "balboa",
         "bang_olufsen",
