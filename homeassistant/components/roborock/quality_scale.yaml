@@ -9,9 +9,7 @@ rules:
       separate cloud vs local intervals.
   brands: done
   common-modules: done
-  config-flow:
-    status: todo
-    comment: Not all fields have a data_description.
+  config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions:

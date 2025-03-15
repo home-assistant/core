@@ -271,7 +271,7 @@ update_todo:
     checklist_options:
       collapsed: true
       fields:
-        add_checklist_item:
+        add_checklist_item: &add_checklist_item
           required: false
           selector:
             text:
@@ -295,7 +295,7 @@ update_todo:
     duedate_options:
       collapsed: true
       fields:
-        date:
+        date: &due_date
           required: false
           selector:
             date:
@@ -308,7 +308,7 @@ update_todo:
     reminder_options:
       collapsed: true
       fields:
-        reminder:
+        reminder: &reminder
           required: false
           selector:
             text:
@@ -327,4 +327,15 @@ update_todo:
               value: true
               label: "🗑️"
     tag_options: *tag_options
+    developer_options: *developer_options
+create_todo:
+  fields:
+    config_entry: *config_entry
+    name: *name
+    notes: *notes
+    add_checklist_item: *add_checklist_item
+    priority: *priority
+    date: *due_date
+    reminder: *reminder
+    tag: *tag
     developer_options: *developer_options

@@ -67,7 +67,7 @@ dependencies    = [
     "PyYAML==6.0.2",
     "requests==2.32.3",
     "securetar==2025.2.1",
-    "SQLAlchemy==2.0.38",
+    "SQLAlchemy==2.0.39",
     "standard-aifc==3.13.0",
     "standard-telnetlib==3.13.0",
     "typing-extensions>=4.12.2,<5.0",

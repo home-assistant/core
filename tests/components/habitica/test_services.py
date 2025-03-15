@@ -55,6 +55,7 @@ from homeassistant.components.habitica.const import (
     SERVICE_CAST_SKILL,
     SERVICE_CREATE_HABIT,
     SERVICE_CREATE_REWARD,
+    SERVICE_CREATE_TODO,
     SERVICE_GET_TASKS,
     SERVICE_LEAVE_QUEST,
     SERVICE_REJECT_QUEST,
@@ -1002,7 +1003,7 @@ async def test_update_task_exceptions(
 )
 @pytest.mark.parametrize(
     "service",
-    [SERVICE_CREATE_REWARD, SERVICE_CREATE_HABIT],
+    [SERVICE_CREATE_REWARD, SERVICE_CREATE_HABIT, SERVICE_CREATE_TODO],
 )
 @pytest.mark.usefixtures("habitica")
 async def test_create_task_exceptions(
@@ -1507,6 +1508,102 @@ async def test_update_todo(
         blocking=True,
     )
     habitica.update_task.assert_awaited_with(UUID(task_id), call_args)
+
+
+@pytest.mark.parametrize(
+    ("service_data", "call_args"),
+    [
+        (
+            {
+                ATTR_NAME: "TITLE",
+            },
+            Task(type=TaskType.TODO, text="TITLE"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_NOTES: "NOTES",
+            },
+            Task(type=TaskType.TODO, text="TITLE", notes="NOTES"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_ADD_CHECKLIST_ITEM: "Checklist-item",
+            },
+            Task(
+                type=TaskType.TODO,
+                text="TITLE",
+                checklist=[
+                    Checklist(
+                        id=UUID("12345678-1234-5678-1234-567812345678"),
+                        text="Checklist-item",
+                        completed=False,
+                    ),
+                ],
+            ),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_PRIORITY: "trivial",
+            },
+            Task(type=TaskType.TODO, text="TITLE", priority=TaskPriority.TRIVIAL),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_DATE: "2025-03-05",
+            },
+            Task(type=TaskType.TODO, text="TITLE", date=datetime(2025, 3, 5)),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_REMINDER: ["2025-02-25T00:00"],
+            },
+            Task(
+                type=TaskType.TODO,
+                text="TITLE",
+                reminders=[
+                    Reminders(
+                        id=UUID("12345678-1234-5678-1234-567812345678"),
+                        time=datetime(2025, 2, 25, 0, 0),
+                        startDate=None,
+                    )
+                ],
+            ),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_ALIAS: "ALIAS",
+            },
+            Task(type=TaskType.TODO, text="TITLE", alias="ALIAS"),
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_uuid4")
+async def test_create_todo(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    service_data: dict[str, Any],
+    call_args: Task,
+) -> None:
+    """Test Habitica create todo action."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CREATE_TODO,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            **service_data,
+        },
+        return_response=True,
+        blocking=True,
+    )
+    habitica.create_task.assert_awaited_with(call_args)
 
 
 async def test_tags(
