@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Final
 
 from aiopurpleair.models.sensors import SensorModel
 
@@ -30,7 +31,9 @@ from .const import CONF_SENSOR_INDICES
 from .coordinator import PurpleAirConfigEntry
 from .entity import PurpleAirEntity
 
-CONCENTRATION_PARTICLES_PER_100_MILLILITERS = f"particles/100{UnitOfVolume.MILLILITERS}"
+CONCENTRATION_PARTICLES_PER_100_MILLILITERS: Final[str] = (
+    f"particles/100{UnitOfVolume.MILLILITERS}"
+)
 
 
 @dataclass(frozen=True, kw_only=True)
