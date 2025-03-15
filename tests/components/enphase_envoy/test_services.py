@@ -58,7 +58,7 @@ async def test_service_load_unload(
     for service in RAW_SERVICE_LIST:
         with pytest.raises(
             ServiceValidationError,
-            match=f"{service}: Enphase envoy is not yet initialized",
+            match=f"{service}: Enphase Envoy is not yet initialized",
         ):
             await hass.services.async_call(
                 DOMAIN,
@@ -162,7 +162,7 @@ async def test_service_get_raw_exceptions(
     mock_envoy.data.raw = {}
     with pytest.raises(
         ServiceValidationError,
-        match=f"{service}: Enphase envoy is not yet initialized",
+        match=f"{service}: Enphase Envoy is not yet initialized",
     ):
         await hass.services.async_call(
             DOMAIN,
