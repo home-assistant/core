@@ -6,6 +6,7 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Generator
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 from random import randint
 from time import monotonic
@@ -103,7 +104,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             randint(event.RANDOM_MICROSECOND_MIN, event.RANDOM_MICROSECOND_MAX) / 10**6
         )
 
-        self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
+        self._listeners: dict[int, tuple[CALLBACK_TYPE, object | None]] = {}
+        self._last_listener_id: int = 0
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._unsub_shutdown: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
@@ -148,21 +150,26 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     ) -> Callable[[], None]:
         """Listen for data updates."""
         schedule_refresh = not self._listeners
-
-        @callback
-        def remove_listener() -> None:
-            """Remove update listener."""
-            self._listeners.pop(remove_listener)
-            if not self._listeners:
-                self._unschedule_refresh()
-
-        self._listeners[remove_listener] = (update_callback, context)
+        self._last_listener_id += 1
+        self._listeners[self._last_listener_id] = (update_callback, context)
 
         # This is the first listener, set up interval.
         if schedule_refresh:
             self._schedule_refresh()
 
-        return remove_listener
+        return partial(self.__async_remove_listener_internal, self._last_listener_id)
+
+    @callback
+    def __async_remove_listener_internal(self, listener_id: int) -> None:
+        """Remove a listener.
+
+        This is an internal function that is not to be overridden
+        in subclasses as it may change in the future.
+        """
+        self._listeners.pop(listener_id)
+        if not self._listeners:
+            self._unschedule_refresh()
+            self._debounced_refresh.async_cancel()
 
     @callback
     def async_update_listeners(self) -> None:
@@ -341,8 +348,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         only once during the first refresh.
         """
         if self.setup_method is None:
-            return None
-        return await self.setup_method()
+            return
+        await self.setup_method()
 
     async def async_refresh(self) -> None:
         """Refresh data and log errors."""

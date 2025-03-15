@@ -860,6 +860,21 @@ async def test_privacy_mode_change_callback(
     assert reolink_connect.get_states.call_count >= 1
     assert hass.states.get(entity_id).state == STATE_ON
 
+    # test cleanup during unloading, first reset to privacy mode ON
+    reolink_connect.baichuan.privacy_mode.return_value = True
+    callback_mock.callback_func()
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    # now fire the callback again, but unload before refresh took place
+    reolink_connect.baichuan.privacy_mode.return_value = False
+    callback_mock.callback_func()
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
 
 async def test_remove(
     hass: HomeAssistant,

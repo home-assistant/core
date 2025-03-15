@@ -10,7 +10,7 @@ from pybalboa.enums import OffOnState, UnknownState
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -23,7 +23,7 @@ from .entity import BalboaEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BalboaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the spa's pumps."""
     spa = entry.runtime_data

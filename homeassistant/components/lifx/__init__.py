@@ -211,7 +211,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except socket.gaierror as ex:
         connection.async_stop()
         raise ConfigEntryNotReady(f"Could not resolve {host}: {ex}") from ex
-    coordinator = LIFXUpdateCoordinator(hass, connection, entry.title)
+    coordinator = LIFXUpdateCoordinator(hass, entry, connection)
     coordinator.async_setup()
     try:
         await coordinator.async_config_entry_first_refresh()

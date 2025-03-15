@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import ATTR_SUGGESTED_AREA
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN as CASETA_DOMAIN
 from .const import CONFIG_URL, MANUFACTURER, UNASSIGNED_AREA
@@ -21,7 +21,7 @@ from .util import area_name_from_id
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: LutronCasetaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron Caseta binary_sensor platform.
 

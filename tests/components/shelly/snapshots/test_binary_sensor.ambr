@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -40,6 +41,101 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.trv_name_calibration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_rpc_flood_entities[binary_sensor.test_name_flood-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_name_flood',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': 'Test name flood',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-flood:0-flood',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_rpc_flood_entities[binary_sensor.test_name_flood-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moisture',
+      'friendly_name': 'Test name flood',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_flood',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_rpc_flood_entities[binary_sensor.test_name_mute-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_name_mute',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Test name mute',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-flood:0-mute',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_rpc_flood_entities[binary_sensor.test_name_mute-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name mute',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_mute',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

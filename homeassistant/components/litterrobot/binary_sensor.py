@@ -15,7 +15,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _WhiskerEntityT
@@ -63,7 +63,7 @@ BINARY_SENSOR_MAP: dict[type[Robot], tuple[RobotBinarySensorEntityDescription, .
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LitterRobotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot binary sensors using config entry."""
     coordinator = entry.runtime_data

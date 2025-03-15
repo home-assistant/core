@@ -15,7 +15,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import (
     ReolinkChannelCoordinatorEntity,
@@ -424,6 +424,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_brightness",
         cmd_key="GetImage",
+        cmd_id=26,
         translation_key="image_brightness",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -437,6 +438,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_contrast",
         cmd_key="GetImage",
+        cmd_id=26,
         translation_key="image_contrast",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -450,6 +452,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_saturation",
         cmd_key="GetImage",
+        cmd_id=26,
         translation_key="image_saturation",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -463,6 +466,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_sharpness",
         cmd_key="GetImage",
+        cmd_id=26,
         translation_key="image_sharpness",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -476,6 +480,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_hue",
         cmd_key="GetImage",
+        cmd_id=26,
         translation_key="image_hue",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -533,7 +538,7 @@ CHIME_NUMBER_ENTITIES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink number entities."""
     reolink_data: ReolinkData = config_entry.runtime_data

@@ -30,7 +30,7 @@ class MotionMountEntity(Entity):
         self.config_entry = config_entry
 
         # We store the pin, as we might need it during reconnect
-        self.pin = config_entry.data[CONF_PIN]
+        self.pin = config_entry.data.get(CONF_PIN)
 
         mac = format_mac(mm.mac.hex())
 

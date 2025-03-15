@@ -57,7 +57,7 @@
       "init": {
         "title": "Envoy {serial} {host} options",
         "data": {
-          "diagnostics_include_fixtures": "Include test fixture data in diagnostic report. Use when requested to provide test data for troubleshooting or development activies. With this option enabled the diagnostic report may take more time to download. When report is created best disable this option again.",
+          "diagnostics_include_fixtures": "Include test fixture data in diagnostic report. Use when requested to provide test data for troubleshooting or development activities. With this option enabled the diagnostic report may take more time to download. When report is created best disable this option again.",
           "disable_keep_alive": "Always use a new connection when requesting data from the Envoy. May resolve communication issues with some Envoy firmwares."
         },
         "data_description": {
@@ -360,9 +360,9 @@
       "acb_battery_state": {
         "name": "Battery state",
         "state": {
-          "discharging": "Discharging",
+          "discharging": "[%key:common::state::discharging%]",
           "idle": "[%key:common::state::idle%]",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "full": "Full"
         }
       },
