@@ -5277,11 +5277,25 @@ async def test_set_variable(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setting variables in scripts."""
-    alias = "variables step"
     sequence = cv.SCRIPT_SCHEMA(
         [
-            {"alias": alias, "variables": {"variable": "value"}},
-            {"action": "test.script", "data": {"value": "{{ variable }}"}},
+            {"alias": "variables", "variables": {"x": 1, "y": 1}},
+            {"alias": "set variables", "set_variables": {"x": 2, "y": 2}},
+            {
+                "alias": "scope",
+                "sequence": [
+                    {"variables": {"x": 3, "w": 3}},
+                    {"set_variables": {"y": 3, "z": 3}},
+                    {
+                        "action": "test.script",
+                        "data": {"value": "x={{ x }}, y={{ y }}, w={{ w }}, z={{ z }}"},
+                    },
+                ],
+            },
+            {
+                "action": "test.script",
+                "data": {"value": "x={{ x }}, y={{ y }}, z={{ z }}"},
+            },
         ]
     )
     script_obj = script.Script(hass, sequence, "test script", "test_domain")
@@ -5291,18 +5305,39 @@ async def test_set_variable(
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
 
-    assert mock_calls[0].data["value"] == "value"
-    assert f"Executing step {alias}" in caplog.text
+    assert len(mock_calls) == 2
+    assert mock_calls[0].data["value"] == "x=3, y=3, w=3, z=3"
+    assert mock_calls[1].data["value"] == "x=2, y=3, z=3"
+
+    assert "Executing step variables" in caplog.text
+    assert "Executing step set variables" in caplog.text
 
     expected_trace = {
-        "0": [{"variables": {"variable": "value"}}],
-        "1": [
+        "0": [{"variables": {"x": 1, "y": 1}}],
+        "1": [{"variables": {"x": 2, "y": 2}}],
+        "2": [{"variables": {"y": 3, "z": 3}}],
+        "2/sequence/0": [{"variables": {"x": 3, "w": 3}}],
+        "2/sequence/1": [{"variables": {"y": 3, "z": 3}}],
+        "2/sequence/2": [
             {
                 "result": {
                     "params": {
                         "domain": "test",
                         "service": "script",
-                        "service_data": {"value": "value"},
+                        "service_data": {"value": "x=3, y=3, w=3, z=3"},
+                        "target": {},
+                    },
+                    "running_script": False,
+                },
+            }
+        ],
+        "3": [
+            {
+                "result": {
+                    "params": {
+                        "domain": "test",
+                        "service": "script",
+                        "service_data": {"value": "x=2, y=3, z=3"},
                         "target": {},
                     },
                     "running_script": False,
@@ -5425,6 +5460,7 @@ async def test_validate_action_config(
             ]
         },
         cv.SCRIPT_ACTION_VARIABLES: {"variables": {"hello": "world"}},
+        cv.SCRIPT_ACTION_SET_VARIABLES: {"set_variables": {"hello": "world"}},
         cv.SCRIPT_ACTION_STOP: {"stop": "Stop it right there buddy..."},
         cv.SCRIPT_ACTION_IF: {
             "if": [
