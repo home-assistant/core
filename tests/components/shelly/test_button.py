@@ -3,12 +3,15 @@
 from unittest.mock import Mock
 
 from aioshelly.const import MODEL_BLU_GATEWAY_G3
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import init_integration
@@ -63,6 +66,62 @@ async def test_rpc_button(
 
 
 @pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (DeviceConnectionError, "Call for Test name Reboot connection error"),
+        (RpcCallError(999), "Call for Test name Reboot request error"),
+    ],
+)
+async def test_rpc_button_exc(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test RPC button with exception."""
+    await init_integration(hass, 2)
+
+    mock_rpc_device.trigger_reboot.side_effect = exception
+
+    with pytest.raises(HomeAssistantError, match=error):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.test_name_reboot"},
+            blocking=True,
+        )
+
+
+async def test_rpc_button_reauth_error(
+    hass: HomeAssistant, mock_rpc_device: Mock
+) -> None:
+    """Test rpc device OTA button with authentication error."""
+    entry = await init_integration(hass, 2)
+
+    mock_rpc_device.trigger_reboot.side_effect = InvalidAuthError
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.test_name_reboot"},
+        blocking=True,
+    )
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id
+
+
+@pytest.mark.parametrize(
     ("gen", "old_unique_id", "new_unique_id", "migration"),
     [
         (2, "test_name_reboot", "123456789ABC_reboot", True),
@@ -113,7 +172,7 @@ async def test_rpc_blu_trv_button(
     entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test rpc device OTA button."""
+    """Test RPC BLU TRV button."""
     monkeypatch.delitem(mock_blu_trv.status, "script:1")
     monkeypatch.delitem(mock_blu_trv.status, "script:2")
     monkeypatch.delitem(mock_blu_trv.status, "script:3")
@@ -135,3 +194,70 @@ async def test_rpc_blu_trv_button(
         blocking=True,
     )
     assert mock_blu_trv.trigger_blu_trv_calibration.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (DeviceConnectionError, "Call RPC for TRV-Name Calibrate connection error"),
+        (RpcCallError(999), "Call RPC for TRV-Name Calibrate request error"),
+    ],
+)
+async def test_rpc_blu_trv_button_exc(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test RPC BLU TRV button with exception."""
+    monkeypatch.delitem(mock_blu_trv.status, "script:1")
+    monkeypatch.delitem(mock_blu_trv.status, "script:2")
+    monkeypatch.delitem(mock_blu_trv.status, "script:3")
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    mock_blu_trv.trigger_blu_trv_calibration.side_effect = exception
+
+    with pytest.raises(HomeAssistantError, match=error):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.trv_name_calibrate"},
+            blocking=True,
+        )
+
+
+async def test_rpc_blu_trv_button_auth_error(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC BLU TRV button with authentication error."""
+    monkeypatch.delitem(mock_blu_trv.status, "script:1")
+    monkeypatch.delitem(mock_blu_trv.status, "script:2")
+    monkeypatch.delitem(mock_blu_trv.status, "script:3")
+
+    entry = await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    mock_blu_trv.trigger_blu_trv_calibration.side_effect = InvalidAuthError
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.trv_name_calibrate"},
+        blocking=True,
+    )
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id
