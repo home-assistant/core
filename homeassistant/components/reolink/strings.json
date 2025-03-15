@@ -746,6 +746,14 @@
           "chargecomplete": "Charge complete"
         }
       },
+      "day_night_state": {
+        "name": "Day night state",
+        "state": {
+          "day": "Color",
+          "night": "Black & white",
+          "led_day": "Color with floodlight"
+        }
+      },
       "hdd_storage": {
         "name": "HDD {hdd_index} storage"
       },
