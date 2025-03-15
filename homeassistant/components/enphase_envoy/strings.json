@@ -405,13 +405,13 @@
       "message": "Failed to execute {action} for {entity}, host: {host}: {args}"
     },
     "not_initialized": {
-      "message": "{service}: Enphase envoy is not yet initialized {args}"
+      "message": "{service}: Enphase Envoy is not yet initialized {args}"
     },
     "not_collected": {
       "message": "{service}: this endpoint is not collected by the Envoy {args}"
     },
     "envoy_service_error": {
-      "message": "Error in Envoy Service: {service} {args}"
+      "message": "Error in Envoy service: {service} {args}"
     },
     "envoy_service_no_config": {
       "message": "No Envoy configuration entry found: {service} {args}"
