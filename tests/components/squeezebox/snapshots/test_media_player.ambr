@@ -12,7 +12,7 @@
       ),
     }),
     'disabled_by': None,
-    'entry_type': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
     'hw_version': None,
     'id': <ANY>,
     'identifiers': set({
@@ -24,8 +24,8 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': 'Ralph Irving',
-    'model': 'SqueezeLite',
+    'manufacturer': 'https://lyrion.org/',
+    'model': 'Lyrion Music Server',',
     'model_id': None,
     'name': 'Test Player',
     'name_by_user': None,
@@ -33,7 +33,7 @@
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
-    'via_device_id': <ANY>,
+    'via_device_id': None,
   })
 # ---
 # name: test_entity_registry[media_player.test_player-entry]
