@@ -26,6 +26,11 @@
     }
   },
   "entity": {
+    "alarm_control_panel": {
+      "homee_mode": {
+        "name": "Status"
+      }
+    },
     "button": {
       "automatic_mode": {
         "name": "Automatic mode"
