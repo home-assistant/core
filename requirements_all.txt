@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.6.0
+aioesphomeapi==29.7.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -371,7 +371,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.3.0
+aioshelly==13.4.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1112,7 +1112,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.27.0
+habluetooth==3.32.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.94.0
