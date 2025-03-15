@@ -72,8 +72,14 @@ async def test_rpc_button(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (DeviceConnectionError, "Call for Test name Reboot connection error"),
-        (RpcCallError(999), "Call for Test name Reboot request error"),
+        (
+            DeviceConnectionError,
+            "Device communication error occurred while calling the trigger_reboot method for device Test name",
+        ),
+        (
+            RpcCallError(999),
+            "RPC call error occurred while calling the trigger_reboot method for device Test name",
+        ),
     ],
 )
 async def test_rpc_button_exc(
@@ -204,8 +210,14 @@ async def test_rpc_blu_trv_button(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (DeviceConnectionError, "Call RPC for TRV-Name Calibrate connection error"),
-        (RpcCallError(999), "Call RPC for TRV-Name Calibrate request error"),
+        (
+            DeviceConnectionError,
+            "Device communication error occurred while calling the trigger_blu_trv_calibration method for device Test name",
+        ),
+        (
+            RpcCallError(999),
+            "RPC call error occurred while calling the trigger_blu_trv_calibration method for device Test name",
+        ),
     ],
 )
 async def test_rpc_blu_trv_button_exc(
