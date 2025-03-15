@@ -372,9 +372,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_VOLUME_SET,
         vol.All(
             cv.make_entity_service_schema(
-                {
-                    vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float,
-                }
+                {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float}
             ),
             _rename_keys(volume=ATTR_MEDIA_VOLUME_LEVEL),
         ),
