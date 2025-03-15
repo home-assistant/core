@@ -28,6 +28,50 @@
         }
       }
     },
+    "send_via_target": {
+      "name": "Send a notification via {target_name}",
+      "description": "Sends a notification message using the {target_name} integration.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "Message body of the notification."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Title for your notification."
+        },
+        "target": {
+          "name": "Target",
+          "description": "The recipient of the notification."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Custom data to be sent with the notification."
+        }
+      }
+    },
+    "send_with_service": {
+      "name": "Send a notification with {service_name}",
+      "description": "Sends a notification message using the {service_name} service.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "Message body of the notification."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Title for your notification."
+        },
+        "target": {
+          "name": "Target",
+          "description": "The recipient of the notification."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Custom data to be sent with the notification."
+        }
+      }
+    },
     "send_message": {
       "name": "Send a notification message",
       "description": "Sends a notification message.",
