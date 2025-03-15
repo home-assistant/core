@@ -403,5 +403,5 @@ class NordpoolDailyAveragePriceSensor(NordpoolBaseEntity, SensorEntity):
         data = self.coordinator.get_data_current_day()
         value = data.area_average.get(self.area)
         if isinstance(value, (int, float)):
-            return value / 1000
+            return value / 1000 if value != 0 else 0
         return None
