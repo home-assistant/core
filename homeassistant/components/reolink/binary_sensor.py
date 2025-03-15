@@ -52,7 +52,7 @@ class ReolinkSmartAIBinarySensorEntityDescription(
 ):
     """A class that describes Smart AI binary sensor entities."""
 
-    ai_type: str = ""
+    smart_type: str
     value: Callable[[Host, int, int], bool]
     supported: Callable[[Host, int, int], bool] = lambda api, ch, loc: True
 
@@ -139,8 +139,8 @@ BINARY_SENSORS = (
 
 BINARY_SMART_AI_SENSORS = (
     ReolinkSmartAIBinarySensorEntityDescription(
-        key="crossline",
-        ai_type="people",
+        key="crossline_person",
+        smart_type="crossline",
         cmd_id=33,
         translation_key="crossline_person",
         value=lambda api, ch, loc: (
@@ -152,8 +152,8 @@ BINARY_SMART_AI_SENSORS = (
         ),
     ),
     ReolinkSmartAIBinarySensorEntityDescription(
-        key="crossline",
-        ai_type="vehicle",
+        key="crossline_vehicle",
+        smart_type="crossline",
         cmd_id=33,
         translation_key="crossline_vehicle",
         value=lambda api, ch, loc: (
@@ -165,8 +165,8 @@ BINARY_SMART_AI_SENSORS = (
         ),
     ),
     ReolinkSmartAIBinarySensorEntityDescription(
-        key="crossline",
-        ai_type="dog_cat",
+        key="crossline_dog_cat",
+        smart_type="crossline",
         cmd_id=33,
         translation_key="crossline_dog_cat",
         value=lambda api, ch, loc: (
@@ -178,8 +178,8 @@ BINARY_SMART_AI_SENSORS = (
         ),
     ),
     ReolinkSmartAIBinarySensorEntityDescription(
-        key="intrusion",
-        ai_type="people",
+        key="intrusion_person",
+        smart_type="intrusion",
         cmd_id=33,
         translation_key="intrusion_person",
         value=lambda api, ch, loc: (
@@ -191,8 +191,8 @@ BINARY_SMART_AI_SENSORS = (
         ),
     ),
     ReolinkSmartAIBinarySensorEntityDescription(
-        key="intrusion",
-        ai_type="vehicle",
+        key="intrusion_vehicle",
+        smart_type="intrusion",
         cmd_id=33,
         translation_key="intrusion_vehicle",
         value=lambda api, ch, loc: (
@@ -204,8 +204,8 @@ BINARY_SMART_AI_SENSORS = (
         ),
     ),
     ReolinkSmartAIBinarySensorEntityDescription(
-        key="intrusion",
-        ai_type="dog_cat",
+        key="intrusion_dog_cat",
+        smart_type="intrusion",
         cmd_id=33,
         translation_key="intrusion_dog_cat",
         value=lambda api, ch, loc: (
@@ -217,8 +217,8 @@ BINARY_SMART_AI_SENSORS = (
         ),
     ),
     ReolinkSmartAIBinarySensorEntityDescription(
-        key="loitering",
-        ai_type="people",
+        key="linger_person",
+        smart_type="loitering",
         cmd_id=33,
         translation_key="linger_person",
         value=lambda api, ch, loc: (
@@ -230,8 +230,8 @@ BINARY_SMART_AI_SENSORS = (
         ),
     ),
     ReolinkSmartAIBinarySensorEntityDescription(
-        key="loitering",
-        ai_type="vehicle",
+        key="linger_vehicle",
+        smart_type="loitering",
         cmd_id=33,
         translation_key="linger_vehicle",
         value=lambda api, ch, loc: (
@@ -243,8 +243,8 @@ BINARY_SMART_AI_SENSORS = (
         ),
     ),
     ReolinkSmartAIBinarySensorEntityDescription(
-        key="loitering",
-        ai_type="dog_cat",
+        key="linger_dog_cat",
+        smart_type="loitering",
         cmd_id=33,
         translation_key="linger_dog_cat",
         value=lambda api, ch, loc: (
@@ -256,14 +256,16 @@ BINARY_SMART_AI_SENSORS = (
         ),
     ),
     ReolinkSmartAIBinarySensorEntityDescription(
-        key="legacy",
+        key="forgotten_item",
+        smart_type="legacy",
         cmd_id=33,
         translation_key="forgotten_item",
         value=lambda api, ch, loc: (api.baichuan.smart_ai_state(ch, "legacy", loc)),
         supported=lambda api, ch, loc: api.supported(ch, "ai_forgotten_item"),
     ),
     ReolinkSmartAIBinarySensorEntityDescription(
-        key="loss",
+        key="taken_item",
+        smart_type="loss",
         cmd_id=33,
         translation_key="taken_item",
         value=lambda api, ch, loc: (api.baichuan.smart_ai_state(ch, "loss", loc)),
@@ -379,16 +381,16 @@ class ReolinkSmartAIBinarySensorEntity(
         self.entity_description = entity_description
         super().__init__(reolink_data, channel)
         unique_index = self._host.api.baichuan.smart_ai_index(
-            channel, self.entity_description.key, location
+            channel, entity_description.smart_type, location
         )
         self._attr_unique_id = (
-            f"{self._attr_unique_id}_{unique_index}_{self.entity_description.ai_type}"
+            f"{self._attr_unique_id}_{unique_index}"
         )
 
         self._location = location
         self._attr_translation_placeholders = {
             "zone_name": self._host.api.baichuan.smart_ai_name(
-                channel, self.entity_description.key, location
+                channel, entity_description.smart_type, location
             )
         }
 
