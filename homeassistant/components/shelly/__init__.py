@@ -39,6 +39,7 @@ from .const import (
     BLOCK_EXPECTED_SLEEP_PERIOD,
     BLOCK_WRONG_SLEEP_PERIOD,
     CONF_COAP_PORT,
+    CONF_SCRIPT,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -266,6 +267,12 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         runtime_data.platforms = PLATFORMS
         try:
             await device.initialize()
+
+            # Update entry data with script support info
+            data = {**entry.data}
+            data[CONF_SCRIPT] = await device.supports_scripts()
+            hass.config_entries.async_update_entry(entry, data=data)
+
             if not device.firmware_supported:
                 async_create_issue_unsupported_firmware(hass, entry)
                 await device.shutdown()
