@@ -170,6 +170,13 @@
         "on": "[%key:common::state::open%]"
       }
     },
+    "sliding_door": {
+      "name": "Sliding door",
+      "state": {
+        "off": "[%key:common::state::closed%]",
+        "on": "[%key:common::state::open%]"
+      }
+    },
     "gas": {
       "name": "Gas",
       "state": {

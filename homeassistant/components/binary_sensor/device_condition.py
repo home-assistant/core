@@ -165,6 +165,10 @@ ENTITY_CONDITIONS = {
         {CONF_TYPE: CONF_IS_OPEN},
         {CONF_TYPE: CONF_IS_NOT_OPEN},
     ],
+    BinarySensorDeviceClass.SLIDING_DOOR: [
+        {CONF_TYPE: CONF_IS_OPEN},
+        {CONF_TYPE: CONF_IS_NOT_OPEN},
+    ],
     BinarySensorDeviceClass.GAS: [
         {CONF_TYPE: CONF_IS_GAS},
         {CONF_TYPE: CONF_IS_NO_GAS},

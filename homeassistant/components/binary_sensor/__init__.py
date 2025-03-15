@@ -54,6 +54,9 @@ class BinarySensorDeviceClass(StrEnum):
     # On means open, Off means closed
     GARAGE_DOOR = "garage_door"
 
+    # On means open, Off means closed
+    SLIDING_DOOR = "sliding_door"
+
     # On means gas detected, Off means no gas (clear)
     GAS = "gas"
 

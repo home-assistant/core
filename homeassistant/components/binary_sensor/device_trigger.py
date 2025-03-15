@@ -100,6 +100,10 @@ ENTITY_TRIGGERS = {
         {CONF_TYPE: CONF_OPENED},
         {CONF_TYPE: CONF_NOT_OPENED},
     ],
+    BinarySensorDeviceClass.SLIDING_DOOR: [
+        {CONF_TYPE: CONF_OPENED},
+        {CONF_TYPE: CONF_NOT_OPENED},
+    ],
     BinarySensorDeviceClass.GAS: [
         {CONF_TYPE: CONF_GAS},
         {CONF_TYPE: CONF_NO_GAS},
