@@ -21,6 +21,9 @@ HAP-python==4.9.2
 # homeassistant.components.tasmota
 HATasmota==0.10.0
 
+# homeassistant.components.hue_ble
+HueBLE==1.0.6
+
 # homeassistant.components.mastodon
 Mastodon.py==2.0.1
 
