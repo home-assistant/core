@@ -20,6 +20,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import _LOGGER, LINE_TYPES
 from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
 UPTIME_DEVIATION = 60
 
