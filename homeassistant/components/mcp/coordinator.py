@@ -36,7 +36,7 @@ async def mcp_client(url: str) -> AsyncGenerator[ClientSession]:
     so that the coordinator has a single object to manage.
     """
     try:
-        async with sse_client(url=url) as streams, ClientSession(*streams) as session:
+        async with sse_client(url=url, sse_read_timeout=None) as streams, ClientSession(*streams) as session:
             await session.initialize()
             yield session
     except ExceptionGroup as err:
@@ -113,7 +113,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         url = self.config_entry.data[CONF_URL]
         try:
             async with (
-                sse_client(url=url) as streams,
+                sse_client(url=url, sse_read_timeout=None) as streams,
                 ClientSession(*streams) as session,
             ):
                 await session.initialize()
