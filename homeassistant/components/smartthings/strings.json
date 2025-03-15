@@ -36,6 +36,9 @@
       "filter_status": {
         "name": "Filter status"
       },
+      "remote_control": {
+        "name": "Remote control"
+      },
       "valve": {
         "name": "Valve"
       }
