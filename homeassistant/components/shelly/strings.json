@@ -170,6 +170,14 @@
       }
     }
   },
+  "exceptions": {
+    "device_communication_error": {
+      "message": "Device communication error occurred while calling the {method} method for device {device}: {error}"
+    },
+    "rpc_call_error": {
+      "message": "RPC call error occurred while calling the {method} method for device {device}: {error}"
+    }
+  },
   "issues": {
     "device_not_calibrated": {
       "title": "Shelly device {device_name} is not calibrated",

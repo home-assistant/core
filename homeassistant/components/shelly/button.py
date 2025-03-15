@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import LOGGER, SHELLY_GAS_MODELS
+from .const import DOMAIN, LOGGER, SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .utils import get_device_entry_gen, get_rpc_key_ids
 
@@ -199,13 +199,23 @@ class ShellyButton(
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
-                f"Call for {self.name} connection error, "
-                f"method: {self.entity_description.press_action}, error: {err!r}"
+                translation_domain=DOMAIN,
+                translation_key="device_communication_error",
+                translation_placeholders={
+                    "method": self.entity_description.press_action,
+                    "device": self.coordinator.device.name,
+                    "error": repr(err),
+                },
             ) from err
         except RpcCallError as err:
             raise HomeAssistantError(
-                f"Call for {self.name} request error, "
-                f"method: {self.entity_description.press_action}, error: {err!r}"
+                translation_domain=DOMAIN,
+                translation_key="rpc_call_error",
+                translation_placeholders={
+                    "method": self.entity_description.press_action,
+                    "device": self.coordinator.device.name,
+                    "error": repr(err),
+                },
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
@@ -244,19 +254,30 @@ class RpcBluTrvButton(CoordinatorEntity[ShellyRpcCoordinator], ButtonEntity):
 
         if TYPE_CHECKING:
             assert method is not None
+            assert self.name is not None
 
         try:
             await method(self._id)
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
-                f"Call RPC for {self.name} connection error, "
-                f"method: {self.entity_description.press_action}, error: {err!r}"
+                translation_domain=DOMAIN,
+                translation_key="device_communication_error",
+                translation_placeholders={
+                    "method": self.entity_description.press_action,
+                    "device": self.coordinator.device.name,
+                    "error": repr(err),
+                },
             ) from err
         except RpcCallError as err:
             raise HomeAssistantError(
-                f"Call RPC for {self.name} request error, "
-                f"method: {self.entity_description.press_action}, error: {err!r}"
+                translation_domain=DOMAIN,
+                translation_key="rpc_call_error",
+                translation_placeholders={
+                    "method": self.entity_description.press_action,
+                    "device": self.coordinator.device.name,
+                    "error": repr(err),
+                },
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
