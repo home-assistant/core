@@ -16,7 +16,7 @@ ENTRY_CONFIG = {
 }
 
 USER_INPUT = {
-    CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+    CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
 }
 
 USER_INPUT_UNSUPPORTED_DEVICE = {
@@ -73,7 +73,7 @@ WOHAND_SERVICE_INFO_NOT_CONNECTABLE = BluetoothServiceInfoBleak(
     manufacturer_data={89: b"\xfd`0U\x92W"},
     service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x90\xd9"},
     service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
-    address="aa:bb:cc:dd:ee:ff",
+    address="AA:BB:CC:DD:EE:FF",
     rssi=-60,
     source="local",
     advertisement=generate_advertisement_data(
@@ -82,7 +82,7 @@ WOHAND_SERVICE_INFO_NOT_CONNECTABLE = BluetoothServiceInfoBleak(
         service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x90\xd9"},
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
-    device=generate_ble_device("aa:bb:cc:dd:ee:ff", "WoHand"),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoHand"),
     time=0,
     connectable=False,
     tx_power=-127,
@@ -124,14 +124,14 @@ WOHAND_SERVICE_ALT_ADDRESS_INFO = BluetoothServiceInfoBleak(
         service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x90\xd9"},
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
-    device=generate_ble_device("aa:bb:cc:dd:ee:ff", "WoHand"),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoHand"),
     time=0,
     connectable=True,
     tx_power=-127,
 )
 WOCURTAIN_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="WoCurtain",
-    address="aa:bb:cc:dd:ee:ff",
+    address="AA:BB:CC:DD:EE:FF",
     manufacturer_data={89: b"\xc1\xc7'}U\xab"},
     service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"c\xd0Y\x00\x11\x04"},
     service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
@@ -143,7 +143,7 @@ WOCURTAIN_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"c\xd0Y\x00\x11\x04"},
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
-    device=generate_ble_device("aa:bb:cc:dd:ee:ff", "WoCurtain"),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoCurtain"),
     time=0,
     connectable=True,
     tx_power=-127,
@@ -152,7 +152,7 @@ WOCURTAIN_SERVICE_INFO = BluetoothServiceInfoBleak(
 WOSENSORTH_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="WoSensorTH",
     service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
-    address="aa:bb:cc:dd:ee:ff",
+    address="AA:BB:CC:DD:EE:FF",
     manufacturer_data={2409: b"\xda,\x1e\xb1\x86Au\x03\x00\x96\xac"},
     service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"T\x00d\x00\x96\xac"},
     rssi=-60,
@@ -161,7 +161,7 @@ WOSENSORTH_SERVICE_INFO = BluetoothServiceInfoBleak(
         manufacturer_data={2409: b"\xda,\x1e\xb1\x86Au\x03\x00\x96\xac"},
         service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"T\x00d\x00\x96\xac"},
     ),
-    device=generate_ble_device("aa:bb:cc:dd:ee:ff", "WoSensorTH"),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoSensorTH"),
     time=0,
     connectable=False,
     tx_power=-127,
@@ -173,7 +173,7 @@ WOLOCK_SERVICE_INFO = BluetoothServiceInfoBleak(
     manufacturer_data={2409: b"\xf1\t\x9fE\x1a]\xda\x83\x00 "},
     service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"o\x80d"},
     service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
-    address="aa:bb:cc:dd:ee:ff",
+    address="AA:BB:CC:DD:EE:FF",
     rssi=-60,
     source="local",
     advertisement=generate_advertisement_data(
@@ -182,7 +182,7 @@ WOLOCK_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"o\x80d"},
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
-    device=generate_ble_device("aa:bb:cc:dd:ee:ff", "WoLock"),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoLock"),
     time=0,
     connectable=True,
     tx_power=-127,
@@ -191,7 +191,7 @@ WOLOCK_SERVICE_INFO = BluetoothServiceInfoBleak(
 NOT_SWITCHBOT_INFO = BluetoothServiceInfoBleak(
     name="unknown",
     service_uuids=[],
-    address="aa:bb:cc:dd:ee:ff",
+    address="AA:BB:CC:DD:EE:FF",
     manufacturer_data={},
     service_data={},
     rssi=-60,
@@ -200,7 +200,7 @@ NOT_SWITCHBOT_INFO = BluetoothServiceInfoBleak(
         manufacturer_data={},
         service_data={},
     ),
-    device=generate_ble_device("aa:bb:cc:dd:ee:ff", "unknown"),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "unknown"),
     time=0,
     connectable=True,
     tx_power=-127,
@@ -292,5 +292,51 @@ REMOTE_SERVICE_INFO = BluetoothServiceInfoBleak(
     device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Any"),
     time=0,
     connectable=False,
+    tx_power=-127,
+)
+
+
+WOSTRIP_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="WOSTRIP",
+    address="AA:BB:CC:DD:EE:FF",
+    manufacturer_data={
+        2409: b'\x84\xf7\x03\xb3?\xde\x04\xe4"\x0c\x00\x00\x00\x00\x00\x00'
+    },
+    service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"r\x00d"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="WOSTRIP",
+        manufacturer_data={
+            2409: b'\x84\xf7\x03\xb3?\xde\x04\xe4"\x0c\x00\x00\x00\x00\x00\x00'
+        },
+        service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"r\x00d"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WOSTRIP"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+WOLOCKPRO_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="WoLockPro",
+    manufacturer_data={2409: b"\xf7a\x07H\xe6\xe8-\x80\x00d\x00\x08"},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"$\x80d"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="WoLockPro",
+        manufacturer_data={2409: b"\xf7a\x07H\xe6\xe8-\x80\x00d\x00\x08"},
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"$\x80d"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoLockPro"),
+    time=0,
+    connectable=True,
     tx_power=-127,
 )
