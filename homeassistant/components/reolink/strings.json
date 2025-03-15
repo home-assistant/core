@@ -176,36 +176,36 @@
       "face": {
         "name": "Face",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "person": {
         "name": "Person",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "vehicle": {
         "name": "Vehicle",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "pet": {
         "name": "Pet",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "animal": {
         "name": "Animal",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "visitor": {
@@ -214,57 +214,57 @@
       "package": {
         "name": "Package",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "cry": {
         "name": "Baby crying",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "motion_lens_0": {
         "name": "Motion lens 0",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "face_lens_0": {
         "name": "Face lens 0",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "person_lens_0": {
         "name": "Person lens 0",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "vehicle_lens_0": {
         "name": "Vehicle lens 0",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "pet_lens_0": {
         "name": "Pet lens 0",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "animal_lens_0": {
         "name": "Animal lens 0",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "visitor_lens_0": {
@@ -273,50 +273,50 @@
       "package_lens_0": {
         "name": "Package lens 0",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "motion_lens_1": {
         "name": "Motion lens 1",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "face_lens_1": {
         "name": "Face lens 1",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "person_lens_1": {
         "name": "Person lens 1",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "vehicle_lens_1": {
         "name": "Vehicle lens 1",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "pet_lens_1": {
         "name": "Pet lens 1",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "animal_lens_1": {
         "name": "Animal lens 1",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "visitor_lens_1": {
@@ -325,8 +325,8 @@
       "package_lens_1": {
         "name": "Package lens 1",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "sleep": {
@@ -339,78 +339,78 @@
       "crossline_person": {
         "name": "Crossline {zone_name} person",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "crossline_vehicle": {
         "name": "Crossline {zone_name} vehicle",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "crossline_dog_cat": {
         "name": "Crossline {zone_name} animal",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "intrusion_person": {
         "name": "Intrusion {zone_name} person",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "intrusion_vehicle": {
         "name": "Intrusion {zone_name} vehicle",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "intrusion_dog_cat": {
         "name": "Intrusion {zone_name} animal",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "linger_person": {
         "name": "Linger {zone_name} person",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "linger_vehicle": {
         "name": "Linger {zone_name} vehicle",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "linger_dog_cat": {
         "name": "Linger {zone_name} animal",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "forgotten_item": {
         "name": "Item forgotten {zone_name}",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       },
       "taken_item": {
         "name": "Item taken {zone_name}",
         "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+          "off": "[%key:component::binary_sensor::entity_component::occupancy::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::occupancy::state::on%]"
         }
       }
     },
