@@ -47,7 +47,6 @@
       "request": "launch",
       "module": "pytest",
       "console": "integratedTerminal",
-      "justMyCode": false,
       "args": ["-vv", "${file}"]
     },
     {
@@ -83,16 +82,6 @@
           "remoteRoot": "/usr/src/homeassistant"
         }
       ]
-    },
-    {
-      "name": "Home Assistant: Changed tests",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "pytest",
-      "justMyCode": false,
-      "args": [
-        "--picked"
-      ]
-    }    
+    }
   ]
 }
