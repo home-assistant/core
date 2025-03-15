@@ -12,6 +12,11 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    PRESET_BOOST,
+    PRESET_COMFORT,
+    PRESET_ECO,
+    PRESET_NONE,
+    PRESET_SLEEP,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -87,8 +92,28 @@ FAN_OSCILLATION_TO_SWING = {
     value: key for key, value in SWING_TO_FAN_OSCILLATION.items()
 }
 
+PRESET_MODE_TO_HA = {
+    "off": PRESET_NONE,
+    "windFree": "wind_free",
+    "windFreeSleep": "wind_free_sleep",
+    "energySaving": PRESET_ECO,
+    "sleep": PRESET_SLEEP,
+    "speed": PRESET_BOOST,
+    "quiet": "quiet",
+    "smart": "smart",
+    "twoStep": "two_step",
+    "comfort": PRESET_COMFORT,
+    "dlightCool": "dlight_cool",
+    "dryComfort": "dry_comfort",
+    "cubePurify": "cube_purify",
+    "longWind": "long_wind",
+    "motionIndirect": "motion_indirect",
+    "motionDirect": "motion_direct",
+}
+
+HA_PRESET_MODE_TO_SMARTTHINGS = {value: key for key, value in PRESET_MODE_TO_HA.items()}
+
 WIND = "wind"
-WINDFREE = "windFree"
 
 UNIT_MAP = {"C": UnitOfTemperature.CELSIUS, "F": UnitOfTemperature.FAHRENHEIT}
 
@@ -552,12 +577,13 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     def _determine_preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         if self.supports_capability(Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE):
-            supported_modes = self.get_attribute_value(
-                Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
-                Attribute.SUPPORTED_AC_OPTIONAL_MODE,
-            )
-            if supported_modes and WINDFREE in supported_modes:
-                return [WINDFREE]
+            return [
+                PRESET_MODE_TO_HA[mode]
+                for mode in self.get_attribute_value(
+                    Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
+                    Attribute.SUPPORTED_AC_OPTIONAL_MODE,
+                )
+            ]
         return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -565,7 +591,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         await self.execute_device_command(
             Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
             Command.SET_AC_OPTIONAL_MODE,
-            argument=preset_mode,
+            argument=HA_PRESET_MODE_TO_SMARTTHINGS[preset_mode],
         )
 
     def _determine_hvac_modes(self) -> list[HVACMode]:
