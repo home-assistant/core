@@ -386,8 +386,7 @@ async def test_entry_unload_device_not_ready(
     mock_rpc_device: Mock,
 ) -> None:
     """Test entry unload when device is not ready."""
-    entry = await init_integration(hass, gen, sleep_period=1000)
-    assert entry
+    assert (entry := await init_integration(hass, gen, sleep_period=1000))
     assert entry.state is ConfigEntryState.LOADED
 
     assert hass.states.get(entity_id) is None
@@ -408,10 +407,11 @@ async def test_entry_unload_not_connected(
     with patch(
         "homeassistant.components.shelly.coordinator.async_stop_scanner"
     ) as mock_stop_scanner:
-        entry = await init_integration(
-            hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+        assert (
+            entry := await init_integration(
+                hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+            )
         )
-        assert entry
         assert entry.state is ConfigEntryState.LOADED
 
         assert (state := hass.states.get("switch.test_switch_0"))
@@ -438,10 +438,11 @@ async def test_entry_unload_not_connected_but_we_think_we_are(
         "homeassistant.components.shelly.coordinator.async_stop_scanner",
         side_effect=DeviceConnectionError,
     ) as mock_stop_scanner:
-        entry = await init_integration(
-            hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+        assert (
+            entry := await init_integration(
+                hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+            )
         )
-        assert entry
         assert entry.state is ConfigEntryState.LOADED
 
         assert (state := hass.states.get("switch.test_switch_0"))

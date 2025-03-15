@@ -98,8 +98,7 @@ async def test_block_update(
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-fwupdate"
 
 
@@ -164,8 +163,7 @@ async def test_block_beta_update(
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-fwupdate_beta"
 
 
@@ -389,8 +387,7 @@ async def test_rpc_update(
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-sys-fwupdate"
 
 
@@ -441,8 +438,7 @@ async def test_rpc_sleeping_update(
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == UpdateEntityFeature(0)
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-sys-fwupdate"
 
 
@@ -669,8 +665,7 @@ async def test_rpc_beta_update(
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-sys-fwupdate_beta"
 
 

@@ -64,8 +64,7 @@ async def test_rpc_device_virtual_enum(
         "option 3",
     ]
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-enum:203-enum"
 
     monkeypatch.setitem(mock_rpc_device.status["enum:203"], "value", "option 2")

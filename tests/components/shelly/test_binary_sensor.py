@@ -48,8 +48,7 @@ async def test_block_binary_sensor(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-relay_0-overpower"
 
 
@@ -74,8 +73,7 @@ async def test_block_binary_sensor_extra_state_attr(
     assert state.state == STATE_OFF
     assert state.attributes.get("detected") == "none"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-sensor_0-gas"
 
 
@@ -100,8 +98,7 @@ async def test_block_rest_binary_sensor(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-cloud"
 
 
@@ -134,8 +131,7 @@ async def test_block_rest_binary_sensor_connected_battery_devices(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-cloud"
 
 
@@ -165,8 +161,7 @@ async def test_block_sleeping_binary_sensor(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-sensor_0-motion"
 
 
@@ -258,8 +253,7 @@ async def test_rpc_binary_sensor(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-cover:0-overpower"
 
 
@@ -318,8 +312,9 @@ async def test_rpc_sleeping_binary_sensor(
     assert (state := hass.states.get("binary_sensor.test_name_external_power"))
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get("binary_sensor.test_name_external_power")
-    assert entry
+    assert (
+        entry := entity_registry.async_get("binary_sensor.test_name_external_power")
+    )
     assert entry.unique_id == "123456789ABC-devicepower:0-external_power"
 
 
@@ -430,8 +425,7 @@ async def test_rpc_device_virtual_binary_sensor(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-boolean:203-boolean"
 
     monkeypatch.setitem(mock_rpc_device.status["boolean:203"], "value", False)

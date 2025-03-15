@@ -74,8 +74,7 @@ async def test_block_sensor(
     assert (state := hass.states.get(entity_id))
     assert state.state == "60.1"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-relay_0-power"
 
 
@@ -92,8 +91,7 @@ async def test_energy_sensor(
     # suggested unit is KWh
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-relay_0-energy"
 
 
@@ -117,8 +115,7 @@ async def test_power_factory_unit_migration(
     assert state.state == "98.0"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-emeter_0-powerFactor"
 
 
@@ -133,8 +130,7 @@ async def test_power_factory_without_unit_migration(
     assert state.state == "0.98"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-emeter_0-powerFactor"
 
 
@@ -187,8 +183,7 @@ async def test_block_sleeping_sensor(
     assert (state := hass.states.get(entity_id))
     assert state.state == "23.4"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-sensor_0-temp"
 
 
@@ -282,8 +277,7 @@ async def test_block_sensor_error(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-device_0-battery"
 
 
@@ -432,8 +426,7 @@ async def test_rpc_illuminance_sensor(
     assert (state := hass.states.get(entity_id))
     assert state.state == "345"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-illuminance:0-illuminance"
 
 
@@ -458,8 +451,7 @@ async def test_rpc_sensor_error(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-voltmeter:100-voltmeter"
 
 
@@ -483,8 +475,7 @@ async def test_rpc_polling_sensor(
     assert (state := hass.states.get(entity_id))
     assert state.state == "-70"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-wifi-rssi"
 
 
@@ -615,29 +606,29 @@ async def test_rpc_em1_sensors(
     assert (state := hass.states.get("sensor.test_name_em0_power"))
     assert state.state == "85.3"
 
-    entry = entity_registry.async_get("sensor.test_name_em0_power")
-    assert entry
+    assert (entry := entity_registry.async_get("sensor.test_name_em0_power"))
     assert entry.unique_id == "123456789ABC-em1:0-power_em1"
 
     assert (state := hass.states.get("sensor.test_name_em1_power"))
     assert state.state == "123.3"
 
-    entry = entity_registry.async_get("sensor.test_name_em1_power")
-    assert entry
+    assert (entry := entity_registry.async_get("sensor.test_name_em1_power"))
     assert entry.unique_id == "123456789ABC-em1:1-power_em1"
 
     assert (state := hass.states.get("sensor.test_name_em0_total_active_energy"))
     assert state.state == "123.4564"
 
-    entry = entity_registry.async_get("sensor.test_name_em0_total_active_energy")
-    assert entry
+    assert (
+        entry := entity_registry.async_get("sensor.test_name_em0_total_active_energy")
+    )
     assert entry.unique_id == "123456789ABC-em1data:0-total_act_energy"
 
     assert (state := hass.states.get("sensor.test_name_em1_total_active_energy"))
     assert state.state == "987.6543"
 
-    entry = entity_registry.async_get("sensor.test_name_em1_total_active_energy")
-    assert entry
+    assert (
+        entry := entity_registry.async_get("sensor.test_name_em1_total_active_energy")
+    )
     assert entry.unique_id == "123456789ABC-em1data:1-total_act_energy"
 
 
@@ -677,8 +668,7 @@ async def test_rpc_sleeping_update_entity_service(
     assert (state := hass.states.get(entity_id))
     assert state.state == "22.9"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-temperature:0-temperature_0"
 
     assert (
@@ -726,8 +716,7 @@ async def test_block_sleeping_update_entity_service(
     assert (state := hass.states.get(entity_id))
     assert state.state == "22.1"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-sensor_0-temp"
 
     assert (
@@ -763,8 +752,7 @@ async def test_rpc_analog_input_sensors(
     assert (state := hass.states.get(entity_id))
     assert state.state == "89"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-input:1-analoginput"
 
     entity_id = f"{SENSOR_DOMAIN}.test_name_input_1_analog_value"
@@ -772,8 +760,7 @@ async def test_rpc_analog_input_sensors(
     assert state.state == "8.9"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-input:1-analoginput_xpercent"
 
 
@@ -844,8 +831,7 @@ async def test_rpc_pulse_counter_sensors(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "pulse"
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-input:2-pulse_counter"
 
     entity_id = f"{SENSOR_DOMAIN}.gas_counter_value"
@@ -853,8 +839,7 @@ async def test_rpc_pulse_counter_sensors(
     assert state.state == "561.74"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-input:2-counter_value"
 
 
@@ -925,8 +910,7 @@ async def test_rpc_pulse_counter_frequency_sensors(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfFrequency.HERTZ
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-input:2-counter_frequency"
 
     entity_id = f"{SENSOR_DOMAIN}.gas_pulse_counter_frequency_value"
@@ -934,8 +918,7 @@ async def test_rpc_pulse_counter_frequency_sensors(
     assert state.state == "6.11"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-input:2-counter_frequency_value"
 
 
@@ -995,8 +978,7 @@ async def test_rpc_device_virtual_text_sensor(
     assert (state := hass.states.get(entity_id))
     assert state.state == "lorem ipsum"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-text:203-text"
 
     monkeypatch.setitem(mock_rpc_device.status["text:203"], "value", "dolor sit amet")
@@ -1099,8 +1081,7 @@ async def test_rpc_device_virtual_number_sensor(
     assert state.state == "34.5"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-number:203-number"
 
     monkeypatch.setitem(mock_rpc_device.status["number:203"], "value", 56.7)
@@ -1213,8 +1194,7 @@ async def test_rpc_device_virtual_enum_sensor(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENUM
     assert state.attributes.get(ATTR_OPTIONS) == ["Title 1", "two", "three"]
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-enum:203-enum"
 
     monkeypatch.setitem(mock_rpc_device.status["enum:203"], "value", "two")
@@ -1321,8 +1301,7 @@ async def test_rpc_rgbw_sensors(
     assert state.state == "12.2"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{light_type}:0-power_{light_type}"
 
     entity_id = f"sensor.test_name_{light_type}_light_0_energy"
@@ -1331,8 +1310,7 @@ async def test_rpc_rgbw_sensors(
     assert state.state == "0.045141"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{light_type}:0-energy_{light_type}"
 
     entity_id = f"sensor.test_name_{light_type}_light_0_current"
@@ -1343,8 +1321,7 @@ async def test_rpc_rgbw_sensors(
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfElectricCurrent.AMPERE
     )
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{light_type}:0-current_{light_type}"
 
     entity_id = f"sensor.test_name_{light_type}_light_0_voltage"
@@ -1355,8 +1332,7 @@ async def test_rpc_rgbw_sensors(
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfElectricPotential.VOLT
     )
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{light_type}:0-voltage_{light_type}"
 
     entity_id = f"sensor.test_name_{light_type}_light_0_device_temperature"
@@ -1365,8 +1341,7 @@ async def test_rpc_rgbw_sensors(
     assert state.state == "54.3"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{light_type}:0-temperature_{light_type}"
 
 
@@ -1419,8 +1394,7 @@ async def test_rpc_voltmeter_value(
     assert state.state == "12.34"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "ppm"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-voltmeter:100-voltmeter_value"
 
 

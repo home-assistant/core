@@ -50,8 +50,7 @@ async def test_rpc_device_virtual_text(
     assert (state := hass.states.get(entity_id))
     assert state.state == "lorem ipsum"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-text:203-text"
 
     monkeypatch.setitem(mock_rpc_device.status["text:203"], "value", "dolor sit amet")

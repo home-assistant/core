@@ -25,8 +25,7 @@ async def test_block_button(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC_reboot"
 
     await hass.services.async_call(
@@ -50,8 +49,7 @@ async def test_rpc_button(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC_reboot"
 
     await hass.services.async_call(

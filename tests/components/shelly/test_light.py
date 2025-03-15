@@ -130,8 +130,7 @@ async def test_block_device_rgbw_bulb(
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 3500
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-light_0"
 
 
@@ -236,8 +235,7 @@ async def test_block_device_rgb_bulb(
     assert state.attributes[ATTR_EFFECT] == "Off"
     assert "Effect 'Breath' not supported" in caplog.text
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-light_1"
 
 
@@ -301,8 +299,7 @@ async def test_block_device_white_bulb(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 33
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-light_1"
 
 
@@ -366,8 +363,7 @@ async def test_block_device_support_transition(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-light_1"
 
 
@@ -431,8 +427,7 @@ async def test_block_device_relay_app_type_light(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-relay_1"
 
 
@@ -481,8 +476,7 @@ async def test_rpc_device_switch_type_lights_mode(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-switch:0"
 
 
@@ -587,8 +581,7 @@ async def test_rpc_light(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-light:0"
 
 
@@ -632,8 +625,7 @@ async def test_rpc_device_rgb_profile(
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGB
     assert state.attributes[ATTR_RGB_COLOR] == (70, 80, 90)
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-rgb:0"
 
 
@@ -680,8 +672,7 @@ async def test_rpc_device_rgbw_profile(
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGBW
     assert state.attributes[ATTR_RGBW_COLOR] == (72, 82, 92, 128)
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-rgbw:0"
 
 
@@ -730,8 +721,7 @@ async def test_rpc_rgbw_device_light_mode_remove_others(
         assert (state := hass.states.get(entity_id))
         assert state.state == STATE_ON
 
-        entry = entity_registry.async_get(entity_id)
-        assert entry
+        assert (entry := entity_registry.async_get(entity_id))
         assert entry.unique_id == f"123456789ABC-light:{i}"
 
     # verify RGB & RGBW entities removed
@@ -796,8 +786,7 @@ async def test_rpc_rgbw_device_rgb_w_modes_remove_others(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{active_mode}:0"
 
     # verify light & RGB/W entities removed
@@ -825,8 +814,7 @@ async def test_rpc_cct_light(
 
     await init_integration(hass, 2)
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-cct:0"
 
     # Turn off

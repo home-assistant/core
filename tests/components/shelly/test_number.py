@@ -63,8 +63,7 @@ async def test_block_number_update(
     assert (state := hass.states.get(entity_id))
     assert state.state == "30"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-device_0-valvePos"
 
 
@@ -316,8 +315,7 @@ async def test_rpc_device_virtual_number(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
     assert state.attributes.get(ATTR_MODE) is mode
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-number:203-number"
 
     monkeypatch.setitem(mock_rpc_device.status["number:203"], "value", 78.9)

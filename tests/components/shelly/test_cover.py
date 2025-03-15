@@ -77,8 +77,7 @@ async def test_block_device_services(
     assert (state := hass.states.get(entity_id))
     assert state.state == CoverState.CLOSED
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-roller_0"
 
 
@@ -168,8 +167,7 @@ async def test_rpc_device_services(
     assert (state := hass.states.get(entity_id))
     assert state.state == CoverState.CLOSED
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-cover:0"
 
 
@@ -237,8 +235,7 @@ async def test_rpc_cover_tilt(
     assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-cover:0"
 
     await hass.services.async_call(

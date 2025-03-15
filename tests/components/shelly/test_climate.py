@@ -81,8 +81,7 @@ async def test_climate_hvac_mode(
     # Test initial hvac mode - off
     assert (state := hass.states.get(ENTITY_ID)) == snapshot(name=f"{ENTITY_ID}-state")
 
-    entry = entity_registry.async_get(ENTITY_ID)
-    assert entry == snapshot(name=f"{ENTITY_ID}-entry")
+    assert entity_registry.async_get(ENTITY_ID) == snapshot(name=f"{ENTITY_ID}-entry")
 
     # Test set hvac mode heat
     await hass.services.async_call(
@@ -617,8 +616,7 @@ async def test_rpc_climate_hvac_mode(
 
     assert (state := hass.states.get(entity_id)) == snapshot(name=f"{entity_id}-state")
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry == snapshot(name=f"{entity_id}-entry")
+    assert entity_registry.async_get(entity_id) == snapshot(name=f"{entity_id}-entry")
 
     monkeypatch.setitem(mock_rpc_device.status["thermostat:0"], "output", False)
     mock_rpc_device.mock_update()
@@ -664,8 +662,7 @@ async def test_rpc_climate_without_humidity(
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
     assert ATTR_CURRENT_HUMIDITY not in state.attributes
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-thermostat:0"
 
 
@@ -765,8 +762,7 @@ async def test_wall_display_thermostat_mode_external_actuator(
     assert state.state == HVACMode.HEAT
     assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 1
 
-    entry = entity_registry.async_get(climate_entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(climate_entity_id))
     assert entry.unique_id == "123456789ABC-thermostat:0"
 
 
@@ -786,8 +782,7 @@ async def test_blu_trv_climate_set_temperature(
 
     assert (state := hass.states.get(entity_id)) == snapshot(name=f"{entity_id}-state")
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry == snapshot(name=f"{entity_id}-entry")
+    assert entity_registry.async_get(entity_id) == snapshot(name=f"{entity_id}-entry")
 
     monkeypatch.setitem(
         mock_blu_trv.status[f"{BLU_TRV_IDENTIFIER}:200"], "target_C", 28

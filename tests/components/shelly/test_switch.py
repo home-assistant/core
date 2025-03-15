@@ -217,8 +217,7 @@ async def test_block_device_unique_ids(
         mock_block_device.mock_online()
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    entry = entity_registry.async_get(entity)
-    assert entry
+    assert (entry := entity_registry.async_get(entity))
     assert entry.unique_id == unique_id
 
 
@@ -363,8 +362,7 @@ async def test_rpc_device_unique_ids(
     monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
-    entry = entity_registry.async_get("switch.test_switch_0")
-    assert entry
+    assert (entry := entity_registry.async_get("switch.test_switch_0"))
     assert entry.unique_id == "123456789ABC-switch:0"
 
 
@@ -489,8 +487,7 @@ async def test_wall_display_relay_mode(
     assert state.state == STATE_ON
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    entry = entity_registry.async_get(switch_entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(switch_entity_id))
     assert entry.unique_id == "123456789ABC-switch:0"
 
 
@@ -526,8 +523,7 @@ async def test_rpc_device_virtual_switch(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-boolean:200-boolean"
 
     monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", False)
@@ -661,8 +657,7 @@ async def test_rpc_device_script_switch(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{key}-script"
 
     monkeypatch.setitem(mock_rpc_device.status[key], "running", False)

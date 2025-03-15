@@ -25,8 +25,7 @@ async def test_block_device_gas_valve(
     await init_integration(hass, 1, MODEL_GAS)
     entity_id = "valve.test_name_valve"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
+    assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-valve_0-valve"
 
     assert (state := hass.states.get(entity_id))
