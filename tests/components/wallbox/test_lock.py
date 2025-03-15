@@ -1,7 +1,8 @@
 """Test Wallbox Lock component."""
 
+from unittest.mock import Mock, patch
+
 import pytest
-import requests_mock
 
 from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.components.wallbox.const import CHARGER_LOCKED_UNLOCKED_KEY
@@ -28,18 +29,20 @@ async def test_wallbox_lock_class(hass: HomeAssistant, entry: MockConfigEntry) -
     assert state
     assert state.state == "unlocked"
 
-    with requests_mock.Mocker() as mock_request:
-        mock_request.get(
-            "https://user-api.wall-box.com/users/signin",
-            json=authorisation_response,
-            status_code=200,
-        )
-        mock_request.put(
-            "https://api.wall-box.com/v2/charger/12345",
-            json={CHARGER_LOCKED_UNLOCKED_KEY: False},
-            status_code=200,
-        )
-
+    with (
+        patch(
+            "wallbox.Wallbox.authenticate",
+            new=Mock(return_value=authorisation_response),
+        ),
+        patch(
+            "wallbox.Wallbox.lockCharger",
+            new=Mock(return_value={CHARGER_LOCKED_UNLOCKED_KEY: False}),
+        ),
+        patch(
+            "wallbox.Wallbox.unlockCharger",
+            new=Mock(return_value={CHARGER_LOCKED_UNLOCKED_KEY: False}),
+        ),
+    ):
         await hass.services.async_call(
             "lock",
             SERVICE_LOCK,
@@ -66,36 +69,49 @@ async def test_wallbox_lock_class_connection_error(
 
     await setup_integration(hass, entry)
 
-    with requests_mock.Mocker() as mock_request:
-        mock_request.get(
-            "https://user-api.wall-box.com/users/signin",
-            json=authorisation_response,
-            status_code=200,
-        )
-        mock_request.put(
-            "https://api.wall-box.com/v2/charger/12345",
-            json={CHARGER_LOCKED_UNLOCKED_KEY: False},
-            status_code=404,
+    with (
+        patch(
+            "wallbox.Wallbox.authenticate",
+            new=Mock(return_value=authorisation_response),
+        ),
+        patch(
+            "wallbox.Wallbox.lockCharger",
+            new=Mock(side_effect=ConnectionError),
+        ),
+        pytest.raises(ConnectionError),
+    ):
+        await hass.services.async_call(
+            "lock",
+            SERVICE_LOCK,
+            {
+                ATTR_ENTITY_ID: MOCK_LOCK_ENTITY_ID,
+            },
+            blocking=True,
         )
 
-        with pytest.raises(ConnectionError):
-            await hass.services.async_call(
-                "lock",
-                SERVICE_LOCK,
-                {
-                    ATTR_ENTITY_ID: MOCK_LOCK_ENTITY_ID,
-                },
-                blocking=True,
-            )
-        with pytest.raises(ConnectionError):
-            await hass.services.async_call(
-                "lock",
-                SERVICE_UNLOCK,
-                {
-                    ATTR_ENTITY_ID: MOCK_LOCK_ENTITY_ID,
-                },
-                blocking=True,
-            )
+    with (
+        patch(
+            "wallbox.Wallbox.authenticate",
+            new=Mock(return_value=authorisation_response),
+        ),
+        patch(
+            "wallbox.Wallbox.lockCharger",
+            new=Mock(side_effect=ConnectionError),
+        ),
+        patch(
+            "wallbox.Wallbox.unlockCharger",
+            new=Mock(side_effect=ConnectionError),
+        ),
+        pytest.raises(ConnectionError),
+    ):
+        await hass.services.async_call(
+            "lock",
+            SERVICE_UNLOCK,
+            {
+                ATTR_ENTITY_ID: MOCK_LOCK_ENTITY_ID,
+            },
+            blocking=True,
+        )
 
 
 async def test_wallbox_lock_class_authentication_error(
