@@ -18,6 +18,7 @@ from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import AddonError
 from homeassistant.components.mqtt.config_flow import PWD_NOT_CHANGED
+from homeassistant.components.mqtt.util import learn_more_url
 from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -33,8 +34,10 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .common import (
     MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
+    MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
     MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
-    MOCK_SUBENTRY_DATA_NOTIFY_NO_NAME,
+    MOCK_SENSOR_SUBENTRY_DATA_SINGLE,
+    MOCK_SENSOR_SUBENTRY_DATA_SINGLE_STATE_CLASS,
 )
 
 from tests.common import MockConfigEntry, MockMqttReasonCode
@@ -2613,49 +2616,134 @@ async def test_migrate_of_incompatible_config_entry(
     (
         "config_subentries_data",
         "mock_entity_user_input",
+        "mock_entity_details_user_input",
+        "mock_entity_details_failed_user_input",
         "mock_mqtt_user_input",
         "mock_failed_mqtt_user_input",
-        "mock_failed_mqtt_user_input_errors",
         "entity_name",
     ),
     [
         (
             MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
             {"name": "Milkman alert"},
+            None,
+            None,
             {
                 "command_topic": "test-topic",
-                "command_template": "{{ value_json.value }}",
+                "command_template": "{{ value }}",
                 "qos": 0,
                 "retain": False,
             },
-            {"command_topic": "test-topic#invalid"},
-            {"command_topic": "invalid_publish_topic"},
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+            ),
             "Milk notifier Milkman alert",
         ),
         (
-            MOCK_SUBENTRY_DATA_NOTIFY_NO_NAME,
+            MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
             {},
+            None,
+            None,
             {
                 "command_topic": "test-topic",
-                "command_template": "{{ value_json.value }}",
+                "command_template": "{{ value }}",
                 "qos": 0,
                 "retain": False,
             },
-            {"command_topic": "test-topic#invalid"},
-            {"command_topic": "invalid_publish_topic"},
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+            ),
             "Milk notifier",
         ),
+        (
+            MOCK_SENSOR_SUBENTRY_DATA_SINGLE,
+            {"name": "Energy"},
+            {"device_class": "enum", "options": ["low", "medium", "high"]},
+            (
+                (
+                    {"device_class": "energy", "options": ["less", "more"]},
+                    {"options": "options_device_class_enum"},
+                ),
+                (
+                    {
+                        "device_class": "enum",
+                        "state_class": "measurement",
+                        "options": ["less", "more"],
+                    },
+                    {"options": "options_not_allowed_with_state_class_or_uom"},
+                ),
+                (
+                    {
+                        "device_class": "energy",
+                        "unit_of_measurement": "ppm",
+                    },
+                    {"unit_of_measurement": "invalid_uom"},
+                ),
+            ),
+            {
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "qos": 1,
+            },
+            (
+                (
+                    {"state_topic": "test-topic#invalid"},
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Test sensor Energy",
+        ),
+        (
+            MOCK_SENSOR_SUBENTRY_DATA_SINGLE_STATE_CLASS,
+            {"name": "Energy"},
+            {
+                "state_class": "measurement",
+                # An empty options list should be reset. When all options are removed,
+                # an empty list is returned in the user_input
+                "options": [],
+            },
+            (),
+            {
+                "state_topic": "test-topic",
+            },
+            (
+                (
+                    {
+                        "state_topic": "test-topic",
+                        "last_reset_value_template": "{{ json_value.value }}",
+                    },
+                    {
+                        "last_reset_value_template": "last_reset_not_with_state_class_total"
+                    },
+                ),
+            ),
+            "Test sensor Energy",
+        ),
     ],
-    ids=["notify_with_entity_name", "notify_no_entity_name"],
+    ids=[
+        "notify_with_entity_name",
+        "notify_no_entity_name",
+        "sensor_options",
+        "sensor_total",
+    ],
 )
 async def test_subentry_configflow(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     config_subentries_data: dict[str, Any],
     mock_entity_user_input: dict[str, Any],
+    mock_entity_details_user_input: dict[str, Any],
+    mock_entity_details_failed_user_input: tuple[
+        tuple[dict[str, Any], dict[str, str]],
+    ],
     mock_mqtt_user_input: dict[str, Any],
-    mock_failed_mqtt_user_input: dict[str, Any],
-    mock_failed_mqtt_user_input_errors: dict[str, Any],
+    mock_failed_mqtt_user_input: tuple[tuple[dict[str, Any], dict[str, str]],],
     entity_name: str,
 ) -> None:
     """Test the subentry ConfigFlow."""
@@ -2723,23 +2811,55 @@ async def test_subentry_configflow(
         | mock_entity_user_input,
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "mqtt_platform_config"
     assert result["errors"] == {}
     assert result["description_placeholders"] == {
-        "mqtt_device": "Milk notifier",
-        "platform": "notify",
+        "mqtt_device": device_name,
+        "platform": component["platform"],
         "entity": entity_name,
+        "url": learn_more_url(component["platform"]),
     }
 
-    # Process entity platform config flow
+    # Process extra step if the platform supports it
+    if mock_entity_details_user_input is not None:
+        # Extra entity details flow step
+        assert result["step_id"] == "entity_platform_config"
 
-    # Test an invalid mqtt user_input case
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        user_input=mock_failed_mqtt_user_input,
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == mock_failed_mqtt_user_input_errors
+        # First test validators if set of test
+        for failed_user_input, failed_errors in mock_entity_details_failed_user_input:
+            # Test an invalid entity details user input case
+            result = await hass.config_entries.subentries.async_configure(
+                result["flow_id"],
+                user_input=failed_user_input,
+            )
+            assert result["type"] is FlowResultType.FORM
+            assert result["errors"] == failed_errors
+
+        # Now try again with valid data
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input=mock_entity_details_user_input,
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {}
+        assert result["description_placeholders"] == {
+            "mqtt_device": device_name,
+            "platform": component["platform"],
+            "entity": entity_name,
+            "url": learn_more_url(component["platform"]),
+        }
+    else:
+        # No details form step
+        assert result["step_id"] == "mqtt_platform_config"
+
+    # Process mqtt platform config flow
+    # Test an invalid mqtt user input case
+    for failed_user_input, failed_errors in mock_failed_mqtt_user_input:
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input=failed_user_input,
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == failed_errors
 
     # Try again with a valid configuration
     result = await hass.config_entries.subentries.async_configure(
@@ -2799,8 +2919,12 @@ async def test_subentry_reconfigure_remove_entity(
     assert len(components) == 2
     object_list = list(components)
     component_list = list(components.values())
-    entity_name_0 = f"{device.name} {component_list[0]['name']}"
-    entity_name_1 = f"{device.name} {component_list[1]['name']}"
+    entity_name_0 = (
+        f"{device.name} {component_list[0]['name']} ({component_list[0]['platform']})"
+    )
+    entity_name_1 = (
+        f"{device.name} {component_list[1]['name']} ({component_list[1]['platform']})"
+    )
 
     for key, component in components.items():
         unique_entity_id = f"{subentry_id}_{key}"
@@ -2920,8 +3044,12 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
     assert len(components) == 2
     object_list = list(components)
     component_list = list(components.values())
-    entity_name_0 = f"{device.name} {component_list[0]['name']}"
-    entity_name_1 = f"{device.name} {component_list[1]['name']}"
+    entity_name_0 = (
+        f"{device.name} {component_list[0]['name']} ({component_list[0]['platform']})"
+    )
+    entity_name_1 = (
+        f"{device.name} {component_list[1]['name']} ({component_list[1]['platform']})"
+    )
 
     for key in components:
         unique_entity_id = f"{subentry_id}_{key}"
