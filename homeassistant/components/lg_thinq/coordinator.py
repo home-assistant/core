@@ -95,6 +95,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.api.fetch_data()
         except ThinQAPIException as e:
+            self.api.update_status(None)
             raise UpdateFailed(e) from e
 
     def refresh_status(self) -> None:
