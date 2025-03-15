@@ -56,8 +56,7 @@ async def test_rpc_device_virtual_enum(
 
     await init_integration(hass, 3)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == expected_state
     assert state.attributes.get(ATTR_OPTIONS) == [
         "Title 1",
@@ -72,8 +71,7 @@ async def test_rpc_device_virtual_enum(
     monkeypatch.setitem(mock_rpc_device.status["enum:203"], "value", "option 2")
     mock_rpc_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "option 2"
 
     monkeypatch.setitem(mock_rpc_device.status["enum:203"], "value", "option 1")
@@ -87,8 +85,7 @@ async def test_rpc_device_virtual_enum(
     assert mock_rpc_device.call_rpc.call_args[0][1] == {"id": 203, "value": "option 1"}
     mock_rpc_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "Title 1"
 
 

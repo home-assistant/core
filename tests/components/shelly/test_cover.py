@@ -47,8 +47,7 @@ async def test_block_device_services(
         {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 50},
         blocking=True,
     )
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_CURRENT_POSITION] == 50
 
     await hass.services.async_call(
@@ -57,8 +56,7 @@ async def test_block_device_services(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == CoverState.OPENING
 
     await hass.services.async_call(
@@ -67,8 +65,7 @@ async def test_block_device_services(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == CoverState.CLOSING
 
     await hass.services.async_call(
@@ -77,8 +74,7 @@ async def test_block_device_services(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == CoverState.CLOSED
 
     entry = entity_registry.async_get(entity_id)
@@ -130,8 +126,7 @@ async def test_rpc_device_services(
         {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 50},
         blocking=True,
     )
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_CURRENT_POSITION] == 50
 
     mutate_rpc_device_status(
@@ -145,8 +140,7 @@ async def test_rpc_device_services(
     )
     mock_rpc_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == CoverState.OPENING
 
     mutate_rpc_device_status(
@@ -160,8 +154,7 @@ async def test_rpc_device_services(
     )
     mock_rpc_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == CoverState.CLOSING
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "state", "closed")
@@ -172,8 +165,7 @@ async def test_rpc_device_services(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == CoverState.CLOSED
 
     entry = entity_registry.async_get(entity_id)
@@ -242,8 +234,7 @@ async def test_rpc_cover_tilt(
 
     await init_integration(hass, 3)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
     entry = entity_registry.async_get(entity_id)
@@ -259,8 +250,7 @@ async def test_rpc_cover_tilt(
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "slat_pos", 50)
     mock_rpc_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 50
 
     await hass.services.async_call(
@@ -272,8 +262,7 @@ async def test_rpc_cover_tilt(
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "slat_pos", 100)
     mock_rpc_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
 
     await hass.services.async_call(
@@ -291,6 +280,5 @@ async def test_rpc_cover_tilt(
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "slat_pos", 10)
     mock_rpc_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 10

@@ -279,15 +279,13 @@ async def test_block_rest_update_connection_error(
     await init_integration(hass, 1)
 
     await mock_rest_update(hass, freezer)
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     monkeypatch.setattr(mock_block_device, "update_shelly", AsyncMock(side_effect=exc))
     await mock_rest_update(hass, freezer)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -310,8 +308,7 @@ async def test_block_sleeping_device_no_periodic_updates(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "22.1"
 
     # Move time to generate polling
@@ -319,8 +316,7 @@ async def test_block_sleeping_device_no_periodic_updates(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -614,8 +610,7 @@ async def test_rpc_sleeping_device_no_periodic_updates(
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "22.9"
 
     # Move time to generate polling
@@ -623,8 +618,7 @@ async def test_rpc_sleeping_device_no_periodic_updates(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -807,14 +801,12 @@ async def test_rpc_polling_connection_error(
         ),
     )
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "-63"
 
     await mock_polling_rpc_update(hass, freezer)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -830,14 +822,12 @@ async def test_rpc_polling_disconnected(
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "-63"
 
     await mock_polling_rpc_update(hass, freezer)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -942,8 +932,7 @@ async def test_block_sleeping_device_connection_error(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     # Make device online event with connection error
@@ -958,8 +947,7 @@ async def test_block_sleeping_device_connection_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Error connecting to Shelly device" in caplog.text
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     # Move time to generate sleep period update
@@ -968,8 +956,7 @@ async def test_block_sleeping_device_connection_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Sleeping device did not update" in caplog.text
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -999,8 +986,7 @@ async def test_rpc_sleeping_device_connection_error(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     # Make device online event with connection error
@@ -1015,8 +1001,7 @@ async def test_rpc_sleeping_device_connection_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Error connecting to Shelly device" in caplog.text
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     # Move time to generate sleep period update
@@ -1025,8 +1010,7 @@ async def test_rpc_sleeping_device_connection_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Sleeping device did not update" in caplog.text
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
 

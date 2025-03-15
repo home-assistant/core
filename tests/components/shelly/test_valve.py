@@ -29,8 +29,7 @@ async def test_block_device_gas_valve(
     assert entry
     assert entry.unique_id == "123456789ABC-valve_0-valve"
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == ValveState.CLOSED
 
     await hass.services.async_call(
@@ -40,16 +39,14 @@ async def test_block_device_gas_valve(
         blocking=True,
     )
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == ValveState.OPENING
 
     monkeypatch.setattr(mock_block_device.blocks[GAS_VALVE_BLOCK_ID], "valve", "opened")
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == ValveState.OPEN
 
     await hass.services.async_call(
@@ -59,14 +56,12 @@ async def test_block_device_gas_valve(
         blocking=True,
     )
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == ValveState.CLOSING
 
     monkeypatch.setattr(mock_block_device.blocks[GAS_VALVE_BLOCK_ID], "valve", "closed")
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == ValveState.CLOSED

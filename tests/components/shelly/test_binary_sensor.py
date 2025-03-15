@@ -39,15 +39,13 @@ async def test_block_binary_sensor(
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_channel_1_overpowering"
     await init_integration(hass, 1)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
     monkeypatch.setattr(mock_block_device.blocks[RELAY_BLOCK_ID], "overpower", 1)
     mock_block_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get(entity_id)
@@ -65,16 +63,14 @@ async def test_block_binary_sensor_extra_state_attr(
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_gas"
     await init_integration(hass, 1)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
     assert state.attributes.get("detected") == "mild"
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "gas", "none")
     mock_block_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
     assert state.attributes.get("detected") == "none"
 
@@ -95,15 +91,13 @@ async def test_block_rest_binary_sensor(
     monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})
     await init_integration(hass, 1)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
     monkeypatch.setitem(mock_block_device.status["cloud"], "connected", True)
     await mock_rest_update(hass, freezer)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get(entity_id)
@@ -125,22 +119,19 @@ async def test_block_rest_binary_sensor_connected_battery_devices(
     monkeypatch.setitem(mock_block_device.settings["coiot"], "update_period", 3600)
     await init_integration(hass, 1, model=MODEL_MOTION)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
     monkeypatch.setitem(mock_block_device.status["cloud"], "connected", True)
 
     # Verify no update on fast intervals
     await mock_rest_update(hass, freezer)
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
     # Verify update on slow intervals
     await mock_rest_update(hass, freezer, seconds=UPDATE_PERIOD_MULTIPLIER * 3600)
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get(entity_id)
@@ -165,15 +156,13 @@ async def test_block_sleeping_binary_sensor(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "motion", 1)
     mock_block_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get(entity_id)
@@ -203,8 +192,7 @@ async def test_block_restored_sleeping_binary_sensor(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     # Make device online
@@ -212,8 +200,7 @@ async def test_block_restored_sleeping_binary_sensor(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
 
@@ -238,8 +225,7 @@ async def test_block_restored_sleeping_binary_sensor_no_last_state(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
 
     # Make device online
@@ -247,8 +233,7 @@ async def test_block_restored_sleeping_binary_sensor_no_last_state(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
 
@@ -262,8 +247,7 @@ async def test_rpc_binary_sensor(
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_cover_0_overpowering"
     await init_integration(hass, 2)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
     mutate_rpc_device_status(
@@ -271,8 +255,7 @@ async def test_rpc_binary_sensor(
     )
     mock_rpc_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get(entity_id)
@@ -322,20 +305,17 @@ async def test_rpc_sleeping_binary_sensor(
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cloud", "connected", True)
     mock_rpc_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     # test external power sensor
-    state = hass.states.get("binary_sensor.test_name_external_power")
-    assert state
+    assert (state := hass.states.get("binary_sensor.test_name_external_power"))
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get("binary_sensor.test_name_external_power")
@@ -367,8 +347,7 @@ async def test_rpc_restored_sleeping_binary_sensor(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     # Make device online
@@ -376,8 +355,7 @@ async def test_rpc_restored_sleeping_binary_sensor(
     mock_rpc_device.mock_update()
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
 
@@ -404,8 +382,7 @@ async def test_rpc_restored_sleeping_binary_sensor_no_last_state(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
 
     # Make device online
@@ -417,8 +394,7 @@ async def test_rpc_restored_sleeping_binary_sensor_no_last_state(
     mock_rpc_device.mock_update()
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
 
@@ -451,8 +427,7 @@ async def test_rpc_device_virtual_binary_sensor(
 
     await init_integration(hass, 3)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get(entity_id)
@@ -462,8 +437,7 @@ async def test_rpc_device_virtual_binary_sensor(
     monkeypatch.setitem(mock_rpc_device.status["boolean:203"], "value", False)
     mock_rpc_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
 
 

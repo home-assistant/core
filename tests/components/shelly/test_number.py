@@ -54,15 +54,13 @@ async def test_block_number_update(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "50"
 
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valvePos", 30)
     mock_block_device.mock_update()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "30"
 
     entry = entity_registry.async_get(entity_id)
@@ -107,8 +105,7 @@ async def test_block_restored_number(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "40"
 
     # Make device online
@@ -116,8 +113,7 @@ async def test_block_restored_number(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "50"
 
 
@@ -149,8 +145,7 @@ async def test_block_restored_number_no_last_state(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
 
     # Make device online
@@ -158,8 +153,7 @@ async def test_block_restored_number_no_last_state(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "50"
 
 
@@ -314,8 +308,7 @@ async def test_rpc_device_virtual_number(
 
     await init_integration(hass, 3)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "12.3"
     assert state.attributes.get(ATTR_MIN) == 0
     assert state.attributes.get(ATTR_MAX) == 100
@@ -329,8 +322,7 @@ async def test_rpc_device_virtual_number(
 
     monkeypatch.setitem(mock_rpc_device.status["number:203"], "value", 78.9)
     mock_rpc_device.mock_update()
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "78.9"
 
     monkeypatch.setitem(mock_rpc_device.status["number:203"], "value", 56.7)
@@ -341,8 +333,7 @@ async def test_rpc_device_virtual_number(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "56.7"
 
 
@@ -441,8 +432,7 @@ async def test_blu_trv_ext_temp_set_value(
 
     # After HA start the state should be unknown because there was no previous external
     # temperature report
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
 
     await hass.services.async_call(
@@ -465,8 +455,7 @@ async def test_blu_trv_ext_temp_set_value(
         BLU_TRV_TIMEOUT,
     )
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "22.2"
 
 
@@ -483,8 +472,7 @@ async def test_blu_trv_valve_pos_set_value(
 
     entity_id = f"{NUMBER_DOMAIN}.trv_name_valve_position"
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "0"
 
     monkeypatch.setitem(mock_blu_trv.status["blutrv:200"], "pos", 20)
@@ -510,6 +498,5 @@ async def test_blu_trv_valve_pos_set_value(
     # device only accepts int for 'pos' value
     assert isinstance(mock_blu_trv.call_rpc.call_args[0][1]["params"]["pos"], int)
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert (state := hass.states.get(entity_id))
     assert state.state == "20"
