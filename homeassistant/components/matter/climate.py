@@ -154,9 +154,14 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8029),
 }
 
+kNamespaceRefrigerator = 65
+kTagRefrigerator = 0
+kTagFreezer = 1
+
 SystemModeEnum = clusters.Thermostat.Enums.SystemModeEnum
 ControlSequenceEnum = clusters.Thermostat.Enums.ControlSequenceOfOperationEnum
 ThermostatFeature = clusters.Thermostat.Bitmaps.Feature
+TemperatureControlFeature = clusters.TemperatureControl.Bitmaps.Feature
 
 
 class ThermostatRunningState(IntEnum):
@@ -408,6 +413,99 @@ class MatterClimate(MatterEntity, ClimateEntity):
         return None
 
 
+class MatterTemperatureControlClimate(MatterEntity, ClimateEntity):
+    """Representation of a climate entity from the Matter TemperatureControl cluster."""
+
+    _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
+    # We can't set the mode for a TemperatureControl cluster but only set the target temperature.
+    _attr_hvac_mode: HVACMode = HVACMode.HEAT_COOL
+    _feature_map: int | None = None
+
+    _platform_translation_key = "temperature_control"
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        target_temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
+
+        if target_temperature is not None:
+            if self.target_temperature != target_temperature:
+                await self.matter_client.send_device_command(
+                    node_id=self._endpoint.node.node_id,
+                    endpoint_id=self._endpoint.endpoint_id,
+                    command=clusters.TemperatureControl.Commands.SetTemperature(
+                        targetTemperature=int(
+                            target_temperature * TEMPERATURE_SCALING_FACTOR
+                        )
+                    ),
+                )
+            return
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        self._calculate_features()
+        # update TagList
+        self._attr_tag_list = list(
+            self.get_matter_attribute_value(clusters.Descriptor.Attributes.TagList)
+        )
+        tag_struct: clusters.Descriptor.Structs.SemanticTagStruct = self._attr_tag_list[
+            0
+        ]
+        namespace_id = tag_struct.namespaceID
+        tag = tag_struct.tag
+        if namespace_id == kNamespaceRefrigerator:
+            if tag == kTagRefrigerator:
+                self._attr_name = "Refrigerator"
+            elif tag == kTagFreezer:
+                self._attr_name = "Freezer"
+
+        # update target_temperature
+        self._attr_target_temperature = self._get_temperature_in_degrees(
+            clusters.TemperatureControl.Attributes.TemperatureSetpoint
+        )
+        # update min_temp
+        attribute = clusters.TemperatureControl.Attributes.MinTemperature
+        if (value := self._get_temperature_in_degrees(attribute)) is not None:
+            self._attr_min_temp = value
+        # update max_temp
+        attribute = clusters.TemperatureControl.Attributes.MaxTemperature
+        if (value := self._get_temperature_in_degrees(attribute)) is not None:
+            self._attr_max_temp = value
+
+    @callback
+    def _calculate_features(
+        self,
+    ) -> None:
+        """Calculate features for HA Thermostat platform from Matter FeatureMap."""
+        feature_map = int(
+            self.get_matter_attribute_value(
+                clusters.TemperatureControl.Attributes.FeatureMap
+            )
+        )
+        # NOTE: the featuremap can dynamically change, so we need to update the
+        # supported features if the featuremap changes.
+        # work out supported features and presets from matter featuremap
+        if self._feature_map == feature_map:
+            return
+        self._feature_map = feature_map
+        self._attr_hvac_modes: list[HVACMode] = [HVACMode.HEAT_COOL]
+        if feature_map & TemperatureControlFeature.kTemperatureNumber:
+            self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        if feature_map & TemperatureControlFeature.kTemperatureStep:
+            self._attr_target_temperature_step = self._get_temperature_in_degrees(
+                clusters.TemperatureControl.Attributes.Step
+            )
+
+    @callback
+    def _get_temperature_in_degrees(
+        self, attribute: type[clusters.ClusterAttributeDescriptor]
+    ) -> float | None:
+        """Return the scaled temperature value for the given attribute."""
+        if value := self.get_matter_attribute_value(attribute):
+            return float(value) / TEMPERATURE_SCALING_FACTOR
+        return None
+
+
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
@@ -434,5 +532,23 @@ DISCOVERY_SCHEMAS = [
         ),
         device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
         allow_multi=True,  # also used for sensor entity
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.CLIMATE,
+        entity_description=ClimateEntityDescription(
+            key="MatterTemperatureControl",
+            name=None,
+        ),
+        entity_class=MatterTemperatureControlClimate,
+        required_attributes=(
+            clusters.TemperatureControl.Attributes.TemperatureSetpoint,
+            clusters.TemperatureControl.Attributes.FeatureMap,
+            clusters.TemperatureControl.Attributes.MinTemperature,
+            clusters.TemperatureControl.Attributes.MaxTemperature,
+        ),
+        optional_attributes=(
+            clusters.TemperatureControl.Attributes.Step,
+            clusters.Descriptor.Attributes.TagList,
+        ),
     ),
 ]
