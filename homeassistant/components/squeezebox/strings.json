@@ -63,6 +63,44 @@
     }
   },
   "entity": {
+    "button": {
+      "preset_1": {
+        "name": "Preset 1"
+      },
+      "preset_2": {
+        "name": "Preset 2"
+      },
+      "preset_3": {
+        "name": "Preset 3"
+      },
+      "preset_4": {
+        "name": "Preset 4"
+      },
+      "preset_5": {
+        "name": "Preset 5"
+      },
+      "preset_6": {
+        "name": "Preset 6"
+      },
+      "brightness_up": {
+        "name": "Brightness Up"
+      },
+      "brightness_down": {
+        "name": "Brightness Down"
+      },
+      "bass_up": {
+        "name": "Bass Up"
+      },
+      "bass_down": {
+        "name": "Bass Down"
+      },
+      "treble_up": {
+        "name": "Treble Up"
+      },
+      "treble_down": {
+        "name": "Treble Down"
+      }
+    },
     "binary_sensor": {
       "rescan": {
         "name": "Library rescan"
