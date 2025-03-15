@@ -6,5 +6,5 @@
   "iot_class": "local_polling",
   "loggers": ["pyasn1", "pysmi", "pysnmp"],
   "quality_scale": "legacy",
-  "requirements": ["pysnmp==7.1.9"]
+  "requirements": ["pysnmp==7.1.16"]
 }
