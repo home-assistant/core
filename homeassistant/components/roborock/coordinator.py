@@ -128,6 +128,23 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         self._api_client = api_client
         self._is_cloud_api = False
 
+    @cached_property
+    def dock_device_info(self) -> DeviceInfo:
+        """Gets the device info for the dock.
+
+        This must happen after the coordinator does the first update.
+        Which will be the case when this is called.
+        """
+        dock_type = self.roborock_device_info.props.status.dock_type
+        return DeviceInfo(
+            name=f"{self.roborock_device_info.device.name} Dock",
+            identifiers={(DOMAIN, f"{self.duid}_dock")},
+            manufacturer="Roborock",
+            model=f"{self.roborock_device_info.product.model} Dock",
+            model_id=str(dock_type.value) if dock_type is not None else "Unknown",
+            sw_version=self.roborock_device_info.device.fv,
+        )
+
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         # Verify we can communicate locally - if we can't, switch to cloud api
