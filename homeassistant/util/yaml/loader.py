@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from io import StringIO
-import logging
 import os
 from typing import TextIO
 
 from annotatedyaml import YAMLException, YamlTypeError
 from annotatedyaml.loader import (
+    HAS_C_LOADER,
     JSON_TYPE,
     LoaderType,
     Secrets,
@@ -22,9 +22,17 @@ import yaml
 
 from homeassistant.exceptions import HomeAssistantError
 
-_LOGGER = logging.getLogger(__name__)
-
-__all__ = ["JSON_TYPE", "Secrets", "add_constructor"]
+__all__ = [
+    "HAS_C_LOADER",
+    "JSON_TYPE",
+    "Secrets",
+    "YamlTypeError",
+    "add_constructor",
+    "load_yaml",
+    "load_yaml_dict",
+    "parse_yaml",
+    "secret_yaml",
+]
 
 
 def load_yaml(
