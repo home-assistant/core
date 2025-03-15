@@ -30,3 +30,36 @@ call_query:
       advanced: true
       selector:
         object:
+button:
+  target:
+    entity:
+      integration: squeezebox
+      domain: media_player
+  fields:
+    button:
+      required: true
+      selector:
+        select:
+          translation_key: "button_selector"
+          multiple: false
+          custom_value: true
+          options:
+            - preset_0_dot_single
+            - preset_1_dot_single
+            - preset_2_dot_single
+            - preset_3_dot_single
+            - preset_4_dot_single
+            - preset_5_dot_single
+            - preset_6_dot_single
+            - preset_7_dot_single
+            - preset_8_dot_single
+            - preset_9_dot_single
+            - brightness_down
+            - brightness_up
+            - brightness_dot_single
+            - sleep
+            - snooze
+            - bassdown
+            - bassup
+            - trebledown
+            - trebleup

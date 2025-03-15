@@ -60,6 +60,16 @@
           "description": "[%key:component::squeezebox::services::call_method::fields::parameters::description%]"
         }
       }
+    },
+    "button": {
+      "name": "Button",
+      "description": "Mimic pressing a button on a Squeezebox device.",
+      "fields": {
+        "button": {
+          "name": "Button",
+          "description": "Which button to mimic pressing."
+        }
+      }
     }
   },
   "entity": {
@@ -116,6 +126,31 @@
           "browse_limit": "Maximum number of items when browsing or in a playlist.",
           "volume_step": "Amount to adjust the volume when turning volume up or down."
         }
+      }
+    }
+  },
+  "selector": {
+    "button_selector": {
+      "options": {
+        "preset_0_dot_single": "Play Preset 0",
+        "preset_1_dot_single": "Play Preset 1",
+        "preset_2_dot_single": "Play Preset 2",
+        "preset_3_dot_single": "Play Preset 3",
+        "preset_4_dot_single": "Play Preset 4",
+        "preset_5_dot_single": "Play Preset 5",
+        "preset_6_dot_single": "Play Preset 6",
+        "preset_7_dot_single": "Play Preset 7",
+        "preset_8_dot_single": "Play Preset 8",
+        "preset_9_dot_single": "Play Preset 9",
+        "brightness_down": "Brightness Up",
+        "brightness_up": "Brightness Up",
+        "brightness_dot_single": "Brightness Toggle",
+        "sleep": "Sleep",
+        "snooze": "Snooze",
+        "bassdown": "Bass Down",
+        "bassup": "Bass Up",
+        "trebledown": "Treble Down",
+        "trebleup": "Treble Up"
       }
     }
   }

@@ -74,6 +74,7 @@ if TYPE_CHECKING:
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
+SERVICE_BUTTON = "button"
 
 ATTR_QUERY_RESULT = "query_result"
 
@@ -82,6 +83,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_PARAMETERS = "parameters"
 ATTR_OTHER_PLAYER = "other_player"
+ATTR_BUTTON = "button"
 
 ATTR_TO_PROPERTY = [
     ATTR_QUERY_RESULT,
@@ -155,6 +157,11 @@ async def async_setup_entry(
             ),
         },
         "async_call_query",
+    )
+    platform.async_register_entity_service(
+        SERVICE_BUTTON,
+        {vol.Required(ATTR_BUTTON): cv.string},
+        "async_button_service",
     )
 
     # Start server discovery task if not already running
@@ -589,6 +596,18 @@ class SqueezeBoxMediaPlayerEntity(
         all_params = [command]
         if parameters:
             all_params.extend(parameters)
+        await self._player.async_query(*all_params)
+
+    async def async_button_service(self, button: str) -> None:
+        """Call Squeezebox JSON/RPC method.
+
+        Additional parameters are added to the command to form the list of
+        positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
+        """
+        all_params = ["button"]
+        # Replace -- back to . to overcome translation key character rules
+        newbutton = button.replace("_dot_", ".")
+        all_params.extend([newbutton])
         await self._player.async_query(*all_params)
 
     async def async_call_query(
