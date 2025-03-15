@@ -10,6 +10,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -1205,3 +1206,27 @@ async def test_media_get_queue(
     )
     soco_mock.get_queue.assert_called_with(max_items=0)
     assert result == snapshot
+
+
+@pytest.mark.parametrize(
+    ("speaker_model", "source_list"),
+    [
+        ("Sonos Arc Ultra", [SOURCE_TV]),
+        ("Sonos Arc", [SOURCE_TV]),
+        ("Sonos Playbar", [SOURCE_TV]),
+        ("Sonos Connect", [SOURCE_LINEIN]),
+        ("Sonos Play:5", [SOURCE_LINEIN]),
+        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV]),
+        ("Sonos Era", None),
+    ],
+    indirect=["speaker_model"],
+)
+async def test_media_source_list(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    speaker_model: str,
+    source_list: list[str] | None,
+) -> None:
+    """Test the mapping between the speaker model name and source_list."""
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == source_list

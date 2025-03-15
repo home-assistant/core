@@ -51,7 +51,7 @@ rules:
     status: exempt
     comment: No supportable devices.
   docs-supported-functions: done
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
     status: exempt
@@ -66,7 +66,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: done
     comment: Used to inform of deprecated entities and actions.

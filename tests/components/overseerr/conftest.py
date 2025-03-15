@@ -7,6 +7,7 @@ import pytest
 from python_overseerr import MovieDetails, RequestCount, RequestResponse
 from python_overseerr.models import TVDetails, WebhookNotificationConfig
 
+from homeassistant.components.overseerr import CONF_CLOUDHOOK_URL
 from homeassistant.components.overseerr.const import DOMAIN
 from homeassistant.const import (
     CONF_API_KEY,
@@ -67,6 +68,24 @@ def mock_overseerr_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_overseerr_client_needs_change(
+    mock_overseerr_client: AsyncMock,
+) -> Generator[AsyncMock]:
+    """Mock an Overseerr client."""
+    mock_overseerr_client.get_webhook_notification_config.return_value.types = 0
+    return mock_overseerr_client
+
+
+@pytest.fixture
+def mock_overseerr_client_cloudhook(
+    mock_overseerr_client: AsyncMock,
+) -> Generator[AsyncMock]:
+    """Mock an Overseerr client."""
+    mock_overseerr_client.get_webhook_notification_config.return_value.options.webhook_url = "https://hooks.nabu.casa/ABCD"
+    return mock_overseerr_client
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
@@ -78,6 +97,24 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_SSL: False,
             CONF_API_KEY: "test-key",
             CONF_WEBHOOK_ID: WEBHOOK_ID,
+        },
+        entry_id="01JG00V55WEVTJ0CJHM0GAD7PC",
+    )
+
+
+@pytest.fixture
+def mock_cloudhook_config_entry() -> MockConfigEntry:
+    """Mock a config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Overseerr",
+        data={
+            CONF_HOST: "overseerr.test",
+            CONF_PORT: 80,
+            CONF_SSL: False,
+            CONF_API_KEY: "test-key",
+            CONF_WEBHOOK_ID: WEBHOOK_ID,
+            CONF_CLOUDHOOK_URL: "https://hooks.nabu.casa/ABCD",
         },
         entry_id="01JG00V55WEVTJ0CJHM0GAD7PC",
     )

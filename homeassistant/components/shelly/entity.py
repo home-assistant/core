@@ -196,10 +196,16 @@ def async_setup_rpc_attribute_entities(
             elif description.use_polling_coordinator:
                 if not sleep_period:
                     entities.append(
-                        sensor_class(polling_coordinator, key, sensor_id, description)
+                        get_entity_class(sensor_class, description)(
+                            polling_coordinator, key, sensor_id, description
+                        )
                     )
             else:
-                entities.append(sensor_class(coordinator, key, sensor_id, description))
+                entities.append(
+                    get_entity_class(sensor_class, description)(
+                        coordinator, key, sensor_id, description
+                    )
+                )
     if not entities:
         return
 
@@ -232,7 +238,9 @@ def async_restore_rpc_attribute_entities(
 
         if description := sensors.get(attribute):
             entities.append(
-                sensor_class(coordinator, key, attribute, description, entry)
+                get_entity_class(sensor_class, description)(
+                    coordinator, key, attribute, description, entry
+                )
             )
 
     if not entities:
@@ -293,6 +301,7 @@ class RpcEntityDescription(EntityDescription):
     supported: Callable = lambda _: False
     unit: Callable[[dict], str | None] | None = None
     options_fn: Callable[[dict], list[str]] | None = None
+    entity_class: Callable | None = None
 
 
 @dataclass(frozen=True)
@@ -381,15 +390,20 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Handle device update."""
         self.async_write_ha_state()
 
-    async def call_rpc(self, method: str, params: Any) -> Any:
+    async def call_rpc(
+        self, method: str, params: Any, timeout: float | None = None
+    ) -> Any:
         """Call RPC method."""
         LOGGER.debug(
-            "Call RPC for entity %s, method: %s, params: %s",
+            "Call RPC for entity %s, method: %s, params: %s, timeout: %s",
             self.name,
             method,
             params,
+            timeout,
         )
         try:
+            if timeout:
+                return await self.coordinator.device.call_rpc(method, params, timeout)
             return await self.coordinator.device.call_rpc(method, params)
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
@@ -673,3 +687,13 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
             "Entity %s comes from a sleeping device, update is not possible",
             self.entity_id,
         )
+
+
+def get_entity_class(
+    sensor_class: Callable, description: RpcEntityDescription
+) -> Callable:
+    """Return entity class."""
+    if description.entity_class is not None:
+        return description.entity_class
+
+    return sensor_class

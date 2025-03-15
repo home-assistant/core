@@ -9,8 +9,8 @@ import aiohttp
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .entity import DoorBirdEntity
 from .models import DoorBirdConfigEntry, DoorBirdData
@@ -25,7 +25,7 @@ _TIMEOUT = 15  # seconds
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: DoorBirdConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the DoorBird camera platform."""
     door_bird_data = config_entry.runtime_data

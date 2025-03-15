@@ -35,7 +35,7 @@
       "charge_port_cold_weather_mode": false,
       "charge_port_color": "<invalid>",
       "charge_port_door_open": true,
-      "charge_port_latch": "Engaged",
+      "charge_port_latch": null,
       "charge_rate": 0,
       "charger_actual_current": 0,
       "charger_phases": null,

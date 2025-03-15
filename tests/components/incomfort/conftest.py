@@ -18,6 +18,11 @@ MOCK_CONFIG = {
     "password": "verysecret",
 }
 
+MOCK_CONFIG_DHCP = {
+    "username": "admin",
+    "password": "verysecret",
+}
+
 MOCK_HEATER_STATUS = {
     "display_code": DisplayCode.STANDBY,
     "display_text": "standby",

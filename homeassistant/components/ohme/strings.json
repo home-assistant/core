@@ -50,15 +50,37 @@
         "name": "Approve charge"
       }
     },
+    "number": {
+      "preconditioning_duration": {
+        "name": "Preconditioning duration"
+      },
+      "target_percentage": {
+        "name": "Target percentage"
+      }
+    },
+    "select": {
+      "charge_mode": {
+        "name": "Charge mode",
+        "state": {
+          "smart_charge": "Smart charge",
+          "max_charge": "Max charge",
+          "paused": "Paused"
+        }
+      },
+      "vehicle": {
+        "name": "Vehicle"
+      }
+    },
     "sensor": {
       "status": {
         "name": "Status",
         "state": {
           "unplugged": "Unplugged",
           "plugged_in": "Plugged in",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "paused": "[%key:common::state::paused%]",
-          "pending_approval": "Pending approval"
+          "pending_approval": "Pending approval",
+          "finished": "Finished charging"
         }
       },
       "ct_current": {
@@ -66,6 +88,9 @@
       },
       "vehicle_battery": {
         "name": "Vehicle battery"
+      },
+      "slot_list": {
+        "name": "Charge slots"
       }
     },
     "switch": {
@@ -77,6 +102,11 @@
       },
       "sleep_when_inactive": {
         "name": "Sleep when inactive"
+      }
+    },
+    "time": {
+      "target_time": {
+        "name": "Target time"
       }
     }
   },

@@ -1,0 +1,189 @@
+# serializer version: 1
+# name: test_all_entities[switch.garden_alarm_sound-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.garden_alarm_sound',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Alarm sound',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_sound',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH63ABCD_alarm_sound',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.garden_alarm_sound-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Garden Alarm sound',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.garden_alarm_sound',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[switch.garden_auto_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.garden_auto_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto mode',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_mode',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH63ABCD_auto_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.garden_auto_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Garden Auto mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.garden_auto_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[switch.garden_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.garden_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH63ABCD_power',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.garden_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Garden Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.garden_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[switch.garden_pump_cycling-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.garden_pump_cycling',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pump cycling',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pump_cycling',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH63ABCD_pump_cycling',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.garden_pump_cycling-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Garden Pump cycling',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.garden_pump_cycling',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
