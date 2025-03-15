@@ -178,11 +178,23 @@
     },
     "volume_up": {
       "name": "Turn up volume",
-      "description": "Turns up the volume."
+      "description": "Turns up the volume.",
+      "fields": {
+        "volume_step": {
+          "name": "Step",
+          "description": "The volume step amount between 0.01 and 1."
+        }
+      }
     },
     "volume_down": {
       "name": "Turn down volume",
-      "description": "Turns down the volume."
+      "description": "Turns down the volume.",
+      "fields": {
+        "volume_step": {
+          "name": "Step",
+          "description": "The volume step amount between 0.01 and 1."
+        }
+      }
     },
     "volume_mute": {
       "name": "Mute/unmute volume",
@@ -201,10 +213,6 @@
         "volume_level": {
           "name": "Level",
           "description": "The volume. 0 is inaudible, 1 is the maximum volume."
-        },
-        "volume_step": {
-          "name": "Step",
-          "description": "The volume step amount between 0.01 and 1."
         }
       }
     },
