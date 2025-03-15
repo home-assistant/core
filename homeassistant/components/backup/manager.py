@@ -230,6 +230,13 @@ class RestoreBackupEvent(ManagerStateEvent):
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
+class BackupPlatformEvent:
+    """Backup platform class."""
+
+    domain: str
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
 class BlockedEvent(ManagerStateEvent):
     """Backup manager blocked, Home Assistant is starting."""
 
@@ -355,6 +362,9 @@ class BackupManager:
         self._backup_event_subscriptions = hass.data[
             DATA_BACKUP
         ].backup_event_subscriptions
+        self._backup_platform_event_subscriptions = hass.data[
+            DATA_BACKUP
+        ].backup_platform_event_subscriptions
 
     async def async_setup(self) -> None:
         """Set up the backup manager."""
@@ -465,6 +475,9 @@ class BackupManager:
         LOGGER.debug("%s platforms loaded in total", len(self.platforms))
         LOGGER.debug("%s agents loaded in total", len(self.backup_agents))
         LOGGER.debug("%s local agents loaded in total", len(self.local_backup_agents))
+        event = BackupPlatformEvent(domain=integration_domain)
+        for subscription in self._backup_platform_event_subscriptions:
+            subscription(event)
 
     async def async_pre_backup_actions(self) -> None:
         """Perform pre backup actions."""
