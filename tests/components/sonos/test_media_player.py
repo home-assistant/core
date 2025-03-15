@@ -978,6 +978,37 @@ async def test_play_media_favorite_item_id(
     assert "UNKNOWN_ID" in str(sve.value)
 
 
+async def test_play_media_favorite_audio_book(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+) -> None:
+    """Test playing audio book from a favorite id."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "favorite_item_id",
+            ATTR_MEDIA_CONTENT_ID: "FV:2/66",
+        },
+        blocking=True,
+    )
+    assert soco_mock.play_uri.call_count == 1
+    assert (
+        soco_mock.play_uri.call_args_list[0].args[0]
+        == "x-rincon-cpcontainer:101340c8reftitle%C9F27_com?sid=239&flags=16584&sn=5"
+    )
+    assert (
+        soco_mock.play_uri.call_args_list[0].kwargs["timeout"] == LONG_SERVICE_TIMEOUT
+    )
+    assert (
+        soco_mock.play_uri.call_args_list[0].kwargs["meta"]
+        == '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="101340c8reftitleC9F27_com" parentID="101340c8reftitleC9F27_com" restricted="true"><dc:title>American Tall Tales</dc:title><upnp:class>object.item.audioItem.audioBook</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON61191_X_#Svc6-0-Token</desc></item></DIDL-Lite>'
+    )
+
+
 async def _setup_hass(hass: HomeAssistant):
     await async_setup_component(
         hass,
