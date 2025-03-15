@@ -86,7 +86,11 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         self.async_write_ha_state()
 
     def _render_single_template(
-        self, key: str, variables: dict[str, Any], is_complex: bool
+        self,
+        key: str,
+        variables: dict[str, Any],
+        is_complex: bool,
+        strict: bool = False,
     ) -> Any:
         """Render a single template."""
         try:
@@ -94,8 +98,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
                 return render_complex(self._config[key], variables)
 
             return self._config[key].async_render(
-                variables,
-                parse_result=key in self._parse_result,
+                variables, parse_result=key in self._parse_result, strict=strict
             )
         except TemplateError as err:
             logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
@@ -116,7 +119,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         if CONF_AVAILABILITY in self._to_render_simple:
             if (
                 result := self._render_single_template(
-                    CONF_AVAILABILITY, variables, False
+                    CONF_AVAILABILITY, variables, False, True
                 )
             ) is not _SENTINEL:
                 rendered[CONF_AVAILABILITY] = available = result

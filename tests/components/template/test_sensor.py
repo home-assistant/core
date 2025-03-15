@@ -1574,6 +1574,48 @@ async def test_trigger_entity_available_skips_state(
     assert "'noexist' is undefined" in caplog.text
 
 
+async def test_trigger_state_with_availability_syntax_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test trigger entity is available when attributes have syntax errors."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Test Sensor",
+                            "availability": "{{ what_the_heck == 2 }}",
+                            "state": "{{ trigger.event.data.beer }}",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    # Sensors are unknown if never triggered
+    state = hass.states.get("sensor.test_sensor")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sensor")
+    assert state.state == "2"
+
+    assert (
+        "Error rendering availability template for sensor.test_sensor: UndefinedError: 'what_the_heck' is undefined"
+        in caplog.text
+    )
+
+
 async def test_trigger_available_with_attribute_syntax_error(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
