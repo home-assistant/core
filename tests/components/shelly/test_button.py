@@ -5,6 +5,7 @@ from unittest.mock import Mock
 from aioshelly.const import MODEL_BLU_GATEWAY_G3
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.shelly.const import DOMAIN
@@ -42,7 +43,10 @@ async def test_block_button(
 
 
 async def test_rpc_button(
-    hass: HomeAssistant, mock_rpc_device: Mock, entity_registry: EntityRegistry
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test rpc device OTA button."""
     await init_integration(hass, 2)
@@ -50,11 +54,11 @@ async def test_rpc_button(
     entity_id = "button.test_name_reboot"
 
     # reboot button
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    state = hass.states.get(entity_id)
+    assert state == snapshot(name=f"{entity_id}-state")
 
     entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "123456789ABC_reboot"
+    assert entry == snapshot(name=f"{entity_id}-entry")
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -171,6 +175,7 @@ async def test_rpc_blu_trv_button(
     mock_blu_trv: Mock,
     entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test RPC BLU TRV button."""
     monkeypatch.delitem(mock_blu_trv.status, "script:1")
@@ -181,11 +186,11 @@ async def test_rpc_blu_trv_button(
 
     entity_id = "button.trv_name_calibrate"
 
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    state = hass.states.get(entity_id)
+    assert state == snapshot(name=f"{entity_id}-state")
 
     entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "f8:44:77:25:f0:dd_calibrate"
+    assert entry == snapshot(name=f"{entity_id}-entry")
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
