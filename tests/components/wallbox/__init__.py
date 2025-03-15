@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 
+import requests
 import requests_mock
 
 from homeassistant.components.wallbox.const import (
@@ -103,6 +104,24 @@ authorisation_response_unauthorised = {
         }
     }
 }
+
+invalid_reauth_response = {
+    "jwt": "fakekeyhere",
+    "refresh_token": "refresh_fakekeyhere",
+    "user_id": 12345,
+    "ttl": 145656758,
+    "refresh_token_ttl": 145756758,
+    "error": False,
+    "status": 200,
+}
+
+http_403_error = requests.exceptions.HTTPError()
+http_403_error.response = requests.Response()
+http_403_error.response.status_code = HTTPStatus.FORBIDDEN
+
+http_404_error = requests.exceptions.HTTPError()
+http_404_error.response = requests.Response()
+http_404_error.response.status_code = HTTPStatus.NOT_FOUND
 
 
 async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None:
