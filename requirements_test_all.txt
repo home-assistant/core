@@ -564,7 +564,7 @@ bluetooth-auto-recovery==1.4.5
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.26.0
+bluetooth-data-tools==1.26.1
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -1246,7 +1246,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==4.1.0
 
 # homeassistant.components.nexia
-nexia==2.2.2
+nexia==2.4.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.5.1
@@ -1325,7 +1325,7 @@ open-garage==0.2.0
 open-meteo==0.3.2
 
 # homeassistant.components.openai_conversation
-openai==1.61.0
+openai==1.65.2
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -1795,7 +1795,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.16.2
+pyoverkiz==1.16.3
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -2000,7 +2000,7 @@ python-roborock==2.12.2
 python-smarttub==0.0.39
 
 # homeassistant.components.snoo
-python-snoo==0.6.1
+python-snoo==0.6.3
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
