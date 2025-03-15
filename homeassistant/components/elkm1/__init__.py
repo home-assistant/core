@@ -105,7 +105,9 @@ def _host_validator(config: dict[str, str]) -> dict[str, str]:
         "elksv1_2://"
     ):
         if CONF_USERNAME not in config or CONF_PASSWORD not in config:
-            raise vol.Invalid("Specify username and password for elks://")
+            raise vol.Invalid(
+                "Specify username and password for elks:// or elksv1_2://"
+            )
     elif not config[CONF_HOST].startswith("elk://") and not config[
         CONF_HOST
     ].startswith("serial://"):
