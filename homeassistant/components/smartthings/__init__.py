@@ -283,6 +283,9 @@ KEEP_CAPABILITY_QUIRK: dict[
     Capability.WASHER_OPERATING_STATE: (
         lambda status: status[Attribute.SUPPORTED_MACHINE_STATES].value is not None
     ),
+    Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: (
+        lambda status: status[Attribute.SUPPORTED_LIGHTING_LEVELS].value is not None
+    ),
     Capability.DEMAND_RESPONSE_LOAD_CONTROL: lambda _: True,
 }
 
