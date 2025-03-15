@@ -165,6 +165,8 @@ async def async_browse_media(
             favorites_folder_payload,
             speaker.favorites,
             media_content_id,
+            media,
+            get_browse_image_url,
         )
 
     payload = {
@@ -443,7 +445,10 @@ def favorites_payload(favorites: SonosFavorites) -> BrowseMedia:
 
 
 def favorites_folder_payload(
-    favorites: SonosFavorites, media_content_id: str
+    favorites: SonosFavorites,
+    media_content_id: str,
+    media: SonosMedia,
+    get_browse_image_url: GetBrowseImageUrlType,
 ) -> BrowseMedia:
     """Create response payload to describe all items of a type of favorite.
 
@@ -463,7 +468,14 @@ def favorites_folder_payload(
                 media_content_type="favorite_item_id",
                 can_play=True,
                 can_expand=False,
-                thumbnail=getattr(favorite, "album_art_uri", None),
+                thumbnail=get_thumbnail_url_full(
+                    media=media,
+                    is_internal=True,
+                    media_content_type="favorite_item_id",
+                    media_content_id=favorite.item_id,
+                    get_browse_image_url=get_browse_image_url,
+                    item=favorite,
+                ),
             )
         )
 
