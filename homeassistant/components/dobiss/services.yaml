@@ -1,0 +1,52 @@
+---
+force_update:
+
+turn_on:
+  description: Turn a dobiss output on, with optional delay in on or off
+  fields:
+    entity_id:
+      required: true
+      example: light.bureel
+    brightness:
+      advanced: true
+      example: 25
+    delayon:
+      example: 10
+    delayoff:
+      example: 60
+    from_pir:
+      advanced: true
+      example: true
+
+set_hvac_temp_timer:
+  fields:
+    entity_id:
+      example: climate.binnen
+    time:
+      example: 90
+    temperature:
+      example: 22.5
+
+action_request:
+  description: Sends an action request to the dobiss NXT server
+  fields:
+    address:
+      required: true
+      example: 1
+    channel:
+      required: true
+      example: 1
+    action:
+      required: true
+      example: 2
+    option1:
+      example: 50
+    option2:
+      example: 50
+
+status_request:
+  fields:
+    address:
+      example: 1
+    channel:
+      example: 1
