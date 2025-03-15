@@ -1,0 +1,16 @@
+{
+  "domain": "airios",
+  "name": "Airios Ventilation Systems",
+  "codeowners": ["@scabrero"],
+  "config_flow": true,
+  "dependencies": ["usb"],
+  "documentation": "https://www.home-assistant.io/integrations/airios",
+  "homekit": {},
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["pymodbus"],
+  "quality_scale": "bronze",
+  "requirements": ["pyairios==1.0.1"],
+  "ssdp": [],
+  "zeroconf": []
+}
