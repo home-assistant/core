@@ -2,9 +2,22 @@
 
 from __future__ import annotations
 
+import logging
+from typing import Any
+
+from homeassistant.const import CONF_STATE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.template import TemplateStateFromEntityId
-from homeassistant.helpers.trigger_template_entity import TriggerBaseEntity
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers.template import (
+    _SENTINEL,
+    TemplateStateFromEntityId,
+    render_complex,
+)
+from homeassistant.helpers.trigger_template_entity import (
+    CONF_ATTRIBUTES,
+    CONF_AVAILABILITY,
+    TriggerBaseEntity,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TriggerUpdateCoordinator
@@ -71,3 +84,90 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         """Handle updated data from the coordinator."""
         self._process_data()
         self.async_write_ha_state()
+
+    def _render_single_template(
+        self, key: str, variables: dict[str, Any], is_complex: bool
+    ) -> Any:
+        """Render a single template."""
+        try:
+            if is_complex:
+                return render_complex(self._config[key], variables)
+
+            return self._config[key].async_render(
+                variables,
+                parse_result=key in self._parse_result,
+            )
+        except TemplateError as err:
+            logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
+                "Error rendering %s template for %s: %s",
+                key,
+                self.entity_id,
+                err,
+            )
+
+        return _SENTINEL
+
+    def _render_templates(self, variables: dict[str, Any]) -> None:
+        """Render templates."""
+        rendered = dict(self._static_rendered)
+
+        # Check availability first
+        available = True
+        if CONF_AVAILABILITY in self._to_render_simple:
+            if (
+                result := self._render_single_template(
+                    CONF_AVAILABILITY, variables, False
+                )
+            ) is not _SENTINEL:
+                rendered[CONF_AVAILABILITY] = available = result
+
+        if not available:
+            self._rendered = rendered
+            return
+
+        # If state fails to render, the entity should go unavailable.
+        if CONF_STATE in self._to_render_simple:
+            if (
+                result := self._render_single_template(CONF_STATE, variables, False)
+            ) is _SENTINEL:
+                self._rendered = self._static_rendered
+                return
+
+            rendered[CONF_STATE] = result
+
+        for key in self._to_render_simple:
+            # Skip availability because we already handled it before.
+            if key in (CONF_AVAILABILITY, CONF_STATE):
+                continue
+
+            if (
+                result := self._render_single_template(key, variables, False)
+            ) is not _SENTINEL:
+                rendered[key] = result
+
+        for key in self._to_render_complex:
+            if (
+                result := self._render_single_template(key, variables, True)
+            ) is not _SENTINEL:
+                rendered[key] = result
+
+        if CONF_ATTRIBUTES in self._config:
+            attributes = {}
+            for attribute, attribute_template in self._config[CONF_ATTRIBUTES].items():
+                try:
+                    value = render_complex(attribute_template, variables)
+                    attributes[attribute] = value
+                    variables.update({attribute: value})
+                except TemplateError as err:
+                    logging.getLogger(
+                        f"{__package__}.{self.entity_id.split('.')[0]}"
+                    ).error(
+                        "Error rendering %s.%s template for %s: %s",
+                        CONF_ATTRIBUTES,
+                        attribute,
+                        self.entity_id,
+                        err,
+                    )
+            rendered[CONF_ATTRIBUTES] = attributes
+
+        self._rendered = rendered
