@@ -383,9 +383,7 @@ class ReolinkSmartAIBinarySensorEntity(
         unique_index = self._host.api.baichuan.smart_ai_index(
             channel, entity_description.smart_type, location
         )
-        self._attr_unique_id = (
-            f"{self._attr_unique_id}_{unique_index}"
-        )
+        self._attr_unique_id = f"{self._attr_unique_id}_{unique_index}"
 
         self._location = location
         self._attr_translation_placeholders = {
