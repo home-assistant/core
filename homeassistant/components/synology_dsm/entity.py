@@ -97,7 +97,6 @@ class SynologyDSMDeviceEntity(
         assert information is not None
         assert storage is not None
         assert network is not None
-        assert external_usb is not None
 
         if "volume" in description.key:
             assert self._device_id is not None
@@ -125,6 +124,7 @@ class SynologyDSMDeviceEntity(
             self._device_type = disk["diskType"]
         elif "device" in description.key:
             assert self._device_id is not None
+            assert external_usb is not None
             device = external_usb.get_device(self._device_id)
             assert device is not None
             self._device_name = device.device_name
@@ -133,6 +133,7 @@ class SynologyDSMDeviceEntity(
             self._device_type = device.device_type
         elif "partition" in description.key:
             assert self._device_id is not None
+            assert external_usb is not None
             for device in external_usb.get_devices.values():
                 assert device is not None
                 partition = device.get_device_partition(self._device_id)
