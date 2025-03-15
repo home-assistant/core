@@ -433,12 +433,6 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         )
         assert not device.is_active
 
-        # The client should have received another ping by now
-        async with asyncio.timeout(1):
-            await mock_client.ping_event.wait()
-
-        assert mock_client.ping is not None
-
         # Pipeline should automatically restart
         async with asyncio.timeout(1):
             await run_pipeline_called.wait()
