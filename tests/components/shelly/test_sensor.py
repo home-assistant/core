@@ -1,6 +1,7 @@
 """Tests for Shelly sensor platform."""
 
 from copy import deepcopy
+from typing import Any
 from unittest.mock import Mock
 
 from aioshelly.const import MODEL_BLU_GATEWAY_G3
@@ -345,34 +346,33 @@ async def test_block_sensor_without_value(
     assert hass.states.get(entity_id) is None
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "initial_state", "block_id", "attribute", "value"),
+    [
+        ("test_name_battery", "98", DEVICE_BLOCK_ID, "battery", None),
+        ("test_name_operation", "normal", SENSOR_BLOCK_ID, "sensorOp", "unknown"),
+    ],
+)
 async def test_block_sensor_unknown_value(
-    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_id: str,
+    initial_state: str,
+    block_id: int,
+    attribute: str,
+    value: Any,
 ) -> None:
     """Test block sensor unknown value."""
-    entity_id = f"{SENSOR_DOMAIN}.test_name_battery"
+    entity_id = f"{SENSOR_DOMAIN}.{entity_id}"
     await init_integration(hass, 1)
 
-    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "battery", None)
+    assert hass.states.get(entity_id).state == initial_state
+
+    monkeypatch.setattr(mock_block_device.blocks[block_id], attribute, value)
     mock_block_device.mock_update()
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
-
-
-async def test_block_sensor_unknown_option_value(
-    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Test block sensor unknown option value."""
-    entity_id = f"{SENSOR_DOMAIN}.test_name_operation"
-    await init_integration(hass, 1)
-
-    assert hass.states.get(entity_id).state == "normal"
-
-    monkeypatch.setattr(
-        mock_block_device.blocks[SENSOR_BLOCK_ID], "sensorOp", "unknown"
-    )
-    mock_block_device.mock_update()
-
-    assert hass.states.get(entity_id).state is None
 
 
 async def test_rpc_sensor(
