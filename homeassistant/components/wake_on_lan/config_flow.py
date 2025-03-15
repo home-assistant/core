@@ -5,7 +5,12 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
+from homeassistant.const import (
+    CONF_BROADCAST_ADDRESS,
+    CONF_BROADCAST_PORT,
+    CONF_HOST,
+    CONF_MAC,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -13,13 +18,14 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
 )
 from homeassistant.helpers.selector import (
+    ActionSelector,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
     TextSelector,
 )
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import CONF_OFF_ACTION, DEFAULT_NAME, DOMAIN
 
 
 async def validate(
@@ -46,12 +52,16 @@ async def validate_options(
     return user_input
 
 
-DATA_SCHEMA = {vol.Required(CONF_MAC): TextSelector()}
+DATA_SCHEMA = {
+    vol.Required(CONF_MAC): TextSelector(),
+}
 OPTIONS_SCHEMA = {
     vol.Optional(CONF_BROADCAST_ADDRESS): TextSelector(),
     vol.Optional(CONF_BROADCAST_PORT): NumberSelector(
         NumberSelectorConfig(min=0, max=65535, step=1, mode=NumberSelectorMode.BOX)
     ),
+    vol.Optional(CONF_HOST): TextSelector(),
+    vol.Optional(CONF_OFF_ACTION): ActionSelector(),
 }
 
 

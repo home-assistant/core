@@ -3,7 +3,7 @@
 from homeassistant.const import Platform
 
 DOMAIN = "wake_on_lan"
-PLATFORMS = [Platform.BUTTON]
+PLATFORMS = [Platform.BUTTON, Platform.SWITCH]
 
 CONF_OFF_ACTION = "turn_off"
 

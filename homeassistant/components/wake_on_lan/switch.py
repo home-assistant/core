@@ -13,6 +13,7 @@ from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_BROADCAST_ADDRESS,
     CONF_BROADCAST_PORT,
@@ -22,9 +23,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.script import Script
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_OFF_ACTION, DEFAULT_NAME, DEFAULT_PING_TIMEOUT, DOMAIN
 
@@ -42,19 +42,18 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up a wake on lan switch."""
-    broadcast_address: str | None = config.get(CONF_BROADCAST_ADDRESS)
-    broadcast_port: int | None = config.get(CONF_BROADCAST_PORT)
-    host: str | None = config.get(CONF_HOST)
-    mac_address: str = config[CONF_MAC]
-    name: str = config[CONF_NAME]
-    off_action: list[Any] | None = config.get(CONF_OFF_ACTION)
+    """Set up the Wake on LAN switch entry."""
+    broadcast_address: str | None = entry.options.get(CONF_BROADCAST_ADDRESS)
+    broadcast_port: int | None = entry.options.get(CONF_BROADCAST_PORT)
+    host: str | None = entry.options.get(CONF_HOST)
+    mac_address: str = entry.options[CONF_MAC]
+    name: str = entry.title
+    off_action: list[Any] | None = entry.options.get(CONF_OFF_ACTION)
 
     async_add_entities(
         [
@@ -86,7 +85,6 @@ class WolSwitch(SwitchEntity):
         broadcast_port: int | None,
     ) -> None:
         """Initialize the WOL switch."""
-        self._attr_name = name
         self._host = host
         self._mac_address = mac_address
         self._broadcast_address = broadcast_address
@@ -98,6 +96,11 @@ class WolSwitch(SwitchEntity):
         self._attr_assumed_state = host is None
         self._attr_should_poll = bool(not self._attr_assumed_state)
         self._attr_unique_id = dr.format_mac(mac_address)
+        self._attr_entity_registry_enabled_default = False
+        self._attr_device_info = dr.DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self._attr_unique_id)},
+            default_name=name,
+        )
 
     @property
     def is_on(self) -> bool:
