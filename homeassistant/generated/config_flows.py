@@ -696,6 +696,7 @@ FLOWS = {
         "webdav",
         "webmin",
         "webostv",
+        "weconnect",
         "weheat",
         "wemo",
         "whirlpool",

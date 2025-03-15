@@ -1,0 +1,10 @@
+{
+  "domain": "weconnect",
+  "name": "Volkswagen WeConnect",
+  "codeowners": ["@krzysdabro"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/weconnect/",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["weconnect==0.60.8"]
+}
