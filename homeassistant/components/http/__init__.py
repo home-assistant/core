@@ -414,14 +414,7 @@ class HomeAssistantHTTP:
         self.app[KEY_HASS] = self.hass
         self.app["hass"] = self.hass  # For backwards compatibility
 
-        # Order matters, security filters middleware needs to go first,
-        # forwarded middleware needs to go second.
-        setup_security_filter(self.app)
-
-        async_setup_forwarded(self.app, use_x_forwarded_for, self.trusted_proxies)
-
-        setup_request_context(self.app, current_request)
-
+        # Set up bans first before we look into what's being requested
         if is_ban_enabled:
             setup_bans(
                 self.hass,
@@ -431,6 +424,14 @@ class HomeAssistantHTTP:
                 log_banned_networks,
                 notify_banned_networks,
             )
+
+        # Order matters, security filters middleware needs to go first,
+        # forwarded middleware needs to go second.
+        setup_security_filter(self.app)
+
+        async_setup_forwarded(self.app, use_x_forwarded_for, self.trusted_proxies)
+
+        setup_request_context(self.app, current_request)
 
         await async_setup_auth(self.hass, self.app)
 
