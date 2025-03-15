@@ -52,6 +52,7 @@ ABBREVIATIONS = {
     "dock_cmd_tpl": "dock_command_template",
     "e": "encoding",
     "en": "enabled_by_default",
+    "en_stat_wr_suppr": "enable_state_write_suppression",
     "ent_cat": "entity_category",
     "ent_pic": "entity_picture",
     "evt_typ": "event_types",
