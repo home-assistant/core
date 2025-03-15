@@ -208,7 +208,7 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 
     if domain == Platform.SWITCH:
         schema |= {
-            vol.Optional(CONF_STATE): selector.TemplateSelector(),
+            vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
             vol.Optional(CONF_TURN_ON): selector.ActionSelector(),
             vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
         }
@@ -409,8 +409,6 @@ CREATE_PREVIEW_ENTITY: dict[
 
 class TemplateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle config flow for template helper."""
-
-    MINOR_VERSION = 2
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW

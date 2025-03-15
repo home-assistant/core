@@ -245,8 +245,10 @@ async def test_setup(hass: HomeAssistant, setup_state_switch) -> None:
     assert state.state == STATE_ON
 
 
+@pytest.mark.parametrize("state_key", ["value_template", "state"])
 async def test_setup_config_entry(
     hass: HomeAssistant,
+    state_key: str,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the config flow."""
@@ -262,7 +264,7 @@ async def test_setup_config_entry(
         domain=template.DOMAIN,
         options={
             "name": "My template",
-            "state": "{{ states('switch.one') }}",
+            state_key: "{{ states('switch.one') }}",
             "template_type": SWITCH_DOMAIN,
         },
         title="My template",

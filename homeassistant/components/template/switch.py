@@ -120,6 +120,16 @@ def rewrite_legacy_to_modern_conf(
     return switches
 
 
+def rewrite_options_to_moder_conf(option_config: dict[str, dict]) -> dict[str, dict]:
+    """Rewrite option configuration to modern configuration."""
+    option_config = {**option_config}
+
+    if CONF_VALUE_TEMPLATE in option_config:
+        option_config[CONF_STATE] = option_config.pop(CONF_VALUE_TEMPLATE)
+
+    return option_config
+
+
 @callback
 def _async_create_template_tracking_entities(
     async_add_entities: AddEntitiesCallback,
@@ -179,6 +189,7 @@ async def async_setup_entry(
     """Initialize config entry."""
     _options = dict(config_entry.options)
     _options.pop("template_type")
+    _options = rewrite_options_to_moder_conf(_options)
     validated_config = SWITCH_CONFIG_SCHEMA(_options)
     async_add_entities([SwitchTemplate(hass, validated_config, config_entry.entry_id)])
 

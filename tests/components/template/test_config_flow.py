@@ -173,7 +173,7 @@ BINARY_SENSOR_OPTIONS = {
         ),
         (
             "switch",
-            {"state": "{{ states('switch.one') }}"},
+            {"value_template": "{{ states('switch.one') }}"},
             "on",
             {"one": "on", "two": "off"},
             {},
@@ -278,7 +278,7 @@ async def test_config_flow(
         ),
         (
             "switch",
-            {"state": "{{ false }}"},
+            {"value_template": "{{ false }}"},
             {},
             {},
         ),
@@ -554,13 +554,13 @@ def get_suggested(schema, key):
         ),
         (
             "switch",
-            {"state": "{{ states('switch.one') }}"},
-            {"state": "{{ states('switch.two') }}"},
+            {"value_template": "{{ states('switch.one') }}"},
+            {"value_template": "{{ states('switch.two') }}"},
             ["on", "off"],
             {"one": "on", "two": "off"},
             {},
             {},
-            "state",
+            "value_template",
         ),
     ],
 )
@@ -1334,7 +1334,7 @@ async def test_option_flow_sensor_preview_config_entry_removed(
         ),
         (
             "switch",
-            {"state": "{{ false }}"},
+            {"value_template": "{{ false }}"},
             {},
             {},
         ),
@@ -1479,65 +1479,3 @@ async def test_options_flow_change_device(
         **state_template,
         **extra_options,
     }
-
-
-@pytest.mark.parametrize(
-    (
-        "version",
-        "minor_version",
-        "options",
-        "expected_version",
-        "expected_minor_version",
-        "expected_options",
-    ),
-    [
-        (1, 1, SWITCH_BEFORE_OPTIONS, 1, 2, SWITCH_AFTER_OPTIONS),
-        (1, 2, SWITCH_AFTER_OPTIONS, 1, 2, SWITCH_AFTER_OPTIONS),
-        (1, 1, SENSOR_OPTIONS, 1, 2, SENSOR_OPTIONS),
-        (1, 2, SENSOR_OPTIONS, 1, 2, SENSOR_OPTIONS),
-        (1, 1, BINARY_SENSOR_OPTIONS, 1, 2, BINARY_SENSOR_OPTIONS),
-        (1, 2, BINARY_SENSOR_OPTIONS, 1, 2, BINARY_SENSOR_OPTIONS),
-    ],
-)
-async def test_migrate_config_entry(
-    hass: HomeAssistant,
-    version: int,
-    minor_version: int,
-    options: dict[str, Any],
-    expected_options: dict[str, Any],
-    expected_version: int,
-    expected_minor_version: int,
-) -> None:
-    """Test migrating a config entry."""
-    config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options=options,
-        title="My Template",
-        version=version,
-        minor_version=minor_version,
-    )
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert dict(config_entry.options) == expected_options
-    assert config_entry.version == expected_version
-    assert config_entry.minor_version == expected_minor_version
-
-
-async def test_migrate_config_entry_from_future_version(hass: HomeAssistant) -> None:
-    """Test migrating a config entry."""
-    config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options=SWITCH_BEFORE_OPTIONS,
-        title="My Template",
-        version=2,
-        minor_version=1,
-    )
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state == config_entries.ConfigEntryState.MIGRATION_ERROR

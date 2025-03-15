@@ -8,14 +8,11 @@ import logging
 from typing import Any
 
 from homeassistant import config as conf_util
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_NAME,
-    CONF_STATE,
     CONF_UNIQUE_ID,
-    CONF_VALUE_TEMPLATE,
     SERVICE_RELOAD,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
@@ -30,16 +27,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 from homeassistant.util.hass_dict import HassKey
 
-from .const import (
-    CONF_MAX,
-    CONF_MIN,
-    CONF_STEP,
-    CONF_TRIGGER,
-    CONFIG_ENTRY_MINOR_VERSION,
-    CONFIG_ENTRY_VERSION,
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import CONF_MAX, CONF_MIN, CONF_STEP, CONF_TRIGGER, DOMAIN, PLATFORMS
 from .coordinator import TriggerUpdateCoordinator
 from .helpers import async_get_blueprints
 
@@ -177,34 +165,3 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
 
     if coordinator_tasks:
         hass.data[DATA_COORDINATORS] = await asyncio.gather(*coordinator_tasks)
-
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Migrate the options from config entry data."""
-    _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
-    data: dict[str, Any] = dict(entry.data)
-    options: dict[str, Any] = dict(entry.options)
-    if entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
-
-    if entry.version == 1 and entry.minor_version < 2:
-        # Migrate switch value_template to state.
-        if (
-            options.get("template_type") == SWITCH_DOMAIN
-            and options.get(CONF_VALUE_TEMPLATE) is not None
-        ):
-            options[CONF_STATE] = options[CONF_VALUE_TEMPLATE]
-
-        hass.config_entries.async_update_entry(
-            entry,
-            data=data,
-            options=options,
-            version=CONFIG_ENTRY_VERSION,
-            minor_version=CONFIG_ENTRY_MINOR_VERSION,
-        )
-
-    _LOGGER.debug(
-        "Migration to version %s:%s successful", entry.version, entry.minor_version
-    )
-    return True
