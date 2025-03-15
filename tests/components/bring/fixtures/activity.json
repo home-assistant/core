@@ -1,0 +1,62 @@
+{
+  "timeline": [
+    {
+      "type": "LIST_ITEMS_CHANGED",
+      "content": {
+        "uuid": "673594a9-f92d-4cb6-adf1-d2f7a83207a4",
+        "purchase": [
+          {
+            "uuid": "658a3770-1a03-4ee0-94a6-10362a642377",
+            "itemId": "Gurke",
+            "specification": "",
+            "attributes": []
+          }
+        ],
+        "recently": [
+          {
+            "uuid": "1ed22d3d-f19b-4530-a518-19872da3fd3e",
+            "itemId": "Milch",
+            "specification": "",
+            "attributes": []
+          }
+        ],
+        "sessionDate": "2025-01-01T03:09:33.036Z",
+        "publicUserUuid": "9a21fdfc-63a4-441a-afc1-ef3030605a9d"
+      }
+    },
+    {
+      "type": "LIST_ITEMS_ADDED",
+      "content": {
+        "uuid": "9a16635c-dea2-4e00-904a-c5034f9cfecf",
+        "items": [
+          {
+            "uuid": "66a633a2-ae09-47bf-8845-3c0198480544",
+            "itemId": "Joghurt",
+            "specification": "",
+            "attributes": []
+          }
+        ],
+        "sessionDate": "2025-01-01T02:54:57.656Z",
+        "publicUserUuid": "73af455f-c158-4004-a5e0-79f4f8a6d4bd"
+      }
+    },
+    {
+      "type": "LIST_ITEMS_REMOVED",
+      "content": {
+        "uuid": "303dedf6-d4b2-4d25-a8cd-1c7967b84fcb",
+        "items": [
+          {
+            "uuid": "2ba8ddb6-01c6-4b0b-a89d-f3da6b291528",
+            "itemId": "Tofu",
+            "specification": "",
+            "attributes": []
+          }
+        ],
+        "sessionDate": "2025-01-01T03:09:12.380Z",
+        "publicUserUuid": "7d5e9d08-877a-4c36-8740-a9bf74ec690a"
+      }
+    }
+  ],
+  "timestamp": "2025-01-01T03:09:33.036Z",
+  "totalEvents": 3
+}

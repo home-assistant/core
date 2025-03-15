@@ -19,6 +19,8 @@ from homeassistant.components.climate import (
     FAN_LOW,
     FAN_MEDIUM,
     FAN_ON,
+    SWING_OFF,
+    SWING_ON,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -32,7 +34,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
@@ -47,7 +49,7 @@ CONTROLLER_MODES_INV = {value: key for key, value in CONTROLLER_MODES.items()}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate(s) for KNX platform."""
     knx_module = hass.data[KNX_MODULE_KEY]
@@ -136,6 +138,14 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
             ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS
         ),
         fan_speed_mode=config[ClimateSchema.CONF_FAN_SPEED_MODE],
+        group_address_swing=config.get(ClimateSchema.CONF_SWING_ADDRESS),
+        group_address_swing_state=config.get(ClimateSchema.CONF_SWING_STATE_ADDRESS),
+        group_address_horizontal_swing=config.get(
+            ClimateSchema.CONF_SWING_HORIZONTAL_ADDRESS
+        ),
+        group_address_horizontal_swing_state=config.get(
+            ClimateSchema.CONF_SWING_HORIZONTAL_STATE_ADDRESS
+        ),
         group_address_humidity_state=config.get(
             ClimateSchema.CONF_HUMIDITY_STATE_ADDRESS
         ),
@@ -207,6 +217,13 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
                 self._attr_fan_modes = [self.fan_zero_mode] + [
                     f"{percentage}%" for percentage in self._fan_modes_percentages[1:]
                 ]
+        if self._device.swing.initialized:
+            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
+            self._attr_swing_modes = [SWING_ON, SWING_OFF]
+
+        if self._device.horizontal_swing.initialized:
+            self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
+            self._attr_swing_horizontal_modes = [SWING_ON, SWING_OFF]
 
         self._attr_target_temperature_step = self._device.temperature_step
         self._attr_unique_id = (
@@ -399,6 +416,28 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
 
         await self._device.set_fan_speed(self._fan_modes_percentages[fan_mode_index])
 
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set the swing setting."""
+        await self._device.set_swing(swing_mode == SWING_ON)
+
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set the horizontal swing setting."""
+        await self._device.set_horizontal_swing(swing_horizontal_mode == SWING_ON)
+
+    @property
+    def swing_mode(self) -> str | None:
+        """Return the swing setting."""
+        if self._device.swing.value is not None:
+            return SWING_ON if self._device.swing.value else SWING_OFF
+        return None
+
+    @property
+    def swing_horizontal_mode(self) -> str | None:
+        """Return the horizontal swing setting."""
+        if self._device.horizontal_swing.value is not None:
+            return SWING_ON if self._device.horizontal_swing.value else SWING_OFF
+        return None
+
     @property
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
@@ -427,7 +466,7 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
             self._device.mode.xknx.devices.async_remove(self._device.mode)
         await super().async_will_remove_from_hass()
 
-    def after_update_callback(self, _device: XknxDevice) -> None:
+    def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
         if self._device.mode is not None and self._device.mode.supports_controller_mode:
             hvac_mode = CONTROLLER_MODES.get(
@@ -435,4 +474,4 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
             )
             if hvac_mode is not HVACMode.OFF:
                 self._last_hvac_mode = hvac_mode
-        super().after_update_callback(_device)
+        super().after_update_callback(device)

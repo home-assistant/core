@@ -29,6 +29,7 @@ async def test_button(
 @pytest.mark.parametrize(
     ("name", "func"),
     [
+        ("wake", "wake_up"),
         ("flash_lights", "flash_lights"),
         ("honk_horn", "honk_horn"),
         ("keyless_driving", "remote_start_drive"),

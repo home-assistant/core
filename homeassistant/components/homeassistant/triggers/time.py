@@ -35,14 +35,14 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _TIME_TRIGGER_ENTITY = vol.All(str, cv.entity_domain(["input_datetime", "sensor"]))
 _TIME_AT_SCHEMA = vol.Any(cv.time, _TIME_TRIGGER_ENTITY)
 
 _TIME_TRIGGER_ENTITY_WITH_OFFSET = vol.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(["sensor"]),
+        vol.Required(CONF_ENTITY_ID): cv.entity_domain(["input_datetime", "sensor"]),
         vol.Optional(CONF_OFFSET): cv.time_period,
     }
 )
@@ -156,14 +156,17 @@ async def async_attach_trigger(
 
             if has_date:
                 # If input_datetime has date, then track point in time.
-                trigger_dt = datetime(
-                    year,
-                    month,
-                    day,
-                    hour,
-                    minute,
-                    second,
-                    tzinfo=dt_util.get_default_time_zone(),
+                trigger_dt = (
+                    datetime(
+                        year,
+                        month,
+                        day,
+                        hour,
+                        minute,
+                        second,
+                        tzinfo=dt_util.get_default_time_zone(),
+                    )
+                    + offset
                 )
                 # Only set up listener if time is now or in the future.
                 if trigger_dt >= dt_util.now():
@@ -178,6 +181,17 @@ async def async_attach_trigger(
                     )
             elif has_time:
                 # Else if it has time, then track time change.
+                if offset != timedelta(0):
+                    # Create a temporary datetime object to get an offset.
+                    temp_dt = dt_util.now().replace(
+                        hour=hour, minute=minute, second=second, microsecond=0
+                    )
+                    temp_dt += offset
+                    # Ignore the date and apply the offset even if it wraps
+                    # around to the next day.
+                    hour = temp_dt.hour
+                    minute = temp_dt.minute
+                    second = temp_dt.second
                 remove = async_track_time_change(
                     hass,
                     partial(

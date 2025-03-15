@@ -51,7 +51,7 @@
   "issues": {
     "deprecated_yaml_import_issue_cannot_connect": {
       "title": "The {integration_title} YAML configuration import failed",
-      "description": "Configuring {integration_title} using YAML is being removed but there was an connection error importing your YAML configuration.\n\nEnsure connection to {integration_title} works and restart Home Assistant to try again or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+      "description": "Configuring {integration_title} using YAML is being removed but there was a connection error importing your YAML configuration.\n\nEnsure connection to {integration_title} works and restart Home Assistant to try again or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
     }
   }
 }

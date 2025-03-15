@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from aioswitcher.api import SwitcherApi, SwitcherBaseResponse
 from aioswitcher.api.remotes import SwitcherBreezeRemote
 from aioswitcher.device import (
     DeviceCategory,
@@ -30,13 +29,15 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitcherConfigEntry
 from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
 from .utils import get_breeze_remote_manager
+
+API_CONTROL_BREEZE_DEVICE = "control_breeze_device"
 
 DEVICE_MODE_TO_HA = {
     ThermostatMode.COOL: HVACMode.COOL,
@@ -61,7 +62,7 @@ HA_TO_DEVICE_FAN = {value: key for key, value in DEVICE_FAN_TO_HA.items()}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: SwitcherConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switcher climate from config entry."""
 
@@ -155,27 +156,7 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
 
     async def _async_control_breeze_device(self, **kwargs: Any) -> None:
         """Call Switcher Control Breeze API."""
-        response: SwitcherBaseResponse | None = None
-        error = None
-
-        try:
-            async with SwitcherApi(
-                self.coordinator.data.device_type,
-                self.coordinator.data.ip_address,
-                self.coordinator.data.device_id,
-                self.coordinator.data.device_key,
-            ) as swapi:
-                response = await swapi.control_breeze_device(self._remote, **kwargs)
-        except (TimeoutError, OSError, RuntimeError) as err:
-            error = repr(err)
-
-        if error or not response or not response.successful:
-            self.coordinator.last_update_success = False
-            self.async_write_ha_state()
-            raise HomeAssistantError(
-                f"Call Breeze control for {self.name} failed, "
-                f"response/error: {response or error}"
-            )
+        await self._async_call_api(API_CONTROL_BREEZE_DEVICE, self._remote, **kwargs)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

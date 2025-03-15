@@ -1,4 +1,4 @@
-"""Test the Whirlpool Sixth Sense climate domain."""
+"""Test the Honeywell climate domain."""
 
 import datetime
 from unittest.mock import MagicMock
@@ -1200,6 +1200,7 @@ async def test_unique_id(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test unique id convert to string."""
+    config_entry.add_to_hass(hass)
     entity_registry.async_get_or_create(
         Platform.CLIMATE,
         DOMAIN,

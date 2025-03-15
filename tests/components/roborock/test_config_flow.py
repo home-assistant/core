@@ -244,3 +244,28 @@ async def test_reauth_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_roborock_entry.data["user_data"]["rriot"]["s"] == "new_password_hash"
+
+
+async def test_account_already_configured(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    mock_roborock_entry: MockConfigEntry,
+) -> None:
+    """Handle the config flow and make sure it succeeds."""
+    with patch(
+        "homeassistant.components.roborock.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        with patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code"
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+            )
+
+            assert result["type"] is FlowResultType.ABORT
+            assert result["reason"] == "already_configured_account"

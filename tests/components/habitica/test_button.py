@@ -2,31 +2,30 @@
 
 from collections.abc import Generator
 from datetime import timedelta
-from http import HTTPStatus
-import re
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientError
+from freezegun.api import FrozenDateTimeFactory
+from habiticalib import HabiticaUserResponse, Skill
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.habitica.const import DEFAULT_URL, DOMAIN
+from homeassistant.components.habitica.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
 
-from .conftest import mock_called_with
+from .conftest import ERROR_BAD_REQUEST, ERROR_NOT_AUTHORIZED, ERROR_TOO_MANY_REQUESTS
 
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_json_object_fixture,
+    load_fixture,
     snapshot_platform,
 )
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
@@ -51,29 +50,15 @@ def button_only() -> Generator[None]:
 async def test_buttons(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
+    habitica: AsyncMock,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     fixture: str,
 ) -> None:
     """Test button entities."""
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/user",
-        json=load_json_object_fixture(f"{fixture}.json", DOMAIN),
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        params={"type": "completedTodos"},
-        json=load_json_object_fixture("completed_todos.json", DOMAIN),
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        json=load_json_object_fixture("tasks.json", DOMAIN),
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/content",
-        params={"language": "en"},
-        json=load_json_object_fixture("content.json", DOMAIN),
+
+    habitica.get_user.return_value = HabiticaUserResponse.from_json(
+        load_fixture(f"{fixture}.json", DOMAIN)
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -85,70 +70,87 @@ async def test_buttons(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "api_url", "fixture"),
+    ("entity_id", "call_func", "call_args", "fixture"),
     [
-        ("button.test_user_allocate_all_stat_points", "user/allocate-now", "user"),
-        ("button.test_user_buy_a_health_potion", "user/buy-health-potion", "user"),
-        ("button.test_user_revive_from_death", "user/revive", "user"),
-        ("button.test_user_start_my_day", "cron", "user"),
+        (
+            "button.test_user_allocate_all_stat_points",
+            "allocate_stat_points",
+            None,
+            "user",
+        ),
+        ("button.test_user_buy_a_health_potion", "buy_health_potion", None, "user"),
+        ("button.test_user_revive_from_death", "revive", None, "user"),
+        ("button.test_user_start_my_day", "run_cron", None, "user"),
         (
             "button.test_user_chilling_frost",
-            "user/class/cast/frost",
+            "cast_skill",
+            Skill.CHILLING_FROST,
             "wizard_fixture",
         ),
         (
             "button.test_user_earthquake",
-            "user/class/cast/earth",
+            "cast_skill",
+            Skill.EARTHQUAKE,
             "wizard_fixture",
         ),
         (
             "button.test_user_ethereal_surge",
-            "user/class/cast/mpheal",
+            "cast_skill",
+            Skill.ETHEREAL_SURGE,
             "wizard_fixture",
         ),
         (
             "button.test_user_stealth",
-            "user/class/cast/stealth",
+            "cast_skill",
+            Skill.STEALTH,
             "rogue_fixture",
         ),
         (
             "button.test_user_tools_of_the_trade",
-            "user/class/cast/toolsOfTrade",
+            "cast_skill",
+            Skill.TOOLS_OF_THE_TRADE,
             "rogue_fixture",
         ),
         (
             "button.test_user_defensive_stance",
-            "user/class/cast/defensiveStance",
+            "cast_skill",
+            Skill.DEFENSIVE_STANCE,
             "warrior_fixture",
         ),
         (
             "button.test_user_intimidating_gaze",
-            "user/class/cast/intimidate",
+            "cast_skill",
+            Skill.INTIMIDATING_GAZE,
             "warrior_fixture",
         ),
         (
             "button.test_user_valorous_presence",
-            "user/class/cast/valorousPresence",
+            "cast_skill",
+            Skill.VALOROUS_PRESENCE,
             "warrior_fixture",
         ),
         (
             "button.test_user_healing_light",
-            "user/class/cast/heal",
+            "cast_skill",
+            Skill.HEALING_LIGHT,
             "healer_fixture",
         ),
         (
             "button.test_user_protective_aura",
-            "user/class/cast/protectAura",
+            "cast_skill",
+            Skill.PROTECTIVE_AURA,
             "healer_fixture",
         ),
         (
             "button.test_user_searing_brightness",
-            "user/class/cast/brightness",
+            "cast_skill",
+            Skill.SEARING_BRIGHTNESS,
             "healer_fixture",
         ),
         (
             "button.test_user_blessing",
-            "user/class/cast/healAll",
+            "cast_skill",
+            Skill.BLESSING,
             "healer_fixture",
         ),
     ],
@@ -156,58 +158,48 @@ async def test_buttons(
 async def test_button_press(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
+    habitica: AsyncMock,
     entity_id: str,
-    api_url: str,
+    call_func: str,
+    call_args: Skill | None,
     fixture: str,
 ) -> None:
     """Test button press method."""
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/user",
-        json=load_json_object_fixture(f"{fixture}.json", DOMAIN),
+
+    habitica.get_user.return_value = HabiticaUserResponse.from_json(
+        load_fixture(f"{fixture}.json", DOMAIN)
     )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        params={"type": "completedTodos"},
-        json=load_json_object_fixture("completed_todos.json", DOMAIN),
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        json=load_json_object_fixture("tasks.json", DOMAIN),
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/content",
-        params={"language": "en"},
-        json=load_json_object_fixture("content.json", DOMAIN),
-    )
+
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    aioclient_mock.post(f"{DEFAULT_URL}/api/v3/{api_url}", json={"data": None})
-
+    mocked = getattr(habitica, call_func)
+    mocked.reset_mock()
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-
-    assert mock_called_with(aioclient_mock, "post", f"{DEFAULT_URL}/api/v3/{api_url}")
+    if call_args:
+        mocked.assert_awaited_once_with(call_args)
+    else:
+        mocked.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "api_url"),
+    ("entity_id", "call_func"),
     [
-        ("button.test_user_allocate_all_stat_points", "user/allocate-now"),
-        ("button.test_user_buy_a_health_potion", "user/buy-health-potion"),
-        ("button.test_user_revive_from_death", "user/revive"),
-        ("button.test_user_start_my_day", "cron"),
-        ("button.test_user_chilling_frost", "user/class/cast/frost"),
-        ("button.test_user_earthquake", "user/class/cast/earth"),
-        ("button.test_user_ethereal_surge", "user/class/cast/mpheal"),
+        ("button.test_user_allocate_all_stat_points", "allocate_stat_points"),
+        ("button.test_user_buy_a_health_potion", "buy_health_potion"),
+        ("button.test_user_revive_from_death", "revive"),
+        ("button.test_user_start_my_day", "run_cron"),
+        ("button.test_user_chilling_frost", "cast_skill"),
+        ("button.test_user_earthquake", "cast_skill"),
+        ("button.test_user_ethereal_surge", "cast_skill"),
     ],
     ids=[
         "allocate-points",
@@ -220,34 +212,39 @@ async def test_button_press(
     ],
 )
 @pytest.mark.parametrize(
-    ("status_code", "msg", "exception"),
+    ("raise_exception", "msg", "expected_exception"),
     [
         (
-            HTTPStatus.TOO_MANY_REQUESTS,
-            "Rate limit exceeded, try again later",
-            ServiceValidationError,
-        ),
-        (
-            HTTPStatus.BAD_REQUEST,
-            "Unable to connect to Habitica, try again later",
+            ERROR_TOO_MANY_REQUESTS,
+            "Rate limit exceeded, try again in 5 seconds",
             HomeAssistantError,
         ),
         (
-            HTTPStatus.UNAUTHORIZED,
+            ERROR_BAD_REQUEST,
+            "Unable to connect to Habitica: reason",
+            HomeAssistantError,
+        ),
+        (
+            ERROR_NOT_AUTHORIZED,
             "Unable to complete action, the required conditions are not met",
             ServiceValidationError,
+        ),
+        (
+            ClientError,
+            "Unable to connect to Habitica: ",
+            HomeAssistantError,
         ),
     ],
 )
 async def test_button_press_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
     entity_id: str,
-    api_url: str,
-    status_code: HTTPStatus,
+    call_func: str,
+    raise_exception: Exception,
     msg: str,
-    exception: Exception,
+    expected_exception: Exception,
 ) -> None:
     """Test button press exceptions."""
 
@@ -257,21 +254,16 @@ async def test_button_press_exceptions(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/{api_url}",
-        status=status_code,
-        json={"data": None},
-    )
+    func = getattr(habitica, call_func)
+    func.side_effect = raise_exception
 
-    with pytest.raises(exception, match=msg):
+    with pytest.raises(expected_exception, match=msg):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-
-    assert mock_called_with(mock_habitica, "post", f"{DEFAULT_URL}/api/v3/{api_url}")
 
 
 @pytest.mark.parametrize(
@@ -322,21 +314,15 @@ async def test_button_press_exceptions(
 async def test_button_unavailable(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
+    habitica: AsyncMock,
     fixture: str,
     entity_ids: list[str],
 ) -> None:
     """Test buttons are unavailable if conditions are not met."""
 
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/user",
-        json=load_json_object_fixture(f"{fixture}.json", DOMAIN),
+    habitica.get_user.return_value = HabiticaUserResponse.from_json(
+        load_fixture(f"{fixture}.json", DOMAIN)
     )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        json=load_json_object_fixture("tasks.json", DOMAIN),
-    )
-    aioclient_mock.get(re.compile(r".*"), json={"data": []})
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -352,9 +338,8 @@ async def test_button_unavailable(
 async def test_class_change(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
+    habitica: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test removing and adding skills after class change."""
     mage_skills = [
@@ -368,23 +353,9 @@ async def test_class_change(
         "button.test_user_searing_brightness",
         "button.test_user_blessing",
     ]
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/user",
-        json=load_json_object_fixture("wizard_fixture.json", DOMAIN),
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        params={"type": "completedTodos"},
-        json=load_json_object_fixture("completed_todos.json", DOMAIN),
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/tasks/user",
-        json=load_json_object_fixture("tasks.json", DOMAIN),
-    )
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/content",
-        params={"language": "en"},
-        json=load_json_object_fixture("content.json", DOMAIN),
+
+    habitica.get_user.return_value = HabiticaUserResponse.from_json(
+        load_fixture("wizard_fixture.json", DOMAIN)
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -395,13 +366,11 @@ async def test_class_change(
     for skill in mage_skills:
         assert hass.states.get(skill)
 
-    aioclient_mock._mocks.pop(0)
-    aioclient_mock.get(
-        f"{DEFAULT_URL}/api/v3/user",
-        json=load_json_object_fixture("healer_fixture.json", DOMAIN),
+    habitica.get_user.return_value = HabiticaUserResponse.from_json(
+        load_fixture("healer_fixture.json", DOMAIN)
     )
-
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=60))
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     for skill in mage_skills:

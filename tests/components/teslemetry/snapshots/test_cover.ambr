@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -54,6 +55,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -102,6 +104,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -150,6 +153,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -198,6 +202,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -246,6 +251,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -294,6 +300,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -335,54 +342,6 @@
     'state': 'open',
   })
 # ---
-# name: test_cover_alt[cover.test_sunroof-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.test_sunroof',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
-    'original_icon': None,
-    'original_name': 'Sunroof',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': <CoverEntityFeature: 11>,
-    'translation_key': 'vehicle_state_sun_roof_state',
-    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_sun_roof_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_alt[cover.test_sunroof-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Test Sunroof',
-      'supported_features': <CoverEntityFeature: 11>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.test_sunroof',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_cover_alt[cover.test_trunk-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -390,6 +349,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -438,6 +398,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -486,6 +447,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -534,6 +496,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -582,6 +545,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -630,6 +594,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -678,6 +643,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -718,4 +684,40 @@
     'last_updated': <ANY>,
     'state': 'closed',
   })
+# ---
+# name: test_cover_streaming[cover.test_charge_port_door-closed]
+  'closed'
+# ---
+# name: test_cover_streaming[cover.test_charge_port_door-open]
+  'closed'
+# ---
+# name: test_cover_streaming[cover.test_charge_port_door-unknown]
+  'unknown'
+# ---
+# name: test_cover_streaming[cover.test_frunk-closed]
+  'unknown'
+# ---
+# name: test_cover_streaming[cover.test_frunk-open]
+  'unknown'
+# ---
+# name: test_cover_streaming[cover.test_frunk-unknown]
+  'unknown'
+# ---
+# name: test_cover_streaming[cover.test_trunk-closed]
+  'unknown'
+# ---
+# name: test_cover_streaming[cover.test_trunk-open]
+  'unknown'
+# ---
+# name: test_cover_streaming[cover.test_trunk-unknown]
+  'unknown'
+# ---
+# name: test_cover_streaming[cover.test_windows-closed]
+  'unknown'
+# ---
+# name: test_cover_streaming[cover.test_windows-open]
+  'unknown'
+# ---
+# name: test_cover_streaming[cover.test_windows-unknown]
+  'unknown'
 # ---

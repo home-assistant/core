@@ -30,5 +30,20 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "button": {
+        "name": "Button {key}"
+      },
+      "overload": {
+        "name": "Overload"
+      }
+    },
+    "sensor": {
+      "brightness": {
+        "name": "Brightness"
+      }
+    }
   }
 }

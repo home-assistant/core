@@ -18,6 +18,10 @@
           "username": "Username to login to the Reolink device itself. Not the Reolink cloud account.",
           "password": "Password to login to the Reolink device itself. Not the Reolink cloud account."
         }
+      },
+      "privacy": {
+        "title": "Permission to disable Reolink privacy mode",
+        "description": "Privacy mode is enabled on Reolink device {host}. By pressing SUBMIT, the privacy mode will be disabled to retrieve the necessary information from the Reolink device. You can abort the setup by pressing X and repeat the setup at a time in which privacy mode can be disabled. After this configuration, you are free to enable the privacy mode again using the privacy mode switch entity. During normal startup the privacy mode will not be disabled. Note however that all entities will be marked unavailable as long as the privacy mode is active."
       }
     },
     "error": {
@@ -34,7 +38,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "unique_id_mismatch": "The mac address of the device does not match the previous mac address"
+      "unique_id_mismatch": "The MAC address of the device does not match the previous MAC address"
     }
   },
   "options": {
@@ -54,7 +58,49 @@
       "message": "Reolink {service_name} error: config entry not found or not loaded"
     },
     "service_not_chime": {
-      "message": "Reolink play_chime error: {device_name} is not a chime"
+      "message": "Reolink play_chime error: {device_name} is not a Chime"
+    },
+    "invalid_parameter": {
+      "message": "Invalid input parameter: {err}"
+    },
+    "api_error": {
+      "message": "The device responded with a error: {err}"
+    },
+    "invalid_content_type": {
+      "message": "Received a different content type than expected: {err}"
+    },
+    "invalid_credentials": {
+      "message": "Invalid credentials: {err}"
+    },
+    "login_error": {
+      "message": "Error during login attempt: {err}"
+    },
+    "no_data": {
+      "message": "Device returned no data: {err}"
+    },
+    "unexpected_data": {
+      "message": "Device returned unexpected data: {err}"
+    },
+    "not_supported": {
+      "message": "Function not supported by this device: {err}"
+    },
+    "subscription_error": {
+      "message": "Error during ONVIF subscription: {err}"
+    },
+    "connection_error": {
+      "message": "Could not connect to the device: {err}"
+    },
+    "timeout": {
+      "message": "Timeout waiting on a response: {err}"
+    },
+    "unexpected": {
+      "message": "Unexpected Reolink error: {err}"
+    },
+    "firmware_install_error": {
+      "message": "Error trying to update Reolink firmware: {err}"
+    },
+    "config_entry_not_ready": {
+      "message": "Error while trying to setup {host}: {err}"
     }
   },
   "issues": {
@@ -76,21 +122,17 @@
     },
     "firmware_update": {
       "title": "Reolink firmware update required",
-      "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The latest firmware can be downloaded from the [Reolink download center]({download_link})."
-    },
-    "hdr_switch_deprecated": {
-      "title": "Reolink HDR switch deprecated",
-      "description": "The Reolink HDR switch entity is deprecated and will be removed in HA 2025.2.0. It has been replaced by a HDR select entity offering options `on`, `off` and `auto`. To remove this issue, please adjust automations accordingly and disable the HDR switch entity."
+      "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The firmware can be updated by pressing \"install\" in the more info dialog of the update entity of \"{name}\" from within Home Assistant. Alternatively, the latest firmware can be downloaded from the [Reolink download center]({download_link})."
     },
     "hub_switch_deprecated": {
       "title": "Reolink Home Hub switches deprecated",
-      "description": "The redundant 'Record', 'Email on event', 'FTP upload', 'Push notifications', and 'Buzzer on event' switches on the Reolink Home Hub are depricated since the new firmware no longer supports these. Please use the equally named switches under each of the camera devices connected to the Home Hub instead. To remove this issue, please adjust automations accordingly and disable the switch entities mentioned."
+      "description": "The redundant 'Record', 'Email on event', 'FTP upload', 'Push notifications', and 'Buzzer on event' switches on the Reolink Home Hub are deprecated since the new firmware no longer supports these. Please use the equally named switches under each of the camera devices connected to the Home Hub instead. To remove this issue, please adjust automations accordingly and disable the switch entities mentioned."
     }
   },
   "services": {
     "ptz_move": {
       "name": "PTZ move",
-      "description": "Move the camera with a specific speed.",
+      "description": "Moves the camera with a specific speed.",
       "fields": {
         "speed": {
           "name": "Speed",
@@ -100,11 +142,11 @@
     },
     "play_chime": {
       "name": "Play chime",
-      "description": "Play a ringtone on a chime.",
+      "description": "Plays a ringtone on a Reolink Chime.",
       "fields": {
         "device_id": {
           "name": "Target chime",
-          "description": "The chime to play the ringtone on."
+          "description": "The Reolink Chime to play the ringtone on."
         },
         "ringtone": {
           "name": "Ringtone",
@@ -171,6 +213,13 @@
       },
       "package": {
         "name": "Package",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "cry": {
+        "name": "Baby crying",
         "state": {
           "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
@@ -528,6 +577,7 @@
           "stayoff": "Stay off",
           "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
           "alwaysonatnight": "Auto & always on at night",
+          "always": "Always on",
           "alwayson": "Always on"
         }
       },
@@ -691,8 +741,8 @@
       "battery_state": {
         "name": "Battery state",
         "state": {
-          "discharging": "Discharging",
-          "charging": "Charging",
+          "discharging": "[%key:common::state::discharging%]",
+          "charging": "[%key:common::state::charging%]",
           "chargecomplete": "Charge complete"
         }
       },
@@ -762,6 +812,9 @@
       },
       "led": {
         "name": "LED"
+      },
+      "privacy_mode": {
+        "name": "Privacy mode"
       }
     }
   }

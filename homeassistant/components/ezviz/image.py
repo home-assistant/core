@@ -4,18 +4,19 @@ from __future__ import annotations
 
 import logging
 
+from propcache.api import cached_property
 from pyezviz.exceptions import PyEzvizError
 from pyezviz.utils import decrypt_image
 
 from homeassistant.components.image import Image, ImageEntity, ImageEntityDescription
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DATA_COORDINATOR, DOMAIN
-from .coordinator import EzvizDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,13 +28,13 @@ IMAGE_TYPE = ImageEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EzvizConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EZVIZ image entities based on a config entry."""
 
-    coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         EzvizLastMotion(hass, coordinator, camera) for camera in coordinator.data
@@ -57,8 +58,15 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         )
         camera = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, serial)
         self.alarm_image_password = (
-            camera.data[CONF_PASSWORD] if camera is not None else None
+            camera.data[CONF_PASSWORD]
+            if camera and camera.source != SOURCE_IGNORE
+            else None
         )
+
+    @cached_property
+    def available(self) -> bool:
+        """Entity gets data from ezviz API so always available."""
+        return True
 
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""

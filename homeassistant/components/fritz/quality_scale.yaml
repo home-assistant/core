@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: still in async_setup_entry, needs to be moved to async_setup
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -24,9 +22,7 @@ rules:
   has-entity-name:
     status: todo
     comment: partially done
-  runtime-data:
-    status: todo
-    comment: still uses hass.data
+  runtime-data: done
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
@@ -95,4 +91,7 @@ rules:
     comment: |
       the fritzconnection lib is not async and relies on requests
       changing this might need a bit more efforts to be spent
-  strict-typing: done
+  strict-typing:
+    status: todo
+    comment: |
+      Requirements 'fritzconnection==1.14.0' and 'xmltodict==0.13.0' appear untyped

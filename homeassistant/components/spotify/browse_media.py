@@ -14,7 +14,7 @@ from spotifyaio import (
     SpotifyClient,
     Track,
 )
-from spotifyaio.models import ItemType, SimplifiedEpisode
+from spotifyaio.models import Episode, ItemType, SimplifiedEpisode
 import yarl
 
 from homeassistant.components.media_player import (
@@ -226,17 +226,17 @@ async def async_browse_media(
     if media_content_id is None or not media_content_id.startswith(MEDIA_PLAYER_PREFIX):
         raise BrowseError("Invalid Spotify URL specified")
 
-    # Check for config entry specifier, and extract Spotify URI
+    # The config entry id is the host name of the URL, the Spotify URI is the name
     parsed_url = yarl.URL(media_content_id)
-    host = parsed_url.host
+    config_entry_id = parsed_url.host
 
     if (
-        host is None
+        config_entry_id is None
         # config entry ids can be upper or lower case. Yarl always returns host
         # names in lower case, so we need to look for the config entry in both
         or (
-            entry := hass.config_entries.async_get_entry(host)
-            or hass.config_entries.async_get_entry(host.upper())
+            entry := hass.config_entries.async_get_entry(config_entry_id)
+            or hass.config_entries.async_get_entry(config_entry_id.upper())
         )
         is None
         or entry.state is not ConfigEntryState.LOADED
@@ -363,7 +363,7 @@ async def build_item_response(  # noqa: C901
                     items.append(_get_track_item_payload(playlist_item.track))
                 elif playlist_item.track.type is ItemType.EPISODE:
                     if TYPE_CHECKING:
-                        assert isinstance(playlist_item.track, SimplifiedEpisode)
+                        assert isinstance(playlist_item.track, Episode)
                     items.append(_get_episode_item_payload(playlist_item.track))
     elif media_content_type == MediaType.ALBUM:
         if album := await spotify.get_album(media_content_id):

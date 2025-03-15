@@ -9,11 +9,11 @@ import voluptuous as vol
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
+    config_validation as cv,
     device_registry as dr,
     discovery,
     entity_registry as er,
 )
-import homeassistant.helpers.config_validation as cv
 
 from .const import ATTR_VIN, CONF_READ_ONLY, DOMAIN
 from .coordinator import BMWConfigEntry, BMWDataUpdateCoordinator
@@ -73,23 +73,29 @@ async def _async_migrate_entries(
     @callback
     def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
         replacements = {
-            "charging_level_hv": "fuel_and_battery.remaining_battery_percent",
-            "fuel_percent": "fuel_and_battery.remaining_fuel_percent",
-            "ac_current_limit": "charging_profile.ac_current_limit",
-            "charging_start_time": "fuel_and_battery.charging_start_time",
-            "charging_end_time": "fuel_and_battery.charging_end_time",
-            "charging_status": "fuel_and_battery.charging_status",
-            "charging_target": "fuel_and_battery.charging_target",
-            "remaining_battery_percent": "fuel_and_battery.remaining_battery_percent",
-            "remaining_range_total": "fuel_and_battery.remaining_range_total",
-            "remaining_range_electric": "fuel_and_battery.remaining_range_electric",
-            "remaining_range_fuel": "fuel_and_battery.remaining_range_fuel",
-            "remaining_fuel": "fuel_and_battery.remaining_fuel",
-            "remaining_fuel_percent": "fuel_and_battery.remaining_fuel_percent",
-            "activity": "climate.activity",
+            Platform.SENSOR.value: {
+                "charging_level_hv": "fuel_and_battery.remaining_battery_percent",
+                "fuel_percent": "fuel_and_battery.remaining_fuel_percent",
+                "ac_current_limit": "charging_profile.ac_current_limit",
+                "charging_start_time": "fuel_and_battery.charging_start_time",
+                "charging_end_time": "fuel_and_battery.charging_end_time",
+                "charging_status": "fuel_and_battery.charging_status",
+                "charging_target": "fuel_and_battery.charging_target",
+                "remaining_battery_percent": "fuel_and_battery.remaining_battery_percent",
+                "remaining_range_total": "fuel_and_battery.remaining_range_total",
+                "remaining_range_electric": "fuel_and_battery.remaining_range_electric",
+                "remaining_range_fuel": "fuel_and_battery.remaining_range_fuel",
+                "remaining_fuel": "fuel_and_battery.remaining_fuel",
+                "remaining_fuel_percent": "fuel_and_battery.remaining_fuel_percent",
+                "activity": "climate.activity",
+            }
         }
-        if (key := entry.unique_id.split("-")[-1]) in replacements:
-            new_unique_id = entry.unique_id.replace(key, replacements[key])
+        if (key := entry.unique_id.split("-")[-1]) in replacements.get(
+            entry.domain, []
+        ):
+            new_unique_id = entry.unique_id.replace(
+                key, replacements[entry.domain][key]
+            )
             _LOGGER.debug(
                 "Migrating entity '%s' unique_id from '%s' to '%s'",
                 entry.entity_id,

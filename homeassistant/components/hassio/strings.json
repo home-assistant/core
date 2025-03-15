@@ -152,7 +152,7 @@
     },
     "unsupported_connectivity_check": {
       "title": "Unsupported system - Connectivity check disabled",
-      "description": "System is unsupported because Home Assistant cannot determine when an internet connection is available. Use the link to learn more and how to fix this."
+      "description": "System is unsupported because Home Assistant cannot determine when an Internet connection is available. Use the link to learn more and how to fix this."
     },
     "unsupported_content_trust": {
       "title": "Unsupported system - Content-trust check disabled",
@@ -216,7 +216,7 @@
     },
     "unsupported_systemd_journal": {
       "title": "Unsupported system - Systemd Journal issues",
-      "description": "System is unsupported because Systemd Journal and/or the gateway service is missing, inactive or misconfigured . Use the link to learn more and how to fix this."
+      "description": "System is unsupported because Systemd Journal and/or the gateway service is missing, inactive or misconfigured. Use the link to learn more and how to fix this."
     },
     "unsupported_systemd_resolved": {
       "title": "Unsupported system - Systemd-Resolved issues",
@@ -348,7 +348,7 @@
         },
         "homeassistant_exclude_database": {
           "name": "Home Assistant exclude database",
-          "description": "Exclude the Home Assistant database file from backup"
+          "description": "Exclude the Home Assistant database file from the backup."
         }
       }
     },
@@ -362,7 +362,7 @@
         },
         "addons": {
           "name": "Add-ons",
-          "description": "List of add-ons to include in the backup. Use the name slug of the add-on."
+          "description": "List of add-ons to include in the backup. Use the name slug of each add-on."
         },
         "folders": {
           "name": "Folders",
@@ -385,8 +385,8 @@
           "description": "[%key:component::hassio::services::backup_full::fields::location::description%]"
         },
         "homeassistant_exclude_database": {
-          "name": "Home Assistant exclude database",
-          "description": "Exclude the Home Assistant database file from backup"
+          "name": "[%key:component::hassio::services::backup_full::fields::homeassistant_exclude_database::name%]",
+          "description": "[%key:component::hassio::services::backup_full::fields::homeassistant_exclude_database::description%]"
         }
       }
     },
@@ -418,11 +418,11 @@
         },
         "folders": {
           "name": "[%key:component::hassio::services::backup_partial::fields::folders::name%]",
-          "description": "[%key:component::hassio::services::backup_partial::fields::folders::description%]"
+          "description": "List of directories to restore from the backup."
         },
         "addons": {
           "name": "[%key:component::hassio::services::backup_partial::fields::addons::name%]",
-          "description": "[%key:component::hassio::services::backup_partial::fields::addons::description%]"
+          "description": "List of add-ons to restore from the backup. Use the name slug of each add-on."
         },
         "password": {
           "name": "[%key:common::config_flow::data::password%]",

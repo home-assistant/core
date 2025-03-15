@@ -29,8 +29,9 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -155,6 +156,101 @@ async def test_run_number_setup(
     assert state.state == "unknown"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == unit_of_measurement
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                number.DOMAIN: {
+                    "state_topic": "test/state_number",
+                    "command_topic": "test/cmd_number",
+                    "name": "Test Number",
+                    "min": 15,
+                    "max": 28,
+                    "device_class": "temperature",
+                    "unit_of_measurement": UnitOfTemperature.CELSIUS.value,
+                }
+            }
+        }
+    ],
+)
+async def test_native_value_validation(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test state validation and native value conversion."""
+    mqtt_mock = await mqtt_mock_entry()
+
+    async_fire_mqtt_message(hass, "test/state_number", "23.5")
+    state = hass.states.get("number.test_number")
+    assert state is not None
+    assert state.attributes.get(ATTR_MIN) == 15
+    assert state.attributes.get(ATTR_MAX) == 28
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfTemperature.CELSIUS.value
+    )
+    assert state.state == "23.5"
+
+    # Test out of range validation
+    async_fire_mqtt_message(hass, "test/state_number", "29.5")
+    state = hass.states.get("number.test_number")
+    assert state is not None
+    assert state.attributes.get(ATTR_MIN) == 15
+    assert state.attributes.get(ATTR_MAX) == 28
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfTemperature.CELSIUS.value
+    )
+    assert state.state == "23.5"
+    assert (
+        "Invalid value for number.test_number: 29.5 (range 15.0 - 28.0)" in caplog.text
+    )
+    caplog.clear()
+
+    # Check if validation still works when changing unit system
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test/state_number", "24.5")
+    state = hass.states.get("number.test_number")
+    assert state is not None
+    assert state.attributes.get(ATTR_MIN) == 59.0
+    assert state.attributes.get(ATTR_MAX) == 82.4
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfTemperature.FAHRENHEIT.value
+    )
+    assert state.state == "76.1"
+
+    # Test out of range validation again
+    async_fire_mqtt_message(hass, "test/state_number", "29.5")
+    state = hass.states.get("number.test_number")
+    assert state is not None
+    assert state.attributes.get(ATTR_MIN) == 59.0
+    assert state.attributes.get(ATTR_MAX) == 82.4
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfTemperature.FAHRENHEIT.value
+    )
+    assert state.state == "76.1"
+    assert (
+        "Invalid value for number.test_number: 29.5 (range 15.0 - 28.0)" in caplog.text
+    )
+    caplog.clear()
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_number", ATTR_VALUE: 68},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("test/cmd_number", "20", 0, False)
+    mqtt_mock.async_publish.reset_mock()
 
 
 @pytest.mark.parametrize(

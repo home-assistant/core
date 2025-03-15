@@ -208,6 +208,14 @@ HOMEKIT = {
         "always_discover": False,
         "domain": "nanoleaf",
     },
+    "NL69": {
+        "always_discover": False,
+        "domain": "nanoleaf",
+    },
+    "NL81": {
+        "always_discover": False,
+        "domain": "nanoleaf",
+    },
     "Netatmo Relay": {
         "always_discover": True,
         "domain": "netatmo",
@@ -522,6 +530,11 @@ ZEROCONF = {
             "domain": "homekit",
         },
     ],
+    "_homewizard._tcp.local.": [
+        {
+            "domain": "homewizard",
+        },
+    ],
     "_hscp._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -557,6 +570,10 @@ ZEROCONF = {
             "properties": {
                 "manufacturer": "nettigo",
             },
+        },
+        {
+            "domain": "peblar",
+            "name": "pblr-*",
         },
         {
             "domain": "powerfox",
@@ -603,6 +620,11 @@ ZEROCONF = {
     "_hwenergy._tcp.local.": [
         {
             "domain": "homewizard",
+        },
+    ],
+    "_iometer._tcp.local.": [
+        {
+            "domain": "iometer",
         },
     ],
     "_ipp._tcp.local.": [
@@ -725,6 +747,11 @@ ZEROCONF = {
             "domain": "octoprint",
         },
     ],
+    "_owserver._tcp.local.": [
+        {
+            "domain": "onewire",
+        },
+    ],
     "_plexmediasvr._tcp.local.": [
         {
             "domain": "plex",
@@ -769,6 +796,16 @@ ZEROCONF = {
             "properties": {
                 "am": "airport*",
             },
+        },
+    ],
+    "_rio._tcp.local.": [
+        {
+            "domain": "russound_rio",
+        },
+    ],
+    "_shelly._tcp.local.": [
+        {
+            "domain": "shelly",
         },
     ],
     "_sideplay._tcp.local.": [

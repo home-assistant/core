@@ -103,9 +103,10 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    data: dict[str, Any] = {}
-
-    _existing_entry_data: Mapping[str, Any] | None = None
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self.data: dict[str, Any] = {}
+        self._existing_entry_data: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -175,19 +176,15 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show the change password step."""
-        existing_data = (
-            dict(self._existing_entry_data) if self._existing_entry_data else {}
-        )
-
         if user_input is not None:
-            return await self.async_step_user(existing_data | user_input)
+            return await self.async_step_user(self._existing_entry_data | user_input)
 
         return self.async_show_form(
             step_id="change_password",
             data_schema=RECONFIGURE_SCHEMA,
             description_placeholders={
-                CONF_USERNAME: existing_data[CONF_USERNAME],
-                CONF_REGION: existing_data[CONF_REGION],
+                CONF_USERNAME: self._existing_entry_data[CONF_USERNAME],
+                CONF_REGION: self._existing_entry_data[CONF_REGION],
             },
         )
 
@@ -195,14 +192,14 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self._existing_entry_data = entry_data
+        self._existing_entry_data = dict(entry_data)
         return await self.async_step_change_password()
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
-        self._existing_entry_data = self._get_reconfigure_entry().data
+        self._existing_entry_data = dict(self._get_reconfigure_entry().data)
         return await self.async_step_change_password()
 
     async def async_step_captcha(

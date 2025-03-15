@@ -6,10 +6,12 @@ import json
 from typing import Any
 from unittest.mock import Mock
 
+from freezegun.api import FrozenDateTimeFactory
 from httplib2 import Response
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.google_tasks.coordinator import UPDATE_INTERVAL
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
     ATTR_DUE_DATE,
@@ -19,12 +21,17 @@ from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
     TodoServices,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import LIST_TASK_LIST_RESPONSE, create_response_object
+from .conftest import (
+    LIST_TASK_LIST_RESPONSE,
+    LIST_TASKS_RESPONSE_WATER,
+    create_response_object,
+)
 
+from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "todo.my_tasks"
@@ -44,17 +51,6 @@ ERROR_RESPONSE = {
 CONTENT_ID = "Content-ID"
 BOUNDARY = "batch_00972cc8-75bd-11ee-9692-0242ac110002"  # Arbitrary uuid
 
-LIST_TASKS_RESPONSE_WATER = {
-    "items": [
-        {
-            "id": "some-task-id",
-            "title": "Water",
-            "status": "needsAction",
-            "description": "Any size is ok",
-            "position": "00000000000000000001",
-        },
-    ],
-}
 LIST_TASKS_RESPONSE_MULTIPLE = {
     "items": [
         {
@@ -311,7 +307,9 @@ async def test_empty_todo_list(
     [
         [
             LIST_TASK_LIST_RESPONSE,
-            ERROR_RESPONSE,
+            LIST_TASKS_RESPONSE_WATER,
+            ERROR_RESPONSE,  # Fail after one update interval
+            LIST_TASKS_RESPONSE_WATER,
         ]
     ],
 )
@@ -319,18 +317,34 @@ async def test_task_items_error_response(
     hass: HomeAssistant,
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
-    hass_ws_client: WebSocketGenerator,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test an error while getting todo list items."""
+    """Test an error while the entity updates getting a new list of todo list items."""
 
     assert await integration_setup()
 
-    await hass_ws_client(hass)
+    # Test successful setup and first data fetch
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "1"
+
+    # Next update fails
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("todo.my_tasks")
     assert state
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
+
+    # Next update succeeds
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "1"
 
 
 @pytest.mark.parametrize(

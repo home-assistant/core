@@ -56,7 +56,7 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Mock config entry."""
+    """Mock config entry for Beosound Balance."""
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_SERIAL_NUMBER,
@@ -66,8 +66,8 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_config_entry_2() -> MockConfigEntry:
-    """Mock config entry."""
+def mock_config_entry_core() -> MockConfigEntry:
+    """Mock config entry for Beoconnect Core."""
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_SERIAL_NUMBER_2,

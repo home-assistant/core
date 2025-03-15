@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from http import HTTPStatus
-from typing import Any, Generic
+from typing import Any, Generic, TypeVar
 
 from aiohttp import web
-from typing_extensions import TypeVar
 import voluptuous as vol
 import voluptuous_serialize
 

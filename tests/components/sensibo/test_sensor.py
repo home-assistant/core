@@ -1,12 +1,12 @@
-"""The test for the sensibo select platform."""
+"""The test for the sensibo sensor platform."""
 
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pysensibo.model import PureAQI, SensiboData
+from pysensibo.model import PureAQI
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -14,7 +14,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, snapshot_platform
 
@@ -27,8 +26,7 @@ from tests.common import async_fire_time_changed, snapshot_platform
 async def test_sensor(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
-    get_data: SensiboData,
+    mock_client: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
@@ -37,17 +35,13 @@ async def test_sensor(
 
     await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
-    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pm25_pure", PureAQI(2))
+    mock_client.async_get_devices_data.return_value.parsed[
+        "AAZZAAZZ"
+    ].pm25_pure = PureAQI(2)
 
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ):
-        async_fire_time_changed(
-            hass,
-            dt_util.utcnow() + timedelta(minutes=5),
-        )
-        await hass.async_block_till_done()
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    state1 = hass.states.get("sensor.kitchen_pure_aqi")
-    assert state1.state == "moderate"
+    state = hass.states.get("sensor.kitchen_pure_aqi")
+    assert state.state == "moderate"

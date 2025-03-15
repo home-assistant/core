@@ -33,7 +33,7 @@ from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import _patch_discovery
 from .utils import MockUFPFixture
@@ -98,6 +98,7 @@ def bootstrap_fixture(nvr: NVR):
     data["events"] = []
     data["doorlocks"] = []
     data["chimes"] = []
+    data["aiports"] = []
 
     return Bootstrap.from_unifi_dict(**data)
 

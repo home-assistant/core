@@ -6,14 +6,14 @@ import asyncio
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
 from homeassistant import config as conf_util
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DISCOVERY, CONF_PAYLOAD, SERVICE_RELOAD
+from homeassistant.const import CONF_DISCOVERY, CONF_PLATFORM, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     ConfigValidationError,
@@ -25,7 +25,6 @@ from homeassistant.helpers import (
     entity_registry as er,
     event as ev,
     issue_registry as ir,
-    template,
 )
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -39,7 +38,7 @@ from homeassistant.util.async_ import create_eager_task
 
 # Loading the config flow file will register the flow
 from . import debug_info, discovery
-from .client import (  # noqa: F401
+from .client import (
     MQTT,
     async_publish,
     async_subscribe,
@@ -47,9 +46,9 @@ from .client import (  # noqa: F401
     publish,
     subscribe,
 )
-from .config import MQTT_BASE_SCHEMA, MQTT_RO_SCHEMA, MQTT_RW_SCHEMA  # noqa: F401
+from .config import MQTT_BASE_SCHEMA, MQTT_RO_SCHEMA, MQTT_RW_SCHEMA
 from .config_integration import CONFIG_SCHEMA_BASE
-from .const import (  # noqa: F401
+from .const import (
     ATTR_PAYLOAD,
     ATTR_QOS,
     ATTR_RETAIN,
@@ -70,6 +69,8 @@ from .const import (  # noqa: F401
     CONF_WILL_MESSAGE,
     CONF_WS_HEADERS,
     CONF_WS_PATH,
+    CONFIG_ENTRY_MINOR_VERSION,
+    CONFIG_ENTRY_VERSION,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
     DEFAULT_PREFIX,
@@ -77,10 +78,12 @@ from .const import (  # noqa: F401
     DEFAULT_RETAIN,
     DOMAIN,
     ENTITY_PLATFORMS,
+    ENTRY_OPTION_FIELDS,
     MQTT_CONNECTION_STATE,
     TEMPLATE_ERRORS,
+    Platform,
 )
-from .models import (  # noqa: F401
+from .models import (
     DATA_MQTT,
     DATA_MQTT_AVAILABLE,
     MqttCommandTemplate,
@@ -91,13 +94,13 @@ from .models import (  # noqa: F401
     ReceiveMessage,
     convert_outgoing_mqtt_payload,
 )
-from .subscription import (  # noqa: F401
+from .subscription import (
     EntitySubscription,
     async_prepare_subscribe_topics,
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from .util import (  # noqa: F401
+from .util import (
     async_create_certificate_temp_files,
     async_forward_entry_setup_and_setup_discovery,
     async_wait_for_mqtt_client,
@@ -108,13 +111,88 @@ from .util import (  # noqa: F401
     valid_subscribe_topic,
 )
 
+__all__ = [
+    "ATTR_PAYLOAD",
+    "ATTR_QOS",
+    "ATTR_RETAIN",
+    "ATTR_TOPIC",
+    "CONFIG_ENTRY_MINOR_VERSION",
+    "CONFIG_ENTRY_VERSION",
+    "CONF_BIRTH_MESSAGE",
+    "CONF_BROKER",
+    "CONF_CERTIFICATE",
+    "CONF_CLIENT_CERT",
+    "CONF_CLIENT_KEY",
+    "CONF_COMMAND_TOPIC",
+    "CONF_DISCOVERY_PREFIX",
+    "CONF_KEEPALIVE",
+    "CONF_QOS",
+    "CONF_STATE_TOPIC",
+    "CONF_TLS_INSECURE",
+    "CONF_TOPIC",
+    "CONF_TRANSPORT",
+    "CONF_WILL_MESSAGE",
+    "CONF_WS_HEADERS",
+    "CONF_WS_PATH",
+    "DATA_MQTT",
+    "DATA_MQTT_AVAILABLE",
+    "DEFAULT_DISCOVERY",
+    "DEFAULT_ENCODING",
+    "DEFAULT_PREFIX",
+    "DEFAULT_QOS",
+    "DEFAULT_RETAIN",
+    "DOMAIN",
+    "ENTITY_PLATFORMS",
+    "ENTRY_OPTION_FIELDS",
+    "MQTT",
+    "MQTT_BASE_SCHEMA",
+    "MQTT_CONNECTION_STATE",
+    "MQTT_RO_SCHEMA",
+    "MQTT_RW_SCHEMA",
+    "SERVICE_RELOAD",
+    "TEMPLATE_ERRORS",
+    "EntitySubscription",
+    "MqttCommandTemplate",
+    "MqttData",
+    "MqttValueTemplate",
+    "PayloadSentinel",
+    "PublishPayloadType",
+    "ReceiveMessage",
+    "SetupPhases",
+    "async_check_config_schema",
+    "async_create_certificate_temp_files",
+    "async_forward_entry_setup_and_setup_discovery",
+    "async_migrate_entry",
+    "async_prepare_subscribe_topics",
+    "async_publish",
+    "async_remove_config_entry_device",
+    "async_setup",
+    "async_setup_entry",
+    "async_subscribe",
+    "async_subscribe_connection_status",
+    "async_subscribe_topics",
+    "async_unload_entry",
+    "async_unsubscribe_topics",
+    "async_wait_for_mqtt_client",
+    "convert_outgoing_mqtt_payload",
+    "create_eager_task",
+    "is_connected",
+    "mqtt_config_entry_enabled",
+    "platforms_from_config",
+    "publish",
+    "subscribe",
+    "valid_publish_topic",
+    "valid_qos_schema",
+    "valid_subscribe_topic",
+    "websocket_mqtt_info",
+    "websocket_subscribe",
+]
+
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_PUBLISH = "publish"
 SERVICE_DUMP = "dump"
 
-ATTR_TOPIC_TEMPLATE = "topic_template"
-ATTR_PAYLOAD_TEMPLATE = "payload_template"
 ATTR_EVALUATE_PAYLOAD = "evaluate_payload"
 
 MAX_RECONNECT_WAIT = 300  # seconds
@@ -155,25 +233,16 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-
-# The use of a topic_template and payload_template in an mqtt publish action call
-# have been deprecated with HA Core 2024.8.0 and will be removed with HA Core 2025.2.0
-
 # Publish action call validation schema
-MQTT_PUBLISH_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Exclusive(ATTR_TOPIC, CONF_TOPIC): valid_publish_topic,
-            vol.Exclusive(ATTR_TOPIC_TEMPLATE, CONF_TOPIC): cv.string,
-            vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
-            vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
-            vol.Optional(ATTR_EVALUATE_PAYLOAD): cv.boolean,
-            vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
-            vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        },
-        required=True,
-    ),
-    cv.has_at_least_one_key(ATTR_TOPIC, ATTR_TOPIC_TEMPLATE),
+MQTT_PUBLISH_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_TOPIC): valid_publish_topic,
+        vol.Required(ATTR_PAYLOAD, default=None): vol.Any(cv.string, None),
+        vol.Optional(ATTR_EVALUATE_PAYLOAD): cv.boolean,
+        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
+        vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+    },
+    required=True,
 )
 
 
@@ -225,6 +294,21 @@ async def async_check_config_schema(
                     ) from exc
 
 
+def _platforms_in_use(hass: HomeAssistant, entry: ConfigEntry) -> set[str | Platform]:
+    """Return a set of platforms in use."""
+    domains: set[str | Platform] = {
+        entry.domain
+        for entry in er.async_entries_for_config_entry(
+            er.async_get(hass), entry.entry_id
+        )
+    }
+    # Update with domains from subentries
+    for subentry in entry.subentries.values():
+        components = subentry.data["components"].values()
+        domains.update(component[CONF_PLATFORM] for component in components)
+    return domains
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the actions and websocket API for the MQTT component."""
 
@@ -233,86 +317,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
-        msg_topic: str | None = call.data.get(ATTR_TOPIC)
-        msg_topic_template: str | None = call.data.get(ATTR_TOPIC_TEMPLATE)
+        msg_topic: str = call.data[ATTR_TOPIC]
 
         if not mqtt_config_entry_enabled(hass):
             raise ServiceValidationError(
                 translation_key="mqtt_not_setup_cannot_publish",
                 translation_domain=DOMAIN,
-                translation_placeholders={
-                    "topic": str(msg_topic or msg_topic_template)
-                },
+                translation_placeholders={"topic": msg_topic},
             )
 
         mqtt_data = hass.data[DATA_MQTT]
-        payload: PublishPayloadType = call.data.get(ATTR_PAYLOAD)
+        payload: PublishPayloadType = call.data[ATTR_PAYLOAD]
         evaluate_payload: bool = call.data.get(ATTR_EVALUATE_PAYLOAD, False)
-        payload_template: str | None = call.data.get(ATTR_PAYLOAD_TEMPLATE)
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
-        if msg_topic_template is not None:
-            # The use of a topic_template in an mqtt publish action call
-            # has been deprecated with HA Core 2024.8.0
-            # and will be removed with HA Core 2025.2.0
-            rendered_topic: Any = MqttCommandTemplate(
-                template.Template(msg_topic_template, hass),
-            ).async_render()
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                f"topic_template_deprecation_{rendered_topic}",
-                breaks_in_ha_version="2025.2.0",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="topic_template_deprecation",
-                translation_placeholders={
-                    "topic_template": msg_topic_template,
-                    "topic": rendered_topic,
-                },
-            )
-            try:
-                msg_topic = valid_publish_topic(rendered_topic)
-            except vol.Invalid as err:
-                err_str = str(err)
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_publish_topic",
-                    translation_placeholders={
-                        "error": err_str,
-                        "topic": str(rendered_topic),
-                        "topic_template": str(msg_topic_template),
-                    },
-                ) from err
 
-        if payload_template is not None:
-            # The use of a payload_template in an mqtt publish action call
-            # has been deprecated with HA Core 2024.8.0
-            # and will be removed with HA Core 2025.2.0
-            if TYPE_CHECKING:
-                assert msg_topic is not None
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                f"payload_template_deprecation_{msg_topic}",
-                breaks_in_ha_version="2025.2.0",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="payload_template_deprecation",
-                translation_placeholders={
-                    "topic": msg_topic,
-                    "payload_template": payload_template,
-                },
-            )
-            payload = MqttCommandTemplate(
-                template.Template(payload_template, hass)
-            ).async_render()
-        elif evaluate_payload:
+        if evaluate_payload:
             # Convert quoted binary literal to raw data
             payload = convert_outgoing_mqtt_payload(payload)
 
-        if TYPE_CHECKING:
-            assert msg_topic is not None
         await mqtt_data.client.async_publish(msg_topic, payload, qos, retain)
 
     hass.services.async_register(
@@ -355,15 +378,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate the options from config entry data."""
+    _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
+    data: dict[str, Any] = dict(entry.data)
+    options: dict[str, Any] = dict(entry.options)
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1 and entry.minor_version < 2:
+        # Can be removed when config entry is bumped to version 2.1
+        # with HA Core 2026.1.0. Read support for version 2.1 is expected before 2026.1
+        # From 2026.1 we will write version 2.1
+        for key in ENTRY_OPTION_FIELDS:
+            if key not in data:
+                continue
+            options[key] = data.pop(key)
+        hass.config_entries.async_update_entry(
+            entry,
+            data=data,
+            options=options,
+            version=CONFIG_ENTRY_VERSION,
+            minor_version=CONFIG_ENTRY_MINOR_VERSION,
+        )
+
+    _LOGGER.debug(
+        "Migration to version %s:%s successful", entry.version, entry.minor_version
+    )
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    conf: dict[str, Any]
     mqtt_data: MqttData
 
     async def _setup_client() -> tuple[MqttData, dict[str, Any]]:
         """Set up the MQTT client."""
         # Fetch configuration
-        conf = dict(entry.data)
+        conf = dict(entry.data | entry.options)
         hass_config = await conf_util.async_hass_config_yaml(hass)
         mqtt_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, [])
         await async_create_certificate_temp_files(hass, conf)
@@ -397,12 +450,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     mqtt_data, conf = await _setup_client()
     platforms_used = platforms_from_config(mqtt_data.config)
-    platforms_used.update(
-        entry.domain
-        for entry in er.async_entries_for_config_entry(
-            er.async_get(hass), entry.entry_id
-        )
-    )
+    platforms_used.update(_platforms_in_use(hass, entry))
     integration = async_get_loaded_integration(hass, DOMAIN)
     # Preload platforms we know we are going to use so
     # discovery can setup each platform synchronously

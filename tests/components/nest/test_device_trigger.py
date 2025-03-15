@@ -1,8 +1,8 @@
 """The tests for Nest device triggers."""
 
 from typing import Any
+from unittest.mock import AsyncMock
 
-from google_nest_sdm.event import EventMessage
 import pytest
 from pytest_unordered import unordered
 
@@ -18,7 +18,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .common import DEVICE_ID, CreateDevice, FakeSubscriber, PlatformSetup
+from .common import DEVICE_ID, CreateDevice, PlatformSetup, create_nest_event
 
 from tests.common import async_get_device_automations
 
@@ -447,7 +447,7 @@ async def test_subscriber_automation(
     service_calls: list[ServiceCall],
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
-    subscriber: FakeSubscriber,
+    subscriber: AsyncMock,
 ) -> None:
     """Test end to end subscriber triggers automation."""
     create_device.create(
@@ -465,7 +465,7 @@ async def test_subscriber_automation(
     assert await setup_automation(hass, device_entry.id, "camera_motion")
 
     # Simulate a pubsub message received by the subscriber with a motion event
-    event = EventMessage.create_event(
+    event = create_nest_event(
         {
             "eventId": "some-event-id",
             "timestamp": "2019-01-01T00:00:01Z",
@@ -479,7 +479,6 @@ async def test_subscriber_automation(
                 },
             },
         },
-        auth=None,
     )
     await subscriber.async_receive_event(event)
     await hass.async_block_till_done()

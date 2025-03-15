@@ -177,6 +177,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "WIND_DIRECTION": SensorEntityDescription(
         key="WIND_DIRECTION",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     "WIND_DIRECTION_RANGE": SensorEntityDescription(
         key="WIND_DIRECTION_RANGE",

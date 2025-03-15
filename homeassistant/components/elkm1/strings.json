@@ -53,7 +53,7 @@
       "fields": {
         "code": {
           "name": "Code",
-          "description": "An code to authorize the bypass of the alarm control panel."
+          "description": "Alarm code to authorize the bypass of the alarm control panel."
         }
       }
     },
@@ -63,7 +63,7 @@
       "fields": {
         "code": {
           "name": "Code",
-          "description": "An code to authorize the bypass clear of the alarm control panel."
+          "description": "Alarm code to authorize the bypass clear of the alarm control panel."
         }
       }
     },
@@ -73,7 +73,7 @@
       "fields": {
         "code": {
           "name": "Code",
-          "description": "An code to arm the alarm control panel."
+          "description": "Alarm code to arm the alarm control panel."
         }
       }
     },
@@ -89,7 +89,7 @@
     },
     "alarm_arm_vacation": {
       "name": "Alarm arm vacation",
-      "description": "Arm the ElkM1 in vacation mode.",
+      "description": "Arms the ElkM1 in vacation mode.",
       "fields": {
         "code": {
           "name": "Code",
@@ -181,7 +181,7 @@
       "fields": {
         "code": {
           "name": "Code",
-          "description": "An code to authorize the bypass of the zone."
+          "description": "Alarm code to authorize the bypass of the zone."
         }
       }
     },

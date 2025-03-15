@@ -17,6 +17,7 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.const import UnitOfEnergy
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util, slugify
@@ -31,12 +32,14 @@ TWO_YEARS = 2 * 365 * 24
 class MillDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Mill data."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        update_interval: timedelta | None = None,
-        *,
+        config_entry: ConfigEntry,
         mill_data_connection: Mill | MillLocal,
+        update_interval: timedelta,
     ) -> None:
         """Initialize global Mill data updater."""
         self.mill_data_connection = mill_data_connection
@@ -44,6 +47,7 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_method=mill_data_connection.fetch_heater_and_sensor_data,
             update_interval=update_interval,

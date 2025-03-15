@@ -28,7 +28,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import CONF_IP_ADDRESS, DOMAIN
 
@@ -121,7 +121,7 @@ def _build_entity(device):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the AEH-W4A1 climate platform."""
     # Priority 1: manual config
@@ -195,7 +195,7 @@ class ClimateAehW4a1(ClimateEntity):
             fan_mode = status["wind_status"]
             self._attr_fan_mode = AC_TO_HA_FAN_MODES[fan_mode]
 
-            swing_mode = f'{status["up_down"]}{status["left_right"]}'
+            swing_mode = f"{status['up_down']}{status['left_right']}"
             self._attr_swing_mode = AC_TO_HA_SWING[swing_mode]
 
             if self._attr_hvac_mode in (HVACMode.COOL, HVACMode.HEAT):
