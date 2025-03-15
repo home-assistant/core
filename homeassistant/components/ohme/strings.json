@@ -21,6 +21,16 @@
         "data_description": {
           "password": "Enter the password for your Ohme account"
         }
+      },
+      "reconfigure": {
+        "description": "Update your password for {email}",
+        "title": "Reconfigure Ohme Account",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Enter the password for your Ohme account"
+        }
       }
     },
     "error": {
