@@ -142,6 +142,10 @@ RPC_INPUTS_EVENTS_TYPES: Final = {
     "long_push",
 }
 
+RPC_TEST_EVENTS_TYPES: Final = {
+    "alarm_test",
+}
+
 BLOCK_INPUTS_EVENTS_TYPES: Final = {
     "single",
     "double",
