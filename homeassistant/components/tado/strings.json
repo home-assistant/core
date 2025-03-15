@@ -1,8 +1,12 @@
 {
   "config": {
+    "progress": {
+      "wait_for_device": "To authenticate, open the following URL and login at Tado: \n {url} \n If the code is not automatically copied, and paste the following code to authorize the integration: \n```\n{code}\n```\n\nThe login atempt will time out after five minutes."
+    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "could_not_authenticate": "Could not authenticate with Tado."
     },
     "step": {
       "user": {
@@ -11,6 +15,10 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "title": "Connect to your Tado account"
+      },
+      "reauth_prepare": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "You need re-authenicate again with Tado. Press Submit to start the re-authentication process."
       },
       "reconfigure": {
         "title": "Reconfigure your Tado",

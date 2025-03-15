@@ -8,11 +8,12 @@ import PyTado.exceptions
 from PyTado.interface import Tado
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import ConfigEntryAuthFailed
 
 from .const import (
     CONF_FALLBACK,
@@ -61,11 +62,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
 
     _LOGGER.debug("Setting up Tado connection")
     try:
-        tado = await hass.async_add_executor_job(
-            Tado,
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-        )
+        tado = await hass.async_add_executor_job(Tado)
+        device_status = await hass.async_add_executor_job(tado.device_activation_status)
+
+        if device_status != "COMPLETED":
+            raise ConfigEntryAuthFailed(
+                f"Device loginf flow status is {device_status}. Starting re-authentication."
+            )
+
     except PyTado.exceptions.TadoWrongCredentialsException as err:
         raise ConfigEntryError(f"Invalid Tado credentials. Error: {err}") from err
     except PyTado.exceptions.TadoException as err:
