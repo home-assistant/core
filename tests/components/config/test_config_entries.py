@@ -511,6 +511,47 @@ async def test_initialize_flow_unauth(
 
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
+async def test_initialize_flow_with_virtual_domain(
+    hass: HomeAssistant, client: TestClient
+) -> None:
+    """Test we can initialize a flow with a virtual domain."""
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(core_ce.ConfigFlow):
+        async def async_step_user(self, user_input=None):
+            schema = {
+                vol.Required("username"): str,
+                vol.Required("password"): str,
+            }
+
+            # verify virtual domain is set
+            assert self.context["virtual_domain"] == "virtual_test"
+            assert self.virtual_domain == "virtual_test"
+
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema(schema),
+                description_placeholders={
+                    "url": "https://example.com",
+                    "show_advanced_options": self.show_advanced_options,
+                },
+                errors={"username": "Should be unique."},
+            )
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow",
+            json={
+                "handler": "test",
+                "show_advanced_options": True,
+                "virtual_domain": "virtual_test",
+            },
+        )
+
+    assert resp.status == HTTPStatus.OK
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_abort(hass: HomeAssistant, client: TestClient) -> None:
     """Test a flow that aborts."""
     mock_platform(hass, "test.config_flow", None)
