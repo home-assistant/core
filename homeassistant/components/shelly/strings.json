@@ -126,7 +126,6 @@
     "sensor": {
       "gas_detected": {
         "state": {
-          "unknown": "Unknown",
           "none": "None",
           "mild": "Mild",
           "heavy": "Heavy",

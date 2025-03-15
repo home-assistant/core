@@ -402,8 +402,8 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
             "mild",
             "heavy",
             "test",
-            "unknown",
         ],
+        value=lambda value: None if value == "unknown" else value,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ("sensor", "selfTest"): BlockSensorDescription(
