@@ -5,14 +5,14 @@ from __future__ import annotations
 from io import StringIO
 import logging
 import os
-from typing import Any, TextIO
+from typing import TextIO
 
 from annotatedyaml import YAMLException, YamlTypeError
 from annotatedyaml.loader import (
     JSON_TYPE,
     LoaderType,
     Secrets,
-    add_constructor as add_annotatedyaml_constructor,
+    add_constructor,
     load_yaml as load_annotated_yaml,
     load_yaml_dict as load_annotated_yaml_dict,
     parse_yaml as parse_annotated_yaml,
@@ -24,7 +24,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 
-__all__ = ["Secrets"]
+__all__ = ["JSON_TYPE", "Secrets", "add_constructor"]
 
 
 def load_yaml(
@@ -73,8 +73,3 @@ def secret_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
         return annotated_secret_yaml(loader, node)
     except YAMLException as exc:
         raise HomeAssistantError(str(exc)) from exc
-
-
-def add_constructor(tag: Any, constructor: Any) -> None:
-    """Add to constructor to all loaders."""
-    add_annotatedyaml_constructor(tag, constructor)
