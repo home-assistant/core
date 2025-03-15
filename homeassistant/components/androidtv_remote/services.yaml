@@ -1,0 +1,11 @@
+send_text:
+  target:
+    entity:
+      integration: androidtv_remote
+      domain: remote
+  fields:
+    text:
+      required: true
+      example: "hello world"
+      selector:
+        text:
