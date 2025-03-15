@@ -33,6 +33,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
+from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -55,6 +56,7 @@ from homeassistant.const import (
     CONF_DISCOVERY,
     CONF_HOST,
     CONF_NAME,
+    CONF_OPTIMISTIC,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_PLATFORM,
@@ -234,7 +236,7 @@ KEY_UPLOAD_SELECTOR = FileSelector(
 
 # Subentry selectors
 RESET_IF_EMPTY = {CONF_OPTIONS}
-SUBENTRY_PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
+SUBENTRY_PLATFORMS = [Platform.NOTIFY, Platform.SENSOR, Platform.SWITCH]
 SUBENTRY_PLATFORM_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[platform.value for platform in SUBENTRY_PLATFORMS],
@@ -286,6 +288,15 @@ SUGGESTED_DISPLAY_PRECISION_SELECTOR = NumberSelector(
 )
 EXIRE_AFTER_SELECTOR = NumberSelector(
     NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0)
+)
+
+# Switch specific selectors
+SWITCH_DEVICE_CLASS_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[device_class.value for device_class in SwitchDeviceClass],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key="device_class_switch",
+    )
 )
 
 
@@ -344,6 +355,9 @@ PLATFORM_ENTITY_FIELDS = {
         ),
         CONF_OPTIONS: PlatformField(OPTIONS_SELECTOR, False, cv.ensure_list),
     },
+    Platform.SWITCH.value: {
+        CONF_DEVICE_CLASS: PlatformField(SWITCH_DEVICE_CLASS_SELECTOR, False, str),
+    },
 }
 PLATFORM_MQTT_FIELDS = {
     Platform.NOTIFY.value: {
@@ -371,12 +385,29 @@ PLATFORM_MQTT_FIELDS = {
         ),
         CONF_EXPIRE_AFTER: PlatformField(EXIRE_AFTER_SELECTOR, False, cv.positive_int),
     },
+    Platform.SWITCH.value: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            TEXT_SELECTOR, True, valid_publish_topic, "invalid_publish_topic"
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            TEMPLATE_SELECTOR, False, cv.template, "invalid_template"
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            TEXT_SELECTOR, False, valid_subscribe_topic, "invalid_subscribe_topic"
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            TEMPLATE_SELECTOR, False, cv.template, "invalid_template"
+        ),
+        CONF_RETAIN: PlatformField(BOOLEAN_SELECTOR, False, bool),
+        CONF_OPTIMISTIC: PlatformField(BOOLEAN_SELECTOR, False, bool),
+    },
 }
 ENTITY_CONFIG_VALIDATOR: dict[
     str, Callable[[dict[str, Any], dict[str, str]], dict[str, Any]] | None
 ] = {
     Platform.NOTIFY.value: None,
     Platform.SENSOR.value: validate_sensor_state_and_device_class_config,
+    Platform.SWITCH.value: None,
 }
 
 MQTT_DEVICE_SCHEMA = vol.Schema(
