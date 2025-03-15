@@ -144,6 +144,25 @@ async def test_volume_up(
 @pytest.mark.parametrize(
     ("player_class", "volume_step"),
     [
+        (SimpleMediaPlayer, 0.01),
+        (AttrMediaPlayer, 0.02),
+        (DescrMediaPlayer, 0.03),
+    ],
+)
+async def test_volume_up_step(
+    hass: HomeAssistant, player_class: type[mp.MediaPlayerEntity], volume_step: float
+) -> None:
+    """Test the volume_up with step method."""
+    player = player_class(hass)
+    await player.async_set_volume_level(0.5)
+    assert player.volume_level == 0.5
+    await player.async_volume_up(step=volume_step)
+    assert player.volume_level == 0.5 + volume_step
+
+
+@pytest.mark.parametrize(
+    ("player_class", "volume_step"),
+    [
         (ExtendedMediaPlayer, 0.1),
         (SimpleMediaPlayer, 0.1),
         (AttrMediaPlayer, 0.2),
@@ -159,6 +178,25 @@ async def test_volume_down(
     await player.async_set_volume_level(0.5)
     assert player.volume_level == 0.5
     await player.async_volume_down()
+    assert player.volume_level == 0.5 - volume_step
+
+
+@pytest.mark.parametrize(
+    ("player_class", "volume_step"),
+    [
+        (SimpleMediaPlayer, 0.01),
+        (AttrMediaPlayer, 0.02),
+        (DescrMediaPlayer, 0.03),
+    ],
+)
+async def test_volume_down_step(
+    hass: HomeAssistant, player_class: type[mp.MediaPlayerEntity], volume_step: float
+) -> None:
+    """Test the volume_down with step method."""
+    player = player_class(hass)
+    await player.async_set_volume_level(0.5)
+    assert player.volume_level == 0.5
+    await player.async_volume_down(step=volume_step)
     assert player.volume_level == 0.5 - volume_step
 
 

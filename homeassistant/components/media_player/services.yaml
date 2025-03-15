@@ -29,6 +29,14 @@ volume_up:
       supported_features:
         - media_player.MediaPlayerEntityFeature.VOLUME_SET
         - media_player.MediaPlayerEntityFeature.VOLUME_STEP
+  fields:
+    volume_step:
+      required: false
+      selector:
+        number:
+          min: 0.01
+          max: 1.0
+          step: 0.01
 
 volume_down:
   target:
@@ -37,6 +45,14 @@ volume_down:
       supported_features:
         - media_player.MediaPlayerEntityFeature.VOLUME_SET
         - media_player.MediaPlayerEntityFeature.VOLUME_STEP
+  fields:
+    volume_step:
+      required: false
+      selector:
+        number:
+          min: 0.01
+          max: 1.0
+          step: 0.01
 
 volume_mute:
   target:
