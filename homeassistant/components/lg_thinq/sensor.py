@@ -175,9 +175,29 @@ RECIPE_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
         key=ThinQProperty.HOP_OIL_INFO,
         translation_key=ThinQProperty.HOP_OIL_INFO,
     ),
+    ThinQProperty.HOP_OIL_CAPSULE_1: SensorEntityDescription(
+        key=ThinQProperty.HOP_OIL_CAPSULE_1,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key=ThinQProperty.HOP_OIL_CAPSULE_1,
+    ),
+    ThinQProperty.HOP_OIL_CAPSULE_2: SensorEntityDescription(
+        key=ThinQProperty.HOP_OIL_CAPSULE_2,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key=ThinQProperty.HOP_OIL_CAPSULE_2,
+    ),
     ThinQProperty.FLAVOR_INFO: SensorEntityDescription(
         key=ThinQProperty.FLAVOR_INFO,
         translation_key=ThinQProperty.FLAVOR_INFO,
+    ),
+    ThinQProperty.FLAVOR_CAPSULE_1: SensorEntityDescription(
+        key=ThinQProperty.FLAVOR_CAPSULE_1,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key=ThinQProperty.FLAVOR_CAPSULE_1,
+    ),
+    ThinQProperty.FLAVOR_CAPSULE_2: SensorEntityDescription(
+        key=ThinQProperty.FLAVOR_CAPSULE_2,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key=ThinQProperty.FLAVOR_CAPSULE_2,
     ),
     ThinQProperty.BEER_REMAIN: SensorEntityDescription(
         key=ThinQProperty.BEER_REMAIN,
@@ -435,7 +455,11 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
         RECIPE_SENSOR_DESC[ThinQProperty.WORT_INFO],
         RECIPE_SENSOR_DESC[ThinQProperty.YEAST_INFO],
         RECIPE_SENSOR_DESC[ThinQProperty.HOP_OIL_INFO],
+        RECIPE_SENSOR_DESC[ThinQProperty.HOP_OIL_CAPSULE_1],
+        RECIPE_SENSOR_DESC[ThinQProperty.HOP_OIL_CAPSULE_2],
         RECIPE_SENSOR_DESC[ThinQProperty.FLAVOR_INFO],
+        RECIPE_SENSOR_DESC[ThinQProperty.FLAVOR_CAPSULE_1],
+        RECIPE_SENSOR_DESC[ThinQProperty.FLAVOR_CAPSULE_2],
         RECIPE_SENSOR_DESC[ThinQProperty.BEER_REMAIN],
         RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
         ELAPSED_DAY_SENSOR_DESC[ThinQProperty.ELAPSED_DAY_STATE],
