@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import suppress
 from functools import partial
 import logging
-from typing import Protocol, cast
+from typing import cast
 import urllib.parse
 
 from soco.data_structures import DidlObject
@@ -42,19 +43,7 @@ from .speaker import SonosMedia, SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
-
-class GetBrowseImageUrlType(Protocol):
-    """Type for callable function."""
-
-    def __call__(
-        self,
-        media_content_type: str,
-        media_content_id: str,
-        media_image_id: str | None = None,
-        item: MusicServiceItem | None = None,
-    ) -> str:
-        """Define method signature."""
-        ...
+type GetBrowseImageUrlType = Callable[[str, str, str | None], str]
 
 
 def fix_image_url(url: str) -> str:
@@ -176,12 +165,8 @@ async def async_browse_media(
             favorites_folder_payload,
             speaker.favorites,
             media_content_id,
-            partial(
-                get_thumbnail_url_full,
-                media,
-                is_internal_request(hass),
-                get_browse_image_url,
-            ),
+            media,
+            get_browse_image_url,
         )
 
     payload = {
@@ -462,7 +447,8 @@ def favorites_payload(favorites: SonosFavorites) -> BrowseMedia:
 def favorites_folder_payload(
     favorites: SonosFavorites,
     media_content_id: str,
-    get_thumbnail_url=None,
+    media: SonosMedia,
+    get_browse_image_url: GetBrowseImageUrlType,
 ) -> BrowseMedia:
     """Create response payload to describe all items of a type of favorite.
 
@@ -482,8 +468,13 @@ def favorites_folder_payload(
                 media_content_type="favorite_item_id",
                 can_play=True,
                 can_expand=False,
-                thumbnail=get_thumbnail_url(
-                    "favorite_item_id", favorite.item_id, item=favorite
+                thumbnail=get_thumbnail_url_full(
+                    media=media,
+                    is_internal=True,
+                    media_content_type="favorite_item_id",
+                    media_content_id=favorite.item_id,
+                    get_browse_image_url=get_browse_image_url,
+                    item=favorite,
                 ),
             )
         )
