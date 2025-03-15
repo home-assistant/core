@@ -26,6 +26,8 @@ class RoborockBinarySensorDescription(BinarySensorEntityDescription):
     """A class that describes Roborock binary sensors."""
 
     value_fn: Callable[[DeviceProp], bool | int | None]
+    # If it is a dock entity
+    is_dock_entity: bool = False
 
 
 BINARY_SENSOR_DESCRIPTIONS = [
@@ -35,6 +37,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.dry_status,
+        is_dock_entity=True,
     ),
     RoborockBinarySensorDescription(
         key="water_box_carriage_status",
@@ -105,6 +108,7 @@ class RoborockBinarySensorEntity(RoborockCoordinatedEntityV1, BinarySensorEntity
         super().__init__(
             f"{description.key}_{coordinator.duid_slug}",
             coordinator,
+            is_dock_entity=description.is_dock_entity,
         )
         self.entity_description = description
 

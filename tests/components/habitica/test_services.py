@@ -1,18 +1,20 @@
 """Test Habitica actions."""
 
 from collections.abc import Generator
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
 from aiohttp import ClientError
+from freezegun.api import freeze_time
 from habiticalib import (
     Checklist,
     Direction,
     Frequency,
     HabiticaTaskResponse,
     Reminders,
+    Repeat,
     Skill,
     Task,
     TaskPriority,
@@ -32,6 +34,7 @@ from homeassistant.components.habitica.const import (
     ATTR_COUNTER_UP,
     ATTR_DIRECTION,
     ATTR_FREQUENCY,
+    ATTR_INTERVAL,
     ATTR_ITEM,
     ATTR_KEYWORD,
     ATTR_NOTES,
@@ -40,8 +43,12 @@ from homeassistant.components.habitica.const import (
     ATTR_REMOVE_CHECKLIST_ITEM,
     ATTR_REMOVE_REMINDER,
     ATTR_REMOVE_TAG,
+    ATTR_REPEAT,
+    ATTR_REPEAT_MONTHLY,
     ATTR_SCORE_CHECKLIST_ITEM,
     ATTR_SKILL,
+    ATTR_START_DATE,
+    ATTR_STREAK,
     ATTR_TAG,
     ATTR_TARGET,
     ATTR_TASK,
@@ -63,6 +70,7 @@ from homeassistant.components.habitica.const import (
     SERVICE_SCORE_REWARD,
     SERVICE_START_QUEST,
     SERVICE_TRANSFORMATION,
+    SERVICE_UPDATE_DAILY,
     SERVICE_UPDATE_HABIT,
     SERVICE_UPDATE_REWARD,
     SERVICE_UPDATE_TODO,
@@ -952,6 +960,7 @@ async def test_get_tasks(
         (SERVICE_UPDATE_REWARD, "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"),
         (SERVICE_UPDATE_HABIT, "f21fa608-cfc6-4413-9fc7-0eb1b48ca43a"),
         (SERVICE_UPDATE_TODO, "88de7cd9-af2b-49ce-9afd-bf941d87336b"),
+        (SERVICE_UPDATE_DAILY, "6e53f1f5-a315-4edd-984d-8d762e4a08ef"),
     ],
 )
 @pytest.mark.usefixtures("habitica")
@@ -1604,6 +1613,270 @@ async def test_create_todo(
         blocking=True,
     )
     habitica.create_task.assert_awaited_with(call_args)
+
+
+@pytest.mark.parametrize(
+    ("service_data", "call_args"),
+    [
+        (
+            {
+                ATTR_RENAME: "RENAME",
+            },
+            Task(text="RENAME"),
+        ),
+        (
+            {
+                ATTR_NOTES: "NOTES",
+            },
+            Task(notes="NOTES"),
+        ),
+        (
+            {
+                ATTR_ADD_CHECKLIST_ITEM: "Checklist-item",
+            },
+            Task(
+                {
+                    "checklist": [
+                        Checklist(
+                            id=UUID("a2a6702d-58e1-46c2-a3ce-422d525cc0b6"),
+                            text="Checklist-item1",
+                            completed=False,
+                        ),
+                        Checklist(
+                            id=UUID("9f64e1cd-b0ab-4577-8344-c7a5e1827997"),
+                            text="Checklist-item2",
+                            completed=True,
+                        ),
+                        Checklist(
+                            id=UUID("12345678-1234-5678-1234-567812345678"),
+                            text="Checklist-item",
+                            completed=False,
+                        ),
+                    ]
+                }
+            ),
+        ),
+        (
+            {
+                ATTR_REMOVE_CHECKLIST_ITEM: "Checklist-item1",
+            },
+            Task(
+                {
+                    "checklist": [
+                        Checklist(
+                            id=UUID("9f64e1cd-b0ab-4577-8344-c7a5e1827997"),
+                            text="Checklist-item2",
+                            completed=True,
+                        ),
+                    ]
+                }
+            ),
+        ),
+        (
+            {
+                ATTR_SCORE_CHECKLIST_ITEM: "Checklist-item1",
+            },
+            Task(
+                {
+                    "checklist": [
+                        Checklist(
+                            id=UUID("a2a6702d-58e1-46c2-a3ce-422d525cc0b6"),
+                            text="Checklist-item1",
+                            completed=True,
+                        ),
+                        Checklist(
+                            id=UUID("9f64e1cd-b0ab-4577-8344-c7a5e1827997"),
+                            text="Checklist-item2",
+                            completed=True,
+                        ),
+                    ]
+                }
+            ),
+        ),
+        (
+            {
+                ATTR_UNSCORE_CHECKLIST_ITEM: "Checklist-item2",
+            },
+            Task(
+                {
+                    "checklist": [
+                        Checklist(
+                            id=UUID("a2a6702d-58e1-46c2-a3ce-422d525cc0b6"),
+                            text="Checklist-item1",
+                            completed=False,
+                        ),
+                        Checklist(
+                            id=UUID("9f64e1cd-b0ab-4577-8344-c7a5e1827997"),
+                            text="Checklist-item2",
+                            completed=False,
+                        ),
+                    ]
+                }
+            ),
+        ),
+        (
+            {
+                ATTR_PRIORITY: "trivial",
+            },
+            Task(priority=TaskPriority.TRIVIAL),
+        ),
+        (
+            {
+                ATTR_START_DATE: "2025-03-05",
+            },
+            Task(startDate=datetime(2025, 3, 5)),
+        ),
+        (
+            {
+                ATTR_FREQUENCY: "weekly",
+            },
+            Task(frequency=Frequency.WEEKLY),
+        ),
+        (
+            {
+                ATTR_INTERVAL: 5,
+            },
+            Task(everyX=5),
+        ),
+        (
+            {
+                ATTR_FREQUENCY: "weekly",
+                ATTR_REPEAT: ["m", "t", "w", "th"],
+            },
+            Task(
+                frequency=Frequency.WEEKLY,
+                repeat=Repeat(m=True, t=True, w=True, th=True),
+            ),
+        ),
+        (
+            {
+                ATTR_FREQUENCY: "monthly",
+                ATTR_REPEAT_MONTHLY: "day_of_month",
+            },
+            Task(frequency=Frequency.MONTHLY, daysOfMonth=[20], weeksOfMonth=[]),
+        ),
+        (
+            {
+                ATTR_FREQUENCY: "monthly",
+                ATTR_REPEAT_MONTHLY: "day_of_week",
+            },
+            Task(
+                frequency=Frequency.MONTHLY,
+                daysOfMonth=[],
+                weeksOfMonth=[2],
+                repeat=Repeat(
+                    m=False, t=False, w=False, th=False, f=True, s=False, su=False
+                ),
+            ),
+        ),
+        (
+            {
+                ATTR_REMINDER: ["10:00"],
+            },
+            Task(
+                {
+                    "reminders": [
+                        Reminders(
+                            id=UUID("12345678-1234-5678-1234-567812345678"),
+                            time=datetime(2025, 2, 25, 10, 0, tzinfo=UTC),
+                            startDate=None,
+                        )
+                    ]
+                }
+            ),
+        ),
+        (
+            {
+                ATTR_REMOVE_REMINDER: ["10:00"],
+            },
+            Task({"reminders": []}),
+        ),
+        (
+            {
+                ATTR_CLEAR_REMINDER: True,
+            },
+            Task({"reminders": []}),
+        ),
+        (
+            {
+                ATTR_STREAK: 10,
+            },
+            Task(streak=10),
+        ),
+        (
+            {
+                ATTR_ALIAS: "ALIAS",
+            },
+            Task(alias="ALIAS"),
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_uuid4")
+@freeze_time("2025-02-25T22:00:00.000Z")
+async def test_update_daily(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    service_data: dict[str, Any],
+    call_args: Task,
+) -> None:
+    """Test Habitica update daily action."""
+    task_id = "6e53f1f5-a315-4edd-984d-8d762e4a08ef"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_DAILY,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            ATTR_TASK: task_id,
+            **service_data,
+        },
+        return_response=True,
+        blocking=True,
+    )
+    habitica.update_task.assert_awaited_with(UUID(task_id), call_args)
+
+
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        {
+            ATTR_FREQUENCY: "daily",
+            ATTR_REPEAT: ["m", "t", "w", "th"],
+        },
+        {
+            ATTR_FREQUENCY: "weekly",
+            ATTR_REPEAT_MONTHLY: "day_of_month",
+        },
+        {
+            ATTR_FREQUENCY: "weekly",
+            ATTR_REPEAT_MONTHLY: "day_of_week",
+        },
+    ],
+)
+@pytest.mark.usefixtures("mock_uuid4")
+@freeze_time("2025-02-25T22:00:00.000Z")
+async def test_update_daily_service_validation_errors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    service_data: dict[str, Any],
+) -> None:
+    """Test Habitica update daily action."""
+    task_id = "6e53f1f5-a315-4edd-984d-8d762e4a08ef"
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_DAILY,
+            service_data={
+                ATTR_CONFIG_ENTRY: config_entry.entry_id,
+                ATTR_TASK: task_id,
+                **service_data,
+            },
+            return_response=True,
+            blocking=True,
+        )
 
 
 async def test_tags(

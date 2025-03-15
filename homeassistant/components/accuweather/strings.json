@@ -106,6 +106,15 @@
           "steady": "Steady",
           "rising": "Rising",
           "falling": "Falling"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "falling": "[%key:component::accuweather::entity::sensor::pressure_tendency::state::falling%]",
+              "rising": "[%key:component::accuweather::entity::sensor::pressure_tendency::state::rising%]",
+              "steady": "[%key:component::accuweather::entity::sensor::pressure_tendency::state::steady%]"
+            }
+          }
         }
       },
       "ragweed_pollen": {

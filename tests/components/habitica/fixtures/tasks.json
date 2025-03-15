@@ -605,7 +605,18 @@
       "startDate": "2024-09-20T23:00:00.000Z",
       "daysOfMonth": [],
       "weeksOfMonth": [3],
-      "checklist": [],
+      "checklist": [
+        {
+          "completed": false,
+          "id": "a2a6702d-58e1-46c2-a3ce-422d525cc0b6",
+          "text": "Checklist-item1"
+        },
+        {
+          "completed": true,
+          "id": "9f64e1cd-b0ab-4577-8344-c7a5e1827997",
+          "text": "Checklist-item2"
+        }
+      ],
       "reminders": [],
       "createdAt": "2024-10-10T15:57:14.304Z",
       "updatedAt": "2024-11-27T23:47:29.986Z",

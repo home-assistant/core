@@ -5,6 +5,7 @@ import os
 
 import onvif
 import onvif.settings
+import pytest
 from zeep import Client
 from zeep.transports import Transport
 
@@ -732,25 +733,24 @@ async def test_tapo_intrusion(hass: HomeAssistant) -> None:
 
 async def test_tapo_missing_attributes(hass: HomeAssistant) -> None:
     """Tests async_parse_tplink_detector with missing fields."""
-    event = await get_event(
-        {
-            "Message": {
-                "_value_1": {
-                    "Data": {
-                        "ElementItem": [],
-                        "Extension": None,
-                        "SimpleItem": [{"Name": "IsPeople", "Value": "true"}],
-                        "_attr_1": None,
-                    },
-                }
-            },
-            "Topic": {
-                "_value_1": "tns1:RuleEngine/PeopleDetector/People",
-            },
-        }
-    )
-
-    assert event is None
+    with pytest.raises(AttributeError, match="SimpleItem"):
+        await get_event(
+            {
+                "Message": {
+                    "_value_1": {
+                        "Data": {
+                            "ElementItem": [],
+                            "Extension": None,
+                            "SimpleItem": [{"Name": "IsPeople", "Value": "true"}],
+                            "_attr_1": None,
+                        },
+                    }
+                },
+                "Topic": {
+                    "_value_1": "tns1:RuleEngine/PeopleDetector/People",
+                },
+            }
+        )
 
 
 async def test_tapo_unknown_type(hass: HomeAssistant) -> None:
