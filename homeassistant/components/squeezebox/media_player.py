@@ -31,6 +31,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
+    device_registry as dr,
     discovery_flow,
     entity_platform,
     entity_registry as er,
@@ -40,7 +41,6 @@ from homeassistant.helpers.device_registry import (
     DeviceInfo,
     format_mac,
 )
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.start import async_at_start
@@ -127,7 +127,9 @@ async def async_setup_entry(
     """Set up the Squeezebox media_player platform from a server config entry."""
 
     # Add media player entities when discovered
-    async def _player_discovered(coordinator: SqueezeBoxPlayerUpdateCoordinator) -> None:
+    async def _player_discovered(
+        coordinator: SqueezeBoxPlayerUpdateCoordinator,
+    ) -> None:
         player = coordinator.player
         _LOGGER.debug("Setting up media_player device and entity for player %s", player)
         device_registry = dr.async_get(hass)
@@ -138,24 +140,24 @@ async def async_setup_entry(
         # Why? so we nicely merge with a server and a player linked by a MAC server information wins
         if device and device.name:
             device = device_registry.async_get_or_create(
-              config_entry_id=entry.entry_id,
-              connections={(CONNECTION_NETWORK_MAC, player.player_id)},
-              default_name=player.name,
-              default_model=player.model,
-              default_manufacturer=player.creator,
-              via_device=(DOMAIN, coordinator.server_uuid),
+                config_entry_id=entry.entry_id,
+                connections={(CONNECTION_NETWORK_MAC, player.player_id)},
+                default_name=player.name,
+                default_model=player.model,
+                default_manufacturer=player.creator,
+                via_device=(DOMAIN, coordinator.server_uuid),
             )
         else:
             device = device_registry.async_get_or_create(
-              config_entry_id=entry.entry_id,
-              identifiers={(DOMAIN, player.player_id)},
-              connections={(CONNECTION_NETWORK_MAC, player.player_id)},
-              name=player.name,
-              model=player.model,
-              manufacturer=player.creator,
-              model_id=player.model_type,
-              sw_version=player.firmware,
-              via_device=(DOMAIN, coordinator.server_uuid),
+                config_entry_id=entry.entry_id,
+                identifiers={(DOMAIN, player.player_id)},
+                connections={(CONNECTION_NETWORK_MAC, player.player_id)},
+                name=player.name,
+                model=player.model,
+                manufacturer=player.creator,
+                model_id=player.model_type,
+                sw_version=player.firmware,
+                via_device=(DOMAIN, coordinator.server_uuid),
             )
         async_add_entities([SqueezeBoxMediaPlayerEntity(coordinator)])
 
