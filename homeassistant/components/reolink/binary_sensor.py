@@ -364,7 +364,7 @@ class ReolinkPushBinarySensorEntity(ReolinkBinarySensorEntity):
 class ReolinkSmartAIBinarySensorEntity(
     ReolinkChannelCoordinatorEntity, BinarySensorEntity
 ):
-    """Binary-sensor class for Reolink IP camera smart AI sensors."""
+    """Binary-sensor class for Reolink IP camera Smart AI sensors."""
 
     entity_description: ReolinkSmartAIBinarySensorEntityDescription
 
