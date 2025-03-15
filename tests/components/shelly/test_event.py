@@ -76,7 +76,7 @@ async def test_rpc_script_1_event(
     await init_integration(hass, 2)
     entity_id = "event.test_name_test_script_js"
 
-    assert (state := hass.states.get(entity_id)) == snapshot(name=f"{entity_id}-state")
+    assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-state")
 
     assert entity_registry.async_get(entity_id) == snapshot(name=f"{entity_id}-entry")
 

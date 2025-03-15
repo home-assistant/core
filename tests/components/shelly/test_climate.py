@@ -79,7 +79,7 @@ async def test_climate_hvac_mode(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Test initial hvac mode - off
-    assert (state := hass.states.get(ENTITY_ID)) == snapshot(name=f"{ENTITY_ID}-state")
+    assert hass.states.get(ENTITY_ID) == snapshot(name=f"{ENTITY_ID}-state")
 
     assert entity_registry.async_get(ENTITY_ID) == snapshot(name=f"{ENTITY_ID}-entry")
 
