@@ -502,6 +502,7 @@ def _mock_blu_rtv_device(version: str | None = None):
         firmware_version="some fw string",
         initialized=True,
         connected=True,
+        xmod_info={},
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
