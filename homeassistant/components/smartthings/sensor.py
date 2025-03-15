@@ -575,7 +575,8 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="oven_setpoint",
                 device_class=SensorDeviceClass.TEMPERATURE,
                 use_temperature_unit=True,
-                value_fn=lambda value: value if value != 0 else None,
+                # Set the value to None if it is 0 F (-17 C)
+                value_fn=lambda value: None if value in {0, -17} else value,
             )
         ]
     },
