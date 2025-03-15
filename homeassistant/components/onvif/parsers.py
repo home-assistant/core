@@ -49,6 +49,7 @@ def local_datetime_or_none(value: str) -> datetime.datetime | None:
 
 
 @PARSERS.register("tns1:VideoSource/MotionAlarm")
+@PARSERS.register("tns1:Device/Trigger/tnshik:AlarmIn")
 async def async_parse_motion_alarm(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
@@ -468,6 +469,28 @@ async def async_parse_visitor_detector(uid: str, msg) -> Event | None:
     return Event(
         f"{uid}_{topic}_{video_source}",
         "Visitor Detection",
+        "binary_sensor",
+        "occupancy",
+        None,
+        payload.Data.SimpleItem[0].Value == "true",
+    )
+
+
+@PARSERS.register("tns1:RuleEngine/MyRuleDetector/Package")
+async def async_parse_package_detector(uid: str, msg) -> Event | None:
+    """Handle parsing event message.
+
+    Topic: tns1:RuleEngine/MyRuleDetector/Package
+    """
+    video_source = ""
+    topic, payload = extract_message(msg)
+    for source in payload.Source.SimpleItem:
+        if source.Name == "Source":
+            video_source = _normalize_video_source(source.Value)
+
+    return Event(
+        f"{uid}_{topic}_{video_source}",
+        "Package Detection",
         "binary_sensor",
         "occupancy",
         None,
