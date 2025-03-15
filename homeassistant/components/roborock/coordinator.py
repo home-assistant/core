@@ -128,10 +128,10 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         """
         dock_type = self.roborock_device_info.props.status.dock_type
         return DeviceInfo(
-            name=self.roborock_device_info.device.name + " Dock",
-            identifiers={(DOMAIN, self.duid + "_dock")},
+            name=f"{self.roborock_device_info.device.name} Dock",
+            identifiers={(DOMAIN, f"{self.duid}_dock")},
             manufacturer="Roborock",
-            model=self.roborock_device_info.product.model + " Dock",
+            model=f"{self.roborock_device_info.product.model} Dock",
             model_id=str(dock_type.value) if dock_type is not None else "Unknown",
             sw_version=self.roborock_device_info.device.fv,
         )
