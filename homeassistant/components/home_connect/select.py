@@ -422,7 +422,7 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
         desc: HomeConnectSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
-        self._original_option_keys = set(desc.values_translation_key.keys())
+        self._original_option_keys = set(desc.values_translation_key)
         super().__init__(
             coordinator,
             appliance,
@@ -475,11 +475,10 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
         if setting and setting.constraints and setting.constraints.allowed_values:
             self._original_option_keys = set(setting.constraints.allowed_values)
             self._attr_options = [
-                self.entity_description.values_translation_key.get(
-                    option, bsh_key_to_translation_key(option)
-                )
+                self.entity_description.values_translation_key[option]
                 for option in self._original_option_keys
                 if option is not None
+                and option in self.entity_description.values_translation_key
             ]
 
 
@@ -496,7 +495,7 @@ class HomeConnectSelectOptionEntity(HomeConnectOptionEntity, SelectEntity):
         desc: HomeConnectSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
-        self._original_option_keys = set(desc.values_translation_key.keys())
+        self._original_option_keys = set(desc.values_translation_key)
         super().__init__(
             coordinator,
             appliance,
@@ -526,9 +525,8 @@ class HomeConnectSelectOptionEntity(HomeConnectOptionEntity, SelectEntity):
         ):
             self._original_option_keys = set(option_constraints.allowed_values)
             self._attr_options = [
-                self.entity_description.values_translation_key.get(
-                    option, bsh_key_to_translation_key(option)
-                )
+                self.entity_description.values_translation_key[option]
                 for option in self._original_option_keys
                 if option is not None
+                and option in self.entity_description.values_translation_key
             ]
