@@ -489,6 +489,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         icon="mdi:auto-mode",
         name="Regulation mode",
         device_class=SensorDeviceClass.ENUM,
+        options=["none", "standby", "increase"],
         state_class=SensorStateClass.MEASUREMENT,
     ),
     OverkizSensorDescription(
