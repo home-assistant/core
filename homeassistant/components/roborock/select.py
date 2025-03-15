@@ -32,6 +32,8 @@ class RoborockSelectDescription(SelectEntityDescription):
     parameter_lambda: Callable[[str, DeviceProp], list[int]]
 
     protocol_listener: RoborockDataProtocol | None = None
+    # If it is a dock entity
+    is_dock_entity: bool = False
 
 
 SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
@@ -70,6 +72,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         parameter_lambda=lambda key, _: [
             RoborockDockDustCollectionModeCode.as_dict().get(key)
         ],
+        is_dock_entity=True,
     ),
 ]
 
@@ -117,6 +120,7 @@ class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
             f"{entity_description.key}_{coordinator.duid_slug}",
             coordinator,
             entity_description.protocol_listener,
+            is_dock_entity=entity_description.is_dock_entity,
         )
         self._attr_options = options
 
