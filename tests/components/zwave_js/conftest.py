@@ -511,18 +511,25 @@ def aeotec_smart_switch_7_state_fixture() -> NodeDataType:
 
 
 @pytest.fixture(name="listen_block")
-def mock_listen_block_fixture():
+def mock_listen_block_fixture() -> asyncio.Event:
     """Mock a listen block."""
     return asyncio.Event()
 
 
+@pytest.fixture(name="listen_result")
+def listen_result_fixture() -> asyncio.Future[None]:
+    """Mock a listen result."""
+    return asyncio.Future()
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(
-    controller_state,
-    controller_node_state,
-    version_state,
-    log_config_state,
-    listen_block,
+    controller_state: dict[str, Any],
+    controller_node_state: dict[str, Any],
+    version_state: dict[str, Any],
+    log_config_state: dict[str, Any],
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
 ):
     """Mock a client."""
     with patch(
@@ -537,6 +544,7 @@ def mock_client_fixture(
         async def listen(driver_ready: asyncio.Event) -> None:
             driver_ready.set()
             await listen_block.wait()
+            await listen_result
 
         async def disconnect():
             client.connected = False
@@ -817,7 +825,10 @@ def nortek_thermostat_removed_event_fixture(client) -> Node:
 
 
 @pytest.fixture(name="integration")
-async def integration_fixture(hass: HomeAssistant, client) -> MockConfigEntry:
+async def integration_fixture(
+    hass: HomeAssistant,
+    client: MagicMock,
+) -> MockConfigEntry:
     """Set up the zwave_js integration."""
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
