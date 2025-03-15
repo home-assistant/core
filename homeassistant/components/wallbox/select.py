@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -21,7 +21,7 @@ from .const import (
     DOMAIN,
     EcoSmartMode,
 )
-from .coordinator import WallboxCoordinator
+from .coordinator import InvalidAuth, WallboxCoordinator
 from .entity import WallboxEntity
 
 
@@ -60,6 +60,25 @@ async def async_setup_entry(
     """Create wallbox select entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
 
+    # Check if power boost is available, if not, end setup
+    if (
+        CHARGER_POWER_BOOST_KEY
+        not in coordinator.data[CHARGER_DATA_KEY][CHARGER_PLAN_KEY][
+            CHARGER_FEATURES_KEY
+        ]
+    ):
+        return
+
+    # Check if the user has sufficient rights to change values, if so, add select component:
+    try:
+        await coordinator.async_set_eco_smart(
+            coordinator.data[CHARGER_SOLAR_CHARGING_MODE]
+        )
+    except InvalidAuth:
+        return
+    except ConnectionError as exc:
+        raise PlatformNotReady from exc
+
     async_add_entities(
         WallboxSelect(coordinator, description)
         for ent in coordinator.data
@@ -82,17 +101,6 @@ class WallboxSelect(WallboxEntity, SelectEntity):
         self.entity_description = description
         self._coordinator = coordinator
         self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
-
-    @property
-    def available(self) -> bool:
-        """Return the availability of the select entity."""
-        return (
-            super().available
-            and CHARGER_POWER_BOOST_KEY
-            in self.coordinator.data[CHARGER_DATA_KEY][CHARGER_PLAN_KEY][
-                CHARGER_FEATURES_KEY
-            ]
-        )
 
     @property
     def current_option(self) -> str | None:
