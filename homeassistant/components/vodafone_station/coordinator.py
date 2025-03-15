@@ -21,6 +21,8 @@ from .helpers import cleanup_device_tracker
 
 CONSIDER_HOME_SECONDS = DEFAULT_CONSIDER_HOME.total_seconds()
 
+type VodafoneConfigEntry = ConfigEntry[VodafoneStationRouter]
+
 
 @dataclass(slots=True)
 class VodafoneStationDeviceInfo:
@@ -42,7 +44,7 @@ class UpdateCoordinatorDataType:
 class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     """Queries router running Vodafone Station firmware."""
 
-    config_entry: ConfigEntry
+    config_entry: VodafoneConfigEntry
 
     def __init__(
         self,
@@ -50,7 +52,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         host: str,
         username: str,
         password: str,
-        config_entry: ConfigEntry,
+        config_entry: VodafoneConfigEntry,
     ) -> None:
         """Initialize the scanner."""
 
