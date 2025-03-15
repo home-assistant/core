@@ -1,26 +1,16 @@
 rules:
   # Bronze
   action-setup: done
-  appropriate-polling:
-    status: todo
-    comment: |
-      The device currently polls every 30 seconds, which is a bit high when idle.
-      We should consider dynamic polling intervals (e.g. when cleaning) and
-      separate cloud vs local intervals.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  docs-actions:
-    status: todo
-    comment: |
-      The documentation for `roborock.get_maps` should be updated so it is next
-      to the other actions rather than only an example. All actions should be
-      updated to use the simple table format.
+  docs-actions: done
   docs-high-level-description: done
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -33,8 +23,8 @@ rules:
   # Silver
   action-exceptions: todo
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -50,20 +40,13 @@ rules:
   discovery-update-info:
     status: exempt
     comment: Devices do not support discovery.
-  docs-data-update:
-    status: todo
-    comment: |
-      The docs talk about device communication works (cloud vs local), but does
-      not yet describe data flow (e.g. polling). We should move into a separate
-      section.
-  docs-examples: todo
+  docs-data-update: done
+  docs-examples: done
   docs-known-limitations:
     status: todo
     comment: Documentation does not describe known limitations like rate limiting
   docs-supported-devices: todo
-  docs-supported-functions:
-    status: todo
-    comment: Mostly complete, but some documentation is outdated (e.g. maps/images)
+  docs-supported-functions: done
   docs-troubleshooting:
     status: todo
     comment: |
