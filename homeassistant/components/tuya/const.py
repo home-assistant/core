@@ -87,6 +87,7 @@ class DPType(StrEnum):
     JSON = "Json"
     RAW = "Raw"
     STRING = "String"
+    BITMAP = "Bitmap"
 
 
 class DPCode(StrEnum):
