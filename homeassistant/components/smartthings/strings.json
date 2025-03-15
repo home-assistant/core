@@ -40,6 +40,27 @@
         "name": "Valve"
       }
     },
+    "climate": {
+      "air_conditioner": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "wind_free": "WindFree",
+              "wind_free_sleep": "WindFree sleep",
+              "quiet": "Quiet",
+              "smart": "Smart",
+              "two_step": "Two step",
+              "dlight_cool": "D'light cool",
+              "dry_comfort": "Dry comfort",
+              "cube_purify": "Cube purify",
+              "long_wind": "Long wind",
+              "motion_indirect": "Motion indirect",
+              "motion_direct": "Motion direct"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "lighting_mode": {
         "name": "Activity lighting mode"

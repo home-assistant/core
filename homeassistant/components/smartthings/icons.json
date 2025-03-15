@@ -1,0 +1,25 @@
+{
+  "entity": {
+    "climate": {
+      "air_conditioner": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "wind_free": "mdi:weather-windy",
+              "wind_free_sleep": "mdi:sleep",
+              "quiet": "mdi:volume-off",
+              "smart": "mdi:brain",
+              "two_step": "mdi:numeric-2-circle-outline",
+              "dlight_cool": "mdi:water-percent",
+              "dry_comfort": "mdi:hair-dryer",
+              "cube_purify": "mdi:air-purifier",
+              "long_wind": "mdi:weather-dust",
+              "motion_indirect": "mdi:motion",
+              "motion_direct": "mdi:motion-sensor"
+            }
+          }
+        }
+      }
+    }
+  }
+}

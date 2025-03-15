@@ -445,7 +445,7 @@ async def test_ac_set_preset_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.ac_office_granit", ATTR_PRESET_MODE: "windFree"},
+        {ATTR_ENTITY_ID: "climate.ac_office_granit", ATTR_PRESET_MODE: "wind_free"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
