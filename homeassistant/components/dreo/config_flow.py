@@ -23,7 +23,7 @@ DATA_SCHEMA = vol.Schema(
 class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Dreo config flow."""
 
-    VERSION = 1  # add version
+    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the Dreo flow."""
@@ -40,8 +40,9 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
         """Validate login credentials."""
         if not username or not password:
             return False, "invalid_auth"
-        if self.manager is None:
-            self.manager = HsCloud(username, password)
+
+        self.manager = HsCloud(username, password)
+
         try:
             await self.hass.async_add_executor_job(self.manager.login)
         except HsCloudException:
@@ -58,20 +59,21 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
-
         errors = {}
         if user_input:
             username = user_input[CONF_USERNAME]
             hashed_password = self._hash_password(user_input[CONF_PASSWORD])
+
+            await self.async_set_unique_id(username)
+            self._abort_if_unique_id_configured()
+
             is_valid, error = await self._validate_login(username, hashed_password)
             if is_valid:
                 return self.async_create_entry(
                     title=username,
                     data={CONF_USERNAME: username, CONF_PASSWORD: hashed_password},
                 )
-            errors["base"] = error if error is not None else "unknown_error"
+            errors["base"] = error if error else "unknown_error"
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
