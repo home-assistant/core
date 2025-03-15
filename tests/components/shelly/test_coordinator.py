@@ -562,7 +562,7 @@ async def test_rpc_update_entry_sleep_period(
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert entry.data["sleep_period"] == 600
+    assert entry.data[CONF_SLEEP_PERIOD] == 600
 
     # Move time to generate sleep period update
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 3600)
@@ -570,7 +570,7 @@ async def test_rpc_update_entry_sleep_period(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert entry.data["sleep_period"] == 3600
+    assert entry.data[CONF_SLEEP_PERIOD] == 3600
 
 
 async def test_rpc_sleeping_device_no_periodic_updates(
