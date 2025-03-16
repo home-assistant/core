@@ -129,8 +129,8 @@
           "description": "Climate preset mode such as Schedule, Away or Frost Guard."
         },
         "end_datetime": {
-          "name": "End date & time",
-          "description": "Date & time the preset will be active until."
+          "name": "End date & time (not used for Schedule mode)",
+          "description": "The preset will be active until this date & time. If unset, keep former endtime or indefinitely if none."
         }
       }
     },
