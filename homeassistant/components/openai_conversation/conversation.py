@@ -82,13 +82,13 @@ def _convert_content_to_param(
             tool_call_id=content.tool_call_id,
             content=json.dumps(content.tool_result),
         )
-    if content.role != "assistant" or not content.tool_calls:  # type: ignore[union-attr]
-        role = content.role
+    if content.role != "assistant" or not content.tool_calls:
+        role: Literal["system", "user", "assistant", "developer"] = content.role
         if role == "system":
             role = "developer"
         return cast(
             ChatCompletionMessageParam,
-            {"role": content.role, "content": content.content},  # type: ignore[union-attr]
+            {"role": content.role, "content": content.content},
         )
 
     # Handle the Assistant content including tool calls.
