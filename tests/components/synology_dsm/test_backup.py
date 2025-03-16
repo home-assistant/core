@@ -444,27 +444,38 @@ async def test_agents_get_backup_not_existing(
     assert response["result"] == {"agent_errors": {}, "backup": None}
 
 
+@pytest.mark.parametrize(
+    ("error", "expected_aget_errors"),
+    [
+        (
+            SynologyDSMAPIErrorException("api", "500", "error"),
+            {"synology_dsm.mocked_syno_dsm_entry": "Failed to list backups"},
+        ),
+        (
+            SynologyDSMRequestException(ClientError("error")),
+            {"synology_dsm.mocked_syno_dsm_entry": "The backup agent is unreachable."},
+        ),
+    ],
+)
 async def test_agents_get_backup_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_dsm_with_filestation: MagicMock,
+    error: SynologyDSMException,
+    expected_aget_errors: dict[str, str],
 ) -> None:
     """Test agent error while get backup."""
     client = await hass_ws_client(hass)
     backup_id = "ef34ab12"
 
-    setup_dsm_with_filestation.file.get_files.side_effect = (
-        SynologyDSMAPIErrorException("api", "500", "error")
-    )
+    setup_dsm_with_filestation.file.get_files.side_effect = error
 
     await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
     response = await client.receive_json()
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {
-            "synology_dsm.mocked_syno_dsm_entry": "Failed to list backups"
-        },
+        "agent_errors": expected_aget_errors,
         "backup": None,
     }
 
@@ -574,11 +585,26 @@ async def test_agents_upload(
     assert mock.call_args_list[1].kwargs["path"] == "/ha_backup/my_backup_path"
 
 
+@pytest.mark.parametrize(
+    ("error", "expected_error"),
+    [
+        (
+            SynologyDSMAPIErrorException("api", "500", "error"),
+            "Failed to upload backup",
+        ),
+        (
+            SynologyDSMRequestException(ClientError("error")),
+            "The backup agent is unreachable.",
+        ),
+    ],
+)
 async def test_agents_upload_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
     setup_dsm_with_filestation: MagicMock,
+    error: SynologyDSMException,
+    expected_error: str,
 ) -> None:
     """Test agent error while uploading backup."""
     client = await hass_client()
@@ -611,9 +637,7 @@ async def test_agents_upload_error(
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = test_backup
-        setup_dsm_with_filestation.file.upload_file.side_effect = (
-            SynologyDSMAPIErrorException("api", "500", "error")
-        )
+        setup_dsm_with_filestation.file.upload_file.side_effect = error
         resp = await client.post(
             "/api/backup/upload?agent_id=synology_dsm.mocked_syno_dsm_entry",
             data={"file": StringIO("test")},
@@ -621,7 +645,7 @@ async def test_agents_upload_error(
 
     assert resp.status == 201
     assert f"Uploading backup {backup_id}" in caplog.text
-    assert "Failed to upload backup" in caplog.text
+    assert expected_error in caplog.text
     mock: AsyncMock = setup_dsm_with_filestation.file.upload_file
     assert len(mock.mock_calls) == 1
     assert mock.call_args_list[0].kwargs["filename"] == f"{base_filename}.tar"
@@ -652,7 +676,7 @@ async def test_agents_upload_error(
 
     assert resp.status == 201
     assert f"Uploading backup {backup_id}" in caplog.text
-    assert "Failed to upload backup" in caplog.text
+    assert expected_error in caplog.text
     mock: AsyncMock = setup_dsm_with_filestation.file.upload_file
     assert len(mock.mock_calls) == 3
     assert mock.call_args_list[1].kwargs["filename"] == f"{base_filename}.tar"
