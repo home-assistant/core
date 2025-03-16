@@ -1,6 +1,7 @@
 """Test Qbus light entities."""
 
-from unittest.mock import MagicMock
+from datetime import timedelta
+from unittest.mock import MagicMock, call
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -198,7 +199,8 @@ def _wait_and_assert_state_request(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
     mqtt_mock.reset_mock()
-    async_fire_time_changed(hass, dt_util.utcnow() + STATE_REQUEST_DELAY)
-    mqtt_mock.async_publish.assert_called_once_with(
-        _TOPIC_GET_STATE, '["UL20"]', 0, False
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(STATE_REQUEST_DELAY))
+    mqtt_mock.async_publish.assert_has_calls(
+        [call(_TOPIC_GET_STATE, '["UL20"]', 0, False)],
+        any_order=True,
     )

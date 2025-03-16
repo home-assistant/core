@@ -1,6 +1,6 @@
 """Support for Qbus thermostat."""
 
-from datetime import datetime, timedelta
+import logging
 from typing import Any
 
 from qbusmqttapi.const import KEY_PROPERTIES_REGIME, KEY_PROPERTIES_SET_TEMPERATURE
@@ -15,16 +15,18 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.mqtt import ReceiveMessage, client as mqtt
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 
 from .coordinator import QbusConfigEntry
 from .entity import QbusEntity, add_new_outputs
 
 PARALLEL_UPDATES = 0
 
-STATE_REQUEST_DELAY = timedelta(seconds=2)
+STATE_REQUEST_DELAY = 2
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -59,29 +61,44 @@ class QbusClimate(QbusEntity, ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, mqtt_output: QbusMqttOutput) -> None:
+    def __init__(self, hass: HomeAssistant, mqtt_output: QbusMqttOutput) -> None:
         """Initialize climate entity."""
 
-        super().__init__(mqtt_output)
+        super().__init__(hass, mqtt_output)
 
         self._attr_hvac_action = HVACAction.IDLE
         self._attr_hvac_mode = HVACMode.OFF
 
-        set_temp: dict = mqtt_output.properties.get(KEY_PROPERTIES_SET_TEMPERATURE, {})
-        current_regime: dict = mqtt_output.properties.get(KEY_PROPERTIES_REGIME, {})
+        set_temp: dict[str, Any] = mqtt_output.properties.get(
+            KEY_PROPERTIES_SET_TEMPERATURE, {}
+        )
+        current_regime: dict[str, Any] = mqtt_output.properties.get(
+            KEY_PROPERTIES_REGIME, {}
+        )
 
-        self._attr_min_temp = set_temp.get("min", 0)
-        self._attr_max_temp = set_temp.get("max", 35)
-        self._attr_target_temperature_step = set_temp.get("step", 0.5)
-        self._attr_preset_modes = current_regime.get("enumValues", [])
-        self._attr_preset_mode = (
+        self._attr_min_temp: float = set_temp.get("min", 0)
+        self._attr_max_temp: float = set_temp.get("max", 35)
+        self._attr_target_temperature_step: float = set_temp.get("step", 0.5)
+        self._attr_preset_modes: list[str] = current_regime.get("enumValues", [])
+        self._attr_preset_mode: str = (
             self._attr_preset_modes[0] if len(self._attr_preset_modes) > 0 else ""
         )
 
-        self._cancel_state_request: CALLBACK_TYPE | None = None
+        self._request_state_debouncer: Debouncer = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=STATE_REQUEST_DELAY,
+            immediate=False,
+            function=self._async_request_state,
+        )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
+
+        if preset_mode not in self._attr_preset_modes:
+            _LOGGER.warning("Invalid preset '%s'", preset_mode)
+            return
+
         state = QbusMqttThermoState(id=self._mqtt_output.id, type=StateType.STATE)
         state.write_regime(preset_mode)
 
@@ -103,6 +120,7 @@ class QbusClimate(QbusEntity, ClimateEntity):
         """Set new target hvac mode."""
         # It is not supported to explicitly set the HVAC mode. The value
         # is determined automatically.
+        self._determine_hvac_mode_and_action()
 
     async def _state_received(self, msg: ReceiveMessage) -> None:
         state = self._message_factory.parse_output_state(
@@ -112,13 +130,14 @@ class QbusClimate(QbusEntity, ClimateEntity):
         if state is None:
             return
 
-        self._attr_preset_mode = state.read_regime() or self._attr_preset_mode
-        self._attr_current_temperature = (
-            state.read_current_temperature() or self._attr_current_temperature
-        )
-        self._attr_target_temperature = (
-            state.read_set_temperature() or self._attr_target_temperature
-        )
+        if preset_mode := state.read_regime():
+            self._attr_preset_mode = preset_mode
+
+        if current_temperature := state.read_current_temperature():
+            self._attr_current_temperature = current_temperature
+
+        if target_temperature := state.read_set_temperature():
+            self._attr_target_temperature = target_temperature
 
         self._determine_hvac_mode_and_action()
 
@@ -127,13 +146,7 @@ class QbusClimate(QbusEntity, ClimateEntity):
         # temperature step by step could cause a flood of state requests, so we're
         # holding off a few seconds before requesting the full state.
         if state.type == StateType.EVENT:
-            if self._cancel_state_request is not None:
-                self._cancel_state_request()
-                self._cancel_state_request = None
-
-            self._cancel_state_request = async_call_later(
-                self.hass, STATE_REQUEST_DELAY, self._async_request_state
-            )
+            await self._request_state_debouncer.async_call()
 
         self.async_schedule_update_ha_state()
 
@@ -154,6 +167,6 @@ class QbusClimate(QbusEntity, ClimateEntity):
             else HVACMode.OFF
         )
 
-    async def _async_request_state(self, _: datetime) -> None:
+    async def _async_request_state(self) -> None:
         request = self._message_factory.create_state_request([self._mqtt_output.id])
         await mqtt.async_publish(self.hass, request.topic, request.payload)
