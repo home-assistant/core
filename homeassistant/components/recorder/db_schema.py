@@ -203,11 +203,11 @@ UINT_32_TYPE = BigInteger().with_variant(
     "mariadb",
 )
 JSON_VARIANT_CAST = Text().with_variant(
-    postgresql.JSON(none_as_null=True),  # type: ignore[no-untyped-call]
+    postgresql.JSON(none_as_null=True),
     "postgresql",
 )
 JSONB_VARIANT_CAST = Text().with_variant(
-    postgresql.JSONB(none_as_null=True),  # type: ignore[no-untyped-call]
+    postgresql.JSONB(none_as_null=True),
     "postgresql",
 )
 DATETIME_TYPE = (

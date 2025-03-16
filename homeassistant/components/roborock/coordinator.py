@@ -38,7 +38,15 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import DOMAIN, IMAGE_CACHE_INTERVAL
+from .const import (
+    A01_UPDATE_INTERVAL,
+    DOMAIN,
+    IMAGE_CACHE_INTERVAL,
+    V1_CLOUD_IN_CLEANING_INTERVAL,
+    V1_CLOUD_NOT_CLEANING_INTERVAL,
+    V1_LOCAL_IN_CLEANING_INTERVAL,
+    V1_LOCAL_NOT_CLEANING_INTERVAL,
+)
 from .models import RoborockA01HassDeviceInfo, RoborockHassDeviceInfo, RoborockMapInfo
 from .roborock_storage import RoborockMapStorage
 
@@ -88,7 +96,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            # Assume we can use the local api.
+            update_interval=V1_LOCAL_NOT_CLEANING_INTERVAL,
         )
         self.roborock_device_info = RoborockHassDeviceInfo(
             device,
@@ -124,6 +133,25 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         self.map_data: dict[int, MapData] = {}
         self.map_updates: dict[int, datetime] = {}
         self._parser = parser
+        self._is_cloud_api = False
+
+    @cached_property
+    def dock_device_info(self) -> DeviceInfo:
+        """Gets the device info for the dock.
+
+        This must happen after the coordinator does the first update.
+        Which will be the case when this is called.
+        """
+        dock_type = self.roborock_device_info.props.status.dock_type
+        return DeviceInfo(
+            name=f"{self.roborock_device_info.device.name} Dock",
+            identifiers={(DOMAIN, f"{self.duid}_dock")},
+            manufacturer="Roborock",
+            model=f"{self.roborock_device_info.product.model} Dock",
+            model_id=str(dock_type.value) if dock_type is not None else "Unknown",
+            sw_version=self.roborock_device_info.device.fv,
+        )
+
 
     async def update_map(self, bump_time: bool = True) -> None:
         """Update the map data for the current map."""
@@ -194,6 +222,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 await self.api.async_disconnect()
                 # We use the cloud api if the local api fails to connect.
                 self.api = self.cloud_api
+                self.update_interval = V1_CLOUD_NOT_CLEANING_INTERVAL
+                self._is_cloud_api = True
                 # Right now this should never be called if the cloud api is the primary api,
                 # but in the future if it is, a new else should be added.
 
@@ -241,6 +271,15 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         except RoborockException as ex:
             _LOGGER.debug("Failed to update data: %s", ex)
             raise UpdateFailed(ex) from ex
+        if self.roborock_device_info.props.status.in_cleaning:
+            if self._is_cloud_api:
+                self.update_interval = V1_CLOUD_IN_CLEANING_INTERVAL
+            else:
+                self.update_interval = V1_LOCAL_IN_CLEANING_INTERVAL
+        elif self._is_cloud_api:
+            self.update_interval = V1_CLOUD_NOT_CLEANING_INTERVAL
+        else:
+            self.update_interval = V1_LOCAL_NOT_CLEANING_INTERVAL
         return self.roborock_device_info.props
 
     def _set_current_map(self) -> None:
@@ -329,7 +368,7 @@ class RoborockDataUpdateCoordinatorA01(
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            update_interval=A01_UPDATE_INTERVAL,
         )
         self.api = api
         self.device_info = DeviceInfo(
