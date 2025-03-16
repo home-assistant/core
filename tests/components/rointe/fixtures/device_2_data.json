@@ -1,0 +1,47 @@
+{
+  "data": {
+    "backlight": 1,
+    "backlight_on": 1,
+    "color": "#ffa600",
+    "comfort": 21,
+    "comfort_minus": 0.0,
+    "eco": 10.5,
+    "gmt": 0,
+    "ice": 7,
+    "ice_mode": false,
+    "last_sync_datetime_app": 1670694731962,
+    "last_sync_datetime_device": 1670694734375,
+    "last_sync_datetime_tariff": 1444984009108,
+    "mode": "manual",
+    "name": "office",
+    "nominal_power": 770,
+    "power": false,
+    "product_version": "v2",
+    "schedule_day": 4,
+    "schedule_hour": 10,
+    "status": "off",
+    "schedule": [
+      "OOOOOOOOOOOOOOOEEEEEEEEE",
+      "OOOOOOOOOOOOOOOEEEEEEEEE",
+      "OOOOOOOOOOOOOOOEEEEEEEEE",
+      "OOOOOOOOOOOOOOOEEEEEEEEE",
+      "OOOOOOOOOOOOOOOEEEEEEEEE",
+      "OOOOOOOOOOOOOOOEEEEEEEEE",
+      "OOOOOOOOOOOOOOOEEEEEEEEE"
+    ],
+    "temp": 20.5,
+    "temp_calc": 21.0,
+    "temp_probe": 21.5,
+    "type": "radiator",
+    "um_max_temp": 23,
+    "um_min_temp": 17,
+    "user_mode": false
+  },
+  "firmware": {
+    "firmware_collective_device": "end_user",
+    "firmware_datetime_device": 1670693512518,
+    "firmware_version_device": "2_0_2"
+  },
+  "installation": "install-home",
+  "serialnumber": "00000000000122"
+}

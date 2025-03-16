@@ -1,0 +1,10 @@
+{
+  "domain": "rointe",
+  "name": "Rointe Heaters",
+  "codeowners": ["@tggm"],
+  "config_flow": true,
+  "documentation": "https://github.com/tggm/rointe-radiators/blob/master/README.md",
+  "iot_class": "cloud_polling",
+  "quality_scale": "internal",
+  "requirements": ["rointe-sdk==1.6.0"]
+}
