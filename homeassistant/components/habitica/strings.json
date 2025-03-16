@@ -768,7 +768,7 @@
           "description": "[%key:component::habitica::common::notes_description%]"
         },
         "tag": {
-          "name": "[%key:component::habitica::common::tag_name%]",
+          "name": "[%key:component::habitica::common::tag_options_name%]",
           "description": "[%key:component::habitica::common::tag_description%]"
         },
         "alias": {
@@ -868,7 +868,7 @@
           "description": "[%key:component::habitica::common::notes_description%]"
         },
         "tag": {
-          "name": "[%key:component::habitica::common::tag_name%]",
+          "name": "[%key:component::habitica::common::tag_options_name%]",
           "description": "[%key:component::habitica::common::tag_description%]"
         },
         "alias": {
@@ -1008,7 +1008,7 @@
           "description": "[%key:component::habitica::common::notes_description%]"
         },
         "tag": {
-          "name": "[%key:component::habitica::common::tag_name%]",
+          "name": "[%key:component::habitica::common::tag_options_name%]",
           "description": "[%key:component::habitica::common::tag_description%]"
         },
         "alias": {
@@ -1024,11 +1024,11 @@
           "description": "[%key:component::habitica::common::date_description%]"
         },
         "reminder": {
-          "name": "[%key:component::habitica::common::reminder_name%]",
+          "name": "[%key:component::habitica::common::reminder_options_name%]",
           "description": "[%key:component::habitica::common::reminder_description%]"
         },
         "add_checklist_item": {
-          "name": "[%key:component::habitica::common::add_checklist_item_name%]",
+          "name": "[%key:component::habitica::common::checklist_options_name%]",
           "description": "[%key:component::habitica::common::add_checklist_item_description%]"
         }
       },
