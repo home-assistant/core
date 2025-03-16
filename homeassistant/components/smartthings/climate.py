@@ -164,9 +164,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
             | ClimateEntityFeature.TURN_OFF
             | ClimateEntityFeature.TURN_ON
         )
-        if self.get_attribute_value(
-            Capability.THERMOSTAT_FAN_MODE, Attribute.THERMOSTAT_FAN_MODE
-        ):
+        if self.supports_capability(Capability.THERMOSTAT_FAN_MODE):
             flags |= ClimateEntityFeature.FAN_MODE
         return flags
 
@@ -256,6 +254,8 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
+        if not self.supports_capability(Capability.THERMOSTAT_OPERATING_STATE):
+            return None
         return OPERATING_STATE_TO_ACTION.get(
             self.get_attribute_value(
                 Capability.THERMOSTAT_OPERATING_STATE,
@@ -275,11 +275,15 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
-        return [
-            state
-            for mode in self.get_attribute_value(
+        if (
+            supported_thermostat_modes := self.get_attribute_value(
                 Capability.THERMOSTAT_MODE, Attribute.SUPPORTED_THERMOSTAT_MODES
             )
+        ) is None:
+            return []
+        return [
+            state
+            for mode in supported_thermostat_modes
             if (state := AC_MODE_TO_STATE.get(mode)) is not None
         ]
 
@@ -317,10 +321,14 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
-            Attribute.TEMPERATURE
-        ].unit
-        assert unit
+        # Offline third party thermostats may not have a unit
+        # Since climate always requires a unit, default to Celsius
+        if (
+            unit := self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
+                Attribute.TEMPERATURE
+            ].unit
+        ) is None:
+            return UnitOfTemperature.CELSIUS
         return UNIT_MAP[unit]
 
 
