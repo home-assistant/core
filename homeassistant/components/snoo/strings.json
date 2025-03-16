@@ -21,7 +21,21 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "exceptions": {
+    "select_failed": {
+      "message": "Error while updating {name} to {option}"
+    }
+  },
   "entity": {
+    "binary_sensor": {
+      "left_clip": {
+        "name": "Left safety clip"
+      },
+      "right_clip": {
+        "name": "Right safety clip"
+      }
+    },
+
     "sensor": {
       "state": {
         "name": "State",
@@ -38,6 +52,19 @@
       },
       "time_left": {
         "name": "Time left"
+      }
+    },
+    "select": {
+      "intensity": {
+        "name": "Intensity",
+        "state": {
+          "baseline": "[%key:component::snoo::entity::sensor::state::state::baseline%]",
+          "level1": "[%key:component::snoo::entity::sensor::state::state::level1%]",
+          "level2": "[%key:component::snoo::entity::sensor::state::state::level2%]",
+          "level3": "[%key:component::snoo::entity::sensor::state::state::level3%]",
+          "level4": "[%key:component::snoo::entity::sensor::state::state::level4%]",
+          "stop": "[%key:component::snoo::entity::sensor::state::state::stop%]"
+        }
       }
     }
   }
