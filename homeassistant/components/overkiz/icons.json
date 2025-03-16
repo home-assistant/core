@@ -23,6 +23,14 @@
           }
         }
       }
+    },
+    "sensor": {
+      "derogated_target_temperature": {
+        "default": "mdi:thermometer-alert"
+      },
+      "regulation_mode": {
+        "default": "mdi:auto-mode"
+      }
     }
   }
 }
