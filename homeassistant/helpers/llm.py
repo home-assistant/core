@@ -364,7 +364,7 @@ class AssistAPI(API):
 
         if user_name:
             prompt.append(
-                f"The user interacting with Home Assistant is named {user_name}."
+                f"The user currently interacting with Home Assistant is: {user_name}."
             )
 
         if llm_context.device_id:
