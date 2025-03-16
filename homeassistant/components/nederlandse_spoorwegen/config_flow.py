@@ -82,14 +82,14 @@ class NederlandseSpoorwegenSubentryFlowHandler(ConfigSubentryFlow):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._stations = dict[str, str]
+        self._stations: dict[str, str] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """User flow to add a new train."""
 
-        if self._stations is None:
+        if len(self._stations) == 0:
             nsapi = self.hass.config_entries.async_get_known_entry(
                 self.handler[0]
             ).runtime_data.nsapi
