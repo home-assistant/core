@@ -48,6 +48,7 @@ from .const import (
     DRAWABLES,
     MAP_FILE_FORMAT,
     MAP_SCALE,
+    MAP_SLEEP,
     V1_CLOUD_IN_CLEANING_INTERVAL,
     V1_CLOUD_NOT_CLEANING_INTERVAL,
     V1_LOCAL_IN_CLEANING_INTERVAL,
@@ -315,6 +316,36 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
     def duid_slug(self) -> str:
         """Get the slug of the duid."""
         return slugify(self.duid)
+
+    async def refresh_coordinator_map(self) -> None:
+        """Get the starting map information for all maps for this device.
+
+        The following steps must be done synchronously.
+        Only one map can be loaded at a time per device.
+        """
+        cur_map = self.current_map
+        # This won't be None at this point as the coordinator will have run first.
+        if cur_map is None:
+            # If we don't have a cur map(shouldn't happen) just
+            # return as we can't do anything.
+            return
+        map_flags = sorted(self.maps, key=lambda data: data == cur_map, reverse=True)
+        for map_flag in map_flags:
+            if map_flag != cur_map:
+                # Only change the map and sleep if we have multiple maps.
+                await self.api.load_multi_map(map_flag)
+                self.current_map = map_flag
+                # We cannot get the map until the roborock servers fully process the
+                # map change.
+                await asyncio.sleep(MAP_SLEEP)
+            await self.set_current_map_rooms()
+
+        if len(self.maps) != 1:
+            # Set the map back to the map the user previously had selected so that it
+            # does not change the end user's app.
+            # Only needs to happen when we changed maps above.
+            await self.api.load_multi_map(cur_map)
+            self.current_map = cur_map
 
 
 class RoborockDataUpdateCoordinatorA01(

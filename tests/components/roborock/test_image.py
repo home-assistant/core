@@ -244,3 +244,33 @@ async def test_fail_updating_image(
         async_fire_time_changed(hass, now)
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
     assert not resp.ok
+
+
+async def test_index_error_map(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that we handle failing getting the image after it has already been setup with a indexerror."""
+    client = await hass_client()
+    now = dt_util.utcnow() + timedelta(seconds=91)
+    # Copy the device prop so we don't override it
+    prop = copy.deepcopy(PROP)
+    prop.status.in_cleaning = 1
+    # Update image, but get IndexError for image.
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
+            side_effect=IndexError,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
+            return_value=prop,
+        ),
+        patch(
+            "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+        ),
+    ):
+        async_fire_time_changed(hass, now)
+        resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert not resp.ok
