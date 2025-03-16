@@ -1,6 +1,9 @@
 """Jewish Calendar calendar platform."""
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
+import logging
+
+from hdate import HDateInfo, Zmanim
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
@@ -10,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import JewishCalendarEntity
 
+_LOGGER = logging.getLogger(__name__)
 CALENDAR_TYPES: tuple[EntityDescription, ...] = (
     EntityDescription(
         key="events",
@@ -47,4 +51,31 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
-        raise NotImplementedError
+        events = []
+        for ordinal in range(start_date.toordinal(), end_date.toordinal()):
+            _date = date.fromordinal(ordinal)
+            info = HDateInfo(_date, self.data.diaspora)
+            match getattr(self, "subscribed_events"):
+                case "date":
+                    event = CalendarEvent(
+                        start=_date, end=_date, summary=str(info.hdate)
+                    )
+                case "holiday":
+                    if info.is_holiday:
+                        event = CalendarEvent(
+                            start=_date, end=_date, summary=str(info.holidays)
+                        )
+
+            zmanim = Zmanim(
+                _date,
+                self.data.location,
+                self.data.candle_lighting_offset,
+                self.data.havdalah_offset,
+            )
+            _LOGGER.info(zmanim)
+            for enabled_event in getattr(self, "subscribed_events"):
+                event = CalendarEvent(
+                    start=_date, end=_date, summary=getattr(info, enabled_event)
+                )
+                events.append(event)
+        return events
