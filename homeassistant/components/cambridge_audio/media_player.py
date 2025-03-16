@@ -170,6 +170,11 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
         return self.client.position_last_updated
 
     @property
+    def media_channel(self) -> str | None:
+        """Channel currently playing."""
+        return self.client.play_state.metadata.station
+
+    @property
     def is_volume_muted(self) -> bool | None:
         """Volume mute status."""
         return self.client.state.mute
