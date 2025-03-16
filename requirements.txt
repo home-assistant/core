@@ -10,7 +10,7 @@ aiohttp_cors==0.7.0
 aiohttp-fast-zlib==0.2.3
 aiohttp-asyncmdnsresolver==0.1.1
 aiozoneinfo==0.2.3
-annotatedyaml==0.1.1
+annotatedyaml==0.2.0
 astral==2.2
 async-interrupt==1.2.2
 attrs==25.1.0
