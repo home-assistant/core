@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Final
 
+from aioshelly.ble.const import BLE_SCRIPT_NAME
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions
 from aioshelly.const import DEFAULT_COAP_PORT, RPC_GENERATIONS
@@ -59,6 +60,7 @@ from .utils import (
     get_coap_context,
     get_device_entry_gen,
     get_http_port,
+    get_rpc_scripts_event_types,
     get_ws_context,
 )
 
@@ -270,6 +272,9 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                 async_create_issue_unsupported_firmware(hass, entry)
                 await device.shutdown()
                 raise ConfigEntryNotReady
+            runtime_data.script_events = await get_rpc_scripts_event_types(
+                device, ignore_scripts=[BLE_SCRIPT_NAME]
+            )
         except (DeviceConnectionError, MacAddressMismatchError) as err:
             await device.shutdown()
             raise ConfigEntryNotReady(repr(err)) from err
