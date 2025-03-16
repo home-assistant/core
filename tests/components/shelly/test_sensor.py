@@ -345,14 +345,30 @@ async def test_block_sensor_without_value(
     assert hass.states.get(entity_id) is None
 
 
+@pytest.mark.parametrize(
+    ("entity", "initial_state", "block_id", "attribute", "value"),
+    [
+        ("test_name_battery", "98", DEVICE_BLOCK_ID, "battery", None),
+        ("test_name_operation", "normal", SENSOR_BLOCK_ID, "sensorOp", "unknown"),
+    ],
+)
 async def test_block_sensor_unknown_value(
-    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity: str,
+    initial_state: str,
+    block_id: int,
+    attribute: str,
+    value: str | None,
 ) -> None:
     """Test block sensor unknown value."""
-    entity_id = f"{SENSOR_DOMAIN}.test_name_battery"
+    entity_id = f"{SENSOR_DOMAIN}.{entity}"
     await init_integration(hass, 1)
 
-    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "battery", None)
+    assert hass.states.get(entity_id).state == initial_state
+
+    monkeypatch.setattr(mock_block_device.blocks[block_id], attribute, value)
     mock_block_device.mock_update()
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
