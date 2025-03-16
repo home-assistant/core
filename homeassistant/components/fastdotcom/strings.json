@@ -24,22 +24,5 @@
         "name": "Unloaded Ping"
       }
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "maxtime": "Max Time (seconds)",
-          "pingcount": "Ping Count"
-        },
-        "data_description": {
-          "maxtime": "The maximum duration in seconds for a test run.",
-          "pingcount": "The number of pings to send during tests."
-        }
-      }
-    },
-    "abort": {
-      "invalid_value": "Invalid option value provided."
-    }
   }
 }
