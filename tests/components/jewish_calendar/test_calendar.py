@@ -11,5 +11,5 @@ async def test_calendar_exists(
     """Test that the calendar exists."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    state = hass.states.get("calendar.jewish_calendar_user_events")
+    state = hass.states.get("calendar.jewish_calendar_events")
     assert state
