@@ -346,6 +346,49 @@ async def test_binary_sensors_functionality(
     assert hass.states.is_state(entity_id, expected)
 
 
+async def test_connected_sensor_functionality(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    appliance_ha_id: str,
+) -> None:
+    """Test if the connected binary sensor reports the right values."""
+    entity_id = "binary_sensor.washer_connectivity"
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    assert hass.states.is_state(entity_id, STATE_ON)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.DISCONNECTED,
+                ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, STATE_OFF)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.CONNECTED,
+                ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, STATE_ON)
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_create_issue(
     hass: HomeAssistant,

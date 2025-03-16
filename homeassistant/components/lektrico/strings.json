@@ -24,7 +24,7 @@
   "entity": {
     "binary_sensor": {
       "state_e_activated": {
-        "name": "Ev error"
+        "name": "EV error"
       },
       "overtemp": {
         "name": "Thermal throttling"
@@ -45,10 +45,10 @@
         "name": "Overvoltage"
       },
       "rcd_error": {
-        "name": "Rcd error"
+        "name": "RCD error"
       },
       "cp_diode_failure": {
-        "name": "Ev diode short"
+        "name": "EV diode short"
       },
       "contactor_failure": {
         "name": "Relay contacts welded"
@@ -64,7 +64,7 @@
     },
     "number": {
       "led_max_brightness": {
-        "name": "Led brightness"
+        "name": "LED brightness"
       },
       "dynamic_limit": {
         "name": "Dynamic limit"
@@ -86,7 +86,7 @@
         "name": "State",
         "state": {
           "available": "Available",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "connected": "Connected",
           "error": "Error",
           "locked": "Locked",

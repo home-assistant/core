@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Final, cast
 
 from aiocomelit import ComelitSerialBridgeObject, ComelitVedoZoneObject
-from aiocomelit.const import ALARM_ZONES, BRIDGE, OTHER, AlarmZoneState
+from aiocomelit.const import BRIDGE, OTHER, AlarmZoneState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,11 +14,14 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_TYPE, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge, ComelitVedoSystem
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 SENSOR_BRIDGE_TYPES: Final = (
     SensorEntityDescription(
@@ -42,7 +45,7 @@ SENSOR_VEDO_TYPES: Final = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ComelitConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Comelit sensors."""
 
@@ -55,7 +58,7 @@ async def async_setup_entry(
 async def async_setup_bridge_entry(
     hass: HomeAssistant,
     config_entry: ComelitConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Comelit Bridge sensors."""
 
@@ -75,14 +78,14 @@ async def async_setup_bridge_entry(
 async def async_setup_vedo_entry(
     hass: HomeAssistant,
     config_entry: ComelitConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Comelit VEDO sensors."""
 
     coordinator = cast(ComelitVedoSystem, config_entry.runtime_data)
 
     entities: list[ComelitVedoSensorEntity] = []
-    for device in coordinator.data[ALARM_ZONES].values():
+    for device in coordinator.data["alarm_zones"].values():
         entities.extend(
             ComelitVedoSensorEntity(
                 coordinator, device, config_entry.entry_id, sensor_desc
@@ -119,9 +122,12 @@ class ComelitBridgeSensorEntity(CoordinatorEntity[ComelitSerialBridge], SensorEn
     @property
     def native_value(self) -> StateType:
         """Sensor value."""
-        return getattr(
-            self.coordinator.data[OTHER][self._device.index],
-            self.entity_description.key,
+        return cast(
+            StateType,
+            getattr(
+                self.coordinator.data[OTHER][self._device.index],
+                self.entity_description.key,
+            ),
         )
 
 
@@ -139,7 +145,7 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
     ) -> None:
         """Init sensor entity."""
         self._api = coordinator.api
-        self._zone = zone
+        self._zone_index = zone.index
         super().__init__(coordinator)
         # Use config_entry.entry_id as base for unique_id
         # because no serial number or mac is available
@@ -151,7 +157,7 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
     @property
     def _zone_object(self) -> ComelitVedoZoneObject:
         """Zone object."""
-        return self.coordinator.data[ALARM_ZONES][self._zone.index]
+        return self.coordinator.data["alarm_zones"][self._zone_index]
 
     @property
     def available(self) -> bool:
@@ -164,4 +170,4 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
         if (status := self._zone_object.human_status) == AlarmZoneState.UNKNOWN:
             return None
 
-        return status.value
+        return cast(str, status.value)

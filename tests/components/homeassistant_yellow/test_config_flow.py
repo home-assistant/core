@@ -18,7 +18,10 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     get_flasher_addon_manager,
     get_multiprotocol_addon_manager,
 )
-from homeassistant.components.homeassistant_hardware.util import ApplicationType
+from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
+    FirmwareInfo,
+)
 from homeassistant.components.homeassistant_yellow.const import DOMAIN, RADIO_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -82,8 +85,14 @@ async def test_config_flow(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
         patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_type",
-            return_value=ApplicationType.EZSP,
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
+            return_value=FirmwareInfo(
+                device=RADIO_DEVICE,
+                firmware_type=ApplicationType.EZSP,
+                firmware_version=None,
+                owners=[],
+                source="probe",
+            ),
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -330,10 +339,22 @@ async def test_firmware_options_flow(hass: HomeAssistant) -> None:
     async def mock_async_step_pick_firmware_zigbee(self, data):
         return await self.async_step_confirm_zigbee(user_input={})
 
-    with patch(
-        "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareOptionsFlow.async_step_pick_firmware_zigbee",
-        autospec=True,
-        side_effect=mock_async_step_pick_firmware_zigbee,
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareOptionsFlow.async_step_pick_firmware_zigbee",
+            autospec=True,
+            side_effect=mock_async_step_pick_firmware_zigbee,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
+            return_value=FirmwareInfo(
+                device=RADIO_DEVICE,
+                firmware_type=ApplicationType.EZSP,
+                firmware_version="7.4.4.0 build 0",
+                owners=[],
+                source="probe",
+            ),
+        ),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -345,6 +366,7 @@ async def test_firmware_options_flow(hass: HomeAssistant) -> None:
 
     assert config_entry.data == {
         "firmware": "ezsp",
+        "firmware_version": "7.4.4.0 build 0",
     }
 
 

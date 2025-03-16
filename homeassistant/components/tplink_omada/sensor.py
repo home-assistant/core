@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import OmadaConfigEntry
@@ -57,7 +57,7 @@ def _map_device_status(device: OmadaListDevice) -> str | None:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OmadaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
     controller = config_entry.runtime_data

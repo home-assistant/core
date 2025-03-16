@@ -141,13 +141,13 @@ def async_get_async_zeroconf(hass: HomeAssistant) -> HaAsyncZeroconf:
     return _async_get_instance(hass)
 
 
-def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZeroconf:
+def _async_get_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
     if DOMAIN in hass.data:
         return cast(HaAsyncZeroconf, hass.data[DOMAIN])
 
     logging.getLogger("zeroconf").setLevel(logging.NOTSET)
 
-    zeroconf = HaZeroconf(**zcargs)
+    zeroconf = HaZeroconf(**_async_get_zc_args(hass))
     aio_zc = HaAsyncZeroconf(zc=zeroconf)
 
     install_multiple_zeroconf_catcher(zeroconf)
@@ -175,12 +175,10 @@ def _async_zc_has_functional_dual_stack() -> bool:
     )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Zeroconf and make Home Assistant discoverable."""
-    zc_args: dict = {"ip_version": IPVersion.V4Only}
-
-    adapters = await network.async_get_adapters(hass)
-
+def _async_get_zc_args(hass: HomeAssistant) -> dict[str, Any]:
+    """Get zeroconf arguments from config."""
+    zc_args: dict[str, Any] = {"ip_version": IPVersion.V4Only}
+    adapters = network.async_get_loaded_adapters(hass)
     ipv6 = False
     if _async_zc_has_functional_dual_stack():
         if any(adapter["enabled"] and adapter["ipv6"] for adapter in adapters):
@@ -195,7 +193,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     else:
         zc_args["interfaces"] = [
             str(source_ip)
-            for source_ip in await network.async_get_enabled_source_ips(hass)
+            for source_ip in network.async_get_enabled_source_ips_from_adapters(
+                adapters
+            )
             if not source_ip.is_loopback
             and not (isinstance(source_ip, IPv6Address) and source_ip.is_global)
             and not (
@@ -207,8 +207,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 and zc_args["ip_version"] == IPVersion.V6Only
             )
         ]
+    return zc_args
 
-    aio_zc = _async_get_instance(hass, **zc_args)
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Zeroconf and make Home Assistant discoverable."""
+    aio_zc = _async_get_instance(hass)
     zeroconf = cast(HaZeroconf, aio_zc.zeroconf)
     zeroconf_types = await async_get_zeroconf(hass)
     homekit_models = await async_get_homekit(hass)

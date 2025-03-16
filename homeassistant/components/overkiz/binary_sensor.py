@@ -15,7 +15,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OverkizDataConfigEntry
 from .const import IGNORED_OVERKIZ_DEVICES
@@ -143,7 +143,7 @@ SUPPORTED_STATES = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OverkizDataConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Overkiz binary sensors from a config entry."""
     data = entry.runtime_data

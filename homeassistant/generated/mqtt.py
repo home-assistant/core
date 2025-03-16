@@ -16,6 +16,9 @@ MQTT = {
     "fully_kiosk": [
         "fully/deviceInfo/+",
     ],
+    "pglab": [
+        "pglab/discovery/#",
+    ],
     "qbus": [
         "cloudapp/QBUSMQTTGW/state",
         "cloudapp/QBUSMQTTGW/config",

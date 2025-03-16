@@ -13,5 +13,6 @@
   "documentation": "https://www.home-assistant.io/integrations/iron_os",
   "iot_class": "local_polling",
   "loggers": ["pynecil"],
-  "requirements": ["pynecil==4.0.1"]
+  "quality_scale": "platinum",
+  "requirements": ["pynecil==4.1.0"]
 }

@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LockData, SchlageConfigEntry, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
@@ -15,7 +15,7 @@ from .entity import SchlageEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: SchlageConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Schlage WiFi locks based on a config entry."""
     coordinator = config_entry.runtime_data

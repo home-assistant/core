@@ -89,6 +89,10 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         """Set light color in kelvin."""
         await device.set_temperature(temperature)
 
+    async def set_scene(self, device: GoveeController, scene: str) -> None:
+        """Set light scene."""
+        await device.set_scene(scene)
+
     @property
     def devices(self) -> list[GoveeDevice]:
         """Return a list of discovered Govee devices."""

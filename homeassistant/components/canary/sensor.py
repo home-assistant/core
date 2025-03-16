@@ -14,7 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
@@ -64,7 +64,7 @@ STATE_AIR_QUALITY_VERY_ABNORMAL: Final = "very_abnormal"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: CanaryConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Canary sensors based on a config entry."""
     coordinator = entry.runtime_data

@@ -35,7 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 
@@ -374,9 +374,9 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         key="sensor|sensorOp",
         name="Operation",
         device_class=SensorDeviceClass.ENUM,
-        options=["unknown", "warmup", "normal", "fault"],
+        options=["warmup", "normal", "fault"],
         translation_key="operation",
-        value=lambda value: value,
+        value=lambda value: None if value == "unknown" else value,
         extra_state_attributes=lambda block: {"self_test": block.selfTest},
     ),
     ("valve", "valve"): BlockSensorDescription(
@@ -391,8 +391,8 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
             "failure",
             "opened",
             "opening",
-            "unknown",
         ],
+        value=lambda value: None if value == "unknown" else value,
         entity_category=EntityCategory.DIAGNOSTIC,
         removal_condition=lambda _, block: block.valve == "not_connected",
     ),
@@ -1324,7 +1324,7 @@ RPC_SENSORS: Final = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:

@@ -42,6 +42,7 @@ class ReadResult:
         self.registers = register_words
         self.bits = register_words
         self.value = register_words
+        self.count = len(register_words) if register_words is not None else 0
 
     def isError(self):
         """Set error state."""

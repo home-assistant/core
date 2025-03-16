@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -28,9 +28,11 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
@@ -71,7 +73,7 @@ SWITCH_CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def _async_create_entities(hass, config):
+async def _async_create_entities(hass: HomeAssistant, config: ConfigType):
     """Create the Template switches."""
     switches = []
 
@@ -104,7 +106,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
     _options = dict(config_entry.options)
@@ -131,11 +133,11 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         object_id,
-        config,
+        config: ConfigType,
         unique_id,
-    ):
+    ) -> None:
         """Initialize the Template switch."""
         super().__init__(
             hass, config=config, fallback_name=object_id, unique_id=unique_id
@@ -144,18 +146,16 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
-        friendly_name = self._attr_name
+        name = self._attr_name
+        if TYPE_CHECKING:
+            assert name is not None
         self._template = config.get(CONF_VALUE_TEMPLATE)
-        self._on_script = (
-            Script(hass, config.get(CONF_TURN_ON), friendly_name, DOMAIN)
-            if config.get(CONF_TURN_ON) is not None
-            else None
-        )
-        self._off_script = (
-            Script(hass, config.get(CONF_TURN_OFF), friendly_name, DOMAIN)
-            if config.get(CONF_TURN_OFF) is not None
-            else None
-        )
+
+        if on_action := config.get(CONF_TURN_ON):
+            self.add_script(CONF_TURN_ON, on_action, name, DOMAIN)
+        if off_action := config.get(CONF_TURN_OFF):
+            self.add_script(CONF_TURN_OFF, off_action, name, DOMAIN)
+
         self._state: bool | None = False
         self._attr_assumed_state = self._template is None
         self._attr_device_info = async_device_info_to_link_from_device_id(
@@ -206,16 +206,16 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Fire the on action."""
-        if self._on_script:
-            await self.async_run_script(self._on_script, context=self._context)
+        if on_script := self._action_scripts.get(CONF_TURN_ON):
+            await self.async_run_script(on_script, context=self._context)
         if self._template is None:
             self._state = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Fire the off action."""
-        if self._off_script:
-            await self.async_run_script(self._off_script, context=self._context)
+        if off_script := self._action_scripts.get(CONF_TURN_OFF):
+            await self.async_run_script(off_script, context=self._context)
         if self._template is None:
             self._state = False
             self.async_write_ha_state()

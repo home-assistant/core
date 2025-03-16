@@ -342,6 +342,17 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         except RequestException as err:
             raise UpdateFailed(f"Error setting Tado meter reading: {err}") from err
 
+    async def set_child_lock(self, device_id: str, enabled: bool) -> None:
+        """Set child lock of device."""
+        try:
+            await self.hass.async_add_executor_job(
+                self._tado.set_child_lock,
+                device_id,
+                enabled,
+            )
+        except RequestException as exc:
+            raise HomeAssistantError(f"Error setting Tado child lock: {exc}") from exc
+
 
 class TadoMobileDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     """Class to manage the mobile devices from Tado via PyTado."""

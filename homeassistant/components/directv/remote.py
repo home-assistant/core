@@ -11,7 +11,7 @@ from directv import DIRECTV, DIRECTVError
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DirecTVConfigEntry
 from .entity import DIRECTVEntity
@@ -24,7 +24,7 @@ SCAN_INTERVAL = timedelta(minutes=2)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DirecTVConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Load DirecTV remote based on a config entry."""
     dtv = entry.runtime_data

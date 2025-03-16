@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -42,7 +42,7 @@ SUPPORTED_SENSORS = {"temperatureSensor", "humiditySensor", "lightSensor"}
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FreedomproConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Freedompro sensor."""
     coordinator = entry.runtime_data

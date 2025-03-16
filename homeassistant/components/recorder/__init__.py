@@ -149,9 +149,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     commit_interval = conf[CONF_COMMIT_INTERVAL]
     db_max_retries = conf[CONF_DB_MAX_RETRIES]
     db_retry_wait = conf[CONF_DB_RETRY_WAIT]
-    db_url = conf.get(CONF_DB_URL) or DEFAULT_URL.format(
-        hass_config_path=hass.config.path(DEFAULT_DB_FILE)
-    )
+    db_url = conf.get(CONF_DB_URL) or get_default_url(hass)
     exclude = conf[CONF_EXCLUDE]
     exclude_event_types: set[EventType[Any] | str] = set(
         exclude.get(CONF_EVENT_TYPES, [])
@@ -200,3 +198,8 @@ async def _async_setup_integration_platform(
             instance.queue_task(AddRecorderPlatformTask(domain, platform))
 
     await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)
+
+
+def get_default_url(hass: HomeAssistant) -> str:
+    """Return the default URL."""
+    return DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))

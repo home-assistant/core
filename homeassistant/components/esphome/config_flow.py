@@ -41,6 +41,7 @@ from .const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
+    CONF_SUBSCRIBE_LOGS,
     DEFAULT_ALLOW_SERVICE_CALLS,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
@@ -507,6 +508,10 @@ class OptionsFlowHandler(OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS
                     ),
+                ): bool,
+                vol.Required(
+                    CONF_SUBSCRIBE_LOGS,
+                    default=self.config_entry.options.get(CONF_SUBSCRIBE_LOGS, False),
                 ): bool,
             }
         )

@@ -106,7 +106,6 @@
         "state_attributes": {
           "detected": {
             "state": {
-              "unknown": "Unknown",
               "none": "None",
               "mild": "Mild",
               "heavy": "Heavy",
@@ -141,7 +140,6 @@
     "sensor": {
       "operation": {
         "state": {
-          "unknown": "Unknown",
           "warmup": "Warm-up",
           "normal": "Normal",
           "fault": "Fault"
@@ -164,8 +162,7 @@
           "closing": "Closing",
           "failure": "Failure",
           "opened": "Opened",
-          "opening": "Opening",
-          "unknown": "[%key:component::shelly::entity::sensor::operation::state::unknown%]"
+          "opening": "Opening"
         }
       }
     }

@@ -15,6 +15,7 @@ from homeassistant.components.backup import (
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import instance_id
+from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -35,7 +36,8 @@ async def backup_only() -> AsyncGenerator[None]:
 
 @pytest.fixture(autouse=True)
 async def setup_integration(hass: HomeAssistant) -> AsyncGenerator[None]:
-    """Set up Kitchen Sink integration."""
+    """Set up Kitchen Sink and backup integrations."""
+    async_initialize_backup(hass)
     with patch("homeassistant.components.backup.is_hassio", return_value=False):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})

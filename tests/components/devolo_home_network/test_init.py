@@ -27,7 +27,9 @@ from .mock import MockDevice
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("device", ["mock_device", "mock_repeater_device"])
+@pytest.mark.parametrize(
+    "device", ["mock_device", "mock_repeater_device", "mock_ipv6_device"]
+)
 async def test_setup_entry(
     hass: HomeAssistant,
     device: str,

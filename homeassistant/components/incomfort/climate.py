@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_LEGACY_SETPOINT_STATUS, DOMAIN
 from .coordinator import InComfortConfigEntry, InComfortDataCoordinator
@@ -27,7 +27,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: InComfortConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up InComfort/InTouch climate devices."""
     incomfort_coordinator = entry.runtime_data

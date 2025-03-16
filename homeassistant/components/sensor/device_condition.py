@@ -83,6 +83,7 @@ CONF_IS_VOLUME = "is_volume"
 CONF_IS_VOLUME_FLOW_RATE = "is_volume_flow_rate"
 CONF_IS_WATER = "is_water"
 CONF_IS_WEIGHT = "is_weight"
+CONF_IS_WIND_DIRECTION = "is_wind_direction"
 CONF_IS_WIND_SPEED = "is_wind_speed"
 
 ENTITY_CONDITIONS = {
@@ -145,6 +146,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.VOLUME_FLOW_RATE: [{CONF_TYPE: CONF_IS_VOLUME_FLOW_RATE}],
     SensorDeviceClass.WATER: [{CONF_TYPE: CONF_IS_WATER}],
     SensorDeviceClass.WEIGHT: [{CONF_TYPE: CONF_IS_WEIGHT}],
+    SensorDeviceClass.WIND_DIRECTION: [{CONF_TYPE: CONF_IS_WIND_DIRECTION}],
     SensorDeviceClass.WIND_SPEED: [{CONF_TYPE: CONF_IS_WIND_SPEED}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_IS_VALUE}],
 }
@@ -204,6 +206,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_VOLUME_FLOW_RATE,
                     CONF_IS_WATER,
                     CONF_IS_WEIGHT,
+                    CONF_IS_WIND_DIRECTION,
                     CONF_IS_WIND_SPEED,
                     CONF_IS_VALUE,
                 ]

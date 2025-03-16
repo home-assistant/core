@@ -55,6 +55,9 @@
           "off": "mdi:network-off"
         }
       },
+      "firewall_policy_control": {
+        "default": "mdi:security-network"
+      },
       "port_forward_control": {
         "default": "mdi:upload-network"
       },

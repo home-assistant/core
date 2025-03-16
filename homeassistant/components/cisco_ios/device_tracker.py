@@ -104,7 +104,7 @@ class CiscoDeviceScanner(DeviceScanner):
         """Open connection to the router and get arp entries."""
 
         try:
-            cisco_ssh: pxssh.pxssh[str] = pxssh.pxssh(encoding="uft-8")
+            cisco_ssh: pxssh.pxssh[str] = pxssh.pxssh(encoding="utf-8")
             cisco_ssh.login(
                 self.host,
                 self.username,

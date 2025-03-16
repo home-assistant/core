@@ -158,11 +158,30 @@ def mock_thermostat() -> Mock:
 
 
 @pytest.fixture
+def mock_thermostat_parent() -> Mock:
+    """Fixture for a thermostat."""
+    climate = Mock()
+    climate.fibaro_id = 5
+    climate.parent_fibaro_id = 0
+    climate.name = "Test climate"
+    climate.room_id = 1
+    climate.dead = False
+    climate.visible = True
+    climate.enabled = True
+    climate.type = "com.fibaro.device"
+    climate.base_type = "com.fibaro.device"
+    climate.properties = {"manufacturer": ""}
+    climate.actions = []
+    return climate
+
+
+@pytest.fixture
 def mock_thermostat_with_operating_mode() -> Mock:
     """Fixture for a thermostat."""
     climate = Mock()
-    climate.fibaro_id = 4
-    climate.parent_fibaro_id = 0
+    climate.fibaro_id = 6
+    climate.endpoint_id = 1
+    climate.parent_fibaro_id = 5
     climate.name = "Test climate"
     climate.room_id = 1
     climate.dead = False
@@ -171,17 +190,44 @@ def mock_thermostat_with_operating_mode() -> Mock:
     climate.type = "com.fibaro.thermostatDanfoss"
     climate.base_type = "com.fibaro.device"
     climate.properties = {"manufacturer": ""}
-    climate.actions = {"setOperationMode": 1}
+    climate.actions = {"setOperatingMode": 1, "setTargetLevel": 1}
     climate.supported_features = {}
     climate.has_supported_operating_modes = True
     climate.supported_operating_modes = [0, 1, 15]
     climate.has_operating_mode = True
     climate.operating_mode = 15
+    climate.has_supported_thermostat_modes = False
     climate.has_thermostat_mode = False
+    climate.has_unit = True
+    climate.unit = "C"
+    climate.has_heating_thermostat_setpoint = False
+    climate.has_heating_thermostat_setpoint_future = False
+    climate.target_level = 23
     value_mock = Mock()
     value_mock.has_value = True
-    value_mock.int_value.return_value = 20
+    value_mock.float_value.return_value = 20
     climate.value = value_mock
+    return climate
+
+
+@pytest.fixture
+def mock_fan_device() -> Mock:
+    """Fixture for a fan endpoint of a thermostat device."""
+    climate = Mock()
+    climate.fibaro_id = 7
+    climate.endpoint_id = 1
+    climate.parent_fibaro_id = 5
+    climate.name = "Test fan"
+    climate.room_id = 1
+    climate.dead = False
+    climate.visible = True
+    climate.enabled = True
+    climate.type = "com.fibaro.fan"
+    climate.base_type = "com.fibaro.device"
+    climate.properties = {"manufacturer": ""}
+    climate.actions = {"setFanMode": 1}
+    climate.supported_modes = [0, 1, 2]
+    climate.mode = 1
     return climate
 
 
@@ -209,19 +255,22 @@ def mock_fibaro_client() -> Generator[Mock]:
     info_mock.hc_name = TEST_NAME
     info_mock.current_version = TEST_VERSION
     info_mock.platform = TEST_MODEL
+    info_mock.manufacturer_name = "Fibaro"
+    info_mock.model_name = "Home Center 2"
+    info_mock.mac_address = "00:22:4d:b7:13:24"
 
     with patch(
         "homeassistant.components.fibaro.FibaroClient", autospec=True
     ) as fibaro_client_mock:
         client = fibaro_client_mock.return_value
-        client.set_authentication.return_value = None
-        client.connect.return_value = True
+        client.connect_with_credentials.return_value = info_mock
         client.read_info.return_value = info_mock
         client.read_rooms.return_value = []
         client.read_scenes.return_value = []
         client.read_devices.return_value = []
         client.register_update_handler.return_value = None
         client.unregister_update_handler.return_value = None
+        client.frontend_url.return_value = TEST_URL.removesuffix("/api/")
         yield client
 
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from homeassistant.components.lock import LockEntity, LockState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN, GATEWAYS_KEY
@@ -24,7 +24,7 @@ UNLOCK_MAINTAIN_TIME = 5
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]

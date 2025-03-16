@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from yolink.const import ATTR_DEVICE_SMART_REMOTER
+from yolink.const import ATTR_DEVICE_SMART_REMOTER, ATTR_DEVICE_SWITCH
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.home_manager import YoLinkHome
@@ -75,7 +75,8 @@ class YoLinkHomeMessageListener(MessageListener):
         device_coordinator.async_set_updated_data(msg_data)
         # handling events
         if (
-            device_coordinator.device.device_type == ATTR_DEVICE_SMART_REMOTER
+            device_coordinator.device.device_type
+            in [ATTR_DEVICE_SMART_REMOTER, ATTR_DEVICE_SWITCH]
             and msg_data.get("event") is not None
         ):
             device_registry = dr.async_get(self._hass)

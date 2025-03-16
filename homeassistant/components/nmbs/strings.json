@@ -29,7 +29,7 @@
   "issues": {
     "deprecated_yaml_import_issue_station_not_found": {
       "title": "The {integration_title} YAML configuration import failed",
-      "description": "Configuring {integration_title} using YAML is being removed but there was an problem importing your YAML configuration.\n\nThe used station \"{station_name}\" could not be found. Fix it or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+      "description": "Configuring {integration_title} using YAML is being removed but there was a problem importing your YAML configuration.\n\nThe used station \"{station_name}\" could not be found. Fix it or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
     }
   }
 }

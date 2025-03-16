@@ -8,7 +8,7 @@ from python_homeassistant_analytics import (
     HomeassistantAnalyticsClient,
     HomeassistantAnalyticsConnectionError,
 )
-from python_homeassistant_analytics.models import IntegrationType
+from python_homeassistant_analytics.models import Environment, IntegrationType
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
@@ -81,7 +81,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             addons = await client.get_addons()
-            integrations = await client.get_integrations()
+            integrations = await client.get_integrations(Environment.NEXT)
             custom_integrations = await client.get_custom_integrations()
         except HomeassistantAnalyticsConnectionError:
             LOGGER.exception("Error connecting to Home Assistant analytics")
@@ -165,7 +165,7 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlow):
         )
         try:
             addons = await client.get_addons()
-            integrations = await client.get_integrations()
+            integrations = await client.get_integrations(Environment.NEXT)
             custom_integrations = await client.get_custom_integrations()
         except HomeassistantAnalyticsConnectionError:
             LOGGER.exception("Error connecting to Home Assistant analytics")

@@ -608,3 +608,40 @@ async def test_async_step_integration_discovery_remote_adapter(
     await hass.async_block_till_done()
     cancel_scanner()
     await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_async_step_integration_discovery_remote_adapter_mac_fix(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test remote adapter corrects mac address via integration discovery."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    bluetooth_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SOURCE: "AA:BB:CC:DD:EE:FF",
+            CONF_SOURCE_DOMAIN: "test",
+            CONF_SOURCE_MODEL: "test",
+            CONF_SOURCE_CONFIG_ENTRY_ID: entry.entry_id,
+            CONF_SOURCE_DEVICE_ID: None,
+        },
+    )
+    bluetooth_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            CONF_SOURCE: "AA:AA:AA:AA:AA:AA",
+            CONF_SOURCE_DOMAIN: "test",
+            CONF_SOURCE_MODEL: "test",
+            CONF_SOURCE_CONFIG_ENTRY_ID: entry.entry_id,
+            CONF_SOURCE_DEVICE_ID: None,
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert bluetooth_entry.unique_id == "AA:AA:AA:AA:AA:AA"
+    assert bluetooth_entry.data[CONF_SOURCE] == "AA:AA:AA:AA:AA:AA"

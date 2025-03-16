@@ -70,6 +70,10 @@
         "data": {
           "retry_count": "Retry count",
           "lock_force_nightlatch": "Force Nightlatch operation mode"
+        },
+        "data_description": {
+          "retry_count": "How many times to retry sending commands to your SwitchBot devices",
+          "lock_force_nightlatch": "Force Nightlatch operation mode even if Nightlatch is not detected"
         }
       }
     }

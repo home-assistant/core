@@ -6,21 +6,12 @@
       tuple(
       ),
       dict({
-        'model_name': 'models/gemini-2.0-flash',
-      }),
-    ),
-    tuple(
-      '().generate_content_async',
-      tuple(
-        list([
+        'contents': list([
           'Describe this image from my doorbell camera',
-          dict({
-            'data': b'image bytes',
-            'mime_type': 'image/jpeg',
-          }),
+          b'some file',
+          b'some file',
         ]),
-      ),
-      dict({
+        'model': 'models/gemini-2.0-flash',
       }),
     ),
   ])
@@ -32,17 +23,25 @@
       tuple(
       ),
       dict({
-        'model_name': 'models/gemini-2.0-flash',
-      }),
-    ),
-    tuple(
-      '().generate_content_async',
-      tuple(
-        list([
+        'contents': list([
           'Write an opening speech for a Home Assistant release party',
         ]),
+        'model': 'models/gemini-2.0-flash',
+      }),
+    ),
+  ])
+# ---
+# name: test_load_entry_with_unloaded_entries
+  list([
+    tuple(
+      '',
+      tuple(
       ),
       dict({
+        'contents': list([
+          'Write an opening speech for a Home Assistant release party',
+        ]),
+        'model': 'models/gemini-2.0-flash',
       }),
     ),
   ])

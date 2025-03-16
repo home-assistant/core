@@ -37,7 +37,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: todo
 
@@ -56,12 +56,12 @@ rules:
   dynamic-devices:
     status: exempt
     comment: Single device per config entry
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
