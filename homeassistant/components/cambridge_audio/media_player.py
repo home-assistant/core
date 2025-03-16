@@ -142,6 +142,12 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
+        if (
+            self.client.play_state.metadata.artist is None
+            and self.client.state.source == "IR"
+        ):
+            # Return channel instead of artist when playing internet radio
+            return self.client.play_state.metadata.station
         return self.client.play_state.metadata.artist
 
     @property
