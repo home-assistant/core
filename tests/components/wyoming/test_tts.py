@@ -156,7 +156,7 @@ async def test_get_tts_audio_connection_lost(
         MockAsyncTcpClient([None]),
     ):
         stream.async_set_message("Hello world")
-        with pytest.raises(HomeAssistantError):  # noqa: PT012
+        with pytest.raises(HomeAssistantError):
             async for _chunk in stream.async_stream_result():
                 pass
 
