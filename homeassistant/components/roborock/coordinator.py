@@ -152,7 +152,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             sw_version=self.roborock_device_info.device.fv,
         )
 
-
     async def update_map(self, bump_time: bool = True) -> None:
         """Update the map data for the current map."""
         # The current map was set in the props update, so these can be done without
