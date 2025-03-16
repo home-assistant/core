@@ -362,7 +362,7 @@
       "fields": {
         "evaluate_payload": {
           "name": "Evaluate payload",
-          "description": "When 'Payload' is a Python bytes literal, evaluate the bytes literal and publish the raw data."
+          "description": "If 'Payload' is a Python bytes literal, evaluate the bytes literal and publish the raw data."
         },
         "topic": {
           "name": "Topic",
