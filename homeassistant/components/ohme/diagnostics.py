@@ -19,7 +19,6 @@ async def async_get_config_entry_diagnostics(
     # Return only the relevant children
     return {
         "device_info": client.device_info,
-        "available": client.available,
         "vehicles": client.vehicles,
         "ct_connected": client.ct_connected,
         "cap_available": client.cap_available,
