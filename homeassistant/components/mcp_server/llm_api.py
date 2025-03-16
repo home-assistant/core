@@ -1,4 +1,10 @@
-"""LLM API for MCP Server."""
+"""LLM API for MCP Server.
+
+This is a modified version of the AssistAPI that does not include the home state
+in the prompt. This API is not registered with the LLM API registry since it is
+only used by the MCP Server. The MCP server will substitute this API when the
+user selects the Assist API.
+"""
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
@@ -7,11 +13,6 @@ from homeassistant.util import yaml as yaml_util
 from .const import LLM_API, LLM_API_NAME
 
 EXPOSED_ENTITY_FIELDS = {"name", "domain", "description", "areas", "names"}
-
-
-def async_register_api(hass: HomeAssistant) -> None:
-    """Register the LLM API."""
-    llm.async_register_api(hass, StatelessAssistAPI(hass))
 
 
 class StatelessAssistAPI(llm.AssistAPI):
