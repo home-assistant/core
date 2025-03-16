@@ -24,16 +24,15 @@ async def test_switch(hass: HomeAssistant, bypass_api: AsyncMock) -> None:
     """Test switch and check test values are correctly set."""
     await async_init_integration(hass)
     assert len(hass.states.async_all("switch")) == 2
-    assert hass.states.get("switch.test_snoo_hold").state == STATE_UNAVAILABLE
+    assert hass.states.get("switch.test_snoo_level_lock").state == STATE_UNAVAILABLE
     assert (
-        hass.states.get("switch.test_snoo_sticky_white_noise").state
-        == STATE_UNAVAILABLE
+        hass.states.get("switch.test_snoo_sleepytime_sounds").state == STATE_UNAVAILABLE
     )
     find_update_callback(bypass_api, "random_num")(MOCK_SNOO_DATA)
     await hass.async_block_till_done()
     assert len(hass.states.async_all("switch")) == 2
-    assert hass.states.get("switch.test_snoo_sticky_white_noise").state == STATE_OFF
-    assert hass.states.get("switch.test_snoo_hold").state == STATE_OFF
+    assert hass.states.get("switch.test_snoo_sleepytime_sounds").state == STATE_OFF
+    assert hass.states.get("switch.test_snoo_level_lock").state == STATE_OFF
 
 
 async def test_update_success(hass: HomeAssistant, bypass_api: AsyncMock) -> None:
@@ -41,7 +40,7 @@ async def test_update_success(hass: HomeAssistant, bypass_api: AsyncMock) -> Non
     await async_init_integration(hass)
 
     find_update_callback(bypass_api, "random_num")(MOCK_SNOO_DATA)
-    assert hass.states.get("switch.test_snoo_sticky_white_noise").state == STATE_OFF
+    assert hass.states.get("switch.test_snoo_sleepytime_sounds").state == STATE_OFF
 
     async def set_sticky_white_noise(device: SnooDevice, state: bool):
         new_data = copy.deepcopy(MOCK_SNOO_DATA)
@@ -53,18 +52,18 @@ async def test_update_success(hass: HomeAssistant, bypass_api: AsyncMock) -> Non
         "switch",
         SERVICE_TOGGLE,
         blocking=True,
-        target={"entity_id": "switch.test_snoo_sticky_white_noise"},
+        target={"entity_id": "switch.test_snoo_sleepytime_sounds"},
     )
 
     assert bypass_api.set_sticky_white_noise.assert_called_once
-    assert hass.states.get("switch.test_snoo_sticky_white_noise").state == STATE_ON
+    assert hass.states.get("switch.test_snoo_sleepytime_sounds").state == STATE_ON
 
 
 @pytest.mark.parametrize(
     ("command", "error_str"),
     [
-        (SERVICE_TURN_ON, "Error while switching Sticky white noise to on"),
-        (SERVICE_TURN_OFF, "Error while switching Sticky white noise to off"),
+        (SERVICE_TURN_ON, "Switching Sleepytime sounds to on failed"),
+        (SERVICE_TURN_OFF, "Switching Sleepytime sounds to off failed"),
     ],
 )
 async def test_update_failed(
@@ -74,7 +73,7 @@ async def test_update_failed(
     await async_init_integration(hass)
 
     find_update_callback(bypass_api, "random_num")(MOCK_SNOO_DATA)
-    assert hass.states.get("switch.test_snoo_sticky_white_noise").state == STATE_OFF
+    assert hass.states.get("switch.test_snoo_sleepytime_sounds").state == STATE_OFF
 
     bypass_api.set_sticky_white_noise.side_effect = SnooCommandException
     with pytest.raises(HomeAssistantError, match=error_str):
@@ -82,8 +81,8 @@ async def test_update_failed(
             "switch",
             command,
             blocking=True,
-            target={"entity_id": "switch.test_snoo_sticky_white_noise"},
+            target={"entity_id": "switch.test_snoo_sleepytime_sounds"},
         )
 
     assert bypass_api.set_level.assert_called_once
-    assert hass.states.get("switch.test_snoo_sticky_white_noise").state == STATE_OFF
+    assert hass.states.get("switch.test_snoo_sleepytime_sounds").state == STATE_OFF

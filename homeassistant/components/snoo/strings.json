@@ -26,7 +26,7 @@
       "message": "Error while updating {name} to {option}"
     },
     "switch_failed": {
-      "message": "Error while switching {name} to {status}"
+      "message": "Switching {name} to {status} failed"
     }
   },
   "entity": {
@@ -72,10 +72,10 @@
     },
     "switch": {
       "sticky_white_noise": {
-        "name": "Sticky white noise"
+        "name": "Sleepytime sounds"
       },
       "hold": {
-        "name": "Hold"
+        "name": "Level lock"
       }
     }
   }
