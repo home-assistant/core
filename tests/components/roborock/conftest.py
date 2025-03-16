@@ -110,7 +110,7 @@ def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
             return_value=MULTI_MAP_LIST,
         ),
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=MAP_DATA,
         ),
         patch(

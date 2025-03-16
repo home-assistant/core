@@ -1,16 +1,10 @@
 """Support for Roborock image."""
 
 import asyncio
-from collections.abc import Callable
 from datetime import datetime
-import io
 import logging
 
 from roborock import RoborockCommand
-from vacuum_map_parser_base.config.color import ColorsPalette
-from vacuum_map_parser_base.config.image_config import ImageConfig
-from vacuum_map_parser_base.config.size import Sizes
-from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
@@ -20,15 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    DEFAULT_DRAWABLES,
-    DOMAIN,
-    DRAWABLES,
-    IMAGE_CACHE_INTERVAL,
-    MAP_FILE_FORMAT,
-    MAP_SCALE,
-    MAP_SLEEP,
-)
+from .const import DOMAIN, IMAGE_CACHE_INTERVAL, MAP_SLEEP
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
 
@@ -42,31 +28,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Roborock image platform."""
 
-    drawables = [
-        drawable
-        for drawable, default_value in DEFAULT_DRAWABLES.items()
-        if config_entry.options.get(DRAWABLES, {}).get(drawable, default_value)
-    ]
-    parser = RoborockMapDataParser(
-        ColorsPalette(),
-        Sizes({k: v * MAP_SCALE for k, v in Sizes.SIZES.items()}),
-        drawables,
-        ImageConfig(scale=MAP_SCALE),
-        [],
-    )
-
-    def parse_image(map_bytes: bytes) -> bytes | None:
-        try:
-            parsed_map = parser.parse(map_bytes)
-        except (IndexError, ValueError) as err:
-            _LOGGER.debug("Exception when parsing map contents: %s", err)
-            return None
-        if parsed_map.image is None:
-            return None
-        img_byte_arr = io.BytesIO()
-        parsed_map.image.data.save(img_byte_arr, format=MAP_FILE_FORMAT)
-        return img_byte_arr.getvalue()
-
     await asyncio.gather(
         *(refresh_coordinators(hass, coord) for coord in config_entry.runtime_data.v1)
     )
@@ -78,7 +39,6 @@ async def async_setup_entry(
                 coord,
                 map_info.flag,
                 map_info.name,
-                parse_image,
             )
             for coord in config_entry.runtime_data.v1
             for map_info in coord.maps.values()
@@ -100,14 +60,12 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         coordinator: RoborockDataUpdateCoordinator,
         map_flag: int,
         map_name: str,
-        parser: Callable[[bytes], bytes | None],
     ) -> None:
         """Initialize a Roborock map."""
         RoborockCoordinatedEntityV1.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
         self.config_entry = config_entry
         self._attr_name = map_name
-        self.parser = parser
         self.map_flag = map_flag
         self.cached_map = b""
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -154,7 +112,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
             )
             if (
                 not isinstance(response[0], bytes)
-                or (content := self.parser(response[0])) is None
+                or (content := self.coordinator.parse_image(response[0])) is None
             ):
                 _LOGGER.debug("Failed to parse map contents: %s", response[0])
                 raise HomeAssistantError(
