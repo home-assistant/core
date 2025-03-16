@@ -10,7 +10,6 @@ from PyTado.interface import Tado
 from requests import RequestException
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
-from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -59,7 +58,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             update_interval=SCAN_INTERVAL,
         )
         self._tado = tado
-        self._access_token = config_entry.data[CONF_ACCESS_TOKEN]
         self._refresh_token = config_entry.data[CONF_REFRESH_TOKEN]
         self._fallback = config_entry.options.get(
             CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT

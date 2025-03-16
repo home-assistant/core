@@ -63,8 +63,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
 
     _LOGGER.debug("Setting up Tado connection")
     try:
+        _LOGGER.debug(
+            "Creating tado instance with refresh token: %s",
+            entry.data[CONF_REFRESH_TOKEN],
+        )
         tado = await hass.async_add_executor_job(
-            Tado, None, entry.data[CONF_ACCESS_TOKEN], entry.data[CONF_REFRESH_TOKEN]
+            Tado, None, entry.data[CONF_REFRESH_TOKEN]
         )
         device_status = await hass.async_add_executor_job(tado.device_activation_status)
 

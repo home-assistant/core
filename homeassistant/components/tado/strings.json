@@ -16,9 +16,9 @@
         },
         "title": "Connect to your Tado account"
       },
-      "reauth_prepare": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "You need re-authenicate again with Tado. Press Submit to start the re-authentication process."
+      "auth_prepare": {
+        "title": "Authenticate with Tado",
+        "description": "You need (re-)authenicate again with Tado. Press Submit to start the (re-)authentication process."
       },
       "reconfigure": {
         "title": "Reconfigure your Tado",

@@ -18,7 +18,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.zeroconf import (
@@ -71,7 +71,6 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     login_task: asyncio.Task | None = None
-    access_token: str | None = None
     refresh_token: str | None = None
     tado: Tado | None = None
 
@@ -118,8 +117,6 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 raise CannotConnect
 
-            _LOGGER.debug("Device activation completed. Obtaining tokens")
-
         if self.tado is None:
             _LOGGER.debug("Initiating device activation")
             self.tado = await self.hass.async_add_executor_job(Tado)
@@ -139,14 +136,8 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_show_progress_done(
                     next_step_id="could_not_authenticate"
                 )
-            self.access_token = await self.hass.async_add_executor_job(
-                self.tado.get_access_token
-            )
             self.refresh_token = await self.hass.async_add_executor_job(
                 self.tado.get_refresh_token
-            )
-            _LOGGER.debug(
-                "Tokens obtained, finalizing reauth. Tokens: %s", self.access_token
             )
             return self.async_show_progress_done(next_step_id="finalize_auth_login")
 
@@ -181,18 +172,12 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(
                 title=name,
-                data={
-                    CONF_ACCESS_TOKEN: self.access_token,
-                    CONF_REFRESH_TOKEN: self.refresh_token,
-                },
+                data={CONF_REFRESH_TOKEN: self.refresh_token},
             )
 
         return self.async_update_reload_and_abort(
             self._get_reauth_entry(),
-            data={
-                CONF_ACCESS_TOKEN: self.access_token,
-                CONF_REFRESH_TOKEN: self.refresh_token,
-            },
+            data={CONF_REFRESH_TOKEN: self.refresh_token},
         )
 
     async def async_step_could_not_authenticate(
