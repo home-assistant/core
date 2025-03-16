@@ -359,20 +359,9 @@ class AssistAPI(API):
             device = device_reg.async_get(llm_context.device_id)
 
             if device:
-                is_mobile_app_device = False
-
-                for config_entry_id in device.config_entries:
-                    entry = self.hass.config_entries.async_get_entry(config_entry_id)
-                    if entry and entry.domain == "mobile_app":
-                        is_mobile_app_device = True
-                        break
-
-                if is_mobile_app_device:
-                    device_name = device.name_by_user or device.name
-                    prompt.append(
-                        f"User is interacting with you from a mobile app device "
-                        f"called {device_name}."
-                    )
+                device_name = device.name_by_user or device.name
+                if device_name:
+                    prompt.append(f"User is interacting with you from a device called {device_name}.")
 
                 area_reg = ar.async_get(self.hass)
                 if device.area_id and (area := area_reg.async_get_area(device.area_id)):
