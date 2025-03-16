@@ -69,6 +69,10 @@
         "username": "Username",
         "verify_ssl": "Verify SSL certificate"
       },
+      "data_description": {
+        "username": "The username of your {account_name} account.",
+        "password": "The password of your {account_name} account."
+      },
       "description": {
         "confirm_setup": "Do you want to start setup?"
       },

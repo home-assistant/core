@@ -1,0 +1,95 @@
+rules:
+  # Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup:
+    status: todo
+    comment: Legacy code will not raise on setup currently
+  appropriate-polling:
+    status: todo
+    comment: |
+      @mib1185 Please check legacy code.
+      deebot-client pulls only once at beginning and afterwards is pushed based
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup: done
+  dependency-transparency:
+    status: todo
+    comment: Currently unsure if all dependencies need to validated or only direct ones.
+  action-setup:
+    status: done
+    comment: "`raw_get_positions` is a entity service"
+  common-modules: done
+  docs-high-level-description: todo
+  docs-installation-instructions: todo
+  docs-removal-instructions: todo
+  docs-actions: todo
+  brands: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: todo
+  entity-unavailable: done
+  action-exceptions: todo
+  reauthentication-flow: todo
+  parallel-updates:
+    status: todo
+    comment: |
+      @mib1185 Please check legacy code.
+      deebot-client uses internally semaphores to prevent to many parallel requests
+  test-coverage: todo
+  integration-owner: done
+  docs-installation-parameters: todo
+  docs-configuration-parameters: todo
+
+  # Gold
+  entity-translations:
+    status: todo
+    comment: |
+      @mib1185 Legacy entities are not translated
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: done
+  discovery:
+    status: exempt
+    comment: Not supported as we don't talk directly to the devices
+  stale-devices: todo
+  diagnostics: done
+  exception-translations: todo
+  icon-translations: done
+  reconfiguration-flow: todo
+  dynamic-devices:
+    status: todo
+    comment: New devices are discovered only on boot currently
+  discovery-update-info:
+    status: exempt
+    comment: Not supported as we don't talk directly to the devices
+  repair-issues: todo
+  docs-use-cases: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-data-update: todo
+  docs-known-limitations: todo
+  docs-troubleshooting: todo
+  docs-examples: todo
+
+  # Platinum
+  async-dependency:
+    status: todo
+    comment: |
+      @mib1185 Please check legacy code.
+      deebot-client is async
+  inject-websession:
+    status: todo
+    comment: |
+      @mib1185 Please check legacy code.
+      deebot-client uses the passed websession
+  strict-typing:
+    status: todo
+    comment: |
+      @mib1185 Please check legacy code.
+      deebot-client is typed
