@@ -189,7 +189,7 @@ async def test_remove_from_hass(
     await hass.config_entries.async_unload(setup_entry.entry_id)
     assert cleanup_map_storage.exists()
     paths = list(cleanup_map_storage.walk())
-    assert len(paths) == 3  # One map image and two directories
+    assert len(paths) == 4  # two map image and two directories
 
     await hass.config_entries.async_remove(setup_entry.entry_id)
     # After removal, directories should be empty.
@@ -219,7 +219,7 @@ async def test_oserror_remove_image(
 
     assert cleanup_map_storage.exists()
     paths = list(cleanup_map_storage.walk())
-    assert len(paths) == 3  # One map image and two directories
+    assert len(paths) == 4  # Two map image and two directories
 
     with patch(
         "homeassistant.components.roborock.roborock_storage.shutil.rmtree",
@@ -242,7 +242,7 @@ async def test_not_supported_protocol(
         "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
         return_value=home_data_copy,
     ):
-        await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
         await hass.async_block_till_done()
     assert "because its protocol version random" in caplog.text
 

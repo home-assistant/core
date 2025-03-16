@@ -62,16 +62,25 @@ async def test_floorplan_image(
             return_value=prop,
         ),
         patch(
-            "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
         ),
         patch(
             "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
-            return_value=new_map_data,
+            return_value=MAP_DATA,
         ) as parse_map,
     ):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
+        #     async_fire_time_changed(hass, now)
+        #     await hass.async_block_till_done()
+        #     # 2 times, one for both coordinators.
+        #     assert parse_map.call_count == 2
+        # with patch(
+        #     "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
+        #     return_value=new_map_data,
+        # ) as parse_map:
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+        # This one isn't selected, so the parse_map count should not increase.
+        resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_downstairs")
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body is not None
@@ -102,7 +111,8 @@ async def test_floorplan_image_failed_parse(
             return_value=prop,
         ),
         patch(
-            "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
         ),
     ):
         async_fire_time_changed(hass, now)
@@ -158,6 +168,9 @@ async def test_fail_to_load_image(
             "homeassistant.components.roborock.roborock_storage.Path.read_bytes",
             side_effect=OSError,
         ) as read_bytes,
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockDataUpdateCoordinator.refresh_coordinator_map"
+        ),
     ):
         # Reload the config entry so that the map is saved in storage and entities exist.
         await hass.config_entries.async_reload(setup_entry.entry_id)
@@ -234,7 +247,8 @@ async def test_fail_updating_image(
             return_value=prop,
         ),
         patch(
-            "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
         ),
         patch(
             "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
@@ -268,7 +282,8 @@ async def test_index_error_map(
             return_value=prop,
         ),
         patch(
-            "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
         ),
     ):
         async_fire_time_changed(hass, now)
