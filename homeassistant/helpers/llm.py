@@ -316,16 +316,18 @@ class AssistAPI(API):
         else:
             exposed_entities = None
 
+        api_prompt = await self._async_get_api_prompt(llm_context, exposed_entities)
+        tools = self._async_get_tools(llm_context, exposed_entities)
+
         return APIInstance(
             api=self,
-            api_prompt=self._async_get_api_prompt(llm_context, exposed_entities),
+            api_prompt=api_prompt,
             llm_context=llm_context,
-            tools=self._async_get_tools(llm_context, exposed_entities),
+            tools=tools,
             custom_serializer=_selector_serializer,
         )
 
-    @callback
-    def _async_get_api_prompt(
+    async def _async_get_api_prompt(
         self, llm_context: LLMContext, exposed_entities: dict | None
     ) -> str:
         if not exposed_entities or not exposed_entities["entities"]:
@@ -333,15 +335,13 @@ class AssistAPI(API):
                 "Only if the user wants to control a device, tell them to expose entities "
                 "to their voice assistant in Home Assistant."
             )
-        return "\n".join(
-            [
-                *self._async_get_preable(llm_context),
-                *self._async_get_exposed_entities_prompt(llm_context, exposed_entities),
-            ]
-        )
 
-    @callback
-    def _async_get_preable(self, llm_context: LLMContext) -> list[str]:
+        preamble = await self._async_get_preamble(llm_context)
+        exposed_entities_prompt = self._async_get_exposed_entities_prompt(llm_context, exposed_entities)
+
+        return "\n".join([*preamble, *exposed_entities_prompt])
+
+    async def _async_get_preamble(self, llm_context: LLMContext) -> list[str]:
         """Return the prompt for the API."""
 
         prompt = [
@@ -354,6 +354,19 @@ class AssistAPI(API):
         ]
         area: ar.AreaEntry | None = None
         floor: fr.FloorEntry | None = None
+
+        # Now this await is valid because we've changed the function to async
+        user_name: str | None = None
+        if llm_context.context and llm_context.context.user_id:
+            user = await self.hass.auth.async_get_user(llm_context.context.user_id)
+            if user is not None:
+                user_name = user.name
+
+        if user_name:
+            prompt.append(
+                f"The user interacting with Home Assistant is named {user_name}."
+            )
+
         if llm_context.device_id:
             device_reg = dr.async_get(self.hass)
             device = device_reg.async_get(llm_context.device_id)
