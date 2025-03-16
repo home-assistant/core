@@ -4,9 +4,14 @@ from io import StringIO
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
+from aiohttp import ClientError
 import pytest
 from synology_dsm.api.file_station.models import SynoFileFile, SynoFileSharedFolder
-from synology_dsm.exceptions import SynologyDSMAPIErrorException
+from synology_dsm.exceptions import (
+    SynologyDSMAPIErrorException,
+    SynologyDSMException,
+    SynologyDSMRequestException,
+)
 
 from homeassistant.components.backup import (
     DOMAIN as BACKUP_DOMAIN,
@@ -315,26 +320,37 @@ async def test_agents_list_backups(
     ]
 
 
+@pytest.mark.parametrize(
+    ("error", "expected_aget_errors"),
+    [
+        (
+            SynologyDSMAPIErrorException("api", "500", "error"),
+            {"synology_dsm.mocked_syno_dsm_entry": "Failed to list backups"},
+        ),
+        (
+            SynologyDSMRequestException(ClientError("error")),
+            {"synology_dsm.mocked_syno_dsm_entry": "The backup agent is unreachable."},
+        ),
+    ],
+)
 async def test_agents_list_backups_error(
     hass: HomeAssistant,
     setup_dsm_with_filestation: MagicMock,
     hass_ws_client: WebSocketGenerator,
+    error: SynologyDSMException,
+    expected_aget_errors: dict[str, str],
 ) -> None:
     """Test agent error while list backups."""
     client = await hass_ws_client(hass)
 
-    setup_dsm_with_filestation.file.get_files.side_effect = (
-        SynologyDSMAPIErrorException("api", "500", "error")
-    )
+    setup_dsm_with_filestation.file.get_files.side_effect = error
 
     await client.send_json_auto_id({"type": "backup/info"})
     response = await client.receive_json()
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {
-            "synology_dsm.mocked_syno_dsm_entry": "Failed to list backups"
-        },
+        "agent_errors": expected_aget_errors,
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,

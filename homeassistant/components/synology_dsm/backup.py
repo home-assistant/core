@@ -8,12 +8,16 @@ from typing import TYPE_CHECKING, Any
 
 from aiohttp import StreamReader
 from synology_dsm.api.file_station import SynoFileStation
-from synology_dsm.exceptions import SynologyDSMAPIErrorException
+from synology_dsm.exceptions import (
+    SynologyDSMAPIErrorException,
+    SynologyDSMRequestException,
+)
 
 from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
     BackupAgentError,
+    BackupAgentUnreachableError,
     BackupNotFound,
     suggested_filename,
 )
@@ -238,6 +242,8 @@ class SynologyDSMBackupAgent(BackupAgent):
             files = await self._file_station.get_files(path=self.path)
         except SynologyDSMAPIErrorException as err:
             raise BackupAgentError("Failed to list backups") from err
+        except SynologyDSMRequestException as err:
+            raise BackupAgentUnreachableError from err
 
         if TYPE_CHECKING:
             assert files
