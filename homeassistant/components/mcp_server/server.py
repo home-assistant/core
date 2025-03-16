@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 
-from .const import LLM_API
+from .const import STATELESS_LLM_API
 from .llm_api import StatelessAssistAPI
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ async def create_server(
 
     async def get_api_instance() -> llm.APIInstance:
         """Substitute the StatelessAssistAPI for the Assist API if selected."""
-        if llm_api_id in (LLM_API, llm.LLM_API_ASSIST):
+        if llm_api_id in (STATELESS_LLM_API, llm.LLM_API_ASSIST):
             api = StatelessAssistAPI(hass)
             return await api.async_get_api_instance(llm_context)
 
@@ -67,7 +67,7 @@ async def create_server(
         return [
             types.Prompt(
                 name=llm_api.api.name,
-                description=f"Default prompt for the Home Assistant LLM API {llm_api.api.name}",
+                description=f"Default prompt for Home Assistant {llm_api.api.name} API",
             )
         ]
 
@@ -80,7 +80,7 @@ async def create_server(
             raise ValueError(f"Unknown prompt: {name}")
 
         return types.GetPromptResult(
-            description=f"Default prompt for the Home Assistant LLM API {llm_api.api.name}",
+            description=f"Default prompt for Home Assistant {llm_api.api.name} API",
             messages=[
                 types.PromptMessage(
                     role="assistant",
