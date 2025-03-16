@@ -132,6 +132,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "abl_light_b_001",
         "tplink_p110",
         "ikea_kadrilj",
+        "aux_ac",
     ]
 )
 def device_fixture(
