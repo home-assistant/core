@@ -80,6 +80,9 @@ def bypass_api_client_fixture() -> None:
             "homeassistant.components.roborock.RoborockApiClient.get_scenes",
             return_value=SCENES,
         ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.load_multi_map"
+        ),
     ):
         yield
 
@@ -127,7 +130,7 @@ def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
             "roborock.version_1_apis.AttributeCache.value",
         ),
         patch(
-            "homeassistant.components.roborock.image.MAP_SLEEP",
+            "homeassistant.components.roborock.coordinator.MAP_SLEEP",
             0,
         ),
         patch(

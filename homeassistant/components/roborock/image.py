@@ -4,8 +4,6 @@ import asyncio
 from datetime import datetime
 import logging
 
-from roborock import RoborockCommand
-
 from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -14,7 +12,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, IMAGE_CACHE_INTERVAL, MAP_SLEEP
+from .const import DOMAIN, IMAGE_CACHE_INTERVAL
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
 
@@ -28,9 +26,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Roborock image platform."""
 
-    await asyncio.gather(
-        *(refresh_coordinators(hass, coord) for coord in config_entry.runtime_data.v1)
-    )
     async_add_entities(
         (
             RoborockMap(
@@ -126,33 +121,3 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
                     content,
                 )
         return self.cached_map
-
-
-async def refresh_coordinators(
-    hass: HomeAssistant, coord: RoborockDataUpdateCoordinator
-) -> None:
-    """Get the starting map information for all maps for this device.
-
-    The following steps must be done synchronously.
-    Only one map can be loaded at a time per device.
-    """
-    cur_map = coord.current_map
-    # This won't be None at this point as the coordinator will have run first.
-    assert cur_map is not None
-    map_flags = sorted(coord.maps, key=lambda data: data == cur_map, reverse=True)
-    for map_flag in map_flags:
-        if map_flag != cur_map:
-            # Only change the map and sleep if we have multiple maps.
-            await coord.api.send_command(RoborockCommand.LOAD_MULTI_MAP, [map_flag])
-            coord.current_map = map_flag
-            # We cannot get the map until the roborock servers fully process the
-            # map change.
-            await asyncio.sleep(MAP_SLEEP)
-        await coord.set_current_map_rooms()
-
-    if len(coord.maps) != 1:
-        # Set the map back to the map the user previously had selected so that it
-        # does not change the end user's app.
-        # Only needs to happen when we changed maps above.
-        await coord.cloud_api.send_command(RoborockCommand.LOAD_MULTI_MAP, [cur_map])
-        coord.current_map = cur_map
