@@ -7,7 +7,7 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
-from google import genai  # type: ignore[attr-defined]
+from google.genai import Client
 from google.genai.errors import APIError, ClientError
 from requests.exceptions import Timeout
 import voluptuous as vol
@@ -76,7 +76,7 @@ async def validate_input(data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = genai.Client(api_key=data[CONF_API_KEY])
+    client = Client(api_key=data[CONF_API_KEY])
     await client.aio.models.list(
         config={
             "http_options": {
@@ -207,7 +207,7 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
 async def google_generative_ai_config_option_schema(
     hass: HomeAssistant,
     options: dict[str, Any] | MappingProxyType[str, Any],
-    genai_client: genai.Client,
+    genai_client: Client,
 ) -> dict:
     """Return a schema for Google Generative AI completion options."""
     hass_apis: list[SelectOptionDict] = [
