@@ -354,7 +354,7 @@ class AssistAPI(API):
         ]
         area: ar.AreaEntry | None = None
         floor: fr.FloorEntry | None = None
-        device_name_prompt = None
+        device_name: str | None = None
 
         if llm_context.device_id:
             device_reg = dr.async_get(self.hass)
@@ -362,7 +362,6 @@ class AssistAPI(API):
 
             if device:
                 device_name = device.name_by_user or device.name
-                device_name_prompt = f"User is interacting with you via {device_name}"
 
                 area_reg = ar.async_get(self.hass)
                 if device.area_id and (area := area_reg.async_get_area(device.area_id)):
@@ -372,8 +371,8 @@ class AssistAPI(API):
 
         if area:
             location_prompt = []
-            if device_name_prompt:
-                location_prompt.append(device_name_prompt)
+            if device_name:
+                location_prompt.append(f"User is interacting with you via {device_name}")
             else:
                 location_prompt.append("You are")
 
@@ -385,8 +384,8 @@ class AssistAPI(API):
             location_prompt.append(area_info)
             prompt.extend(location_prompt)
         else:
-            if device_name_prompt:
-                prompt.append(f"{device_name_prompt}.")
+            if device_name:
+                prompt.append(f"User is interacting with you via {device_name}.")
 
             prompt.append(
                 "When a user asks to turn on all devices of a specific type, "
