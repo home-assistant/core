@@ -1,0 +1,67 @@
+{
+  "config": {
+    "flow_title": "Discovered Device: {name}",
+    "step": {
+      "user": {
+        "title": "Setup Daikin Smart AC",
+        "description": "Enter the Device Name and Device Key for SSID: {hostname}.\n\nNote - To find the Device Key for the SSID shown above, open the Daikin Smart AC mobile app and navigate to Menu → Integrations → Home Assistant. Enter the SSID and press Submit.",
+        "data": {
+          "device_name": "Device Name",
+          "api_key": "Device Key",
+          "poll_interval": "Poll Interval (seconds)"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Daikin Smart AC",
+        "description": "Enter the Device Key for SSID: {hostname}.\n\nNote - To find the Device Key for the SSID shown above, open the Daikin Smart AC mobile app and navigate to Menu → Integrations → Home Assistant. Enter the SSID and press Submit.",
+        "data": {
+          "api_key": "Device Key"
+        }
+      },
+      "manual": {
+        "title": "Setup Daikin Smart AC",
+        "description": "Open your network router setup and check the client list. The Daikin AC should appear in the list with the format DAIKINXXXXXX.\n\nNote - To find the Device Key, open the Daikin Smart AC mobile app and navigate to Menu → Integrations → Home Assistant. Enter the SSID (DAIKINXXXXXX) and press Submit.",
+        "data": {
+          "device_ip": "Device IP Address",
+          "device_name": "Device Name",
+          "api_key": "Device Key"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatched": "The device's unique ID does not match the expected value",
+      "device_ip_updated": "The device IP changed, configuration updated"
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unique_id_mismatched": "The device's unique ID does not match the expected value"
+    }
+  },
+  "entity": {
+    "climate": {
+      "daikin_ac": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "medium_high": "Medium High",
+              "low_medium": "Low Medium",
+              "quiet": "Quiet"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "eco": "Econo",
+              "boost": "Power Chill"
+            }
+          }
+        }
+      }
+    }
+  }
+}

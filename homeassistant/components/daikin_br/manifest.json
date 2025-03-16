@@ -1,0 +1,13 @@
+{
+  "domain": "daikin_br",
+  "name": "Daikin Smart AC",
+  "codeowners": ["@daikin-br"],
+  "config_flow": true,
+  "dependencies": ["zeroconf"],
+  "documentation": "https://www.home-assistant.io/integrations/daikin_br",
+  "iot_class": "local_polling",
+  "loggers": ["pyiotdevice"],
+  "quality_scale": "bronze",
+  "requirements": ["pyiotdevice==1.0.12"],
+  "zeroconf": ["_iota._tcp.local."]
+}
