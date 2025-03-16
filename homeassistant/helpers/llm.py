@@ -370,21 +370,17 @@ class AssistAPI(API):
                         floor = floor_reg.async_get_floor(area.floor_id)
 
         if area:
-            location_prompt = []
             if device_name:
-                location_prompt.append(
-                    f"User is interacting with you via {device_name}"
-                )
+                prefix = f"User is interacting with you via {device_name}"
             else:
-                location_prompt.append("You are")
+                prefix = "You are"
 
-            area_info = f" in area {area.name}"
+            area_info = f"in area {area.name}"
             if floor:
                 area_info += f" (floor {floor.name})"
             area_info += " and all generic commands like 'turn on the lights' should target this area."
 
-            location_prompt.append(area_info)
-            prompt.extend(location_prompt)
+            prompt.append(f"{prefix} {area_info}")
         else:
             if device_name:
                 prompt.append(f"User is interacting with you via {device_name}.")

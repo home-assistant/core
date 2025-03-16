@@ -447,17 +447,19 @@ async def test_assist_api_prompt(
 
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
-    device = device_registry.async_get_or_create(
+
+    # Main device with area - we'll use this for area/floor tests
+    main_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={("test", "1234")},
+        connections={("test", "main-device-id")},
         suggested_area="Test Area",
         name="Living Room Device",
     )
 
-    # Create a device without area
+    # Create a device without area - using unique connection ID
     device_no_area = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={("test", "5678")},
+        connections={("test", "no-area-device-id")},
         name="No Area Device",
     )
 
@@ -476,7 +478,7 @@ async def test_assist_api_prompt(
         "mock-id-living-room",
         original_name="Living Room",
         suggested_object_id="living_room",
-        device_id=device.id,
+        device_id=main_device.id,
     )
     hass.states.async_set(
         entry1.entity_id,
@@ -505,7 +507,7 @@ async def test_assist_api_prompt(
     create_entity(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            connections={("test", "1234")},
+            connections={("test", "test-device-id")},
             name="Test Device",
             manufacturer="Test Manufacturer",
             model="Test Model",
@@ -528,7 +530,7 @@ async def test_assist_api_prompt(
     create_entity(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            connections={("test", "5678")},
+            connections={("test", "device2-id")},
             name="Test Device 2",
             manufacturer="Test Manufacturer 2",
             model="Device 2",
@@ -538,7 +540,7 @@ async def test_assist_api_prompt(
     create_entity(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            connections={("test", "9876")},
+            connections={("test", "device3-id")},
             name="Test Device 3",
             manufacturer="Test Manufacturer 3",
             model="Test Model 3A",
@@ -548,14 +550,14 @@ async def test_assist_api_prompt(
     create_entity(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            connections={("test", "qwer")},
+            connections={("test", "device4-id")},
             name="Test Device 4",
             suggested_area="Test Area 2",
         )
     )
     device2 = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={("test", "9876-disabled")},
+        connections={("test", "disabled-device-id")},
         name="Test Device 3 - disabled",
         manufacturer="Test Manufacturer 3",
         model="Test Model 3A",
@@ -568,7 +570,7 @@ async def test_assist_api_prompt(
     create_entity(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            connections={("test", "9876-no-name")},
+            connections={("test", "no-name-device-id")},
             manufacturer="Test Manufacturer NoName",
             model="Test Model NoName",
             suggested_area="Test Area 2",
@@ -577,13 +579,25 @@ async def test_assist_api_prompt(
     create_entity(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            connections={("test", "9876-integer-values")},
+            connections={("test", "integer-values-id")},
             name=1,
             manufacturer=2,
             model=3,
             suggested_area="Test Area 2",
         )
     )
+
+    # Create an entity for our no-area device too
+    create_entity(device_no_area)
+
+    # Create a nameless device with area for the last test
+    nameless_area_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("test", "nameless-area-device-id")},
+        suggested_area="Test Area",
+    )
+    create_entity(nameless_area_device)
+
     exposed_entities_prompt = """An overview of the areas and the devices in this smart home:
 - names: Kitchen
   domain: light
@@ -631,6 +645,13 @@ async def test_assist_api_prompt(
   domain: light
   state: unavailable
   areas: Test Area 2
+- names: No Area Device
+  domain: light
+  state: unavailable
+- names: Unnamed Device
+  domain: light
+  state: unavailable
+  areas: Test Area, Alternative name
 """
     first_part_prompt = (
         "When controlling Home Assistant always call the intent tools. "
@@ -665,7 +686,7 @@ async def test_assist_api_prompt(
     )
 
     # Fake that request is made from a specific device ID with an area
-    llm_context.device_id = device.id
+    llm_context.device_id = main_device.id
     device_area_prompt = (
         "User is interacting with you via Living Room Device"
         " in area Test Area and all generic commands like 'turn on the lights' "
@@ -696,7 +717,7 @@ async def test_assist_api_prompt(
     )
 
     # Register device for timers
-    async_register_timer_handler(hass, device.id, lambda *args: None)
+    async_register_timer_handler(hass, main_device.id, lambda *args: None)
 
     api = await llm.async_get_api(hass, "assist", llm_context)
     # The no_timer_prompt is gone
@@ -707,13 +728,7 @@ async def test_assist_api_prompt(
     )
 
     # Test for an unspecified device but with area info (You are in...)
-    device_registry.async_remove_device(device.id)
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={("test", "1234-no-name")},
-        suggested_area="Test Area",
-    )
-    llm_context.device_id = device.id
+    llm_context.device_id = nameless_area_device.id
     no_name_area_floor_prompt = (
         "You are in area Test Area (floor 2) and all generic commands like 'turn on the lights' "
         "should target this area."
