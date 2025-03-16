@@ -2,17 +2,16 @@
 
 from unittest.mock import AsyncMock, mock_open, patch
 
-from httpx import Request, Response
+import httpx
 from openai import (
     APIConnectionError,
     AuthenticationError,
     BadRequestError,
     RateLimitError,
 )
-from openai.types.chat.chat_completion import ChatCompletion, Choice
-from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from openai.types.image import Image
 from openai.types.images_response import ImagesResponse
+from openai.types.responses import Response, ResponseOutputMessage, ResponseOutputText
 import pytest
 
 from homeassistant.components.openai_conversation import CONF_FILENAMES
@@ -117,8 +116,8 @@ async def test_generate_image_service_error(
         patch(
             "openai.resources.images.AsyncImages.generate",
             side_effect=RateLimitError(
-                response=Response(
-                    status_code=500, request=Request(method="GET", url="")
+                response=httpx.Response(
+                    status_code=500, request=httpx.Request(method="GET", url="")
                 ),
                 body=None,
                 message="Reason",
@@ -202,13 +201,13 @@ async def test_invalid_config_entry(
     ("side_effect", "error"),
     [
         (
-            APIConnectionError(request=Request(method="GET", url="test")),
+            APIConnectionError(request=httpx.Request(method="GET", url="test")),
             "Connection error",
         ),
         (
             AuthenticationError(
-                response=Response(
-                    status_code=500, request=Request(method="GET", url="test")
+                response=httpx.Response(
+                    status_code=500, request=httpx.Request(method="GET", url="test")
                 ),
                 body=None,
                 message="",
@@ -217,8 +216,8 @@ async def test_invalid_config_entry(
         ),
         (
             BadRequestError(
-                response=Response(
-                    status_code=500, request=Request(method="GET", url="test")
+                response=httpx.Response(
+                    status_code=500, request=httpx.Request(method="GET", url="test")
                 ),
                 body=None,
                 message="",
@@ -250,11 +249,11 @@ async def test_init_error(
         (
             {"prompt": "Picture of a dog", "filenames": []},
             {
-                "messages": [
+                "input": [
                     {
                         "content": [
                             {
-                                "type": "text",
+                                "type": "input_text",
                                 "text": "Picture of a dog",
                             },
                         ],
@@ -266,18 +265,18 @@ async def test_init_error(
         (
             {"prompt": "Picture of a dog", "filenames": ["/a/b/c.jpg"]},
             {
-                "messages": [
+                "input": [
                     {
                         "content": [
                             {
-                                "type": "text",
+                                "type": "input_text",
                                 "text": "Picture of a dog",
                             },
                             {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": "data:image/jpeg;base64,BASE64IMAGE1",
-                                },
+                                "type": "input_image",
+                                "image_url": "data:image/jpeg;base64,BASE64IMAGE1",
+                                "detail": "auto",
+                                "file_id": "/a/b/c.jpg",
                             },
                         ],
                     },
@@ -291,24 +290,24 @@ async def test_init_error(
                 "filenames": ["/a/b/c.jpg", "d/e/f.jpg"],
             },
             {
-                "messages": [
+                "input": [
                     {
                         "content": [
                             {
-                                "type": "text",
+                                "type": "input_text",
                                 "text": "Picture of a dog",
                             },
                             {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": "data:image/jpeg;base64,BASE64IMAGE1",
-                                },
+                                "type": "input_image",
+                                "image_url": "data:image/jpeg;base64,BASE64IMAGE1",
+                                "detail": "auto",
+                                "file_id": "/a/b/c.jpg",
                             },
                             {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": "data:image/jpeg;base64,BASE64IMAGE2",
-                                },
+                                "type": "input_image",
+                                "image_url": "data:image/jpeg;base64,BASE64IMAGE2",
+                                "detail": "auto",
+                                "file_id": "d/e/f.jpg",
                             },
                         ],
                     },
@@ -329,13 +328,17 @@ async def test_generate_content_service(
     """Test generate content service."""
     service_data["config_entry"] = mock_config_entry.entry_id
     expected_args["model"] = "gpt-4o-mini"
-    expected_args["n"] = 1
-    expected_args["response_format"] = {"type": "json_object"}
-    expected_args["messages"][0]["role"] = "user"
+    expected_args["max_output_tokens"] = 150
+    expected_args["top_p"] = 1.0
+    expected_args["temperature"] = 1.0
+    expected_args["user"] = None
+    expected_args["store"] = False
+    expected_args["input"][0]["type"] = "message"
+    expected_args["input"][0]["role"] = "user"
 
     with (
         patch(
-            "openai.resources.chat.completions.AsyncCompletions.create",
+            "openai.resources.responses.AsyncResponses.create",
             new_callable=AsyncMock,
         ) as mock_create,
         patch(
@@ -345,19 +348,27 @@ async def test_generate_content_service(
         patch("pathlib.Path.exists", return_value=True),
         patch.object(hass.config, "is_allowed_path", return_value=True),
     ):
-        mock_create.return_value = ChatCompletion(
-            id="",
-            model="",
-            created=1700000000,
-            object="chat.completion",
-            choices=[
-                Choice(
-                    index=0,
-                    finish_reason="stop",
-                    message=ChatCompletionMessage(
-                        role="assistant",
-                        content="This is the response",
-                    ),
+        mock_create.return_value = Response(
+            object="response",
+            id="resp_A",
+            created_at=1700000000,
+            model="gpt-4o-mini",
+            parallel_tool_calls=True,
+            tool_choice="auto",
+            tools=[],
+            output=[
+                ResponseOutputMessage(
+                    type="message",
+                    id="msg_A",
+                    content=[
+                        ResponseOutputText(
+                            type="output_text",
+                            text="This is the response",
+                            annotations=[],
+                        )
+                    ],
+                    role="assistant",
+                    status="completed",
                 )
             ],
         )
@@ -427,7 +438,7 @@ async def test_generate_content_service_invalid(
 
     with (
         patch(
-            "openai.resources.chat.completions.AsyncCompletions.create",
+            "openai.resources.responses.AsyncResponses.create",
             new_callable=AsyncMock,
         ) as mock_create,
         patch(
@@ -459,10 +470,10 @@ async def test_generate_content_service_error(
     """Test generate content service handles errors."""
     with (
         patch(
-            "openai.resources.chat.completions.AsyncCompletions.create",
+            "openai.resources.responses.AsyncResponses.create",
             side_effect=RateLimitError(
-                response=Response(
-                    status_code=417, request=Request(method="GET", url="")
+                response=httpx.Response(
+                    status_code=417, request=httpx.Request(method="GET", url="")
                 ),
                 body=None,
                 message="Reason",
