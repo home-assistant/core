@@ -12,6 +12,7 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -27,6 +28,7 @@ from homeassistant.helpers.service_info.zeroconf import (
 
 from .const import (
     CONF_FALLBACK,
+    CONF_REFRESH_TOKEN,
     CONST_OVERLAY_TADO_DEFAULT,
     CONST_OVERLAY_TADO_OPTIONS,
     DOMAIN,
@@ -77,43 +79,20 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
-        if user_input:
-            try:
-                validated = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except NoHomes:
-                errors["base"] = "no_homes"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-            if not errors:
-                await self.async_set_unique_id(validated[UNIQUE_ID])
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=validated["title"], data=user_input
-                )
-
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
-        )
+        return await self.async_step_auth_prepare()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth on credential failure."""
-        return await self.async_step_reauth_prepare()
+        return await self.async_step_auth_prepare()
 
-    async def async_step_reauth_prepare(
+    async def async_step_auth_prepare(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Prepare reauth."""
         if user_input is None:
-            return self.async_show_form(step_id="reauth_prepare")
+            return self.async_show_form(step_id="auth_prepare")
 
         return await self.async_step_reauth_confirm()
 
@@ -166,7 +145,10 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
             self.refresh_token = await self.hass.async_add_executor_job(
                 self.tado.get_refresh_token
             )
-            return self.async_show_progress_done(next_step_id="finalize_reauth_login")
+            _LOGGER.debug(
+                "Tokens obtained, finalizing reauth. Tokens: %s", self.access_token
+            )
+            return self.async_show_progress_done(next_step_id="finalize_auth_login")
 
         return self.async_show_progress(
             step_id="reauth_confirm",
@@ -178,16 +160,38 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
             progress_task=self.login_task,
         )
 
-    async def async_step_finalize_reauth_login(
+    async def async_step_finalize_auth_login(
         self,
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Handle the finalization of reauth."""
+        _LOGGER.debug("Finalizing reauth")
+        tado_me = await self.hass.async_add_executor_job(self.tado.get_me)
+
+        if "homes" not in tado_me or len(tado_me["homes"]) == 0:
+            raise NoHomes
+
+        home = tado_me["homes"][0]
+        unique_id = str(home["id"])
+        name = home["name"]
+
+        if self.source != SOURCE_REAUTH:
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
+
+            return self.async_create_entry(
+                title=name,
+                data={
+                    CONF_ACCESS_TOKEN: self.access_token,
+                    CONF_REFRESH_TOKEN: self.refresh_token,
+                },
+            )
+
         return self.async_update_reload_and_abort(
             self._get_reauth_entry(),
             data={
                 CONF_ACCESS_TOKEN: self.access_token,
-                CONF_PASSWORD: self.refresh_token,
+                CONF_REFRESH_TOKEN: self.refresh_token,
             },
         )
 
