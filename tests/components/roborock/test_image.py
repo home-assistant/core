@@ -47,7 +47,7 @@ async def test_floorplan_image(
     assert body[0:4] == b"\x89PNG"
 
     # Call a second time - this time forcing it to update - and save new image
-    now = dt_util.utcnow() + timedelta(minutes=61)
+    now = dt_util.utcnow() + timedelta(seconds=61)
 
     # Copy the device prop so we don't override it
     prop = copy.deepcopy(PROP)
@@ -73,6 +73,8 @@ async def test_floorplan_image(
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+        # This one isn't selected, so the parse_map count should not increase.
+        resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_downstairs")
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body is not None
@@ -160,6 +162,7 @@ async def test_fail_to_load_image(
             "homeassistant.components.roborock.roborock_storage.Path.read_bytes",
             side_effect=OSError,
         ) as read_bytes,
+        patch("homeassistant.components.roborock.refresh_coordinators"),
     ):
         # Reload the config entry so that the map is saved in storage and entities exist.
         await hass.config_entries.async_reload(setup_entry.entry_id)
@@ -171,6 +174,25 @@ async def test_fail_to_load_image(
 
 
 async def test_fail_parse_on_startup(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_roborock_entry: MockConfigEntry,
+    bypass_api_fixture,
+) -> None:
+    """Test that if we fail parsing on startup, we still create the entity."""
+    with patch(
+        "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
+        side_effect=IndexError,
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+    assert (
+        image_entity := hass.states.get("image.roborock_s7_maxv_upstairs")
+    ) is not None
+    assert image_entity.state
+
+
+async def test_index_error_map(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_roborock_entry: MockConfigEntry,

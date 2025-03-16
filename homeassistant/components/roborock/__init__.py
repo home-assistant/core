@@ -10,7 +10,6 @@ from typing import Any
 
 from roborock import (
     HomeDataRoom,
-    RoborockCommand,
     RoborockException,
     RoborockInvalidCredentials,
     RoborockInvalidUserAgreement,
@@ -27,7 +26,11 @@ from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
 from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 
 from .const import (
     CONF_BASE_URL,
@@ -35,8 +38,6 @@ from .const import (
     DEFAULT_DRAWABLES,
     DOMAIN,
     DRAWABLES,
-    IMAGE_CACHE_INTERVAL,
-    MAP_FILE_FORMAT,
     MAP_SCALE,
     MAP_SLEEP,
     PLATFORMS,
@@ -348,7 +349,10 @@ async def refresh_coordinators(
     """
     cur_map = coord.current_map
     # This won't be None at this point as the coordinator will have run first.
-    assert cur_map is not None
+    if cur_map is None:
+        # realistically should never happen - but this is an alternative
+        # to calling assert.
+        return
     map_flags = sorted(coord.maps, key=lambda data: data == cur_map, reverse=True)
     for map_flag in map_flags:
         if map_flag != cur_map:
@@ -358,7 +362,15 @@ async def refresh_coordinators(
             # We cannot get the map until the roborock servers fully process the
             # map change.
             await asyncio.sleep(MAP_SLEEP)
-        await coord.update_map()
+        try:
+            await coord.update_map()
+        except HomeAssistantError as ex:
+            _LOGGER.error(
+                "Error while updating map %s for device %s: %s",
+                map_flag,
+                coord.roborock_device_info.device.name,
+                ex,
+            )
 
     if len(coord.maps) != 1:
         # Set the map back to the map the user previously had selected so that it

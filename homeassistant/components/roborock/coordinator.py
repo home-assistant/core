@@ -126,8 +126,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         self._parser = parser
 
     async def update_map(self, bump_time: bool = True) -> None:
-        # The current map was set in the props update, so these can be done without worry of applying them to the wrong map.
-        _LOGGER.info("Updating map! %s", self.current_map)
+        """Update the map data for the current map."""
+        # The current map was set in the props update, so these can be done without
+        # worry of applying them to the wrong map.
         response = await asyncio.gather(
             *(
                 self.cloud_api.get_map_v1(),
@@ -145,12 +146,20 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             parsed_map = self._parser.parse(response[0])
         except (IndexError, ValueError) as err:
             _LOGGER.debug("Exception when parsing map contents: %s", err)
-            return
-        if parsed_map.image is None:
-            return
-        self.map_data[self.current_map] = parsed_map
-        if bump_time:
-            self.map_updates[self.current_map] = dt_util.utcnow()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+            ) from err
+        if parsed_map.image is None or parsed_map.image.data is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+            )
+        if self.current_map is not None:
+            # Current map should be set here, but this is a safeguard.
+            self.map_data[self.current_map] = parsed_map
+            if bump_time:
+                self.map_updates[self.current_map] = dt_util.utcnow()
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -212,7 +221,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             # If the vacuum is currently cleaning and it has been IMAGE_CACHE_INTERVAL
             # since the last map update, you can update the map.
             if (
-                self.roborock_device_info.props.status.in_cleaning
+                self.current_map
+                and self.roborock_device_info.props.status.in_cleaning
                 and (
                     (
                         dt_util.utcnow()
@@ -222,7 +232,10 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 > IMAGE_CACHE_INTERVAL
                 # Or, if the vacuums status has changed since the last map update, update the map.
             ):
-                await self.update_map()
+                try:
+                    await self.update_map()
+                except HomeAssistantError as err:
+                    _LOGGER.debug("Failed to update map: %s", err)
             else:
                 await self.set_current_map_rooms()
         except RoborockException as ex:

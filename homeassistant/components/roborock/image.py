@@ -4,6 +4,8 @@ from datetime import datetime
 import io
 import logging
 
+from vacuum_map_parser_base.map_data import MapData
+
 from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -84,30 +86,25 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
             self._attr_image_last_updated = self.coordinator.map_updates[self.map_flag]
         super()._handle_coordinator_update()
 
+    async def _update_cached_map(self, map_data: MapData) -> None:
+        img_byte_arr = io.BytesIO()
+        # For the map to be saved in the coordinator, image.data must exist,
+        # so we can safely ignore the type error.
+        map_data.image.data.save(img_byte_arr, format=MAP_FILE_FORMAT)  # type: ignore[union-attr]
+        content = img_byte_arr.getvalue()
+        if self.cached_map != content:
+            self.cached_map = content
+            await self.coordinator.map_storage.async_save_map(
+                self.map_flag,
+                content,
+            )
+
     async def async_image(self) -> bytes | None:
         """Update the image if it is not cached."""
         if self.is_selected:
             # If it is the current selected map, and async_image is hit,
             # then we should manually update it.
             await self.coordinator.update_map(False)
-            parsed_map = self.coordinator.map_data[self.map_flag]
-            img_byte_arr = io.BytesIO()
-            parsed_map.image.data.save(img_byte_arr, format=MAP_FILE_FORMAT)
-            content = img_byte_arr.getvalue()
-            if self.cached_map != content:
-                self.cached_map = content
-                await self.coordinator.map_storage.async_save_map(
-                    self.map_flag,
-                    content,
-                )
-        elif self.cached_map == b"" and self.coordinator.map_data.get(self.map_flag):
-            # If it isn't selected, and the map has not been set, then we should make sure to get the latest from the coordinator.
-            parsed_map = self.coordinator.map_data[self.map_flag]
-            img_byte_arr = io.BytesIO()
-            parsed_map.image.data.save(img_byte_arr, format=MAP_FILE_FORMAT)
-            self.cached_map = img_byte_arr.getvalue()
-            await self.coordinator.map_storage.async_save_map(
-                self.map_flag,
-                self.cached_map,
-            )
+        parsed_map = self.coordinator.map_data[self.map_flag]
+        await self._update_cached_map(parsed_map)
         return self.cached_map
