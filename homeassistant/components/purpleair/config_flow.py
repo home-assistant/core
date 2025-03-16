@@ -5,6 +5,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, Final
 
+from aiopurpleair import API
+from aiopurpleair.errors import (
+    InvalidApiKeyError,
+    InvalidRequestError,
+    NotFoundError,
+    PurpleAirError,
+    RequestError,
+)
+from aiopurpleair.models.keys import GetKeysResponse
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -13,22 +22,26 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     ConfigSubentryFlow,
 )
-from homeassistant.const import CONF_API_KEY, CONF_SHOW_ON_MAP
+from homeassistant.const import CONF_API_KEY, CONF_BASE, CONF_SHOW_ON_MAP
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .config_validation import ConfigValidation
-from .const import DOMAIN, SCHEMA_VERSION
+from .const import (
+    CONF_INVALID_API_KEY,
+    CONF_SENSOR,
+    CONF_UNKNOWN,
+    DOMAIN,
+    LOGGER,
+    SCHEMA_VERSION,
+    TITLE,
+)
 from .options_flow import PurpleAirOptionsFlow
 from .subentry_flow import PurpleAirSubentryFlow
-
-TITLE: Final[str] = "PurpleAir"
 
 CONF_REAUTH_CONFIRM: Final[str] = "reauth_confirm"
 CONF_REAUTH_SUCCESSFUL: Final[str] = "reauth_successful"
 CONF_RECONFIGURE_SUCCESSFUL: Final[str] = "reconfigure_successful"
 CONF_RECONFIGURE: Final[str] = "reconfigure"
-CONF_SENSOR: Final[str] = "sensor"
 
 
 class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -39,6 +52,7 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self._flow_data: dict[str, Any] = {}
+        self._errors: dict[str, Any] = {}
 
     async def _async_get_title(self) -> str:
         """Get instance title."""
@@ -47,6 +61,36 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
         if len(config_list) > 0:
             title = f"{TITLE} ({len(config_list)})"
         return title
+
+    async def _async_validate_api_key(self) -> bool:
+        """Validate API key."""
+        self._errors = {}
+
+        api = API(
+            self._flow_data[CONF_API_KEY],
+            session=aiohttp_client.async_get_clientsession(self.hass),
+        )
+        try:
+            keys_response: GetKeysResponse = await api.async_check_api_key()
+        except InvalidApiKeyError as err:
+            LOGGER.exception("InvalidApiKeyError exception: %s", err)
+            self._errors[CONF_API_KEY] = CONF_INVALID_API_KEY
+        except (
+            RequestError,
+            InvalidRequestError,
+            NotFoundError,
+            PurpleAirError,
+        ) as err:
+            LOGGER.exception("PurpleAirError exception: %s", err)
+            self._errors[CONF_BASE] = CONF_UNKNOWN
+            return False
+        except Exception as err:  # noqa: BLE001
+            LOGGER.exception("Exception: %s", err)
+            self._errors[CONF_BASE] = CONF_UNKNOWN
+            return False
+
+        LOGGER.debug("KeysResponse: %s", keys_response)
+        return True
 
     @classmethod
     @callback
@@ -93,14 +137,11 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         self._flow_data[CONF_API_KEY] = str(user_input.get(CONF_API_KEY))
-        validation = await ConfigValidation.async_validate_api_key(
-            self.hass, self._flow_data[CONF_API_KEY]
-        )
-        if validation.errors:
+        if not await self._async_validate_api_key():
             return self.async_show_form(
                 step_id=CONF_API_KEY,
                 data_schema=self.api_key_schema,
-                errors=validation.errors,
+                errors=self._errors,
             )
 
         await self.async_set_unique_id(self._flow_data[CONF_API_KEY])
@@ -124,20 +165,20 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle re-auth step."""
         if user_input is None:
+            self._flow_data[CONF_API_KEY] = self._get_reauth_entry().data.get(
+                CONF_API_KEY
+            )
             return self.async_show_form(
                 step_id=CONF_REAUTH_CONFIRM,
                 data_schema=self.api_key_schema,
             )
 
         self._flow_data[CONF_API_KEY] = str(user_input[CONF_API_KEY])
-        validation = await ConfigValidation.async_validate_api_key(
-            self.hass, self._flow_data[CONF_API_KEY]
-        )
-        if validation.errors:
+        if not await self._async_validate_api_key():
             return self.async_show_form(
                 step_id=CONF_REAUTH_CONFIRM,
                 data_schema=self.api_key_schema,
-                errors=validation.errors,
+                errors=self._errors,
             )
 
         await self.async_set_unique_id(self._flow_data[CONF_API_KEY])
@@ -164,14 +205,11 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         self._flow_data[CONF_API_KEY] = str(user_input[CONF_API_KEY])
-        validation = await ConfigValidation.async_validate_api_key(
-            self.hass, self._flow_data[CONF_API_KEY]
-        )
-        if validation.errors:
+        if not await self._async_validate_api_key():
             return self.async_show_form(
                 step_id=CONF_RECONFIGURE,
                 data_schema=self.api_key_schema,
-                errors=validation.errors,
+                errors=self._errors,
             )
 
         await self.async_set_unique_id(self._flow_data[CONF_API_KEY])

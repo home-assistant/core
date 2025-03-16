@@ -18,7 +18,7 @@ MANUFACTURER: Final[str] = "PurpleAir, Inc."
 
 
 class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
-    """PurpleAir entity."""
+    """Entity."""
 
     _attr_has_entity_name = True
 
@@ -50,7 +50,7 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
         if self.sensor_data.latitude is None or self.sensor_data.longitude is None:
             return attrs
 
-        if self._entry.options.get(CONF_SHOW_ON_MAP):
+        if self._entry.options.get(CONF_SHOW_ON_MAP) is True:
             attrs[ATTR_LATITUDE] = self.sensor_data.latitude
             attrs[ATTR_LONGITUDE] = self.sensor_data.longitude
 
@@ -59,4 +59,5 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
     @property
     def sensor_data(self) -> SensorModel:
         """Get SensorModel object."""
+        assert self.coordinator.data is not None
         return self.coordinator.data.data[self._sensor_index]

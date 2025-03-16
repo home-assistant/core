@@ -85,7 +85,7 @@
   "options": {
     "step": {
       "settings": {
-        "title": "PurpleAir settings",
+        "title": "Settings",
         "data": {
           "show_on_map": "Show sensor location on map"
         }
