@@ -27,6 +27,15 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "left_clip": {
+        "name": "Left safety clip"
+      },
+      "right_clip": {
+        "name": "Right safety clip"
+      }
+    },
+
     "sensor": {
       "state": {
         "name": "State",
