@@ -3,6 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable, Coroutine
 import contextlib
+from datetime import datetime
 import logging
 from typing import Any, Concatenate, cast
 
@@ -137,34 +138,26 @@ def constraint_fetcher[_EntityT: HomeConnectEntity, **_P](
     If it needs to be called later, it will call async_write_ha_state function
     """
 
-    async def handler_and_write_ha_state(
+    async def handler_to_return(
         self: _EntityT, *args: _P.args, **kwargs: _P.kwargs
     ) -> None:
-        try:
-            await func(self, *args, **kwargs)
-        except TooManyRequestsError as err:
-            async_call_later(
-                self.hass,
-                err.retry_after or API_DEFAULT_RETRY_AFTER,
-                lambda _: handler_and_write_ha_state(self, *args, **kwargs),
-            )
-        except HomeConnectError as err:
-            _LOGGER.error("Error fetching constraints for %s: %s", self.entity_id, err)
-        else:
-            self.async_write_ha_state()
+        async def handler(_datetime: datetime | None = None) -> None:
+            try:
+                await func(self, *args, **kwargs)
+            except TooManyRequestsError as err:
+                async_call_later(
+                    self.hass,
+                    err.retry_after or API_DEFAULT_RETRY_AFTER,
+                    handler,
+                )
+            except HomeConnectError as err:
+                _LOGGER.error(
+                    "Error fetching constraints for %s: %s", self.entity_id, err
+                )
+            else:
+                if _datetime is not None:
+                    self.async_write_ha_state()
 
-    async def first_attempt_handler(
-        self: _EntityT, *args: _P.args, **kwargs: _P.kwargs
-    ) -> None:
-        try:
-            await func(self, *args, **kwargs)
-        except TooManyRequestsError as err:
-            async_call_later(
-                self.hass,
-                err.retry_after or API_DEFAULT_RETRY_AFTER,
-                lambda _: handler_and_write_ha_state(self, *args, **kwargs),
-            )
-        except HomeConnectError as err:
-            _LOGGER.error("Error fetching constraints for %s: %s", self.entity_id, err)
+        await handler()
 
-    return first_attempt_handler
+    return handler_to_return
