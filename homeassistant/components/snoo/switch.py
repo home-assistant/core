@@ -84,7 +84,7 @@ class SnooSwitch(SnooDescriptionEntity, SwitchEntity):
         except SnooCommandException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="switch_failed",
+                translation_key="switch_on_failed",
                 translation_placeholders={"name": str(self.name), "status": "on"},
             ) from err
 
@@ -100,6 +100,6 @@ class SnooSwitch(SnooDescriptionEntity, SwitchEntity):
         except SnooCommandException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="switch_failed",
+                translation_key="switch_off_failed",
                 translation_placeholders={"name": str(self.name), "status": "off"},
             ) from err

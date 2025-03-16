@@ -62,8 +62,8 @@ async def test_update_success(hass: HomeAssistant, bypass_api: AsyncMock) -> Non
 @pytest.mark.parametrize(
     ("command", "error_str"),
     [
-        (SERVICE_TURN_ON, "Switching Sleepytime sounds to on failed"),
-        (SERVICE_TURN_OFF, "Switching Sleepytime sounds to off failed"),
+        (SERVICE_TURN_ON, "Turning Sleepytime sounds on failed"),
+        (SERVICE_TURN_OFF, "Turning Sleepytime sounds off failed"),
     ],
 )
 async def test_update_failed(

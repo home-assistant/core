@@ -25,8 +25,11 @@
     "select_failed": {
       "message": "Error while updating {name} to {option}"
     },
-    "switch_failed": {
-      "message": "Switching {name} to {status} failed"
+    "switch_on_failed": {
+      "message": "Turning {name} on failed"
+    },
+    "switch_off_failed": {
+      "message": "Turning {name} off failed"
     }
   },
   "entity": {
