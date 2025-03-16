@@ -355,7 +355,6 @@ class AssistAPI(API):
         area: ar.AreaEntry | None = None
         floor: fr.FloorEntry | None = None
 
-        # Now this await is valid because we've changed the function to async
         user_name: str | None = None
         if llm_context.context and llm_context.context.user_id:
             user = await self.hass.auth.async_get_user(llm_context.context.user_id)
