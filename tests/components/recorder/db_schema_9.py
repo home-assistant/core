@@ -19,8 +19,7 @@ from sqlalchemy import (
     Text,
     distinct,
 )
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id

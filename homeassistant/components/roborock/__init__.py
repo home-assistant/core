@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
@@ -21,34 +20,22 @@ from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
 from roborock.version_a01_apis import RoborockMqttClientA01
 from roborock.web_api import RoborockApiClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
-from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
+from .coordinator import (
+    RoborockConfigEntry,
+    RoborockCoordinators,
+    RoborockDataUpdateCoordinator,
+    RoborockDataUpdateCoordinatorA01,
+)
 from .roborock_storage import async_remove_map_storage
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
-
-type RoborockConfigEntry = ConfigEntry[RoborockCoordinators]
-
-
-@dataclass
-class RoborockCoordinators:
-    """Roborock coordinators type."""
-
-    v1: list[RoborockDataUpdateCoordinator]
-    a01: list[RoborockDataUpdateCoordinatorA01]
-
-    def values(
-        self,
-    ) -> list[RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01]:
-        """Return all coordinators."""
-        return self.v1 + self.a01
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
@@ -78,6 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_key="no_user_agreement",
         ) from err
     except RoborockException as err:
+        _LOGGER.debug("Failed to get Roborock home data: %s", err)
         raise ConfigEntryNotReady(
             "Failed to get Roborock home data",
             translation_domain=DOMAIN,
@@ -95,7 +83,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     # Get a Coordinator if the device is available or if we have connected to the device before
     coordinators = await asyncio.gather(
         *build_setup_functions(
-            hass, device_map, user_data, product_info, home_data.rooms
+            hass,
+            entry,
+            device_map,
+            user_data,
+            product_info,
+            home_data.rooms,
+            api_client,
         ),
         return_exceptions=True,
     )
@@ -142,10 +136,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
 
 def build_setup_functions(
     hass: HomeAssistant,
+    entry: RoborockConfigEntry,
     device_map: dict[str, HomeDataDevice],
     user_data: UserData,
     product_info: dict[str, HomeDataProduct],
     home_data_rooms: list[HomeDataRoom],
+    api_client: RoborockApiClient,
 ) -> list[
     Coroutine[
         Any,
@@ -156,7 +152,13 @@ def build_setup_functions(
     """Create a list of setup functions that can later be called asynchronously."""
     return [
         setup_device(
-            hass, user_data, device, product_info[device.product_id], home_data_rooms
+            hass,
+            entry,
+            user_data,
+            device,
+            product_info[device.product_id],
+            home_data_rooms,
+            api_client,
         )
         for device in device_map.values()
     ]
@@ -164,18 +166,20 @@ def build_setup_functions(
 
 async def setup_device(
     hass: HomeAssistant,
+    entry: RoborockConfigEntry,
     user_data: UserData,
     device: HomeDataDevice,
     product_info: HomeDataProduct,
     home_data_rooms: list[HomeDataRoom],
+    api_client: RoborockApiClient,
 ) -> RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01 | None:
     """Set up a coordinator for a given device."""
     if device.pv == "1.0":
         return await setup_device_v1(
-            hass, user_data, device, product_info, home_data_rooms
+            hass, entry, user_data, device, product_info, home_data_rooms, api_client
         )
     if device.pv == "A01":
-        return await setup_device_a01(hass, user_data, device, product_info)
+        return await setup_device_a01(hass, entry, user_data, device, product_info)
     _LOGGER.warning(
         "Not adding device %s because its protocol version %s or category %s is not supported",
         device.duid,
@@ -187,10 +191,12 @@ async def setup_device(
 
 async def setup_device_v1(
     hass: HomeAssistant,
+    entry: RoborockConfigEntry,
     user_data: UserData,
     device: HomeDataDevice,
     product_info: HomeDataProduct,
     home_data_rooms: list[HomeDataRoom],
+    api_client: RoborockApiClient,
 ) -> RoborockDataUpdateCoordinator | None:
     """Set up a device Coordinator."""
     mqtt_client = await hass.async_add_executor_job(
@@ -212,7 +218,15 @@ async def setup_device_v1(
         await mqtt_client.async_release()
         raise
     coordinator = RoborockDataUpdateCoordinator(
-        hass, device, networking, product_info, mqtt_client, home_data_rooms
+        hass,
+        entry,
+        device,
+        networking,
+        product_info,
+        mqtt_client,
+        home_data_rooms,
+        api_client,
+        user_data,
     )
     try:
         await coordinator.async_config_entry_first_refresh()
@@ -246,6 +260,7 @@ async def setup_device_v1(
 
 async def setup_device_a01(
     hass: HomeAssistant,
+    entry: RoborockConfigEntry,
     user_data: UserData,
     device: HomeDataDevice,
     product_info: HomeDataProduct,
@@ -254,7 +269,9 @@ async def setup_device_a01(
     mqtt_client = RoborockMqttClientA01(
         user_data, DeviceData(device, product_info.name), product_info.category
     )
-    coord = RoborockDataUpdateCoordinatorA01(hass, device, product_info, mqtt_client)
+    coord = RoborockDataUpdateCoordinatorA01(
+        hass, entry, device, product_info, mqtt_client
+    )
     await coord.async_config_entry_first_refresh()
     return coord
 

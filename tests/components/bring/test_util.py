@@ -1,6 +1,12 @@
 """Test for utility functions of the Bring! integration."""
 
-from bring_api import BringItemsResponse, BringListResponse, BringUserSettingsResponse
+from bring_api import (
+    BringActivityResponse,
+    BringItemsResponse,
+    BringListResponse,
+    BringUserSettingsResponse,
+)
+from bring_api.types import BringUsersResponse
 import pytest
 
 from homeassistant.components.bring.const import DOMAIN
@@ -41,9 +47,10 @@ def test_sum_attributes(attribute: str, expected: int) -> None:
     """Test function sum_attributes."""
     items = BringItemsResponse.from_json(load_fixture("items.json", DOMAIN))
     lst = BringListResponse.from_json(load_fixture("lists.json", DOMAIN))
-
+    activity = BringActivityResponse.from_json(load_fixture("activity.json", DOMAIN))
+    users = BringUsersResponse.from_json(load_fixture("users.json", DOMAIN))
     result = sum_attributes(
-        BringData(lst.lists[0], items),
+        BringData(lst.lists[0], items, activity, users),
         attribute,
     )
 

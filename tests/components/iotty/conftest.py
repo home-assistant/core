@@ -169,7 +169,7 @@ def mock_iotty() -> Generator[MagicMock]:
 def mock_coordinator() -> Generator[MagicMock]:
     """Mock IottyDataUpdateCoordinator."""
     with patch(
-        "homeassistant.components.iotty.coordinator.IottyDataUpdateCoordinator",
+        "homeassistant.components.iotty.IottyDataUpdateCoordinator",
         autospec=True,
     ) as coordinator_mock:
         yield coordinator_mock

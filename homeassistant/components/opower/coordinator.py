@@ -2,8 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-from types import MappingProxyType
-from typing import Any, cast
+from typing import cast
 
 from opower import (
     Account,
@@ -23,6 +22,7 @@ from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     statistics_during_period,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -34,19 +34,24 @@ from .const import CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type OpowerConfigEntry = ConfigEntry[OpowerCoordinator]
+
 
 class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
     """Handle fetching Opower data, updating sensors and inserting statistics."""
 
+    config_entry: OpowerConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        entry_data: MappingProxyType[str, Any],
+        config_entry: OpowerConfigEntry,
     ) -> None:
         """Initialize the data handler."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Opower",
             # Data is updated daily on Opower.
             # Refresh every 12h to be at most 12h behind.
@@ -54,10 +59,10 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         )
         self.api = Opower(
             aiohttp_client.async_get_clientsession(hass),
-            entry_data[CONF_UTILITY],
-            entry_data[CONF_USERNAME],
-            entry_data[CONF_PASSWORD],
-            entry_data.get(CONF_TOTP_SECRET),
+            config_entry.data[CONF_UTILITY],
+            config_entry.data[CONF_USERNAME],
+            config_entry.data[CONF_PASSWORD],
+            config_entry.data.get(CONF_TOTP_SECRET),
         )
 
         @callback

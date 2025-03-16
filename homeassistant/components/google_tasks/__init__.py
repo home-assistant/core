@@ -13,9 +13,8 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
 from .const import DOMAIN
-from .coordinator import TaskUpdateCoordinator
+from .coordinator import GoogleTasksConfigEntry, TaskUpdateCoordinator
 from .exceptions import GoogleTasksApiError
-from .types import GoogleTasksConfigEntry
 
 __all__ = [
     "DOMAIN",
@@ -52,6 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleTasksConfigEntry) 
     coordinators = [
         TaskUpdateCoordinator(
             hass,
+            entry,
             auth,
             task_list["id"],
             task_list["title"],

@@ -36,6 +36,10 @@ async def test_repair_acquires_token(
     client = await hass_client()
 
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, unique_id="HWE-BAT_5c2fafabcdef"
+    )
+    await hass.async_block_till_done()
 
     with patch("homeassistant.components.homewizard.has_v2_api", return_value=True):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
