@@ -24,6 +24,9 @@
   "exceptions": {
     "select_failed": {
       "message": "Error while updating {name} to {option}"
+    },
+    "switch_failed": {
+      "message": "Error while switching {name} to {status}"
     }
   },
   "entity": {
@@ -65,6 +68,14 @@
           "level4": "[%key:component::snoo::entity::sensor::state::state::level4%]",
           "stop": "[%key:component::snoo::entity::sensor::state::state::stop%]"
         }
+      }
+    },
+    "switch": {
+      "sticky_white_noise": {
+        "name": "Sticky white noise"
+      },
+      "hold": {
+        "name": "Hold"
       }
     }
   }
