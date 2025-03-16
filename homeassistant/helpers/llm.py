@@ -372,7 +372,9 @@ class AssistAPI(API):
         if area:
             location_prompt = []
             if device_name:
-                location_prompt.append(f"User is interacting with you via {device_name}")
+                location_prompt.append(
+                    f"User is interacting with you via {device_name}"
+                )
             else:
                 location_prompt.append("You are")
 

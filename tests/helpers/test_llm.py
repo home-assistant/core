@@ -654,7 +654,7 @@ async def test_assist_api_prompt(
 
     # Test with device that has no area
     llm_context.device_id = device_no_area.id
-    device_prompt = f"User is interacting with you via No Area Device."
+    device_prompt = "User is interacting with you via No Area Device."
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
@@ -667,9 +667,9 @@ async def test_assist_api_prompt(
     # Fake that request is made from a specific device ID with an area
     llm_context.device_id = device.id
     device_area_prompt = (
-        f"User is interacting with you via Living Room Device"
-        f" in area Test Area and all generic commands like 'turn on the lights' "
-        f"should target this area."
+        "User is interacting with you via Living Room Device"
+        " in area Test Area and all generic commands like 'turn on the lights' "
+        "should target this area."
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
@@ -683,9 +683,9 @@ async def test_assist_api_prompt(
     floor = floor_registry.async_create("2")
     area_registry.async_update(area.id, floor_id=floor.floor_id)
     device_area_floor_prompt = (
-        f"User is interacting with you via Living Room Device"
-        f" in area Test Area (floor 2) and all generic commands like 'turn on the lights' "
-        f"should target this area."
+        "User is interacting with you via Living Room Device"
+        " in area Test Area (floor 2) and all generic commands like 'turn on the lights' "
+        "should target this area."
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
@@ -715,8 +715,8 @@ async def test_assist_api_prompt(
     )
     llm_context.device_id = device.id
     no_name_area_floor_prompt = (
-        f"You are in area Test Area (floor 2) and all generic commands like 'turn on the lights' "
-        f"should target this area."
+        "You are in area Test Area (floor 2) and all generic commands like 'turn on the lights' "
+        "should target this area."
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
