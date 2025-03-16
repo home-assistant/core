@@ -45,78 +45,66 @@ class SqueezeboxButtonEntityDescription(ButtonEntityDescription):
 BUTTON_ENTITIES: tuple[SqueezeboxButtonEntityDescription, ...] = (
     SqueezeboxButtonEntityDescription(
         key="preset_1",
-        name="Preset 1",
         translation_key="preset_1",
         press_action="preset_1.single",
     ),
     SqueezeboxButtonEntityDescription(
         key="preset_2",
-        name="Preset 2",
         translation_key="preset_2",
         press_action="preset_2.single",
     ),
     SqueezeboxButtonEntityDescription(
         key="preset_3",
-        name="Preset 3",
         translation_key="preset_3",
         press_action="preset_3.single",
     ),
     SqueezeboxButtonEntityDescription(
         key="preset_4",
-        name="Preset 4",
         translation_key="preset_4",
         press_action="preset_4.single",
     ),
     SqueezeboxButtonEntityDescription(
         key="preset_5",
-        name="Preset 5",
         translation_key="preset_5",
         press_action="preset_5.single",
     ),
     SqueezeboxButtonEntityDescription(
         key="preset_6",
-        name="Preset 6",
         translation_key="preset_6",
         press_action="preset_6.single",
     ),
     SqueezeboxButtonEntityDescription(
         key="brightness_up",
-        name="Brightness Up",
         translation_key="brightness_up",
         press_action="brightness_up",
         models=HARDWARE_MODELS_WITH_SCREEN,
     ),
     SqueezeboxButtonEntityDescription(
         key="brightness_down",
-        name="Brightness Down",
         translation_key="brightness_down",
         press_action="brightness_down",
         models=HARDWARE_MODELS_WITH_SCREEN,
     ),
     SqueezeboxButtonEntityDescription(
         key="bass_up",
-        name="Bass Up",
         translation_key="bass_up",
         press_action="bass_up",
         models=HARDWARE_MODELS_WITH_SCREEN,
     ),
     SqueezeboxButtonEntityDescription(
         key="bass_down",
-        name="Bass Down",
         translation_key="bass_down",
         press_action="bass_down",
         models=HARDWARE_MODELS_WITH_SCREEN,
     ),
     SqueezeboxButtonEntityDescription(
         key="treble_up",
-        name="Treble Up",
         translation_key="treble_up",
         press_action="treble_up",
         models=HARDWARE_MODELS_WITH_SCREEN,
     ),
     SqueezeboxButtonEntityDescription(
         key="treble_down",
-        name="Treble Down",
         translation_key="treble_down",
         press_action="treble_down",
         models=HARDWARE_MODELS_WITH_SCREEN,
@@ -166,19 +154,15 @@ class SqueezeboxButtonEntity(ButtonEntity):
         player = coordinator.player
         self._player = player
         self.entity_description: SqueezeboxButtonEntityDescription = entity_description
-        self._unique_id = f"{self._player.name}_{self.entity_description.key}"
-        self._entity_id = f"button.{self._player.name}_{self.entity_description.key}"
+        self._attr_unique_id = f"{self._player.name}_{self.entity_description.key}"
+        #        self._entity_id = f"button.{self._player.name}_{self.entity_description.key}"
+        self._attr_has_entity_name = True
 
     async def async_press(self) -> None:
         """Execute the button action."""
         all_params = ["button"]
         all_params.extend([self.entity_description.press_action])
         await self._player.async_query(*all_params)
-
-    @property
-    def unique_id(self) -> str:
-        """Set unique_id."""
-        return self._unique_id
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -189,11 +173,12 @@ class SqueezeboxButtonEntity(ButtonEntity):
             via_device=(DOMAIN, self._coordinator.server_uuid),
         )
 
-    @property
-    def entity_id(self) -> str:
-        """Set entity_id."""
-        return self._entity_id
 
-    @entity_id.setter
-    def entity_id(self, entity_id: str) -> None:
-        self._entity_id = entity_id
+#    @property
+#    def entity_id(self) -> str:
+#        """Set entity_id."""
+#        return self._entity_id
+
+#    @entity_id.setter
+#    def entity_id(self, entity_id: str) -> None:
+#        self._entity_id = entity_id
