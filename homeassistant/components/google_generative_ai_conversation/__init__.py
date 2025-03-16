@@ -5,7 +5,7 @@ from __future__ import annotations
 import mimetypes
 from pathlib import Path
 
-from google import genai  # type: ignore[attr-defined]
+from google.genai import Client
 from google.genai.errors import APIError, ClientError
 from requests.exceptions import Timeout
 import voluptuous as vol
@@ -43,7 +43,7 @@ CONF_FILENAMES = "filenames"
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (Platform.CONVERSATION,)
 
-type GoogleGenerativeAIConfigEntry = ConfigEntry[genai.Client]
+type GoogleGenerativeAIConfigEntry = ConfigEntry[Client]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -108,7 +108,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 f"Error generating content due to content violations, reason: {response.prompt_feedback.block_reason_message}"
             )
 
-        if not response.candidates[0].content.parts:
+        if (
+            not response.candidates
+            or not response.candidates[0].content
+            or not response.candidates[0].content.parts
+        ):
             raise HomeAssistantError("Unknown error generating content")
 
         return {"text": response.text}
@@ -139,7 +143,7 @@ async def async_setup_entry(
     """Set up Google Generative AI Conversation from a config entry."""
 
     try:
-        client = genai.Client(api_key=entry.data[CONF_API_KEY])
+        client = Client(api_key=entry.data[CONF_API_KEY])
         await client.aio.models.get(
             model=entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
             config={"http_options": {"timeout": TIMEOUT_MILLIS}},
