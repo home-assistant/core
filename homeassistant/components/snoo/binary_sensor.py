@@ -65,6 +65,6 @@ class SnooBinarySensor(SnooDescriptionEntity, BinarySensorEntity):
     entity_description: SnooBinarySensorEntityDescription
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self.coordinator.data)
