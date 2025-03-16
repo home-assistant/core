@@ -32,6 +32,14 @@ from .const import (
 
 from tests.common import MockConfigEntry
 
+mock_wallbox = Mock()
+mock_wallbox.authenticate = Mock(return_value=authorisation_response)
+mock_wallbox.setEnergyCost = Mock(return_value={CHARGER_ENERGY_PRICE_KEY: 1.1})
+mock_wallbox.setMaxChargingCurrent = Mock(
+    return_value={CHARGER_MAX_CHARGING_CURRENT_KEY: 20}
+)
+mock_wallbox.setIcpMaxCurrent = Mock(return_value={CHARGER_MAX_ICP_CURRENT_KEY: 10})
+
 
 async def test_wallbox_number_class(
     hass: HomeAssistant, entry: MockConfigEntry
@@ -42,11 +50,11 @@ async def test_wallbox_number_class(
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response),
         ),
         patch(
-            "wallbox.Wallbox.setMaxChargingCurrent",
+            "homeassistant.components.wallbox.Wallbox.setMaxChargingCurrent",
             new=Mock(return_value={CHARGER_MAX_CHARGING_CURRENT_KEY: 20}),
         ),
     ):
@@ -86,11 +94,11 @@ async def test_wallbox_number_energy_class(
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response),
         ),
         patch(
-            "wallbox.Wallbox.setEnergyCost",
+            "homeassistant.components.wallbox.Wallbox.setEnergyCost",
             new=Mock(return_value={CHARGER_ENERGY_PRICE_KEY: 1.1}),
         ),
     ):
@@ -114,11 +122,11 @@ async def test_wallbox_number_class_connection_error(
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response),
         ),
         patch(
-            "wallbox.Wallbox.setMaxChargingCurrent",
+            "homeassistant.components.wallbox.Wallbox.setMaxChargingCurrent",
             new=Mock(side_effect=http_404_error),
         ),
         pytest.raises(ConnectionError),
@@ -143,11 +151,11 @@ async def test_wallbox_number_class_energy_price_connection_error(
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response),
         ),
         patch(
-            "wallbox.Wallbox.setEnergyCost",
+            "homeassistant.components.wallbox.Wallbox.setEnergyCost",
             new=Mock(side_effect=http_404_error),
         ),
         pytest.raises(ConnectionError),
@@ -172,11 +180,11 @@ async def test_wallbox_number_class_energy_price_auth_error(
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response),
         ),
         patch(
-            "wallbox.Wallbox.setEnergyCost",
+            "homeassistant.components.wallbox.Wallbox.setEnergyCost",
             new=Mock(side_effect=http_403_error),
         ),
         pytest.raises(ConfigEntryAuthFailed),
@@ -213,11 +221,11 @@ async def test_wallbox_number_class_icp_energy(
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response),
         ),
         patch(
-            "wallbox.Wallbox.setIcpMaxCurrent",
+            "homeassistant.components.wallbox.Wallbox.setIcpMaxCurrent",
             new=Mock(return_value={CHARGER_MAX_ICP_CURRENT_KEY: 10}),
         ),
     ):
@@ -241,11 +249,11 @@ async def test_wallbox_number_class_icp_energy_auth_error(
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response),
         ),
         patch(
-            "wallbox.Wallbox.setIcpMaxCurrent",
+            "homeassistant.components.wallbox.Wallbox.setIcpMaxCurrent",
             new=Mock(side_effect=http_403_error),
         ),
         pytest.raises(InvalidAuth),
@@ -270,11 +278,11 @@ async def test_wallbox_number_class_icp_energy_connection_error(
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response),
         ),
         patch(
-            "wallbox.Wallbox.setIcpMaxCurrent",
+            "homeassistant.components.wallbox.Wallbox.setIcpMaxCurrent",
             new=Mock(side_effect=http_404_error),
         ),
         pytest.raises(ConnectionError),

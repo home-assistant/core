@@ -56,11 +56,11 @@ async def test_form_cannot_authenticate(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(side_effect=http_403_error),
         ),
         patch(
-            "wallbox.Wallbox.pauseChargingSession",
+            "homeassistant.components.wallbox.Wallbox.pauseChargingSession",
             new=Mock(side_effect=http_403_error),
         ),
     ):
@@ -85,11 +85,11 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(side_effect=http_404_error),
         ),
         patch(
-            "wallbox.Wallbox.pauseChargingSession",
+            "homeassistant.components.wallbox.Wallbox.pauseChargingSession",
             new=Mock(side_effect=http_404_error),
         ),
     ):
@@ -114,11 +114,11 @@ async def test_form_validate_input(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response),
         ),
         patch(
-            "wallbox.Wallbox.getChargerStatus",
+            "homeassistant.components.wallbox.Wallbox.getChargerStatus",
             new=Mock(return_value=test_response),
         ),
     ):
@@ -142,11 +142,11 @@ async def test_form_reauth(hass: HomeAssistant, entry: MockConfigEntry) -> None:
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response_unauthorised),
         ),
         patch(
-            "wallbox.Wallbox.getChargerStatus",
+            "homeassistant.components.wallbox.Wallbox.getChargerStatus",
             new=Mock(return_value=test_response),
         ),
     ):
@@ -175,11 +175,11 @@ async def test_form_reauth_invalid(hass: HomeAssistant, entry: MockConfigEntry) 
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response_unauthorised),
         ),
         patch(
-            "wallbox.Wallbox.getChargerStatus",
+            "homeassistant.components.wallbox.Wallbox.getChargerStatus",
             new=Mock(return_value=test_response),
         ),
     ):

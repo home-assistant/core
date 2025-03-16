@@ -52,11 +52,11 @@ async def test_wallbox_refresh_failed_connection_error_auth(
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(side_effect=http_403_error),
         ),
         patch(
-            "wallbox.Wallbox.pauseChargingSession",
+            "homeassistant.components.wallbox.Wallbox.pauseChargingSession",
             new=Mock(return_value=test_response),
         ),
     ):
@@ -78,11 +78,11 @@ async def test_wallbox_refresh_failed_invalid_auth(
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(side_effect=http_403_error),
         ),
         patch(
-            "wallbox.Wallbox.pauseChargingSession",
+            "homeassistant.components.wallbox.Wallbox.pauseChargingSession",
             new=Mock(side_effect=http_403_error),
         ),
     ):
@@ -104,11 +104,11 @@ async def test_wallbox_refresh_failed_connection_error(
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response),
         ),
         patch(
-            "wallbox.Wallbox.pauseChargingSession",
+            "homeassistant.components.wallbox.Wallbox.pauseChargingSession",
             new=Mock(side_effect=http_403_error),
         ),
     ):

@@ -28,15 +28,15 @@ async def test_wallbox_switch_class(
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response),
         ),
         patch(
-            "wallbox.Wallbox.pauseChargingSession",
+            "homeassistant.components.wallbox.Wallbox.pauseChargingSession",
             new=Mock(return_value={CHARGER_STATUS_ID_KEY: 193}),
         ),
         patch(
-            "wallbox.Wallbox.resumeChargingSession",
+            "homeassistant.components.wallbox.Wallbox.resumeChargingSession",
             new=Mock(return_value={CHARGER_STATUS_ID_KEY: 193}),
         ),
     ):
@@ -68,11 +68,11 @@ async def test_wallbox_switch_class_connection_error(
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response),
         ),
         patch(
-            "wallbox.Wallbox.resumeChargingSession",
+            "homeassistant.components.wallbox.Wallbox.resumeChargingSession",
             new=Mock(side_effect=ConnectionError),
         ),
         pytest.raises(ConnectionError),

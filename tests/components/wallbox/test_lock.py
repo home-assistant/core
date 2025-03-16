@@ -31,15 +31,15 @@ async def test_wallbox_lock_class(hass: HomeAssistant, entry: MockConfigEntry) -
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response),
         ),
         patch(
-            "wallbox.Wallbox.lockCharger",
+            "homeassistant.components.wallbox.Wallbox.lockCharger",
             new=Mock(return_value={CHARGER_LOCKED_UNLOCKED_KEY: False}),
         ),
         patch(
-            "wallbox.Wallbox.unlockCharger",
+            "homeassistant.components.wallbox.Wallbox.unlockCharger",
             new=Mock(return_value={CHARGER_LOCKED_UNLOCKED_KEY: False}),
         ),
     ):
@@ -71,11 +71,11 @@ async def test_wallbox_lock_class_connection_error(
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response),
         ),
         patch(
-            "wallbox.Wallbox.lockCharger",
+            "homeassistant.components.wallbox.Wallbox.lockCharger",
             new=Mock(side_effect=ConnectionError),
         ),
         pytest.raises(ConnectionError),
@@ -91,15 +91,15 @@ async def test_wallbox_lock_class_connection_error(
 
     with (
         patch(
-            "wallbox.Wallbox.authenticate",
+            "homeassistant.components.wallbox.Wallbox.authenticate",
             new=Mock(return_value=authorisation_response),
         ),
         patch(
-            "wallbox.Wallbox.lockCharger",
+            "homeassistant.components.wallbox.Wallbox.lockCharger",
             new=Mock(side_effect=ConnectionError),
         ),
         patch(
-            "wallbox.Wallbox.unlockCharger",
+            "homeassistant.components.wallbox.Wallbox.unlockCharger",
             new=Mock(side_effect=ConnectionError),
         ),
         pytest.raises(ConnectionError),
