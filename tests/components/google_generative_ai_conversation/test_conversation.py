@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
-from homeassistant.components.conversation import trace
+from homeassistant.components.conversation import UserContent, async_get_chat_log, trace
 from homeassistant.components.google_generative_ai_conversation.conversation import (
     _escape_decode,
     _format_schema,
@@ -18,7 +18,7 @@ from homeassistant.components.google_generative_ai_conversation.conversation imp
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import intent, llm
+from homeassistant.helpers import chat_session, intent, llm
 
 from . import CLIENT_ERROR_500
 
@@ -627,3 +627,37 @@ async def test_escape_decode() -> None:
 async def test_format_schema(openapi, genai_schema) -> None:
     """Test _format_schema."""
     assert _format_schema(openapi) == genai_schema
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_empty_content_in_chat_history(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Tests that in case of an empty entry in the chat history the google API will receive an injected space sign instead."""
+    with (
+        patch("google.genai.chats.AsyncChats.create") as mock_create,
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        mock_chat = AsyncMock()
+        mock_create.return_value.send_message = mock_chat
+
+        # Chat preparation with two inputs, one being an empty string
+        first_input = "First request"
+        second_input = ""
+        chat_log.async_add_user_content(UserContent(first_input))
+        chat_log.async_add_user_content(UserContent(second_input))
+
+        await conversation.async_converse(
+            hass,
+            "Second request",
+            session.conversation_id,
+            Context(),
+            agent_id="conversation.google_generative_ai_conversation",
+        )
+
+        _, kwargs = mock_create.call_args
+        actual_history = kwargs.get("history")
+
+        assert actual_history[0].parts[0].text == first_input
+        assert actual_history[1].parts[0].text == " "
