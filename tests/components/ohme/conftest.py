@@ -66,4 +66,6 @@ def mock_client():
             "model": "Home Pro",
             "sw_version": "v2.65",
         }
+        client.vehicles = ["Nissan Leaf", "Tesla Model 3"]
+        client.current_vehicle = "Nissan Leaf"
         yield client

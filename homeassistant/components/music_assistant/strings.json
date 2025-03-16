@@ -139,8 +139,8 @@
       }
     },
     "get_library": {
-      "name": "Get Library items",
-      "description": "Get items from a Music Assistant library.",
+      "name": "Get library items",
+      "description": "Retrieves items from a Music Assistant library.",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::music_assistant::services::search::fields::config_entry_id::name%]",
@@ -167,7 +167,7 @@
           "description": "Offset to start the list from."
         },
         "order_by": {
-          "name": "Order By",
+          "name": "Order by",
           "description": "Sort the list by this field."
         },
         "album_type": {
@@ -176,7 +176,7 @@
         },
         "album_artists_only": {
           "name": "Enable album artists filter (only for artist library)",
-          "description": "Only return Album Artists when listing the Artists library items."
+          "description": "Only return album artists when listing the artists library items."
         }
       }
     }
