@@ -451,7 +451,16 @@ async def test_assist_api_prompt(
         config_entry_id=entry.entry_id,
         connections={("test", "1234")},
         suggested_area="Test Area",
+        name="Living Room Device",
     )
+
+    # Create a device without area
+    device_no_area = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("test", "5678")},
+        name="No Area Device",
+    )
+
     area = area_registry.async_get_area_by_name("Test Area")
     area_registry.async_update(area.id, aliases=["Alternative name"])
     entry1 = entity_registry.async_get_or_create(
@@ -643,16 +652,29 @@ async def test_assist_api_prompt(
 {exposed_entities_prompt}"""
     )
 
+    # Test with device that has no area
+    llm_context.device_id = device_no_area.id
+    device_prompt = f"User is interacting with you via No Area Device."
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert api.api_prompt == (
+        f"""{first_part_prompt}
+{device_prompt}
+{area_prompt}
+{no_timer_prompt}
+{exposed_entities_prompt}"""
+    )
+
     # Fake that request is made from a specific device ID with an area
     llm_context.device_id = device.id
-    area_prompt = (
-        "You are in area Test Area and all generic commands like 'turn on the lights' "
-        "should target this area."
+    device_area_prompt = (
+        f"User is interacting with you via Living Room Device"
+        f" in area Test Area and all generic commands like 'turn on the lights' "
+        f"should target this area."
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
+{device_area_prompt}
 {no_timer_prompt}
 {exposed_entities_prompt}"""
     )
@@ -660,14 +682,15 @@ async def test_assist_api_prompt(
     # Add floor
     floor = floor_registry.async_create("2")
     area_registry.async_update(area.id, floor_id=floor.floor_id)
-    area_prompt = (
-        "You are in area Test Area (floor 2) and all generic commands like 'turn on the lights' "
-        "should target this area."
+    device_area_floor_prompt = (
+        f"User is interacting with you via Living Room Device"
+        f" in area Test Area (floor 2) and all generic commands like 'turn on the lights' "
+        f"should target this area."
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
+{device_area_floor_prompt}
 {no_timer_prompt}
 {exposed_entities_prompt}"""
     )
@@ -679,7 +702,27 @@ async def test_assist_api_prompt(
     # The no_timer_prompt is gone
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
+{device_area_floor_prompt}
+{exposed_entities_prompt}"""
+    )
+
+    # Test for an unspecified device but with area info (You are in...)
+    device_registry.async_remove_device(device.id)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("test", "1234-no-name")},
+        suggested_area="Test Area",
+    )
+    llm_context.device_id = device.id
+    no_name_area_floor_prompt = (
+        f"You are in area Test Area (floor 2) and all generic commands like 'turn on the lights' "
+        f"should target this area."
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert api.api_prompt == (
+        f"""{first_part_prompt}
+{no_name_area_floor_prompt}
+{no_timer_prompt}
 {exposed_entities_prompt}"""
     )
 
