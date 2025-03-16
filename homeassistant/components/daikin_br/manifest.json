@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/daikin_br",
   "iot_class": "local_polling",
   "loggers": ["pyiotdevice"],
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["pyiotdevice==1.0.12"],
   "zeroconf": ["_iota._tcp.local."]
 }
