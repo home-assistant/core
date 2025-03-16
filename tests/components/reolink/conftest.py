@@ -10,6 +10,7 @@ from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import (
+    CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
     CONF_USE_HTTPS,
     DOMAIN,
@@ -48,6 +49,7 @@ TEST_ITEM_NUMBER = "P000"
 TEST_CAM_MODEL = "RLC-123"
 TEST_DUO_MODEL = "Reolink Duo PoE"
 TEST_PRIVACY = True
+TEST_BC_PORT = 5678
 
 
 @pytest.fixture
@@ -136,6 +138,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         # Baichuan
         host_mock.baichuan = create_autospec(Baichuan)
         # Disable tcp push by default for tests
+        host_mock.baichuan.port = TEST_BC_PORT
         host_mock.baichuan.events_active = False
         host_mock.baichuan.privacy_mode.return_value = False
         host_mock.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
@@ -175,6 +178,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
+            CONF_BC_PORT: TEST_BC_PORT,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,

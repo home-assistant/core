@@ -454,6 +454,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_node_capabilities)
     websocket_api.async_register_command(hass, websocket_invoke_cc_api)
     websocket_api.async_register_command(hass, websocket_get_integration_settings)
+    websocket_api.async_register_command(hass, websocket_backup_nvm)
+    websocket_api.async_register_command(hass, websocket_restore_nvm)
     hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
 
 
@@ -2780,3 +2782,126 @@ def websocket_get_integration_settings(
             CONF_INSTALLER_MODE: hass.data[DOMAIN].get(CONF_INSTALLER_MODE, False),
         },
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/backup_nvm",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_backup_nvm(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Backup NVM data."""
+    controller = driver.controller
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def forward_progress(event: dict) -> None:
+        """Forward progress events to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "bytesRead": event["bytesRead"],
+                    "total": event["total"],
+                },
+            )
+        )
+
+    # Set up subscription for progress events
+    connection.subscriptions[msg["id"]] = async_cleanup
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
+        controller.on("nvm backup progress", forward_progress),
+    ]
+
+    result = await controller.async_backup_nvm_raw_base64()
+    # Send the finished event with the backup data
+    connection.send_message(
+        websocket_api.event_message(
+            msg[ID],
+            {
+                "event": "finished",
+                "data": result,
+            },
+        )
+    )
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/restore_nvm",
+        vol.Required(ENTRY_ID): str,
+        vol.Required("data"): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_restore_nvm(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Restore NVM data."""
+    controller = driver.controller
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def forward_progress(event: dict) -> None:
+        """Forward progress events to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "bytesRead": event.get("bytesRead"),
+                    "bytesWritten": event.get("bytesWritten"),
+                    "total": event["total"],
+                },
+            )
+        )
+
+    # Set up subscription for progress events
+    connection.subscriptions[msg["id"]] = async_cleanup
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
+        controller.on("nvm convert progress", forward_progress),
+        controller.on("nvm restore progress", forward_progress),
+    ]
+
+    await controller.async_restore_nvm_base64(msg["data"])
+    connection.send_message(
+        websocket_api.event_message(
+            msg[ID],
+            {
+                "event": "finished",
+            },
+        )
+    )
+    connection.send_result(msg[ID])
