@@ -6,6 +6,8 @@ from typing import Any
 from roborock.code_mappings import RoborockStateCode
 from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import RoborockCommand
+from vacuum_map_parser_base.image_generator import ColorsPalette, ImageConfig, Sizes
+from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -26,7 +28,6 @@ from .const import (
 )
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
-from .image import ColorsPalette, ImageConfig, RoborockMapDataParser, Sizes
 
 STATE_CODE_TO_STATE = {
     RoborockStateCode.starting: VacuumActivity.IDLE,  # "Starting"

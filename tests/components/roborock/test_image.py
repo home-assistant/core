@@ -62,10 +62,11 @@ async def test_floorplan_image(
             return_value=prop,
         ),
         patch(
-            "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
         ),
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=new_map_data,
         ) as parse_map,
     ):
@@ -94,7 +95,7 @@ async def test_floorplan_image_failed_parse(
     # Update image, but get none for parse image.
     with (
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=map_data,
         ),
         patch(
@@ -102,7 +103,8 @@ async def test_floorplan_image_failed_parse(
             return_value=prop,
         ),
         patch(
-            "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
         ),
     ):
         async_fire_time_changed(hass, now)
@@ -148,7 +150,7 @@ async def test_fail_to_load_image(
     """Test that we gracefully handle failing to load an image."""
     with (
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
         ) as parse_map,
         patch(
             "homeassistant.components.roborock.roborock_storage.Path.exists",
@@ -178,7 +180,7 @@ async def test_fail_parse_on_startup(
     map_data = copy.deepcopy(MAP_DATA)
     map_data.image = None
     with patch(
-        "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+        "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
         return_value=map_data,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -226,7 +228,7 @@ async def test_fail_updating_image(
     # Update image, but get none for parse image.
     with (
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=map_data,
         ),
         patch(
@@ -234,7 +236,8 @@ async def test_fail_updating_image(
             return_value=prop,
         ),
         patch(
-            "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
         ),
         patch(
             "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",

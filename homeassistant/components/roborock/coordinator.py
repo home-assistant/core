@@ -123,7 +123,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         self._api_client = api_client
         self.map_data: dict[int, MapData] = {}
         self.map_updates: dict[int, datetime] = {}
-        self._map_last_status: dict[int, int] = {}
         self._parser = parser
 
     async def update_map(self, bump_time: bool = True) -> None:
@@ -152,9 +151,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         self.map_data[self.current_map] = parsed_map
         if bump_time:
             self.map_updates[self.current_map] = dt_util.utcnow()
-        self._map_last_status[self.current_map] = (
-            self.roborock_device_info.props.status.state
-        )
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -225,9 +221,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 )
                 > IMAGE_CACHE_INTERVAL
                 # Or, if the vacuums status has changed since the last map update, update the map.
-            ) or self._map_last_status.get(
-                self.current_map
-            ) != self.roborock_device_info.props.status.state:
+            ):
                 await self.update_map()
             else:
                 await self.set_current_map_rooms()
