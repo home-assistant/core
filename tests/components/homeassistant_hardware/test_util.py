@@ -2,6 +2,10 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+from universal_silabs_flasher.common import Version as FlasherVersion
+from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
+
 from homeassistant.components.hassio import (
     AddonError,
     AddonInfo,
@@ -18,6 +22,8 @@ from homeassistant.components.homeassistant_hardware.util import (
     OwningIntegration,
     get_otbr_addon_firmware_info,
     guess_firmware_info,
+    probe_silabs_firmware_info,
+    probe_silabs_firmware_type,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -199,6 +205,93 @@ async def test_owning_addon(hass: HomeAssistant) -> None:
         assert (await owning_addon.is_running(hass)) is False
 
 
+async def test_owning_addon_temporarily_stop_info_error(hass: HomeAssistant) -> None:
+    """Test `OwningAddon` temporarily stopping with an info error."""
+
+    owning_addon = OwningAddon(slug="some-addon-slug")
+    mock_manager = AsyncMock()
+    mock_manager.async_get_addon_info.side_effect = AddonError()
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.util.WaitingAddonManager",
+        return_value=mock_manager,
+    ):
+        async with owning_addon.temporarily_stop(hass):
+            pass
+
+    # We never restart it
+    assert len(mock_manager.async_get_addon_info.mock_calls) == 1
+    assert len(mock_manager.async_stop_addon.mock_calls) == 0
+    assert len(mock_manager.async_wait_until_addon_state.mock_calls) == 0
+    assert len(mock_manager.async_start_addon_waiting.mock_calls) == 0
+
+
+async def test_owning_addon_temporarily_stop_not_running(hass: HomeAssistant) -> None:
+    """Test `OwningAddon` temporarily stopping when the addon is not running."""
+
+    owning_addon = OwningAddon(slug="some-addon-slug")
+
+    mock_manager = AsyncMock()
+    mock_manager.async_get_addon_info.return_value = AddonInfo(
+        available=True,
+        hostname="core_some_addon_slug",
+        options={},
+        state=AddonState.NOT_RUNNING,
+        update_available=False,
+        version="1.0.0",
+    )
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.util.WaitingAddonManager",
+        return_value=mock_manager,
+    ):
+        async with owning_addon.temporarily_stop(hass):
+            pass
+
+    # We never restart it
+    assert len(mock_manager.async_get_addon_info.mock_calls) == 1
+    assert len(mock_manager.async_stop_addon.mock_calls) == 0
+    assert len(mock_manager.async_wait_until_addon_state.mock_calls) == 0
+    assert len(mock_manager.async_start_addon_waiting.mock_calls) == 0
+
+
+async def test_owning_addon_temporarily_stop(hass: HomeAssistant) -> None:
+    """Test `OwningAddon` temporarily stopping when the addon is running."""
+
+    owning_addon = OwningAddon(slug="some-addon-slug")
+
+    mock_manager = AsyncMock()
+    mock_manager.async_get_addon_info.return_value = AddonInfo(
+        available=True,
+        hostname="core_some_addon_slug",
+        options={},
+        state=AddonState.RUNNING,
+        update_available=False,
+        version="1.0.0",
+    )
+
+    mock_manager.async_stop_addon = AsyncMock()
+    mock_manager.async_wait_until_addon_state = AsyncMock()
+    mock_manager.async_start_addon_waiting = AsyncMock()
+
+    # The error is propagated but it doesn't affect restarting the addon
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.WaitingAddonManager",
+            return_value=mock_manager,
+        ),
+        pytest.raises(RuntimeError),
+    ):
+        async with owning_addon.temporarily_stop(hass):
+            raise RuntimeError("Some error")
+
+    # We restart it
+    assert len(mock_manager.async_get_addon_info.mock_calls) == 1
+    assert len(mock_manager.async_stop_addon.mock_calls) == 1
+    assert len(mock_manager.async_wait_until_addon_state.mock_calls) == 1
+    assert len(mock_manager.async_start_addon_waiting.mock_calls) == 1
+
+
 async def test_owning_integration(hass: HomeAssistant) -> None:
     """Test `OwningIntegration`."""
     config_entry = MockConfigEntry(domain="mock_domain", unique_id="some_unique_id")
@@ -217,6 +310,67 @@ async def test_owning_integration(hass: HomeAssistant) -> None:
     # Missing config entry
     owning_integration2 = OwningIntegration(config_entry_id="some_nonexistenct_id")
     assert (await owning_integration2.is_running(hass)) is False
+
+
+async def test_owning_integration_temporarily_stop_missing_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test temporarily stopping the integration when the config entry doesn't exist."""
+    missing_integration = OwningIntegration(config_entry_id="missing_entry_id")
+
+    with (
+        patch.object(hass.config_entries, "async_unload") as mock_unload,
+        patch.object(hass.config_entries, "async_setup") as mock_setup,
+    ):
+        async with missing_integration.temporarily_stop(hass):
+            pass
+
+    # Because there's no matching entry, no unload or setup calls are made
+    assert len(mock_unload.mock_calls) == 0
+    assert len(mock_setup.mock_calls) == 0
+
+
+async def test_owning_integration_temporarily_stop_not_loaded(
+    hass: HomeAssistant,
+) -> None:
+    """Test temporarily stopping the integration when the config entry is not loaded."""
+    entry = MockConfigEntry(domain="test_domain")
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, ConfigEntryState.NOT_LOADED)
+
+    integration = OwningIntegration(config_entry_id=entry.entry_id)
+
+    with (
+        patch.object(hass.config_entries, "async_unload") as mock_unload,
+        patch.object(hass.config_entries, "async_setup") as mock_setup,
+    ):
+        async with integration.temporarily_stop(hass):
+            pass
+
+    # Since the entry was not loaded, we never unload or re-setup
+    assert len(mock_unload.mock_calls) == 0
+    assert len(mock_setup.mock_calls) == 0
+
+
+async def test_owning_integration_temporarily_stop_loaded(hass: HomeAssistant) -> None:
+    """Test temporarily stopping the integration when the config entry is loaded."""
+    entry = MockConfigEntry(domain="test_domain")
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, ConfigEntryState.LOADED)
+
+    integration = OwningIntegration(config_entry_id=entry.entry_id)
+
+    with (
+        patch.object(hass.config_entries, "async_unload") as mock_unload,
+        patch.object(hass.config_entries, "async_setup") as mock_setup,
+        pytest.raises(RuntimeError),
+    ):
+        async with integration.temporarily_stop(hass):
+            raise RuntimeError("Some error during the temporary stop")
+
+    # We expect one unload followed by one setup call
+    mock_unload.assert_called_once_with(entry.entry_id)
+    mock_setup.assert_called_once_with(entry.entry_id)
 
 
 async def test_firmware_info(hass: HomeAssistant) -> None:
@@ -280,3 +434,95 @@ async def test_get_otbr_addon_firmware_info_failure_bad_options(
     )
 
     assert (await get_otbr_addon_firmware_info(hass, otbr_addon_manager)) is None
+
+
+@pytest.mark.parametrize(
+    ("app_type", "firmware_version", "expected_fw_info"),
+    [
+        (
+            FlasherApplicationType.EZSP,
+            FlasherVersion("1.0.0"),
+            FirmwareInfo(
+                device="/dev/ttyUSB0",
+                firmware_type=ApplicationType.EZSP,
+                firmware_version="1.0.0",
+                source="probe",
+                owners=[],
+            ),
+        ),
+        (
+            FlasherApplicationType.EZSP,
+            None,
+            FirmwareInfo(
+                device="/dev/ttyUSB0",
+                firmware_type=ApplicationType.EZSP,
+                firmware_version=None,
+                source="probe",
+                owners=[],
+            ),
+        ),
+        (
+            FlasherApplicationType.SPINEL,
+            FlasherVersion("2.0.0"),
+            FirmwareInfo(
+                device="/dev/ttyUSB0",
+                firmware_type=ApplicationType.SPINEL,
+                firmware_version="2.0.0",
+                source="probe",
+                owners=[],
+            ),
+        ),
+        (None, None, None),
+    ],
+)
+async def test_probe_silabs_firmware_info(
+    app_type: FlasherApplicationType | None,
+    firmware_version: FlasherVersion | None,
+    expected_fw_info: FirmwareInfo | None,
+) -> None:
+    """Test getting the firmware info."""
+
+    def probe_app_type() -> None:
+        mock_flasher.app_type = app_type
+        mock_flasher.app_version = firmware_version
+
+    mock_flasher = MagicMock()
+    mock_flasher.app_type = None
+    mock_flasher.app_version = None
+    mock_flasher.probe_app_type = AsyncMock(side_effect=probe_app_type)
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.util.Flasher",
+        return_value=mock_flasher,
+    ):
+        result = await probe_silabs_firmware_info("/dev/ttyUSB0")
+        assert result == expected_fw_info
+
+
+@pytest.mark.parametrize(
+    ("probe_result", "expected"),
+    [
+        (
+            FirmwareInfo(
+                device="/dev/ttyUSB0",
+                firmware_type=ApplicationType.EZSP,
+                firmware_version=None,
+                source="unknown",
+                owners=[],
+            ),
+            ApplicationType.EZSP,
+        ),
+        (None, None),
+    ],
+)
+async def test_probe_silabs_firmware_type(
+    probe_result: FirmwareInfo | None, expected: ApplicationType | None
+) -> None:
+    """Test getting the firmware type from the probe result."""
+    with patch(
+        "homeassistant.components.homeassistant_hardware.util.probe_silabs_firmware_info",
+        autospec=True,
+        return_value=probe_result,
+    ):
+        result = await probe_silabs_firmware_type("/dev/ttyUSB0")
+        assert result == expected

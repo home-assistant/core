@@ -33,10 +33,10 @@
         "name": "Upload speed limit"
       },
       "alltime_download": {
-        "name": "Alltime download"
+        "name": "All-time download"
       },
       "alltime_upload": {
-        "name": "Alltime upload"
+        "name": "All-time upload"
       },
       "global_ratio": {
         "name": "Global ratio"
@@ -115,7 +115,7 @@
       "message": "No entry with ID {device_id} was found"
     },
     "login_error": {
-      "message": "A login error occured. Please check your username and password."
+      "message": "A login error occurred. Please check your username and password."
     },
     "cannot_connect": {
       "message": "Can't connect to qBittorrent, please check your configuration."

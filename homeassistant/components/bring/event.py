@@ -77,9 +77,12 @@ class BringEventEntity(BringBaseEntity, EventEntity):
             attributes = asdict(activity.content)
 
             attributes["last_activity_by"] = next(
-                x.name
-                for x in bring_list.users.users
-                if x.publicUuid == activity.content.publicUserUuid
+                (
+                    x.name
+                    for x in bring_list.users.users
+                    if x.publicUuid == activity.content.publicUserUuid
+                ),
+                None,
             )
 
             self._trigger_event(

@@ -3,7 +3,7 @@
 import logging
 from typing import Any, cast
 
-from aiohomeconnect.model import EventKey, ProgramKey, SettingKey
+from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
 from aiohomeconnect.model.program import EnumerateProgram
 
@@ -37,11 +37,12 @@ from .coordinator import (
     HomeConnectConfigEntry,
     HomeConnectCoordinator,
 )
-from .entity import HomeConnectEntity
+from .entity import HomeConnectEntity, HomeConnectOptionEntity
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
 
 SWITCHES = (
     SwitchEntityDescription(
@@ -100,6 +101,61 @@ POWER_SWITCH_DESCRIPTION = SwitchEntityDescription(
     translation_key="power",
 )
 
+SWITCH_OPTIONS = (
+    SwitchEntityDescription(
+        key=OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_MULTIPLE_BEVERAGES,
+        translation_key="multiple_beverages",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_INTENSIV_ZONE,
+        translation_key="intensiv_zone",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_BRILLIANCE_DRY,
+        translation_key="brilliance_dry",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_VARIO_SPEED_PLUS,
+        translation_key="vario_speed_plus",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND,
+        translation_key="silence_on_demand",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+        translation_key="half_load",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_EXTRA_DRY,
+        translation_key="extra_dry",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_HYGIENE_PLUS,
+        translation_key="hygiene_plus",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_ECO_DRY,
+        translation_key="eco_dry",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_ZEOLITE_DRY,
+        translation_key="zeolite_dry",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.COOKING_OVEN_FAST_PRE_HEAT,
+        translation_key="fast_pre_heat",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE,
+        translation_key="i_dos1_active",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_I_DOS_2_ACTIVE,
+        translation_key="i_dos2_active",
+    ),
+)
+
 
 def _get_entities_for_appliance(
     entry: HomeConnectConfigEntry,
@@ -123,8 +179,19 @@ def _get_entities_for_appliance(
         for description in SWITCHES
         if description.key in appliance.settings
     )
-
     return entities
+
+
+def _get_option_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectOptionEntity]:
+    """Get a list of currently available option entities."""
+    return [
+        HomeConnectSwitchOptionEntity(entry.runtime_data, appliance, description)
+        for description in SWITCH_OPTIONS
+        if description.key in appliance.options
+    ]
 
 
 async def async_setup_entry(
@@ -137,6 +204,7 @@ async def async_setup_entry(
         entry,
         _get_entities_for_appliance,
         async_add_entities,
+        _get_option_entities_for_appliance,
     )
 
 
@@ -403,3 +471,19 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             self.power_off_state = BSH_POWER_STANDBY
         else:
             self.power_off_state = None
+
+
+class HomeConnectSwitchOptionEntity(HomeConnectOptionEntity, SwitchEntity):
+    """Switch option class for Home Connect."""
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the option."""
+        await self.async_set_option(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the option."""
+        await self.async_set_option(False)
+
+    def update_native_value(self) -> None:
+        """Set the value of the entity."""
+        self._attr_is_on = cast(bool | None, self.option_value)

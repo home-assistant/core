@@ -27,6 +27,8 @@ from .coordinator import (
     ElectricKiwiHOPDataCoordinator,
 )
 
+PARALLEL_UPDATES = 0
+
 ATTR_EK_HOP_START = "hop_power_start"
 ATTR_EK_HOP_END = "hop_power_end"
 ATTR_TOTAL_RUNNING_BALANCE = "total_running_balance"
