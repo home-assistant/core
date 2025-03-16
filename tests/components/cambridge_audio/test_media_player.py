@@ -499,6 +499,8 @@ async def test_play_media_unknown_type(
         ("USB_AUDIO", "Iron Maiden", "Radio BOB!", "Iron Maiden"),
         ("IR", "In Flames", "Radio BOB!", "In Flames"),
         ("IR", None, "Radio BOB!", "Radio BOB!"),
+        ("IR", None, None, None),
+        ("MEDIA_PLAYER", None, "Radio BOB!", None),
     ],
 )
 async def test_media_artist(
@@ -520,4 +522,9 @@ async def test_media_artist(
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_MEDIA_ARTIST] == display
+    if (artist is None and source_id != "IR") or (
+        source_id == "IR" and station is None
+    ):
+        assert ATTR_MEDIA_ARTIST not in state.attributes
+    else:
+        assert state.attributes[ATTR_MEDIA_ARTIST] == display
