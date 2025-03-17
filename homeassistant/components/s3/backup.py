@@ -1,9 +1,10 @@
 """Backup platform for the S3 integration."""
 
 from collections.abc import AsyncGenerator, AsyncIterator, Callable, Coroutine
+import functools
 import json
 import logging
-from typing import Any
+from typing import Any, TypeVar, cast
 
 from botocore.exceptions import BotoCoreError
 
@@ -11,6 +12,7 @@ from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
     BackupAgentError,
+    BackupNotFound,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -20,6 +22,26 @@ from .const import CONF_BUCKET, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 METADATA_VERSION = "1"
+
+# Type variable for the decorator return type
+T = TypeVar("T")
+
+
+def handle_boto_errors(
+    func: Callable[..., Coroutine[Any, Any, T]],
+) -> Callable[..., Coroutine[Any, Any, T]]:
+    """Handle BotoCoreError exceptions by converting them to BackupAgentError."""
+
+    @functools.wraps(func)
+    async def wrapper(*args: Any, **kwargs: Any) -> T:
+        """Catch BotoCoreError and raise BackupAgentError."""
+        try:
+            return await func(*args, **kwargs)
+        except BotoCoreError as err:
+            error_msg = f"Failed during {func.__name__}"
+            raise BackupAgentError(error_msg) from err
+
+    return wrapper
 
 
 async def async_get_backup_agents(
@@ -77,8 +99,9 @@ class S3BackupAgent(BackupAgent):
         self._client = entry.runtime_data
         self._bucket: str = entry.data[CONF_BUCKET]
         self.name = entry.title
-        self.unique_id = entry.entry_id
+        self.unique_id = cast(str, entry.unique_id)
 
+    @handle_boto_errors
     async def async_download_backup(
         self,
         backup_id: str,
@@ -111,6 +134,7 @@ class S3BackupAgent(BackupAgent):
             "backup_metadata": backup.as_dict(),
         }
 
+        upload_id = None
         try:
             multipart_upload = await self._client.create_multipart_upload(
                 Bucket=self._bucket,
@@ -141,17 +165,18 @@ class S3BackupAgent(BackupAgent):
                 MultipartUpload={"Parts": parts},
             )
         except BotoCoreError as err:
-            _LOGGER.exception("Failed to upload backup")
-            try:
-                await self._client.abort_multipart_upload(
-                    Bucket=self._bucket,
-                    Key=key,
-                    UploadId=upload_id,
-                )
-            except BotoCoreError:
-                _LOGGER.exception("Failed to abort multipart upload")
-            raise BackupAgentError from err
+            if upload_id:
+                try:
+                    await self._client.abort_multipart_upload(
+                        Bucket=self._bucket,
+                        Key=key,
+                        UploadId=upload_id,
+                    )
+                except BotoCoreError:
+                    _LOGGER.exception("Failed to abort multipart upload")
+            raise BackupAgentError("Failed to upload backup") from err
 
+    @handle_boto_errors
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -161,26 +186,21 @@ class S3BackupAgent(BackupAgent):
 
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
-        try:
-            _, obj = await self._get_backup(backup_id)
-        except ValueError:
-            return
+        _, obj = await self._get_backup(backup_id)
         await self._client.delete_object(Bucket=self._bucket, Key=obj["Key"])
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         return [backup async for backup, _ in self._list_backups()]
 
+    @handle_boto_errors
     async def async_get_backup(
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup | None:
+    ) -> AgentBackup:
         """Return a backup."""
-        try:
-            backup, _ = await self._get_backup(backup_id)
-        except ValueError:
-            return None
+        backup, _ = await self._get_backup(backup_id)
         return backup
 
     async def _get_backup(self, backup_id: str) -> tuple[AgentBackup, dict]:
@@ -188,7 +208,7 @@ class S3BackupAgent(BackupAgent):
         try:
             backup, obj = await anext(self._list_backups(backup_id))
         except StopAsyncIteration:
-            raise ValueError(f"Backup with ID {backup_id} not found") from None
+            raise BackupNotFound(f"Backup {backup_id} not found") from None
         _LOGGER.debug("Found matching object %s", obj["Key"])
         return backup, obj
 
