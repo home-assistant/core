@@ -272,7 +272,8 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url.
 
-        If you want to override this method, calling super is mandatory (for adding scopes):
+        If you want to override this method,
+        calling super is mandatory (for adding scopes):
         ```
         @def extra_authorize_data(self) -> dict:
             data: dict = {
@@ -293,7 +294,8 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
     def extra_token_resolve_data(self) -> dict:
         """Extra data that needs to be included in the token resolve request.
 
-        If you want to override this method, calling super is mandatory (for adding `someKey`):
+        If you want to override this method,
+        calling super is mandatory (for adding `someKey`):
         ```
         @def extra_token_resolve_data(self) -> dict:
             data: dict = {
@@ -310,7 +312,10 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
     def generate_code_verifier(code_verifier_length: int = 128) -> str:
         """Generate a code verifier."""
         if not 43 <= code_verifier_length <= 128:
-            msg = "Parameter `code_verifier_length` must verify `43 <= code_verifier_length <= 128`."
+            msg = (
+                "Parameter `code_verifier_length` must validate"
+                "`43 <= code_verifier_length <= 128`."
+            )
             raise ValueError(msg)
         return secrets.token_urlsafe(96)[:code_verifier_length]
 
@@ -318,7 +323,10 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
     def compute_code_challenge(code_verifier: str) -> str:
         """Compute the code challenge."""
         if not 43 <= len(code_verifier) <= 128:
-            msg = "Parameter `code_verifier` must verify `43 <= len(code_verifier) <= 128`."
+            msg = (
+                "Parameter `code_verifier` must validate "
+                "`43 <= len(code_verifier) <= 128`."
+            )
             raise ValueError(msg)
 
         hashed = hashlib.sha256(code_verifier.encode("ascii")).digest()
