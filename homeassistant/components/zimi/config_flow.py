@@ -80,7 +80,13 @@ class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             api_description = await ControlPointDiscoveryService().discover()
         except ControlPointError as _:
-            errors["base"] = ZimiConfigException.DISCOVERY_FAILURE
+            _LOGGER.error("ZCC Discovery failed - falling back to manual configuration")
+            return self.async_show_form(
+                step_id="finish",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_USER_DATA_SCHEMA, data
+                ),
+            )
 
         if api_description:
             data[CONF_HOST] = api_description.host
