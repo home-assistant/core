@@ -149,12 +149,25 @@ class ReolinkHost:
     async def async_init(self) -> None:
         """Connect to Reolink host."""
         if not self._api.valid_password():
+            if len(self._config[CONF_PASSWORD]) >= 32:
+                ir.async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    "password_too_long",
+                    is_fixable=True,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="password_too_long",
+                    translation_placeholders={"name": self._api.camera_name(ch)},
+                )
+
             raise PasswordIncompatible(
                 "Reolink password contains incompatible special character or "
                 "is too long, please change the password to only contain characters: "
                 f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS} "
                 "and not be longer than 31 characters"
             )
+
+        ir.async_delete_issue(self._hass, DOMAIN, "password_too_long")
 
         store: Store[str] | None = None
         if self._config_entry_id is not None:

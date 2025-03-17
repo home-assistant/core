@@ -127,6 +127,10 @@
     "hub_switch_deprecated": {
       "title": "Reolink Home Hub switches deprecated",
       "description": "The redundant 'Record', 'Email on event', 'FTP upload', 'Push notifications', and 'Buzzer on event' switches on the Reolink Home Hub are deprecated since the new firmware no longer supports these. Please use the equally named switches under each of the camera devices connected to the Home Hub instead. To remove this issue, please adjust automations accordingly and disable the switch entities mentioned."
+    },
+    "password_too_long": {
+      "title": "Reolink password too long",
+      "description": "The password for \"{name}\" is more than 31 characters long, this is no longer compatible with the Reolink API. Please change the password using the Reolink app/client to a password with is shorter than 32 characters. After changing the password, fill in the new password in the Reolink Re-authentication flow to continue using this integration. The latest version of the Reolink app/client also has a password limit of 31 characters."
     }
   },
   "services": {
