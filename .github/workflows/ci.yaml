@@ -37,7 +37,7 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 11
+  CACHE_VERSION: 12
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 9
   HA_SHORT_VERSION: "2025.4"
@@ -197,7 +197,9 @@ jobs:
           if [[ "${{ github.event.inputs.lint-only }}" == "true" ]] \
             || [[ "${{ github.event.inputs.pylint-only }}" == "true" ]] \
             || [[ "${{ github.event.inputs.mypy-only }}" == "true" ]] \
-            || [[ "${{ github.event.inputs.audit-licenses-only }}" == "true" ]];
+            || [[ "${{ github.event.inputs.audit-licenses-only }}" == "true" ]] \
+            || [[ "${{ github.event_name }}" == "push" \
+              && "${{ github.event.repository.full_name }}" != "home-assistant/core" ]];
           then
             lint_only="true"
             skip_coverage="true"
@@ -636,6 +638,25 @@ jobs:
           . venv/bin/activate
           python -m script.gen_requirements_all validate
 
+  dependency-review:
+    name: Dependency review
+    runs-on: ubuntu-24.04
+    needs:
+      - info
+      - base
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && needs.info.outputs.requirements == 'true'
+      && github.event_name == 'pull_request'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.2.2
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4.5.0
+        with:
+          license-check: false # We use our own license audit checks
+
   audit-licenses:
     name: Audit licenses
     runs-on: ubuntu-24.04
@@ -842,8 +863,7 @@ jobs:
   prepare-pytest-full:
     runs-on: ubuntu-24.04
     if: |
-      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
-      && needs.info.outputs.lint_only != 'true'
+      needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
@@ -896,8 +916,7 @@ jobs:
   pytest-full:
     runs-on: ubuntu-24.04
     if: |
-      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
-      && needs.info.outputs.lint_only != 'true'
+      needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
@@ -1023,8 +1042,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: password
         options: --health-cmd="mysqladmin ping -uroot -ppassword" --health-interval=5s --health-timeout=2s --health-retries=3
     if: |
-      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
-      && needs.info.outputs.lint_only != 'true'
+      needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.mariadb_groups != '[]'
     needs:
       - info
@@ -1156,8 +1174,7 @@ jobs:
           POSTGRES_PASSWORD: password
         options: --health-cmd="pg_isready -hlocalhost -Upostgres" --health-interval=5s --health-timeout=2s --health-retries=3
     if: |
-      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
-      && needs.info.outputs.lint_only != 'true'
+      needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.postgresql_groups != '[]'
     needs:
       - info
@@ -1309,8 +1326,7 @@ jobs:
   pytest-partial:
     runs-on: ubuntu-24.04
     if: |
-      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
-      && needs.info.outputs.lint_only != 'true'
+      needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.tests_glob
       && needs.info.outputs.test_full_suite == 'false'
     needs:
