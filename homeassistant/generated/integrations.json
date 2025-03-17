@@ -3999,6 +3999,12 @@
           "config_flow": true,
           "iot_class": "assumed_state",
           "name": "Motionblinds Bluetooth"
+        },
+        "motionblinds_matter": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "matter",
+          "name": "Motionblinds Matter"
         }
       }
     },
