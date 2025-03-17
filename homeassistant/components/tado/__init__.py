@@ -65,25 +65,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
     _async_import_options_from_data_if_missing(hass, entry)
 
     _LOGGER.debug("Setting up Tado connection")
+    _LOGGER.debug(
+        "Creating tado instance with refresh token: %s",
+        entry.data[CONF_REFRESH_TOKEN],
+    )
+
+    def create_tado_instance() -> tuple[Tado, str]:
+        tado = Tado(saved_refresh_token=entry.data[CONF_REFRESH_TOKEN])
+        return tado, tado.device_activation_status()
+
     try:
-        _LOGGER.debug(
-            "Creating tado instance with refresh token: %s",
-            entry.data[CONF_REFRESH_TOKEN],
-        )
-        tado = await hass.async_add_executor_job(
-            Tado, None, entry.data[CONF_REFRESH_TOKEN]
-        )
-        device_status = await hass.async_add_executor_job(tado.device_activation_status)
-
-        if device_status != "COMPLETED":
-            raise ConfigEntryAuthFailed(
-                f"Device loginf flow status is {device_status}. Starting re-authentication."
-            )
-
+        tado, device_status = await hass.async_add_executor_job(create_tado_instance)
     except PyTado.exceptions.TadoWrongCredentialsException as err:
         raise ConfigEntryError(f"Invalid Tado credentials. Error: {err}") from err
     except PyTado.exceptions.TadoException as err:
         raise ConfigEntryNotReady(f"Error during Tado setup: {err}") from err
+    if device_status != "COMPLETED":
+        raise ConfigEntryAuthFailed(
+            f"Device login flow status is {device_status}. Starting re-authentication."
+        )
+
     _LOGGER.debug("Tado connection established")
 
     coordinator = TadoDataUpdateCoordinator(hass, entry, tado)
