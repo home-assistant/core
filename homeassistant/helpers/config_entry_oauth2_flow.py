@@ -170,7 +170,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
 
     @property
     def extra_token_resolve_data(self) -> dict:
-        """Extra data that needs to be included in the token resolve request, after getting the code."""
+        """Extra data for the token resolve request."""
         return {}
 
     async def async_generate_authorize_url(self, flow_id: str) -> str:
