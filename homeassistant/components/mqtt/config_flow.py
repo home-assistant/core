@@ -1185,16 +1185,19 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             assert self._component_id is not None
         component = self._subentry_data["components"][self._component_id]
         platform = component[CONF_PLATFORM]
-        if not (data_schema_fields := PLATFORM_ENTITY_FIELDS[platform]):
-            return await self.async_step_mqtt_platform_config()
+        data_schema_fields = PLATFORM_ENTITY_FIELDS[platform]
         errors: dict[str, str] = {}
 
         data_schema = data_schema_from_fields(
             data_schema_fields,
-            reconfig=True,
+            reconfig=bool(
+                {field for field in data_schema_fields if field in component}
+            ),
             component=component,
             user_input=user_input,
         )
+        if not data_schema.schema:
+            return await self.async_step_mqtt_platform_config()
         if user_input is not None:
             # Test entity fields against the validator
             self.reset_if_empty(user_input)
@@ -1235,10 +1238,15 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
         if TYPE_CHECKING:
             assert self._component_id is not None
-        platform = self._subentry_data["components"][self._component_id][CONF_PLATFORM]
+        component = self._subentry_data["components"][self._component_id]
+        platform = component[CONF_PLATFORM]
         data_schema_fields = PLATFORM_MQTT_FIELDS[platform] | COMMON_MQTT_FIELDS
         data_schema = data_schema_from_fields(
-            data_schema_fields, reconfig=self._component_id is not None
+            data_schema_fields,
+            reconfig=bool(
+                {field for field in data_schema_fields if field in component}
+            ),
+            component=component,
         )
         if user_input is not None:
             # Test entity fields against the validator
