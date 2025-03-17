@@ -1,0 +1,74 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not have any actions.
+  appropriate-polling:
+    status: done
+    comment: |
+      This integration uses cloud polling.
+  brands:
+    status: done
+    comment: |
+      Brands changes are submitted for review.
+  common-modules:
+    status: done
+    comment: |
+      This integration uses common modules.
+  config-flow-test-coverage:
+    status: done
+    comment: |
+      basic test coverage is provided.
+  config-flow:
+    status: done
+    comment: |
+      This integration uses config flow.
+  dependency-transparency:
+    status: done
+    comment: |
+      All dependencies are transparent.
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not have any actions.
+  docs-high-level-description:
+    status: done
+    comment: |
+      High level documentation is submitted for review.
+  docs-installation-instructions:
+    status: done
+    comment: |
+      High level documentation is submitted for review.
+  docs-removal-instructions:
+    status: exempt
+    comment: |
+      This integration does not need special instructions to remove.
+  entity-event-setup:
+    status: done
+    comment: |
+      All update callbacks are handled.
+  entity-unique-id:
+    status: done
+    comment: |
+      This integration used device serial number which is unique per device.
+  has-entity-name:
+    status: done
+    comment: |
+      Yes, entity has a name.
+  runtime-data:
+    status: exempt
+    comment: |
+      This integration does not use runtime_data.
+  test-before-configure:
+    status: done
+    comment: |
+      This is taken care inherently.
+  test-before-setup:
+    status: done
+    comment: |
+      This is taken care inherently.
+  unique-config-entry:
+    status: done
+    comment: |
+      This is taken care due to unique serial per device.

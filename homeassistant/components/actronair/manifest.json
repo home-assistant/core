@@ -5,9 +5,7 @@
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/actronair",
-  "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": [],
-  "ssdp": [],
-  "zeroconf": []
+  "quality_scale": "bronze",
+  "requirements": ["actronair-api==0.1.3"]
 }

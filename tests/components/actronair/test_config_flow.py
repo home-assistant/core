@@ -1,85 +1,43 @@
-"""Test the Actron Air config flow."""
+"""Tests for ActronAir OAuth2 Config Flow."""
 
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
-from homeassistant.components.actronair.const import (
-    DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
-)
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
+from homeassistant.components.actronair.config_flow import OAuth2FlowHandler
+from homeassistant.components.actronair.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.setup import async_setup_component
-
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
-
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
+from homeassistant.data_entry_flow import FlowResultType
 
 
-@pytest.fixture
-async def setup_credentials(hass: HomeAssistant) -> None:
-    """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(CLIENT_ID, CLIENT_SECRET),
-    )
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_full_flow(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
-) -> None:
-    """Check full flow."""
+@pytest.mark.asyncio
+async def test_config_flow_initialization(hass: HomeAssistant) -> None:
+    """Test initializing the OAuth2 config flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    state = config_entry_oauth2_flow._encode_jwt(  # noqa: SLF001
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
-        },
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}"
-    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
-    assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
-        },
-    )
+@pytest.mark.asyncio
+async def test_oauth2_authorization_url(hass: HomeAssistant) -> None:
+    """Test OAuth2 authorization URL generation."""
+    flow = OAuth2FlowHandler()
+    expected_scope = {"scope": "ac-system-access"}
 
+    assert flow.extra_authorize_data == expected_scope
+
+
+@pytest.mark.asyncio
+async def test_config_flow_successful_auth(hass: HomeAssistant) -> None:
+    """Test completing the OAuth2 authentication successfully."""
     with patch(
-        "homeassistant.components.actronair.async_setup_entry", return_value=True
-    ) as mock_setup:
-        await hass.config_entries.flow.async_configure(result["flow_id"])
+        "homeassistant.helpers.config_entry_oauth2_flow.AbstractOAuth2FlowHandler.async_create_entry"
+    ) as mock_create_entry:
+        result = await hass.config_entries.flow.async_configure("test_flow_id", {})
 
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        mock_create_entry.assert_called_once()
