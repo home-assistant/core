@@ -255,7 +255,6 @@
         "invalid_template": "Invalid template",
         "invalid_uom": "The unit of measurement is not allowed with the selected device class, please use the correct device class, or pick a valid unit of measurement from the list",
         "invalid_url": "Invalid URL",
-        "last_reset_not_with_state_class_total": "The last reset value template option should be used with state class 'Total' only",
         "options_not_allowed_with_state_class_or_uom": "The 'Options' setting is not allowed when state class or unit of measurement are used",
         "options_device_class_enum": "The 'Options' setting must be used with the Enumeration device class'"
       }

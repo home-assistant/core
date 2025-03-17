@@ -299,6 +299,7 @@ class PlatformField:
     error: str | None = None
     default: str | int | vol.Undefined = vol.UNDEFINED
     exclude_from_reconfig: bool = False
+    conditions: tuple[dict[str, Any], ...] | None = None
     custom_filtering: bool = False
 
 
@@ -362,7 +363,11 @@ PLATFORM_MQTT_FIELDS = {
             TEMPLATE_SELECTOR, False, cv.template, "invalid_template"
         ),
         CONF_LAST_RESET_VALUE_TEMPLATE: PlatformField(
-            TEMPLATE_SELECTOR, False, cv.template, "invalid_template"
+            TEMPLATE_SELECTOR,
+            False,
+            cv.template,
+            "invalid_template",
+            conditions=({CONF_STATE_CLASS: "total"},),
         ),
         CONF_EXPIRE_AFTER: PlatformField(EXIRE_AFTER_SELECTOR, False, cv.positive_int),
     },
@@ -466,10 +471,22 @@ def data_schema_from_fields(
     user_input: dict[str, Any] | None = None,
 ) -> vol.Schema:
     """Generate custom data schema from platform fields."""
+
+    def _check_conditions(
+        conditions: tuple[dict[str, Any], ...] | None,
+    ) -> bool:
+        """Only include field if one of conditions match, or no conditions are set."""
+        if conditions is None or component is None:
+            return True
+        return any(
+            all(component.get(key) == value for key, value in condition.items())
+            for condition in conditions
+        )
+
     user_data = component
     if user_data is not None and user_input is not None:
         user_data |= user_input
-    return vol.Schema(
+    data_schema = vol.Schema(
         {
             vol.Required(field_name, default=field_details.default)
             if field_details.required
@@ -479,9 +496,17 @@ def data_schema_from_fields(
             if field_details.custom_filtering
             else field_details.selector
             for field_name, field_details in data_schema_fields.items()
-            if not field_details.exclude_from_reconfig or not reconfig
+            if (not field_details.exclude_from_reconfig or not reconfig)
+            and _check_conditions(field_details.conditions)
         }
     )
+    # Reset all fields from the component not in the schema
+    if component:
+        filtered_fields = set(data_schema_fields) - set(data_schema.schema)
+        for field in filtered_fields:
+            if field in component:
+                del component[field]
+    return data_schema
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):

@@ -119,6 +119,17 @@ MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS = {
         "qos": 0,
     },
 }
+MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET = {
+    "e9261f6feed443e7b7d5f3fbe2a47412": {
+        "platform": "sensor",
+        "name": "Energy",
+        "state_class": "total",
+        "last_reset_value_template": "{{ value_json.value }}",
+        "state_topic": "test-topic",
+        "entity_picture": "https://example.com/e9261f6feed443e7b7d5f3fbe2a47412",
+        "qos": 0,
+    },
+}
 
 # Bogus light component just for code coverage
 # Note that light cannot be setup through the UI yet
@@ -206,6 +217,17 @@ MOCK_SENSOR_SUBENTRY_DATA_SINGLE_STATE_CLASS = {
         "configuration_url": "https://example.com",
     },
     "components": MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS,
+}
+MOCK_SENSOR_SUBENTRY_DATA_SINGLE_LAST_RESET_TEMPLATE = {
+    "device": {
+        "name": "Test sensor",
+        "sw_version": "1.0",
+        "hw_version": "2.1 rev a",
+        "model": "Model XL",
+        "model_id": "mn002",
+        "configuration_url": "https://example.com",
+    },
+    "components": MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET,
 }
 
 MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA = {

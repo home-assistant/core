@@ -442,12 +442,10 @@ def validate_sensor_state_and_device_class_config(
         CONF_LAST_RESET_VALUE_TEMPLATE in config
         and (state_class := config.get(CONF_STATE_CLASS)) != SensorStateClass.TOTAL
     ):
-        if errors is None:
-            raise vol.Invalid(
-                f"The option `{CONF_LAST_RESET_VALUE_TEMPLATE}` cannot be used "
-                f"together with state class `{state_class}`"
-            )
-        errors[CONF_LAST_RESET_VALUE_TEMPLATE] = "last_reset_not_with_state_class_total"
+        raise vol.Invalid(
+            f"The option `{CONF_LAST_RESET_VALUE_TEMPLATE}` cannot be used "
+            f"together with state class `{state_class}`"
+        )
 
     # Only allow `options` to be set for `enum` sensors
     # to limit the possible sensor values
