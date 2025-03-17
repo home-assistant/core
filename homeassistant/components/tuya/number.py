@@ -314,7 +314,6 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.TEMP_CORRECTION,
             translation_key="temperature_correction",
-            device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
         ),
     )
