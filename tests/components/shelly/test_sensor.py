@@ -56,26 +56,61 @@ SENSOR_BLOCK_ID = 3
 DEVICE_BLOCK_ID = 4
 
 
+@pytest.mark.parametrize(
+    ("entity", "initial_state", "block_id", "attribute", "value", "unique_id"),
+    [
+        (
+            "test_name_channel_1_power",
+            "53.4",
+            RELAY_BLOCK_ID,
+            "power",
+            60.1,
+            "relay_0-power",
+        ),
+        (
+            "test_name_operation",
+            "normal",
+            SENSOR_BLOCK_ID,
+            "sensorOp",
+            "normal",
+            "sensor_0-sensorOp",
+        ),
+        (
+            "test_name_self_test",
+            "pending",
+            SENSOR_BLOCK_ID,
+            "selfTest",
+            "completed",
+            "sensor_0-selfTest",
+        ),
+    ],
+)
 async def test_block_sensor(
     hass: HomeAssistant,
     mock_block_device: Mock,
     entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
+    entity: str,
+    initial_state: str,
+    block_id: int,
+    attribute: str,
+    value: float | str,
+    unique_id: str,
 ) -> None:
     """Test block sensor."""
-    entity_id = f"{SENSOR_DOMAIN}.test_name_channel_1_power"
+    entity_id = f"{SENSOR_DOMAIN}.{entity}"
     await init_integration(hass, 1)
 
-    assert hass.states.get(entity_id).state == "53.4"
+    assert hass.states.get(entity_id).state == initial_state
 
-    monkeypatch.setattr(mock_block_device.blocks[RELAY_BLOCK_ID], "power", 60.1)
+    monkeypatch.setattr(mock_block_device.blocks[block_id], attribute, value)
     mock_block_device.mock_update()
 
-    assert hass.states.get(entity_id).state == "60.1"
+    assert hass.states.get(entity_id).state == str(value)
 
     entry = entity_registry.async_get(entity_id)
     assert entry
-    assert entry.unique_id == "123456789ABC-relay_0-power"
+    assert entry.unique_id == f"123456789ABC-{unique_id}"
 
 
 async def test_energy_sensor(
