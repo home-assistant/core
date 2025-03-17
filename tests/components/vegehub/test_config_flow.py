@@ -16,11 +16,15 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_WEBHOOK_ID,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import init_integration
 from .conftest import TEST_HOSTNAME, TEST_IP, TEST_SIMPLE_MAC
+
+from tests.common import MockConfigEntry
 
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     ip_address=ip_address(TEST_IP),
@@ -118,7 +122,7 @@ async def test_user_flow_cannot_connect(
         result["flow_id"], {CONF_IP_ADDRESS: TEST_IP}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_IP
     assert result["data"][CONF_IP_ADDRESS] == TEST_IP
     assert result["data"][CONF_MAC] == TEST_SIMPLE_MAC
@@ -152,7 +156,7 @@ async def test_user_flow_device_bad_connection_then_success(
         result["flow_id"], {CONF_IP_ADDRESS: TEST_IP}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert "errors" in result
     assert result["errors"] == {"base": expected_error}
@@ -163,7 +167,7 @@ async def test_user_flow_device_bad_connection_then_success(
         result["flow_id"], {CONF_IP_ADDRESS: TEST_IP}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_IP
     assert result["data"][CONF_IP_ADDRESS] == TEST_IP
     assert result["data"][CONF_MAC] == TEST_SIMPLE_MAC
@@ -192,7 +196,7 @@ async def test_user_flow_no_ip_entered(
         result["flow_id"], {CONF_IP_ADDRESS: TEST_IP}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_bad_ip_entered(
@@ -296,15 +300,12 @@ async def test_zeroconf_flow_abort_device_asleep(
 
 async def test_zeroconf_flow_abort_same_id(
     hass: HomeAssistant,
+    mocked_config_entry: MockConfigEntry,
 ) -> None:
     """Test when zeroconf gets the same device twice."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zeroconf_confirm"
+    with patch("homeassistant.components.vegehub.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mocked_config_entry)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO

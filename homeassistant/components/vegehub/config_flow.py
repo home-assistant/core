@@ -95,7 +95,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check if this device already exists
         await self.async_set_unique_id(self._hub.mac_address)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: device_ip})
 
         # Add title and configuration URL to the context so that the device discovery
         # tile has the correct title, and a "Visit Device" link available.
