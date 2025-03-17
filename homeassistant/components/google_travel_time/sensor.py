@@ -62,7 +62,7 @@ from .helpers import convert_to_waypoint
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = datetime.timedelta(minutes=5)
+SCAN_INTERVAL = datetime.timedelta(minutes=10)
 FIELD_MASK = "routes.duration,routes.localized_values"
 
 
