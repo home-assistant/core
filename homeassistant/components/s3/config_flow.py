@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from typing import Any
-from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -14,7 +13,6 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
-from homeassistant.util import slugify
 
 from ._api import (
     CannotConnectError,
@@ -45,20 +43,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def _get_unique_id(data: dict[str, str]) -> str:
-    """Generate config entry's unique ID from the provided user input."""
-    parsed_url = urlparse(data[CONF_ENDPOINT_URL])
-    return ".".join(
-        map(
-            slugify,
-            [
-                parsed_url.netloc,
-                data[CONF_BUCKET],
-            ],
-        )
-    )
-
-
 class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
@@ -69,8 +53,7 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(_get_unique_id(user_input))
-            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match(user_input)
             try:
                 async with get_client(user_input):
                     pass

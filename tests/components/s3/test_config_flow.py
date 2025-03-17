@@ -11,7 +11,6 @@ from homeassistant.components.s3._api import (
     InvalidCredentialsError,
     InvalidEndpointURLError,
 )
-from homeassistant.components.s3.config_flow import _get_unique_id
 from homeassistant.components.s3.const import CONF_BUCKET, CONF_ENDPOINT_URL, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -19,30 +18,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from .const import USER_INPUT
 
 from tests.common import MockConfigEntry
-
-
-@pytest.mark.parametrize(
-    ("input_data", "expected_unique_id"),
-    [
-        (
-            {
-                CONF_BUCKET: "foo",
-                CONF_ENDPOINT_URL: "https://s3.eu-central-1.amazonaws.com/",
-            },
-            "s3_eu_central_1_amazonaws_com.foo",
-        ),
-        (
-            {
-                CONF_BUCKET: "foo",
-                CONF_ENDPOINT_URL: "http://127.0.0.1:9000/",
-            },
-            "127_0_0_1_9000.foo",
-        ),
-    ],
-)
-def test_get_unique_id(input_data: dict[str, str], expected_unique_id: str) -> None:
-    """Test config entry IDs are unique tuples of (Endpoint + Bucket name)."""
-    assert _get_unique_id(input_data) == expected_unique_id
 
 
 async def _async_start_flow(
