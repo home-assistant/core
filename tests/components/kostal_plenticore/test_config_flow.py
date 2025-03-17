@@ -74,7 +74,7 @@ async def test_form_g1(
             return_value={"scb:network": {"Hostname": "scb"}}
         )
 
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
@@ -92,9 +92,9 @@ async def test_form_g1(
             "scb:network", "Hostname"
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "scb"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "scb"
+    assert result["data"] == {
         "host": "1.1.1.1",
         "password": "test-password",
     }
@@ -140,7 +140,7 @@ async def test_form_g2(
             return_value={"scb:network": {"Network:Hostname": "scb"}}
         )
 
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
@@ -158,9 +158,9 @@ async def test_form_g2(
             "scb:network", "Network:Hostname"
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "scb"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "scb"
+    assert result["data"] == {
         "host": "1.1.1.1",
         "password": "test-password",
     }
@@ -206,7 +206,7 @@ async def test_form_g2_with_service_code(
             return_value={"scb:network": {"Network:Hostname": "scb"}}
         )
 
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
@@ -227,9 +227,9 @@ async def test_form_g2_with_service_code(
             "scb:network", "Network:Hostname"
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "scb"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "scb"
+    assert result["data"] == {
         "host": "1.1.1.1",
         "password": "test-password",
         "service_code": "test-service-code",
@@ -259,7 +259,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
         mock_api_class.return_value = mock_api
 
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
@@ -267,8 +267,8 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"password": "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"password": "invalid_auth"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -293,7 +293,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
         mock_api_class.return_value = mock_api
 
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
@@ -301,8 +301,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"host": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"host": "cannot_connect"}
 
 
 async def test_form_unexpected_error(hass: HomeAssistant) -> None:
@@ -327,7 +327,7 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
 
         mock_api_class.return_value = mock_api
 
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
@@ -335,8 +335,8 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_already_configured(hass: HomeAssistant) -> None:
@@ -351,7 +351,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             "host": "1.1.1.1",
@@ -359,5 +359,5 @@ async def test_already_configured(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
