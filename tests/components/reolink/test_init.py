@@ -19,7 +19,7 @@ from homeassistant.components.reolink import (
     FIRMWARE_UPDATE_INTERVAL,
     NUM_CRED_ERRORS,
 )
-from homeassistant.components.reolink.const import DOMAIN
+from homeassistant.components.reolink.const import CONF_BC_PORT, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -46,6 +46,7 @@ from .conftest import (
     CONF_SUPPORTS_PRIVACY_MODE,
     CONF_USE_HTTPS,
     DEFAULT_PROTOCOL,
+    TEST_BC_PORT,
     TEST_CAM_MODEL,
     TEST_HOST,
     TEST_HOST_MODEL,
@@ -807,6 +808,21 @@ async def test_port_changed(
     await hass.async_block_till_done()
 
     assert config_entry.data[CONF_PORT] == 4567
+
+
+async def test_baichuan_port_changed(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test config_entry baichuan port update when it has changed during initial login."""
+    assert config_entry.data[CONF_BC_PORT] == TEST_BC_PORT
+    reolink_connect.baichuan.port = 8901
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_BC_PORT] == 8901
 
 
 async def test_privacy_mode_on(
