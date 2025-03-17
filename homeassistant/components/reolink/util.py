@@ -108,87 +108,75 @@ def raise_translated_error[**P, R](
         try:
             return await func(*args, **kwargs)
         except InvalidParameterError as err:
-            key = err.translation_key if err.translation_key else "invalid_parameter"
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key=key,
+                translation_key=err.translation_key or "invalid_parameter",
                 translation_placeholders={"err": str(err)},
             ) from err
         except ApiError as err:
-            key = err.translation_key if err.translation_key else "api_error"
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=key,
+                translation_key=err.translation_key or "api_error",
                 translation_placeholders={"err": str(err)},
             ) from err
         except InvalidContentTypeError as err:
-            key = err.translation_key if err.translation_key else "invalid_content_type"
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=key,
+                translation_key=err.translation_key or "invalid_content_type",
                 translation_placeholders={"err": str(err)},
             ) from err
         except CredentialsInvalidError as err:
-            key = err.translation_key if err.translation_key else "invalid_credentials"
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=key,
+                translation_key=err.translation_key or "invalid_credentials",
                 translation_placeholders={"err": str(err)},
             ) from err
         except LoginError as err:
-            key = err.translation_key if err.translation_key else "login_error"
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=key,
+                translation_key=err.translation_key or "login_error",
                 translation_placeholders={"err": str(err)},
             ) from err
         except NoDataError as err:
-            key = err.translation_key if err.translation_key else "no_data"
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=key,
+                translation_key=err.translation_key or "no_data",
                 translation_placeholders={"err": str(err)},
             ) from err
         except UnexpectedDataError as err:
-            key = err.translation_key if err.translation_key else "unexpected_data"
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=key,
+                translation_key=err.translation_key or "unexpected_data",
                 translation_placeholders={"err": str(err)},
             ) from err
         except NotSupportedError as err:
-            key = err.translation_key if err.translation_key else "not_supported"
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=key,
+                translation_key=err.translation_key or "not_supported",
                 translation_placeholders={"err": str(err)},
             ) from err
         except SubscriptionError as err:
-            key = err.translation_key if err.translation_key else "subscription_error"
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=key,
+                translation_key=err.translation_key or "subscription_error",
                 translation_placeholders={"err": str(err)},
             ) from err
         except ReolinkConnectionError as err:
-            key = err.translation_key if err.translation_key else "connection_error"
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=key,
+                translation_key=err.translation_key or "connection_error",
                 translation_placeholders={"err": str(err)},
             ) from err
         except ReolinkTimeoutError as err:
-            key = err.translation_key if err.translation_key else "timeout"
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=key,
+                translation_key=err.translation_key or "timeout",
                 translation_placeholders={"err": str(err)},
             ) from err
         except ReolinkError as err:
-            key = err.translation_key if err.translation_key else "unexpected"
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=key,
+                translation_key=err.translation_key or "unexpected",
                 translation_placeholders={"err": str(err)},
             ) from err
 
