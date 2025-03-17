@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
@@ -27,6 +28,7 @@ DATA_CHAT_SESSION: HassKey[dict[str, ChatSession]] = HassKey("chat_session")
 DATA_CHAT_SESSION_CLEANUP: HassKey[SessionCleanup] = HassKey("chat_session_cleanup")
 
 CONVERSATION_TIMEOUT = timedelta(minutes=5)
+LOGGER = logging.getLogger(__name__)
 
 current_session: ContextVar[ChatSession | None] = ContextVar(
     "current_session", default=None
@@ -100,6 +102,7 @@ class SessionCleanup:
         # yielding session based on it.
         for conversation_id, session in list(all_sessions.items()):
             if session.last_updated + CONVERSATION_TIMEOUT < now:
+                LOGGER.debug("Cleaning up session %s", conversation_id)
                 del all_sessions[conversation_id]
                 session.async_cleanup()
 
@@ -150,6 +153,7 @@ def async_get_chat_session(
             pass
 
     if session is None:
+        LOGGER.debug("Creating new session %s", conversation_id)
         session = ChatSession(conversation_id)
 
     current_session.set(session)

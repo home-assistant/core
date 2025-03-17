@@ -2,13 +2,16 @@
 
 from collections.abc import Callable, Coroutine
 from copy import deepcopy
+import datetime
 from http import HTTPStatus
 import json
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import aiohttp
-from hass_nabucasa import thingtalk
+from freezegun.api import FrozenDateTimeFactory
+from hass_nabucasa import AlreadyConnectedError, thingtalk
 from hass_nabucasa.auth import (
     InvalidTotpCode,
     MFARequired,
@@ -370,7 +373,38 @@ async def test_login_view_request_timeout(
         "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
     )
 
+    assert cloud.login.call_args[1]["check_connection"] is False
+
     assert req.status == HTTPStatus.BAD_GATEWAY
+
+
+async def test_login_view_with_already_existing_connection(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test request timeout while trying to log in."""
+    cloud_client = await hass_client()
+    cloud.login.side_effect = AlreadyConnectedError(
+        details={"remote_ip_address": "127.0.0.1", "connected_at": "1"}
+    )
+
+    req = await cloud_client.post(
+        "/api/cloud/login",
+        json={
+            "email": "my_username",
+            "password": "my_password",
+            "check_connection": True,
+        },
+    )
+
+    assert cloud.login.call_args[1]["check_connection"] is True
+    assert req.status == HTTPStatus.CONFLICT
+    resp = await req.json()
+    assert resp == {
+        "code": "alreadyconnectederror",
+        "message": '{"remote_ip_address": "127.0.0.1", "connected_at": "1"}',
+    }
 
 
 async def test_login_view_invalid_credentials(
@@ -1869,15 +1903,18 @@ async def test_logout_view_dispatch_event(
     assert async_dispatcher_send_mock.mock_calls[0][1][2] == {"type": "logout"}
 
 
+@patch("homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3)
 async def test_download_support_package(
     hass: HomeAssistant,
     cloud: MagicMock,
     set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test downloading a support package file."""
+
     aioclient_mock.get("https://cloud.bla.com/status", text="")
     aioclient_mock.get(
         "https://cert-server/directory", exc=Exception("Unexpected exception")
@@ -1935,6 +1972,19 @@ async def test_download_support_package(
             "cloud_ice_servers_enabled": True,
         }
     )
+
+    now = dt_util.utcnow()
+    # The logging is done with local time according to the system timezone. Set the
+    # fake time to 12:00 local time
+    tz = now.astimezone().tzinfo
+    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    logging.getLogger("hass_nabucasa.iot").info(
+        "This message will be dropped since this test patches MAX_RECORDS"
+    )
+    logging.getLogger("hass_nabucasa.iot").info("Hass nabucasa log")
+    logging.getLogger("snitun.utils.aiohttp_client").warning("Snitun log")
+    logging.getLogger("homeassistant.components.cloud.client").error("Cloud log")
+    freezer.move_to(now)  # Reset time otherwise hass_client auth fails
 
     cloud_client = await hass_client()
     with (

@@ -7,7 +7,7 @@ from nextdns import AnalyticsStatus
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NextDnsConfigEntry
@@ -25,7 +25,7 @@ CLEAR_LOGS_BUTTON = ButtonEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: NextDnsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add aNextDNS entities from a config_entry."""
     coordinator = entry.runtime_data.status

@@ -14,7 +14,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEnti
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CROWNSTONE_INCLUDE_TYPES,
@@ -30,7 +30,7 @@ from .helpers import map_from_to
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: CrownstoneConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up crownstones from a config entry."""
     manager = config_entry.runtime_data

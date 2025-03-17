@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 
@@ -33,7 +33,7 @@ SERVICE_CLEAR_LOCK_USER_CODE = "clear_lock_user_code"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation Door Lock from config entry."""
     zha_data = get_zha_data(hass)

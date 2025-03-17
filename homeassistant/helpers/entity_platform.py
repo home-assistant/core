@@ -80,6 +80,22 @@ class AddEntitiesCallback(Protocol):
         """Define add_entities type."""
 
 
+class AddConfigEntryEntitiesCallback(Protocol):
+    """Protocol type for EntityPlatform.add_entities callback."""
+
+    def __call__(
+        self,
+        new_entities: Iterable[Entity],
+        update_before_add: bool = False,
+        *,
+        config_subentry_id: str | None = None,
+    ) -> None:
+        """Define add_entities type.
+
+        :param config_subentry_id: subentry which the entities should be added to
+        """
+
+
 class EntityPlatformModule(Protocol):
     """Protocol type for entity platform modules."""
 
@@ -105,7 +121,7 @@ class EntityPlatformModule(Protocol):
         self,
         hass: HomeAssistant,
         entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up an integration platform from a config entry."""
 
@@ -517,13 +533,21 @@ class EntityPlatform:
 
     @callback
     def _async_schedule_add_entities_for_entry(
-        self, new_entities: Iterable[Entity], update_before_add: bool = False
+        self,
+        new_entities: Iterable[Entity],
+        update_before_add: bool = False,
+        *,
+        config_subentry_id: str | None = None,
     ) -> None:
         """Schedule adding entities for a single platform async and track the task."""
         assert self.config_entry
         task = self.config_entry.async_create_task(
             self.hass,
-            self.async_add_entities(new_entities, update_before_add=update_before_add),
+            self.async_add_entities(
+                new_entities,
+                update_before_add=update_before_add,
+                config_subentry_id=config_subentry_id,
+            ),
             f"EntityPlatform async_add_entities_for_entry {self.domain}.{self.platform_name}",
             eager_start=True,
         )
@@ -625,12 +649,27 @@ class EntityPlatform:
             )
 
     async def async_add_entities(
-        self, new_entities: Iterable[Entity], update_before_add: bool = False
+        self,
+        new_entities: Iterable[Entity],
+        update_before_add: bool = False,
+        *,
+        config_subentry_id: str | None = None,
     ) -> None:
         """Add entities for a single platform async.
 
         This method must be run in the event loop.
+
+        :param config_subentry_id: subentry which the entities should be added to
         """
+        if config_subentry_id and (
+            not self.config_entry
+            or config_subentry_id not in self.config_entry.subentries
+        ):
+            raise HomeAssistantError(
+                f"Can't add entities to unknown subentry {config_subentry_id} of config "
+                f"entry {self.config_entry.entry_id if self.config_entry else None}"
+            )
+
         # handle empty list from component/platform
         if not new_entities:  # type: ignore[truthy-iterable]
             return
@@ -641,7 +680,9 @@ class EntityPlatform:
         entities: list[Entity] = []
         for entity in new_entities:
             coros.append(
-                self._async_add_entity(entity, update_before_add, entity_registry)
+                self._async_add_entity(
+                    entity, update_before_add, entity_registry, config_subentry_id
+                )
             )
             entities.append(entity)
 
@@ -720,6 +761,7 @@ class EntityPlatform:
         entity: Entity,
         update_before_add: bool,
         entity_registry: EntityRegistry,
+        config_subentry_id: str | None,
     ) -> None:
         """Add an entity to the platform."""
         if entity is None:
@@ -779,6 +821,7 @@ class EntityPlatform:
                 try:
                     device = dev_reg.async_get(self.hass).async_get_or_create(
                         config_entry_id=self.config_entry.entry_id,
+                        config_subentry_id=config_subentry_id,
                         **device_info,
                     )
                 except dev_reg.DeviceInfoError as exc:
@@ -825,6 +868,7 @@ class EntityPlatform:
                 entity.unique_id,
                 capabilities=entity.capability_attributes,
                 config_entry=self.config_entry,
+                config_subentry_id=config_subentry_id,
                 device_id=device.id if device else None,
                 disabled_by=disabled_by,
                 entity_category=entity.entity_category,

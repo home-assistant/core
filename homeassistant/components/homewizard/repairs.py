@@ -47,7 +47,7 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
 
         # Tell device we want a token, user must now press the button within 30 seconds
         # The first attempt will always fail, but this opens the window to press the button
-        token = await async_request_token(ip_address)
+        token = await async_request_token(self.hass, ip_address)
         errors: dict[str, str] | None = None
 
         if token is None:

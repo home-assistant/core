@@ -34,6 +34,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.ssl import SSLCipherList
 
 DOMAIN = "rest_command"
 
@@ -46,6 +47,7 @@ DEFAULT_VERIFY_SSL = True
 SUPPORT_REST_METHODS = ["get", "patch", "post", "put", "delete"]
 
 CONF_CONTENT_TYPE = "content_type"
+CONF_INSECURE_CIPHER = "insecure_cipher"
 
 COMMAND_SCHEMA = vol.Schema(
     {
@@ -60,6 +62,7 @@ COMMAND_SCHEMA = vol.Schema(
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
         vol.Optional(CONF_CONTENT_TYPE): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        vol.Optional(CONF_INSECURE_CIPHER, default=False): cv.boolean,
     }
 )
 
@@ -91,7 +94,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def async_register_rest_command(name: str, command_config: dict[str, Any]) -> None:
         """Create service for rest command."""
-        websession = async_get_clientsession(hass, command_config[CONF_VERIFY_SSL])
+        websession = async_get_clientsession(
+            hass,
+            command_config[CONF_VERIFY_SSL],
+            ssl_cipher=(
+                SSLCipherList.INSECURE
+                if command_config[CONF_INSECURE_CIPHER]
+                else SSLCipherList.PYTHON_DEFAULT
+            ),
+        )
         timeout = command_config[CONF_TIMEOUT]
         method = command_config[CONF_METHOD]
 
@@ -134,6 +145,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             if content_type:
                 headers[hdrs.CONTENT_TYPE] = content_type
+
+            _LOGGER.debug(
+                "Calling %s %s with headers: %s and payload: %s",
+                method,
+                request_url,
+                headers,
+                payload,
+            )
 
             try:
                 async with getattr(websession, method)(

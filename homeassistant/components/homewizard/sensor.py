@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_VIA_DEVICE,
     PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -32,13 +33,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import HomeWizardConfigEntry
 from .const import DOMAIN
-from .coordinator import HWEnergyDeviceUpdateCoordinator
+from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 
 PARALLEL_UPDATES = 1
@@ -135,6 +135,21 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
             lambda data: data.system.wifi_strength_pct
             if data.system is not None
             else None
+        ),
+    ),
+    HomeWizardSensorEntityDescription(
+        key="wifi_rssi",
+        translation_key="wifi_rssi",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=(
+            lambda data: data.system is not None
+            and data.system.wifi_rssi_db is not None
+        ),
+        value_fn=(
+            lambda data: data.system.wifi_rssi_db if data.system is not None else None
         ),
     ),
     HomeWizardSensorEntityDescription(
@@ -675,7 +690,7 @@ EXTERNAL_SENSORS = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeWizardConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize sensors."""
 

@@ -13,30 +13,18 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     get_flasher_addon_manager,
     get_multiprotocol_addon_manager,
 )
+from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
+    FirmwareInfo,
+)
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
+from .common import USB_DATA_SKY, USB_DATA_ZBT1
+
 from tests.common import MockConfigEntry
-
-USB_DATA_SKY = UsbServiceInfo(
-    device="/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
-    vid="10C4",
-    pid="EA60",
-    serial_number="9e2adbd75b8beb119fe564a0f320645d",
-    manufacturer="Nabu Casa",
-    description="SkyConnect v1.0",
-)
-
-USB_DATA_ZBT1 = UsbServiceInfo(
-    device="/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
-    vid="10C4",
-    pid="EA60",
-    serial_number="9e2adbd75b8beb119fe564a0f320645d",
-    manufacturer="Nabu Casa",
-    description="Home Assistant Connect ZBT-1",
-)
 
 
 @pytest.mark.parametrize(
@@ -61,10 +49,22 @@ async def test_config_flow(
     async def mock_async_step_pick_firmware_zigbee(self, data):
         return await self.async_step_confirm_zigbee(user_input={})
 
-    with patch(
-        "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow.async_step_pick_firmware_zigbee",
-        autospec=True,
-        side_effect=mock_async_step_pick_firmware_zigbee,
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow.async_step_pick_firmware_zigbee",
+            autospec=True,
+            side_effect=mock_async_step_pick_firmware_zigbee,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
+            return_value=FirmwareInfo(
+                device=usb_data.device,
+                firmware_type=ApplicationType.EZSP,
+                firmware_version="7.4.4.0 build 0",
+                owners=[],
+                source="probe",
+            ),
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -76,6 +76,7 @@ async def test_config_flow(
     config_entry = result["result"]
     assert config_entry.data == {
         "firmware": "ezsp",
+        "firmware_version": "7.4.4.0 build 0",
         "device": usb_data.device,
         "manufacturer": usb_data.manufacturer,
         "pid": usb_data.pid,
@@ -134,10 +135,22 @@ async def test_options_flow(
     async def mock_async_step_pick_firmware_zigbee(self, data):
         return await self.async_step_confirm_zigbee(user_input={})
 
-    with patch(
-        "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareOptionsFlow.async_step_pick_firmware_zigbee",
-        autospec=True,
-        side_effect=mock_async_step_pick_firmware_zigbee,
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareOptionsFlow.async_step_pick_firmware_zigbee",
+            autospec=True,
+            side_effect=mock_async_step_pick_firmware_zigbee,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
+            return_value=FirmwareInfo(
+                device=usb_data.device,
+                firmware_type=ApplicationType.EZSP,
+                firmware_version="7.4.4.0 build 0",
+                owners=[],
+                source="probe",
+            ),
+        ),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -149,6 +162,7 @@ async def test_options_flow(
 
     assert config_entry.data == {
         "firmware": "ezsp",
+        "firmware_version": "7.4.4.0 build 0",
         "device": usb_data.device,
         "manufacturer": usb_data.manufacturer,
         "pid": usb_data.pid,

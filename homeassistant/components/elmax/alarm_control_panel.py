@@ -15,7 +15,7 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, InvalidStateError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import ElmaxConfigEntry
@@ -25,7 +25,7 @@ from .entity import ElmaxEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ElmaxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Elmax area platform."""
     coordinator = config_entry.runtime_data

@@ -3,6 +3,10 @@
     "invalid_platform_config": {
       "title": "Invalid config found for mqtt {domain} item",
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
+    },
+    "invalid_unit_of_measurement": {
+      "title": "Sensor with invalid unit of measurement",
+      "description": "Manual configured Sensor entity **{entity_id}** has a configured unit of measurement **{uom}** which is not valid with configured device class **{device_class}**. Make sure a valid unit of measurement is configured or remove the device class, and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
     }
   },
   "config": {
@@ -26,6 +30,7 @@
           "client_id": "Client ID (leave empty to randomly generated one)",
           "client_cert": "Upload client certificate file",
           "client_key": "Upload private key file",
+          "client_key_password": "[%key:common::config_flow::data::password%]",
           "keepalive": "The time between sending keep alive messages",
           "tls_insecure": "Ignore broker certificate validation",
           "protocol": "MQTT protocol",
@@ -45,6 +50,7 @@
           "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",
           "client_cert": "The client certificate to authenticate against your MQTT broker.",
           "client_key": "The private key file that belongs to your client certificate.",
+          "client_key_password": "The password for the private key file (if set).",
           "keepalive": "A value less than 90 seconds is advised.",
           "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
           "protocol": "The MQTT protocol your broker operates at. For example 3.1.1.",
@@ -93,13 +99,134 @@
       "bad_will": "Invalid will topic",
       "bad_discovery_prefix": "Invalid discovery prefix",
       "bad_certificate": "The CA certificate is invalid",
-      "bad_client_cert": "Invalid client certificate, ensure a PEM coded file is supplied",
-      "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
+      "bad_client_cert": "Invalid client certificate, ensure a valid file is supplied",
+      "client_key_error": "Invalid private key file or invalid password supplied",
       "bad_client_cert_key": "Client certificate and private key are not a valid pair",
       "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_inclusion": "The client certificate and private key must be configured together"
+    }
+  },
+  "config_subentries": {
+    "device": {
+      "initiate_flow": {
+        "user": "Add MQTT Device",
+        "reconfigure": "Reconfigure MQTT Device"
+      },
+      "entry_type": "MQTT Device",
+      "step": {
+        "availability": {
+          "title": "Availability options",
+          "description": "The availability feature allows a device to report it's availability.",
+          "data": {
+            "availability_topic": "Availability topic",
+            "availability_template": "Availability template",
+            "payload_available": "Payload available",
+            "payload_not_available": "Payload not available"
+          },
+          "data_description": {
+            "availability_topic": "Topic to receive the availabillity payload on",
+            "availability_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-templates-with-the-mqtt-integration) to render the availability payload received on the availability topic",
+            "payload_available": "The payload that indicates the device is available (defaults to 'online')",
+            "payload_not_available": "The payload that indicates the device is not available (defaults to 'offline')"
+          }
+        },
+        "device": {
+          "title": "Configure MQTT device details",
+          "description": "Enter the MQTT device details:",
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "configuration_url": "Configuration URL",
+            "sw_version": "Software version",
+            "hw_version": "Hardware version",
+            "model": "Model",
+            "model_id": "Model ID"
+          },
+          "data_description": {
+            "name": "The name of the manually added MQTT device.",
+            "configuration_url": "A link to the webpage that can manage the configuration of this device. Can be either a 'http://', 'https://' or an internal 'homeassistant://' URL.",
+            "sw_version": "The software version of the device. E.g. '2025.1.0'.",
+            "hw_version": "The hardware version of the device. E.g. 'v1.0 rev a'.",
+            "model": "E.g. 'Cleanmaster Pro'.",
+            "model_id": "E.g. '123NK2PRO'."
+          }
+        },
+        "summary_menu": {
+          "title": "Reconfigure \"{mqtt_device}\"",
+          "description": "Entities set up:\n{mqtt_items}\n\nDecide what to do next:",
+          "menu_options": {
+            "entity": "Add another entity to \"{mqtt_device}\"",
+            "update_entity": "Update entity properties",
+            "delete_entity": "Delete an entity",
+            "availability": "Configure availability",
+            "device": "Update device properties",
+            "save_changes": "Save changes"
+          }
+        },
+        "entity": {
+          "title": "Configure MQTT device \"{mqtt_device}\"",
+          "description": "Configure the basic {platform_label}entity settings{entity_name_label}",
+          "data": {
+            "platform": "Type of entity",
+            "name": "Entity name",
+            "entity_picture": "Entity picture"
+          },
+          "data_description": {
+            "platform": "The type of the entity to configure.",
+            "name": "The name of the entity. Leave empty to set it to `None` to [mark it as main feature of the MQTT device](https://www.home-assistant.io/integrations/mqtt/#naming-of-mqtt-entities).",
+            "entity_picture": "An URL to a picture to be assigned."
+          }
+        },
+        "delete_entity": {
+          "title": "Delete entity",
+          "description": "Delete an entity. The entity will be removed from the device. Removing an entity will break any automations or scripts that depend on it.",
+          "data": {
+            "component": "Entity"
+          },
+          "data_description": {
+            "component": "Select the entity you want to delete. Minimal one entity is required."
+          }
+        },
+        "update_entity": {
+          "title": "Select entity",
+          "description": "Select the entity you want to update",
+          "data": {
+            "component": "Entity"
+          },
+          "data_description": {
+            "component": "Select the entity you want to update."
+          }
+        },
+        "mqtt_platform_config": {
+          "title": "Configure MQTT device \"{mqtt_device}\"",
+          "description": "Please configure MQTT specific details for {platform} entity \"{entity}\":",
+          "data": {
+            "command_topic": "Command topic",
+            "command_template": "Command template",
+            "retain": "Retain",
+            "qos": "QoS"
+          },
+          "data_description": {
+            "command_topic": "The publishing topic that will be used to control the {platform} entity.",
+            "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic.",
+            "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker.",
+            "qos": "The QoS value {platform} entity should use."
+          }
+        }
+      },
+      "abort": {
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "create_entry": {
+        "default": "MQTT device with {platform} entity \"{entity}\" was set up successfully.\n\nNote that you can reconfigure the MQTT device at any time, e.g. to add more entities."
+      },
+      "error": {
+        "invalid_input": "Invalid value",
+        "invalid_subscribe_topic": "Invalid subscribe topic",
+        "invalid_template": "Invalid template",
+        "invalid_url": "Invalid URL"
+      }
     }
   },
   "device_automation": {
@@ -207,7 +334,7 @@
       "bad_discovery_prefix": "[%key:component::mqtt::config::error::bad_discovery_prefix%]",
       "bad_certificate": "[%key:component::mqtt::config::error::bad_certificate%]",
       "bad_client_cert": "[%key:component::mqtt::config::error::bad_client_cert%]",
-      "bad_client_key": "[%key:component::mqtt::config::error::bad_client_key%]",
+      "client_key_error": "[%key:component::mqtt::config::error::client_key_error%]",
       "bad_client_cert_key": "[%key:component::mqtt::config::error::bad_client_cert_key%]",
       "bad_ws_headers": "[%key:component::mqtt::config::error::bad_ws_headers%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -215,6 +342,11 @@
     }
   },
   "selector": {
+    "platform": {
+      "options": {
+        "notify": "Notify"
+      }
+    },
     "set_ca_cert": {
       "options": {
         "off": "[%key:common::state::off%]",
@@ -230,7 +362,7 @@
       "fields": {
         "evaluate_payload": {
           "name": "Evaluate payload",
-          "description": "When `payload` is a Python bytes literal, evaluate the bytes literal and publish the raw data."
+          "description": "If 'Payload' is a Python bytes literal, evaluate the bytes literal and publish the raw data."
         },
         "topic": {
           "name": "Topic",
@@ -238,11 +370,7 @@
         },
         "payload": {
           "name": "Payload",
-          "description": "The payload to publish."
-        },
-        "payload_template": {
-          "name": "Payload template",
-          "description": "Template to render as a payload value. If a payload is provided, the template is ignored."
+          "description": "The payload to publish. Publishes an empty message if not provided."
         },
         "qos": {
           "name": "QoS",

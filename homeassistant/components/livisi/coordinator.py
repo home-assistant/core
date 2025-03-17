@@ -39,10 +39,10 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name="Livisi devices",
             update_interval=timedelta(seconds=DEVICE_POLLING_DELAY),
         )
-        self.config_entry = config_entry
         self.hass = hass
         self.aiolivisi = aiolivisi
         self.websocket = Websocket(aiolivisi)
