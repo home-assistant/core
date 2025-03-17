@@ -235,7 +235,7 @@
             "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic.",
             "state_topic": "The MQTT topic subscribed to receive {platform} state values. [Learn more..]({url}#state_topic)",
             "value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the {platform} entity value.",
-            "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset temaplate is set, the State class option must be Total.  [Learn more..]({url}#last_reset_value_template)",
+            "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset template is set, the State class option must be Total.  [Learn more..]({url}#last_reset_value_template)",
             "expire_after": "If set, it defines the number of seconds after the sensor’s state expires, if it’s not updated. After expiry, the sensor’s state becomes unavailable. Default the sensors state never expires. [Learn more..]({url}#expire_after)",
             "force_update": "Sends update events even if the value hasn’t changed. Useful if you want to have meaningful value graphs in history. [Learn more..]({url}#force_update)",
             "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker.",
