@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.56.1
+PySwitchbot==0.57.1
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -189,7 +189,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2025.1.1
+aioautomower==2025.3.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -231,7 +231,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.6.0
+aioesphomeapi==29.7.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -353,7 +353,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.3.0
+aioshelly==13.4.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -640,7 +640,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.39.5
+dbus-fast==2.39.6
 
 # homeassistant.components.debugpy
 debugpy==1.8.13
@@ -950,7 +950,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.27.0
+habluetooth==3.32.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.94.0
@@ -1010,7 +1010,8 @@ ibeacon-ble==1.2.0
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==8.3.0
+# homeassistant.components.remote_calendar
+ical==9.0.1
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1083,7 +1084,7 @@ kegtron-ble==0.4.0
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.1.30.194235
+knx-frontend==2025.3.8.214559
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1261,7 +1262,7 @@ nextdns==4.0.0
 nhc==0.4.10
 
 # homeassistant.components.nibe_heatpump
-nibe==2.14.0
+nibe==2.17.0
 
 # homeassistant.components.nice_go
 nice-go==1.0.1
@@ -1325,7 +1326,7 @@ open-garage==0.2.0
 open-meteo==0.3.2
 
 # homeassistant.components.openai_conversation
-openai==1.65.2
+openai==1.66.3
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -1994,7 +1995,7 @@ python-picnic-api2==1.2.2
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.12.2
+python-roborock==2.14.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.39
@@ -2351,7 +2352,7 @@ toonapi==0.3.0
 total-connect-client==2025.1.4
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.4.3
+tplink-omada-client==1.4.4
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
