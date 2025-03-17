@@ -206,9 +206,9 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
                 {
                     "flag": vacuum_map.flag,
                     "name": vacuum_map.name,
-                    "rooms": {
-                        str(room_id): room for room_id, room in vacuum_map.rooms.items()
-                    },
+                    # JsonValueType does not accept a int as a key - was not a
+                    # issue with previous asdict() implementation.
+                    "rooms": vacuum_map.rooms,  # type: ignore[dict-item]
                 }
                 for vacuum_map in self.coordinator.maps.values()
             ]
