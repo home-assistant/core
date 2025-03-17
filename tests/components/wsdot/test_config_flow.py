@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock
 
 from homeassistant.components.wsdot.const import (
     CONF_API_KEY,
-    CONF_NAME,
     CONF_TRAVEL_TIMES,
     CONF_TRAVEL_TIMES_ID,
     CONF_TRAVEL_TIMES_NAME,
@@ -13,10 +12,7 @@ from homeassistant.components.wsdot.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import (
-    CONF_SOURCE,
-    CONF_TYPE,
-)
+from homeassistant.const import CONF_SOURCE, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

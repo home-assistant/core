@@ -6,12 +6,11 @@ from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 import logging
 import re
-from typing import Any
+from typing import Any, Final
 
 import requests
 import voluptuous as vol
 
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
@@ -19,12 +18,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    CONF_API_KEY,
-    CONF_ID,
-    CONF_NAME,
-    CONF_TRAVEL_TIMES,
     ATTR_ACCESS_CODE,
     ATTR_AVG_TIME,
     ATTR_CURRENT_TIME,
@@ -33,12 +29,19 @@ from .const import (
     ATTR_TIME_UPDATED,
     ATTR_TRAVEL_TIME_ID,
     ATTRIBUTION,
+    CONF_API_KEY,
+    CONF_ID,
+    CONF_NAME,
+    CONF_TRAVEL_TIMES,
     ICON,
     RESOURCE,
     UnitOfTime,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL: Final = timedelta(minutes=3)
+
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -78,7 +81,7 @@ class WashingtonStateTransportSensor(SensorEntity):
 
     _attr_icon = ICON
 
-    def __init__(self, name, access_code):
+    def __init__(self, name, access_code) -> None:
         """Initialize the sensor."""
         self._data = {}
         self._access_code = access_code
@@ -86,12 +89,12 @@ class WashingtonStateTransportSensor(SensorEntity):
         self._state = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self._state
 
@@ -102,7 +105,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     _attr_attribution = ATTRIBUTION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
-    def __init__(self, name, access_code, travel_time_id):
+    def __init__(self, name, access_code, travel_time_id) -> None:
         """Construct a travel time sensor."""
         self._travel_time_id = travel_time_id
         WashingtonStateTransportSensor.__init__(self, name, access_code)

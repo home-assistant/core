@@ -1,13 +1,8 @@
-from datetime import timedelta
+"""Constants for wsdot integration."""
+
 from typing import Final
 
-from homeassistant.const import (
-    ATTR_NAME as ATTR_NAME,
-    CONF_API_KEY as CONF_API_KEY,
-    CONF_ID as CONF_ID,
-    CONF_NAME as CONF_NAME,
-    UnitOfTime as UnitOfTime,
-)
+from homeassistant import const
 
 ATTRIBUTION: Final[str] = "Data provided by WSDOT"
 
@@ -15,10 +10,14 @@ ATTR_ACCESS_CODE: Final[str] = "AccessCode"
 ATTR_AVG_TIME: Final[str] = "AverageTime"
 ATTR_CURRENT_TIME: Final[str] = "CurrentTime"
 ATTR_DESCRIPTION: Final[str] = "Description"
+ATTR_NAME = const.ATTR_NAME
 ATTR_TIME_UPDATED: Final[str] = "TimeUpdated"
 ATTR_TRAVEL_TIME_ID: Final[str] = "TravelTimeID"
 ATTR_TRAVEL_TIME_NAME: Final[str] = "Name"
 
+CONF_API_KEY = const.CONF_API_KEY
+CONF_ID = const.CONF_ID
+CONF_NAME = const.CONF_NAME
 CONF_TRAVEL_TIMES: Final[str] = "travel_time"
 CONF_TRAVEL_TIMES_ID: Final[str] = "id"
 CONF_TRAVEL_TIMES_NAME: Final[str] = "name"
@@ -35,4 +34,4 @@ RESOURCE: Final[str] = (
     "TravelTimesREST.svc/GetTravelTimeAsJson"
 )
 
-SCAN_INTERVAL: Final = timedelta(minutes=3)
+UnitOfTime = const.UnitOfTime

@@ -1,15 +1,18 @@
 """Adds config flow for wsdot."""
 
 from asyncio import timeout
+import logging
 from typing import Any
 from urllib.parse import urlencode, urlunsplit
 
-from aiohttp import ClientError
-from aiohttp.client_exceptions import ClientConnectorError
+from aiohttp.client_exceptions import (
+    ClientConnectorError,
+    ClientError,
+    ContentTypeError,
+)
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -24,21 +27,31 @@ from .const import (
     DOMAIN,
 )
 
-class WSDOTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Config flow for WSDOT"""
+_LOGGER = logging.getLogger(__name__)
+
+
+class InvalidApiKeyError(ClientError):
+    """Exception indicating the user entered an invalid API Key."""
+
+class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Config flow for WSDOT."""
+
     VERSION = 1
     MINOR_VERSION = 1
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None):
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Handle a flow initialized by the user."""
         errors = {}
 
         if user_input is not None:
             try:
-                travel_time_routes = await self.get_travel_times(user_input[DIALOG_API_KEY])
+                travel_time_routes = await self._get_travel_times(user_input[DIALOG_API_KEY])
+            except InvalidApiKeyError:
+                errors[DIALOG_API_KEY] = "Invalid API Key. If you do not have an API Key, you can get a new one at https://wsdot.wa.gov/traffic/api/"
             except (ClientConnectorError, TimeoutError, ClientError):
-                errors["base"] = "cannot_connect"
-            #except InvalidApiKeyError:
-                #errors[DIALOG_API_KEY] = "invalid_api_key"
+                err_msg = "Unable to retrieve routes from WSDOT"
+                _LOGGER.exception(err_msg)
+                errors["base"] = err_msg
             else:
                 return self.async_create_entry(
                     title=user_input[DIALOG_NAME],
@@ -57,7 +70,7 @@ class WSDOTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def fetch_wsdot(self, api_key: str) -> dict[str, Any]:
+    async def _fetch_wsdot(self, api_key: str) -> dict[str, Any]:
         url = urlunsplit((
             'https',
             'wsdot.com',
@@ -68,9 +81,20 @@ class WSDOTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
 
         async with timeout(15):
+            _LOGGER.debug("Querying WSDOT [GET] %s", url)
             async with session.get(url) as response:
-                return await response.json()
+                try:
+                    j = await response.json()
+                except ContentTypeError as cte:
+                    _LOGGER.warning("WSDOT did not respond with JSON. This indicates that an (HTML) error page was returned")
+                    raise InvalidApiKeyError from cte
+                except Exception:
+                    _LOGGER.warning("Unexpected response from WSDOT", exc_info=True)
+                    raise
+                else:
+                    _LOGGER.debug("WSDOT responded %s", j)
+                return j
 
-    async def get_travel_times(self, api_key: str) -> dict[str, str]:
-        travel_times_blobs = await self.fetch_wsdot(api_key)
+    async def _get_travel_times(self, api_key: str) -> dict[str, str]:
+        travel_times_blobs = await self._fetch_wsdot(api_key)
         return {str(tt[ATTR_TRAVEL_TIME_ID]): tt[ATTR_TRAVEL_TIME_NAME] for tt in travel_times_blobs}

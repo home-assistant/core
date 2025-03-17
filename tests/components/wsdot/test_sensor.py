@@ -9,12 +9,7 @@ from homeassistant.components.wsdot import sensor as wsdot_sensor
 from homeassistant.components.wsdot.const import (
     ATTR_DESCRIPTION,
     ATTR_TIME_UPDATED,
-    CONF_API_KEY,
-    CONF_ID,
-    CONF_NAME,
-    CONF_TRAVEL_TIMES,
     RESOURCE,
-    SCAN_INTERVAL,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
