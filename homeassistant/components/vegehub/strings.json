@@ -19,13 +19,13 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect. Ensure Hub is awake, and try again.",
-      "timeout_connect": "Timeout establishing connection. Ensure Hub is awake, and try again.",
+      "cannot_connect": "Failed to connect. Ensure VegeHub is awake, and try again.",
+      "timeout_connect": "Timeout establishing connection. Ensure VegeHub is awake, and try again.",
       "invalid_ip": "Invalid IPv4 address."
     },
     "abort": {
       "cannot_connect": "Failed to connect to the device. Please try again.",
-      "timeout_connect": "Timed out connecting. Ensure Hub is awake, and try again.",
+      "timeout_connect": "Timed out connecting. Ensure VegeHub is awake, and try again.",
       "already_in_progress": "Device already detected. Check discovered devices.",
       "already_configured": "Device is already configured.",
       "unknown_error": "An unknown error has occurred."
