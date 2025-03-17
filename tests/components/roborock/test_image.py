@@ -71,15 +71,13 @@ async def test_floorplan_image(
         ) as parse_map,
     ):
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-        assert resp.status == HTTPStatus.OK
-        body = await resp.read()
-        assert body is not None
 
         # This one isn't selected, so the parse_map count should not increase.
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_downstairs")
-        # It's not selected, so we don't parse it, and it isn't stored,
-        # so we cannot render it.
-        assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.OK
+    body = await resp.read()
+    assert body is not None
+
     assert parse_map.call_count == 1
 
 

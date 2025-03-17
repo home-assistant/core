@@ -29,7 +29,6 @@ from roborock.web_api import RoborockApiClient
 from vacuum_map_parser_base.config.color import ColorsPalette
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.config.size import Sizes
-from vacuum_map_parser_base.map_data import MapData
 from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
 from homeassistant.config_entries import ConfigEntry
@@ -169,17 +168,15 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             sw_version=self.roborock_device_info.device.fv,
         )
 
-    async def parse_image(
-        self, map_bytes: bytes
-    ) -> tuple[bytes | None, MapData | None]:
+    async def parse_image(self, map_bytes: bytes) -> bytes | None:
         """Parse map_bytes and store it as image bytes."""
         try:
             parsed_map = self.map_parser.parse(map_bytes)
         except (IndexError, ValueError) as err:
             _LOGGER.debug("Exception when parsing map contents: %s", err)
-            return None, None
+            return None
         if parsed_map.image is None:
-            return None, None
+            return None
         img_byte_arr = io.BytesIO()
         parsed_map.image.data.save(img_byte_arr, format=MAP_FILE_FORMAT)
         image = img_byte_arr.getvalue()
@@ -188,7 +185,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 self.current_map,
                 image,
             )
-        return image, parsed_map
+        return image
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -213,7 +210,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 flag=roborock_map.mapFlag,
                 name=roborock_map.name or f"Map {roborock_map.mapFlag}",
                 rooms={},
-                map_data=None,
                 image=image,
                 last_updated=dt_util.utcnow() - IMAGE_CACHE_INTERVAL,
             )
@@ -234,14 +230,13 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
-        parsed_image, parsed_map = await self.parse_image(response)
-        if parsed_map is None or parsed_image is None:
+        parsed_image = await self.parse_image(response)
+        if parsed_image is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
         current_roborock_map_info = self.maps[self.current_map]
-        current_roborock_map_info.map_data = parsed_map
         current_roborock_map_info.image = parsed_image
         if bump_time:
             current_roborock_map_info.last_updated = dt_util.utcnow()
@@ -397,7 +392,14 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 # We cannot get the map until the roborock servers fully process the
                 # map change.
                 await asyncio.sleep(MAP_SLEEP)
-            await self.set_current_map_rooms()
+            tasks = [self.set_current_map_rooms()]
+            # The image is set within async_setup, so if it exists, we have it here.
+            if self.maps[map_flag].image is None:
+                # If we don't have a cached map, let's update it here so that it can be
+                # cached in the future.
+                tasks.append(self.update_map())
+            # If either of these fail, we don't care, and we want to continue.
+            await asyncio.gather(*tasks, return_exceptions=True)
 
         if len(self.maps) != 1:
             # Set the map back to the map the user previously had selected so that it

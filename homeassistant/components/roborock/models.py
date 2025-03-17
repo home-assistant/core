@@ -6,7 +6,6 @@ from typing import Any
 
 from roborock.containers import HomeDataDevice, HomeDataProduct, NetworkInfo
 from roborock.roborock_typing import DeviceProp
-from vacuum_map_parser_base.map_data import MapData
 
 
 @dataclass
@@ -50,6 +49,5 @@ class RoborockMapInfo:
     flag: int
     name: str
     rooms: dict[int, str]
-    map_data: MapData | None
     image: bytes | None
     last_updated: datetime
