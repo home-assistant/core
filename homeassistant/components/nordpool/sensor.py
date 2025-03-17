@@ -37,7 +37,9 @@ def validate_prices(
     result = func(entity)[area][index]
     if result is None:
         return None
-    return result / 1000 if result != 0 else 0
+    if result == 0:
+        return 0
+    return result / 1000
 
 
 def get_prices(
@@ -403,6 +405,6 @@ class NordpoolDailyAveragePriceSensor(NordpoolBaseEntity, SensorEntity):
         """Return value of sensor."""
         data = self.coordinator.get_data_current_day()
         value = data.area_average.get(self.area)
-        if isinstance(value, (int, float)):
-            return value / 1000 if value != 0 else 0
-        return None
+        if value is None:
+            return None
+        return value / 1000
