@@ -5,7 +5,7 @@ from watergate_local_api.models.auto_shut_off_report import AutoShutOffReport
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WatergateConfigEntry
 from .const import AUTO_SHUT_OFF_EVENT_NAME
@@ -21,13 +21,11 @@ DESCRIPTIONS: list[EventEntityDescription] = [
         translation_key="auto_shut_off_volume",
         key="auto_shut_off_volume",
         event_types=[VOLUME_AUTO_SHUT_OFF],
-        icon="mdi:water",
     ),
     EventEntityDescription(
         translation_key="auto_shut_off_duration",
         key="auto_shut_off_duration",
         event_types=[DURATION_AUTO_SHUT_OFF],
-        icon="mdi:timelapse",
     ),
 ]
 
@@ -37,7 +35,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: WatergateConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Event entities from config entry."""
 
@@ -50,10 +48,6 @@ async def async_setup_entry(
 
 class AutoShutOffEvent(WatergateEntity, EventEntity):
     """Event for Auto Shut Off."""
-
-    _attr_has_entity_name = True
-
-    entity_description: EventEntityDescription
 
     def __init__(
         self,
@@ -81,8 +75,4 @@ class AutoShutOffEvent(WatergateEntity, EventEntity):
             event.type.lower(),
             {"volume": event.volume, "duration": event.duration},
         )
-        self._attr_extra_state_attributes = {
-            "volume": event.volume,
-            "duration": event.duration,
-        }
         self.async_write_ha_state()

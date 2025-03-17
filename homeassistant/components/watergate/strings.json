@@ -30,10 +30,10 @@
             }
           },
           "volume": {
-            "name": "Volume"
+            "name": "[%key:component::watergate::entity::event::auto_shut_off_volume::state_attributes::event_type::state::volume_threshold%]"
           },
           "duration": {
-            "name": "Duration"
+            "name": "[%key:component::watergate::entity::event::auto_shut_off_volume::state_attributes::event_type::state::duration_threshold%]"
           }
         }
       },
@@ -42,15 +42,15 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "volume_threshold": "Volume",
-              "duration_threshold": "Duration"
+              "volume_threshold": "[%key:component::watergate::entity::event::auto_shut_off_volume::state_attributes::event_type::state::volume_threshold%]",
+              "duration_threshold": "[%key:component::watergate::entity::event::auto_shut_off_volume::state_attributes::event_type::state::duration_threshold%]"
             }
           },
           "volume": {
-            "name": "Volume"
+            "name": "[%key:component::watergate::entity::event::auto_shut_off_volume::state_attributes::event_type::state::volume_threshold%]"
           },
           "duration": {
-            "name": "Duration"
+            "name": "[%key:component::watergate::entity::event::auto_shut_off_volume::state_attributes::event_type::state::duration_threshold%]"
           }
         }
       }

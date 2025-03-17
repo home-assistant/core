@@ -54,10 +54,10 @@ async def test_auto_shut_off_webhook(
     await init_integration(hass, mock_entry)
 
     def assert_state(entity_id: str, expected_state: str):
-        state = hass.states.get(entity_id)
+        state = hass.states.get(f"event.{entity_id}")
         assert state.state == str(expected_state)
 
-    assert_state("event." + entity_id, "unknown")
+    assert_state(entity_id, "unknown")
 
     telemetry_change_data = {
         "type": "auto-shut-off-report",
@@ -76,9 +76,9 @@ async def test_auto_shut_off_webhook(
     def assert_extra_state(
         entity_id: str, attribute: str, expected_attribute: StateType
     ):
-        attributes = hass.states.get(entity_id).attributes
+        attributes = hass.states.get(f"event.{entity_id}").attributes
         assert attributes.get(attribute) == expected_attribute
 
-    assert_extra_state("event." + entity_id, "event_type", event_type)
-    assert_extra_state("event." + entity_id, "volume", 1500)
-    assert_extra_state("event." + entity_id, "duration", 30)
+    assert_extra_state(entity_id, "event_type", event_type)
+    assert_extra_state(entity_id, "volume", 1500)
+    assert_extra_state(entity_id, "duration", 30)
