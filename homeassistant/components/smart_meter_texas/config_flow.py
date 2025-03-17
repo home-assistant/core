@@ -16,7 +16,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
-from homeassistant.util.ssl import client_context
+from homeassistant.util.ssl import get_default_context
 
 from .const import DOMAIN
 
