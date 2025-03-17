@@ -42,7 +42,7 @@ PlexAPI==4.15.16
 ProgettiHWSW==0.1.3
 
 # homeassistant.components.cast
-PyChromecast==14.0.5
+PyChromecast==14.0.6
 
 # homeassistant.components.flick_electric
 PyFlick==1.1.3
@@ -640,7 +640,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.39.5
+dbus-fast==2.39.6
 
 # homeassistant.components.debugpy
 debugpy==1.8.13
@@ -1011,7 +1011,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==8.3.0
+ical==9.0.1
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1262,7 +1262,7 @@ nextdns==4.0.0
 nhc==0.4.10
 
 # homeassistant.components.nibe_heatpump
-nibe==2.14.0
+nibe==2.17.0
 
 # homeassistant.components.nice_go
 nice-go==1.0.1
@@ -1995,7 +1995,7 @@ python-picnic-api2==1.2.2
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.12.2
+python-roborock==2.14.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.39
@@ -2122,7 +2122,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.12.2
+reolink-aio==0.12.3b1
 
 # homeassistant.components.rflink
 rflink==0.0.66
@@ -2334,7 +2334,7 @@ thermobeacon-ble==0.8.1
 thermopro-ble==0.11.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==1.0.4
+thinqconnect==1.0.5
 
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3
@@ -2352,7 +2352,7 @@ toonapi==0.3.0
 total-connect-client==2025.1.4
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.4.3
+tplink-omada-client==1.4.4
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
@@ -2542,7 +2542,7 @@ zeversolar==0.3.2
 zha==0.0.52
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.61.0
+zwave-js-server-python==0.62.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
