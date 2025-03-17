@@ -16,6 +16,7 @@ from .coordinator import FlickConfigEntry, FlickElectricDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=5)
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
