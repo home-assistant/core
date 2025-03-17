@@ -6,7 +6,7 @@ rules:
       There are no service actions.
   appropriate-polling:
     status: done
-    comment: >
+    comment: |
       There is no polling of the entities.
   brands: done
   common-modules: done
