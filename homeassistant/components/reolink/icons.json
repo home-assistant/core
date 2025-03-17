@@ -54,6 +54,72 @@
         "state": {
           "on": "mdi:sleep"
         }
+      },
+      "crossline_person": {
+        "default": "mdi:fence",
+        "state": {
+          "on": "mdi:fence-electric"
+        }
+      },
+      "crossline_vehicle": {
+        "default": "mdi:fence",
+        "state": {
+          "on": "mdi:fence-electric"
+        }
+      },
+      "crossline_dog_cat": {
+        "default": "mdi:fence",
+        "state": {
+          "on": "mdi:fence-electric"
+        }
+      },
+      "intrusion_person": {
+        "default": "mdi:location-enter",
+        "state": {
+          "on": "mdi:alert-circle-outline"
+        }
+      },
+      "intrusion_vehicle": {
+        "default": "mdi:location-enter",
+        "state": {
+          "on": "mdi:alert-circle-outline"
+        }
+      },
+      "intrusion_dog_cat": {
+        "default": "mdi:location-enter",
+        "state": {
+          "on": "mdi:alert-circle-outline"
+        }
+      },
+      "linger_person": {
+        "default": "mdi:account-switch",
+        "state": {
+          "on": "mdi:account-alert"
+        }
+      },
+      "linger_vehicle": {
+        "default": "mdi:account-switch",
+        "state": {
+          "on": "mdi:account-alert"
+        }
+      },
+      "linger_dog_cat": {
+        "default": "mdi:account-switch",
+        "state": {
+          "on": "mdi:account-alert"
+        }
+      },
+      "forgotten_item": {
+        "default": "mdi:package-variant-closed-plus",
+        "state": {
+          "on": "mdi:package-variant-closed-check"
+        }
+      },
+      "taken_item": {
+        "default": "mdi:package-variant-closed-minus",
+        "state": {
+          "on": "mdi:package-variant-closed-check"
+        }
       }
     },
     "button": {

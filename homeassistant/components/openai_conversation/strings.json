@@ -48,10 +48,10 @@
   "services": {
     "generate_image": {
       "name": "Generate image",
-      "description": "Turn a prompt into an image",
+      "description": "Turns a prompt into an image",
       "fields": {
         "config_entry": {
-          "name": "Config Entry",
+          "name": "Config entry",
           "description": "The config entry to use for this action"
         },
         "prompt": {
@@ -70,6 +70,24 @@
         "style": {
           "name": "Style",
           "description": "The style of the generated image"
+        }
+      }
+    },
+    "generate_content": {
+      "name": "Generate content",
+      "description": "Sends a conversational query to ChatGPT including any attached image files",
+      "fields": {
+        "config_entry": {
+          "name": "Config entry",
+          "description": "The config entry to use for this action"
+        },
+        "prompt": {
+          "name": "Prompt",
+          "description": "The prompt to send"
+        },
+        "filenames": {
+          "name": "Files",
+          "description": "List of files to upload"
         }
       }
     }

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from roborock.containers import RoborockStateCode
 from roborock.roborock_typing import DeviceProp
 
 from homeassistant.components.binary_sensor import (
@@ -12,7 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import ATTR_BATTERY_CHARGING, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -25,6 +26,8 @@ class RoborockBinarySensorDescription(BinarySensorEntityDescription):
     """A class that describes Roborock binary sensors."""
 
     value_fn: Callable[[DeviceProp], bool | int | None]
+    # If it is a dock entity
+    is_dock_entity: bool = False
 
 
 BINARY_SENSOR_DESCRIPTIONS = [
@@ -34,6 +37,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.dry_status,
+        is_dock_entity=True,
     ),
     RoborockBinarySensorDescription(
         key="water_box_carriage_status",
@@ -62,6 +66,13 @@ BINARY_SENSOR_DESCRIPTIONS = [
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.in_cleaning,
+    ),
+    RoborockBinarySensorDescription(
+        key=ATTR_BATTERY_CHARGING,
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.status.state
+        in (RoborockStateCode.charging, RoborockStateCode.charging_complete),
     ),
 ]
 
@@ -97,6 +108,7 @@ class RoborockBinarySensorEntity(RoborockCoordinatedEntityV1, BinarySensorEntity
         super().__init__(
             f"{description.key}_{coordinator.duid_slug}",
             coordinator,
+            is_dock_entity=description.is_dock_entity,
         )
         self.entity_description = description
 

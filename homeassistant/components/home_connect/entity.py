@@ -8,6 +8,7 @@ from typing import cast
 from aiohomeconnect.model import EventKey, OptionKey
 from aiohomeconnect.model.error import ActiveProgramNotSetError, HomeConnectError
 
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -51,8 +52,10 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.update_native_value()
+        available = self._attr_available = self.appliance.info.connected
         self.async_write_ha_state()
-        _LOGGER.debug("Updated %s, new state: %s", self.entity_id, self.state)
+        state = STATE_UNAVAILABLE if not available else self.state
+        _LOGGER.debug("Updated %s, new state: %s", self.entity_id, state)
 
     @property
     def bsh_key(self) -> str:
@@ -61,10 +64,13 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            self.appliance.info.connected and self._attr_available and super().available
-        )
+        """Return True if entity is available.
+
+        Do not use self.last_update_success for available state
+        as event updates should take precedence over the coordinator
+        refresh.
+        """
+        return self._attr_available
 
 
 class HomeConnectOptionEntity(HomeConnectEntity):

@@ -180,7 +180,6 @@ EXCEPTIONS = {
     "PyMicroBot",  # https://github.com/spycle/pyMicroBot/pull/3
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
-    "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
     "chacha20poly1305",  # LGPL
     "commentjson",  # https://github.com/vaidik/commentjson/pull/55
     "crownstone-cloud",  # https://github.com/crownstone/crownstone-lib-python-cloud/pull/5

@@ -37,7 +37,7 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 11
+  CACHE_VERSION: 12
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 9
   HA_SHORT_VERSION: "2025.4"
@@ -89,6 +89,7 @@ jobs:
       test_groups: ${{ steps.info.outputs.test_groups }}
       tests_glob: ${{ steps.info.outputs.tests_glob }}
       tests: ${{ steps.info.outputs.tests }}
+      lint_only: ${{ steps.info.outputs.lint_only }}
       skip_coverage: ${{ steps.info.outputs.skip_coverage }}
     runs-on: ubuntu-24.04
     steps:
@@ -142,6 +143,7 @@ jobs:
           test_group_count=10
           tests="[]"
           tests_glob=""
+          lint_only=""
           skip_coverage=""
 
           if [[ "${{ steps.integrations.outputs.changes }}" != "[]" ]];
@@ -192,6 +194,17 @@ jobs:
             test_full_suite="true"
           fi
 
+          if [[ "${{ github.event.inputs.lint-only }}" == "true" ]] \
+            || [[ "${{ github.event.inputs.pylint-only }}" == "true" ]] \
+            || [[ "${{ github.event.inputs.mypy-only }}" == "true" ]] \
+            || [[ "${{ github.event.inputs.audit-licenses-only }}" == "true" ]] \
+            || [[ "${{ github.event_name }}" == "push" \
+              && "${{ github.event.repository.full_name }}" != "home-assistant/core" ]];
+          then
+            lint_only="true"
+            skip_coverage="true"
+          fi
+
           if [[ "${{ github.event.inputs.skip-coverage }}" == "true" ]] \
             || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-skip-coverage') }}" == "true" ]];
           then
@@ -217,6 +230,8 @@ jobs:
           echo "tests=${tests}" >> $GITHUB_OUTPUT
           echo "tests_glob: ${tests_glob}"
           echo "tests_glob=${tests_glob}" >> $GITHUB_OUTPUT
+          echo "lint_only": ${lint_only}
+          echo "lint_only=${lint_only}" >> $GITHUB_OUTPUT
           echo "skip_coverage: ${skip_coverage}"
           echo "skip_coverage=${skip_coverage}" >> $GITHUB_OUTPUT
 
@@ -623,6 +638,25 @@ jobs:
           . venv/bin/activate
           python -m script.gen_requirements_all validate
 
+  dependency-review:
+    name: Dependency review
+    runs-on: ubuntu-24.04
+    needs:
+      - info
+      - base
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && needs.info.outputs.requirements == 'true'
+      && github.event_name == 'pull_request'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.2.2
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4.5.0
+        with:
+          license-check: false # We use our own license audit checks
+
   audit-licenses:
     name: Audit licenses
     runs-on: ubuntu-24.04
@@ -829,11 +863,7 @@ jobs:
   prepare-pytest-full:
     runs-on: ubuntu-24.04
     if: |
-      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
-      && github.event.inputs.lint-only != 'true'
-      && github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.mypy-only != 'true'
-      && github.event.inputs.audit-licenses-only != 'true'
+      needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
@@ -886,11 +916,7 @@ jobs:
   pytest-full:
     runs-on: ubuntu-24.04
     if: |
-      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
-      && github.event.inputs.lint-only != 'true'
-      && github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.mypy-only != 'true'
-      && github.event.inputs.audit-licenses-only != 'true'
+      needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
@@ -962,6 +988,7 @@ jobs:
           if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
             cov_params+=(--cov="homeassistant")
             cov_params+=(--cov-report=xml)
+            cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
           fi
 
           echo "Test group ${{ matrix.group }}: $(sed -n "${{ matrix.group }},1p" pytest_buckets.txt)"
@@ -992,6 +1019,12 @@ jobs:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
           overwrite: true
+      - name: Upload test results artifact
+        if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
+        uses: actions/upload-artifact@v4.6.1
+        with:
+          name: test-results-full-${{ matrix.python-version }}-${{ matrix.group }}
+          path: junit.xml
       - name: Remove pytest_buckets
         run: rm pytest_buckets.txt
       - name: Check dirty
@@ -1009,11 +1042,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: password
         options: --health-cmd="mysqladmin ping -uroot -ppassword" --health-interval=5s --health-timeout=2s --health-retries=3
     if: |
-      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
-      && github.event.inputs.lint-only != 'true'
-      && github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.mypy-only != 'true'
-      && github.event.inputs.audit-licenses-only != 'true'
+      needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.mariadb_groups != '[]'
     needs:
       - info
@@ -1088,6 +1117,7 @@ jobs:
             cov_params+=(--cov="homeassistant.components.recorder")
             cov_params+=(--cov-report=xml)
             cov_params+=(--cov-report=term-missing)
+            cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
           fi
 
           python3 -b -X dev -m pytest \
@@ -1122,6 +1152,13 @@ jobs:
             steps.pytest-partial.outputs.mariadb }}
           path: coverage.xml
           overwrite: true
+      - name: Upload test results artifact
+        if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
+        uses: actions/upload-artifact@v4.6.1
+        with:
+          name: test-results-mariadb-${{ matrix.python-version }}-${{
+            steps.pytest-partial.outputs.mariadb }}
+          path: junit.xml
       - name: Check dirty
         run: |
           ./script/check_dirty
@@ -1137,11 +1174,7 @@ jobs:
           POSTGRES_PASSWORD: password
         options: --health-cmd="pg_isready -hlocalhost -Upostgres" --health-interval=5s --health-timeout=2s --health-retries=3
     if: |
-      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
-      && github.event.inputs.lint-only != 'true'
-      && github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.mypy-only != 'true'
-      && github.event.inputs.audit-licenses-only != 'true'
+      needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.postgresql_groups != '[]'
     needs:
       - info
@@ -1218,6 +1251,7 @@ jobs:
             cov_params+=(--cov="homeassistant.components.recorder")
             cov_params+=(--cov-report=xml)
             cov_params+=(--cov-report=term-missing)
+            cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
           fi
 
           python3 -b -X dev -m pytest \
@@ -1253,6 +1287,13 @@ jobs:
             steps.pytest-partial.outputs.postgresql }}
           path: coverage.xml
           overwrite: true
+      - name: Upload test results artifact
+        if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
+        uses: actions/upload-artifact@v4.6.1
+        with:
+          name: test-results-postgres-${{ matrix.python-version }}-${{
+            steps.pytest-partial.outputs.postgresql }}
+          path: junit.xml
       - name: Check dirty
         run: |
           ./script/check_dirty
@@ -1285,11 +1326,7 @@ jobs:
   pytest-partial:
     runs-on: ubuntu-24.04
     if: |
-      (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
-      && github.event.inputs.lint-only != 'true'
-      && github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.mypy-only != 'true'
-      && github.event.inputs.audit-licenses-only != 'true'
+      needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.tests_glob
       && needs.info.outputs.test_full_suite == 'false'
     needs:
@@ -1365,6 +1402,7 @@ jobs:
             cov_params+=(--cov="homeassistant.components.${{ matrix.group }}")
             cov_params+=(--cov-report=xml)
             cov_params+=(--cov-report=term-missing)
+            cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
           fi
 
           python3 -b -X dev -m pytest \
@@ -1394,6 +1432,12 @@ jobs:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
           overwrite: true
+      - name: Upload test results artifact
+        if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
+        uses: actions/upload-artifact@v4.6.1
+        with:
+          name: test-results-partial-${{ matrix.python-version }}-${{ matrix.group }}
+          path: junit.xml
       - name: Check dirty
         run: |
           ./script/check_dirty
@@ -1418,4 +1462,29 @@ jobs:
         uses: codecov/codecov-action@v5.4.0
         with:
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  upload-test-results:
+    name: Upload test results to Codecov
+    # codecov/test-results-action currently doesn't support tokenless uploads
+    # therefore we can't run it on forks
+    if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork) && needs.info.outputs.skip_coverage != 'true' && !cancelled() }}
+    runs-on: ubuntu-24.04
+    needs:
+      - info
+      - pytest-partial
+      - pytest-full
+      - pytest-postgres
+      - pytest-mariadb
+    timeout-minutes: 10
+    steps:
+      - name: Download all coverage artifacts
+        uses: actions/download-artifact@v4.1.9
+        with:
+          pattern: test-results-*
+      - name: Upload test results to Codecov
+        uses: codecov/test-results-action@v1
+        with:
+          fail_ci_if_error: true
+          verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}

@@ -1,4 +1,59 @@
 # serializer version: 1
+# name: test_sensor[sensor.nettigo_air_monitor_bh1750_illuminance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nettigo_air_monitor_bh1750_illuminance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
+    'original_icon': None,
+    'original_name': 'BH1750 illuminance',
+    'platform': 'nam',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'bh1750_illuminance',
+    'unique_id': 'aa:bb:cc:dd:ee:ff-bh1750_illuminance',
+    'unit_of_measurement': 'lx',
+  })
+# ---
+# name: test_sensor[sensor.nettigo_air_monitor_bh1750_illuminance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'illuminance',
+      'friendly_name': 'Nettigo Air Monitor BH1750 illuminance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'lx',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nettigo_air_monitor_bh1750_illuminance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '298.45',
+  })
+# ---
 # name: test_sensor[sensor.nettigo_air_monitor_bme280_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

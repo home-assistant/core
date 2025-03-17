@@ -16,10 +16,10 @@ from homeassistant.components.blueprint import (
     DomainBlueprints,
 )
 from homeassistant.components.template import DOMAIN, SERVICE_RELOAD
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-from homeassistant.util import yaml as yaml_util
+from homeassistant.util import dt as dt_util, yaml as yaml_util
 
 from tests.common import async_mock_service
 
@@ -212,6 +212,61 @@ async def test_reload_template_when_blueprint_changes(hass: HomeAssistant) -> No
     assert not_inverted.state == "on"
 
 
+async def test_trigger_event_sensor(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test event sensor blueprint."""
+    blueprint = "test_event_sensor.yaml"
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "use_blueprint": {
+                        "path": blueprint,
+                        "input": {
+                            "event_type": "my_custom_event",
+                            "event_data": {"foo": "bar"},
+                        },
+                    },
+                    "name": "My Custom Event",
+                },
+            ]
+        },
+    )
+
+    context = Context()
+    now = dt_util.utcnow()
+    with patch("homeassistant.util.dt.now", return_value=now):
+        hass.bus.async_fire(
+            "my_custom_event", {"foo": "bar", "beer": 2}, context=context
+        )
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.my_custom_event")
+    assert date_state is not None
+    assert date_state.state == now.isoformat(timespec="seconds")
+    data = date_state.attributes.get("data")
+    assert data is not None
+    assert data != ""
+    assert data.get("foo") == "bar"
+    assert data.get("beer") == 2
+
+    inverted_foo_template = template.helpers.blueprint_in_template(
+        hass, "sensor.my_custom_event"
+    )
+    assert inverted_foo_template == blueprint
+
+    inverted_binary_sensor_blueprint_entity_ids = (
+        template.helpers.templates_with_blueprint(hass, blueprint)
+    )
+    assert len(inverted_binary_sensor_blueprint_entity_ids) == 1
+
+    with pytest.raises(BlueprintInUse):
+        await template.async_get_blueprints(hass).async_remove_blueprint(blueprint)
+
+
 async def test_domain_blueprint(hass: HomeAssistant) -> None:
     """Test DomainBlueprint services."""
     reload_handler_calls = async_mock_service(hass, DOMAIN, SERVICE_RELOAD)
@@ -262,7 +317,8 @@ async def test_invalid_blueprint(
         )
 
     assert "more than one platform defined per blueprint" in caplog.text
-    assert await template.async_get_blueprints(hass).async_get_blueprints() == {}
+    blueprints = await template.async_get_blueprints(hass).async_get_blueprints()
+    assert "invalid.yaml" not in blueprints
 
 
 async def test_no_blueprint(hass: HomeAssistant) -> None:

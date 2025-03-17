@@ -34,10 +34,12 @@ from .const import (
     CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
+    CONF_THINKING_BUDGET,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_THINKING_BUDGET,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -128,21 +130,29 @@ class AnthropicOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         options: dict[str, Any] | MappingProxyType[str, Any] = self.config_entry.options
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
                 if user_input[CONF_LLM_HASS_API] == "none":
                     user_input.pop(CONF_LLM_HASS_API)
-                return self.async_create_entry(title="", data=user_input)
 
-            # Re-render the options again, now with the recommended options shown/hidden
-            self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
+                if user_input.get(
+                    CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET
+                ) >= user_input.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS):
+                    errors[CONF_THINKING_BUDGET] = "thinking_budget_too_large"
 
-            options = {
-                CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
-                CONF_PROMPT: user_input[CONF_PROMPT],
-                CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
-            }
+                if not errors:
+                    return self.async_create_entry(title="", data=user_input)
+            else:
+                # Re-render the options again, now with the recommended options shown/hidden
+                self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
+
+                options = {
+                    CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
+                    CONF_PROMPT: user_input[CONF_PROMPT],
+                    CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
+                }
 
         suggested_values = options.copy()
         if not suggested_values.get(CONF_PROMPT):
@@ -156,6 +166,7 @@ class AnthropicOptionsFlow(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=schema,
+            errors=errors or None,
         )
 
 
@@ -205,6 +216,10 @@ def anthropic_config_option_schema(
                 CONF_TEMPERATURE,
                 default=RECOMMENDED_TEMPERATURE,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+            vol.Optional(
+                CONF_THINKING_BUDGET,
+                default=RECOMMENDED_THINKING_BUDGET,
+            ): int,
         }
     )
     return schema

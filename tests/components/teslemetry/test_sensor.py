@@ -72,7 +72,7 @@ async def test_sensors_streaming(
                 Signal.AC_CHARGING_ENERGY_IN: 10,
                 Signal.AC_CHARGING_POWER: 2,
                 Signal.CHARGING_CABLE_TYPE: None,
-                Signal.TIME_TO_FULL_CHARGE: 10,
+                Signal.TIME_TO_FULL_CHARGE: 0.166666667,
                 Signal.MINUTES_TO_ARRIVAL: None,
             },
             "createdAt": "2024-10-04T10:45:17.537Z",

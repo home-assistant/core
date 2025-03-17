@@ -1,4 +1,14 @@
 # serializer version: 1
+# name: test_set_operation_mode[botched]
+  list([
+    dict({
+      'until': HAFakeDatetime(2024, 7, 10, 12, 30, tzinfo=datetime.timezone.utc),
+    }),
+    dict({
+      'until': HAFakeDatetime(2024, 7, 10, 12, 30, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
 # name: test_set_operation_mode[default]
   list([
     dict({
@@ -29,9 +39,9 @@
         ),
         'dhw_id': '3933910',
         'setpoints': dict({
-          'next_sp_from': HAFakeDatetime(2024, 7, 10, 13, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 30, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
           'next_sp_state': 'Off',
-          'this_sp_from': HAFakeDatetime(2024, 7, 10, 12, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 6, 30, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
           'this_sp_state': 'On',
         }),
         'state_status': dict({

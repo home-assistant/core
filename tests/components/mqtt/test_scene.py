@@ -10,7 +10,7 @@ from homeassistant.components import mqtt, scene
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 
-from .test_common import (
+from .common import (
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,

@@ -110,7 +110,9 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         self._attr_hvac_modes = [HVACMode.OFF]
         self._attr_hvac_mode = HVACMode.OFF
         self._attr_preset_modes = []
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_temperature_unit = (
+            self._get_unit_of_measurement(self.data.unit) or UnitOfTemperature.CELSIUS
+        )
         self._requested_hvac_mode: str | None = None
 
         # Set up HVAC modes.
@@ -181,6 +183,11 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         self._attr_target_temperature = self.data.target_temp
         self._attr_target_temperature_high = self.data.target_temp_high
         self._attr_target_temperature_low = self.data.target_temp_low
+
+        # Update unit.
+        self._attr_temperature_unit = (
+            self._get_unit_of_measurement(self.data.unit) or UnitOfTemperature.CELSIUS
+        )
 
         _LOGGER.debug(
             "[%s:%s] update status: c:%s, t:%s, l:%s, h:%s, hvac:%s, unit:%s, step:%s",
