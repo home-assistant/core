@@ -44,6 +44,31 @@
     'title': 'Favorites',
   })
 # ---
+# name: test_browse_media_favorites[object.container.album.musicAlbum-favorites_folder]
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'children': list([
+      dict({
+        'can_expand': False,
+        'can_play': True,
+        'children_media_class': None,
+        'media_class': 'album',
+        'media_content_id': 'FV:2/8',
+        'media_content_type': 'favorite_item_id',
+        'thumbnail': 'http://192.168.42.2:1400/getaa?u=x-file-cifs://192.168.42.2/music/iTunes%20Music/Aerosmith/1984&v=742',
+        'title': '1984',
+      }),
+    ]),
+    'children_media_class': 'album',
+    'media_class': 'directory',
+    'media_content_id': '',
+    'media_content_type': 'favorites',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'Albums',
+  })
+# ---
 # name: test_browse_media_favorites[object.item.audioItem.audioBook-favorites_folder]
   dict({
     'can_expand': True,

@@ -640,7 +640,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.39.5
+dbus-fast==2.39.6
 
 # homeassistant.components.debugpy
 debugpy==1.8.13
@@ -1014,7 +1014,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==8.3.0
+ical==9.0.1
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1087,7 +1087,7 @@ kegtron-ble==0.4.0
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.1.30.194235
+knx-frontend==2025.3.8.214559
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1265,7 +1265,7 @@ nextdns==4.0.0
 nhc==0.4.10
 
 # homeassistant.components.nibe_heatpump
-nibe==2.14.0
+nibe==2.17.0
 
 # homeassistant.components.nice_go
 nice-go==1.0.1
@@ -1998,7 +1998,7 @@ python-picnic-api2==1.2.2
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.12.2
+python-roborock==2.14.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.39
@@ -2355,7 +2355,7 @@ toonapi==0.3.0
 total-connect-client==2025.1.4
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.4.3
+tplink-omada-client==1.4.4
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
