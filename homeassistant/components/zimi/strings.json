@@ -9,11 +9,13 @@
         "title": "Zimi",
         "description": "Confirm details of your Zimi Cloud Connect device.",
         "data": {
+          "title": "Title",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "mac": "MAC address"
         },
         "data_description": {
+          "title": "Mandatory - ZCC user-friendly title.",
           "host": "Mandatory - ZCC IP address (auto-discovered or manually overriden).",
           "port": "Mandatory - ZCC port number (auto-discovered or manually overriden).",
           "mac": "Optional - ZCC BLE MAC address (auto-discovered or manually overriden)."
