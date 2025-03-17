@@ -35,11 +35,7 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.start import async_at_start
@@ -68,6 +64,7 @@ from .const import (
     SQUEEZEBOX_SOURCE_STRINGS,
 )
 from .coordinator import SqueezeBoxPlayerUpdateCoordinator
+from .entity import SqueezeboxEntity
 
 if TYPE_CHECKING:
     from . import SqueezeboxConfigEntry
@@ -182,7 +179,9 @@ def get_announce_timeout(extra: dict) -> int | None:
 
 
 class SqueezeBoxMediaPlayerEntity(
-    CoordinatorEntity[SqueezeBoxPlayerUpdateCoordinator], MediaPlayerEntity
+    CoordinatorEntity[SqueezeBoxPlayerUpdateCoordinator],
+    MediaPlayerEntity,
+    SqueezeboxEntity,
 ):
     """Representation of the media player features of a SqueezeBox device.
 
@@ -217,30 +216,13 @@ class SqueezeBoxMediaPlayerEntity(
     def __init__(self, coordinator: SqueezeBoxPlayerUpdateCoordinator) -> None:
         """Initialize the SqueezeBox device."""
         super().__init__(coordinator)
-        player = coordinator.player
-        self._player = player
+        SqueezeboxEntity.__init__(self, coordinator)
+        # player = coordinator.player
+        # self._player = player
         self._query_result: bool | dict = {}
         self._remove_dispatcher: Callable | None = None
         self._previous_media_position = 0
-        self._attr_unique_id = format_mac(player.player_id)
-        _manufacturer = None
-        if player.model.startswith("SqueezeLite") or "SqueezePlay" in player.model:
-            _manufacturer = "Ralph Irving"
-        elif (
-            "Squeezebox" in player.model
-            or "Transporter" in player.model
-            or "Slim" in player.model
-        ):
-            _manufacturer = "Logitech"
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            name=player.name,
-            connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)},
-            via_device=(DOMAIN, coordinator.server_uuid),
-            model=player.model,
-            manufacturer=_manufacturer,
-        )
+        self._attr_unique_id = format_mac(self._player.player_id)
         self._browse_data = BrowseData()
 
     @callback
