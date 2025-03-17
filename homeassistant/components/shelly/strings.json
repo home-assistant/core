@@ -138,6 +138,24 @@
       }
     },
     "sensor": {
+      "gas_detected": {
+        "state": {
+          "none": "None",
+          "mild": "Mild",
+          "heavy": "Heavy",
+          "test": "Test"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "none": "None",
+              "mild": "Mild",
+              "heavy": "Heavy",
+              "test": "Test"
+            }
+          }
+        }
+      },
       "operation": {
         "state": {
           "warmup": "Warm-up",
@@ -146,6 +164,24 @@
         },
         "state_attributes": {
           "self_test": {
+            "state": {
+              "not_completed": "Not completed",
+              "completed": "Completed",
+              "running": "Running",
+              "pending": "Pending"
+            }
+          }
+        }
+      },
+      "self_test": {
+        "state": {
+          "not_completed": "Not completed",
+          "completed": "Completed",
+          "running": "Running",
+          "pending": "Pending"
+        },
+        "state_attributes": {
+          "options": {
             "state": {
               "not_completed": "Not completed",
               "completed": "Completed",
