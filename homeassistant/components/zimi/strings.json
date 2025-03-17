@@ -16,7 +16,7 @@
         "data_description": {
           "host": "Mandatory - ZCC IP address (auto-discovered or manually overriden).",
           "port": "Mandatory - ZCC port number (auto-discovered or manually overriden).",
-          "mac": "Mandatory - ZCC BLE MAC address (auto-discovered or manually overriden)."
+          "mac": "Optional - ZCC BLE MAC address (auto-discovered or manually overriden)."
         }
       }
     },
