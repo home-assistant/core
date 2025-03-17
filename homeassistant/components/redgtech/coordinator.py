@@ -45,7 +45,6 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator [List[RedgtechDevice]]
             self.access_token = access_token
             return access_token
         except Exception as e:
-            _LOGGER.error("Login failed: %s", e)
             raise HomeAssistantError("Login failed")
 
     async def _async_update_data(self) -> List[RedgtechDevice]:
@@ -54,7 +53,6 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator [List[RedgtechDevice]]
         try:
             data = await self.api.get_data(self.access_token)
         except Exception as e:
-            _LOGGER.error(f"Error fetching data: {e}")
             raise UpdateFailed(f"Error fetching data: {e}")
 
         devices: List[RedgtechDevice] = []
@@ -74,8 +72,6 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator [List[RedgtechDevice]]
         """Set the state of a device."""
         success = await self.api.set_switch_state(device_id, state, self.access_token)
         if success:
-            _LOGGER.debug("State of %s set to %s", device_id, state)
             await self.async_request_refresh()
         else:
-            _LOGGER.error("Failed to set state for %s", device_id)
             raise HomeAssistantError(f"Failed to set state for {device_id}")

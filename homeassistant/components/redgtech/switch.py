@@ -8,7 +8,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.const import STATE_ON, STATE_OFF
 from .const import DOMAIN
 from .coordinator import RedgtechDataUpdateCoordinator, RedgtechDevice
-from . import RedgtechEntryData
 from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,7 +16,8 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the switch platform."""
-    coordinator = config_entry.runtime_data.coordinator
+
+    coordinator = config_entry.runtime_data
 
     switches = []
     for device in coordinator.data:

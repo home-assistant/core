@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: only entity actions
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -17,39 +15,31 @@ rules:
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
-  test-before-configure:
-    status: done
-    comment: tested by publishing a success message to the topic
-  test-before-setup:
-    status: exempt
-    comment: testing would require to trigger a notification
+  test-before-configure: done
+  test-before-setup: done
   unique-config-entry: done
-
   # Silver
   action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
-    comment: the integration has no options
+    comment: No options flow
   docs-installation-parameters: done
-  entity-unavailable:
-    status: exempt
-    comment: the integration only implements a stateless notify entity.
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: exempt
-    comment: the integration only integrates state-less entities
+  log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow:
-    status: exempt
-    comment: the integration currently does not implement authenticated requests
+  reauthentication-flow: done
   test-coverage: done
-
   # Gold
-  devices: todo
-  diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: Discovery not possible
+  discovery:
+    status: exempt
+    comment: Discovery not possible
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -59,24 +49,14 @@ rules:
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: done
-  entity-device-class:
-    status: exempt
-    comment: no suitable device class for the notify entity
-  entity-disabled-by-default:
-    status: exempt
-    comment: only one entity
-  entity-translations:
-    status: exempt
-    comment: the notify entity uses the topic as name, no translation required
-  exception-translations: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow: todo
-  repair-issues:
-    status: exempt
-    comment: the integration has no repeairs
-  stale-devices:
-    status: exempt
-    comment: only one device per entry, is deleted with the entry.
+  repair-issues: done
+  stale-devices: done
 
   # Platinum
   async-dependency: done
