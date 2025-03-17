@@ -65,8 +65,6 @@ def mock_controller_connection_failed():
         (
             {
                 CONF_TLS: True,
-                CONF_HOST: "velbus",
-                CONF_PORT: 6000,
                 CONF_PASSWORD: "password",
             },
             "tls://password@velbus:6000",
@@ -74,14 +72,12 @@ def mock_controller_connection_failed():
         (
             {
                 CONF_TLS: True,
-                CONF_HOST: "velbus",
-                CONF_PORT: 6000,
                 CONF_PASSWORD: "",
             },
             "tls://velbus:6000",
         ),
-        ({CONF_TLS: True, CONF_HOST: "velbus", CONF_PORT: 6000}, "tls://velbus:6000"),
-        ({CONF_TLS: False, CONF_HOST: "velbus", CONF_PORT: 6000}, "velbus:6000"),
+        ({CONF_TLS: True}, "tls://velbus:6000"),
+        ({CONF_TLS: False}, "velbus:6000"),
     ],
 )
 async def test_user_network_succes(
@@ -105,7 +101,12 @@ async def test_user_network_succes(
     assert result["type"] is FlowResultType.FORM
     # fill in the network form
     result = await hass.config_entries.flow.async_configure(
-        result.get("flow_id"), inputParams
+        result.get("flow_id"),
+        {
+            CONF_HOST: "velbus",
+            CONF_PORT: 6000,
+            **inputParams,
+        },
     )
     assert result
     assert result.get("type") is FlowResultType.CREATE_ENTRY
