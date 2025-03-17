@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from pathlib import Path
 
+import aiofiles
 from google.genai import Client, types
 from google.genai.errors import APIError, ClientError
 from requests.exceptions import Timeout
@@ -33,12 +34,15 @@ from .const import (
     CONF_PROMPT,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_IMAGE_MODEL,
     TIMEOUT_MILLIS,
 )
 
 SERVICE_GENERATE_CONTENT = "generate_content"
+SERVICE_GENERATE_IMAGE = "generate_image"
 CONF_IMAGE_FILENAME = "image_filename"
 CONF_FILENAMES = "filenames"
+CONF_OUTPUT_FILENAME = "output_filename"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (Platform.CONVERSATION,)
@@ -134,6 +138,93 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             }
         ),
         supports_response=SupportsResponse.ONLY,
+    )
+
+    async def generate_image(call: ServiceCall) -> ServiceResponse:
+        """Generate content from text and optionally images."""
+
+        output_filename = call.data[CONF_OUTPUT_FILENAME]
+        if not hass.config.is_allowed_path(output_filename):
+            raise HomeAssistantError(
+                f"Cannot save to `{output_filename}`, no access to path; "
+                "`allowlist_external_dirs` may need to be adjusted in "
+                "`configuration.yaml`"
+            )
+
+        prompt_parts = [call.data[CONF_PROMPT]]
+
+        config_entry: GoogleGenerativeAIConfigEntry = (
+            hass.config_entries.async_loaded_entries(DOMAIN)[0]
+        )
+
+        client = config_entry.runtime_data
+
+        prompt_parts += await upload_attachments(
+            client,
+            call.data[CONF_FILENAMES],
+        )
+
+        try:
+            response = await client.aio.models.generate_content(
+                model=RECOMMENDED_IMAGE_MODEL,
+                contents=prompt_parts,
+                config=types.GenerateContentConfig(
+                    response_modalities=["Text", "Image"],
+                ),
+            )
+        except (
+            APIError,
+            ValueError,
+        ) as err:
+            raise HomeAssistantError(f"Error generating content: {err}") from err
+
+        if response.prompt_feedback:
+            raise HomeAssistantError(
+                f"Error generating content due to content violations, reason: {response.prompt_feedback.block_reason_message}"
+            )
+
+        if (
+            not response.candidates
+            or not response.candidates[0].content
+            or not response.candidates[0].content.parts
+        ):
+            raise HomeAssistantError("Unknown error generating content")
+
+        image_parts = [
+            part
+            for part in response.candidates[0].content.parts
+            if part.inline_data
+            and part.inline_data.mime_type
+            and part.inline_data.mime_type.startswith("image/")
+        ]
+        if (
+            len(image_parts) != 1
+            or not image_parts[0].inline_data
+            or not image_parts[0].inline_data.data
+        ):
+            raise HomeAssistantError(
+                f"Prompt did not generate exactly one image; found {len(image_parts)} images.\n\nResponse text: {response.text}"
+            )
+
+        async with aiofiles.open(output_filename, "wb") as file:
+            await file.write(image_parts[0].inline_data.data)
+
+        return {"text": response.text}
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GENERATE_IMAGE,
+        generate_image,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_PROMPT): cv.string,
+                vol.Optional(CONF_FILENAMES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Required(CONF_OUTPUT_FILENAME): cv.string,
+            }
+        ),
+        supports_response=SupportsResponse.OPTIONAL,
     )
     return True
 

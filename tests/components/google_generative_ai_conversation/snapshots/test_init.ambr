@@ -31,6 +31,22 @@
     ),
   ])
 # ---
+# name: test_generate_image
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'config': GenerateContentConfig(http_options=None, system_instruction=None, temperature=None, top_p=None, top_k=None, candidate_count=None, max_output_tokens=None, stop_sequences=None, response_logprobs=None, logprobs=None, presence_penalty=None, frequency_penalty=None, seed=None, response_mime_type=None, response_schema=None, routing_config=None, safety_settings=None, tools=None, tool_config=None, labels=None, cached_content=None, response_modalities=['Text', 'Image'], media_resolution=None, speech_config=None, audio_timestamp=None, automatic_function_calling=None, thinking_config=None),
+        'contents': list([
+          'Draw a picture of a cat',
+        ]),
+        'model': 'models/gemini-2.0-flash-exp',
+      }),
+    ),
+  ])
+# ---
 # name: test_load_entry_with_unloaded_entries
   list([
     tuple(
