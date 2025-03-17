@@ -70,14 +70,6 @@ async def test_floorplan_image(
             return_value=MAP_DATA,
         ) as parse_map,
     ):
-        #     async_fire_time_changed(hass, now)
-        #     await hass.async_block_till_done()
-        #     # 2 times, one for both coordinators.
-        #     assert parse_map.call_count == 2
-        # with patch(
-        #     "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
-        #     return_value=new_map_data,
-        # ) as parse_map:
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
         # This one isn't selected, so the parse_map count should not increase.
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_downstairs")
