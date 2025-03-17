@@ -40,7 +40,7 @@ from .exceptions import (
     ReolinkWebhookException,
     UserNotAdmin,
 )
-from .util import get_store
+from .util import ReolinkConfigEntry, get_store
 
 DEFAULT_TIMEOUT = 30
 FIRST_TCP_PUSH_TIMEOUT = 10
@@ -66,11 +66,11 @@ class ReolinkHost:
         hass: HomeAssistant,
         config: Mapping[str, Any],
         options: Mapping[str, Any],
-        config_entry_id: str | None = None,
+        config_entry: ReolinkConfigEntry | None = None,
     ) -> None:
         """Initialize Reolink Host. Could be either NVR, or Camera."""
         self._hass: HomeAssistant = hass
-        self._config_entry_id = config_entry_id
+        self._config_entry = config_entry
         self._config = config
         self._unique_id: str = ""
 
@@ -149,15 +149,18 @@ class ReolinkHost:
     async def async_init(self) -> None:
         """Connect to Reolink host."""
         if not self._api.valid_password():
-            if len(self._config[CONF_PASSWORD]) >= 32:
+            if (
+                len(self._config[CONF_PASSWORD]) >= 32
+                and self._config_entry is not None
+            ):
                 ir.async_create_issue(
                     self._hass,
                     DOMAIN,
-                    "password_too_long",
+                    f"password_too_long_{self._config_entry.entry_id}",
                     is_fixable=True,
                     severity=ir.IssueSeverity.ERROR,
                     translation_key="password_too_long",
-                    translation_placeholders={"name": self._api.camera_name(ch)},
+                    translation_placeholders={"name": self._config_entry.title},
                 )
 
             raise PasswordIncompatible(
@@ -167,11 +170,12 @@ class ReolinkHost:
                 "and not be longer than 31 characters"
             )
 
-        ir.async_delete_issue(self._hass, DOMAIN, "password_too_long")
-
         store: Store[str] | None = None
-        if self._config_entry_id is not None:
-            store = get_store(self._hass, self._config_entry_id)
+        if self._config_entry is not None:
+            ir.async_delete_issue(
+                self._hass, DOMAIN, f"password_too_long_{self._config_entry.entry_id}"
+            )
+            store = get_store(self._hass, self._config_entry.entry_id)
             if self._config.get(CONF_SUPPORTS_PRIVACY_MODE) and (
                 data := await store.async_load()
             ):
