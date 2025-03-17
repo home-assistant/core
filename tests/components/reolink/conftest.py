@@ -35,6 +35,7 @@ TEST_PASSWORD = "password"
 TEST_PASSWORD2 = "new_password"
 TEST_MAC = "aa:bb:cc:dd:ee:ff"
 TEST_MAC2 = "ff:ee:dd:cc:bb:aa"
+TEST_MAC_CAM = "11:22:33:44:55:66"
 DHCP_FORMATTED_MAC = "aabbccddeeff"
 TEST_UID = "ABC1234567D89EFG"
 TEST_UID_CAM = "DEF7654321D89GHT"
@@ -140,6 +141,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         # Disable tcp push by default for tests
         host_mock.baichuan.port = TEST_BC_PORT
         host_mock.baichuan.events_active = False
+        host_mock.baichuan.mac_address.return_value = TEST_MAC_CAM
         host_mock.baichuan.privacy_mode.return_value = False
         host_mock.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
         host_mock.baichuan.abilities = {
