@@ -346,12 +346,33 @@ async def test_block_sensor_without_value(
 
 
 @pytest.mark.parametrize(
-    ("entity", "initial_state", "block_id", "attribute", "value"),
+    ("entity", "initial_state", "block_id", "attribute", "value", "final_value"),
     [
-        ("test_name_battery", "98", DEVICE_BLOCK_ID, "battery", None),
-        ("test_name_operation", "normal", SENSOR_BLOCK_ID, "sensorOp", "unknown"),
-        ("test_name_operation", "normal", SENSOR_BLOCK_ID, "sensorOp", "normal"),
-        ("test_name_self_test", "pending", SENSOR_BLOCK_ID, "selfTest", "completed"),
+        ("test_name_battery", "98", DEVICE_BLOCK_ID, "battery", None, STATE_UNKNOWN),
+        (
+            "test_name_operation",
+            "normal",
+            SENSOR_BLOCK_ID,
+            "sensorOp",
+            None,
+            STATE_UNKNOWN,
+        ),
+        (
+            "test_name_operation",
+            "normal",
+            SENSOR_BLOCK_ID,
+            "sensorOp",
+            "normal",
+            "normal",
+        ),
+        (
+            "test_name_self_test",
+            "pending",
+            SENSOR_BLOCK_ID,
+            "selfTest",
+            "completed",
+            "completed",
+        ),
     ],
 )
 async def test_block_sensor_values(
@@ -363,6 +384,7 @@ async def test_block_sensor_values(
     block_id: int,
     attribute: str,
     value: str | None,
+    final_value: str,
 ) -> None:
     """Test block sensor unknown value."""
     entity_id = f"{SENSOR_DOMAIN}.{entity}"
@@ -373,7 +395,7 @@ async def test_block_sensor_values(
     monkeypatch.setattr(mock_block_device.blocks[block_id], attribute, value)
     mock_block_device.mock_update()
 
-    assert hass.states.get(entity_id).state == value or STATE_UNKNOWN
+    assert hass.states.get(entity_id).state == final_value
 
 
 async def test_rpc_sensor(
