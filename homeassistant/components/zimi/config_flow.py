@@ -16,6 +16,7 @@ from zcc import (
 )
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.helpers.device_registry import format_mac
 
@@ -62,7 +63,7 @@ class ZimiConfigException(Exception):
             self.error_detail = None
 
 
-class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for zcc."""
 
     api: ControlPoint
