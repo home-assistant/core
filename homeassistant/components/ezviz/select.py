@@ -5,7 +5,12 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pyezvizapi.constants import BatteryCameraWorkMode, DeviceSwitchType, DeviceCatagories, SoundMode
+from pyezvizapi.constants import (
+    BatteryCameraWorkMode,
+    DeviceCatagories,
+    DeviceSwitchType,
+    SoundMode,
+)
 from pyezvizapi.exceptions import HTTPError, PyEzvizError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
