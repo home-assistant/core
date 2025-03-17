@@ -10,7 +10,7 @@ from pyezvizapi.exceptions import HTTPError, PyEzvizError
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -26,7 +26,7 @@ BRIGHTNESS_RANGE = (1, 255)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EzvizConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EZVIZ lights based on a config entry."""
     coordinator = entry.runtime_data

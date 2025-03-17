@@ -40,6 +40,8 @@ from .data import SystemBridgeData
 class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData]):
     """Class to manage fetching System Bridge data from single endpoint."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -65,6 +67,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         super().__init__(
             hass,
             LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )

@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
-from aioshelly.const import MODEL_BLU_GATEWAY_GEN3
+from aioshelly.const import MODEL_BLU_GATEWAY_G3
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -345,17 +345,60 @@ async def test_block_sensor_without_value(
     assert hass.states.get(entity_id) is None
 
 
+@pytest.mark.parametrize(
+    ("entity", "initial_state", "block_id", "attribute", "value"),
+    [
+        ("test_name_battery", "98", DEVICE_BLOCK_ID, "battery", None),
+        ("test_name_operation", "normal", SENSOR_BLOCK_ID, "sensorOp", "unknown"),
+    ],
+)
 async def test_block_sensor_unknown_value(
-    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity: str,
+    initial_state: str,
+    block_id: int,
+    attribute: str,
+    value: str | None,
 ) -> None:
     """Test block sensor unknown value."""
-    entity_id = f"{SENSOR_DOMAIN}.test_name_battery"
+    entity_id = f"{SENSOR_DOMAIN}.{entity}"
     await init_integration(hass, 1)
 
-    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "battery", None)
+    assert hass.states.get(entity_id).state == initial_state
+
+    monkeypatch.setattr(mock_block_device.blocks[block_id], attribute, value)
     mock_block_device.mock_update()
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("lamp_life_seconds", "percentage"),
+    [
+        (0 * 3600, "100.0"),  # 0 hours, 100% remaining
+        (16 * 3600, "99.8222222222222"),
+        (4500 * 3600, "50.0"),  # 4500 hours, 50% remaining
+        (9000 * 3600, "0.0"),  # 9000 hours, 0% remaining
+        (10000 * 3600, "0.0"),  # > 9000 hours, 0% remaining
+    ],
+)
+async def test_block_shelly_air_lamp_life(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    lamp_life_seconds: int,
+    percentage: float,
+) -> None:
+    """Test block Shelly Air lamp life percentage sensor."""
+    entity_id = f"{SENSOR_DOMAIN}.{'test_name_channel_1_lamp_life'}"
+    monkeypatch.setattr(
+        mock_block_device.blocks[RELAY_BLOCK_ID], "totalWorkTime", lamp_life_seconds
+    )
+    await init_integration(hass, 1)
+
+    assert hass.states.get(entity_id).state == percentage
 
 
 async def test_rpc_sensor(
@@ -1416,7 +1459,7 @@ async def test_blu_trv_sensor_entity(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test BLU TRV sensor entity."""
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     for entity in ("battery", "signal_strength", "valve_position"):
         entity_id = f"{SENSOR_DOMAIN}.trv_name_{entity}"
@@ -1426,3 +1469,32 @@ async def test_blu_trv_sensor_entity(
 
         entry = entity_registry.async_get(entity_id)
         assert entry == snapshot(name=f"{entity_id}-entry")
+
+
+async def test_rpc_device_virtual_number_sensor_with_device_class(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a virtual number sensor with device class for RPC device."""
+    config = deepcopy(mock_rpc_device.config)
+    config["number:203"] = {
+        "name": "Current humidity",
+        "min": 0,
+        "max": 100,
+        "meta": {"ui": {"step": 1, "unit": "%", "view": "label"}},
+        "role": "current_humidity",
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["number:203"] = {"value": 34}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    state = hass.states.get("sensor.test_name_current_humidity")
+    assert state
+    assert state.state == "34"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY

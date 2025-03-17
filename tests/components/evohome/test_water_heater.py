@@ -33,7 +33,7 @@ from .const import TEST_INSTALLS_WITH_DHW
 DHW_ENTITY_ID = "water_heater.domestic_hot_water"
 
 
-@pytest.mark.parametrize("install", [*TEST_INSTALLS_WITH_DHW, "botched"])
+@pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_setup_platform(
     hass: HomeAssistant,
     config: dict[str, str],
@@ -67,7 +67,7 @@ async def test_set_operation_mode(
     results = []
 
     # SERVICE_SET_OPERATION_MODE: auto
-    with patch("evohomeasync2.hotwater.HotWater.reset_mode") as mock_fcn:
+    with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
         await hass.services.async_call(
             Platform.WATER_HEATER,
             SERVICE_SET_OPERATION_MODE,
@@ -78,12 +78,10 @@ async def test_set_operation_mode(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args == ()
-        assert mock_fcn.await_args.kwargs == {}
+        mock_fcn.assert_awaited_once_with()
 
     # SERVICE_SET_OPERATION_MODE: off (until next scheduled setpoint)
-    with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
+    with patch("evohomeasync2.hotwater.HotWater.off") as mock_fcn:
         await hass.services.async_call(
             Platform.WATER_HEATER,
             SERVICE_SET_OPERATION_MODE,
@@ -94,14 +92,16 @@ async def test_set_operation_mode(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
+        mock_fcn.assert_awaited_once()
+
+        assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args == ()
         assert mock_fcn.await_args.kwargs != {}
 
         results.append(mock_fcn.await_args.kwargs)
 
     # SERVICE_SET_OPERATION_MODE: on (until next scheduled setpoint)
-    with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:
+    with patch("evohomeasync2.hotwater.HotWater.on") as mock_fcn:
         await hass.services.async_call(
             Platform.WATER_HEATER,
             SERVICE_SET_OPERATION_MODE,
@@ -112,7 +112,9 @@ async def test_set_operation_mode(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
+        mock_fcn.assert_awaited_once()
+
+        assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args == ()
         assert mock_fcn.await_args.kwargs != {}
 
@@ -126,7 +128,7 @@ async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> Non
     """Test SERVICE_SET_AWAY_MODE of an evohome DHW zone."""
 
     # set_away_mode: off
-    with patch("evohomeasync2.hotwater.HotWater.reset_mode") as mock_fcn:
+    with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
         await hass.services.async_call(
             Platform.WATER_HEATER,
             SERVICE_SET_AWAY_MODE,
@@ -137,12 +139,10 @@ async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> Non
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args == ()
-        assert mock_fcn.await_args.kwargs == {}
+        mock_fcn.assert_awaited_once_with()
 
     # set_away_mode: on
-    with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
+    with patch("evohomeasync2.hotwater.HotWater.off") as mock_fcn:
         await hass.services.async_call(
             Platform.WATER_HEATER,
             SERVICE_SET_AWAY_MODE,
@@ -153,9 +153,7 @@ async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> Non
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args == ()
-        assert mock_fcn.await_args.kwargs == {}
+        mock_fcn.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)

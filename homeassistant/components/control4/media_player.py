@@ -19,7 +19,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4ConfigEntry, Control4RuntimeData
@@ -77,7 +77,7 @@ async def get_rooms(hass: HomeAssistant, entry: Control4ConfigEntry):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: Control4ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Control4 rooms from a config entry."""
     runtime_data = entry.runtime_data

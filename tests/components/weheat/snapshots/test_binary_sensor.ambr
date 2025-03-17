@@ -1,17 +1,18 @@
 # serializer version: 1
-# name: test_binary_entities[binary_sensor.test_model_indoor_unit_auxilary_water_pump-entry]
+# name: test_binary_entities[binary_sensor.test_model_indoor_unit_auxiliary_water_pump-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.test_model_indoor_unit_auxilary_water_pump',
+    'entity_id': 'binary_sensor.test_model_indoor_unit_auxiliary_water_pump',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,7 +24,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Indoor unit auxilary water pump',
+    'original_name': 'Indoor unit auxiliary water pump',
     'platform': 'weheat',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -32,14 +33,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_indoor_unit_auxilary_water_pump-state]
+# name: test_binary_entities[binary_sensor.test_model_indoor_unit_auxiliary_water_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': 'Test Model Indoor unit auxilary water pump',
+      'friendly_name': 'Test Model Indoor unit auxiliary water pump',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_indoor_unit_auxilary_water_pump',
+    'entity_id': 'binary_sensor.test_model_indoor_unit_auxiliary_water_pump',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -53,6 +54,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -100,6 +102,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -146,6 +149,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
