@@ -201,16 +201,23 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         except RoborockException as err:
             raise UpdateFailed("Failed to get map data: {err}") from err
         # Rooms names populated later with calls to `set_current_map_rooms` for each map
+        roborock_maps = maps.map_info if (maps and maps.map_info) else ()
+        stored_images = await asyncio.gather(
+            *[
+                self.map_storage.async_load_map(roborock_map.mapFlag)
+                for roborock_map in roborock_maps
+            ]
+        )
         self.maps = {
             roborock_map.mapFlag: RoborockMapInfo(
                 flag=roborock_map.mapFlag,
                 name=roborock_map.name or f"Map {roborock_map.mapFlag}",
                 rooms={},
                 map_data=None,
-                image=None,
-                last_updated=dt_util.utcnow() - timedelta(seconds=IMAGE_CACHE_INTERVAL),
+                image=image,
+                last_updated=dt_util.utcnow() - IMAGE_CACHE_INTERVAL,
             )
-            for roborock_map in (maps.map_info if (maps and maps.map_info) else ())
+            for image, roborock_map in zip(stored_images, roborock_maps, strict=False)
         }
 
     async def update_map(self, bump_time: bool = True) -> None:
@@ -220,29 +227,24 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         if self.current_map is None:
             # This exists as a safeguard/ to keep mypy happy.
             return
-        response = await asyncio.gather(
-            *(
-                self.cloud_api.get_map_v1(),
-                self.set_current_map_rooms(),
-            ),
-            return_exceptions=True,
-        )
-        if not isinstance(response[0], bytes):
-            _LOGGER.debug("Failed to parse map contents: %s", response[0])
+        response = await self.cloud_api.get_map_v1()
+        if not isinstance(response, bytes):
+            _LOGGER.debug("Failed to parse map contents: %s", response)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
-        parsed_image, parsed_map = await self.parse_image(response[0])
+        parsed_image, parsed_map = await self.parse_image(response)
         if parsed_map is None or parsed_image is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
-        self.maps[self.current_map].map_data = parsed_map
-        self.maps[self.current_map].image = parsed_image
+        current_roborock_map_info = self.maps[self.current_map]
+        current_roborock_map_info.map_data = parsed_map
+        current_roborock_map_info.image = parsed_image
         if bump_time:
-            self.maps[self.current_map].last_updated = dt_util.utcnow()
+            current_roborock_map_info.last_updated = dt_util.utcnow()
 
     async def _verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
@@ -290,19 +292,14 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             if (
                 self.current_map is not None
                 and self.roborock_device_info.props.status.in_cleaning
-                and (
-                    (
-                        dt_util.utcnow() - self.maps[self.current_map].last_updated
-                    ).total_seconds()
-                )
+                and (dt_util.utcnow() - self.maps[self.current_map].last_updated)
                 > IMAGE_CACHE_INTERVAL
             ):
                 try:
                     await self.update_map()
                 except HomeAssistantError as err:
                     _LOGGER.debug("Failed to update map: %s", err)
-            else:
-                await self.set_current_map_rooms()
+            await self.set_current_map_rooms()
         except RoborockException as ex:
             _LOGGER.debug("Failed to update data: %s", ex)
             raise UpdateFailed(ex) from ex
@@ -400,10 +397,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 # We cannot get the map until the roborock servers fully process the
                 # map change.
                 await asyncio.sleep(MAP_SLEEP)
-            try:
-                await self.update_map()
-            except HomeAssistantError as err:
-                _LOGGER.debug("Failed to update map: %s", err)
+            await self.set_current_map_rooms()
 
         if len(self.maps) != 1:
             # Set the map back to the map the user previously had selected so that it

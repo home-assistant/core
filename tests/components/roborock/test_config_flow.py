@@ -12,9 +12,10 @@ from roborock.exceptions import (
     RoborockInvalidEmail,
     RoborockUrlException,
 )
+from vacuum_map_parser_base.config.drawable import Drawable
 
 from homeassistant import config_entries
-from homeassistant.components.roborock.const import CONF_ENTRY_CODE, DOMAIN
+from homeassistant.components.roborock.const import CONF_ENTRY_CODE, DOMAIN, DRAWABLES
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -191,6 +192,34 @@ async def test_config_flow_failures_code_login(
     assert result["data"] == MOCK_CONFIG
     assert result["result"]
     assert len(mock_setup.mock_calls) == 1
+
+
+async def test_options_flow_drawables(
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+) -> None:
+    """Test that the options flow works."""
+    with patch("homeassistant.components.roborock.roborock_storage"):
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(
+            mock_roborock_entry.entry_id
+        )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == DRAWABLES
+        with patch(
+            "homeassistant.components.roborock.async_setup_entry", return_value=True
+        ) as mock_setup:
+            result = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                user_input={Drawable.PREDICTED_PATH: True},
+            )
+            await hass.async_block_till_done()
+
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert mock_roborock_entry.options[DRAWABLES][Drawable.PREDICTED_PATH] is True
+        assert len(mock_setup.mock_calls) == 1
 
 
 async def test_reauth_flow(
