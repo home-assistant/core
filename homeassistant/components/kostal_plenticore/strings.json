@@ -5,14 +5,14 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "service_code": "Service Code"
+          "service_code": "Service code"
         }
       },
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "service_code": "Service Code"
+          "service_code": "[%key:component::kostal_plenticore::config::step::user::data::service_code%]"
         }
       }
     },
