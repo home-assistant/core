@@ -270,6 +270,8 @@ async def mock_config_entry_setup(
 class MockResultStream(ResultStream):
     """Mock result stream."""
 
+    test_set_message: str | None = None
+
     def __init__(self, hass: HomeAssistant, extension: str, data: bytes) -> None:
         """Initialize the result stream."""
         super().__init__(
@@ -284,6 +286,11 @@ class MockResultStream(ResultStream):
         )
         hass.data[DATA_TTS_MANAGER].token_to_stream[self.token] = self
         self._mock_data = data
+
+    @callback
+    def async_set_message(self, message: str) -> None:
+        """Set message to be generated."""
+        self.test_set_message = message
 
     async def async_stream_result(self):
         """Stream the result."""

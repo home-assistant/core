@@ -65,7 +65,7 @@ async def test_floorplan_image(
             "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
         ),
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=new_map_data,
         ) as parse_map,
     ):
@@ -94,7 +94,7 @@ async def test_floorplan_image_failed_parse(
     # Update image, but get none for parse image.
     with (
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=map_data,
         ),
         patch(
@@ -148,7 +148,7 @@ async def test_fail_to_load_image(
     """Test that we gracefully handle failing to load an image."""
     with (
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
         ) as parse_map,
         patch(
             "homeassistant.components.roborock.roborock_storage.Path.exists",
@@ -178,7 +178,7 @@ async def test_fail_parse_on_startup(
     map_data = copy.deepcopy(MAP_DATA)
     map_data.image = None
     with patch(
-        "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+        "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
         return_value=map_data,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -226,7 +226,7 @@ async def test_fail_updating_image(
     # Update image, but get none for parse image.
     with (
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=map_data,
         ),
         patch(
@@ -239,6 +239,36 @@ async def test_fail_updating_image(
         patch(
             "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
             side_effect=RoborockException,
+        ),
+    ):
+        async_fire_time_changed(hass, now)
+        resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert not resp.ok
+
+
+async def test_index_error_map(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that we handle failing getting the image after it has already been setup with a indexerror."""
+    client = await hass_client()
+    now = dt_util.utcnow() + timedelta(seconds=91)
+    # Copy the device prop so we don't override it
+    prop = copy.deepcopy(PROP)
+    prop.status.in_cleaning = 1
+    # Update image, but get IndexError for image.
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
+            side_effect=IndexError,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
+            return_value=prop,
+        ),
+        patch(
+            "homeassistant.components.roborock.image.dt_util.utcnow", return_value=now
         ),
     ):
         async_fire_time_changed(hass, now)
