@@ -25,67 +25,55 @@ from .entity import EzvizEntity
 PARALLEL_UPDATES = 1
 
 
-class EzvizSelectEntityActionBase:
-    """Base class to handle retrieval and selection of a EzvizSelectEntity."""
-
-    current_option: Callable[[EzvizSelect], str | None]
-    select_option: Callable[[EzvizSelect, str, str], None]
-
-
-class AlarmSoundModeAction(EzvizSelectEntityActionBase):
-    """Class dedicated to Alarm Sound Mode."""
-
-    @staticmethod
-    def current_option(ezvizSelect: EzvizSelect) -> str | None:
-        """Return the selected entity option to represent the entity state."""
-        sound_mode_value = getattr(
-            SoundMode, ezvizSelect.data[ezvizSelect.entity_description.key]
-        ).value
-        if sound_mode_value in [0, 1, 2]:
-            return ezvizSelect.options[sound_mode_value]
-
-        return None
-
-    @staticmethod
-    def select_option(ezvizSelect: EzvizSelect, serial: str, option: str) -> None:
-        """Change the selected option."""
-        sound_mode_value = ezvizSelect.options.index(option)
-
-        ezvizSelect.coordinator.ezviz_client.alarm_sound(serial, sound_mode_value, 1)
-
-
-class BatteryWorkModeAction(EzvizSelectEntityActionBase):
-    """Class dedicated to Battery Work Mode."""
-
-    @staticmethod
-    def current_option(ezvizSelect: EzvizSelect) -> str | None:
-        """Return the selected entity option to represent the entity state."""
-        battery_work_mode = getattr(
-            BatteryCameraWorkMode,
-            ezvizSelect.data[ezvizSelect.entity_description.key],
-            BatteryCameraWorkMode.UNKNOWN,
-        )
-        if battery_work_mode == BatteryCameraWorkMode.UNKNOWN:
-            return None
-
-        return battery_work_mode.name.lower()
-
-    @staticmethod
-    def select_option(ezvizSelect: EzvizSelect, serial: str, option: str) -> None:
-        """Change the selected option."""
-        battery_work_mode = getattr(BatteryCameraWorkMode, option.upper())
-
-        ezvizSelect.coordinator.ezviz_client.set_battery_camera_work_mode(
-            serial, battery_work_mode.value
-        )
-
-
 @dataclass(frozen=True, kw_only=True)
 class EzvizSelectEntityDescription(SelectEntityDescription):
     """Describe a EZVIZ Select entity."""
 
     supported_switch: int
-    action_handler: type[EzvizSelectEntityActionBase]
+    current_option: Callable[[EzvizSelect], str | None]
+    select_option: Callable[[EzvizSelect, str, str], None]
+
+
+def alarm_sound_mode_current_option(ezvizSelect: EzvizSelect) -> str | None:
+    """Return the selected entity option to represent the entity state."""
+    sound_mode_value = getattr(
+        SoundMode, ezvizSelect.data[ezvizSelect.entity_description.key]
+    ).value
+    if sound_mode_value in [0, 1, 2]:
+        return ezvizSelect.options[sound_mode_value]
+
+    return None
+
+
+def alarm_sound_mode_select_option(
+    ezvizSelect: EzvizSelect, serial: str, option: str
+) -> None:
+    """Change the selected option."""
+    sound_mode_value = ezvizSelect.options.index(option)
+    ezvizSelect.coordinator.ezviz_client.alarm_sound(serial, sound_mode_value, 1)
+
+
+def battery_work_mode_current_option(ezvizSelect: EzvizSelect) -> str | None:
+    """Return the selected entity option to represent the entity state."""
+    battery_work_mode = getattr(
+        BatteryCameraWorkMode,
+        ezvizSelect.data[ezvizSelect.entity_description.key],
+        BatteryCameraWorkMode.UNKNOWN,
+    )
+    if battery_work_mode == BatteryCameraWorkMode.UNKNOWN:
+        return None
+
+    return battery_work_mode.name.lower()
+
+
+def battery_work_mode_select_option(
+    ezvizSelect: EzvizSelect, serial: str, option: str
+) -> None:
+    """Change the selected option."""
+    battery_work_mode = getattr(BatteryCameraWorkMode, option.upper())
+    ezvizSelect.coordinator.ezviz_client.set_battery_camera_work_mode(
+        serial, battery_work_mode.value
+    )
 
 
 ALARM_SOUND_MODE_SELECT_TYPE = EzvizSelectEntityDescription(
@@ -94,7 +82,8 @@ ALARM_SOUND_MODE_SELECT_TYPE = EzvizSelectEntityDescription(
     entity_category=EntityCategory.CONFIG,
     options=["soft", "intensive", "silent"],
     supported_switch=DeviceSwitchType.ALARM_TONE.value,
-    action_handler=AlarmSoundModeAction,
+    current_option=alarm_sound_mode_current_option,
+    select_option=alarm_sound_mode_select_option,
 )
 
 BATTERY_WORK_MODE_SELECT_TYPE = EzvizSelectEntityDescription(
@@ -110,7 +99,8 @@ BATTERY_WORK_MODE_SELECT_TYPE = EzvizSelectEntityDescription(
         "custom",
     ],
     supported_switch=-1,
-    action_handler=BatteryWorkModeAction,
+    current_option=battery_work_mode_current_option,
+    select_option=battery_work_mode_select_option,
 )
 
 
@@ -160,14 +150,12 @@ class EzvizSelect(EzvizEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return self.entity_description.action_handler.current_option(self)
+        return self.entity_description.current_option(self)
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
         try:
-            return self.entity_description.action_handler.select_option(
-                self, self._serial, option
-            )
+            return self.entity_description.select_option(self, self._serial, option)
 
         except (HTTPError, PyEzvizError) as err:
             raise HomeAssistantError(
