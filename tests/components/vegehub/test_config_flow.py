@@ -382,3 +382,34 @@ async def test_zeroconf_flow_device_error_response(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_zeroconf_flow_update_ip_hostname(
+    hass: HomeAssistant,
+    mocked_config_entry: MockConfigEntry,
+) -> None:
+    """Test when zeroconf gets the same device twice."""
+
+    with patch("homeassistant.components.vegehub.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mocked_config_entry)
+
+    new_ip = "192.168.0.99"
+    new_hostname = "new_hostname"
+    new_discovery_info = DISCOVERY_INFO
+    new_discovery_info.ip_address = ip_address(new_ip)
+    new_discovery_info.hostname = f"{new_hostname}.local."
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=new_discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+
+    # Check if the original config entry has been updated
+    entries = hass.config_entries.async_entries(domain=DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.data[CONF_IP_ADDRESS] == new_ip
+    assert entry.data[CONF_HOST] == new_hostname
