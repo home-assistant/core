@@ -80,12 +80,8 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         self._ip_address = self._host
         self._poll_interval = device_data.get("poll_interval")  # For future use
         self._command_suffix = device_data.get("command_suffix")
-
-        # self._device_info = device_data
         self._device_info = dict(device_data)
-        # self._unique_id = device_data.get("device_apn")
         self._unique_id = str(device_data.get("device_apn", ""))
-
         self._power_state = 0  # default is Off
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._hvac_mode = HVACMode.OFF
