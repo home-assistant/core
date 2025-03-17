@@ -8,9 +8,8 @@ from unittest.mock import MagicMock, patch
 from aiohomeconnect.const import OAUTH2_TOKEN
 from aiohomeconnect.model import OptionKey, ProgramKey, SettingKey, StatusKey
 from aiohomeconnect.model.error import HomeConnectError, UnauthorizedError
+import aiohttp
 import pytest
-import requests_mock
-import respx
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -221,14 +220,12 @@ async def test_exception_handling(
 
 
 @pytest.mark.parametrize("token_expiration_time", [12345])
-@respx.mock
 async def test_token_refresh_success(
     hass: HomeAssistant,
     platforms: list[Platform],
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
-    requests_mock: requests_mock.Mocker,
     setup_credentials: None,
     client: MagicMock,
 ) -> None:
@@ -236,7 +233,6 @@ async def test_token_refresh_success(
 
     assert config_entry.data["token"]["access_token"] == FAKE_ACCESS_TOKEN
 
-    requests_mock.post(OAUTH2_TOKEN, json=SERVER_ACCESS_TOKEN)
     aioclient_mock.post(
         OAUTH2_TOKEN,
         json=SERVER_ACCESS_TOKEN,
@@ -278,6 +274,61 @@ async def test_token_refresh_success(
         config_entry.data["token"]["access_token"]
         == SERVER_ACCESS_TOKEN["access_token"]
     )
+
+
+@pytest.mark.parametrize("token_expiration_time", [12345])
+@pytest.mark.parametrize(
+    ("aioclient_mock_args", "expected_config_entry_state"),
+    [
+        (
+            {
+                "status": 400,
+                "json": {"error": "invalid_grant"},
+            },
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            {
+                "status": 500,
+            },
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            {
+                "exc": aiohttp.ClientError,
+            },
+            ConfigEntryState.SETUP_RETRY,
+        ),
+    ],
+)
+async def test_token_refresh_error(
+    aioclient_mock_args: dict[str, Any],
+    expected_config_entry_state: ConfigEntryState,
+    hass: HomeAssistant,
+    platforms: list[Platform],
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test where token is expired and the refresh attempt fails."""
+
+    config_entry.data["token"]["access_token"] = FAKE_ACCESS_TOKEN
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        **aioclient_mock_args,
+    )
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    with patch(
+        "homeassistant.components.home_connect.HomeConnectClient", return_value=client
+    ):
+        assert not await integration_setup(client)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == expected_config_entry_state
 
 
 @pytest.mark.parametrize(
