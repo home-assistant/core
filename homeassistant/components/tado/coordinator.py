@@ -107,6 +107,18 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self.data["weather"] = home["weather"]
         self.data["geofence"] = home["geofence"]
 
+        refresh_token = await self.hass.async_add_executor_job(
+            self._tado.get_refresh_token
+        )
+
+        if refresh_token != self._refresh_token:
+            _LOGGER.debug("New refresh token obtained from Tado: %s", refresh_token)
+            self._refresh_token = refresh_token
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={**self.config_entry.data, CONF_REFRESH_TOKEN: refresh_token},
+            )
+
         return self.data
 
     async def _async_update_devices(self) -> dict[str, dict]:

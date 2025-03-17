@@ -70,12 +70,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
         entry.data[CONF_REFRESH_TOKEN],
     )
 
-    def create_tado_instance() -> tuple[Tado, str]:
+    def create_tado_instance() -> tuple[Tado, str, str]:
+        """Create a Tado instance, this time with a previously obtained refresh token."""
         tado = Tado(saved_refresh_token=entry.data[CONF_REFRESH_TOKEN])
-        return tado, tado.device_activation_status()
+        return tado, tado.device_activation_status(), tado.get_refresh_token()
 
     try:
-        tado, device_status = await hass.async_add_executor_job(create_tado_instance)
+        tado, device_status, new_refresh_token = await hass.async_add_executor_job(
+            create_tado_instance
+        )
+        _LOGGER.debug("New refresh token: %s", new_refresh_token)
+        # Mindtwist here: the refresh token from the config_flow has been invalidated
+        # and a new one has been obtained. We need to update the config entry with the new
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_REFRESH_TOKEN: new_refresh_token}
+        )
     except PyTado.exceptions.TadoWrongCredentialsException as err:
         raise ConfigEntryError(f"Invalid Tado credentials. Error: {err}") from err
     except PyTado.exceptions.TadoException as err:
