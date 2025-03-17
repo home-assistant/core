@@ -70,15 +70,18 @@ async def test_floorplan_image(
             return_value=MAP_DATA,
         ) as parse_map,
     ):
+        # This should call parse_map twice as the both devices are in cleaning.
+        async_fire_time_changed(hass, now)
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-
-        # This one isn't selected, so the parse_map count should not increase.
+        assert resp.status == HTTPStatus.OK
+        resp = await client.get("/api/image_proxy/image.roborock_s7_2_upstairs")
+        assert resp.status == HTTPStatus.OK
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_downstairs")
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body is not None
 
-    assert parse_map.call_count == 1
+    assert parse_map.call_count == 2
 
 
 async def test_floorplan_image_failed_parse(
@@ -94,6 +97,7 @@ async def test_floorplan_image_failed_parse(
     # Copy the device prop so we don't override it
     prop = copy.deepcopy(PROP)
     prop.status.in_cleaning = 1
+    previous_state = hass.states.get("image.roborock_s7_maxv_upstairs").state
     # Update image, but get none for parse image.
     with (
         patch(
@@ -111,7 +115,10 @@ async def test_floorplan_image_failed_parse(
     ):
         async_fire_time_changed(hass, now)
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-    assert not resp.ok
+    # The map should load fine from the coordinator, but it should not update the
+    # last_updated timestamp.
+    assert resp.ok
+    assert previous_state == hass.states.get("image.roborock_s7_maxv_upstairs").state
 
 
 async def test_fail_to_save_image(
@@ -231,6 +238,7 @@ async def test_fail_updating_image(
     prop = copy.deepcopy(PROP)
     prop.status.in_cleaning = 1
     # Update image, but get none for parse image.
+    previous_state = hass.states.get("image.roborock_s7_maxv_upstairs").state
     with (
         patch(
             "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
@@ -251,7 +259,10 @@ async def test_fail_updating_image(
     ):
         async_fire_time_changed(hass, now)
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-    assert not resp.ok
+    # The map should load fine from the coordinator, but it should not update the
+    # last_updated timestamp.
+    assert resp.ok
+    assert previous_state == hass.states.get("image.roborock_s7_maxv_upstairs").state
 
 
 async def test_index_error_map(
@@ -265,6 +276,7 @@ async def test_index_error_map(
     # Copy the device prop so we don't override it
     prop = copy.deepcopy(PROP)
     prop.status.in_cleaning = 1
+    previous_state = hass.states.get("image.roborock_s7_maxv_upstairs").state
     # Update image, but get IndexError for image.
     with (
         patch(
@@ -282,4 +294,7 @@ async def test_index_error_map(
     ):
         async_fire_time_changed(hass, now)
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-    assert not resp.ok
+    # The map should load fine from the coordinator, but it should not update the
+    # last_updated timestamp.
+    assert resp.ok
+    assert previous_state == hass.states.get("image.roborock_s7_maxv_upstairs").state

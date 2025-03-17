@@ -84,9 +84,5 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         super()._handle_coordinator_update()
 
     async def async_image(self) -> bytes | None:
-        """Update the image if it is not cached."""
-        if self.is_selected:
-            # If it is the current selected map, and async_image is hit,
-            # then we should manually update it.
-            await self.coordinator.update_map(False)
+        """Get the cached image."""
         return self.coordinator.maps[self.map_flag].image

@@ -216,14 +216,20 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             for image, roborock_map in zip(stored_images, roborock_maps, strict=False)
         }
 
-    async def update_map(self, bump_time: bool = True) -> None:
+    async def update_map(self) -> None:
         """Update the currently selected map."""
         # The current map was set in the props update, so these can be done without
         # worry of applying them to the wrong map.
         if self.current_map is None:
             # This exists as a safeguard/ to keep mypy happy.
             return
-        response = await self.cloud_api.get_map_v1()
+        try:
+            response = await self.cloud_api.get_map_v1()
+        except RoborockException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+            ) from ex
         if not isinstance(response, bytes):
             _LOGGER.debug("Failed to parse map contents: %s", response)
             raise HomeAssistantError(
@@ -238,8 +244,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             )
         current_roborock_map_info = self.maps[self.current_map]
         current_roborock_map_info.image = parsed_image
-        if bump_time:
-            current_roborock_map_info.last_updated = dt_util.utcnow()
+        current_roborock_map_info.last_updated = dt_util.utcnow()
 
     async def _verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
