@@ -8,12 +8,15 @@ import PyTado.exceptions
 from PyTado.interface import Tado
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import ConfigEntryAuthFailed
 
 from .const import (
     CONF_FALLBACK,
