@@ -269,3 +269,37 @@ async def test_account_already_configured(
 
             assert result["type"] is FlowResultType.ABORT
             assert result["reason"] == "already_configured_account"
+
+
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant, bypass_api_fixture, mock_roborock_entry: MockConfigEntry
+) -> None:
+    """Handle the config flow and make sure it succeeds."""
+    result = await mock_roborock_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.roborock.async_setup_entry", return_value=True
+    ) as mock_setup:
+        with patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code"
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_USERNAME: "new_email@gmail.com"}
+            )
+
+            assert result["type"] is FlowResultType.FORM
+            assert result["step_id"] == "code"
+            assert result["errors"] == {}
+        with patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
+            return_value=USER_DATA,
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
+            )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert mock_roborock_entry.title == "new_email@gmail.com"
+    assert len(mock_setup.mock_calls) == 1

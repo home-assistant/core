@@ -29,7 +29,7 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: todo
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
   # Gold
   devices: done
@@ -66,7 +66,7 @@ rules:
   entity-translations: done
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: todo
     comment: The Cloud vs Local API warning should probably be a repair issue.
