@@ -1527,7 +1527,10 @@ async def test_trigger_entity_available(hass: HomeAssistant) -> None:
     assert state.state == "unavailable"
 
 
-async def test_numeric_trigger_entity_set_unknown(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(("source_event_value"), [None, "None", "none"])
+async def test_numeric_trigger_entity_set_unknown(
+    hass: HomeAssistant, source_event_value: str | None
+) -> None:
     """Test trigger entity state parsing with numeric sensors."""
     assert await async_setup_component(
         hass,
@@ -1538,9 +1541,8 @@ async def test_numeric_trigger_entity_set_unknown(hass: HomeAssistant) -> None:
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "sensor": [
                         {
-                            "name": "Numeric",
+                            "name": "Source",
                             "state": "{{ trigger.event.data.value }}",
-                            "unit_of_measurement": "kW",
                         },
                     ],
                 },
@@ -1552,16 +1554,16 @@ async def test_numeric_trigger_entity_set_unknown(hass: HomeAssistant) -> None:
     hass.bus.async_fire("test_event", {"value": 1})
     await hass.async_block_till_done()
 
-    numeric_state = hass.states.get("sensor.numeric")
-    assert numeric_state is not None
-    assert numeric_state.state == "1"
+    state = hass.states.get("sensor.source")
+    assert state is not None
+    assert state.state == "1"
 
-    hass.bus.async_fire("test_event", {"value": None})
+    hass.bus.async_fire("test_event", {"value": source_event_value})
     await hass.async_block_till_done()
 
-    numeric_state = hass.states.get("sensor.numeric")
-    assert numeric_state is not None
-    assert numeric_state.state == STATE_UNKNOWN
+    state = hass.states.get("sensor.source")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_trigger_entity_available_skips_state(

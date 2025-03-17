@@ -386,7 +386,7 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
 
         # Ensure that the state is set to None only if the rendered result is "None"
         state = self._rendered.get(CONF_STATE)
-        if state == "None":
+        if state and state.lower() == "none":
             self._rendered[CONF_STATE] = None
             return
 
