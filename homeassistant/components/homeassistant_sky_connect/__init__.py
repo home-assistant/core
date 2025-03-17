@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import logging
+import os.path
 
 from homeassistant.components.homeassistant_hardware.util import guess_firmware_info
+from homeassistant.components.usb import USBDevice, async_register_port_event_callback
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DESCRIPTION, DEVICE, FIRMWARE, FIRMWARE_VERSION, PRODUCT
 
@@ -15,7 +18,36 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Home Assistant SkyConnect config entry."""
+
+    # Postpone loading the config entry if the device is missing
+    device_path = entry.data[DEVICE]
+    if not await hass.async_add_executor_job(os.path.exists, device_path):
+        raise ConfigEntryNotReady
+
+    @callback
+    def async_port_event_callback(
+        added: set[USBDevice], removed: set[USBDevice]
+    ) -> None:
+        """Handle USB port events."""
+        if not added and not removed:
+            return
+
+        for device in removed:
+            if device.device == device_path:
+                _LOGGER.debug(
+                    "Device %r has been unplugged, reloading config entry",
+                    device.device,
+                )
+                hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+                return
+
+    # Handle the ZBT-1 being unplugged
+    entry.async_on_unload(
+        async_register_port_event_callback(hass, async_port_event_callback)
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, ["update"])
+
     return True
 
 
