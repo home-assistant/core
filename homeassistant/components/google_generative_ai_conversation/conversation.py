@@ -188,7 +188,7 @@ def _convert_content(
     | conversation.SystemContent,
 ) -> Content:
     """Convert HA content to Google content."""
-    if content.role != "assistant" or not content.tool_calls:  # type: ignore[union-attr]
+    if content.role != "assistant" or not content.tool_calls:
         role = "model" if content.role == "assistant" else content.role
         return Content(
             role=role,
@@ -321,24 +321,14 @@ class GoogleGenerativeAIConversationEntity(
 
         for chat_content in chat_log.content[1:-1]:
             if chat_content.role == "tool_result":
-                # mypy doesn't like picking a type based on checking shared property 'role'
-                tool_results.append(cast(conversation.ToolResultContent, chat_content))
+                tool_results.append(chat_content)
                 continue
 
             if tool_results:
                 messages.append(_create_google_tool_response_content(tool_results))
                 tool_results.clear()
 
-            messages.append(
-                _convert_content(
-                    cast(
-                        conversation.UserContent
-                        | conversation.SystemContent
-                        | conversation.AssistantContent,
-                        chat_content,
-                    )
-                )
-            )
+            messages.append(_convert_content(chat_content))
 
         if tool_results:
             messages.append(_create_google_tool_response_content(tool_results))

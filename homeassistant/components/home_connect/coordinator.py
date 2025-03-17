@@ -231,15 +231,15 @@ class HomeConnectCoordinator(
                                 self.data[event_message_ha_id].update(appliance_data)
                             else:
                                 self.data[event_message_ha_id] = appliance_data
-                            for listener, context in list(
-                                self._special_listeners.values()
-                            ) + list(self._listeners.values()):
-                                assert isinstance(context, tuple)
+                            for listener, context in self._special_listeners.values():
                                 if (
                                     EventKey.BSH_COMMON_APPLIANCE_DEPAIRED
                                     not in context
                                 ):
                                     listener()
+                            self._call_all_event_listeners_for_appliance(
+                                event_message_ha_id
+                            )
 
                         case EventType.DISCONNECTED:
                             self.data[event_message_ha_id].info.connected = False

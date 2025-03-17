@@ -5,11 +5,11 @@
       "user": {
         "description": "Please choose a name for the calendar to be imported",
         "data": {
-          "calendar_name": "Calendar Name",
+          "calendar_name": "Calendar name",
           "url": "Calendar URL"
         },
         "data_description": {
-          "calendar_name": "The name of the calendar shown in th UI.",
+          "calendar_name": "The name of the calendar shown in the UI.",
           "url": "The URL of the remote calendar."
         }
       }

@@ -261,7 +261,7 @@ async def test_get_current_position(
             return_value=b"",
         ),
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=map_data,
         ),
     ):
@@ -316,7 +316,7 @@ async def test_get_current_position_no_robot_position(
             return_value=b"",
         ),
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=map_data,
         ),
         pytest.raises(HomeAssistantError, match="Robot position not found"),
