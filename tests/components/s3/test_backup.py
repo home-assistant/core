@@ -3,17 +3,18 @@
 from collections.abc import AsyncGenerator
 from io import StringIO
 import json
-from unittest.mock import Mock, patch
+from time import time
+from unittest.mock import AsyncMock, Mock, patch
 
 from botocore.exceptions import ConnectTimeoutError
 import pytest
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.components.s3.backup import (
-    _deserialize,
-    _get_key,
-    _serialize,
+    BotoCoreError,
+    S3BackupAgent,
     async_register_backup_agents_listener,
+    suggested_filenames,
 )
 from homeassistant.components.s3.const import (
     CONF_ENDPOINT_URL,
@@ -49,8 +50,8 @@ async def setup_backup_integration(
         yield
 
 
-async def test_get_key() -> None:
-    """Test the _get_key function."""
+async def test_suggested_filenames() -> None:
+    """Test the suggested_filenames function."""
     backup = AgentBackup(
         backup_id="a1b2c3",
         date="2021-01-01T01:02:03+00:00",
@@ -64,72 +65,12 @@ async def test_get_key() -> None:
         protected=False,
         size=0,
     )
-    expected_key = "a1b2c3_my_pretty_backup_2021-01-01_01.02_03000000.tar"
-    assert _get_key(backup) == expected_key
+    tar_filename, metadata_filename = suggested_filenames(backup)
 
-
-async def test_serialize() -> None:
-    """Test the _serialize function."""
-    metadata = {
-        "key1": "value1",
-        "key2": 123,
-        "key3": {"nested_key": 'nested "value'},
-        "key4": "666",
-    }
-
-    expected_output = {
-        "key1": '"value1"',
-        "key2": "123",
-        "key3": '{"nested_key": "nested \\"value"}',
-        "key4": '"666"',
-    }
-
-    assert _serialize(metadata) == expected_output
-
-
-async def test_serialize_empty() -> None:
-    """Test the _serialize function with empty metadata."""
-    metadata = {}
-    expected_output = {}
-
-    assert _serialize(metadata) == expected_output
-
-
-async def test_deserialize() -> None:
-    """Test the _deserialize function."""
-    metadata = {
-        "key1": '"value1"',
-        "key2": "123",
-        "key3": '{"nested_key": "nested \\"value"}',
-        "key4": '"666"',
-    }
-
-    expected_output = {
-        "key1": "value1",
-        "key2": 123,
-        "key3": {"nested_key": 'nested "value'},
-        "key4": "666",
-    }
-
-    assert _deserialize(metadata) == expected_output
-
-
-async def test_deserialize_empty() -> None:
-    """Test the _deserialize function with empty metadata."""
-    metadata = {}
-    expected_output = {}
-
-    assert _deserialize(metadata) == expected_output
-
-
-async def test_deserialize_invalid_json() -> None:
-    """Test the _deserialize function with invalid JSON."""
-    metadata = {
-        "key1": "{invalid_json",
-    }
-
-    with pytest.raises(json.JSONDecodeError):
-        _deserialize(metadata)
+    assert tar_filename == "my_pretty_backup_2021-01-01_01.02_03000000.tar"
+    assert (
+        metadata_filename == "my_pretty_backup_2021-01-01_01.02_03000000.metadata.json"
+    )
 
 
 async def test_agents_info(
@@ -229,8 +170,10 @@ async def test_agents_get_backup(
 async def test_agents_get_backup_does_not_throw_on_not_found(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    mock_client: MagicMock,
 ) -> None:
     """Test agent get backup does not throw on a backup not found."""
+    mock_client.list_objects_v2.return_value = {"Contents": []}
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": "random"})
@@ -239,6 +182,54 @@ async def test_agents_get_backup_does_not_throw_on_not_found(
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backup"] is None
+
+
+async def test_agents_list_backups_with_corrupted_metadata(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test listing backups when one metadata file is corrupted."""
+    # Create agent
+    agent = S3BackupAgent(hass, mock_config_entry)
+
+    # Set up mock responses for both valid and corrupted metadata files
+    mock_client.list_objects_v2.return_value = {
+        "Contents": [
+            {
+                "Key": "valid_backup.metadata.json",
+                "LastModified": "2023-01-01T00:00:00+00:00",
+            },
+            {
+                "Key": "corrupted_backup.metadata.json",
+                "LastModified": "2023-01-01T00:00:00+00:00",
+            },
+        ]
+    }
+
+    # Mock responses for get_object calls
+    valid_metadata = json.dumps(TEST_BACKUP.as_dict())
+    corrupted_metadata = "{invalid json content"
+
+    async def mock_get_object(**kwargs):
+        """Mock get_object with different responses based on the key."""
+        key = kwargs.get("Key", "")
+        if "valid_backup" in key:
+            mock_body = AsyncMock()
+            mock_body.read.return_value = valid_metadata.encode()
+            return {"Body": mock_body}
+        # Corrupted metadata
+        mock_body = AsyncMock()
+        mock_body.read.return_value = corrupted_metadata.encode()
+        return {"Body": mock_body}
+
+    mock_client.get_object.side_effect = mock_get_object
+
+    backups = await agent.async_list_backups()
+    assert len(backups) == 1
+    assert backups[0].backup_id == TEST_BACKUP.backup_id
+    assert "Failed to process metadata file" in caplog.text
 
 
 async def test_agents_delete(
@@ -259,7 +250,8 @@ async def test_agents_delete(
 
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
-    mock_client.delete_object.assert_called_once()
+    # Should delete both the tar and the metadata file
+    assert mock_client.delete_object.call_count == 2
 
 
 async def test_agents_delete_not_throwing_on_not_found(
@@ -268,6 +260,8 @@ async def test_agents_delete_not_throwing_on_not_found(
     mock_client: MagicMock,
 ) -> None:
     """Test agent delete backup does not throw on a backup not found."""
+    mock_client.list_objects_v2.return_value = {"Contents": []}
+
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
@@ -337,6 +331,7 @@ async def test_agents_upload(
     mock_client.create_multipart_upload.assert_awaited_once()
     mock_client.upload_part.assert_awaited()
     mock_client.complete_multipart_upload.assert_awaited_once()
+    mock_client.put_object.assert_awaited_once()  # For metadata file
 
 
 async def test_agents_upload_network_failure(
@@ -414,7 +409,7 @@ async def test_agents_download(
     )
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
-    mock_client.get_object.assert_called_once()
+    assert mock_client.get_object.call_count == 2  # One for metadata, one for tar file
 
 
 async def test_error_during_delete(
@@ -424,7 +419,7 @@ async def test_error_during_delete(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the error wrapper."""
-    mock_client.delete_object.side_effect = Exception("Failed to delete backup")
+    mock_client.delete_object.side_effect = BotoCoreError
 
     client = await hass_ws_client(hass)
 
@@ -439,9 +434,55 @@ async def test_error_during_delete(
     assert response["success"]
     assert response["result"] == {
         "agent_errors": {
-            f"{DOMAIN}.{mock_config_entry.entry_id}": "Failed to delete backup"
+            f"{DOMAIN}.{mock_config_entry.entry_id}": "Failed during async_delete_backup"
         }
     }
+
+
+async def test_cache_expiration(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+) -> None:
+    """Test that the cache expires correctly."""
+    # Mock the entry
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"bucket": "test-bucket"},
+        unique_id="test-unique-id",
+        title="Test S3",
+    )
+    mock_entry.runtime_data = mock_client
+
+    # Create agent
+    agent = S3BackupAgent(hass, mock_entry)
+
+    # Mock metadata response
+    metadata_content = json.dumps(TEST_BACKUP.as_dict())
+    mock_body = AsyncMock()
+    mock_body.read.return_value = metadata_content.encode()
+    mock_client.list_objects_v2.return_value = {
+        "Contents": [
+            {"Key": "test.metadata.json", "LastModified": "2023-01-01T00:00:00+00:00"}
+        ]
+    }
+
+    # First call should query S3
+    await agent.async_list_backups()
+    assert mock_client.list_objects_v2.call_count == 1
+    assert mock_client.get_object.call_count == 1
+
+    # Second call should use cache
+    await agent.async_list_backups()
+    assert mock_client.list_objects_v2.call_count == 1
+    assert mock_client.get_object.call_count == 1
+
+    # Set cache to expire
+    agent._cache_expiration = time() - 1
+
+    # Third call should query S3 again
+    await agent.async_list_backups()
+    assert mock_client.list_objects_v2.call_count == 2
+    assert mock_client.get_object.call_count == 2
 
 
 async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
@@ -454,4 +495,4 @@ async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
     ]  # make sure it's the last listener
     remove_listener()
 
-    assert hass.data.get(DATA_BACKUP_AGENT_LISTENERS) == []
+    assert DATA_BACKUP_AGENT_LISTENERS not in hass.data
