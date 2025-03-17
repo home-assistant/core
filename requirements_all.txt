@@ -45,7 +45,7 @@ ProgettiHWSW==0.1.3
 # PyBluez==0.22
 
 # homeassistant.components.cast
-PyChromecast==14.0.5
+PyChromecast==14.0.6
 
 # homeassistant.components.flick_electric
 PyFlick==1.1.3
@@ -2622,7 +2622,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.12.2
+reolink-aio==0.12.3b1
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -3165,7 +3165,7 @@ ziggo-mediabox-xl==1.1.0
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.61.0
+zwave-js-server-python==0.62.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
