@@ -404,7 +404,6 @@ class NordpoolDailyAveragePriceSensor(NordpoolBaseEntity, SensorEntity):
     def native_value(self) -> float | None:
         """Return value of sensor."""
         data = self.coordinator.get_data_current_day()
-        value = data.area_average.get(self.area)
-        if value is None:
+        if (value := data.area_average.get(self.area)) is None:
             return None
         return value / 1000
