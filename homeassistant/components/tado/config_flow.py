@@ -100,8 +100,18 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle users reauth credentials."""
 
+        if self.tado is None:
+            _LOGGER.debug("Initiating device activation")
+            self.tado = await self.hass.async_add_executor_job(Tado)
+            assert self.tado is not None
+            tado_device_url = await self.hass.async_add_executor_job(
+                self.tado.device_verification_url
+            )
+            user_code = tado_device_url.split("user_code=")[-1]
+
         async def _wait_for_login() -> None:
             """Wait for the user to login."""
+            assert self.tado is not None
             _LOGGER.debug("Waiting for device activation")
             try:
                 await self.hass.async_add_executor_job(self.tado.device_activation)
@@ -116,14 +126,6 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
                 != "COMPLETED"
             ):
                 raise CannotConnect
-
-        if self.tado is None:
-            _LOGGER.debug("Initiating device activation")
-            self.tado = await self.hass.async_add_executor_job(Tado)
-            tado_device_url = await self.hass.async_add_executor_job(
-                self.tado.device_verification_url
-            )
-            user_code = tado_device_url.split("user_code=")[-1]
 
         _LOGGER.debug("Checking login task")
         if self.login_task is None:
@@ -157,6 +159,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the finalization of reauth."""
         _LOGGER.debug("Finalizing reauth")
+        assert self.tado is not None
         tado_me = await self.hass.async_add_executor_job(self.tado.get_me)
 
         if "homes" not in tado_me or len(tado_me["homes"]) == 0:
