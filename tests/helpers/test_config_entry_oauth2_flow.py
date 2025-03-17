@@ -985,20 +985,9 @@ async def test_abort_if_oauth_with_pkce_rejected(
 ) -> None:
     """Check bad oauth token."""
     flow_handler.async_register_implementation(hass, local_impl_pkce)
-    config_entry_oauth2_flow.async_register_implementation(
-        hass, TEST_DOMAIN, MockOAuth2Implementation()
-    )
 
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "pick_implementation"
-
-    # Pick implementation
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"implementation": TEST_DOMAIN}
     )
 
     state = config_entry_oauth2_flow._encode_jwt(
