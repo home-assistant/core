@@ -312,7 +312,6 @@ class RestEntityDescription(EntityDescription):
     name: str = ""
 
     value: Callable[[dict, Any], Any] | None = None
-    extra_state_attributes: Callable[[dict], dict | None] | None = None
 
 
 class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
