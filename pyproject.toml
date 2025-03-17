@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2025.2.0.dev0"
+version     = "2025.4.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -18,72 +18,72 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Home Automation",
 ]
-requires-python = ">=3.12.0"
+requires-python = ">=3.13.0"
 dependencies    = [
     "aiodns==3.2.0",
     # Integrations may depend on hassio integration without listing it to
     # change behavior based on presence of supervisor. Deprecated with #127228
     # Lib can be removed with 2025.11
-    "aiohasupervisor==0.2.2b5",
-    "aiohttp==3.11.11",
+    "aiohasupervisor==0.3.0",
+    "aiohttp==3.11.14",
     "aiohttp_cors==0.7.0",
-    "aiohttp-fast-zlib==0.2.0",
-    "aiohttp-asyncmdnsresolver==0.0.1",
-    "aiozoneinfo==0.2.1",
+    "aiohttp-fast-zlib==0.2.3",
+    "aiohttp-asyncmdnsresolver==0.1.1",
+    "aiozoneinfo==0.2.3",
+    "annotatedyaml==0.2.0",
     "astral==2.2",
-    "async-interrupt==1.2.0",
-    "attrs==24.2.0",
+    "async-interrupt==1.2.2",
+    "attrs==25.1.0",
     "atomicwrites-homeassistant==1.4.1",
-    "audioop-lts==0.2.1;python_version>='3.13'",
+    "audioop-lts==0.2.1",
     "awesomeversion==24.6.0",
     "bcrypt==4.2.0",
     "certifi>=2021.5.30",
     "ciso8601==2.3.2",
     "cronsim==2.6",
-    "fnv-hash-fast==1.0.2",
+    "fnv-hash-fast==1.4.0",
     # hass-nabucasa is imported by helpers which don't depend on the cloud
     # integration
-    "hass-nabucasa==0.87.0",
+    "hass-nabucasa==0.94.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
-    "httpx==0.27.2",
-    "home-assistant-bluetooth==1.13.0",
+    "httpx==0.28.1",
+    "home-assistant-bluetooth==1.13.1",
     "ifaddr==0.2.0",
-    "Jinja2==3.1.5",
+    "Jinja2==3.1.6",
     "lru-dict==1.3.0",
     "PyJWT==2.10.1",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==44.0.0",
+    "cryptography==44.0.1",
     "Pillow==11.1.0",
-    "propcache==0.2.1",
-    "pyOpenSSL==24.3.0",
-    "orjson==3.10.12",
+    "propcache==0.3.0",
+    "pyOpenSSL==25.0.0",
+    "orjson==3.10.15",
     "packaging>=23.1",
     "psutil-home-assistant==0.0.1",
     "python-slugify==8.0.4",
     "PyYAML==6.0.2",
     "requests==2.32.3",
-    "securetar==2024.11.0",
-    "SQLAlchemy==2.0.36",
-    "standard-aifc==3.13.0;python_version>='3.13'",
-    "standard-telnetlib==3.13.0;python_version>='3.13'",
+    "securetar==2025.2.1",
+    "SQLAlchemy==2.0.39",
+    "standard-aifc==3.13.0",
+    "standard-telnetlib==3.13.0",
     "typing-extensions>=4.12.2,<5.0",
-    "ulid-transform==1.0.2",
+    "ulid-transform==1.4.0",
     # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
-    "uv==0.5.8",
+    "uv==0.6.1",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.6",
     "yarl==1.18.3",
     "webrtc-models==0.3.0",
-    "zeroconf==0.137.2"
+    "zeroconf==0.146.0"
 ]
 
 [project.urls]
@@ -104,7 +104,7 @@ include-package-data = true
 include = ["homeassistant*"]
 
 [tool.pylint.MAIN]
-py-version = "3.12"
+py-version = "3.13"
 # Use a conservative default here; 2 should speed up most setups and not hurt
 # any too bad. Override on command line as appropriate.
 jobs = 2
@@ -701,17 +701,12 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.8.0"
+required-version = ">=0.11.0"
 
 [tool.ruff.lint]
 select = [
     "A001", # Variable {name} is shadowing a Python builtin
-    "ASYNC210", # Async functions should not call blocking HTTP methods
-    "ASYNC220", # Async functions should not create subprocesses with blocking methods
-    "ASYNC221", # Async functions should not run processes with blocking methods
-    "ASYNC222", # Async functions should not wait on processes with blocking methods
-    "ASYNC230", # Async functions should not open files with blocking methods like open
-    "ASYNC251", # Async functions should not call time.sleep
+    "ASYNC", # flake8-async
     "B002", # Python does not support the unary prefix increment
     "B005", # Using .strip() with multi-character strings is misleading
     "B007", # Loop control variable {name} not used within loop body
@@ -720,8 +715,10 @@ select = [
     "B017", # pytest.raises(BaseException) should be considered evil
     "B018", # Found useless attribute access. Either assign it to a variable or remove it.
     "B023", # Function definition does not bind loop variable {name}
+    "B024", # `{name}` is an abstract base class, but it has no abstract methods or properties
     "B026", # Star-arg unpacking after a keyword argument is strongly discouraged
     "B032", # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
+    "B035", # Dictionary comprehension uses static key
     "B904", # Use raise from to specify exception cause
     "B905", # zip() without an explicit strict= parameter
     "BLE",
@@ -755,12 +752,27 @@ select = [
     "RSE", # flake8-raise
     "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
+    "RUF007", # Prefer itertools.pairwise() over zip() when iterating over successive pairs
+    "RUF008", # Do not use mutable default values for dataclass attributes
     "RUF010", # Use explicit conversion flag
     "RUF013", # PEP 484 prohibits implicit Optional
+    "RUF016", # Slice in indexed access to type {value_type} uses type {index_type} instead of an integer
     "RUF017", # Avoid quadratic list summation
     "RUF018", # Avoid assignment expressions in assert statements
     "RUF019", # Unnecessary key check before dictionary access
-    # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up
+    "RUF020", # {never_like} | T is equivalent to T
+    "RUF021", # Parenthesize a and b expressions when chaining and and or together, to make the precedence clear
+    "RUF022", # Sort __all__
+    "RUF023", # Sort __slots__
+    "RUF024", # Do not pass mutable objects as values to dict.fromkeys
+    "RUF026", # default_factory is a positional-only argument to defaultdict
+    "RUF030", # print() call in assert statement is likely unintentional
+    "RUF032", # Decimal() called with float literal argument
+    "RUF033", # __post_init__ method with argument defaults
+    "RUF034", # Useless if-else condition
+    "RUF100", # Unused `noqa` directive
+    "RUF101", # noqa directives that use redirected rule codes
+    "RUF200", # Failed to parse pyproject.toml: {message}
     "S102", # Use of exec detected
     "S103", # bad-file-permissions
     "S108", # hardcoded-temp-file
@@ -773,7 +785,6 @@ select = [
     "S317", # suspicious-xml-sax-usage
     "S318", # suspicious-xml-mini-dom-usage
     "S319", # suspicious-xml-pull-dom-usage
-    "S320", # suspicious-xmle-tree-usage
     "S601", # paramiko-call
     "S602", # subprocess-popen-with-shell-equals-true
     "S604", # call-with-shell-equals-true
@@ -794,6 +805,8 @@ select = [
 ]
 
 ignore = [
+    "ASYNC109", # Async function definition with a `timeout` parameter Use `asyncio.timeout` instead
+    "ASYNC110", # Use `asyncio.Event` instead of awaiting `asyncio.sleep` in a `while` loop
     "D202", # No blank lines allowed after function docstring
     "D203", # 1 blank line required before class docstring
     "D213", # Multi-line docstring summary should start at the second line
@@ -823,6 +836,8 @@ ignore = [
     "TC001", # Move application import {} into a type-checking block
     "TC002", # Move third-party import {} into a type-checking block
     "TC003", # Move standard library import {} into a type-checking block
+    # Quotes for typing.cast generally not necessary, only for performance critical paths
+    "TC006", # Add quotes to type expression in typing.cast()
 
     "TRY003", # Avoid specifying long messages outside the exception class
     "TRY400", # Use `logging.exception` instead of `logging.error`
@@ -839,10 +854,9 @@ ignore = [
     "Q",
     "COM812",
     "COM819",
-    "ISC001",
 
     # Disabled because ruff does not understand type of __all__ generated by a function
-    "PLE0605"
+    "PLE0605",
 ]
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
@@ -897,7 +911,15 @@ voluptuous = "vol"
 "homeassistant.helpers.floor_registry" = "fr"
 "homeassistant.helpers.issue_registry" = "ir"
 "homeassistant.helpers.label_registry" = "lr"
+"homeassistant.util.color" = "color_util"
 "homeassistant.util.dt" = "dt_util"
+"homeassistant.util.json" = "json_util"
+"homeassistant.util.location" = "location_util"
+"homeassistant.util.logging" = "logging_util"
+"homeassistant.util.network" = "network_util"
+"homeassistant.util.ulid" = "ulid_util"
+"homeassistant.util.uuid" = "uuid_util"
+"homeassistant.util.yaml" = "yaml_util"
 
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
@@ -936,4 +958,4 @@ split-on-trailing-comma = false
 max-complexity = 25
 
 [tool.ruff.lint.pydocstyle]
-property-decorators = ["propcache.cached_property"]
+property-decorators = ["propcache.api.cached_property"]

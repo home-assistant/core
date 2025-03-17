@@ -31,7 +31,7 @@ def _check_import_call_allowed(mapped_args: dict[str, Any]) -> bool:
 def _check_file_allowed(mapped_args: dict[str, Any]) -> bool:
     # If the file is in /proc we can ignore it.
     args = mapped_args["args"]
-    path = args[0] if type(args[0]) is str else str(args[0])  # noqa: E721
+    path = args[0] if type(args[0]) is str else str(args[0])
     return path.startswith(ALLOWED_FILE_PREFIXES)
 
 

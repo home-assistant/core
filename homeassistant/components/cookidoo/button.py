@@ -8,7 +8,7 @@ from cookidoo_api import Cookidoo, CookidooException
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
@@ -35,7 +35,7 @@ TODO_CLEAR = CookidooButtonEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: CookidooConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Cookidoo button entities based on a config entry."""
     coordinator = entry.runtime_data
@@ -56,7 +56,8 @@ class CookidooButton(CookidooBaseEntity, ButtonEntity):
         """Initialize cookidoo button."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        assert coordinator.config_entry.unique_id
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     async def async_press(self) -> None:
         """Press the button."""

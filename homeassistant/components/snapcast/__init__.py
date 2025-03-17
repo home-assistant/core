@@ -11,15 +11,14 @@ from .coordinator import SnapcastUpdateCoordinator
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Snapcast from a config entry."""
-    host = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
-    coordinator = SnapcastUpdateCoordinator(hass, host, port)
+    coordinator = SnapcastUpdateCoordinator(hass, entry)
 
     try:
         await coordinator.async_config_entry_first_refresh()
     except OSError as ex:
         raise ConfigEntryNotReady(
-            f"Could not connect to Snapcast server at {host}:{port}"
+            "Could not connect to Snapcast server at "
+            f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
         ) from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator

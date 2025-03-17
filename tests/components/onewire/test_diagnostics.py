@@ -19,22 +19,8 @@ from tests.typing import ClientSessionGenerator
 @pytest.fixture(autouse=True)
 def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
-    with patch("homeassistant.components.onewire.PLATFORMS", [Platform.SWITCH]):
+    with patch("homeassistant.components.onewire._PLATFORMS", [Platform.SWITCH]):
         yield
-
-
-DEVICE_DETAILS = {
-    "device_info": {
-        "identifiers": [["onewire", "EF.111111111113"]],
-        "manufacturer": "Hobby Boards",
-        "model": "HB_HUB",
-        "name": "EF.111111111113",
-    },
-    "family": "EF",
-    "id": "EF.111111111113",
-    "path": "/EF.111111111113/",
-    "type": "HB_HUB",
-}
 
 
 @pytest.mark.parametrize("device_id", ["EF.111111111113"], indirect=True)

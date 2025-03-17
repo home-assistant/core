@@ -2,18 +2,8 @@
 
 import pytest
 
-from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
-
-from .common import TEST_PASSWORD, TEST_USER_ID
 
 from tests.common import MockConfigEntry
 
@@ -24,12 +14,8 @@ async def test_binary_sensors(
 ) -> None:
     """Test Flo by Moen sensors."""
     config_entry.add_to_hass(hass)
-    assert await async_setup_component(
-        hass, FLO_DOMAIN, {CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD}
-    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 2
 
     valve_state = hass.states.get(
         "binary_sensor.smart_water_shutoff_pending_system_alerts"

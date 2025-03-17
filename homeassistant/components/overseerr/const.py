@@ -14,6 +14,8 @@ ATTR_STATUS = "status"
 ATTR_SORT_ORDER = "sort_order"
 ATTR_REQUESTED_BY = "requested_by"
 
+EVENT_KEY = f"{DOMAIN}_event"
+
 REGISTERED_NOTIFICATIONS = (
     NotificationType.REQUEST_PENDING_APPROVAL
     | NotificationType.REQUEST_APPROVED
@@ -23,28 +25,24 @@ REGISTERED_NOTIFICATIONS = (
     | NotificationType.REQUEST_AUTOMATICALLY_APPROVED
 )
 JSON_PAYLOAD = (
-    '"{\\"notification_type\\":\\"{{notification_type}}\\",\\"event\\":\\"'
-    '{{event}}\\",\\"subject\\":\\"{{subject}}\\",\\"message\\":\\"{{messa'
-    'ge}}\\",\\"image\\":\\"{{image}}\\",\\"{{media}}\\":{\\"media_type\\"'
-    ':\\"{{media_type}}\\",\\"tmdbId\\":\\"{{media_tmdbid}}\\",\\"tvdbId\\'
-    '":\\"{{media_tvdbid}}\\",\\"status\\":\\"{{media_status}}\\",\\"statu'
-    's4k\\":\\"{{media_status4k}}\\"},\\"{{request}}\\":{\\"request_id\\":'
-    '\\"{{request_id}}\\",\\"requestedBy_email\\":\\"{{requestedBy_email}}'
-    '\\",\\"requestedBy_username\\":\\"{{requestedBy_username}}\\",\\"requ'
-    'estedBy_avatar\\":\\"{{requestedBy_avatar}}\\",\\"requestedBy_setting'
-    's_discordId\\":\\"{{requestedBy_settings_discordId}}\\",\\"requestedB'
-    'y_settings_telegramChatId\\":\\"{{requestedBy_settings_telegramChatId'
-    '}}\\"},\\"{{issue}}\\":{\\"issue_id\\":\\"{{issue_id}}\\",\\"issue_ty'
-    'pe\\":\\"{{issue_type}}\\",\\"issue_status\\":\\"{{issue_status}}\\",'
-    '\\"reportedBy_email\\":\\"{{reportedBy_email}}\\",\\"reportedBy_usern'
-    'ame\\":\\"{{reportedBy_username}}\\",\\"reportedBy_avatar\\":\\"{{rep'
-    'ortedBy_avatar}}\\",\\"reportedBy_settings_discordId\\":\\"{{reported'
-    'By_settings_discordId}}\\",\\"reportedBy_settings_telegramChatId\\":'
-    '\\"{{reportedBy_settings_telegramChatId}}\\"},\\"{{comment}}\\":{\\"c'
-    'omment_message\\":\\"{{comment_message}}\\",\\"commentedBy_email\\":'
-    '\\"{{commentedBy_email}}\\",\\"commentedBy_username\\":\\"{{commented'
-    'By_username}}\\",\\"commentedBy_avatar\\":\\"{{commentedBy_avatar}}'
-    '\\",\\"commentedBy_settings_discordId\\":\\"{{commentedBy_settings_di'
-    'scordId}}\\",\\"commentedBy_settings_telegramChatId\\":\\"{{commented'
-    'By_settings_telegramChatId}}\\"},\\"{{extra}}\\":[]\\n}"'
+    '"{\\"notification_type\\":\\"{{notification_type}}\\",\\"subject\\":\\"{{subject}'
+    '}\\",\\"message\\":\\"{{message}}\\",\\"image\\":\\"{{image}}\\",\\"{{media}}\\":'
+    '{\\"media_type\\":\\"{{media_type}}\\",\\"tmdb_id\\":\\"{{media_tmdbid}}\\",\\"t'
+    'vdb_id\\":\\"{{media_tvdbid}}\\",\\"status\\":\\"{{media_status}}\\",\\"status4k'
+    '\\":\\"{{media_status4k}}\\"},\\"{{request}}\\":{\\"request_id\\":\\"{{request_id'
+    '}}\\",\\"requested_by_email\\":\\"{{requestedBy_email}}\\",\\"requested_by_userna'
+    'me\\":\\"{{requestedBy_username}}\\",\\"requested_by_avatar\\":\\"{{requestedBy_a'
+    'vatar}}\\",\\"requested_by_settings_discord_id\\":\\"{{requestedBy_settings_disco'
+    'rdId}}\\",\\"requested_by_settings_telegram_chat_id\\":\\"{{requestedBy_settings_'
+    'telegramChatId}}\\"},\\"{{issue}}\\":{\\"issue_id\\":\\"{{issue_id}}\\",\\"issue_'
+    'type\\":\\"{{issue_type}}\\",\\"issue_status\\":\\"{{issue_status}}\\",\\"reporte'
+    'd_by_email\\":\\"{{reportedBy_email}}\\",\\"reported_by_username\\":\\"{{reported'
+    'By_username}}\\",\\"reported_by_avatar\\":\\"{{reportedBy_avatar}}\\",\\"reported'
+    '_by_settings_discord_id\\":\\"{{reportedBy_settings_discordId}}\\",\\"reported_by'
+    '_settings_telegram_chat_id\\":\\"{{reportedBy_settings_telegramChatId}}\\"},\\"{{'
+    'comment}}\\":{\\"comment_message\\":\\"{{comment_message}}\\",\\"commented_by_ema'
+    'il\\":\\"{{commentedBy_email}}\\",\\"commented_by_username\\":\\"{{commentedBy_us'
+    'ername}}\\",\\"commented_by_avatar\\":\\"{{commentedBy_avatar}}\\",\\"commented_b'
+    'y_settings_discord_id\\":\\"{{commentedBy_settings_discordId}}\\",\\"commented_by'
+    '_settings_telegram_chat_id\\":\\"{{commentedBy_settings_telegramChatId}}\\"}}"'
 )

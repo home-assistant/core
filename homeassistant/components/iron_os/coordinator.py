@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import Enum
 import logging
 from typing import cast
 
+from awesomeversion import AwesomeVersion
 from pynecil import (
     CharSetting,
     CommunicationError,
@@ -33,6 +35,8 @@ SCAN_INTERVAL = timedelta(seconds=5)
 SCAN_INTERVAL_GITHUB = timedelta(hours=3)
 SCAN_INTERVAL_SETTINGS = timedelta(seconds=60)
 
+V223 = AwesomeVersion("v2.23")
+
 
 @dataclass
 class IronOSCoordinators:
@@ -42,15 +46,19 @@ class IronOSCoordinators:
     settings: IronOSSettingsCoordinator
 
 
+type IronOSConfigEntry = ConfigEntry[IronOSCoordinators]
+
+
 class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """IronOS base coordinator."""
 
     device_info: DeviceInfoResponse
-    config_entry: ConfigEntry
+    config_entry: IronOSConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: IronOSConfigEntry,
         device: Pynecil,
         update_interval: timedelta,
     ) -> None:
@@ -59,6 +67,7 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=update_interval,
             request_refresh_debouncer=Debouncer(
@@ -66,6 +75,7 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             ),
         )
         self.device = device
+        self.v223_features = False
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -75,13 +85,17 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         except CommunicationError as e:
             raise UpdateFailed("Cannot connect to device") from e
 
+        self.v223_features = AwesomeVersion(self.device_info.build) >= V223
+
 
 class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
     """IronOS coordinator."""
 
-    def __init__(self, hass: HomeAssistant, device: Pynecil) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: IronOSConfigEntry, device: Pynecil
+    ) -> None:
         """Initialize IronOS coordinator."""
-        super().__init__(hass, device=device, update_interval=SCAN_INTERVAL)
+        super().__init__(hass, config_entry, device, SCAN_INTERVAL)
 
     async def _async_update_data(self) -> LiveDataResponse:
         """Fetch data from Device."""
@@ -108,6 +122,51 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
         return False
 
 
+class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):
+    """IronOS coordinator."""
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: IronOSConfigEntry, device: Pynecil
+    ) -> None:
+        """Initialize IronOS coordinator."""
+        super().__init__(hass, config_entry, device, SCAN_INTERVAL_SETTINGS)
+
+    async def _async_update_data(self) -> SettingsDataResponse:
+        """Fetch data from Device."""
+
+        characteristics = set(self.async_contexts())
+
+        if self.device.is_connected and characteristics:
+            try:
+                return await self.device.get_settings(list(characteristics))
+            except CommunicationError as e:
+                _LOGGER.debug("Failed to fetch settings", exc_info=e)
+
+        return self.data or SettingsDataResponse()
+
+    async def write(
+        self,
+        characteristic: CharSetting,
+        value: bool | Enum | float,
+    ) -> None:
+        """Write value to the settings characteristic."""
+
+        try:
+            await self.device.write(characteristic, value)
+        except CommunicationError as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="submit_setting_failed",
+            ) from e
+
+        # prevent switch bouncing while waiting for coordinator to finish refresh
+        self.data.update(
+            cast(SettingsDataResponse, {characteristic.name.lower(): value})
+        )
+        self.async_update_listeners()
+        await self.async_request_refresh()
+
+
 class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[LatestRelease]):
     """IronOS coordinator for retrieving update information from github."""
 
@@ -129,42 +188,3 @@ class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[LatestRelease]):
             return await self.github.latest_release()
         except UpdateException as e:
             raise UpdateFailed("Failed to check for latest IronOS update") from e
-
-
-class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):
-    """IronOS coordinator."""
-
-    def __init__(self, hass: HomeAssistant, device: Pynecil) -> None:
-        """Initialize IronOS coordinator."""
-        super().__init__(hass, device=device, update_interval=SCAN_INTERVAL_SETTINGS)
-
-    async def _async_update_data(self) -> SettingsDataResponse:
-        """Fetch data from Device."""
-
-        characteristics = set(self.async_contexts())
-
-        if self.device.is_connected and characteristics:
-            try:
-                return await self.device.get_settings(list(characteristics))
-            except CommunicationError as e:
-                _LOGGER.debug("Failed to fetch settings", exc_info=e)
-
-        return self.data or SettingsDataResponse()
-
-    async def write(self, characteristic: CharSetting, value: bool) -> None:
-        """Write value to the settings characteristic."""
-
-        try:
-            await self.device.write(characteristic, value)
-        except CommunicationError as e:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="submit_setting_failed",
-            ) from e
-
-        # prevent switch bouncing while waiting for coordinator to finish refresh
-        self.data.update(
-            cast(SettingsDataResponse, {characteristic.name.lower(): value})
-        )
-        self.async_update_listeners()
-        await self.async_request_refresh()

@@ -66,7 +66,7 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
     """Test that invalid credentials throws an error."""
 
     with patch(
-        "homeassistant.components.fireservicerota.FireServiceRota.request_tokens",
+        "homeassistant.components.fireservicerota.coordinator.FireServiceRota.request_tokens",
         side_effect=InvalidAuthError,
     ):
         result = await hass.config_entries.flow.async_init(

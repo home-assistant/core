@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import SensiboConfigEntry
@@ -138,18 +138,29 @@ def _find_valid_target_temp(target: float, valid_targets: list[int]) -> int:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SensiboConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Sensibo climate entry."""
 
     coordinator = entry.runtime_data
 
-    entities = [
-        SensiboClimate(coordinator, device_id)
-        for device_id, device_data in coordinator.data.parsed.items()
-    ]
+    added_devices: set[str] = set()
 
-    async_add_entities(entities)
+    def _add_remove_devices() -> None:
+        """Handle additions of devices and sensors."""
+        nonlocal added_devices
+        new_devices, _, new_added_devices = coordinator.get_devices(added_devices)
+        added_devices = new_added_devices
+
+        if new_devices:
+            async_add_entities(
+                SensiboClimate(coordinator, device_id)
+                for device_id in coordinator.data.parsed
+                if device_id in new_devices
+            )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_remove_devices))
+    _add_remove_devices()
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(

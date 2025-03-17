@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CURRENCY_CENT, UnitOfEnergy
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_COMPONENTS, ATTR_END_AT, ATTR_START_AT
@@ -21,7 +21,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FlickConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Flick Sensor Setup."""
     coordinator = entry.runtime_data
@@ -51,19 +51,19 @@ class FlickPricingSensor(CoordinatorEntity[FlickElectricDataCoordinator], Sensor
             _LOGGER.warning(
                 "Unexpected quantity for unit price: %s", self.coordinator.data
             )
-        return self.coordinator.data.cost
+        return self.coordinator.data.cost * 100
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-        components: dict[str, Decimal] = {}
+        components: dict[str, float] = {}
 
         for component in self.coordinator.data.components:
             if component.charge_setter not in ATTR_COMPONENTS:
                 _LOGGER.warning("Found unknown component: %s", component.charge_setter)
                 continue
 
-            components[component.charge_setter] = component.value
+            components[component.charge_setter] = float(component.value * 100)
 
         return {
             ATTR_START_AT: self.coordinator.data.start_at,

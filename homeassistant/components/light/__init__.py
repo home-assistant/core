@@ -8,9 +8,9 @@ import dataclasses
 from functools import partial
 import logging
 import os
-from typing import Any, Final, Self, cast, final
+from typing import TYPE_CHECKING, Any, Final, Self, cast, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -35,7 +35,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from .const import (  # noqa: F401
     COLOR_MODES_BRIGHTNESS,
@@ -528,6 +528,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         elif ATTR_RGB_COLOR in params and ColorMode.RGB not in supported_color_modes:
             rgb_color = params.pop(ATTR_RGB_COLOR)
             assert rgb_color is not None
+            if TYPE_CHECKING:
+                rgb_color = cast(tuple[int, int, int], rgb_color)
             if ColorMode.RGBW in supported_color_modes:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif ColorMode.RGBWW in supported_color_modes:
@@ -601,6 +603,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         ):
             rgbww_color = params.pop(ATTR_RGBWW_COLOR)
             assert rgbww_color is not None
+            if TYPE_CHECKING:
+                rgbww_color = cast(tuple[int, int, int, int, int], rgbww_color)
             rgb_color = color_util.color_rgbww_to_rgb(
                 *rgbww_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
             )
@@ -1388,7 +1392,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Remove this compatibility shim in 2025.1 or later.
         """
         features = self.supported_features
-        if type(features) is not int:  # noqa: E721
+        if type(features) is not int:
             return features
         new_features = LightEntityFeature(features)
         if self._deprecated_supported_features_reported is True:

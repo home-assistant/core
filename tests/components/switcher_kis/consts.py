@@ -91,8 +91,8 @@ DUMMY_POSITION = [54]
 DUMMY_POSITION_2 = [54, 54]
 DUMMY_DIRECTION = [ShutterDirection.SHUTTER_STOP]
 DUMMY_DIRECTION_2 = [ShutterDirection.SHUTTER_STOP, ShutterDirection.SHUTTER_STOP]
-DUMMY_CHILD_LOCK = [ShutterChildLock.OFF]
-DUMMY_CHILD_LOCK_2 = [ShutterChildLock.OFF, ShutterChildLock.OFF]
+DUMMY_CHILD_LOCK = [ShutterChildLock.ON]
+DUMMY_CHILD_LOCK_2 = [ShutterChildLock.ON, ShutterChildLock.ON]
 DUMMY_USERNAME = "email"
 DUMMY_TOKEN = "zvVvd7JxtN7CgvkD1Psujw=="
 DUMMY_LIGHT = [DeviceState.ON]

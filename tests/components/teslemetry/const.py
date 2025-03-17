@@ -51,7 +51,7 @@ METADATA = {
             "proxy": False,
             "access": True,
             "polling": True,
-            "firmware": "2024.44.25",
+            "firmware": "2026.0.0",
         }
     },
 }

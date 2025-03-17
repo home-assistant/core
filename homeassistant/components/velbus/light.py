@@ -23,7 +23,7 @@ from homeassistant.components.light import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VelbusConfigEntry
 from .entity import VelbusEntity, api_call
@@ -34,7 +34,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: VelbusConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Velbus switch based on config_entry."""
     await entry.runtime_data.scan_task
@@ -122,19 +122,14 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
     @api_call
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the Velbus light to turn on."""
-        if ATTR_FLASH in kwargs:
-            if kwargs[ATTR_FLASH] == FLASH_LONG:
-                attr, *args = "set_led_state", "slow"
-            elif kwargs[ATTR_FLASH] == FLASH_SHORT:
-                attr, *args = "set_led_state", "fast"
-            else:
-                attr, *args = "set_led_state", "on"
+        if (flash := ATTR_FLASH in kwargs) and kwargs[ATTR_FLASH] == FLASH_LONG:
+            await self._channel.set_led_state("slow")
+        elif flash and kwargs[ATTR_FLASH] == FLASH_SHORT:
+            await self._channel.set_led_state("fast")
         else:
-            attr, *args = "set_led_state", "on"
-        await getattr(self._channel, attr)(*args)
+            await self._channel.set_led_state("on")
 
     @api_call
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the velbus light to turn off."""
-        attr, *args = "set_led_state", "off"
-        await getattr(self._channel, attr)(*args)
+        await self._channel.set_led_state("off")

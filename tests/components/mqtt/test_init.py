@@ -13,6 +13,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
+from homeassistant import core as ha
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.models import (
@@ -30,7 +31,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, template
@@ -45,6 +45,7 @@ from tests.common import (
     MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
+    MockMqttReasonCode,
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache,
@@ -391,6 +392,25 @@ async def test_service_call_with_ascii_qos_retain_flags(
         blocking=True,
     )
     assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == ""
+    assert mqtt_mock.async_publish.call_args[0][2] == 2
+    assert not mqtt_mock.async_publish.call_args[0][3]
+
+    mqtt_mock.reset_mock()
+
+    # Test service call without payload
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_QOS: "2",
+            mqtt.ATTR_RETAIN: "no",
+        },
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] is None
     assert mqtt_mock.async_publish.call_args[0][2] == 2
     assert not mqtt_mock.async_publish.call_args[0][3]
 
@@ -695,7 +715,12 @@ async def test_reload_entry_with_restored_subscriptions(
 ) -> None:
     """Test reloading the config entry with with subscriptions restored."""
     # Setup the MQTT entry
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
     with patch("homeassistant.config.load_yaml_config_file", return_value={}):
@@ -800,7 +825,10 @@ async def test_default_entry_setting_are_applied(
 
     # Config entry data is incomplete but valid according the schema
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN, data={"broker": "test-broker", "port": 1234}
+        domain=mqtt.DOMAIN,
+        data={"broker": "test-broker", "port": 1234},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
@@ -1545,6 +1573,7 @@ async def test_subscribe_connection_status(
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test connextion status subscription."""
+
     mqtt_client_mock = setup_with_birth_msg_client_mock
     mqtt_connected_calls_callback: list[bool] = []
     mqtt_connected_calls_async: list[bool] = []
@@ -1562,7 +1591,7 @@ async def test_subscribe_connection_status(
     assert mqtt.is_connected(hass) is True
 
     # Mock disconnect status
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is False
 
@@ -1576,12 +1605,12 @@ async def test_subscribe_connection_status(
 
     # Mock connect status
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, MockMqttReasonCode())
     await mock_debouncer.wait()
     assert mqtt.is_connected(hass) is True
 
     # Mock disconnect status
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is False
 
@@ -1591,7 +1620,7 @@ async def test_subscribe_connection_status(
 
     # Mock connect status
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, MockMqttReasonCode())
     await mock_debouncer.wait()
     assert mqtt.is_connected(hass) is True
 
@@ -1614,6 +1643,8 @@ async def test_unload_config_entry(
     entry = MockConfigEntry(
         domain=mqtt.DOMAIN,
         data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 

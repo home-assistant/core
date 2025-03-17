@@ -14,14 +14,14 @@ from goslideapi.goslideapi import (
 )
 import voluptuous as vol
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import SlideConfigEntry
 from .const import CONF_INVERT_POSITION, DOMAIN
+from .coordinator import SlideConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}
         except (AuthenticationFailed, DigestAuthCalcError):
             return {"base": "invalid_auth"}
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.exception("Exception occurred during connection test")
             return {"base": "unknown"}
 
@@ -85,7 +85,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}
         except (AuthenticationFailed, DigestAuthCalcError):
             return {"base": "invalid_auth"}
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.exception("Exception occurred during connection test")
             return {"base": "unknown"}
 

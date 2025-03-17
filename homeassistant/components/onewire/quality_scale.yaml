@@ -7,10 +7,7 @@ rules:
   unique-config-entry:
     status: done
     comment: unique ID is not available, but duplicates are prevented based on host/port
-  config-flow-test-coverage:
-    status: todo
-    comment: >
-      Let's have test_user_options_empty_selection end in CREATE_ENTRY
+  config-flow-test-coverage: done
   runtime-data: done
   test-before-setup: done
   appropriate-polling: done
@@ -69,8 +66,8 @@ rules:
   entity-category: done
   entity-disabled-by-default: done
   discovery:
-    status: todo
-    comment: mDNS should be possible - https://owfs.org/index_php_page_avahi-discovery.html
+    status: done
+    comment: hassio and mDNS/zeroconf discovery implemented
   stale-devices:
     status: done
     comment: >
@@ -87,8 +84,8 @@ rules:
     comment: It doesn't make sense to override defaults
   reconfiguration-flow: done
   dynamic-devices:
-    status: todo
-    comment: Not yet implemented
+    status: done
+    comment: The bus is scanned for new devices at regular interval
   discovery-update-info:
     status: todo
     comment: Under review

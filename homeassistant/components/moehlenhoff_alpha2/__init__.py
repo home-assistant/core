@@ -17,7 +17,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CLIMATE, Platform
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     base = Alpha2Base(entry.data[CONF_HOST])
-    coordinator = Alpha2BaseCoordinator(hass, base)
+    coordinator = Alpha2BaseCoordinator(hass, entry, base)
 
     await coordinator.async_config_entry_first_refresh()
 

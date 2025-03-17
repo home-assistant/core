@@ -16,9 +16,8 @@ from homeassistant.components.select import (
     SelectEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -68,7 +67,7 @@ DEVICE_SELECT_TYPES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SensiboConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sensibo select platform."""
 
@@ -109,16 +108,27 @@ async def async_setup_entry(
                             "entity": entity_id,
                         },
                     )
-
-    entities.extend(
-        [
-            SensiboSelect(coordinator, device_id, description)
-            for device_id, device_data in coordinator.data.parsed.items()
-            for description in DEVICE_SELECT_TYPES
-            if description.key in device_data.full_features
-        ]
-    )
     async_add_entities(entities)
+
+    added_devices: set[str] = set()
+
+    def _add_remove_devices() -> None:
+        """Handle additions of devices and sensors."""
+        nonlocal added_devices
+        new_devices, _, new_added_devices = coordinator.get_devices(added_devices)
+        added_devices = new_added_devices
+
+        if new_devices:
+            async_add_entities(
+                SensiboSelect(coordinator, device_id, description)
+                for device_id, device_data in coordinator.data.parsed.items()
+                if device_id in new_devices
+                for description in DEVICE_SELECT_TYPES
+                if description.key in device_data.full_features
+            )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_remove_devices))
+    _add_remove_devices()
 
 
 class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
@@ -138,6 +148,13 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        if self.entity_description.key not in self.device_data.active_features:
+            return False
+        return super().available
+
+    @property
     def current_option(self) -> str | None:
         """Return the current selected option."""
         return self.entity_description.value_fn(self.device_data)
@@ -152,17 +169,6 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set state to the selected option."""
-        if self.entity_description.key not in self.device_data.active_features:
-            hvac_mode = self.device_data.hvac_mode if self.device_data.hvac_mode else ""
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="select_option_not_available",
-                translation_placeholders={
-                    "hvac_mode": hvac_mode,
-                    "key": self.entity_description.key,
-                },
-            )
-
         await self.async_send_api_call(
             key=self.entity_description.data_key,
             value=option,

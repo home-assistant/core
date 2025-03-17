@@ -94,6 +94,9 @@
       },
       "temp_increment_long": {
         "name": "Long-press temperature step"
+      },
+      "hall_effect_sleep_time": {
+        "name": "Hall sensor sleep timeout"
       }
     },
     "select": {
@@ -166,6 +169,22 @@
           "seconds_5": "5 second",
           "loop": "Loop"
         }
+      },
+      "usb_pd_mode": {
+        "name": "Power Delivery 3.1 EPR",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "tip_type": {
+        "name": "Soldering tip type",
+        "state": {
+          "auto": "Auto sense",
+          "ts100_long": "TS100 long/Hakko T12 tip",
+          "pine_short": "Pinecil short tip",
+          "pts200": "PTS200 short tip"
+        }
       }
     },
     "sensor": {
@@ -216,7 +235,16 @@
           "sleeping": "Sleeping",
           "settings": "Settings",
           "debug": "Debug",
-          "boost": "Boost"
+          "boost": "Boost",
+          "soldering_profile": "Soldering profile",
+          "temperature_adjust": "Temperature adjust",
+          "usb_pd_debug": "USB PD debug",
+          "thermal_runaway": "Thermal runaway",
+          "startup_logo": "Booting",
+          "cjc_calibration": "CJC calibration",
+          "startup_warnings": "Startup warnings",
+          "initialisation_done": "Initialisation done",
+          "hibernating": "Hibernating"
         }
       },
       "estimated_power": {
