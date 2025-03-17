@@ -56,61 +56,26 @@ SENSOR_BLOCK_ID = 3
 DEVICE_BLOCK_ID = 4
 
 
-@pytest.mark.parametrize(
-    ("entity", "initial_state", "block_id", "attribute", "value", "unique_id"),
-    [
-        (
-            "test_name_channel_1_power",
-            "53.4",
-            RELAY_BLOCK_ID,
-            "power",
-            60.1,
-            "relay_0-power",
-        ),
-        (
-            "test_name_operation",
-            "normal",
-            SENSOR_BLOCK_ID,
-            "sensorOp",
-            "normal",
-            "sensor_0-sensorOp",
-        ),
-        (
-            "test_name_self_test",
-            "pending",
-            SENSOR_BLOCK_ID,
-            "selfTest",
-            "completed",
-            "sensor_0-selfTest",
-        ),
-    ],
-)
 async def test_block_sensor(
     hass: HomeAssistant,
     mock_block_device: Mock,
     entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
-    entity: str,
-    initial_state: str,
-    block_id: int,
-    attribute: str,
-    value: float | str,
-    unique_id: str,
 ) -> None:
     """Test block sensor."""
-    entity_id = f"{SENSOR_DOMAIN}.{entity}"
+    entity_id = f"{SENSOR_DOMAIN}.test_name_channel_1_power"
     await init_integration(hass, 1)
 
-    assert hass.states.get(entity_id).state == initial_state
+    assert hass.states.get(entity_id).state == "53.4"
 
-    monkeypatch.setattr(mock_block_device.blocks[block_id], attribute, value)
+    monkeypatch.setattr(mock_block_device.blocks[RELAY_BLOCK_ID], "power", 60.1)
     mock_block_device.mock_update()
 
-    assert hass.states.get(entity_id).state == str(value)
+    assert hass.states.get(entity_id).state == "60.1"
 
     entry = entity_registry.async_get(entity_id)
     assert entry
-    assert entry.unique_id == f"123456789ABC-{unique_id}"
+    assert entry.unique_id == "123456789ABC-relay_0-power"
 
 
 async def test_energy_sensor(
@@ -385,9 +350,11 @@ async def test_block_sensor_without_value(
     [
         ("test_name_battery", "98", DEVICE_BLOCK_ID, "battery", None),
         ("test_name_operation", "normal", SENSOR_BLOCK_ID, "sensorOp", "unknown"),
+        ("test_name_operation", "normal", SENSOR_BLOCK_ID, "sensorOp", "normal"),
+        ("test_name_self_test", "pending", SENSOR_BLOCK_ID, "selfTest", "completed"),
     ],
 )
-async def test_block_sensor_unknown_value(
+async def test_block_sensor_values(
     hass: HomeAssistant,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
@@ -406,7 +373,7 @@ async def test_block_sensor_unknown_value(
     monkeypatch.setattr(mock_block_device.blocks[block_id], attribute, value)
     mock_block_device.mock_update()
 
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert hass.states.get(entity_id).state == value or STATE_UNKNOWN
 
 
 async def test_rpc_sensor(
