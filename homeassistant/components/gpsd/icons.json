@@ -16,6 +16,12 @@
       },
       "elevation": {
         "default": "mdi:arrow-up-down"
+      },
+      "total_satellites": {
+        "default": "mdi:satellite-variant"
+      },
+      "used_satellites": {
+        "default": "mdi:satellite-variant"
       }
     }
   }

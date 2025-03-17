@@ -1,0 +1,43 @@
+{
+  "components": {
+    "main": {
+      "refresh": {},
+      "firmwareUpdate": {
+        "lastUpdateStatusReason": {
+          "value": null
+        },
+        "availableVersion": {
+          "value": "00102101",
+          "timestamp": "2025-02-08T19:37:03.624Z"
+        },
+        "lastUpdateStatus": {
+          "value": null
+        },
+        "supportedCommands": {
+          "value": null
+        },
+        "state": {
+          "value": "normalOperation",
+          "timestamp": "2025-02-08T19:37:03.622Z"
+        },
+        "updateAvailable": {
+          "value": false,
+          "timestamp": "2025-02-08T19:37:03.624Z"
+        },
+        "currentVersion": {
+          "value": "00102101",
+          "timestamp": "2025-02-08T19:37:03.594Z"
+        },
+        "lastUpdateTime": {
+          "value": null
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "on",
+          "timestamp": "2025-02-09T17:31:12.210Z"
+        }
+      }
+    }
+  }
+}

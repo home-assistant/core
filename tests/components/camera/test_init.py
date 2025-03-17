@@ -301,13 +301,24 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_camera")
-async def test_snapshot_service_os_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    ("target", "side_effect"),
+    [
+        ("homeassistant.components.camera.os.makedirs", OSError),
+        (
+            "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
+            TimeoutError,
+        ),
+    ],
+)
+async def test_snapshot_service_error(
+    hass: HomeAssistant, target: str, side_effect: Exception
 ) -> None:
-    """Test snapshot service with os error."""
+    """Test snapshot service with error."""
     with (
         patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch("homeassistant.components.camera.os.makedirs", side_effect=OSError),
+        patch(target, side_effect=side_effect),
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             camera.DOMAIN,
@@ -318,8 +329,6 @@ async def test_snapshot_service_os_error(
             },
             blocking=True,
         )
-
-    assert "Can't write image to file:" in caplog.text
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream")

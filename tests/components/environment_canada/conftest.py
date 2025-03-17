@@ -19,6 +19,9 @@ def ec_data():
         if t := weather.get("timestamp"):
             with contextlib.suppress(ValueError):
                 weather["timestamp"] = datetime.fromisoformat(t)
+        elif t := weather.get("period"):
+            with contextlib.suppress(ValueError):
+                weather["period"] = datetime.fromisoformat(t)
         return weather
 
     return json.loads(

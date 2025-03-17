@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 from unittest.mock import MagicMock
+import weakref
 
 from freezegun.api import FrozenDateTimeFactory
 from homewizard_energy.errors import DisabledError, UnauthorizedError
@@ -9,6 +10,7 @@ import pytest
 
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -24,6 +26,9 @@ async def test_load_unload_v1(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    weak_ref = weakref.ref(mock_config_entry.runtime_data)
+    assert weak_ref() is not None
+
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert len(mock_homewizardenergy.combined.mock_calls) == 1
 
@@ -31,6 +36,7 @@ async def test_load_unload_v1(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert weak_ref() is None
 
 
 async def test_load_unload_v2(
@@ -50,6 +56,36 @@ async def test_load_unload_v2(
     await hass.async_block_till_done()
 
     assert mock_config_entry_v2.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_load_unload_v2_as_v1(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test loading and unloading of integration with v2 config, but without using it."""
+
+    # Simulate v2 config but as a P1 Meter
+    mock_config_entry = MockConfigEntry(
+        title="Device",
+        domain=DOMAIN,
+        data={
+            CONF_IP_ADDRESS: "127.0.0.1",
+            CONF_TOKEN: "00112233445566778899ABCDEFABCDEF",
+        },
+        unique_id="HWE-P1_5c2fafabcdef",
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert len(mock_homewizardenergy.combined.mock_calls) == 1
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_load_failed_host_unavailable(

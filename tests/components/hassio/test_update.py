@@ -3,18 +3,22 @@
 from datetime import timedelta
 import os
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohasupervisor import SupervisorBadRequestError, SupervisorError
 from aiohasupervisor.models import HomeAssistantUpdateOptions, StoreAddonUpdate
 import pytest
 
-from homeassistant.components.backup import BackupManagerError
+from homeassistant.components.backup import BackupManagerError, ManagerBackup
+
+# pylint: disable-next=hass-component-root-import
+from homeassistant.components.backup.manager import AgentBackupStatus
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -232,6 +236,13 @@ async def test_update_addon(hass: HomeAssistant, update_addon: AsyncMock) -> Non
     update_addon.assert_called_once_with("test", StoreAddonUpdate(backup=False))
 
 
+async def setup_backup_integration(hass: HomeAssistant) -> None:
+    """Set up the backup integration."""
+    async_initialize_backup(hass)
+    assert await async_setup_component(hass, "backup", {})
+    await hass.async_block_till_done()
+
+
 @pytest.mark.parametrize(
     ("commands", "default_mount", "expected_kwargs"),
     [
@@ -315,8 +326,7 @@ async def test_update_addon_with_backup(
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
-    assert await async_setup_component(hass, "backup", {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
 
     client = await hass_ws_client(hass)
     for command in commands:
@@ -335,6 +345,118 @@ async def test_update_addon_with_backup(
             blocking=True,
         )
     mock_create_backup.assert_called_once_with(**expected_kwargs)
+    update_addon.assert_called_once_with("test", StoreAddonUpdate(backup=False))
+
+
+@pytest.mark.parametrize(
+    ("backups", "removed_backups"),
+    [
+        (
+            {},
+            [],
+        ),
+        (
+            {
+                "backup-1": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-10T04:45:00+01:00",
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-11T04:45:00+01:00",
+                    with_automatic_settings=False,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-11T04:45:00+01:00",
+                    extra_metadata={"supervisor.addon_update": "other"},
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-4": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-11T04:45:00+01:00",
+                    extra_metadata={"supervisor.addon_update": "other"},
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-5": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-11T04:45:00+01:00",
+                    extra_metadata={"supervisor.addon_update": "test"},
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-6": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-12T04:45:00+01:00",
+                    extra_metadata={"supervisor.addon_update": "test"},
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+            },
+            ["backup-5"],
+        ),
+    ],
+)
+async def test_update_addon_with_backup_removes_old_backups(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    update_addon: AsyncMock,
+    backups: dict[str, ManagerBackup],
+    removed_backups: list[str],
+) -> None:
+    """Test updating addon update entity."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await setup_backup_integration(hass)
+
+    supervisor_client.mounts.info.return_value.default_backup_mount = None
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_create_backup",
+        ) as mock_create_backup,
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_delete_backup",
+            autospec=True,
+            return_value={},
+        ) as async_delete_backup,
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backups",
+            return_value=(backups, {}),
+        ),
+    ):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.test_update", "backup": True},
+            blocking=True,
+        )
+    mock_create_backup.assert_called_once_with(
+        agent_ids=["hassio.local"],
+        extra_metadata={"supervisor.addon_update": "test"},
+        include_addons=["test"],
+        include_all_addons=False,
+        include_database=False,
+        include_folders=None,
+        include_homeassistant=False,
+        name="test 2.0.0",
+        password=None,
+    )
+    assert len(async_delete_backup.mock_calls) == len(removed_backups)
+    for call in async_delete_backup.mock_calls:
+        assert call.args[1] in removed_backups
     update_addon.assert_called_once_with("test", StoreAddonUpdate(backup=False))
 
 
@@ -472,8 +594,7 @@ async def test_update_core_with_backup(
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
-    assert await async_setup_component(hass, "backup", {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
 
     client = await hass_ws_client(hass)
     for command in commands:
@@ -550,9 +671,19 @@ async def test_update_addon_with_error(
         )
 
 
+@pytest.mark.parametrize(
+    ("create_backup_error", "delete_filtered_backups_error", "message"),
+    [
+        (BackupManagerError, None, r"^Error creating backup: "),
+        (None, BackupManagerError, r"^Error deleting old backups: "),
+    ],
+)
 async def test_update_addon_with_backup_and_error(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
+    create_backup_error: Exception | None,
+    delete_filtered_backups_error: Exception | None,
+    message: str,
 ) -> None:
     """Test updating addon update entity with error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -565,17 +696,20 @@ async def test_update_addon_with_backup_and_error(
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
-    assert await async_setup_component(hass, "backup", {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
 
     supervisor_client.homeassistant.update.return_value = None
     supervisor_client.mounts.info.return_value.default_backup_mount = None
     with (
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_create_backup",
-            side_effect=BackupManagerError,
+            side_effect=create_backup_error,
         ),
-        pytest.raises(HomeAssistantError, match=r"^Error creating backup:"),
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_delete_filtered_backups",
+            side_effect=delete_filtered_backups_error,
+        ),
+        pytest.raises(HomeAssistantError, match=message),
     ):
         assert not await hass.services.async_call(
             "update",
@@ -681,8 +815,7 @@ async def test_update_core_with_backup_and_error(
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
-    assert await async_setup_component(hass, "backup", {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
 
     supervisor_client.homeassistant.update.return_value = None
     supervisor_client.mounts.info.return_value.default_backup_mount = None

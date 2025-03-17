@@ -9,16 +9,19 @@ from aiocomelit.const import IRRIGATION, OTHER, STATE_OFF, STATE_ON
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ComelitConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Comelit switches."""
 
@@ -77,7 +80,4 @@ class ComelitSwitchEntity(CoordinatorEntity[ComelitSerialBridge], SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if switch is on."""
-        return (
-            self.coordinator.data[self._device.type][self._device.index].status
-            == STATE_ON
-        )
+        return self.coordinator.data[OTHER][self._device.index].status == STATE_ON

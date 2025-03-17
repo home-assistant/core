@@ -1,0 +1,119 @@
+{
+  "items": [
+    {
+      "deviceId": "3442dfc6-17c0-a65f-dae0-4c6e01786f44",
+      "name": "[robot vacuum] Samsung",
+      "label": "Robot vacuum",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-RVC-NORMAL-000001",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "586e4602-34ab-4a22-993e-5f616b04604f",
+      "ownerId": "b603d7e8-6066-4e10-8102-afa752a63816",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
+      "deviceTypeName": "Samsung OCF Robot Vacuum",
+      "components": [
+        {
+          "id": "main",
+          "label": "Robot vacuum",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "battery",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "robotCleanerTurboMode",
+              "version": 1
+            },
+            {
+              "id": "robotCleanerMovement",
+              "version": 1
+            },
+            {
+              "id": "robotCleanerCleaningMode",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledComponents",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerCleaningMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.robotCleanerOperatingState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "RobotCleaner",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2018-06-06T23:04:25Z",
+      "profile": {
+        "id": "61b1c3cd-61cc-3dde-a4ba-9477d5e559cb"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.robotcleaner",
+        "name": "[robot vacuum] Samsung",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "powerbot_7000_17M|50016055|80010404011141000100000000000000",
+        "platformVersion": "00",
+        "platformOS": "Tizen(3/0)",
+        "hwVersion": "1.0",
+        "firmwareVersion": "1.0",
+        "vendorId": "DA-RVC-NORMAL-000001",
+        "lastSignupTime": "2020-11-03T04:43:02.729Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "CLOUD"
+    }
+  ],
+  "_links": {}
+}

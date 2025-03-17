@@ -28,6 +28,7 @@ def async_connect_scanner(
     entry_data: RuntimeEntryData,
     cli: APIClient,
     device_info: DeviceInfo,
+    device_id: str,
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     client_data = connect_scanner(cli, device_info, entry_data.available)
@@ -45,6 +46,7 @@ def async_connect_scanner(
                 source_domain=DOMAIN,
                 source_model=device_info.model,
                 source_config_entry_id=entry_data.entry_id,
+                source_device_id=device_id,
             ),
             scanner.async_setup(),
         ],

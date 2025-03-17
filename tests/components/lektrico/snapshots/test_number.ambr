@@ -11,6 +11,7 @@
       'step': 1,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -67,6 +68,7 @@
       'step': 5,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -84,7 +86,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Led brightness',
+    'original_name': 'LED brightness',
     'platform': 'lektrico',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -96,7 +98,7 @@
 # name: test_all_entities[number.1p7k_500006_led_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1p7k_500006 Led brightness',
+      'friendly_name': '1p7k_500006 LED brightness',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,

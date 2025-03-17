@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     except ClientError as err:
         raise ConfigEntryNotReady from err
-    coordinator = YouTubeDataUpdateCoordinator(hass, auth)
+    coordinator = YouTubeDataUpdateCoordinator(hass, entry, auth)
 
     await coordinator.async_config_entry_first_refresh()
 

@@ -3,6 +3,7 @@
 from datetime import datetime as dt, timedelta
 import logging
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -18,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import alter_time, make_jerusalem_test_params, make_nyc_test_params
+from . import make_jerusalem_test_params, make_nyc_test_params
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -191,7 +192,7 @@ async def test_issur_melacha_sensor(
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
-    with alter_time(test_time):
+    with freeze_time(test_time):
         entry = MockConfigEntry(
             title=DEFAULT_NAME,
             domain=DOMAIN,
@@ -213,7 +214,7 @@ async def test_issur_melacha_sensor(
             == result["state"]
         )
 
-        with alter_time(result["update"]):
+        with freeze_time(result["update"]):
             async_fire_time_changed(hass, result["update"])
             await hass.async_block_till_done()
             assert (
@@ -264,7 +265,7 @@ async def test_issur_melacha_sensor_update(
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
-    with alter_time(test_time):
+    with freeze_time(test_time):
         entry = MockConfigEntry(
             title=DEFAULT_NAME,
             domain=DOMAIN,
@@ -286,7 +287,7 @@ async def test_issur_melacha_sensor_update(
         )
 
     test_time += timedelta(microseconds=1)
-    with alter_time(test_time):
+    with freeze_time(test_time):
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
         assert (

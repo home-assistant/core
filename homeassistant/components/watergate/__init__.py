@@ -16,12 +16,11 @@ from homeassistant.components.webhook import (
     async_generate_url,
     async_register,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .coordinator import WatergateDataCoordinator
+from .coordinator import WatergateConfigEntry, WatergateDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +33,6 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.VALVE,
 ]
-
-type WatergateConfigEntry = ConfigEntry[WatergateDataCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) -> bool:
@@ -52,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) ->
         sonic_address if sonic_address.startswith("http") else f"http://{sonic_address}"
     )
 
-    coordinator = WatergateDataCoordinator(hass, watergate_client)
+    coordinator = WatergateDataCoordinator(hass, entry, watergate_client)
     entry.runtime_data = coordinator
 
     async_register(

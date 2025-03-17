@@ -15,7 +15,7 @@ from homeassistant.components.valve import (
     ValveEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry
 from .entity import (
@@ -42,7 +42,7 @@ GAS_VALVE = BlockValveDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up valves for device."""
     if get_device_entry_gen(config_entry) in BLOCK_GENERATIONS:
@@ -53,7 +53,7 @@ async def async_setup_entry(
 def async_setup_block_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up valve for device."""
     coordinator = config_entry.runtime_data.block

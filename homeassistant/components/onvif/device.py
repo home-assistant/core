@@ -235,7 +235,7 @@ class ONVIFDevice:
         LOGGER.debug("%s: Retrieving current device date/time", self.name)
         try:
             device_time = await device_mgmt.GetSystemDateAndTime()
-        except RequestError as err:
+        except (RequestError, Fault) as err:
             LOGGER.warning(
                 "Couldn't get device '%s' date/time. Error: %s", self.name, err
             )

@@ -1,0 +1,75 @@
+# serializer version: 1
+# name: test_setup_entry
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+        tuple(
+          'mac',
+          '11:11:11:11:11:11',
+        ),
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'flo',
+          '98765',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Flo by Moen',
+      'model': 'flo_device_075_v2',
+      'model_id': None,
+      'name': 'Smart water shutoff',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': '111111111111',
+      'suggested_area': None,
+      'sw_version': '6.1.1',
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+        tuple(
+          'mac',
+          '1a:2b:3c:4d:5e:6f',
+        ),
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'flo',
+          '32839',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Flo by Moen',
+      'model': 'puck_v1',
+      'model_id': None,
+      'name': 'Kitchen sink',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': '111111111112',
+      'suggested_area': None,
+      'sw_version': '1.1.15',
+      'via_device_id': None,
+    }),
+  ])
+# ---

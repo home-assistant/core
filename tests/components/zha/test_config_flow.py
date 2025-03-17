@@ -1914,9 +1914,18 @@ async def test_options_flow_migration_reset_old_adapter(
     assert result4["step_id"] == "choose_serial_port"
 
 
-async def test_config_flow_port_yellow_port_name(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "device",
+    [
+        "/dev/ttyAMA1",  # CM4
+        "/dev/ttyAMA10",  # CM5, erroneously detected by pyserial
+    ],
+)
+async def test_config_flow_port_yellow_port_name(
+    hass: HomeAssistant, device: str
+) -> None:
     """Test config flow serial port name for Yellow Zigbee radio."""
-    port = com_port(device="/dev/ttyAMA1")
+    port = com_port(device=device)
     port.serial_number = None
     port.manufacturer = None
     port.description = None

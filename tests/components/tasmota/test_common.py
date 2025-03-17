@@ -27,7 +27,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import async_fire_mqtt_message
+from tests.common import MockMqttReasonCode, async_fire_mqtt_message
 from tests.typing import MqttMockHAClient, MqttMockPahoClient, WebSocketGenerator
 
 DEFAULT_CONFIG = {
@@ -165,7 +165,7 @@ async def help_test_availability_when_connection_lost(
 
     # Disconnected from MQTT server -> state changed to unavailable
     mqtt_mock.connected = False
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -174,7 +174,7 @@ async def help_test_availability_when_connection_lost(
 
     # Reconnected to MQTT server -> state still unavailable
     mqtt_mock.connected = True
-    mqtt_client_mock.on_connect(None, None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, MockMqttReasonCode())
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -226,7 +226,7 @@ async def help_test_deep_sleep_availability_when_connection_lost(
 
     # Disconnected from MQTT server -> state changed to unavailable
     mqtt_mock.connected = False
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -235,7 +235,7 @@ async def help_test_deep_sleep_availability_when_connection_lost(
 
     # Reconnected to MQTT server -> state no longer unavailable
     mqtt_mock.connected = True
-    mqtt_client_mock.on_connect(None, None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, MockMqttReasonCode())
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -478,7 +478,7 @@ async def help_test_availability_poll_state(
 
     # Disconnected from MQTT server
     mqtt_mock.connected = False
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -486,7 +486,7 @@ async def help_test_availability_poll_state(
 
     # Reconnected to MQTT server
     mqtt_mock.connected = True
-    mqtt_client_mock.on_connect(None, None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, MockMqttReasonCode())
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     await hass.async_block_till_done()

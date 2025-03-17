@@ -11,7 +11,7 @@
     },
     "error": {
       "cannot_connect": "Unable to connect, please check serial port, address, electrical connection and that inverter is on (in daylight)",
-      "invalid_serial_port": "Serial port is not a valid device or could not be openned",
+      "invalid_serial_port": "Serial port is not a valid device or could not be opened",
       "cannot_open_serial_port": "Cannot open serial port, please check and try again"
     },
     "abort": {

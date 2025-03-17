@@ -5,17 +5,14 @@ from __future__ import annotations
 from aioaquacell import AquacellApi
 from aioaquacell.const import Brand
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_BRAND
-from .coordinator import AquacellCoordinator
+from .coordinator import AquacellConfigEntry, AquacellCoordinator
 
 PLATFORMS = [Platform.SENSOR]
-
-type AquacellConfigEntry = ConfigEntry[AquacellCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AquacellConfigEntry) -> bool:
@@ -26,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquacellConfigEntry) -> 
 
     aquacell_api = AquacellApi(session, brand)
 
-    coordinator = AquacellCoordinator(hass, aquacell_api)
+    coordinator = AquacellCoordinator(hass, entry, aquacell_api)
 
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
@@ -36,6 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquacellConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AquacellConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

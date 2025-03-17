@@ -81,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
     )
 
-    coordinator = CoilCoordinator(hass, heatpump, connection)
+    coordinator = CoilCoordinator(hass, entry, heatpump, connection)
 
     data = hass.data.setdefault(DOMAIN, {})
     data[entry.entry_id] = coordinator

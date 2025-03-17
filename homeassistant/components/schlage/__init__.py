@@ -5,12 +5,11 @@ from __future__ import annotations
 from pycognito.exceptions import WarrantException
 import pyschlage
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .coordinator import SchlageDataUpdateCoordinator
+from .coordinator import SchlageConfigEntry, SchlageDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -19,8 +18,6 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-
-type SchlageConfigEntry = ConfigEntry[SchlageDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SchlageConfigEntry) -> bool:
@@ -32,7 +29,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SchlageConfigEntry) -> b
     except WarrantException as ex:
         raise ConfigEntryAuthFailed from ex
 
-    coordinator = SchlageDataUpdateCoordinator(hass, username, pyschlage.Schlage(auth))
+    coordinator = SchlageDataUpdateCoordinator(
+        hass, entry, username, pyschlage.Schlage(auth)
+    )
     entry.runtime_data = coordinator
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -1,0 +1,51 @@
+# serializer version: 1
+# name: test_valve_snapshot[valve.test_valve_valve_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'valve',
+    'entity_category': None,
+    'entity_id': 'valve.test_valve_valve_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ValveDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Valve position',
+    'platform': 'homee',
+    'previous_unique_id': None,
+    'supported_features': <ValveEntityFeature: 4>,
+    'translation_key': 'valve_position',
+    'unique_id': '00055511EECC-1-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_valve_snapshot[valve.test_valve_valve_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'water',
+      'friendly_name': 'Test Valve Valve position',
+      'supported_features': <ValveEntityFeature: 4>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.test_valve_valve_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---

@@ -561,7 +561,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if not hasattr(flow, method):
             self._async_remove_flow_progress(flow.flow_id)
             raise UnknownStep(
-                f"Handler {self.__class__.__name__} doesn't support step {step_id}"
+                f"Handler {flow.__class__.__name__} doesn't support step {step_id}"
             )
 
     async def _async_setup_preview(

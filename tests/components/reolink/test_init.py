@@ -19,7 +19,7 @@ from homeassistant.components.reolink import (
     FIRMWARE_UPDATE_INTERVAL,
     NUM_CRED_ERRORS,
 )
-from homeassistant.components.reolink.const import DOMAIN
+from homeassistant.components.reolink.const import CONF_BC_PORT, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_PORT,
@@ -38,6 +38,7 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
+    TEST_BC_PORT,
     TEST_CAM_MODEL,
     TEST_HOST_MODEL,
     TEST_MAC,
@@ -762,6 +763,21 @@ async def test_port_changed(
     assert config_entry.data[CONF_PORT] == 4567
 
 
+async def test_baichuan_port_changed(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test config_entry baichuan port update when it has changed during initial login."""
+    assert config_entry.data[CONF_BC_PORT] == TEST_BC_PORT
+    reolink_connect.baichuan.port = 8901
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_BC_PORT] == 8901
+
+
 async def test_privacy_mode_on(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -859,3 +875,30 @@ async def test_privacy_mode_change_callback(
 
     assert reolink_connect.get_states.call_count >= 1
     assert hass.states.get(entity_id).state == STATE_ON
+
+    # test cleanup during unloading, first reset to privacy mode ON
+    reolink_connect.baichuan.privacy_mode.return_value = True
+    callback_mock.callback_func()
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    # now fire the callback again, but unload before refresh took place
+    reolink_connect.baichuan.privacy_mode.return_value = False
+    callback_mock.callback_func()
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_remove(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test removing of the reolink integration."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_remove(config_entry.entry_id)

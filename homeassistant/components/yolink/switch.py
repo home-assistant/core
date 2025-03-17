@@ -23,7 +23,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DEV_MODEL_MULTI_OUTLET_YS6801, DOMAIN
 from .coordinator import YoLinkCoordinator
@@ -116,7 +116,7 @@ DEVICE_TYPE = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink switch from a config entry."""
     device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
@@ -162,11 +162,12 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
     @callback
     def update_entity_state(self, state: dict[str, str | list[str]]) -> None:
         """Update HA Entity State."""
-        self._attr_is_on = self._get_state(
-            state.get("state"),
-            self.entity_description.plug_index_fn(self.coordinator.device),
-        )
-        self.async_write_ha_state()
+        if (state_value := state.get("state")) is not None:
+            self._attr_is_on = self._get_state(
+                state_value,
+                self.entity_description.plug_index_fn(self.coordinator.device),
+            )
+            self.async_write_ha_state()
 
     async def call_state_change(self, state: str) -> None:
         """Call setState api to change switch state."""

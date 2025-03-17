@@ -1,0 +1,43 @@
+{
+  "id": 1,
+  "name": "Test Select",
+  "profile": 33,
+  "image": "nodeicon_dimmablebulb",
+  "favorite": 0,
+  "order": 27,
+  "protocol": 3,
+  "routing": 0,
+  "state": 1,
+  "state_changed": 1736188706,
+  "added": 1610308228,
+  "history": 1,
+  "cube_type": 3,
+  "note": "",
+  "services": 7,
+  "phonetic_name": "",
+  "owner": 2,
+  "security": 0,
+  "attributes": [
+    {
+      "id": 1,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 2,
+      "current_value": 1.0,
+      "target_value": 1.0,
+      "last_value": 1.0,
+      "unit": "n/a",
+      "step_value": 1.0,
+      "editable": 1,
+      "type": 226,
+      "state": 1,
+      "last_changed": 1680027880,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": ""
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "data": {
+    "type": "connection",
+    "id": 515363,
+    "customer_id": 273941,
+    "customer_number": 34030646,
+    "icp_identifier": "00000000DDA",
+    "address": "",
+    "short_address": "",
+    "physical_address_unit": "",
+    "physical_address_number": "555",
+    "physical_address_street": "RACECOURSE ROAD",
+    "physical_address_suburb": "",
+    "physical_address_town": "Blah",
+    "physical_address_region": "Blah",
+    "physical_address_postcode": "0000",
+    "is_active": "Y",
+    "pricing_plan": {
+      "id": 51423,
+      "usage": "0.0000",
+      "fixed": "0.6000",
+      "usage_rate_inc_gst": "0.0000",
+      "supply_rate_inc_gst": "0.6900",
+      "plan_description": "MoveMaster Anytime Residential (Low User)",
+      "plan_type": "movemaster_tou",
+      "signup_price_plan_blurb": "Better rates every day during off-peak, and all day on weekends. Plus half price nights (11pm-7am) and our best solar buyback.",
+      "signup_price_plan_label": "MoveMaster",
+      "app_price_plan_label": "Your MoveMaster rates are...",
+      "solar_rate_excl_gst": "0.1250",
+      "solar_rate_incl_gst": "0.1438",
+      "pricing_type": "tou_plus",
+      "tou_plus": {
+        "fixed_rate_excl_gst": "0.6000",
+        "fixed_rate_incl_gst": "0.6900",
+        "interval_types": ["peak", "off_peak_shoulder", "off_peak_night"],
+        "peak": {
+          "price_excl_gst": "0.5390",
+          "price_incl_gst": "0.6199",
+          "display_text": {
+            "Weekdays": "7am-9am, 5pm-9pm"
+          },
+          "tou_plus_label": "Peak"
+        },
+        "off_peak_shoulder": {
+          "price_excl_gst": "0.3234",
+          "price_incl_gst": "0.3719",
+          "display_text": {
+            "Weekdays": "9am-5pm, 9pm-11pm",
+            "Weekends": "7am-11pm"
+          },
+          "tou_plus_label": "Off-peak shoulder"
+        },
+        "off_peak_night": {
+          "price_excl_gst": "0.2695",
+          "price_incl_gst": "0.3099",
+          "display_text": {
+            "Every day": "11pm-7am"
+          },
+          "tou_plus_label": "Off-peak night"
+        }
+      }
+    },
+    "hop": {
+      "start_time": "9:00 PM",
+      "end_time": "10:00 PM",
+      "interval_start": "43",
+      "interval_end": "44"
+    },
+    "start_date": "2022-03-03",
+    "end_date": "",
+    "property_type": "residential"
+  }
+}

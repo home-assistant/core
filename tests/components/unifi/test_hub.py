@@ -76,7 +76,7 @@ async def test_reset_fails(
         return_value=False,
     ):
         assert not await hass.config_entries.async_unload(config_entry_setup.entry_id)
-        assert config_entry_setup.state is ConfigEntryState.LOADED
+        assert config_entry_setup.state is ConfigEntryState.FAILED_UNLOAD
 
 
 @pytest.mark.usefixtures("mock_device_registry")

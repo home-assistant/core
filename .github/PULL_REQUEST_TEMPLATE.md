@@ -46,6 +46,8 @@
 - This PR fixes or closes issue: fixes #
 - This PR is related to issue: 
 - Link to documentation pull request: 
+- Link to developer documentation pull request: 
+- Link to frontend pull request: 
 
 ## Checklist
 <!--

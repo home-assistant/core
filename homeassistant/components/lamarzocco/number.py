@@ -29,7 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
@@ -220,7 +220,8 @@ SCALE_KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
             config.bbw_settings.doses[key] if config.bbw_settings else None
         ),
         supported_fn=(
-            lambda coordinator: coordinator.device.model == MachineModel.LINEA_MINI
+            lambda coordinator: coordinator.device.model
+            in (MachineModel.LINEA_MINI, MachineModel.LINEA_MINI_R)
             and coordinator.device.config.scale is not None
         ),
     ),
@@ -230,7 +231,7 @@ SCALE_KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LaMarzoccoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up number entities."""
     coordinator = entry.runtime_data.config_coordinator

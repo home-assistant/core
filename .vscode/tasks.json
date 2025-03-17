@@ -148,7 +148,7 @@
     {
       "label": "Install all Test Requirements",
       "type": "shell",
-      "command": "uv pip install -r requirements_test_all.txt",
+      "command": "uv pip install -r requirements.txt -r requirements_test_all.txt",
       "group": {
         "kind": "build",
         "isDefault": true

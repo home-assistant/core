@@ -19,7 +19,6 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import JellyfinConfigEntry
 from .const import (
     COLLECTION_TYPE_MOVIES,
     COLLECTION_TYPE_MUSIC,
@@ -48,6 +47,7 @@ from .const import (
     PLAYABLE_ITEM_TYPES,
     SUPPORTED_COLLECTION_TYPES,
 )
+from .coordinator import JellyfinConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

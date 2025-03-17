@@ -13,7 +13,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ArveConfigEntry) -> bool:
     """Set up Arve from a config entry."""
 
-    coordinator = ArveCoordinator(hass)
+    coordinator = ArveCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 

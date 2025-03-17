@@ -16,10 +16,10 @@ from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, RoborockConfigEntry
-from .coordinator import RoborockDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockEntityV1
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,7 +114,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock time platform."""
     possible_entities: list[

@@ -17,10 +17,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RadarrConfigEntry
-from .coordinator import RadarrDataUpdateCoordinator, T
+from .coordinator import RadarrConfigEntry, RadarrDataUpdateCoordinator, T
 from .entity import RadarrEntity
 
 
@@ -82,14 +81,12 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
     "movie": RadarrSensorEntityDescription[int](
         key="movies",
         translation_key="movies",
-        native_unit_of_measurement="Movies",
         entity_registry_enabled_default=False,
         value_fn=lambda data, _: data,
     ),
     "queue": RadarrSensorEntityDescription[int](
         key="queue",
         translation_key="queue",
-        native_unit_of_measurement="Movies",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data, _: data,
@@ -117,7 +114,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RadarrConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Radarr sensors based on a config entry."""
     entities: list[RadarrSensor[Any]] = []

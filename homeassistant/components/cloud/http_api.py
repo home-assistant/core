@@ -8,14 +8,15 @@ from contextlib import suppress
 import dataclasses
 from functools import wraps
 from http import HTTPStatus
+import json
 import logging
 import time
-from typing import Any, Concatenate
+from typing import Any, Concatenate, cast
 
 import aiohttp
 from aiohttp import web
 import attr
-from hass_nabucasa import Cloud, auth, thingtalk
+from hass_nabucasa import AlreadyConnectedError, Cloud, auth, thingtalk
 from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice import TTS_VOICES
 import voluptuous as vol
@@ -29,6 +30,7 @@ from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.components.system_health import get_info as get_system_health_info
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -42,6 +44,7 @@ from .assist_pipeline import async_create_cloud_pipeline
 from .client import CloudClient
 from .const import (
     DATA_CLOUD,
+    DATA_CLOUD_LOG_HANDLER,
     EVENT_CLOUD_EVENT,
     LOGIN_MFA_TIMEOUT,
     PREF_ALEXA_REPORT_STATE,
@@ -62,7 +65,9 @@ from .subscription import async_subscription_info
 _LOGGER = logging.getLogger(__name__)
 
 
-_CLOUD_ERRORS: dict[type[Exception], tuple[HTTPStatus, str]] = {
+_CLOUD_ERRORS: dict[
+    type[Exception], tuple[HTTPStatus, Callable[[Exception], str] | str]
+] = {
     TimeoutError: (
         HTTPStatus.BAD_GATEWAY,
         "Unable to reach the Home Assistant cloud.",
@@ -107,6 +112,7 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.http.register_view(CloudRegisterView)
     hass.http.register_view(CloudResendConfirmView)
     hass.http.register_view(CloudForgotPasswordView)
+    hass.http.register_view(DownloadSupportPackageView)
 
     _CLOUD_ERRORS.update(
         {
@@ -129,6 +135,10 @@ def async_setup(hass: HomeAssistant) -> None:
             MFAExpiredOrNotStarted: (
                 HTTPStatus.BAD_REQUEST,
                 "Multi-factor authentication expired, or not started. Please try again.",
+            ),
+            AlreadyConnectedError: (
+                HTTPStatus.CONFLICT,
+                lambda x: json.dumps(cast(AlreadyConnectedError, x).details),
             ),
         }
     )
@@ -194,7 +204,11 @@ def _process_cloud_exception(exc: Exception, where: str) -> tuple[HTTPStatus, st
 
     for err, value_info in _CLOUD_ERRORS.items():
         if isinstance(exc, err):
-            err_info = value_info
+            status, content = value_info
+            err_info = (
+                status,
+                content if isinstance(content, str) else content(exc),
+            )
             break
 
     if err_info is None:
@@ -237,6 +251,7 @@ class CloudLoginView(HomeAssistantView):
             vol.All(
                 {
                     vol.Required("email"): str,
+                    vol.Optional("check_connection", default=False): bool,
                     vol.Exclusive("password", "login"): str,
                     vol.Exclusive("code", "login"): str,
                 },
@@ -255,7 +270,11 @@ class CloudLoginView(HomeAssistantView):
             code = data.get("code")
 
             if email and password:
-                await cloud.login(email, password)
+                await cloud.login(
+                    email,
+                    password,
+                    check_connection=data["check_connection"],
+                )
 
             else:
                 if (
@@ -267,7 +286,12 @@ class CloudLoginView(HomeAssistantView):
                 # Voluptuous should ensure that code is not None because password is
                 assert code is not None
 
-                await cloud.login_verify_totp(email, code, self._mfa_tokens)
+                await cloud.login_verify_totp(
+                    email,
+                    code,
+                    self._mfa_tokens,
+                    check_connection=data["check_connection"],
+                )
                 self._mfa_tokens = {}
                 self._mfa_tokens_set_time = 0
 
@@ -387,6 +411,73 @@ class CloudForgotPasswordView(HomeAssistantView):
             await cloud.auth.async_forgot_password(data["email"])
 
         return self.json_message("ok")
+
+
+class DownloadSupportPackageView(HomeAssistantView):
+    """Download support package view."""
+
+    url = "/api/cloud/support_package"
+    name = "api:cloud:support_package"
+
+    async def _generate_markdown(
+        self,
+        hass: HomeAssistant,
+        hass_info: dict[str, Any],
+        domains_info: dict[str, dict[str, str]],
+    ) -> str:
+        def get_domain_table_markdown(domain_info: dict[str, Any]) -> str:
+            if len(domain_info) == 0:
+                return "No information available\n"
+
+            markdown = ""
+            first = True
+            for key, value in domain_info.items():
+                markdown += f"{key} | {value}\n"
+                if first:
+                    markdown += "--- | ---\n"
+                    first = False
+            return markdown + "\n"
+
+        markdown = "## System Information\n\n"
+        markdown += get_domain_table_markdown(hass_info)
+
+        for domain, domain_info in domains_info.items():
+            domain_info_md = get_domain_table_markdown(domain_info)
+            markdown += (
+                f"<details><summary>{domain}</summary>\n\n"
+                f"{domain_info_md}"
+                "</details>\n\n"
+            )
+
+        log_handler = hass.data[DATA_CLOUD_LOG_HANDLER]
+        logs = "\n".join(await log_handler.get_logs(hass))
+        markdown += (
+            "## Full logs\n\n"
+            "<details><summary>Logs</summary>\n\n"
+            "```logs\n"
+            f"{logs}\n"
+            "```\n\n"
+            "</details>\n"
+        )
+
+        return markdown
+
+    async def get(self, request: web.Request) -> web.Response:
+        """Download support package file."""
+
+        hass = request.app[KEY_HASS]
+        domain_health = await get_system_health_info(hass)
+
+        hass_info = domain_health.pop("homeassistant", {})
+        markdown = await self._generate_markdown(hass, hass_info, domain_health)
+
+        return web.Response(
+            body=markdown,
+            content_type="text/markdown",
+            headers={
+                "Content-Disposition": 'attachment; filename="support_package.md"'
+            },
+        )
 
 
 @websocket_api.require_admin

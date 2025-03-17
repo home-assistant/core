@@ -827,6 +827,45 @@ TRAFFIC_ROUTE = {
     ],
 }
 
+FIREWALL_POLICY = {
+    "_id": "678ceb9fe3849d293243405c",
+    "action": "ALLOW",
+    "connection_state_type": "ALL",
+    "connection_states": [],
+    "create_allow_respond": True,
+    "description": "",
+    "destination": {
+        "match_opposite_ports": False,
+        "matching_target": "ANY",
+        "port_matching_type": "ANY",
+        "zone_id": "678ccc26e3849d2932432e26",
+    },
+    "enabled": True,
+    "icmp_typename": "ANY",
+    "icmp_v6_typename": "ANY",
+    "index": 10000,
+    "ip_version": "BOTH",
+    "logging": False,
+    "match_ip_sec": False,
+    "match_opposite_protocol": False,
+    "name": "Allow internal to IoT",
+    "predefined": False,
+    "protocol": "all",
+    "schedule": {
+        "mode": "EVERY_DAY",
+        "repeat_on_days": [],
+        "time_all_day": False,
+        "time_range_end": "12:00",
+        "time_range_start": "09:00",
+    },
+    "source": {
+        "match_opposite_ports": False,
+        "matching_target": "ANY",
+        "port_matching_type": "ANY",
+        "zone_id": "678c63bc2d97692f08adcdfa",
+    },
+}
+
 
 @pytest.mark.parametrize(
     "config_entry_options", [{CONF_BLOCK_CLIENT: [BLOCKED["mac"]]}]
@@ -1220,6 +1259,62 @@ async def test_traffic_routes(
     )
 
     expected_enable_call = deepcopy(traffic_route)
+    expected_enable_call["enabled"] = True
+
+    assert aioclient_mock.call_count == call_count + 2
+    assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
+
+
+@pytest.mark.parametrize(("firewall_policy_payload"), [([FIREWALL_POLICY])])
+async def test_firewall_policies(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+    firewall_policy_payload: list[dict[str, Any]],
+) -> None:
+    """Test control of UniFi firewall policies."""
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    # Validate state object
+    assert (
+        hass.states.get("switch.unifi_network_allow_internal_to_iot").state == STATE_ON
+    )
+
+    firewall_policy = deepcopy(firewall_policy_payload[0])
+
+    # Disable firewall policy
+    aioclient_mock.put(
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/v2/api/site/{config_entry_setup.data[CONF_SITE_ID]}"
+        f"/firewall-policies/{firewall_policy['_id']}",
+    )
+
+    call_count = aioclient_mock.call_count
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": "switch.unifi_network_allow_internal_to_iot"},
+        blocking=True,
+    )
+    # Updating the value for firewall policies will make another call to retrieve the values
+    assert aioclient_mock.call_count == call_count + 2
+    expected_disable_call = deepcopy(firewall_policy)
+    expected_disable_call["enabled"] = False
+
+    assert aioclient_mock.mock_calls[call_count][2] == expected_disable_call
+
+    call_count = aioclient_mock.call_count
+
+    # Enable firewall policy
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {"entity_id": "switch.unifi_network_allow_internal_to_iot"},
+        blocking=True,
+    )
+
+    expected_enable_call = deepcopy(firewall_policy)
     expected_enable_call["enabled"] = True
 
     assert aioclient_mock.call_count == call_count + 2
@@ -1677,6 +1772,7 @@ async def test_updating_unique_id(
 @pytest.mark.parametrize("dpi_group_payload", [DPI_GROUPS])
 @pytest.mark.parametrize("port_forward_payload", [[PORT_FORWARD_PLEX]])
 @pytest.mark.parametrize(("traffic_rule_payload"), [([TRAFFIC_RULE])])
+@pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
 @pytest.mark.parametrize("wlan_payload", [[WLAN]])
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -1691,6 +1787,7 @@ async def test_hub_state_change(
         "switch.block_media_streaming",
         "switch.unifi_network_plex",
         "switch.unifi_network_test_traffic_rule",
+        "switch.unifi_network_allow_internal_to_iot",
         "switch.ssid_1",
     )
     for entity_id in entity_ids:

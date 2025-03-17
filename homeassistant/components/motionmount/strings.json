@@ -11,6 +11,10 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the MotionMount.",
+          "port": "The port of the MotionMount."
         }
       },
       "zeroconf_confirm": {
@@ -22,6 +26,9 @@
         "description": "Your MotionMount requires a PIN to operate.",
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
+        },
+        "data_description": {
+          "pin": "The user level PIN configured on the MotionMount."
         }
       },
       "backoff": {
@@ -65,6 +72,9 @@
         "state": {
           "none": "None",
           "motor": "Motor",
+          "hdmi_cec": "HDMI CEC",
+          "obstruction": "Obstruction",
+          "tv_width_constraint": "TV width constraint",
           "internal": "Internal"
         }
       }

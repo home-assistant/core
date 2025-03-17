@@ -15,6 +15,7 @@
           'model_id': 'HB_HUB',
           'name': 'EF.111111111113',
           'serial_number': '111111111113',
+          'sw_version': '3.2',
         }),
         'family': 'EF',
         'id': 'EF.111111111113',

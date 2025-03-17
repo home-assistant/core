@@ -13,9 +13,19 @@ from homeassistant.components.backup import DOMAIN
 from homeassistant.components.backup.manager import NewBackup, WrittenBackup
 from homeassistant.core import HomeAssistant
 
-from .common import TEST_BACKUP_PATH_ABC123
+from .common import TEST_BACKUP_PATH_ABC123, TEST_BACKUP_PATH_DEF456
 
 from tests.common import get_fixture_path
+
+
+@pytest.fixture(name="instance_id", autouse=True)
+def instance_id_fixture(hass: HomeAssistant) -> Generator[None]:
+    """Mock instance ID."""
+    with patch(
+        "homeassistant.components.backup.manager.instance_id.async_get",
+        return_value="our_uuid",
+    ):
+        yield
 
 
 @pytest.fixture(name="mocked_json_bytes")
@@ -38,10 +48,14 @@ def mocked_tarfile_fixture() -> Generator[Mock]:
 
 
 @pytest.fixture(name="path_glob")
-def path_glob_fixture() -> Generator[MagicMock]:
+def path_glob_fixture(hass: HomeAssistant) -> Generator[MagicMock]:
     """Mock path glob."""
     with patch(
-        "pathlib.Path.glob", return_value=[TEST_BACKUP_PATH_ABC123]
+        "pathlib.Path.glob",
+        return_value=[
+            Path(hass.config.path()) / "backups" / TEST_BACKUP_PATH_ABC123,
+            Path(hass.config.path()) / "backups" / TEST_BACKUP_PATH_DEF456,
+        ],
     ) as path_glob:
         yield path_glob
 

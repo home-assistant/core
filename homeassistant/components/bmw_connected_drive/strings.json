@@ -138,7 +138,7 @@
         "name": "Charging status",
         "state": {
           "default": "Default",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "error": "Error",
           "complete": "Complete",
           "fully_charged": "Fully charged",

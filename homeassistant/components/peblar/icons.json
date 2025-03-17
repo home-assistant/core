@@ -36,6 +36,9 @@
       }
     },
     "switch": {
+      "charge": {
+        "default": "mdi:ev-plug-type2"
+      },
       "force_single_phase": {
         "default": "mdi:power-cycle"
       }

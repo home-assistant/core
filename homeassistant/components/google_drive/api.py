@@ -11,7 +11,7 @@ from aiohttp import ClientSession, ClientTimeout, StreamReader
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from google_drive_api.api import AbstractAuth, GoogleDriveApi
 
-from homeassistant.components.backup import AgentBackup
+from homeassistant.components.backup import AgentBackup, suggested_filename
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.exceptions import (
@@ -132,7 +132,7 @@ class DriveClient:
         """Upload a backup."""
         folder_id, _ = await self.async_create_ha_root_folder_if_not_exists()
         backup_metadata = {
-            "name": f"{backup.name} {backup.date}.tar",
+            "name": suggested_filename(backup),
             "description": json.dumps(backup.as_dict()),
             "parents": [folder_id],
             "properties": {
@@ -146,9 +146,10 @@ class DriveClient:
             backup.backup_id,
             backup_metadata,
         )
-        await self._api.upload_file(
+        await self._api.resumable_upload_file(
             backup_metadata,
             open_stream,
+            backup.size,
             timeout=ClientTimeout(total=_UPLOAD_AND_DOWNLOAD_TIMEOUT),
         )
         _LOGGER.debug(

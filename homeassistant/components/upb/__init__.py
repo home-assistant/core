@@ -27,6 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     file = config_entry.data[CONF_FILE_PATH]
 
     upb = upb_lib.UpbPim({"url": url, "UPStartExportFile": file})
+    await upb.load_upstart_file()
     await upb.async_connect()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {"upb": upb}

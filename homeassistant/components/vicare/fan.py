@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import suppress
 import enum
 import logging
+from typing import Any
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -17,7 +18,7 @@ from requests.exceptions import ConnectionError as RequestConnectionError
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -25,7 +26,7 @@ from homeassistant.util.percentage import (
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice
-from .utils import filter_state, get_device_serial
+from .utils import filter_state, get_device_serial, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +74,12 @@ class VentilationMode(enum.StrEnum):
         return None
 
 
+class VentilationQuickmode(enum.StrEnum):
+    """ViCare ventilation quickmodes."""
+
+    STANDBY = "standby"
+
+
 HA_TO_VICARE_MODE_VENTILATION = {
     VentilationMode.PERMANENT: "permanent",
     VentilationMode.VENTILATION: "ventilation",
@@ -104,7 +111,7 @@ def _build_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ViCareConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ViCare fan platform."""
     async_add_entities(
@@ -147,6 +154,19 @@ class ViCareFan(ViCareEntity, FanEntity):
         if supported_levels is not None and len(supported_levels) > 0:
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
 
+        # evaluate quickmodes
+        quickmodes: list[str] = (
+            device.getVentilationQuickmodes()
+            if is_supported(
+                "getVentilationQuickmodes",
+                lambda api: api.getVentilationQuickmodes(),
+                device,
+            )
+            else []
+        )
+        if VentilationQuickmode.STANDBY in quickmodes:
+            self._attr_supported_features |= FanEntityFeature.TURN_OFF
+
     def update(self) -> None:
         """Update state of fan."""
         level: str | None = None
@@ -155,6 +175,7 @@ class ViCareFan(ViCareEntity, FanEntity):
                 self._attr_preset_mode = VentilationMode.from_vicare_mode(
                     self._api.getActiveVentilationMode()
                 )
+
             with suppress(PyViCareNotSupportedFeatureError):
                 level = filter_state(self._api.getVentilationLevel())
             if level is not None and level in ORDERED_NAMED_FAN_SPEEDS:
@@ -175,12 +196,27 @@ class ViCareFan(ViCareEntity, FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
-        # Viessmann ventilation unit cannot be turned off
-        return True
+        if (
+            self._attr_supported_features & FanEntityFeature.TURN_OFF
+            and self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY)
+        ):
+            return False
+
+        return self.percentage is not None and self.percentage > 0
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+
+        self._api.activateVentilationQuickmode(str(VentilationQuickmode.STANDBY))
 
     @property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
+        if (
+            self._attr_supported_features & FanEntityFeature.TURN_OFF
+            and self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY)
+        ):
+            return "mdi:fan-off"
         if hasattr(self, "_attr_preset_mode"):
             if self._attr_preset_mode == VentilationMode.VENTILATION:
                 return "mdi:fan-clock"
@@ -206,6 +242,8 @@ class ViCareFan(ViCareEntity, FanEntity):
         """Set the speed of the fan, as a percentage."""
         if self._attr_preset_mode != str(VentilationMode.PERMANENT):
             self.set_preset_mode(VentilationMode.PERMANENT)
+        elif self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
+            self._api.deactivateVentilationQuickmode(str(VentilationQuickmode.STANDBY))
 
         level = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
         _LOGGER.debug("changing ventilation level to %s", level)

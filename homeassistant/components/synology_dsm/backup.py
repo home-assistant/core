@@ -10,7 +10,13 @@ from aiohttp import StreamReader
 from synology_dsm.api.file_station import SynoFileStation
 from synology_dsm.exceptions import SynologyDSMAPIErrorException
 
-from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
+from homeassistant.components.backup import (
+    AgentBackup,
+    BackupAgent,
+    BackupAgentError,
+    BackupNotFound,
+    suggested_filename,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
@@ -26,6 +32,15 @@ from .const import (
 from .models import SynologyDSMData
 
 LOGGER = logging.getLogger(__name__)
+
+
+def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
+    """Suggest filenames for the backup.
+
+    returns a tuple of tar_filename and meta_filename
+    """
+    base_name = suggested_filename(backup).rsplit(".", 1)[0]
+    return (f"{base_name}.tar", f"{base_name}_meta.json")
 
 
 async def async_get_backup_agents(
@@ -87,6 +102,7 @@ class SynologyDSMBackupAgent(BackupAgent):
         )
         syno_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
         self.api = syno_data.api
+        self.backup_base_names: dict[str, str] = {}
 
     @property
     def _file_station(self) -> SynoFileStation:
@@ -94,6 +110,19 @@ class SynologyDSMBackupAgent(BackupAgent):
             # we ensure that file_station exist already in async_get_backup_agents
             assert self.api.file_station
         return self.api.file_station
+
+    async def _async_backup_filenames(
+        self,
+        backup_id: str,
+    ) -> tuple[str, str]:
+        """Return the actual backup filenames.
+
+        :param backup_id: The ID of the backup that was returned in async_list_backups.
+        :return: A tuple of tar_filename and meta_filename
+        """
+        await self.async_get_backup(backup_id)
+        base_name = self.backup_base_names[backup_id]
+        return (f"{base_name}.tar", f"{base_name}_meta.json")
 
     async def async_download_backup(
         self,
@@ -105,10 +134,12 @@ class SynologyDSMBackupAgent(BackupAgent):
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         :return: An async iterator that yields bytes.
         """
+        (filename_tar, _) = await self._async_backup_filenames(backup_id)
+
         try:
             resp = await self._file_station.download_file(
                 path=self.path,
-                filename=f"{backup_id}.tar",
+                filename=filename_tar,
             )
         except SynologyDSMAPIErrorException as err:
             raise BackupAgentError("Failed to download backup") from err
@@ -131,11 +162,13 @@ class SynologyDSMBackupAgent(BackupAgent):
         :param backup: Metadata about the backup that should be uploaded.
         """
 
+        (filename_tar, filename_meta) = suggested_filenames(backup)
+
         # upload backup.tar file first
         try:
             await self._file_station.upload_file(
                 path=self.path,
-                filename=f"{backup.backup_id}.tar",
+                filename=filename_tar,
                 source=await open_stream(),
                 create_parents=True,
             )
@@ -146,7 +179,7 @@ class SynologyDSMBackupAgent(BackupAgent):
         try:
             await self._file_station.upload_file(
                 path=self.path,
-                filename=f"{backup.backup_id}_meta.json",
+                filename=filename_meta,
                 source=json_dumps(backup.as_dict()).encode(),
             )
         except SynologyDSMAPIErrorException as err:
@@ -161,15 +194,22 @@ class SynologyDSMBackupAgent(BackupAgent):
 
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
-        try:
-            await self._file_station.delete_file(
-                path=self.path, filename=f"{backup_id}.tar"
-            )
-            await self._file_station.delete_file(
-                path=self.path, filename=f"{backup_id}_meta.json"
-            )
-        except SynologyDSMAPIErrorException as err:
-            raise BackupAgentError("Failed to delete the backup") from err
+        (filename_tar, filename_meta) = await self._async_backup_filenames(backup_id)
+
+        for filename in (filename_tar, filename_meta):
+            try:
+                await self._file_station.delete_file(path=self.path, filename=filename)
+            except SynologyDSMAPIErrorException as err:
+                err_args: dict = err.args[0]
+                if int(err_args.get("code", 0)) != 900 or (
+                    (err_details := err_args.get("details")) is not None
+                    and isinstance(err_details, list)
+                    and isinstance(err_details[0], dict)
+                    and int(err_details[0].get("code", 0))
+                    != 408  # No such file or directory
+                ):
+                    LOGGER.error("Failed to delete backup: %s", err)
+                    raise BackupAgentError("Failed to delete backup") from err
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
@@ -203,6 +243,7 @@ class SynologyDSMBackupAgent(BackupAgent):
             assert files
 
         backups: dict[str, AgentBackup] = {}
+        backup_base_names: dict[str, str] = {}
         for file in files:
             if file.name.endswith("_meta.json"):
                 try:
@@ -211,14 +252,19 @@ class SynologyDSMBackupAgent(BackupAgent):
                     LOGGER.error("Failed to download meta data: %s", err)
                     continue
                 agent_backup = AgentBackup.from_dict(meta_data)
-                backups[agent_backup.backup_id] = agent_backup
+                backup_id = agent_backup.backup_id
+                backups[backup_id] = agent_backup
+                backup_base_names[backup_id] = file.name.replace("_meta.json", "")
+        self.backup_base_names = backup_base_names
         return backups
 
     async def async_get_backup(
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup | None:
+    ) -> AgentBackup:
         """Return a backup."""
         backups = await self._async_list_backups()
-        return backups.get(backup_id)
+        if backup_id not in backups:
+            raise BackupNotFound(f"Backup {backup_id} not found")
+        return backups[backup_id]

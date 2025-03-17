@@ -7,11 +7,13 @@ import logging
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION
 from .coordinator import ElectricKiwiConfigEntry, ElectricKiwiHOPDataCoordinator
+
+PARALLEL_UPDATES = 1
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_EK_HOP_SELECT = "hop_select"
@@ -26,7 +28,7 @@ HOP_SELECT = SelectEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ElectricKiwiConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Electric Kiwi select setup."""
     hop_coordinator = entry.runtime_data.hop
@@ -53,8 +55,8 @@ class ElectricKiwiSelectHOPEntity(
         """Initialise the HOP selection entity."""
         super().__init__(coordinator)
         self._attr_unique_id = (
-            f"{coordinator._ek_api.customer_number}"  # noqa: SLF001
-            f"_{coordinator._ek_api.connection_id}_{description.key}"  # noqa: SLF001
+            f"{coordinator.ek_api.customer_number}"
+            f"_{coordinator.ek_api.electricity.identifier}_{description.key}"
         )
         self.entity_description = description
         self.values_dict = coordinator.get_hop_options()

@@ -46,12 +46,16 @@ class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[Analytic
     config_entry: AnalyticsInsightsConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, client: HomeassistantAnalyticsClient
+        self,
+        hass: HomeAssistant,
+        config_entry: AnalyticsInsightsConfigEntry,
+        client: HomeassistantAnalyticsClient,
     ) -> None:
         """Initialize the Homeassistant Analytics data coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(hours=12),
         )

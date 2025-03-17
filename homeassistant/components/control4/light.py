@@ -18,7 +18,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4ConfigEntry, Control4RuntimeData, get_items_of_category
@@ -36,7 +36,7 @@ CONTROL4_DIMMER_VARS = ["LIGHT_LEVEL", "Brightness Percent"]
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: Control4ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Control4 lights from a config entry."""
     runtime_data = entry.runtime_data

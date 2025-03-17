@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await ruckus.close()
         raise ConfigEntryAuthFailed from autherr
 
-    coordinator = RuckusDataUpdateCoordinator(hass, ruckus=ruckus)
+    coordinator = RuckusDataUpdateCoordinator(hass, entry, ruckus)
 
     await coordinator.async_config_entry_first_refresh()
 

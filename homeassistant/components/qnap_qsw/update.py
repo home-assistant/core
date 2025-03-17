@@ -20,7 +20,7 @@ from homeassistant.components.update import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, QSW_COORD_FW, QSW_UPDATE
 from .coordinator import QswFirmwareCoordinator
@@ -36,7 +36,9 @@ UPDATE_TYPES: Final[tuple[UpdateEntityDescription, ...]] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add QNAP QSW updates from a config_entry."""
     coordinator: QswFirmwareCoordinator = hass.data[DOMAIN][entry.entry_id][

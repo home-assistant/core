@@ -60,12 +60,12 @@
       "description": "Requests gas prices from easyEnergy.",
       "fields": {
         "config_entry": {
-          "name": "Config Entry",
+          "name": "Config entry",
           "description": "The configuration entry to use for this action."
         },
         "incl_vat": {
-          "name": "VAT Included",
-          "description": "Include or exclude VAT in the prices, default is true."
+          "name": "VAT included",
+          "description": "Whether the prices should include VAT."
         },
         "start": {
           "name": "Start",
