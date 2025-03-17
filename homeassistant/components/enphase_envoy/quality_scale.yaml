@@ -76,7 +76,7 @@ rules:
     comment: https://www.home-assistant.io/integrations/enphase_envoy#troubleshooting
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category: todo
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done

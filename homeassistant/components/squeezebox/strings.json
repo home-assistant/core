@@ -103,5 +103,20 @@
         "unit_of_measurement": "[%key:component::squeezebox::entity::sensor::player_count::unit_of_measurement%]"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "LMS Configuration",
+        "data": {
+          "browse_limit": "Browse limit",
+          "volume_step": "Volume step"
+        },
+        "data_description": {
+          "browse_limit": "Maximum number of items when browsing or in a playlist.",
+          "volume_step": "Amount to adjust the volume when turning volume up or down."
+        }
+      }
+    }
   }
 }

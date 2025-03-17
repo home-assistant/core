@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except LoginError as error:
         raise ConfigEntryAuthFailed from error
 
-    coordinator = LaCrosseUpdateCoordinator(hass, api, entry)
+    coordinator = LaCrosseUpdateCoordinator(hass, entry, api)
 
     _LOGGER.debug("First refresh")
     await coordinator.async_config_entry_first_refresh()

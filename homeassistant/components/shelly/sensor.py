@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final, cast
 
@@ -34,11 +35,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 
-from .const import CONF_SLEEP_PERIOD, SHAIR_MAX_WORK_HOURS
+from .const import CONF_SLEEP_PERIOD, ROLE_TO_DEVICE_CLASS_MAP, SHAIR_MAX_WORK_HOURS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -71,6 +72,8 @@ class BlockSensorDescription(BlockEntityDescription, SensorEntityDescription):
 class RpcSensorDescription(RpcEntityDescription, SensorEntityDescription):
     """Class to describe a RPC sensor."""
 
+    device_class_fn: Callable[[dict], SensorDeviceClass | None] | None = None
+
 
 @dataclass(frozen=True, kw_only=True)
 class RestSensorDescription(RestEntityDescription, SensorEntityDescription):
@@ -94,6 +97,12 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
 
         if self.option_map:
             self._attr_options = list(self.option_map.values())
+
+        if description.device_class_fn is not None:
+            if device_class := description.device_class_fn(
+                coordinator.device.config[key]
+            ):
+                self._attr_device_class = device_class
 
     @property
     def native_value(self) -> StateType:
@@ -365,9 +374,9 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         key="sensor|sensorOp",
         name="Operation",
         device_class=SensorDeviceClass.ENUM,
-        options=["unknown", "warmup", "normal", "fault"],
+        options=["warmup", "normal", "fault"],
         translation_key="operation",
-        value=lambda value: value,
+        value=lambda value: None if value == "unknown" else value,
         extra_state_attributes=lambda block: {"self_test": block.selfTest},
     ),
     ("valve", "valve"): BlockSensorDescription(
@@ -382,8 +391,8 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
             "failure",
             "opened",
             "opening",
-            "unknown",
         ],
+        value=lambda value: None if value == "unknown" else value,
         entity_category=EntityCategory.DIAGNOSTIC,
         removal_condition=lambda _, block: block.valve == "not_connected",
     ),
@@ -1266,6 +1275,9 @@ RPC_SENSORS: Final = {
         unit=lambda config: config["meta"]["ui"]["unit"]
         if config["meta"]["ui"]["unit"]
         else None,
+        device_class_fn=lambda config: ROLE_TO_DEVICE_CLASS_MAP.get(config["role"])
+        if "role" in config
+        else None,
     ),
     "enum": RpcSensorDescription(
         key="enum",
@@ -1312,7 +1324,7 @@ RPC_SENSORS: Final = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:

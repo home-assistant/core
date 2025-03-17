@@ -28,7 +28,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import common
 from .common import MockScanner, mock_legacy_device_tracker_setup

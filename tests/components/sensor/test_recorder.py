@@ -40,7 +40,7 @@ from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .common import MockSensor
@@ -541,11 +541,11 @@ async def test_compile_hourly_statistics_with_all_same_last_updated(
         "max",
     ),
     [
-        ("temperature", "°C", "°C", "°C", "temperature", 0, 60, 60),
-        ("temperature", "°F", "°F", "°F", "temperature", 0, 60, 60),
+        ("temperature", "°C", "°C", "°C", "temperature", 60, -10, 60),
+        ("temperature", "°F", "°F", "°F", "temperature", 60, -10, 60),
     ],
 )
-async def test_compile_hourly_statistics_only_state_is_and_end_of_period(
+async def test_compile_hourly_statistics_only_state_is_at_end_of_period(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_class,
@@ -557,7 +557,7 @@ async def test_compile_hourly_statistics_only_state_is_and_end_of_period(
     min,
     max,
 ) -> None:
-    """Test compiling hourly statistics when the only state at end of period."""
+    """Test compiling hourly statistics when the only states are at end of period."""
     zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
@@ -604,6 +604,7 @@ async def test_compile_hourly_statistics_only_state_is_and_end_of_period(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
     do_adhoc_statistics(hass, start=zero)
+    do_adhoc_statistics(hass, start=zero + timedelta(minutes=5))
     await async_wait_recording_done(hass)
     statistic_ids = await async_list_statistic_ids(hass)
     assert statistic_ids == [
@@ -622,8 +623,8 @@ async def test_compile_hourly_statistics_only_state_is_and_end_of_period(
     assert stats == {
         "sensor.test1": [
             {
-                "start": process_timestamp(zero).timestamp(),
-                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+                "start": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -651,7 +652,10 @@ async def test_compile_hourly_statistics_purged_state_changes(
     statistics_unit,
     unit_class,
 ) -> None:
-    """Test compiling hourly statistics."""
+    """Test compiling hourly statistics.
+
+    This tests statistics falls back to the state machine when states are purged.
+    """
     zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
@@ -707,6 +711,93 @@ async def test_compile_hourly_statistics_purged_state_changes(
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min_value),
                 "max": pytest.approx(max_value),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    (
+        "device_class",
+        "state_unit",
+        "display_unit",
+        "statistics_unit",
+        "unit_class",
+        "mean",
+        "min",
+        "max",
+    ),
+    [
+        (None, "%", "%", "%", "unitless", 13.050847, -10, 30),
+    ],
+)
+async def test_compile_hourly_statistics_ignore_future_state(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_class,
+    state_unit,
+    display_unit,
+    statistics_unit,
+    unit_class,
+    mean,
+    min,
+    max,
+) -> None:
+    """Test compiling hourly statistics.
+
+    This tests statistics does not fall back to the state machine if the state
+    in the state machine is newer than the end of the statistics period.
+    """
+    zero = get_start_time(dt_util.utcnow() + timedelta(minutes=5))
+    previous_period = zero - timedelta(minutes=5)
+    await async_setup_component(hass, "sensor", {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    attributes = {
+        "device_class": device_class,
+        "state_class": "measurement",
+        "unit_of_measurement": state_unit,
+    }
+    with freeze_time(zero) as freezer:
+        four, states = await async_record_states(
+            hass, freezer, zero, "sensor.test1", attributes
+        )
+    await async_wait_recording_done(hass)
+    hist = history.get_significant_states(
+        hass, zero, four, hass.states.async_entity_ids()
+    )
+    assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
+
+    do_adhoc_statistics(hass, start=previous_period)
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test1",
+            "display_unit_of_measurement": display_unit,
+            "has_mean": True,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": statistics_unit,
+            "unit_class": unit_class,
+        }
+    ]
+    stats = statistics_during_period(hass, previous_period, period="5minute")
+    # Check we get no stats from the previous period
+    assert stats == {
+        "sensor.test1": [
+            {
+                "start": process_timestamp(zero).timestamp(),
+                "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
+                "mean": pytest.approx(mean),
+                "min": pytest.approx(min),
+                "max": pytest.approx(max),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
@@ -5449,12 +5540,11 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
     assert ATTR_FRIENDLY_NAME in states[0].attributes
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 @pytest.mark.parametrize(
-    "ignore_translations",
+    "ignore_missing_translations",
     [
         [
-            "component.test.issues..title",
-            "component.test.issues..description",
             "component.sensor.issues..title",
             "component.sensor.issues..description",
         ]

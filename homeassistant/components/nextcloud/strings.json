@@ -21,7 +21,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "connection_error_during_import": "Connection error occured during yaml configuration import",
+      "connection_error_during_import": "Connection error occurred during yaml configuration import",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
@@ -70,7 +70,7 @@
         "name": "Cache memory"
       },
       "nextcloud_cache_num_entries": {
-        "name": "Cache number of entires"
+        "name": "Cache number of entries"
       },
       "nextcloud_cache_num_hits": {
         "name": "Cache number of hits"

@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import CoreState, HomeAssistant, State, callback
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .test_init import mock_rflink
 

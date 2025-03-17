@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 from aiohttp import ClientConnectionError
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.myuplink.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
@@ -214,3 +215,47 @@ async def test_device_remove_devices(
         old_device_entry.id, mock_config_entry.entry_id
     )
     assert response["success"]
+
+
+@pytest.mark.parametrize(
+    "load_systems_file",
+    [load_fixture("systems-multi.json", DOMAIN)],
+    ids=[
+        "multi",
+    ],
+)
+@pytest.mark.parametrize(
+    ("load_device_file", "device_id"),
+    [
+        (
+            load_fixture("device-alfred.json", DOMAIN),
+            "alfred-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",
+        ),
+        (
+            load_fixture("device-batman.json", DOMAIN),
+            "batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",
+        ),
+        (
+            load_fixture("device-robin.json", DOMAIN),
+            "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",
+        ),
+    ],
+    ids=[
+        "alfred",
+        "batman",
+        "robin",
+    ],
+)
+async def test_device_info(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_myuplink_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    device_id: str,
+) -> None:
+    """Test device registry integration."""
+    await setup_integration(hass, mock_config_entry)
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device_entry is not None
+    assert device_entry == snapshot

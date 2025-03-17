@@ -328,7 +328,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
             host, port = self._async_get_host_port(host)
 
-            match_dict = {CONF_HOST: host}
+            match_dict: dict[str, Any] = {CONF_HOST: host}
             if port:
                 self.port = port
                 match_dict[CONF_PORT] = port

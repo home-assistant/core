@@ -29,7 +29,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
@@ -303,8 +303,8 @@ VEHICLE_TIME_DESCRIPTIONS: tuple[TeslaFleetTimeEntityDescription, ...] = (
     ),
 )
 
-ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+ENERGY_LIVE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
+    TeslaFleetSensorEntityDescription(
         key="solar_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -312,7 +312,7 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
     ),
-    SensorEntityDescription(
+    TeslaFleetSensorEntityDescription(
         key="energy_left",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -321,7 +321,7 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(
+    TeslaFleetSensorEntityDescription(
         key="total_pack_energy",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -331,14 +331,15 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TeslaFleetSensorEntityDescription(
         key="percentage_charged",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         suggested_display_precision=2,
+        value_fn=lambda value: value or 0,
     ),
-    SensorEntityDescription(
+    TeslaFleetSensorEntityDescription(
         key="battery_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -346,7 +347,7 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
     ),
-    SensorEntityDescription(
+    TeslaFleetSensorEntityDescription(
         key="load_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -354,7 +355,7 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
     ),
-    SensorEntityDescription(
+    TeslaFleetSensorEntityDescription(
         key="grid_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -362,7 +363,7 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
     ),
-    SensorEntityDescription(
+    TeslaFleetSensorEntityDescription(
         key="grid_services_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -370,7 +371,7 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
     ),
-    SensorEntityDescription(
+    TeslaFleetSensorEntityDescription(
         key="generator_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -379,7 +380,7 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TeslaFleetSensorEntityDescription(
         key="island_status",
         options=[
             "island_status_unknown",
@@ -445,7 +446,7 @@ ENERGY_INFO_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslaFleetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tesla Fleet sensor platform from a config entry."""
     async_add_entities(
@@ -465,6 +466,7 @@ async def async_setup_entry(
                 for energysite in entry.runtime_data.energysites
                 for description in ENERGY_LIVE_DESCRIPTIONS
                 if description.key in energysite.live_coordinator.data
+                or description.key == "percentage_charged"
             ),
             (  # Add energy site history
                 TeslaFleetEnergyHistorySensorEntity(energysite, description)
@@ -550,12 +552,12 @@ class TeslaFleetVehicleTimeSensorEntity(TeslaFleetVehicleEntity, SensorEntity):
 class TeslaFleetEnergyLiveSensorEntity(TeslaFleetEnergyLiveEntity, SensorEntity):
     """Base class for Tesla Fleet energy site metric sensors."""
 
-    entity_description: SensorEntityDescription
+    entity_description: TeslaFleetSensorEntityDescription
 
     def __init__(
         self,
         data: TeslaFleetEnergyData,
-        description: SensorEntityDescription,
+        description: TeslaFleetSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
@@ -563,7 +565,7 @@ class TeslaFleetEnergyLiveSensorEntity(TeslaFleetEnergyLiveEntity, SensorEntity)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        self._attr_native_value = self._value
+        self._attr_native_value = self.entity_description.value_fn(self._value)
 
 
 class TeslaFleetEnergyHistorySensorEntity(TeslaFleetEnergyHistoryEntity, SensorEntity):

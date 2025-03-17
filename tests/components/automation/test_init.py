@@ -51,8 +51,7 @@ from homeassistant.helpers.script import (
     _async_stop_scripts_at_shutdown,
 )
 from homeassistant.setup import async_setup_component
-from homeassistant.util import yaml as yaml_util
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, yaml as yaml_util
 
 from tests.common import (
     MockConfigEntry,

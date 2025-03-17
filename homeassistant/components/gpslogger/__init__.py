@@ -10,8 +10,7 @@ from homeassistant.components.device_tracker import ATTR_BATTERY
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_flow
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (

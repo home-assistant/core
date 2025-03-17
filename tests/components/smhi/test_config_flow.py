@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from smhi.smhi_lib import SmhiForecastException
+from pysmhi import SmhiForecastException
 
 from homeassistant import config_entries
 from homeassistant.components.smhi.const import DOMAIN
@@ -31,7 +31,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+            "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
             return_value={"test": "something", "test2": "something else"},
         ),
         patch(
@@ -66,7 +66,7 @@ async def test_form(hass: HomeAssistant) -> None:
     )
     with (
         patch(
-            "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+            "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
             return_value={"test": "something", "test2": "something else"},
         ),
         patch(
@@ -102,7 +102,7 @@ async def test_form_invalid_coordinates(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+        "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
         side_effect=SmhiForecastException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -122,7 +122,7 @@ async def test_form_invalid_coordinates(hass: HomeAssistant) -> None:
     # Continue flow with new coordinates
     with (
         patch(
-            "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+            "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
             return_value={"test": "something", "test2": "something else"},
         ),
         patch(
@@ -170,7 +170,7 @@ async def test_form_unique_id_exist(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+        "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
         return_value={"test": "something", "test2": "something else"},
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -218,7 +218,7 @@ async def test_reconfigure_flow(
     assert result["type"] is FlowResultType.FORM
 
     with patch(
-        "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+        "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
         side_effect=SmhiForecastException,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -237,7 +237,7 @@ async def test_reconfigure_flow(
 
     with (
         patch(
-            "homeassistant.components.smhi.config_flow.Smhi.async_get_forecast",
+            "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
             return_value={"test": "something", "test2": "something else"},
         ),
         patch(
