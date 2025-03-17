@@ -15,6 +15,7 @@ from openai.types.responses import (
     ResponseFunctionCallArgumentsDeltaEvent,
     ResponseFunctionCallArgumentsDoneEvent,
     ResponseFunctionToolCall,
+    ResponseIncompleteEvent,
     ResponseInProgressEvent,
     ResponseOutputItemAddedEvent,
     ResponseOutputItemDoneEvent,
@@ -26,6 +27,7 @@ from openai.types.responses import (
     ResponseTextDeltaEvent,
     ResponseTextDoneEvent,
 )
+from openai.types.responses.response import IncompleteDetails
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -83,17 +85,27 @@ def mock_create_stream() -> Generator[AsyncMock]:
             response=response,
             type="response.in_progress",
         )
+        response.status = "completed"
 
         for value in events:
             if isinstance(value, ResponseOutputItemDoneEvent):
                 response.output.append(value.item)
+            elif isinstance(value, IncompleteDetails):
+                response.status = "incomplete"
+                response.incomplete_details = value
+                break
             yield value
 
-        response.status = "completed"
-        yield ResponseCompletedEvent(
-            response=response,
-            type="response.completed",
-        )
+        if response.status == "incomplete":
+            yield ResponseIncompleteEvent(
+                response=response,
+                type="response.incomplete",
+            )
+        else:
+            yield ResponseCompletedEvent(
+                response=response,
+                type="response.completed",
+            )
 
     with patch(
         "openai.resources.responses.AsyncResponses.create",
@@ -173,6 +185,67 @@ async def test_error_handling(
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.speech["plain"]["speech"] == message, result.response.speech
+
+
+async def test_max_token_limit(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    mock_chat_log: MockChatLog,  # noqa: F811
+) -> None:
+    """Test handling early model stop."""
+    # Length limit reached after some content is generated
+    mock_create_stream.return_value = [
+        (
+            # Start message
+            *create_message_item(
+                id="msg_A",
+                text=["Once upon", " a time, ", "there was "],
+                output_index=0,
+            ),
+            # Length limit
+            IncompleteDetails(reason="max_output_tokens"),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Please tell me a big story",
+        "mock-conversation-id",
+        Context(),
+        agent_id="conversation.openai",
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "OpenAI response incomplete: max_output_tokens"
+    ), result.response.speech
+
+    # Length limit reached before any content is generated
+    mock_create_stream.return_value = [
+        (
+            # Start generating response
+            *create_reasoning_item(id="rs_A", output_index=0),
+            # Length limit
+            IncompleteDetails(reason="max_output_tokens"),
+        )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "please tell me a big story",
+        "mock-conversation-id",
+        Context(),
+        agent_id="conversation.openai",
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "OpenAI response incomplete: max_output_tokens"
+    ), result.response.speech
 
 
 async def test_conversation_agent(

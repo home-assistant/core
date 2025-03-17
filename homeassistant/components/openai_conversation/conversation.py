@@ -13,6 +13,7 @@ from openai.types.responses import (
     ResponseFunctionCallArgumentsDoneEvent,
     ResponseFunctionToolCall,
     ResponseFunctionToolCallParam,
+    ResponseIncompleteEvent,
     ResponseInputParam,
     ResponseOutputItemAddedEvent,
     ResponseOutputMessage,
@@ -138,6 +139,10 @@ async def _transform_stream(
                     )
                 ]
             }
+        elif isinstance(event, ResponseIncompleteEvent):
+            raise HomeAssistantError(
+                f"OpenAI response incomplete: {event.response.incomplete_details.reason if event.response.incomplete_details else None}"
+            )
 
 
 class OpenAIConversationEntity(
