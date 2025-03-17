@@ -25,7 +25,7 @@
     },
     "error": {
       "mqtt_version": "Incorrect broker MQTT version",
-      "forbidden_id": "Forbidden MQTT client id",
+      "forbidden_id": "Forbidden MQTT client ID",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unauthorized": "Unauthorized connection",
