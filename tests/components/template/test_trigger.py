@@ -794,6 +794,39 @@ async def test_if_fires_on_change_with_for_template_3(
     [
         {
             automation.DOMAIN: {
+                "trigger_variables": {
+                    "seconds": 5,
+                    "entity": "test.entity",
+                },
+                "trigger": {
+                    "platform": "template",
+                    "value_template": "{{ is_state(entity, 'world') }}",
+                    "for": "{{ seconds }}",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    ],
+)
+@pytest.mark.usefixtures("start_ha")
+async def test_if_fires_on_change_with_for_template_4(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test for firing on change with for template."""
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, automation.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            automation.DOMAIN: {
                 "trigger": {
                     "platform": "template",
                     "value_template": "{{ is_state('test.entity', 'world') }}",
