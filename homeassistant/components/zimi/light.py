@@ -1,4 +1,4 @@
-"""Platform for light integration."""
+"""Light platform for zcc integration."""
 
 from __future__ import annotations
 
