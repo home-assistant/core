@@ -142,7 +142,7 @@ async def test_unavailable_api(
     hass: HomeAssistant, mock_nmbs_client: AsyncMock
 ) -> None:
     """Test starting a flow by user and api is unavailable."""
-    mock_nmbs_client.get_stations.return_value = -1
+    mock_nmbs_client.get_stations.return_value = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -203,7 +203,7 @@ async def test_unavailable_api_import(
     hass: HomeAssistant, mock_nmbs_client: AsyncMock
 ) -> None:
     """Test starting a flow by import and api is unavailable."""
-    mock_nmbs_client.get_stations.return_value = -1
+    mock_nmbs_client.get_stations.return_value = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},

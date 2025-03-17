@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from json.decoder import JSONDecodeError
-from typing import Any
+from typing import Any, cast
 
 from aiovodafone import VodafoneStationDevice, VodafoneStationSercommApi, exceptions
 
@@ -127,7 +127,11 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 exceptions.GenericLoginError,
                 JSONDecodeError,
             ) as err:
-                raise UpdateFailed(f"Error fetching data: {err!r}") from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_failed",
+                    translation_placeholders={"error": repr(err)},
+                ) from err
         except (ConfigEntryAuthFailed, UpdateFailed):
             await self.api.close()
             raise
@@ -164,7 +168,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     @property
     def serial_number(self) -> str:
         """Device serial number."""
-        return self.data.sensors["sys_serial_number"]
+        return cast(str, self.data.sensors["sys_serial_number"])
 
     @property
     def device_info(self) -> DeviceInfo:

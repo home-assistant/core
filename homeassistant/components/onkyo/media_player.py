@@ -398,6 +398,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self._volume_resolution = volume_resolution
         self._max_volume = max_volume
 
+        self._options_sources = sources
         self._source_lib_mapping = _input_source_lib_mappings(zone)
         self._rev_source_lib_mapping = _rev_input_source_lib_mappings(zone)
         self._source_mapping = {
@@ -409,6 +410,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             value: key for key, value in self._source_mapping.items()
         }
 
+        self._options_sound_modes = sound_modes
         self._sound_mode_lib_mapping = _listening_mode_lib_mappings(zone)
         self._rev_sound_mode_lib_mapping = _rev_listening_mode_lib_mappings(zone)
         self._sound_mode_mapping = {
@@ -586,7 +588,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             self._attr_volume_level = min(1, volume_level)
         elif command in ["muting", "audio-muting"]:
             self._attr_is_volume_muted = bool(value == "on")
-        elif command in ["selector", "input-selector"]:
+        elif command in ["selector", "input-selector"] and value != "N/A":
             self._parse_source(value)
             self._query_av_info_delayed()
         elif command == "hdmi-output-selector":
@@ -623,11 +625,20 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             return
 
         source_meaning = source.value_meaning
-        _LOGGER.error(
-            'Input source "%s" is invalid for entity: %s',
-            source_meaning,
-            self.entity_id,
-        )
+
+        if source not in self._options_sources:
+            _LOGGER.warning(
+                'Input source "%s" for entity: %s is not in the list. Check integration options',
+                source_meaning,
+                self.entity_id,
+            )
+        else:
+            _LOGGER.error(
+                'Input source "%s" is invalid for entity: %s',
+                source_meaning,
+                self.entity_id,
+            )
+
         self._attr_source = source_meaning
 
     @callback
@@ -638,11 +649,20 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             return
 
         sound_mode_meaning = sound_mode.value_meaning
-        _LOGGER.error(
-            'Listening mode "%s" is invalid for entity: %s',
-            sound_mode_meaning,
-            self.entity_id,
-        )
+
+        if sound_mode not in self._options_sound_modes:
+            _LOGGER.warning(
+                'Listening mode "%s" for entity: %s is not in the list. Check integration options',
+                sound_mode_meaning,
+                self.entity_id,
+            )
+        else:
+            _LOGGER.error(
+                'Listening mode "%s" is invalid for entity: %s',
+                sound_mode_meaning,
+                self.entity_id,
+            )
+
         self._attr_sound_mode = sound_mode_meaning
 
     @callback

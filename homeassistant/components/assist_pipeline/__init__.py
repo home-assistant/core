@@ -117,7 +117,7 @@ async def async_pipeline_from_audio_stream(
     """
     with chat_session.async_get_chat_session(hass, conversation_id) as session:
         pipeline_input = PipelineInput(
-            conversation_id=session.conversation_id,
+            session=session,
             device_id=device_id,
             stt_metadata=stt_metadata,
             stt_stream=stt_stream,

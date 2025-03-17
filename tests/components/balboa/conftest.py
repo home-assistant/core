@@ -68,4 +68,6 @@ def client_fixture() -> Generator[MagicMock]:
         client.pumps = []
         client.temperature_range.state = LowHighRange.LOW
 
+        client.fault = None
+
         yield client

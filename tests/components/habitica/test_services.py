@@ -1,35 +1,61 @@
 """Test Habitica actions."""
 
 from collections.abc import Generator
+from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
 from aiohttp import ClientError
-from habiticalib import Direction, HabiticaTaskResponse, Skill, Task
+from habiticalib import (
+    Checklist,
+    Direction,
+    Frequency,
+    HabiticaTaskResponse,
+    Reminders,
+    Skill,
+    Task,
+    TaskPriority,
+    TaskType,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.habitica.const import (
+    ATTR_ADD_CHECKLIST_ITEM,
     ATTR_ALIAS,
+    ATTR_CLEAR_DATE,
+    ATTR_CLEAR_REMINDER,
     ATTR_CONFIG_ENTRY,
     ATTR_COST,
+    ATTR_COUNTER_DOWN,
+    ATTR_COUNTER_UP,
     ATTR_DIRECTION,
+    ATTR_FREQUENCY,
     ATTR_ITEM,
     ATTR_KEYWORD,
     ATTR_NOTES,
     ATTR_PRIORITY,
+    ATTR_REMINDER,
+    ATTR_REMOVE_CHECKLIST_ITEM,
+    ATTR_REMOVE_REMINDER,
     ATTR_REMOVE_TAG,
+    ATTR_SCORE_CHECKLIST_ITEM,
     ATTR_SKILL,
     ATTR_TAG,
     ATTR_TARGET,
     ATTR_TASK,
     ATTR_TYPE,
+    ATTR_UNSCORE_CHECKLIST_ITEM,
+    ATTR_UP_DOWN,
     DOMAIN,
     SERVICE_ABORT_QUEST,
     SERVICE_ACCEPT_QUEST,
     SERVICE_CANCEL_QUEST,
     SERVICE_CAST_SKILL,
+    SERVICE_CREATE_HABIT,
+    SERVICE_CREATE_REWARD,
+    SERVICE_CREATE_TODO,
     SERVICE_GET_TASKS,
     SERVICE_LEAVE_QUEST,
     SERVICE_REJECT_QUEST,
@@ -37,10 +63,13 @@ from homeassistant.components.habitica.const import (
     SERVICE_SCORE_REWARD,
     SERVICE_START_QUEST,
     SERVICE_TRANSFORMATION,
+    SERVICE_UPDATE_HABIT,
     SERVICE_UPDATE_REWARD,
+    SERVICE_UPDATE_TODO,
 )
 from homeassistant.components.todo import ATTR_RENAME
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_DATE, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -917,6 +946,14 @@ async def test_get_tasks(
         ),
     ],
 )
+@pytest.mark.parametrize(
+    ("service", "task_id"),
+    [
+        (SERVICE_UPDATE_REWARD, "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"),
+        (SERVICE_UPDATE_HABIT, "f21fa608-cfc6-4413-9fc7-0eb1b48ca43a"),
+        (SERVICE_UPDATE_TODO, "88de7cd9-af2b-49ce-9afd-bf941d87336b"),
+    ],
+)
 @pytest.mark.usefixtures("habitica")
 async def test_update_task_exceptions(
     hass: HomeAssistant,
@@ -925,18 +962,69 @@ async def test_update_task_exceptions(
     exception: Exception,
     expected_exception: Exception,
     exception_msg: str,
+    service: str,
+    task_id: str,
 ) -> None:
     """Test Habitica task action exceptions."""
-    task_id = "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"
 
     habitica.update_task.side_effect = exception
     with pytest.raises(expected_exception, match=exception_msg):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPDATE_REWARD,
+            service,
             service_data={
                 ATTR_CONFIG_ENTRY: config_entry.entry_id,
                 ATTR_TASK: task_id,
+            },
+            return_response=True,
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_exception", "exception_msg"),
+    [
+        (
+            ERROR_TOO_MANY_REQUESTS,
+            HomeAssistantError,
+            RATE_LIMIT_EXCEPTION_MSG,
+        ),
+        (
+            ERROR_BAD_REQUEST,
+            HomeAssistantError,
+            REQUEST_EXCEPTION_MSG,
+        ),
+        (
+            ClientError,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "service",
+    [SERVICE_CREATE_REWARD, SERVICE_CREATE_HABIT, SERVICE_CREATE_TODO],
+)
+@pytest.mark.usefixtures("habitica")
+async def test_create_task_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    exception: Exception,
+    expected_exception: Exception,
+    exception_msg: str,
+    service: str,
+) -> None:
+    """Test Habitica task create action exceptions."""
+
+    habitica.create_task.side_effect = exception
+    with pytest.raises(expected_exception, match=exception_msg):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            service_data={
+                ATTR_CONFIG_ENTRY: config_entry.entry_id,
+                ATTR_NAME: "TITLE",
             },
             return_response=True,
             blocking=True,
@@ -1022,6 +1110,500 @@ async def test_update_reward(
         blocking=True,
     )
     habitica.update_task.assert_awaited_with(UUID(task_id), call_args)
+
+
+@pytest.mark.parametrize(
+    ("service_data", "call_args"),
+    [
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_COST: 100,
+            },
+            Task(type=TaskType.REWARD, text="TITLE", value=100),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+            },
+            Task(type=TaskType.REWARD, text="TITLE"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_NOTES: "NOTES",
+            },
+            Task(type=TaskType.REWARD, text="TITLE", notes="NOTES"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_ALIAS: "ALIAS",
+            },
+            Task(type=TaskType.REWARD, text="TITLE", alias="ALIAS"),
+        ),
+    ],
+)
+async def test_create_reward(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    service_data: dict[str, Any],
+    call_args: Task,
+) -> None:
+    """Test Habitica create_reward action."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CREATE_REWARD,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            **service_data,
+        },
+        return_response=True,
+        blocking=True,
+    )
+    habitica.create_task.assert_awaited_with(call_args)
+
+
+@pytest.mark.parametrize(
+    ("service_data", "call_args"),
+    [
+        (
+            {
+                ATTR_RENAME: "RENAME",
+            },
+            Task(text="RENAME"),
+        ),
+        (
+            {
+                ATTR_NOTES: "NOTES",
+            },
+            Task(notes="NOTES"),
+        ),
+        (
+            {
+                ATTR_UP_DOWN: [""],
+            },
+            Task(up=False, down=False),
+        ),
+        (
+            {
+                ATTR_UP_DOWN: ["up"],
+            },
+            Task(up=True, down=False),
+        ),
+        (
+            {
+                ATTR_UP_DOWN: ["down"],
+            },
+            Task(up=False, down=True),
+        ),
+        (
+            {
+                ATTR_PRIORITY: "trivial",
+            },
+            Task(priority=TaskPriority.TRIVIAL),
+        ),
+        (
+            {
+                ATTR_FREQUENCY: "daily",
+            },
+            Task(frequency=Frequency.DAILY),
+        ),
+        (
+            {
+                ATTR_COUNTER_UP: 1,
+                ATTR_COUNTER_DOWN: 2,
+            },
+            Task(counterUp=1, counterDown=2),
+        ),
+        (
+            {
+                ATTR_ALIAS: "ALIAS",
+            },
+            Task(alias="ALIAS"),
+        ),
+    ],
+)
+async def test_update_habit(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    service_data: dict[str, Any],
+    call_args: Task,
+) -> None:
+    """Test Habitica habit action."""
+    task_id = "f21fa608-cfc6-4413-9fc7-0eb1b48ca43a"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_HABIT,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            ATTR_TASK: task_id,
+            **service_data,
+        },
+        return_response=True,
+        blocking=True,
+    )
+    habitica.update_task.assert_awaited_with(UUID(task_id), call_args)
+
+
+@pytest.mark.parametrize(
+    ("service_data", "call_args"),
+    [
+        (
+            {
+                ATTR_NAME: "TITLE",
+            },
+            Task(type=TaskType.HABIT, text="TITLE"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_NOTES: "NOTES",
+            },
+            Task(type=TaskType.HABIT, text="TITLE", notes="NOTES"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_UP_DOWN: [""],
+            },
+            Task(type=TaskType.HABIT, text="TITLE", up=False, down=False),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_UP_DOWN: ["up"],
+            },
+            Task(type=TaskType.HABIT, text="TITLE", up=True, down=False),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_UP_DOWN: ["down"],
+            },
+            Task(type=TaskType.HABIT, text="TITLE", up=False, down=True),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_PRIORITY: "trivial",
+            },
+            Task(type=TaskType.HABIT, text="TITLE", priority=TaskPriority.TRIVIAL),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_FREQUENCY: "daily",
+            },
+            Task(type=TaskType.HABIT, text="TITLE", frequency=Frequency.DAILY),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_ALIAS: "ALIAS",
+            },
+            Task(type=TaskType.HABIT, text="TITLE", alias="ALIAS"),
+        ),
+    ],
+)
+async def test_create_habit(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    service_data: dict[str, Any],
+    call_args: Task,
+) -> None:
+    """Test Habitica create_habit action."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CREATE_HABIT,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            **service_data,
+        },
+        return_response=True,
+        blocking=True,
+    )
+    habitica.create_task.assert_awaited_with(call_args)
+
+
+@pytest.mark.parametrize(
+    ("service_data", "call_args"),
+    [
+        (
+            {
+                ATTR_RENAME: "RENAME",
+            },
+            Task(text="RENAME"),
+        ),
+        (
+            {
+                ATTR_NOTES: "NOTES",
+            },
+            Task(notes="NOTES"),
+        ),
+        (
+            {
+                ATTR_ADD_CHECKLIST_ITEM: "Checklist-item",
+            },
+            Task(
+                {
+                    "checklist": [
+                        Checklist(
+                            id=UUID("fccc26f2-1e2b-4bf8-9dd0-a405be261036"),
+                            text="Checklist-item1",
+                            completed=False,
+                        ),
+                        Checklist(
+                            id=UUID("5a897af4-ea94-456a-a2bd-f336bcd79509"),
+                            text="Checklist-item2",
+                            completed=True,
+                        ),
+                        Checklist(
+                            id=UUID("12345678-1234-5678-1234-567812345678"),
+                            text="Checklist-item",
+                            completed=False,
+                        ),
+                    ]
+                }
+            ),
+        ),
+        (
+            {
+                ATTR_REMOVE_CHECKLIST_ITEM: "Checklist-item1",
+            },
+            Task(
+                {
+                    "checklist": [
+                        Checklist(
+                            id=UUID("5a897af4-ea94-456a-a2bd-f336bcd79509"),
+                            text="Checklist-item2",
+                            completed=True,
+                        ),
+                    ]
+                }
+            ),
+        ),
+        (
+            {
+                ATTR_SCORE_CHECKLIST_ITEM: "Checklist-item1",
+            },
+            Task(
+                {
+                    "checklist": [
+                        Checklist(
+                            id=UUID("fccc26f2-1e2b-4bf8-9dd0-a405be261036"),
+                            text="Checklist-item1",
+                            completed=True,
+                        ),
+                        Checklist(
+                            id=UUID("5a897af4-ea94-456a-a2bd-f336bcd79509"),
+                            text="Checklist-item2",
+                            completed=True,
+                        ),
+                    ]
+                }
+            ),
+        ),
+        (
+            {
+                ATTR_UNSCORE_CHECKLIST_ITEM: "Checklist-item2",
+            },
+            Task(
+                {
+                    "checklist": [
+                        Checklist(
+                            id=UUID("fccc26f2-1e2b-4bf8-9dd0-a405be261036"),
+                            text="Checklist-item1",
+                            completed=False,
+                        ),
+                        Checklist(
+                            id=UUID("5a897af4-ea94-456a-a2bd-f336bcd79509"),
+                            text="Checklist-item2",
+                            completed=False,
+                        ),
+                    ]
+                }
+            ),
+        ),
+        (
+            {
+                ATTR_PRIORITY: "trivial",
+            },
+            Task(priority=TaskPriority.TRIVIAL),
+        ),
+        (
+            {
+                ATTR_DATE: "2025-03-05",
+            },
+            Task(date=datetime(2025, 3, 5)),
+        ),
+        (
+            {
+                ATTR_CLEAR_DATE: True,
+            },
+            Task(date=None),
+        ),
+        (
+            {
+                ATTR_REMINDER: ["2025-02-25T00:00"],
+            },
+            Task(
+                {
+                    "reminders": [
+                        Reminders(
+                            id=UUID("12345678-1234-5678-1234-567812345678"),
+                            time=datetime(2025, 2, 25, 0, 0),
+                            startDate=None,
+                        )
+                    ]
+                }
+            ),
+        ),
+        (
+            {
+                ATTR_REMOVE_REMINDER: ["2025-02-25T00:00"],
+            },
+            Task({"reminders": []}),
+        ),
+        (
+            {
+                ATTR_CLEAR_REMINDER: True,
+            },
+            Task({"reminders": []}),
+        ),
+        (
+            {
+                ATTR_ALIAS: "ALIAS",
+            },
+            Task(alias="ALIAS"),
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_uuid4")
+async def test_update_todo(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    service_data: dict[str, Any],
+    call_args: Task,
+) -> None:
+    """Test Habitica update todo action."""
+    task_id = "88de7cd9-af2b-49ce-9afd-bf941d87336b"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_TODO,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            ATTR_TASK: task_id,
+            **service_data,
+        },
+        return_response=True,
+        blocking=True,
+    )
+    habitica.update_task.assert_awaited_with(UUID(task_id), call_args)
+
+
+@pytest.mark.parametrize(
+    ("service_data", "call_args"),
+    [
+        (
+            {
+                ATTR_NAME: "TITLE",
+            },
+            Task(type=TaskType.TODO, text="TITLE"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_NOTES: "NOTES",
+            },
+            Task(type=TaskType.TODO, text="TITLE", notes="NOTES"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_ADD_CHECKLIST_ITEM: "Checklist-item",
+            },
+            Task(
+                type=TaskType.TODO,
+                text="TITLE",
+                checklist=[
+                    Checklist(
+                        id=UUID("12345678-1234-5678-1234-567812345678"),
+                        text="Checklist-item",
+                        completed=False,
+                    ),
+                ],
+            ),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_PRIORITY: "trivial",
+            },
+            Task(type=TaskType.TODO, text="TITLE", priority=TaskPriority.TRIVIAL),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_DATE: "2025-03-05",
+            },
+            Task(type=TaskType.TODO, text="TITLE", date=datetime(2025, 3, 5)),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_REMINDER: ["2025-02-25T00:00"],
+            },
+            Task(
+                type=TaskType.TODO,
+                text="TITLE",
+                reminders=[
+                    Reminders(
+                        id=UUID("12345678-1234-5678-1234-567812345678"),
+                        time=datetime(2025, 2, 25, 0, 0),
+                        startDate=None,
+                    )
+                ],
+            ),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_ALIAS: "ALIAS",
+            },
+            Task(type=TaskType.TODO, text="TITLE", alias="ALIAS"),
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_uuid4")
+async def test_create_todo(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    service_data: dict[str, Any],
+    call_args: Task,
+) -> None:
+    """Test Habitica create todo action."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CREATE_TODO,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            **service_data,
+        },
+        return_response=True,
+        blocking=True,
+    )
+    habitica.create_task.assert_awaited_with(call_args)
 
 
 async def test_tags(

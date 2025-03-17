@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
+    ArrayOfHomeAppliances,
     ArrayOfPrograms,
     Event,
     EventKey,
@@ -22,6 +23,7 @@ from aiohomeconnect.model.error import (
     SelectedProgramNotSetError,
 )
 from aiohomeconnect.model.program import (
+    EnumerateProgram,
     ProgramDefinitionConstraints,
     ProgramDefinitionOption,
 )
@@ -84,7 +86,7 @@ def platforms() -> list[str]:
             [False, True, True],
             (
                 OptionKey.DISHCARE_DISHWASHER_HYGIENE_PLUS,
-                "switch.dishwasher_hygiene_plus",
+                "switch.dishwasher_hygiene",
             ),
             (OptionKey.DISHCARE_DISHWASHER_EXTRA_DRY, "switch.dishwasher_extra_dry"),
         )
@@ -231,6 +233,198 @@ async def test_program_options_retrieval(
         )
     for _, entity_id in (option_without_default, option_without_constraints):
         assert hass.states.is_state(entity_id, STATE_UNKNOWN)
+
+
+@pytest.mark.parametrize(
+    ("array_of_programs_program_arg", "event_key"),
+    [
+        (
+            "active",
+            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+        ),
+        (
+            "selected",
+            EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+        ),
+    ],
+)
+async def test_no_options_retrieval_on_unknown_program(
+    array_of_programs_program_arg: str,
+    event_key: EventKey,
+    appliance_ha_id: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test that no options are retrieved when the program is unknown."""
+
+    async def get_all_programs_with_options_mock(ha_id: str) -> ArrayOfPrograms:
+        return ArrayOfPrograms(
+            **(
+                {
+                    "programs": [
+                        EnumerateProgram(ProgramKey.UNKNOWN, "unknown program")
+                    ],
+                    array_of_programs_program_arg: Program(
+                        ProgramKey.UNKNOWN, options=[]
+                    ),
+                }
+            )
+        )
+
+    client.get_all_programs = AsyncMock(side_effect=get_all_programs_with_options_mock)
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    assert client.get_available_program.call_count == 0
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=event_key,
+                            raw_key=event_key.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=ProgramKey.UNKNOWN,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert client.get_available_program.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "event_key",
+    [
+        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+        EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+    ],
+)
+@pytest.mark.parametrize(
+    ("appliance_ha_id", "option_key", "option_entity_id"),
+    [
+        (
+            "Dishwasher",
+            OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+            "switch.dishwasher_half_load",
+        )
+    ],
+    indirect=["appliance_ha_id"],
+)
+async def test_program_options_retrieval_after_appliance_connection(
+    event_key: EventKey,
+    appliance_ha_id: str,
+    option_key: OptionKey,
+    option_entity_id: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test that the options are correctly retrieved at the start and updated on program updates."""
+    array_of_home_appliances = client.get_home_appliances.return_value
+
+    async def get_home_appliances_with_options_mock() -> ArrayOfHomeAppliances:
+        return ArrayOfHomeAppliances(
+            [
+                appliance
+                for appliance in array_of_home_appliances.homeappliances
+                if appliance.ha_id != appliance_ha_id
+            ]
+        )
+
+    client.get_home_appliances = AsyncMock(
+        side_effect=get_home_appliances_with_options_mock
+    )
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[],
+        )
+    )
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    assert not hass.states.get(option_entity_id)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.CONNECTED,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_APPLIANCE_CONNECTED,
+                            raw_key=EventKey.BSH_COMMON_APPLIANCE_CONNECTED.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value="",
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert not hass.states.get(option_entity_id)
+
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    option_key,
+                    "Boolean",
+                    constraints=ProgramDefinitionConstraints(
+                        default=False,
+                    ),
+                ),
+            ],
+        )
+    )
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=event_key,
+                            raw_key=event_key.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(option_entity_id)
 
 
 @pytest.mark.parametrize(

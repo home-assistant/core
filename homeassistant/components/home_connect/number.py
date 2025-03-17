@@ -11,7 +11,6 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -23,6 +22,7 @@ from .const import (
     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
     SVE_TRANSLATION_PLACEHOLDER_KEY,
     SVE_TRANSLATION_PLACEHOLDER_VALUE,
+    UNIT_MAP,
 )
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity
@@ -31,13 +31,6 @@ from .utils import get_dict_from_home_connect_error
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
-
-UNIT_MAP = {
-    "seconds": UnitOfTime.SECONDS,
-    "ml": UnitOfVolume.MILLILITERS,
-    "°C": UnitOfTemperature.CELSIUS,
-    "°F": UnitOfTemperature.FAHRENHEIT,
-}
 
 NUMBERS = (
     NumberEntityDescription(

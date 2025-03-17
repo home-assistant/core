@@ -159,7 +159,7 @@ class NumberDeviceClass(StrEnum):
     DURATION = "duration"
     """Fixed duration.
 
-    Unit of measurement: `d`, `h`, `min`, `s`, `ms`
+    Unit of measurement: `d`, `h`, `min`, `s`, `ms`, `µs`
     """
 
     ENERGY = "energy"
@@ -462,6 +462,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfTime.MINUTES,
         UnitOfTime.SECONDS,
         UnitOfTime.MILLISECONDS,
+        UnitOfTime.MICROSECONDS,
     },
     NumberDeviceClass.ENERGY: set(UnitOfEnergy),
     NumberDeviceClass.ENERGY_DISTANCE: set(UnitOfEnergyDistance),

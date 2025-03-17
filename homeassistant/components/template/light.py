@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -39,7 +39,6 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
@@ -127,7 +126,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def _async_create_entities(hass, config):
+async def _async_create_entities(hass: HomeAssistant, config):
     """Create the Template Lights."""
     lights = []
 
@@ -164,11 +163,11 @@ class LightTemplate(TemplateEntity, LightEntity):
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         object_id,
-        config,
+        config: dict[str, Any],
         unique_id,
-    ):
+    ) -> None:
         """Initialize the light."""
         super().__init__(
             hass, config=config, fallback_name=object_id, unique_id=unique_id
@@ -176,52 +175,31 @@ class LightTemplate(TemplateEntity, LightEntity):
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        friendly_name = self._attr_name
+        name = self._attr_name
+        if TYPE_CHECKING:
+            assert name is not None
+
         self._template = config.get(CONF_VALUE_TEMPLATE)
-        self._on_script = Script(hass, config[CONF_ON_ACTION], friendly_name, DOMAIN)
-        self._off_script = Script(hass, config[CONF_OFF_ACTION], friendly_name, DOMAIN)
-        self._level_script = None
-        if (level_action := config.get(CONF_LEVEL_ACTION)) is not None:
-            self._level_script = Script(hass, level_action, friendly_name, DOMAIN)
         self._level_template = config.get(CONF_LEVEL_TEMPLATE)
-        self._temperature_script = None
-        if (temperature_action := config.get(CONF_TEMPERATURE_ACTION)) is not None:
-            self._temperature_script = Script(
-                hass, temperature_action, friendly_name, DOMAIN
-            )
         self._temperature_template = config.get(CONF_TEMPERATURE_TEMPLATE)
-        self._color_script = None
-        if (color_action := config.get(CONF_COLOR_ACTION)) is not None:
-            self._color_script = Script(hass, color_action, friendly_name, DOMAIN)
         self._color_template = config.get(CONF_COLOR_TEMPLATE)
-        self._hs_script = None
-        if (hs_action := config.get(CONF_HS_ACTION)) is not None:
-            self._hs_script = Script(hass, hs_action, friendly_name, DOMAIN)
         self._hs_template = config.get(CONF_HS_TEMPLATE)
-        self._rgb_script = None
-        if (rgb_action := config.get(CONF_RGB_ACTION)) is not None:
-            self._rgb_script = Script(hass, rgb_action, friendly_name, DOMAIN)
         self._rgb_template = config.get(CONF_RGB_TEMPLATE)
-        self._rgbw_script = None
-        if (rgbw_action := config.get(CONF_RGBW_ACTION)) is not None:
-            self._rgbw_script = Script(hass, rgbw_action, friendly_name, DOMAIN)
         self._rgbw_template = config.get(CONF_RGBW_TEMPLATE)
-        self._rgbww_script = None
-        if (rgbww_action := config.get(CONF_RGBWW_ACTION)) is not None:
-            self._rgbww_script = Script(hass, rgbww_action, friendly_name, DOMAIN)
         self._rgbww_template = config.get(CONF_RGBWW_TEMPLATE)
-        self._effect_script = None
-        if (effect_action := config.get(CONF_EFFECT_ACTION)) is not None:
-            self._effect_script = Script(hass, effect_action, friendly_name, DOMAIN)
         self._effect_list_template = config.get(CONF_EFFECT_LIST_TEMPLATE)
         self._effect_template = config.get(CONF_EFFECT_TEMPLATE)
         self._max_mireds_template = config.get(CONF_MAX_MIREDS_TEMPLATE)
         self._min_mireds_template = config.get(CONF_MIN_MIREDS_TEMPLATE)
         self._supports_transition_template = config.get(CONF_SUPPORTS_TRANSITION)
 
+        for action_id in (CONF_ON_ACTION, CONF_OFF_ACTION, CONF_EFFECT_ACTION):
+            if action_config := config.get(action_id):
+                self.add_script(action_id, action_config, name, DOMAIN)
+
         self._state = False
         self._brightness = None
-        self._temperature = None
+        self._temperature: int | None = None
         self._hs_color = None
         self._rgb_color = None
         self._rgbw_color = None
@@ -235,21 +213,18 @@ class LightTemplate(TemplateEntity, LightEntity):
         self._supported_color_modes = None
 
         color_modes = {ColorMode.ONOFF}
-        if self._level_script is not None:
-            color_modes.add(ColorMode.BRIGHTNESS)
-        if self._temperature_script is not None:
-            color_modes.add(ColorMode.COLOR_TEMP)
-        if self._hs_script is not None:
-            color_modes.add(ColorMode.HS)
-        if self._color_script is not None:
-            color_modes.add(ColorMode.HS)
-        if self._rgb_script is not None:
-            color_modes.add(ColorMode.RGB)
-        if self._rgbw_script is not None:
-            color_modes.add(ColorMode.RGBW)
-        if self._rgbww_script is not None:
-            color_modes.add(ColorMode.RGBWW)
-
+        for action_id, color_mode in (
+            (CONF_TEMPERATURE_ACTION, ColorMode.COLOR_TEMP),
+            (CONF_LEVEL_ACTION, ColorMode.BRIGHTNESS),
+            (CONF_COLOR_ACTION, ColorMode.HS),
+            (CONF_HS_ACTION, ColorMode.HS),
+            (CONF_RGB_ACTION, ColorMode.RGB),
+            (CONF_RGBW_ACTION, ColorMode.RGBW),
+            (CONF_RGBWW_ACTION, ColorMode.RGBWW),
+        ):
+            if action_config := config.get(action_id):
+                self.add_script(action_id, action_config, name, DOMAIN)
+                color_modes.add(color_mode)
         self._supported_color_modes = filter_supported_color_modes(color_modes)
         if len(self._supported_color_modes) > 1:
             self._color_mode = ColorMode.UNKNOWN
@@ -257,7 +232,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._color_mode = next(iter(self._supported_color_modes))
 
         self._attr_supported_features = LightEntityFeature(0)
-        if self._effect_script is not None:
+        if self._action_scripts.get(CONF_EFFECT_ACTION):
             self._attr_supported_features |= LightEntityFeature.EFFECT
         if self._supports_transition is True:
             self._attr_supported_features |= LightEntityFeature.TRANSITION
@@ -321,12 +296,12 @@ class LightTemplate(TemplateEntity, LightEntity):
         return self._effect_list
 
     @property
-    def color_mode(self):
+    def color_mode(self) -> ColorMode | None:
         """Return current color mode."""
         return self._color_mode
 
     @property
-    def supported_color_modes(self):
+    def supported_color_modes(self) -> set[ColorMode] | None:
         """Flag supported color modes."""
         return self._supported_color_modes
 
@@ -555,17 +530,22 @@ class LightTemplate(TemplateEntity, LightEntity):
         if ATTR_TRANSITION in kwargs and self._supports_transition is True:
             common_params["transition"] = kwargs[ATTR_TRANSITION]
 
-        if ATTR_COLOR_TEMP_KELVIN in kwargs and self._temperature_script:
+        if ATTR_COLOR_TEMP_KELVIN in kwargs and (
+            temperature_script := self._action_scripts.get(CONF_TEMPERATURE_ACTION)
+        ):
             common_params["color_temp"] = color_util.color_temperature_kelvin_to_mired(
                 kwargs[ATTR_COLOR_TEMP_KELVIN]
             )
 
             await self.async_run_script(
-                self._temperature_script,
+                temperature_script,
                 run_variables=common_params,
                 context=self._context,
             )
-        elif ATTR_EFFECT in kwargs and self._effect_script:
+        elif ATTR_EFFECT in kwargs and (
+            effect_script := self._action_scripts.get(CONF_EFFECT_ACTION)
+        ):
+            assert self._effect_list is not None
             effect = kwargs[ATTR_EFFECT]
             if effect not in self._effect_list:
                 _LOGGER.error(
@@ -579,27 +559,33 @@ class LightTemplate(TemplateEntity, LightEntity):
             common_params["effect"] = effect
 
             await self.async_run_script(
-                self._effect_script, run_variables=common_params, context=self._context
+                effect_script, run_variables=common_params, context=self._context
             )
-        elif ATTR_HS_COLOR in kwargs and self._color_script:
+        elif ATTR_HS_COLOR in kwargs and (
+            color_script := self._action_scripts.get(CONF_COLOR_ACTION)
+        ):
             hs_value = kwargs[ATTR_HS_COLOR]
             common_params["hs"] = hs_value
             common_params["h"] = int(hs_value[0])
             common_params["s"] = int(hs_value[1])
 
             await self.async_run_script(
-                self._color_script, run_variables=common_params, context=self._context
+                color_script, run_variables=common_params, context=self._context
             )
-        elif ATTR_HS_COLOR in kwargs and self._hs_script:
+        elif ATTR_HS_COLOR in kwargs and (
+            hs_script := self._action_scripts.get(CONF_HS_ACTION)
+        ):
             hs_value = kwargs[ATTR_HS_COLOR]
             common_params["hs"] = hs_value
             common_params["h"] = int(hs_value[0])
             common_params["s"] = int(hs_value[1])
 
             await self.async_run_script(
-                self._hs_script, run_variables=common_params, context=self._context
+                hs_script, run_variables=common_params, context=self._context
             )
-        elif ATTR_RGBWW_COLOR in kwargs and self._rgbww_script:
+        elif ATTR_RGBWW_COLOR in kwargs and (
+            rgbww_script := self._action_scripts.get(CONF_RGBWW_ACTION)
+        ):
             rgbww_value = kwargs[ATTR_RGBWW_COLOR]
             common_params["rgbww"] = rgbww_value
             common_params["rgb"] = (
@@ -614,9 +600,11 @@ class LightTemplate(TemplateEntity, LightEntity):
             common_params["ww"] = int(rgbww_value[4])
 
             await self.async_run_script(
-                self._rgbww_script, run_variables=common_params, context=self._context
+                rgbww_script, run_variables=common_params, context=self._context
             )
-        elif ATTR_RGBW_COLOR in kwargs and self._rgbw_script:
+        elif ATTR_RGBW_COLOR in kwargs and (
+            rgbw_script := self._action_scripts.get(CONF_RGBW_ACTION)
+        ):
             rgbw_value = kwargs[ATTR_RGBW_COLOR]
             common_params["rgbw"] = rgbw_value
             common_params["rgb"] = (
@@ -630,9 +618,11 @@ class LightTemplate(TemplateEntity, LightEntity):
             common_params["w"] = int(rgbw_value[3])
 
             await self.async_run_script(
-                self._rgbw_script, run_variables=common_params, context=self._context
+                rgbw_script, run_variables=common_params, context=self._context
             )
-        elif ATTR_RGB_COLOR in kwargs and self._rgb_script:
+        elif ATTR_RGB_COLOR in kwargs and (
+            rgb_script := self._action_scripts.get(CONF_RGB_ACTION)
+        ):
             rgb_value = kwargs[ATTR_RGB_COLOR]
             common_params["rgb"] = rgb_value
             common_params["r"] = int(rgb_value[0])
@@ -640,15 +630,19 @@ class LightTemplate(TemplateEntity, LightEntity):
             common_params["b"] = int(rgb_value[2])
 
             await self.async_run_script(
-                self._rgb_script, run_variables=common_params, context=self._context
+                rgb_script, run_variables=common_params, context=self._context
             )
-        elif ATTR_BRIGHTNESS in kwargs and self._level_script:
+        elif ATTR_BRIGHTNESS in kwargs and (
+            level_script := self._action_scripts.get(CONF_LEVEL_ACTION)
+        ):
             await self.async_run_script(
-                self._level_script, run_variables=common_params, context=self._context
+                level_script, run_variables=common_params, context=self._context
             )
         else:
             await self.async_run_script(
-                self._on_script, run_variables=common_params, context=self._context
+                self._action_scripts[CONF_ON_ACTION],
+                run_variables=common_params,
+                context=self._context,
             )
 
         if optimistic_set:
@@ -656,14 +650,15 @@ class LightTemplate(TemplateEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
+        off_script = self._action_scripts[CONF_OFF_ACTION]
         if ATTR_TRANSITION in kwargs and self._supports_transition is True:
             await self.async_run_script(
-                self._off_script,
+                off_script,
                 run_variables={"transition": kwargs[ATTR_TRANSITION]},
                 context=self._context,
             )
         else:
-            await self.async_run_script(self._off_script, context=self._context)
+            await self.async_run_script(off_script, context=self._context)
         if self._template is None:
             self._state = False
             self.async_write_ha_state()
@@ -1013,7 +1008,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         if render in (None, "None", ""):
             self._supports_transition = False
             return
-        self._attr_supported_features &= LightEntityFeature.EFFECT
+        self._attr_supported_features &= ~LightEntityFeature.TRANSITION
         self._supports_transition = bool(render)
         if self._supports_transition:
             self._attr_supported_features |= LightEntityFeature.TRANSITION

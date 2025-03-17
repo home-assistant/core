@@ -1848,6 +1848,60 @@ async def test_supports_transition_template(
 
 
 @pytest.mark.parametrize("count", [1])
+async def test_supports_transition_template_updates(
+    hass: HomeAssistant, count: int
+) -> None:
+    """Test the template for the supports transition dynamically."""
+    light_config = {
+        "test_template_light": {
+            "value_template": "{{ 1 == 1 }}",
+            "turn_on": {"service": "light.turn_on", "entity_id": "light.test_state"},
+            "turn_off": {"service": "light.turn_off", "entity_id": "light.test_state"},
+            "set_temperature": {
+                "service": "light.turn_on",
+                "data_template": {
+                    "entity_id": "light.test_state",
+                    "color_temp": "{{color_temp}}",
+                },
+            },
+            "set_effect": {
+                "service": "test.automation",
+                "data_template": {
+                    "entity_id": "test.test_state",
+                    "effect": "{{effect}}",
+                },
+            },
+            "effect_list_template": "{{ ['Disco', 'Police'] }}",
+            "effect_template": "{{ None }}",
+            "supports_transition_template": "{{ states('sensor.test') }}",
+        }
+    }
+    await async_setup_light(hass, count, light_config)
+    state = hass.states.get("light.test_template_light")
+    assert state is not None
+
+    hass.states.async_set("sensor.test", 0)
+    await hass.async_block_till_done()
+    state = hass.states.get("light.test_template_light")
+    supported_features = state.attributes.get("supported_features")
+    assert supported_features == LightEntityFeature.EFFECT
+
+    hass.states.async_set("sensor.test", 1)
+    await hass.async_block_till_done()
+    state = hass.states.get("light.test_template_light")
+    supported_features = state.attributes.get("supported_features")
+    assert (
+        supported_features == LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
+    )
+
+    hass.states.async_set("sensor.test", 0)
+    await hass.async_block_till_done()
+    state = hass.states.get("light.test_template_light")
+    supported_features = state.attributes.get("supported_features")
+    assert supported_features == LightEntityFeature.EFFECT
+
+
+@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     "light_config",
     [
