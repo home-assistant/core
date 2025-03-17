@@ -57,6 +57,8 @@ STATE_CODE_TO_STATE = {
     RoborockStateCode.device_offline: VacuumActivity.ERROR,  # "Device offline"
 }
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
