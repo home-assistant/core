@@ -102,12 +102,14 @@ MOCK_BLOCKS = [
             "power": 53.4,
             "energy": 1234567.89,
             "output": True,
+            "totalWorkTime": 3600,
         },
         channel="0",
         type="relay",
         overpower=0,
         power=53.4,
         energy=1234567.89,
+        totalWorkTime=3600,
         description="relay_0",
         set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
     ),
@@ -134,11 +136,18 @@ MOCK_BLOCKS = [
         set_state=AsyncMock(side_effect=mock_light_set_state),
     ),
     Mock(
-        sensor_ids={"motion": 0, "temp": 22.1, "gas": "mild", "motionActive": 1},
+        sensor_ids={
+            "motion": 0,
+            "temp": 22.1,
+            "gas": "mild",
+            "motionActive": 1,
+            "sensorOp": "normal",
+        },
         channel="0",
         motion=0,
         temp=22.1,
         gas="mild",
+        sensorOp="normal",
         targetTemp=4,
         description="sensor_0",
         type="sensor",
@@ -502,6 +511,7 @@ def _mock_blu_rtv_device(version: str | None = None):
         firmware_version="some fw string",
         initialized=True,
         connected=True,
+        xmod_info={},
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
