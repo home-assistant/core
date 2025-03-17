@@ -129,7 +129,7 @@ async def test_entity_supported_features(
     )
 
 
-async def test_entity_supported_features_with_controlBus(
+async def test_entity_supported_features_with_control_bus(
     hass: HomeAssistant,
     mock_stream_magic_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
