@@ -24,9 +24,24 @@
   "exceptions": {
     "select_failed": {
       "message": "Error while updating {name} to {option}"
+    },
+    "switch_on_failed": {
+      "message": "Turning {name} on failed"
+    },
+    "switch_off_failed": {
+      "message": "Turning {name} off failed"
     }
   },
   "entity": {
+    "binary_sensor": {
+      "left_clip": {
+        "name": "Left safety clip"
+      },
+      "right_clip": {
+        "name": "Right safety clip"
+      }
+    },
+
     "sensor": {
       "state": {
         "name": "State",
@@ -56,6 +71,14 @@
           "level4": "[%key:component::snoo::entity::sensor::state::state::level4%]",
           "stop": "[%key:component::snoo::entity::sensor::state::state::stop%]"
         }
+      }
+    },
+    "switch": {
+      "sticky_white_noise": {
+        "name": "Sleepytime sounds"
+      },
+      "hold": {
+        "name": "Level lock"
       }
     }
   }

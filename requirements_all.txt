@@ -1194,7 +1194,7 @@ ibmiotf==0.3.4
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==8.3.0
+ical==9.0.1
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1502,7 +1502,7 @@ nextdns==4.0.0
 nhc==0.4.10
 
 # homeassistant.components.nibe_heatpump
-nibe==2.14.0
+nibe==2.17.0
 
 # homeassistant.components.nice_go
 nice-go==1.0.1
@@ -2465,7 +2465,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.12.2
+python-roborock==2.14.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.39
@@ -2930,7 +2930,7 @@ total-connect-client==2025.1.4
 tp-connected==0.0.4
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.4.3
+tplink-omada-client==1.4.4
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
