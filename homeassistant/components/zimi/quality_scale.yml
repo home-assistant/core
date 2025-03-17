@@ -65,9 +65,9 @@ rules:
   entity-category: todo
   entity-disabled-by-default: todo
   discovery:
-    status: done
+    status: exempt
     comment: >
-      Discovery is supported by the Zimi protocol with UDP broadcast on LAN.
+      Discovery is not supported as confirmation of ZCC settings is required.
   stale-devices: todo
   diagnostics: todo
   exception-translations: todo
@@ -80,7 +80,7 @@ rules:
   discovery-update-info:
     status: exempt
     comment: >
-      The Zimi Cloud controller IP address cannot be changed after integration.
+      Discovery is not supported.
   repair-issues: todo
   docs-use-cases: todo
   docs-supported-devices: done
