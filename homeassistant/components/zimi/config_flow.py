@@ -65,7 +65,7 @@ class ZimiConfigException(Exception):
 class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for zcc."""
 
-    api: ControlPoint | None = None
+    api: ControlPoint
     data: dict[str, Any]
 
     async def async_step_user(
