@@ -14,7 +14,7 @@ rules:
   config-flow: done
   dependency-transparency:
     status: done
-    comment: >
+    comment: |
       https://mark_hannon@bitbucket.org/mark_hannon/zcc.git
   docs-actions:
     status: exempt
