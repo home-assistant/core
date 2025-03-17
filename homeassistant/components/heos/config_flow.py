@@ -205,7 +205,7 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Obtain host and validate connection."""
-        await self.async_set_unique_id(DOMAIN)
+        await self.async_set_unique_id(DOMAIN, raise_on_progress=False)
         self._abort_if_unique_id_configured(error="single_instance_allowed")
         # Try connecting to host if provided
         errors: dict[str, str] = {}

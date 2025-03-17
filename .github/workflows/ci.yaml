@@ -37,7 +37,7 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 11
+  CACHE_VERSION: 12
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 9
   HA_SHORT_VERSION: "2025.4"
@@ -637,6 +637,25 @@ jobs:
         run: |
           . venv/bin/activate
           python -m script.gen_requirements_all validate
+
+  dependency-review:
+    name: Dependency review
+    runs-on: ubuntu-24.04
+    needs:
+      - info
+      - base
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && needs.info.outputs.requirements == 'true'
+      && github.event_name == 'pull_request'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.2.2
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4.5.0
+        with:
+          license-check: false # We use our own license audit checks
 
   audit-licenses:
     name: Audit licenses
