@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import mimetypes
+from collections.abc import Iterable
 from pathlib import Path
 
-from google.genai import Client
+from google.genai import Client, types
 from google.genai.errors import APIError, ClientError
 from requests.exceptions import Timeout
 import voluptuous as vol
@@ -49,6 +49,23 @@ type GoogleGenerativeAIConfigEntry = ConfigEntry[Client]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Google Generative AI Conversation."""
 
+    async def upload_attachments(
+        client: Client, filenames: Iterable[str]
+    ) -> list[types.File]:
+        """Upload attachments and return a list of parts."""
+        parts = []
+        for filename in filenames:
+            if not hass.config.is_allowed_path(filename):
+                raise HomeAssistantError(
+                    f"Cannot read `{filename}`, no access to path; "
+                    "`allowlist_external_dirs` may need to be adjusted in "
+                    "`configuration.yaml`"
+                )
+            if not Path(filename).exists():
+                raise HomeAssistantError(f"`{filename}` does not exist")
+            parts.append(await client.aio.files.upload(file=filename))
+        return parts
+
     async def generate_content(call: ServiceCall) -> ServiceResponse:
         """Generate content from text and optionally images."""
 
@@ -72,26 +89,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         client = config_entry.runtime_data
 
-        def append_files_to_prompt():
-            image_filenames = call.data[CONF_IMAGE_FILENAME]
-            filenames = call.data[CONF_FILENAMES]
-            for filename in set(image_filenames + filenames):
-                if not hass.config.is_allowed_path(filename):
-                    raise HomeAssistantError(
-                        f"Cannot read `{filename}`, no access to path; "
-                        "`allowlist_external_dirs` may need to be adjusted in "
-                        "`configuration.yaml`"
-                    )
-                if not Path(filename).exists():
-                    raise HomeAssistantError(f"`{filename}` does not exist")
-                mimetype = mimetypes.guess_type(filename)[0]
-                with open(filename, "rb") as file:
-                    uploaded_file = client.files.upload(
-                        file=file, config={"mime_type": mimetype}
-                    )
-                    prompt_parts.append(uploaded_file)
-
-        await hass.async_add_executor_job(append_files_to_prompt)
+        prompt_parts += await upload_attachments(
+            client,
+            set(call.data[CONF_IMAGE_FILENAME] + call.data[CONF_FILENAMES]),
+        )
 
         try:
             response = await client.aio.models.generate_content(

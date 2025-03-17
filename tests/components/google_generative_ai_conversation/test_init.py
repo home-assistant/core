@@ -66,7 +66,7 @@ async def test_generate_content_service_with_image(
             ),
         ) as mock_generate,
         patch(
-            "google.genai.files.Files.upload",
+            "google.genai.files.AsyncFiles.upload",
             return_value=b"some file",
         ),
         patch("pathlib.Path.exists", return_value=True),
