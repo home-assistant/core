@@ -5639,65 +5639,65 @@ async def test_lookup_device(
 
     client.driver.config_manager.lookup_device.assert_called_once_with(4, 5, 6, None)
 
-
-async def test_lookup_device_not_found(
-    hass: HomeAssistant,
-    integration: MockConfigEntry,
-    client: MagicMock,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test lookup_device websocket command when device is not found."""
-    entry = integration
-    ws_client = await hass_ws_client(hass)
-
     # Test device not found
-    client.driver.config_manager.lookup_device = AsyncMock(return_value=None)
+    with patch.object(
+        client.driver.config_manager,
+        "lookup_device",
+        return_value=None,
+    ):
+        await ws_client.send_json_auto_id(
+            {
+                TYPE: "zwave_js/lookup_device",
+                ENTRY_ID: entry.entry_id,
+                MANUFACTURER_ID: 99,
+                PRODUCT_TYPE: 99,
+                PRODUCT_ID: 99,
+                APPLICATION_VERSION: "9.9",
+            }
+        )
+        msg = await ws_client.receive_json()
 
-    await ws_client.send_json_auto_id(
-        {
-            TYPE: "zwave_js/lookup_device",
-            ENTRY_ID: entry.entry_id,
-            MANUFACTURER_ID: 99,
-            PRODUCT_TYPE: 99,
-            PRODUCT_ID: 99,
-            APPLICATION_VERSION: "9.9",
-        }
-    )
-    msg = await ws_client.receive_json()
+        assert not msg["success"]
+        assert msg["error"]["code"] == ERR_NOT_FOUND
+        assert msg["error"]["message"] == "Device not found"
 
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
-    assert msg["error"]["message"] == "Device not found"
+        # Test sending command with improper entry ID fails
+        await ws_client.send_json_auto_id(
+            {
+                TYPE: "zwave_js/lookup_device",
+                ENTRY_ID: "invalid_entry_id",
+                MANUFACTURER_ID: 1,
+                PRODUCT_TYPE: 1,
+                PRODUCT_ID: 1,
+                APPLICATION_VERSION: "1.0",
+            }
+        )
+        msg = await ws_client.receive_json()
+        assert not msg["success"]
+        assert msg["error"]["code"] == ERR_NOT_FOUND
+        assert msg["error"]["message"] == "Config entry invalid_entry_id not found"
 
-    # Test sending command with improper entry ID fails
-    await ws_client.send_json_auto_id(
-        {
-            TYPE: "zwave_js/lookup_device",
-            ENTRY_ID: "invalid_entry_id",
-            MANUFACTURER_ID: 1,
-            PRODUCT_TYPE: 1,
-            PRODUCT_ID: 1,
-            APPLICATION_VERSION: "1.0",
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
+    # Test FailedCommand exception
+    error_message = "Failed to execute lookup_device command"
+    with patch.object(
+        client.driver.config_manager,
+        "lookup_device",
+        side_effect=FailedCommand("lookup_device", error_message),
+    ):
+        # Send the subscription request
+        await ws_client.send_json_auto_id(
+            {
+                TYPE: "zwave_js/lookup_device",
+                ENTRY_ID: entry.entry_id,
+                MANUFACTURER_ID: 1,
+                PRODUCT_TYPE: 2,
+                PRODUCT_ID: 3,
+                APPLICATION_VERSION: "1.0",
+            }
+        )
 
-    # Test sending command with not loaded entry fails
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    await ws_client.send_json_auto_id(
-        {
-            TYPE: "zwave_js/lookup_device",
-            ENTRY_ID: entry.entry_id,
-            MANUFACTURER_ID: 1,
-            PRODUCT_TYPE: 1,
-            PRODUCT_ID: 1,
-            APPLICATION_VERSION: "1.0",
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_LOADED
+        # Verify error response
+        msg = await ws_client.receive_json()
+        assert not msg["success"]
+        assert msg["error"]["code"] == error_message
+        assert msg["error"]["message"] == f"Command failed: {error_message}"
