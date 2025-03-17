@@ -66,6 +66,7 @@ class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for zcc."""
 
     api: ControlPoint | None = None
+    data: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -73,71 +74,57 @@ class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial auto-discovery step."""
 
         api_description: ControlPointDescription | None = None
-        data: dict[str, Any] = {}
-        details: dict[str, str] = {}
-        errors: dict[str, str] = {}
+
+        self.data = {}
 
         try:
             api_description = await ControlPointDiscoveryService().discover()
         except ControlPointError as _:
             _LOGGER.error("ZCC Discovery failed - falling back to manual configuration")
-            return self.async_show_form(
-                step_id="finish",
-                data_schema=self.add_suggested_values_to_schema(
-                    STEP_USER_DATA_SCHEMA, data
-                ),
-            )
+            return await self.async_step_finish()
 
         if api_description:
-            data[CONF_HOST] = api_description.host
-            data[CONF_PORT] = api_description.port
+            self.data[CONF_HOST] = api_description.host
+            self.data[CONF_PORT] = api_description.port
 
             with contextlib.suppress(ControlPointError):
                 self.api = await async_connect_to_controller(
-                    data[CONF_HOST], data[CONF_PORT], fast=True
+                    self.data[CONF_HOST], self.data[CONF_PORT], fast=True
                 )
 
             if self.api and self.api.ready:
-                data[CONF_MAC] = self.api.mac
+                self.data[CONF_MAC] = self.api.mac
 
-        return self.async_show_form(
-            step_id="finish",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, data
-            ),
-            errors=errors,
-            description_placeholders=details,
-        )
+        return await self.async_step_finish()
 
     async def async_step_finish(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle the final step."""
 
-        data: dict[str, Any] = {}
-        details: dict[str, str] = {}
         errors: dict[str, str] = {}
+        details: dict[str, str] = {}
 
         if user_input is not None:
-            data[CONF_HOST] = user_input[CONF_HOST]
-            data[CONF_PORT] = user_input[CONF_PORT]
-            data[CONF_MAC] = user_input[CONF_MAC]
+            self.data[CONF_HOST] = user_input[CONF_HOST]
+            self.data[CONF_PORT] = user_input[CONF_PORT]
+            self.data[CONF_MAC] = user_input[CONF_MAC]
 
             (errors, details) = await self.check_errors(
-                data[CONF_HOST], data[CONF_PORT], data[CONF_MAC]
+                self.data[CONF_HOST], self.data[CONF_PORT], self.data[CONF_MAC]
             )
 
             if not errors:
                 if details:
-                    data[CONF_MAC] = details.get("mac", None)
-                await self.async_set_unique_id(data[CONF_MAC])
+                    self.data[CONF_MAC] = details.get("mac", None)
+                await self.async_set_unique_id(self.data[CONF_MAC])
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=TITLE, data=data)
+                return self.async_create_entry(title=TITLE, data=self.data)
 
         return self.async_show_form(
             step_id="finish",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, data
+                STEP_USER_DATA_SCHEMA, self.data
             ),
             errors=errors,
             description_placeholders=details,
