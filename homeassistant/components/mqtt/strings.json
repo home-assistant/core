@@ -209,7 +209,7 @@
             "options": "Options"
           },
           "data_description": {
-            "device_class": "The type/class of the {platform} entity to set the icon in the frontend. [Learn more..]({url}#device_class)",
+            "device_class": "The device class of the {platform} entity. [Learn more..]({url}#device_class)",
             "state_class": "The [state_class](https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes) of the sensor. [Learn more..]({url}#state_class)",
             "unit_of_measurement": "Defines the units of measurement of the sensor, if any.",
             "suggested_display_precision": "The number of decimals which should be used in the sensor’s state after rounding. [Learn more..]({url}#suggested_display_precision)",
