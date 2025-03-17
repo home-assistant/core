@@ -373,6 +373,14 @@ async def test_block_sensor_without_value(
             "completed",
             "completed",
         ),
+        (
+            "test_name_gas_detected",
+            "mild",
+            SENSOR_BLOCK_ID,
+            "gas",
+            "heavy",
+            "heavy",
+        ),
     ],
 )
 async def test_block_sensor_values(
