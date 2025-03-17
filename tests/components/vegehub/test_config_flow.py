@@ -393,11 +393,18 @@ async def test_zeroconf_flow_update_ip_hostname(
     with patch("homeassistant.components.vegehub.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, mocked_config_entry)
 
+    # Use the same discovery info, but change the IP and hostname
     new_ip = "192.168.0.99"
     new_hostname = "new_hostname"
-    new_discovery_info = DISCOVERY_INFO
-    new_discovery_info.ip_address = ip_address(new_ip)
-    new_discovery_info.hostname = f"{new_hostname}.local."
+    new_discovery_info = zeroconf.ZeroconfServiceInfo(
+        ip_address=ip_address(new_ip),
+        ip_addresses=[ip_address(new_ip)],
+        port=DISCOVERY_INFO.port,
+        hostname=f"{new_hostname}.local.",
+        type=DISCOVERY_INFO.type,
+        name=DISCOVERY_INFO.name,
+        properties=DISCOVERY_INFO.properties,
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
