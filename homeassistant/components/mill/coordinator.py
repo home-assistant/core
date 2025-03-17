@@ -79,12 +79,13 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
             timedelta(hours=1) + now.replace(minute=0, second=0) - now
         )
 
+        recoder_instance = get_instance(self.hass)
         for dev_id, heater in self.mill_data_connection.devices.items():
             if not isinstance(heater, Heater):
                 continue
             statistic_id = f"{DOMAIN}:energy_{slugify(dev_id)}"
 
-            last_stats = await get_instance(self.hass).async_add_executor_job(
+            last_stats = await recoder_instance.async_add_executor_job(
                 get_last_statistics, self.hass, 1, statistic_id, True, set()
             )
 
@@ -115,7 +116,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
                 hourly_data = dict(sorted(hourly_data.items(), key=lambda x: x[0]))
                 start_time = next(iter(hourly_data))
 
-                stats = await get_instance(self.hass).async_add_executor_job(
+                stats = await recoder_instance.async_add_executor_job(
                     statistics_during_period,
                     self.hass,
                     start_time,
