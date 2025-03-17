@@ -1,6 +1,6 @@
 """The tests for the Ring component."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -20,11 +20,11 @@ from homeassistant.components.ring.coordinator import RingConfigEntry, RingEvent
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_HARDWARE_ID
-from .device_mocks import FRONT_DOOR_DEVICE_ID
+from .device_mocks import FRONT_DEVICE_ID, FRONT_DOOR_DEVICE_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -285,11 +285,13 @@ async def test_error_on_device_update(
 @pytest.mark.parametrize(
     ("domain", "old_unique_id", "new_unique_id"),
     [
-        pytest.param(LIGHT_DOMAIN, 123456, "123456", id="Light integer"),
+        pytest.param(
+            LIGHT_DOMAIN, FRONT_DEVICE_ID, str(FRONT_DEVICE_ID), id="Light integer"
+        ),
         pytest.param(
             CAMERA_DOMAIN,
-            654321,
-            "654321-last_recording",
+            FRONT_DOOR_DEVICE_ID,
+            f"{FRONT_DOOR_DEVICE_ID}-last_recording",
             id="Camera integer",
         ),
     ],
@@ -340,7 +342,7 @@ async def test_update_unique_id_existing(
     mock_ring_client,
 ) -> None:
     """Test unique_id update of integration."""
-    old_unique_id = 123456
+    old_unique_id = FRONT_DOOR_DEVICE_ID
     entry = MockConfigEntry(
         title="Ring",
         domain=DOMAIN,
@@ -370,15 +372,13 @@ async def test_update_unique_id_existing(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_not_migrated = entity_registry.async_get(entity.entity_id)
     entity_existing = entity_registry.async_get(entity_existing.entity_id)
-    assert entity_not_migrated
+
     assert entity_existing
-    assert entity_not_migrated.unique_id == old_unique_id
+
     assert (
         f"Cannot migrate to unique_id '{old_unique_id}', "
-        f"already exists for '{entity_existing.entity_id}', "
-        "You may have to delete unavailable ring entities"
+        f"already exists for '{entity_existing.entity_id}'"
     ) in caplog.text
     assert entry.minor_version == CONF_CONFIG_ENTRY_MINOR_VERSION
 
@@ -390,7 +390,7 @@ async def test_update_unique_id_camera_update(
     mock_ring_client,
 ) -> None:
     """Test camera unique id with no suffix is updated."""
-    correct_unique_id = "123456-last_recording"
+    correct_unique_id = f"{FRONT_DOOR_DEVICE_ID}-last_recording"
     entry = MockConfigEntry(
         title="Ring",
         domain=DOMAIN,
@@ -406,10 +406,10 @@ async def test_update_unique_id_camera_update(
     entity = entity_registry.async_get_or_create(
         domain=CAMERA_DOMAIN,
         platform=DOMAIN,
-        unique_id="123456",
+        unique_id=str(FRONT_DOOR_DEVICE_ID),
         config_entry=entry,
     )
-    assert entity.unique_id == "123456"
+    assert entity.unique_id == str(FRONT_DOOR_DEVICE_ID)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -535,3 +535,48 @@ async def test_migrate_create_device_id(
     assert entry.data[CONF_DEVICE_ID] == MOCK_HARDWARE_ID
 
     assert "Migration to version 1.2 complete" in caplog.text
+
+
+async def test_dynamic_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ring_client: Mock,
+    mock_ring_devices: Mock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the in-home chime switch added/removed during setup entry."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    front_door_mock = mock_ring_devices.get_device(FRONT_DOOR_DEVICE_ID)
+    device_identifier = front_door_mock.device_id  # mac
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, device_identifier)}
+    )
+    assert device_entry
+
+    mock_ring_devices._hide_device(FRONT_DOOR_DEVICE_ID)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, device_identifier)}
+    )
+    assert not device_entry
+
+    mock_ring_devices._unhide_device(FRONT_DOOR_DEVICE_ID)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, device_identifier)}
+    )
+    assert device_entry
