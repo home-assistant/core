@@ -388,7 +388,7 @@ async def test_zeroconf_flow_update_ip_hostname(
     hass: HomeAssistant,
     mocked_config_entry: MockConfigEntry,
 ) -> None:
-    """Test when zeroconf gets the same device twice."""
+    """Test when zeroconf gets the same device with a new IP and hostname."""
 
     with patch("homeassistant.components.vegehub.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, mocked_config_entry)
