@@ -16,7 +16,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.ssl import client_context
+from homeassistant.util.ssl import get_default_context
 
 from .const import (
     DATA_COORDINATOR,
