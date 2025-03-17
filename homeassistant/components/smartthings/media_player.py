@@ -82,6 +82,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
                 Capability.MEDIA_PLAYBACK,
                 Capability.MEDIA_PLAYBACK_REPEAT,
                 Capability.MEDIA_PLAYBACK_SHUFFLE,
+                Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE,
                 Capability.SWITCH,
             },
         )
@@ -107,6 +108,8 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         if self.supports_capability(Capability.SWITCH):
             flags |= (MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF)
         if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
+            flags |= MediaPlayerEntityFeature.SELECT_SOURCE
+        if self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
             flags |= MediaPlayerEntityFeature.SELECT_SOURCE
         if self.supports_capability(Capability.MEDIA_PLAYBACK_SHUFFLE):
             flags |= MediaPlayerEntityFeature.SHUFFLE_SET
@@ -195,11 +198,18 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
 
     async def async_select_source(self, source: str) -> None:
         """Select source."""
-        await self.execute_device_command(
-            Capability.MEDIA_INPUT_SOURCE,
-            Command.SET_INPUT_SOURCE,
-            argument=source,
-        )
+        if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
+            await self.execute_device_command(
+                Capability.MEDIA_INPUT_SOURCE,
+                Command.SET_INPUT_SOURCE,
+                argument=source,
+            )
+        elif self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
+            await self.execute_device_command(
+                Capability.MEDIA_INPUT_SOURCE,
+                Command.SET_INPUT_SOURCE,
+                argument=source,
+            )
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Set shuffle mode."""
@@ -238,7 +248,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     def state(self) -> MediaPlayerState | None:
         """State of the media player."""
         if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on":
-            if self.source is not None and self.source in CONTROLLABLE_SOURCES: # todo ???
+            if self.source is not None and self.source in CONTROLLABLE_SOURCES:  # todo ???
                 if self.get_attribute_value(Capability.MEDIA_PLAYBACK, Attribute.PLAYBACK_STATUS) in VALUE_TO_STATE:
                     return VALUE_TO_STATE[
                         self.get_attribute_value(Capability.MEDIA_PLAYBACK, Attribute.PLAYBACK_STATUS)]
@@ -270,6 +280,10 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             return self.get_attribute_value(
                 Capability.MEDIA_INPUT_SOURCE, Attribute.INPUT_SOURCE
             )
+        if self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
+            return self.get_attribute_value(
+                Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE, Attribute.INPUT_SOURCE
+            )
         return None
 
     @property
@@ -278,6 +292,10 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
             return self.get_attribute_value(
                 Capability.MEDIA_INPUT_SOURCE, Attribute.SUPPORTED_INPUT_SOURCES
+            )
+        if self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
+            return self.get_attribute_value(
+                Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE, Attribute.SUPPORTED_INPUT_SOURCES
             )
         return None
 
