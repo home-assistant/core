@@ -14,3 +14,19 @@ generate_content:
       selector:
         text:
           multiple: true
+generate_image:
+  fields:
+    prompt:
+      required: true
+      selector:
+        text:
+          multiline: true
+    filenames:
+      required: false
+      selector:
+        text:
+          multiple: true
+    output_filename:
+      required: true
+      selector:
+        text:

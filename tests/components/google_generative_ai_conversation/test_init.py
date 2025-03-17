@@ -1,6 +1,6 @@
 """Tests for the Google Generative AI Conversation integration."""
 
-from unittest.mock import AsyncMock, Mock, mock_open, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 from requests.exceptions import Timeout
@@ -13,6 +13,55 @@ from homeassistant.exceptions import HomeAssistantError
 from . import CLIENT_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
 
 from tests.common import MockConfigEntry
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_image(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
+    """Test generate content service."""
+    stubbed_generated_content = "Here is a picture"
+
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch(
+            "google.genai.models.AsyncModels.generate_content",
+            return_value=Mock(
+                text=stubbed_generated_content,
+                prompt_feedback=None,
+                candidates=[
+                    Mock(
+                        content=Mock(
+                            parts=[
+                                Mock(
+                                    inline_data=Mock(
+                                        mime_type="image/jpeg", data=b"image bytes"
+                                    )
+                                )
+                            ]
+                        )
+                    )
+                ],
+            ),
+        ) as mock_generate,
+        patch(
+            "aiofiles.open",
+            Mock(return_value=AsyncMock(write=AsyncMock())),
+        ) as mock_open,
+    ):
+        response = await hass.services.async_call(
+            "google_generative_ai_conversation",
+            "generate_image",
+            {"prompt": "Draw a picture of a cat", "output_filename": "cat.jpg"},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert response == {
+        "text": stubbed_generated_content,
+    }
+    # Record mock call to async context manager protocol
+    # pylint: disable-next=unnecessary-dunder-call
+    assert call.__aenter__().write(b"image bytes") in mock_open.return_value.mock_calls
+    assert [tuple(mock_call) for mock_call in mock_generate.mock_calls] == snapshot
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -71,7 +120,6 @@ async def test_generate_content_service_with_image(
         ),
         patch("pathlib.Path.exists", return_value=True),
         patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch("builtins.open", mock_open(read_data="this is an image")),
         patch("mimetypes.guess_type", return_value=["image/jpeg"]),
     ):
         response = await hass.services.async_call(
