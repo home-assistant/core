@@ -27,7 +27,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Zimi Light platform."""
 
-    api: ControlPoint = config_entry.runtime_data
+    api = config_entry.runtime_data
 
     lights: list[ZimiLight | ZimiDimmer] = [
         ZimiLight(device, api)
