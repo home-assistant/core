@@ -744,7 +744,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.39.5
+dbus-fast==2.39.6
 
 # homeassistant.components.debugpy
 debugpy==1.8.13
@@ -1194,7 +1194,7 @@ ibmiotf==0.3.4
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==8.3.0
+ical==9.0.1
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1502,7 +1502,7 @@ nextdns==4.0.0
 nhc==0.4.10
 
 # homeassistant.components.nibe_heatpump
-nibe==2.14.0
+nibe==2.17.0
 
 # homeassistant.components.nice_go
 nice-go==1.0.1
