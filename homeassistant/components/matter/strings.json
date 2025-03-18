@@ -228,13 +228,13 @@
         "name": "Spin speed"
       },
       "local_config_disabled": {
-        "name": "Local Configuration"
+        "name": "Local configuration"
       },
       "enable_one_touch_locking": {
-        "name": "One-Touch Locking"
+        "name": "One-touch locking"
       },
       "door_lock_sound_volume": {
-        "name": "Sound Volume"
+        "name": "Sound volume"
       }
     },
     "sensor": {
@@ -295,13 +295,13 @@
         "name": "Current phase"
       },
       "min_pin_code_length": {
-        "name": "Min PIN Code Length"
+        "name": "Min PIN code length"
       },
       "max_pin_code_length": {
-        "name": "Max PIN Code Length"
+        "name": "Max PIN code length"
       },
       "window_covering_target_position": {
-        "name": "Target Open-to Position"
+        "name": "Target open-to position"
       }
     },
     "switch": {
