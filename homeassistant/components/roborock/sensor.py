@@ -36,7 +36,11 @@ from .coordinator import (
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
 )
-from .entity import RoborockCoordinatedEntityA01, RoborockCoordinatedEntityV1
+from .entity import (
+    RoborockCoordinatedEntityA01,
+    RoborockCoordinatedEntityV1,
+    RoborockEntity,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -306,7 +310,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Roborock vacuum sensors."""
     coordinators = config_entry.runtime_data
-    async_add_entities(
+    entities: list[RoborockEntity] = [
         RoborockSensorEntity(
             coordinator,
             description,
@@ -314,11 +318,9 @@ async def async_setup_entry(
         for coordinator in coordinators.v1
         for description in SENSOR_DESCRIPTIONS
         if description.value_fn(coordinator.roborock_device_info.props) is not None
-    )
-    async_add_entities(
-        RoborockCurrentRoom(coordinator) for coordinator in coordinators.v1
-    )
-    async_add_entities(
+    ]
+    entities.extend(RoborockCurrentRoom(coordinator) for coordinator in coordinators.v1)
+    entities.extend(
         RoborockSensorEntityA01(
             coordinator,
             description,
@@ -327,6 +329,7 @@ async def async_setup_entry(
         for description in A01_SENSOR_DESCRIPTIONS
         if description.data_protocol in coordinator.data
     )
+    async_add_entities(entities)
 
 
 class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
@@ -387,15 +390,8 @@ class RoborockCurrentRoom(RoborockCoordinatedEntityV1, SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the value reported by the sensor."""
-        if (
-            self.coordinator.current_map is not None
-            and (
-                map_info := self.coordinator.maps[self.coordinator.current_map]
-            ).map_data
-            is not None
-            and map_info.map_data.vacuum_room is not None
-        ):
-            return map_info.rooms.get(map_info.map_data.vacuum_room)
+        if self.coordinator.current_map is not None:
+            return self.coordinator.maps[self.coordinator.current_map].current_room
         return None
 
 

@@ -53,7 +53,7 @@ class RoborockMapInfo:
     image: bytes | None
     last_updated: datetime
     map_data: MapData | None
-    
+
     @property
     def current_room(self) -> str | None:
         """Get the currently active room for this map if any."""
