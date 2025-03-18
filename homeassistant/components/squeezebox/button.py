@@ -164,7 +164,7 @@ async def async_setup_entry(
 
 
 class SqueezeboxButtonEntity(
-    CoordinatorEntity[SqueezeBoxPlayerUpdateCoordinator], ButtonEntity, SqueezeboxEntity
+    SqueezeboxEntity, ButtonEntity
 ):
     """Representation of Buttons for Squeezebox entities."""
 
