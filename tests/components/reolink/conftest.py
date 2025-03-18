@@ -132,6 +132,8 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.doorbell_led_list.return_value = ["stayoff", "auto"]
         host_mock.auto_track_method.return_value = 3
         host_mock.daynight_state.return_value = "Black&White"
+        host_mock.hub_alarm_tone_id.return_value = 1
+        host_mock.hub_visitor_tone_id.return_value = 1
 
         # Baichuan
         host_mock.baichuan = create_autospec(Baichuan)
