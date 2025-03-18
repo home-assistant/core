@@ -17,6 +17,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockEntity, RoborockEntityV1
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class RoborockButtonDescription(ButtonEntityDescription):

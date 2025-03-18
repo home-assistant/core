@@ -20,6 +20,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class RoborockBinarySensorDescription(BinarySensorEntityDescription):

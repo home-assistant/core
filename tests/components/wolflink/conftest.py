@@ -67,22 +67,25 @@ def mock_wolflink() -> Generator[MagicMock]:
         wolflink = wolflink_mock.return_value
 
         wolflink.fetch_parameters.return_value = [
-            EnergyParameter(6002800000, "Energy Parameter", "Heating", 6005200000),
+            EnergyParameter(
+                6002800000, "Energy Parameter", "Heating", 6005200000, 2000
+            ),
             ListItemParameter(
                 8002800000,
                 "List Item Parameter",
                 "Heating",
                 [ListItem("0", "Aus"), ListItem("1", "Ein")],
                 8005200000,
+                3001,
             ),
-            PowerParameter(5002800000, "Power Parameter", "Heating", 5005200000),
-            Pressure(4002800000, "Pressure Parameter", "Heating", 4005200000),
-            Temperature(3002800000, "Temperature Parameter", "Solar", 3005200000),
+            PowerParameter(5002800000, "Power Parameter", "Heating", 5005200000, 1000),
+            Pressure(4002800000, "Pressure Parameter", "Heating", 4005200000, 1000),
+            Temperature(3002800000, "Temperature Parameter", "Solar", 3005200000, 1000),
             PercentageParameter(
-                2002800000, "Percentage Parameter", "Solar", 2005200000
+                2002800000, "Percentage Parameter", "Solar", 2005200000, 1000
             ),
-            HoursParameter(7002800000, "Hours Parameter", "Heating", 7005200000),
-            SimpleParameter(1002800000, "Simple Parameter", "DHW", 1005200000),
+            HoursParameter(7002800000, "Hours Parameter", "Heating", 7005200000, 1000),
+            SimpleParameter(1002800000, "Simple Parameter", "DHW", 1005200000, 1000),
         ]
 
         wolflink.fetch_value.return_value = [

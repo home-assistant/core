@@ -71,3 +71,16 @@ async def test_update_failed(
     respx.get(CALENDER_URL).mock(side_effect=side_effect)
     await setup_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@respx.mock
+async def test_calendar_parse_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test CalendarParseError using respx."""
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(status_code=200, text="not a calendar")
+    )
+    await setup_integration(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
