@@ -47,6 +47,8 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Get extra state attributes."""
         attrs: dict[str, Any] = {}
+        # TODO: aiopurpleair crashes with null coordinates, fix required else this code cannot get test coverage # pylint: disable=fixme
+        # See: https://github.com/bachya/aiopurpleair/issues/573
         if self.sensor_data.latitude is None or self.sensor_data.longitude is None:
             return attrs
 
@@ -59,5 +61,4 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
     @property
     def sensor_data(self) -> SensorModel:
         """Get SensorModel object."""
-        assert self.coordinator.data is not None
         return self.coordinator.data.data[self._sensor_index]

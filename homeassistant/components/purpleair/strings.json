@@ -25,7 +25,8 @@
     },
     "error": {
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -75,7 +76,8 @@
         "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
         "no_sensors_found": "No sensors found in search area",
         "no_sensor_found": "Sensors not found",
-        "unknown": "[%key:common::config_flow::error::unknown%]"
+        "unknown": "[%key:common::config_flow::error::unknown%]",
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
       },
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

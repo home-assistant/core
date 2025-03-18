@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Final
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_SHOW_ON_MAP
 
-CONF_SETTINGS: Final[str] = "settings"
+from .const import CONF_SETTINGS
 
 
 class PurpleAirOptionsFlow(OptionsFlow):

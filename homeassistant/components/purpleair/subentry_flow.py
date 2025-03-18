@@ -42,25 +42,28 @@ from homeassistant.helpers.selector import (
 from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
+    CONF_ADD_MAP_LOCATION,
+    CONF_ADD_OPTIONS,
+    CONF_ADD_SENSOR_INDEX,
+    CONF_ALREADY_CONFIGURED,
     CONF_INVALID_API_KEY,
+    CONF_NO_SENSOR_FOUND,
+    CONF_NO_SENSORS_FOUND,
+    CONF_SELECT_SENSOR,
     CONF_SENSOR,
     CONF_SENSOR_INDEX,
     CONF_SENSOR_READ_KEY,
     CONF_UNKNOWN,
+    DOMAIN,
     LOGGER,
-    SENSOR_FIELDS_TO_RETRIEVE,
+    SENSOR_FIELDS_ALL,
 )
 
 DEFAULT_RADIUS: Final[int] = 2000
 LIMIT_RESULTS: Final[int] = 25
+SENSOR_FIELDS_NEARBY: Final[list[str]] = ["name", "longitude", "latitude"]
 
-CONF_ADD_MAP_LOCATION: Final[str] = "add_map_location"
-CONF_ADD_OPTIONS: Final[str] = "add_options"
-CONF_ADD_SENSOR_INDEX: Final[str] = "add_sensor_index"
 CONF_NEARBY_SENSOR_LIST: Final[str] = "nearby_sensor_list"
-CONF_NO_SENSOR_FOUND: Final[str] = "no_sensor_found"
-CONF_NO_SENSORS_FOUND: Final[str] = "no_sensors_found"
-CONF_SELECT_SENSOR: Final[str] = "select_sensor"
 
 
 class PurpleAirSubentryFlow(ConfigSubentryFlow):
@@ -92,7 +95,7 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
             nearby_sensor_list: list[
                 NearbySensorResult
             ] = await api.sensors.async_get_nearby_sensors(
-                SENSOR_FIELDS_TO_RETRIEVE,
+                SENSOR_FIELDS_NEARBY,
                 self._flow_data[CONF_LATITUDE],
                 self._flow_data[CONF_LONGITUDE],
                 DistanceConverter.convert(
@@ -102,6 +105,7 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
                 ),
                 limit_results=LIMIT_RESULTS,
             )
+            LOGGER.debug("NearbySensorResult: %s", nearby_sensor_list)
         except InvalidApiKeyError as err:
             LOGGER.exception("InvalidApiKeyError exception: %s", err)
             self._errors[CONF_BASE] = CONF_INVALID_API_KEY
@@ -124,7 +128,6 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
             self._errors[CONF_LOCATION] = CONF_NO_SENSORS_FOUND
             return False
 
-        LOGGER.debug("NearbySensorResult: %s", nearby_sensor_list)
         self._flow_data[CONF_NEARBY_SENSOR_LIST] = nearby_sensor_list
         return True
 
@@ -146,10 +149,11 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
         )
         try:
             sensors_response: GetSensorsResponse = await api.sensors.async_get_sensors(
-                SENSOR_FIELDS_TO_RETRIEVE,
+                SENSOR_FIELDS_ALL,
                 sensor_indices=index_list,
                 read_keys=read_key_list,
             )
+            LOGGER.debug("GetSensorsResponse: %s", sensors_response)
         except InvalidApiKeyError as err:
             LOGGER.exception("InvalidApiKeyError exception: %s", err)
             self._errors[CONF_BASE] = CONF_INVALID_API_KEY
@@ -178,7 +182,16 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
             self._errors[CONF_SENSOR_INDEX] = CONF_NO_SENSOR_FOUND
             return False
 
-        LOGGER.debug("SensorModel: %s", sensors_response.data[sensor_index])
+        # TODO: _raise_if_subentry_unique_id_exists() only tests uniqueness for this config entry, but sensors need to be unique globally. # pylint: disable=fixme
+        global_index_list: list[int] = [
+            int(subentry.data[CONF_SENSOR_INDEX])
+            for config_entry in self.hass.config_entries.async_loaded_entries(DOMAIN)
+            for subentry in config_entry.subentries.values()
+        ]
+        if sensor_index in global_index_list:
+            self._errors[CONF_SENSOR_INDEX] = CONF_ALREADY_CONFIGURED
+            return False
+
         self._flow_data[CONF_SENSOR] = sensors_response.data[sensor_index]
         return True
 
@@ -267,7 +280,7 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
                         options=[
                             SelectOptionDict(
                                 value=str(result.sensor.sensor_index),
-                                label=f"{result.sensor.sensor_index} : {result.sensor.name}",
+                                label=self._get_title(result.sensor),
                             )
                             for result in nearby_sensor_list
                         ],
@@ -289,21 +302,17 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
                 data_schema=self.select_sensor_schema,
             )
 
-        nearby_sensor_list: list[NearbySensorResult] = self._flow_data[
-            CONF_NEARBY_SENSOR_LIST
-        ]
-        sensor = next(
-            (
-                result.sensor
-                for result in nearby_sensor_list
-                if result.sensor.sensor_index == int(user_input[CONF_SENSOR_INDEX])
-            ),
-            None,
-        )
-        assert sensor is not None
+        self._flow_data[CONF_SENSOR_INDEX] = int(user_input[CONF_SENSOR_INDEX])
+        self._flow_data[CONF_SENSOR_READ_KEY] = None
+        if not await self._async_validate_sensor():
+            return self.async_show_form(
+                step_id=CONF_SELECT_SENSOR,
+                data_schema=self.select_sensor_schema,
+                errors=self._errors,
+            )
 
-        # TODO: Test for global uniqueness of sensor index before creating the subentry # pylint: disable=fixme
-        # _raise_if_subentry_unique_id_exists() -> already_configured
+        sensor: SensorModel = self._flow_data[CONF_SENSOR]
+        assert sensor is not None
 
         return self.async_create_entry(
             title=self._get_title(sensor),

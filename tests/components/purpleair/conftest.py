@@ -1,6 +1,7 @@
-"""Define fixtures for PurpleAir tests."""
+"""Fixtures for PurpleAir tests."""
 
 from collections.abc import Generator
+from types import MappingProxyType
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -9,13 +10,14 @@ from aiopurpleair.models.sensors import GetSensorsResponse
 import pytest
 
 from homeassistant.components.purpleair.const import (
+    CONF_SENSOR,
     CONF_SENSOR_INDEX,
-    CONF_SENSOR_LIST,
     CONF_SENSOR_READ_KEY,
     DOMAIN,
     SCHEMA_VERSION,
     TITLE,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_KEY, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 
@@ -45,8 +47,8 @@ def api_fixture(get_sensors_response: GetSensorsResponse) -> Mock:
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(
     hass: HomeAssistant,
-    config_entry_data: dict[str, Any],
-    config_entry_options: dict[str, Any],
+    config_entry_data,
+    config_entry_options,
 ) -> MockConfigEntry:
     """Define a config entry fixture."""
     entry = MockConfigEntry(
@@ -69,15 +71,37 @@ def config_entry_data_fixture() -> dict[str, Any]:
     }
 
 
+@pytest.fixture(name="config_subentry_data")
+def config_subentry_data_fixture() -> dict[str, Any]:
+    """Define a config subentry data fixture."""
+    return {
+        CONF_SENSOR_INDEX: TEST_SENSOR_INDEX1,
+        CONF_SENSOR_READ_KEY: None,
+    }
+
+
 @pytest.fixture(name="config_entry_options")
 def config_entry_options_fixture() -> dict[str, Any]:
     """Define a config entry options fixture."""
     return {
-        CONF_SENSOR_LIST: [
-            {CONF_SENSOR_INDEX: TEST_SENSOR_INDEX1, CONF_SENSOR_READ_KEY: None},
-        ],
-        CONF_SHOW_ON_MAP: False,
+        CONF_SHOW_ON_MAP: True,
     }
+
+
+@pytest.fixture(name="config_subentry")
+def config_subentry_fixture(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    config_subentry_data: dict[str, Any],
+) -> bool:
+    """Define a config subentry fixture."""
+    subentry = ConfigSubentry(
+        data=MappingProxyType(config_subentry_data),
+        subentry_type=CONF_SENSOR,
+        title=f"TEST_SENSOR_INDEX1 ({TEST_SENSOR_INDEX1})",
+        unique_id=str(TEST_SENSOR_INDEX1),
+    )
+    return hass.config_entries.async_add_subentry(config_entry, subentry)
 
 
 @pytest.fixture(name="get_sensors_response", scope="package")
@@ -93,6 +117,8 @@ def mock_aiopurpleair_fixture(api: Mock) -> Generator[Mock]:
     """Define a fixture to patch aiopurpleair."""
     with (
         patch("homeassistant.components.purpleair.coordinator.API", return_value=api),
+        patch("homeassistant.components.purpleair.config_flow.API", return_value=api),
+        patch("homeassistant.components.purpleair.subentry_flow.API", return_value=api),
     ):
         yield api
 
