@@ -83,7 +83,7 @@ async def test_climate(
     assert entity.attributes[ATTR_CURRENT_TEMPERATURE] is None
     assert entity.attributes[ATTR_PRESET_MODE] == "MANUEEL"
     assert entity.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
-    assert entity.state == HVACMode.OFF
+    assert entity.state == HVACMode.HEAT
 
     # After a delay, a full state request should've been sent
     _wait_and_assert_state_request(hass, mqtt_mock)
@@ -101,7 +101,7 @@ async def test_climate(
     assert entity.attributes[ATTR_CURRENT_TEMPERATURE] == _CURRENT_TEMPERATURE
     assert entity.attributes[ATTR_PRESET_MODE] == "MANUEEL"
     assert entity.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
-    assert entity.state == HVACMode.OFF
+    assert entity.state == HVACMode.HEAT
 
     # Set preset
     mqtt_mock.reset_mock()
@@ -130,7 +130,7 @@ async def test_climate(
     assert entity.attributes[ATTR_CURRENT_TEMPERATURE] == _CURRENT_TEMPERATURE
     assert entity.attributes[ATTR_PRESET_MODE] == _REGIME
     assert entity.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
-    assert entity.state == HVACMode.OFF
+    assert entity.state == HVACMode.HEAT
 
     # After a delay, a full state request should've been sent
     _wait_and_assert_state_request(hass, mqtt_mock)
