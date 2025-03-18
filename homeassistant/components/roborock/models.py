@@ -1,6 +1,7 @@
 """Roborock Models."""
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from roborock.containers import HomeDataDevice, HomeDataProduct, NetworkInfo
@@ -48,3 +49,5 @@ class RoborockMapInfo:
     flag: int
     name: str
     rooms: dict[int, str]
+    image: bytes | None
+    last_updated: datetime
