@@ -177,10 +177,7 @@ def get_announce_timeout(extra: dict) -> int | None:
     return announce_timeout
 
 
-class SqueezeBoxMediaPlayerEntity(
-    SqueezeboxEntity,
-    MediaPlayerEntity,
-):
+class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     """Representation of the media player features of a SqueezeBox device.
 
     Wraps a pysqueezebox.Player() object.
