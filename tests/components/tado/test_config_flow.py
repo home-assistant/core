@@ -4,9 +4,11 @@ from http import HTTPStatus
 from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import PyTado
 import pytest
 import requests
+import requests_mock
 
 from homeassistant import config_entries
 from homeassistant.components.tado.config_flow import NoHomes
@@ -23,7 +25,7 @@ from homeassistant.helpers.service_info.zeroconf import (
     ZeroconfServiceInfo,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 def _get_mock_tado_api(get_me=None) -> MagicMock:
@@ -125,40 +127,54 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["data"] == {CONF_FALLBACK: CONST_OVERLAY_TADO_DEFAULT}
 
 
-async def test_create_entry(hass: HomeAssistant) -> None:
+async def test_create_entry(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test we can setup though the user path."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-
-    mock_tado_api = _get_mock_tado_api(get_me={"homes": [{"id": 1, "name": "myhome"}]})
-
-    with (
-        patch(
-            "homeassistant.components.tado.config_flow.Tado",
-            return_value=mock_tado_api,
-        ),
-        patch(
-            "homeassistant.components.tado.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
+    with requests_mock.mock() as m:
+        m.post(
+            "https://login.tado.com/oauth2/device_authorize",
+            text=load_fixture("tado/device_authorize.json"),
         )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "auth_prepare"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+        assert result["step_id"] == "reauth_confirm"
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+        m.post(
+            "https://login.tado.com/oauth2/token", text=load_fixture("tado/token.json")
+        )
+        m.get("https://my.tado.com/api/v2/me", text=load_fixture("tado/me.json"))
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/", text=load_fixture("tado/home.json")
+        )
+
+        freezer.tick(10)
         await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "myhome"
-    assert result["data"] == {
-        "username": "test-username",
-        "password": "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+        with (
+            patch(
+                "homeassistant.components.tado.async_setup_entry",
+                return_value=True,
+            ) as mock_setup_entry,
+        ):
+            result = await hass.config_entries.flow.async_configure(result["flow_id"])
+            await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "home name"
+        assert result["data"] == {"refresh_token": "refresh"}
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
