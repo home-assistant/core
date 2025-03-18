@@ -1,15 +1,15 @@
 """Sensor configuration for VegeHub integration."""
 
+from vegehub import VegeHub
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, UnitOfElectricPotential
+from homeassistant.const import UnitOfElectricPotential
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, MODEL
 from .coordinator import VegeHubCoordinator
+from .entity import VegeHubEntity
 
 
 async def async_setup_entry(
@@ -19,21 +19,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up Vegetronix sensors from a config entry."""
     sensors: list[VegeHubSensor] = []
-    hub = config_entry.runtime_data.hub
+    vegehub = config_entry.runtime_data.vegehub
 
     # We add up the number of sensors, plus the number of actuators, then add one
     # for battery reading, and one because the array is 1 based instead of 0 based.
-    for i in range(hub.num_sensors + hub.num_actuators + 1):  # Add 1 for battery
+    for i in range(
+        vegehub.num_sensors + vegehub.num_actuators + 1
+    ):  # Add 1 for battery
         sensor = VegeHubSensor(
             index=i + 1,
             coordinator=config_entry.runtime_data.coordinator,
+            vegehub=vegehub,
         )
         sensors.append(sensor)
 
     async_add_entities(sensors)
 
 
-class VegeHubSensor(CoordinatorEntity[VegeHubCoordinator], SensorEntity):
+class VegeHubSensor(VegeHubEntity, SensorEntity):
     """Class for VegeHub Analog Sensors."""
 
     _attr_has_entity_name = True
@@ -47,25 +50,15 @@ class VegeHubSensor(CoordinatorEntity[VegeHubCoordinator], SensorEntity):
         self,
         index: int,
         coordinator: VegeHubCoordinator,
+        vegehub: VegeHub,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-
-        config_entry = coordinator.config_entry
-
+        super().__init__(coordinator, vegehub)
         self._attr_translation_placeholders = {"index": str(index)}
         self._attr_available = False
-        self._mac_address = config_entry.data[CONF_MAC]
         self._attr_unique_id = (
             f"{self._mac_address}_{index}".lower()
-        )  # Generate a unique_id using mac and slot
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._mac_address)},
-            name=config_entry.data[CONF_HOST],
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            via_device=(DOMAIN, self._mac_address),
-        )
+        )  # Set unique ID for pulling data from the coordinator
 
     @callback
     def _handle_coordinator_update(self) -> None:

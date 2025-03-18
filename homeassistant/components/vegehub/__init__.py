@@ -3,7 +3,6 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from http import HTTPStatus
-import logging
 from typing import Any
 
 from aiohttp.hdrs import METH_POST
@@ -17,20 +16,15 @@ from homeassistant.components.webhook import (
 )
 from homeassistant.const import (
     CONF_DEVICE,
-    CONF_HOST,
     CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_WEBHOOK_ID,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from .const import DOMAIN, MANUFACTURER, MODEL, NAME, PLATFORMS
+from .const import DOMAIN, NAME, PLATFORMS
 from .coordinator import VegeHubConfigEntry, VegeHubCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -38,7 +32,7 @@ class VegeHubData:
     """Define a data class."""
 
     coordinator: VegeHubCoordinator
-    hub: VegeHub
+    vegehub: VegeHub
 
 
 # The integration is only set up through the UI (config flow)
@@ -46,12 +40,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
     """Set up VegeHub from a config entry."""
 
     # Register the device in the device registry
-    device_registry = dr.async_get(hass)
     device_mac = entry.data[CONF_MAC]
 
     assert entry.unique_id
 
-    hub = VegeHub(
+    vegehub = VegeHub(
         entry.data[CONF_IP_ADDRESS],
         device_mac,
         entry.unique_id,
@@ -61,19 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
     # Initialize runtime data
     entry.runtime_data = VegeHubData(
         coordinator=VegeHubCoordinator(hass=hass, config_entry=entry),
-        hub=hub,
-    )
-
-    # Register the device
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={(CONNECTION_NETWORK_MAC, device_mac)},
-        identifiers={(DOMAIN, device_mac)},
-        manufacturer=MANUFACTURER,
-        model=MODEL,
-        name=entry.data[CONF_HOST],
-        sw_version=hub.sw_version,
-        configuration_url=hub.url,
+        vegehub=vegehub,
     )
 
     async def unregister_webhook(_: Any) -> None:
