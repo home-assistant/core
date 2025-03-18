@@ -16,8 +16,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
     VehicleOffline,
 )
-from tesla_fleet_api.tesla.energysite import EnergySite
-from tesla_fleet_api.tesla.vehicle.fleet import VehicleFleet
+from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed

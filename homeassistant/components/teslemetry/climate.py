@@ -6,7 +6,7 @@ from itertools import chain
 from typing import Any, cast
 
 from tesla_fleet_api.const import CabinOverheatProtectionTemp, Scope
-from tesla_fleet_api.vehicle import VehicleSpecific
+from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -90,7 +90,7 @@ async def async_setup_entry(
 class TeslemetryClimateEntity(TeslemetryRootEntity, ClimateEntity):
     """Vehicle Climate Control."""
 
-    api: VehicleSpecific
+    api: Vehicle
 
     _attr_precision = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -372,7 +372,7 @@ COP_LEVELS = {
 class TeslemetryCabinOverheatProtectionEntity(TeslemetryRootEntity, ClimateEntity):
     """Vehicle Cabin Overheat Protection."""
 
-    api: VehicleSpecific
+    api: Vehicle
 
     _attr_precision = PRECISION_WHOLE
     _attr_target_temperature_step = 5
