@@ -31,15 +31,7 @@ HARDWARE_MODELS_WITH_SCREEN = [
 ]
 
 HARDWARE_MODELS_WITH_TONE = [
-    "Squeezebox Boom",
-    "Squeezebox Radio",
-    "Transporter",
-    "Squeezebox Touch",
-    "Squeezebox",
-    "SliMP3",
-    "Squeezebox 1",
-    "Squeezebox 2",
-    "Squeezebox 3",
+    *HARDWARE_MODELS_WITH_SCREEN,
     "Squeezebox Receiver",
 ]
 
