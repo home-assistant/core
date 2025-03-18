@@ -91,4 +91,12 @@ STATES = {
     "Cooling": "cooling",
     "TPW": "tpw",
     "Warmwasservorrang": "warmwasservorrang",
+    "Solarladung aktiv": "solarladung_aktiv",
+    "Keine Aktivität": "keine_aktivitat",
+    "Solarkreispumpentaktsperre aktiv": "solarkreispumpentaktsperre_aktiv",
+    "Röhrenkollektorfunktion aktiv": "rohrenkollektorfunktion_aktiv",
+    "Frostschutzfunktion aktiv": "frostschutzfunktion_aktiv",
+    "Kollektorkühlfunktion aktiv": "kollektorkuhlfunktion_aktiv",
+    "Rückkühlfunktion aktiv": "ruckkuhlfunktion_aktiv",
+    "Unterdrückung FC 65": "unterdruckung_fc_65",
 }
