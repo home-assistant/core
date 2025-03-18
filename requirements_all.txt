@@ -1783,7 +1783,7 @@ pyEmby==1.10
 pyHik==0.3.2
 
 # homeassistant.components.homee
-pyHomee==1.2.7
+pyHomee==1.2.8
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
