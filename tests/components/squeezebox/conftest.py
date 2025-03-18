@@ -33,6 +33,9 @@ from homeassistant.helpers.device_registry import format_mac
 # from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
+CONF_VOLUME_STEP = "volume_step"
+TEST_VOLUME_STEP = 10
+
 TEST_HOST = "1.2.3.4"
 TEST_PORT = "9000"
 TEST_USE_HTTPS = False
@@ -109,9 +112,17 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_PORT: TEST_PORT,
             const.CONF_HTTPS: TEST_USE_HTTPS,
         },
+        options={
+            CONF_VOLUME_STEP: TEST_VOLUME_STEP,
+        },
     )
     config_entry.add_to_hass(hass)
     return config_entry
+
+
+async def mock_async_play_announcement(media_id: str) -> bool:
+    """Mock the announcement."""
+    return True
 
 
 async def mock_async_browse(
@@ -121,6 +132,7 @@ async def mock_async_browse(
     child_types = {
         "favorites": "favorites",
         "new music": "album",
+        "album artists": "artists",
         "albums": "album",
         "album": "track",
         "genres": "genre",
@@ -131,6 +143,9 @@ async def mock_async_browse(
         "title": "title",
         "playlists": "playlist",
         "playlist": "title",
+        "apps": "app",
+        "radios": "app",
+        "app-fakecommand": "track",
     }
     fake_items = [
         {
@@ -141,15 +156,19 @@ async def mock_async_browse(
             "item_type": child_types[media_type],
             "artwork_track_id": "b35bb9e9",
             "url": "file:///var/lib/squeezeboxserver/music/track_1.mp3",
+            "cmd": "fakecommand",
+            "icon": "plugins/Qobuz/html/images/qobuz.png",
         },
         {
             "title": "Fake Item 2",
             "id": FAKE_VALID_ITEM_ID + "_2",
             "hasitems": media_type == "favorites",
-            "isaudio": True,
+            "isaudio": False,
             "item_type": child_types[media_type],
             "image_url": "http://lms.internal:9000/html/images/favorites.png",
             "url": "file:///var/lib/squeezeboxserver/music/track_2.mp3",
+            "cmd": "fakecommand",
+            "icon": "plugins/Qobuz/html/images/qobuz.png",
         },
         {
             "title": "Fake Item 3",
@@ -158,6 +177,19 @@ async def mock_async_browse(
             "isaudio": True,
             "album_id": FAKE_VALID_ITEM_ID if media_type == "favorites" else None,
             "url": "file:///var/lib/squeezeboxserver/music/track_3.mp3",
+            "cmd": "fakecommand",
+            "icon": "plugins/Qobuz/html/images/qobuz.png",
+        },
+        {
+            "title": "Fake Invalid Item 1",
+            "id": FAKE_VALID_ITEM_ID + "invalid_3",
+            "hasitems": media_type == "favorites",
+            "isaudio": True,
+            "album_id": FAKE_VALID_ITEM_ID if media_type == "favorites" else None,
+            "url": "file:///var/lib/squeezeboxserver/music/track_3.mp3",
+            "cmd": "fakecommand",
+            "icon": "plugins/Qobuz/html/images/qobuz.png",
+            "type": "text",
         },
     ]
 
@@ -187,7 +219,10 @@ async def mock_async_browse(
                 "items": fake_items,
             }
         return None
-    if media_type in MEDIA_TYPE_TO_SQUEEZEBOX.values():
+    if (
+        media_type in MEDIA_TYPE_TO_SQUEEZEBOX.values()
+        or media_type == "app-fakecommand"
+    ):
         return {
             "title": media_type,
             "items": fake_items,
@@ -214,6 +249,14 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
     ) as mock_player:
         mock_player.async_browse = AsyncMock(side_effect=mock_async_browse)
         mock_player.generate_image_url_from_track_id = MagicMock(
+            return_value="http://lms.internal:9000/html/images/favorites.png"
+        )
+        mock_player.set_announce_volume = MagicMock(return_value=True)
+        mock_player.set_announce_timeout = MagicMock(return_value=True)
+        mock_player.async_play_announcement = AsyncMock(
+            side_effect=mock_async_play_announcement
+        )
+        mock_player.generate_image_url = MagicMock(
             return_value="http://lms.internal:9000/html/images/favorites.png"
         )
         mock_player.name = TEST_PLAYER_NAME

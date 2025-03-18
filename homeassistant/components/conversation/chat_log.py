@@ -1,11 +1,14 @@
-"""Conversation history."""
+"""Conversation chat log."""
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Generator
+import asyncio
+from collections.abc import AsyncGenerator, AsyncIterable, Callable, Generator
 from contextlib import contextmanager
-from dataclasses import dataclass, field, replace
+from contextvars import ContextVar
+from dataclasses import asdict, dataclass, field, replace
 import logging
+from typing import Literal, TypedDict
 
 import voluptuous as vol
 
@@ -19,9 +22,13 @@ from . import trace
 from .const import DOMAIN
 from .models import ConversationInput, ConversationResult
 
-DATA_CHAT_HISTORY: HassKey[dict[str, ChatLog]] = HassKey("conversation_chat_log")
+DATA_CHAT_LOGS: HassKey[dict[str, ChatLog]] = HassKey("conversation_chat_logs")
 
 LOGGER = logging.getLogger(__name__)
+
+current_chat_log: ContextVar[ChatLog | None] = ContextVar(
+    "current_chat_log", default=None
+)
 
 
 @contextmanager
@@ -29,43 +36,69 @@ def async_get_chat_log(
     hass: HomeAssistant,
     session: chat_session.ChatSession,
     user_input: ConversationInput | None = None,
+    *,
+    chat_log_delta_listener: Callable[[ChatLog, dict], None] | None = None,
 ) -> Generator[ChatLog]:
     """Return chat log for a specific chat session."""
-    all_history = hass.data.get(DATA_CHAT_HISTORY)
-    if all_history is None:
-        all_history = {}
-        hass.data[DATA_CHAT_HISTORY] = all_history
+    # If a chat log is already active and it's the requested conversation ID,
+    # return that. We won't update the last updated time in this case.
+    if (
+        chat_log := current_chat_log.get()
+    ) and chat_log.conversation_id == session.conversation_id:
+        if chat_log_delta_listener is not None:
+            raise RuntimeError(
+                "Cannot attach chat log delta listener unless initial caller"
+            )
+        if user_input is not None and (
+            (content := chat_log.content[-1]).role != "user"
+            or content.content != user_input.text
+        ):
+            chat_log.async_add_user_content(UserContent(content=user_input.text))
 
-    history = all_history.get(session.conversation_id)
+        yield chat_log
+        return
 
-    if history:
-        history = replace(history, content=history.content.copy())
+    all_chat_logs = hass.data.get(DATA_CHAT_LOGS)
+    if all_chat_logs is None:
+        all_chat_logs = {}
+        hass.data[DATA_CHAT_LOGS] = all_chat_logs
+
+    if chat_log := all_chat_logs.get(session.conversation_id):
+        chat_log = replace(chat_log, content=chat_log.content.copy())
     else:
-        history = ChatLog(hass, session.conversation_id)
+        chat_log = ChatLog(hass, session.conversation_id)
+
+    if chat_log_delta_listener:
+        chat_log.delta_listener = chat_log_delta_listener
 
     if user_input is not None:
-        history.async_add_user_content(UserContent(content=user_input.text))
+        chat_log.async_add_user_content(UserContent(content=user_input.text))
 
-    last_message = history.content[-1]
+    last_message = chat_log.content[-1]
 
-    yield history
+    token = current_chat_log.set(chat_log)
+    yield chat_log
+    current_chat_log.reset(token)
 
-    if history.content[-1] is last_message:
+    if chat_log.content[-1] is last_message:
         LOGGER.debug(
-            "History opened but no assistant message was added, ignoring update"
+            "Chat Log opened but no assistant message was added, ignoring update"
         )
         return
 
-    if session.conversation_id not in all_history:
+    if session.conversation_id not in all_chat_logs:
 
         @callback
         def do_cleanup() -> None:
             """Handle cleanup."""
-            all_history.pop(session.conversation_id)
+            all_chat_logs.pop(session.conversation_id)
 
         session.async_on_cleanup(do_cleanup)
 
-    all_history[session.conversation_id] = history
+    if chat_log_delta_listener:
+        chat_log.delta_listener = None
+
+    all_chat_logs[session.conversation_id] = chat_log
 
 
 class ConverseError(HomeAssistantError):
@@ -94,7 +127,7 @@ class ConverseError(HomeAssistantError):
 class SystemContent:
     """Base class for chat messages."""
 
-    role: str = field(init=False, default="system")
+    role: Literal["system"] = field(init=False, default="system")
     content: str
 
 
@@ -102,7 +135,7 @@ class SystemContent:
 class UserContent:
     """Assistant content."""
 
-    role: str = field(init=False, default="user")
+    role: Literal["user"] = field(init=False, default="user")
     content: str
 
 
@@ -110,9 +143,9 @@ class UserContent:
 class AssistantContent:
     """Assistant content."""
 
-    role: str = field(init=False, default="assistant")
+    role: Literal["assistant"] = field(init=False, default="assistant")
     agent_id: str
-    content: str
+    content: str | None = None
     tool_calls: list[llm.ToolInput] | None = None
 
 
@@ -120,14 +153,22 @@ class AssistantContent:
 class ToolResultContent:
     """Tool result content."""
 
-    role: str = field(init=False, default="tool_result")
+    role: Literal["tool_result"] = field(init=False, default="tool_result")
     agent_id: str
     tool_call_id: str
     tool_name: str
     tool_result: JsonObjectType
 
 
-Content = SystemContent | UserContent | AssistantContent | ToolResultContent
+type Content = SystemContent | UserContent | AssistantContent | ToolResultContent
+
+
+class AssistantContentDeltaDict(TypedDict, total=False):
+    """Partial content to define an AssistantContent."""
+
+    role: Literal["assistant"]
+    content: str | None
+    tool_calls: list[llm.ToolInput] | None
 
 
 @dataclass
@@ -139,10 +180,36 @@ class ChatLog:
     content: list[Content] = field(default_factory=lambda: [SystemContent(content="")])
     extra_system_prompt: str | None = None
     llm_api: llm.APIInstance | None = None
+    delta_listener: Callable[[ChatLog, dict], None] | None = None
+
+    @property
+    def continue_conversation(self) -> bool:
+        """Return whether the conversation should continue."""
+        if not self.content:
+            return False
+
+        last_msg = self.content[-1]
+
+        return (
+            last_msg.role == "assistant"
+            and last_msg.content is not None
+            and last_msg.content.strip().endswith(
+                (
+                    "?",
+                    ";",  # Greek question mark
+                )
+            )
+        )
+
+    @property
+    def unresponded_tool_results(self) -> bool:
+        """Return if there are unresponded tool results."""
+        return self.content[-1].role == "tool_result"
 
     @callback
     def async_add_user_content(self, content: UserContent) -> None:
         """Add user content to the log."""
+        LOGGER.debug("Adding user content: %s", content)
         self.content.append(content)
 
     @callback
@@ -150,14 +217,24 @@ class ChatLog:
         self, content: AssistantContent
     ) -> None:
         """Add assistant content to the log."""
+        LOGGER.debug("Adding assistant content: %s", content)
         if content.tool_calls is not None:
             raise ValueError("Tool calls not allowed")
         self.content.append(content)
 
     async def async_add_assistant_content(
-        self, content: AssistantContent
+        self,
+        content: AssistantContent,
+        /,
+        tool_call_tasks: dict[str, asyncio.Task] | None = None,
     ) -> AsyncGenerator[ToolResultContent]:
-        """Add assistant content."""
+        """Add assistant content and execute tool calls.
+
+        tool_call_tasks can contains tasks for tool calls that are already in progress.
+
+        This method is an async generator and will yield the tool results as they come in.
+        """
+        LOGGER.debug("Adding assistant content: %s", content)
         self.content.append(content)
 
         if content.tool_calls is None:
@@ -166,13 +243,22 @@ class ChatLog:
         if self.llm_api is None:
             raise ValueError("No LLM API configured")
 
+        if tool_call_tasks is None:
+            tool_call_tasks = {}
+        for tool_input in content.tool_calls:
+            if tool_input.id not in tool_call_tasks:
+                tool_call_tasks[tool_input.id] = self.hass.async_create_task(
+                    self.llm_api.async_call_tool(tool_input),
+                    name=f"llm_tool_{tool_input.id}",
+                )
+
         for tool_input in content.tool_calls:
             LOGGER.debug(
                 "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
             )
 
             try:
-                tool_result = await self.llm_api.async_call_tool(tool_input)
+                tool_result = await tool_call_tasks[tool_input.id]
             except (HomeAssistantError, vol.Invalid) as e:
                 tool_result = {"error": type(e).__name__}
                 if str(e):
@@ -187,6 +273,86 @@ class ChatLog:
             )
             self.content.append(response_content)
             yield response_content
+
+    async def async_add_delta_content_stream(
+        self, agent_id: str, stream: AsyncIterable[AssistantContentDeltaDict]
+    ) -> AsyncGenerator[AssistantContent | ToolResultContent]:
+        """Stream content into the chat log.
+
+        Returns a generator with all content that was added to the chat log.
+
+        stream iterates over dictionaries with optional keys role, content and tool_calls.
+
+        When a delta contains a role key, the current message is considered complete and
+        a new message is started.
+
+        The keys content and tool_calls will be concatenated if they appear multiple times.
+        """
+        current_content = ""
+        current_tool_calls: list[llm.ToolInput] = []
+        tool_call_tasks: dict[str, asyncio.Task] = {}
+
+        async for delta in stream:
+            LOGGER.debug("Received delta: %s", delta)
+
+            # Indicates update to current message
+            if "role" not in delta:
+                if delta_content := delta.get("content"):
+                    current_content += delta_content
+                if delta_tool_calls := delta.get("tool_calls"):
+                    if self.llm_api is None:
+                        raise ValueError("No LLM API configured")
+                    current_tool_calls += delta_tool_calls
+
+                    # Start processing the tool calls as soon as we know about them
+                    for tool_call in delta_tool_calls:
+                        tool_call_tasks[tool_call.id] = self.hass.async_create_task(
+                            self.llm_api.async_call_tool(tool_call),
+                            name=f"llm_tool_{tool_call.id}",
+                        )
+                if self.delta_listener:
+                    self.delta_listener(self, delta)  # type: ignore[arg-type]
+                continue
+
+            # Starting a new message
+
+            if delta["role"] != "assistant":
+                raise ValueError(f"Only assistant role expected. Got {delta['role']}")
+
+            # Yield the previous message if it has content
+            if current_content or current_tool_calls:
+                content = AssistantContent(
+                    agent_id=agent_id,
+                    content=current_content or None,
+                    tool_calls=current_tool_calls or None,
+                )
+                yield content
+                async for tool_result in self.async_add_assistant_content(
+                    content, tool_call_tasks=tool_call_tasks
+                ):
+                    yield tool_result
+                    if self.delta_listener:
+                        self.delta_listener(self, asdict(tool_result))
+
+            current_content = delta.get("content") or ""
+            current_tool_calls = delta.get("tool_calls") or []
+
+            if self.delta_listener:
+                self.delta_listener(self, delta)  # type: ignore[arg-type]
+
+        if current_content or current_tool_calls:
+            content = AssistantContent(
+                agent_id=agent_id,
+                content=current_content or None,
+                tool_calls=current_tool_calls or None,
+            )
+            yield content
+            async for tool_result in self.async_add_assistant_content(
+                content, tool_call_tasks=tool_call_tasks
+            ):
+                yield tool_result
+                if self.delta_listener:
+                    self.delta_listener(self, asdict(tool_result))
 
     async def async_update_llm_data(
         self,
@@ -275,12 +441,10 @@ class ChatLog:
         if llm_api:
             prompt_parts.append(llm_api.api_prompt)
 
-        extra_system_prompt = (
+        if extra_system_prompt := (
             # Take new system prompt if one was given
             user_input.extra_system_prompt or self.extra_system_prompt
-        )
-
-        if extra_system_prompt:
+        ):
             prompt_parts.append(extra_system_prompt)
 
         prompt = "\n".join(prompt_parts)

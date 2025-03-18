@@ -12,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import BringConfigEntry, BringDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.TODO]
+PLATFORMS: list[Platform] = [Platform.EVENT, Platform.SENSOR, Platform.TODO]
 
 _LOGGER = logging.getLogger(__name__)
 

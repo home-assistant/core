@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, NamedTuple
 
-from pytouchline import PyTouchline
+from pytouchline_extended import PyTouchline
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -53,12 +53,13 @@ def setup_platform(
     """Set up the Touchline devices."""
 
     host = config[CONF_HOST]
-    py_touchline = PyTouchline()
-    number_of_devices = int(py_touchline.get_number_of_devices(host))
-    add_entities(
-        (Touchline(PyTouchline(device_id)) for device_id in range(number_of_devices)),
-        True,
-    )
+    py_touchline = PyTouchline(url=host)
+    number_of_devices = int(py_touchline.get_number_of_devices())
+    devices = [
+        Touchline(PyTouchline(id=device_id, url=host))
+        for device_id in range(number_of_devices)
+    ]
+    add_entities(devices, True)
 
 
 class Touchline(ClimateEntity):

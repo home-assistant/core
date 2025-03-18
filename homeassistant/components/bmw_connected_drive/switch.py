@@ -12,7 +12,7 @@ from bimmer_connected.vehicle.fuel_and_battery import ChargingState
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN as BMW_DOMAIN, BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
@@ -66,7 +66,7 @@ NUMBER_TYPES: list[BMWSwitchEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BMWConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the MyBMW switch from config entry."""
     coordinator = config_entry.runtime_data

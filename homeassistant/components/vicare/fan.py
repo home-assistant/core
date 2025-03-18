@@ -18,7 +18,7 @@ from requests.exceptions import ConnectionError as RequestConnectionError
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -111,7 +111,7 @@ def _build_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ViCareConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ViCare fan platform."""
     async_add_entities(
@@ -196,7 +196,10 @@ class ViCareFan(ViCareEntity, FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
-        if self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
+        if (
+            self._attr_supported_features & FanEntityFeature.TURN_OFF
+            and self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY)
+        ):
             return False
 
         return self.percentage is not None and self.percentage > 0
@@ -209,7 +212,10 @@ class ViCareFan(ViCareEntity, FanEntity):
     @property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
-        if self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
+        if (
+            self._attr_supported_features & FanEntityFeature.TURN_OFF
+            and self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY)
+        ):
             return "mdi:fan-off"
         if hasattr(self, "_attr_preset_mode"):
             if self._attr_preset_mode == VentilationMode.VENTILATION:

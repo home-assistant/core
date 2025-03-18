@@ -70,7 +70,7 @@
           "plugged_waiting": "Plugged, waiting",
           "plugged_charging": "Plugged, charging",
           "out_of_activation_period": "Out of activation period",
-          "high_charge_period": "High charge period"
+          "high_tariff_period": "High tariff period"
         }
       }
     },

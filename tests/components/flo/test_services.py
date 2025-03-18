@@ -13,11 +13,8 @@ from homeassistant.components.flo.switch import (
     SERVICE_SET_SLEEP_MODE,
     SYSTEM_MODE_HOME,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
-
-from .common import TEST_PASSWORD, TEST_USER_ID
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -33,12 +30,9 @@ async def test_services(
 ) -> None:
     """Test Flo services."""
     config_entry.add_to_hass(hass)
-    assert await async_setup_component(
-        hass, FLO_DOMAIN, {CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD}
-    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 2
     assert aioclient_mock.call_count == 8
 
     await hass.services.async_call(

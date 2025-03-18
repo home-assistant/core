@@ -42,6 +42,12 @@ class RymProDataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict]]):
         try:
             meters = await self.rympro.last_read()
             for meter_id, meter in meters.items():
+                meter["monthly_consumption"] = await self.rympro.monthly_consumption(
+                    meter_id
+                )
+                meter["daily_consumption"] = await self.rympro.daily_consumption(
+                    meter_id
+                )
                 meter["consumption_forecast"] = await self.rympro.consumption_forecast(
                     meter_id
                 )

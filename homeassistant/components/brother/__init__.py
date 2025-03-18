@@ -5,16 +5,13 @@ from __future__ import annotations
 from brother import Brother, SnmpError
 
 from homeassistant.components.snmp import async_get_snmp_engine
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .coordinator import BrotherDataUpdateCoordinator
+from .coordinator import BrotherConfigEntry, BrotherDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
-
-type BrotherConfigEntry = ConfigEntry[BrotherDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> bool:
@@ -30,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> b
     except (ConnectionError, SnmpError, TimeoutError) as error:
         raise ConfigEntryNotReady from error
 
-    coordinator = BrotherDataUpdateCoordinator(hass, brother)
+    coordinator = BrotherDataUpdateCoordinator(hass, entry, brother)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

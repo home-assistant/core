@@ -18,15 +18,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
+type PowerfoxConfigEntry = ConfigEntry[list[PowerfoxDataUpdateCoordinator]]
+
 
 class PowerfoxDataUpdateCoordinator(DataUpdateCoordinator[Poweropti]):
     """Class to manage fetching Powerfox data from the API."""
 
-    config_entry: ConfigEntry
+    config_entry: PowerfoxConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: PowerfoxConfigEntry,
         client: Powerfox,
         device: Device,
     ) -> None:
@@ -34,6 +37,7 @@ class PowerfoxDataUpdateCoordinator(DataUpdateCoordinator[Poweropti]):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
