@@ -16,7 +16,6 @@ from homeassistant.components.purpleair.const import (
     DOMAIN,
     TITLE,
 )
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_BASE, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -28,6 +27,7 @@ from .const import (
     CONF_OPTIONS,
     CONF_REASON,
     CONF_SOURCE,
+    CONF_SOURCE_USER,
     CONF_STEP_ID,
     CONF_TITLE,
     CONF_TYPE,
@@ -41,7 +41,7 @@ async def test_user_init(hass: HomeAssistant, mock_aiopurpleair, api) -> None:
 
     # User init
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: CONF_SOURCE_USER}
     )
     await hass.async_block_till_done()
     assert result[CONF_TYPE] is FlowResultType.FORM
@@ -67,7 +67,7 @@ async def test_user_init(hass: HomeAssistant, mock_aiopurpleair, api) -> None:
 
     # Add second entry
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: CONF_SOURCE_USER}
     )
     await hass.async_block_till_done()
     assert result[CONF_TYPE] is FlowResultType.FORM
@@ -179,7 +179,7 @@ async def test_duplicate_api_key(
 
     # User init
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: CONF_SOURCE_USER}
     )
     await hass.async_block_till_done()
     assert result[CONF_TYPE] is FlowResultType.FORM
@@ -221,7 +221,7 @@ async def test_user_init_errors(
 
     # User init
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: CONF_SOURCE_USER}
     )
     await hass.async_block_till_done()
     assert result[CONF_TYPE] is FlowResultType.FORM

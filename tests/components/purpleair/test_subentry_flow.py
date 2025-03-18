@@ -19,7 +19,6 @@ from homeassistant.components.purpleair.const import (
     CONF_SENSOR_READ_KEY,
     CONF_UNKNOWN,
 )
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_BASE,
     CONF_LATITUDE,
@@ -36,6 +35,7 @@ from .const import (
     CONF_FLOW_ID,
     CONF_NEXT_STEP_ID,
     CONF_SOURCE,
+    CONF_SOURCE_USER,
     CONF_STEP_ID,
     CONF_TYPE,
     TEST_LATITUDE,
@@ -53,7 +53,7 @@ async def test_create_from_map(
 
     # User init
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, CONF_SENSOR), context={CONF_SOURCE: SOURCE_USER}
+        (config_entry.entry_id, CONF_SENSOR), context={CONF_SOURCE: CONF_SOURCE_USER}
     )
     await hass.async_block_till_done()
     assert result[CONF_TYPE] is FlowResultType.MENU
@@ -103,7 +103,7 @@ async def test_create_from_index(
 
     # User init
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, CONF_SENSOR), context={CONF_SOURCE: SOURCE_USER}
+        (config_entry.entry_id, CONF_SENSOR), context={CONF_SOURCE: CONF_SOURCE_USER}
     )
     await hass.async_block_till_done()
     assert result[CONF_TYPE] is FlowResultType.MENU
@@ -145,7 +145,7 @@ async def test_duplicate_sensor(
     """Test creating subentry from index and read key."""
     # User init
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, CONF_SENSOR), context={CONF_SOURCE: SOURCE_USER}
+        (config_entry.entry_id, CONF_SENSOR), context={CONF_SOURCE: CONF_SOURCE_USER}
     )
     await hass.async_block_till_done()
     assert result[CONF_TYPE] is FlowResultType.MENU
@@ -196,7 +196,7 @@ async def test_create_from_map_errors(
 
     # User init
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, CONF_SENSOR), context={CONF_SOURCE: SOURCE_USER}
+        (config_entry.entry_id, CONF_SENSOR), context={CONF_SOURCE: CONF_SOURCE_USER}
     )
     await hass.async_block_till_done()
     assert result[CONF_TYPE] is FlowResultType.MENU
@@ -250,7 +250,7 @@ async def test_create_from_index_errors(
 
     # User init
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, CONF_SENSOR), context={CONF_SOURCE: SOURCE_USER}
+        (config_entry.entry_id, CONF_SENSOR), context={CONF_SOURCE: CONF_SOURCE_USER}
     )
     await hass.async_block_till_done()
     assert result[CONF_TYPE] is FlowResultType.MENU

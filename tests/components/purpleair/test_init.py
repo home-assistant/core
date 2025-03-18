@@ -1,7 +1,8 @@
 """PurpleAir init flow tests."""
 
-from homeassistant.components.purpleair import CONF_SENSOR, async_migrate_entry
+from homeassistant.components.purpleair import async_migrate_entry
 from homeassistant.components.purpleair.const import (
+    CONF_SENSOR,
     CONF_SENSOR_INDEX,
     DOMAIN,
     SCHEMA_VERSION,
@@ -68,12 +69,12 @@ async def test_migrate_entry(
     dr = mock_device_registry(hass)
     dr.async_get_or_create(
         config_entry_id=entry1.entry_id,
-        identifiers={(DOMAIN, TEST_SENSOR_INDEX1)},
+        identifiers={(DOMAIN, str(TEST_SENSOR_INDEX1))},
         name="TEST_SENSOR_INDEX1",
     )
     dr.async_get_or_create(
         config_entry_id=entry2.entry_id,
-        identifiers={(DOMAIN, TEST_SENSOR_INDEX2)},
+        identifiers={(DOMAIN, str(TEST_SENSOR_INDEX2))},
         name="TEST_SENSOR_INDEX2",
     )
     await hass.async_block_till_done()
