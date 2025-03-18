@@ -77,11 +77,8 @@ class AccuWeatherObservationDataUpdateCoordinator(
         except EXCEPTIONS as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="update_error",
-                translation_placeholders={
-                    "data_type": "current conditions data",
-                    "error": repr(error),
-                },
+                translation_key="current_conditions_update_error",
+                translation_placeholders={"error": repr(error)},
             ) from error
 
         _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)
@@ -130,11 +127,8 @@ class AccuWeatherDailyForecastDataUpdateCoordinator(
         except EXCEPTIONS as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="update_error",
-                translation_placeholders={
-                    "data_type": "daily forecast data",
-                    "error": repr(error),
-                },
+                translation_key="forecast_update_error",
+                translation_placeholders={"error": repr(error)},
             ) from error
 
         _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)
