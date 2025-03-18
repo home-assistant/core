@@ -1,5 +1,25 @@
 {
   "entity": {
+    "button": {
+      "operation_mode_start": {
+        "default": "mdi:play-circle-outline"
+      },
+      "operation_mode_start_for_location": {
+        "default": "mdi:play-circle-outline"
+      },
+      "operation_mode_stop": {
+        "default": "mdi:pause-circle-outline"
+      },
+      "operation_mode_stop_for_location": {
+        "default": "mdi:pause-circle-outline"
+      },
+      "operation_mode_wake_up": {
+        "default": "mdi:sleep-off"
+      },
+      "operation_mode_wake_up_for_location": {
+        "default": "mdi:sleep-off"
+      }
+    },
     "switch": {
       "auto_mode": {
         "default": "mdi:cogs"
