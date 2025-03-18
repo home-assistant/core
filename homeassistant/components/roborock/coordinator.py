@@ -206,6 +206,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 rooms={},
                 image=image,
                 last_updated=dt_util.utcnow() - IMAGE_CACHE_INTERVAL,
+                last_status=None,
             )
             for image, roborock_map in zip(stored_images, roborock_maps, strict=False)
         }
@@ -236,14 +237,18 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
+        current_roborock_map_info = self.maps[self.current_map]
         if parsed_image != self.maps[self.current_map].image:
             await self.map_storage.async_save_map(
                 self.current_map,
                 parsed_image,
             )
-            current_roborock_map_info = self.maps[self.current_map]
             current_roborock_map_info.image = parsed_image
             current_roborock_map_info.last_updated = dt_util.utcnow()
+        # We should always update last_status even if the map hasn't changed.
+        current_roborock_map_info.last_status = (
+            self.roborock_device_info.props.status.state_name
+        )
 
     async def _verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
@@ -288,11 +293,19 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
 
             # If the vacuum is currently cleaning and it has been IMAGE_CACHE_INTERVAL
             # since the last map update, you can update the map.
-            if (
-                self.current_map is not None
-                and self.roborock_device_info.props.status.in_cleaning
-                and (dt_util.utcnow() - self.maps[self.current_map].last_updated)
-                > IMAGE_CACHE_INTERVAL
+            if self.current_map is not None and (
+                (
+                    self.roborock_device_info.props.status.in_cleaning
+                    and (dt_util.utcnow() - self.maps[self.current_map].last_updated)
+                    > IMAGE_CACHE_INTERVAL
+                )
+                or (
+                    self.roborock_device_info.props.status.state_name
+                    != (last_status := self.maps[self.current_map].last_status)
+                    # Don't update when last_status has never been set.
+                    # Otherwise, it is basically not using caching.
+                    and last_status is not None
+                )
             ):
                 try:
                     await self.update_map()

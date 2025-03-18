@@ -11,6 +11,7 @@ from roborock import RoborockException
 from vacuum_map_parser_base.map_data import ImageConfig, ImageData
 
 from homeassistant.components.roborock import DOMAIN
+from homeassistant.components.roborock.const import V1_LOCAL_NOT_CLEANING_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -298,3 +299,51 @@ async def test_index_error_map(
     # last_updated timestamp.
     assert resp.ok
     assert previous_state == hass.states.get("image.roborock_s7_maxv_upstairs").state
+
+
+async def test_map_status_change(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test floor plan map image is correctly updated on status change."""
+    assert len(hass.states.async_all("image")) == 4
+
+    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert resp.status == HTTPStatus.OK
+    old_body = await resp.read()
+    assert old_body[0:4] == b"\x89PNG"
+
+    # Call a second time - this time forcing it to update - and save new image
+    now = dt_util.utcnow() + V1_LOCAL_NOT_CLEANING_INTERVAL
+
+    # Copy the device prop so we don't override it
+    prop = copy.deepcopy(PROP)
+    prop.status.state_name = "testing"
+    new_map_data = copy.deepcopy(MAP_DATA)
+    new_map_data.image = ImageData(
+        100, 10, 10, 10, 10, ImageConfig(), Image.new("RGB", (2, 2)), lambda p: p
+    )
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
+            return_value=prop,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
+            return_value=new_map_data,
+        ),
+    ):
+        async_fire_time_changed(hass, now)
+        resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+        assert resp.status == HTTPStatus.OK
+    assert resp.status == HTTPStatus.OK
+    body = await resp.read()
+    assert body is not None
+    assert body != old_body
