@@ -168,7 +168,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             sw_version=self.roborock_device_info.device.fv,
         )
 
-    async def parse_image(self, map_bytes: bytes) -> bytes | None:
+    def parse_image(self, map_bytes: bytes) -> bytes | None:
         """Parse map_bytes and store it as image bytes."""
         try:
             parsed_map = self.map_parser.parse(map_bytes)
@@ -230,7 +230,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
-        parsed_image = await self.parse_image(response)
+        parsed_image = self.parse_image(response)
         if parsed_image is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -244,9 +244,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 self.current_map,
                 parsed_image,
             )
-        current_roborock_map_info = self.maps[self.current_map]
-        current_roborock_map_info.image = parsed_image
-        current_roborock_map_info.last_updated = dt_util.utcnow()
+            current_roborock_map_info = self.maps[self.current_map]
+            current_roborock_map_info.image = parsed_image
+            current_roborock_map_info.last_updated = dt_util.utcnow()
 
     async def _verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
