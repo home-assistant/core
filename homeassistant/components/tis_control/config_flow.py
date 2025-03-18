@@ -41,7 +41,7 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
-            errors=errors if errors else {},
+            errors=errors,
             description_placeholders={CONF_PORT: "Port"},
         )
 
