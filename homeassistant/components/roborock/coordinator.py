@@ -289,16 +289,14 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
 
             # If the vacuum is currently cleaning and it has been IMAGE_CACHE_INTERVAL
             # since the last map update, you can update the map.
+            new_state = self.roborock_device_info.props.status
             if self.current_map is not None and (
                 (
-                    self.roborock_device_info.props.status.in_cleaning
+                    new_state.in_cleaning
                     and (dt_util.utcnow() - self.maps[self.current_map].last_updated)
                     > IMAGE_CACHE_INTERVAL
                 )
-                or (
-                    previous_state != self.roborock_device_info.props.status.state_name
-                    and previous_state is not None
-                )
+                or previous_state != new_state.state_name
             ):
                 try:
                     await self.update_map()
