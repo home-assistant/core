@@ -458,7 +458,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -476,7 +478,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'RPM Parameter',
     'platform': 'wolflink',
@@ -491,10 +493,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'bundle_id': 7000,
-      'device_class': 'speed',
       'friendly_name': 'RPM Parameter',
       'parameter_id': 10005200000,
       'parent': 'Heating',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'rpm',
       'value_id': 1000280001,
     }),
