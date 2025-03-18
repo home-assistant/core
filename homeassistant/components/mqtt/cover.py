@@ -596,7 +596,6 @@ class MqttCover(MqttEntity, CoverEntity):
             self._attr_current_cover_tilt_position = tilt_percentage
             self.async_write_ha_state()
 
-
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop moving the cover tilt."""
         await self.async_publish_with_config(
