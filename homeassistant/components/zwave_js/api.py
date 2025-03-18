@@ -72,7 +72,10 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 
 from .config_validation import BITMASK_SCHEMA
 from .const import (
@@ -170,6 +173,9 @@ SUPPORTED_PROTOCOLS = "supportedProtocols"
 ADDITIONAL_PROPERTIES = "additional_properties"
 STATUS = "status"
 REQUESTED_SECURITY_CLASSES = "requestedSecurityClasses"
+
+DEVICE_NAME = "device_name"
+AREA_NAME = "area_name"
 
 FEATURE = "feature"
 STRATEGY = "strategy"
@@ -976,13 +982,9 @@ async def websocket_validate_dsk_and_enter_pin(
     {
         vol.Required(TYPE): "zwave_js/provision_smart_start_node",
         vol.Required(ENTRY_ID): str,
-        vol.Exclusive(
-            PLANNED_PROVISIONING_ENTRY, "options"
-        ): PLANNED_PROVISIONING_ENTRY_SCHEMA,
-        vol.Exclusive(
-            QR_PROVISIONING_INFORMATION, "options"
-        ): QR_PROVISIONING_INFORMATION_SCHEMA,
-        vol.Exclusive(QR_CODE_STRING, "options"): QR_CODE_STRING_SCHEMA,
+        vol.Required(QR_PROVISIONING_INFORMATION): QR_PROVISIONING_INFORMATION_SCHEMA,
+        vol.Optional(DEVICE_NAME): str,
+        vol.Optional(AREA_NAME): str,
     }
 )
 @websocket_api.async_response
@@ -997,34 +999,50 @@ async def websocket_provision_smart_start_node(
     driver: Driver,
 ) -> None:
     """Pre-provision a smart start node."""
-    try:
-        cv.has_at_least_one_key(
-            PLANNED_PROVISIONING_ENTRY, QR_PROVISIONING_INFORMATION, QR_CODE_STRING
-        )(msg)
-    except vol.Invalid as err:
-        connection.send_error(
-            msg[ID],
-            ERR_INVALID_FORMAT,
-            err.args[0],
-        )
-        return
+    provisioning_info = msg[QR_PROVISIONING_INFORMATION]
 
-    provisioning_info = (
-        msg.get(PLANNED_PROVISIONING_ENTRY)
-        or msg.get(QR_PROVISIONING_INFORMATION)
-        or msg[QR_CODE_STRING]
-    )
-
-    if (
-        QR_PROVISIONING_INFORMATION in msg
-        and provisioning_info.version == QRCodeVersion.S2
-    ):
+    if provisioning_info.version == QRCodeVersion.S2:
         connection.send_error(
             msg[ID],
             ERR_INVALID_FORMAT,
             "QR code version S2 is not supported for this command",
         )
         return
+
+    # Create an empty device if device_name is provided
+    if device_name := msg.get(DEVICE_NAME):
+        dev_reg = dr.async_get(hass)
+
+        # Create a unique device identifier using the DSK
+        device_identifier = (DOMAIN, f"provision_{provisioning_info.dsk}")
+
+        manufacturer = None
+        model = None
+
+        device_info = await driver.config_manager.lookup_device(
+            provisioning_info.manufacturer_id,
+            provisioning_info.product_type,
+            provisioning_info.product_id,
+        )
+        if device_info:
+            manufacturer = device_info.manufacturer
+            model = device_info.label
+
+        # Create an empty device
+        device = dev_reg.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={device_identifier},
+            name=device_name,
+            manufacturer=manufacturer,
+            model=model,
+            suggested_area=msg.get(AREA_NAME),
+        )
+
+        provisioning_info.device_id = device.id
+
+        # Dispatch event that device was added to registry
+        async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
+
     await driver.controller.async_provision_smart_start_node(provisioning_info)
     connection.send_result(msg[ID])
 
