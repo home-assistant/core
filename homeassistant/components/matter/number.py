@@ -183,4 +183,34 @@ DISCOVERY_SCHEMAS = [
         ),
         vendor_id=(4874,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="PIROccupiedToUnoccupiedDelay",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="pir_occupied_to_unoccupied_delay",
+            native_max_value=65534,
+            native_min_value=0,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            clusters.OccupancySensing.Attributes.PIROccupiedToUnoccupiedDelay,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="AutoRelockTimer",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="auto_relock_timer",
+            native_max_value=65534,
+            native_min_value=0,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(clusters.DoorLock.Attributes.AutoRelockTime,),
+    ),
 ]
