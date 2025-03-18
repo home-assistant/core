@@ -340,27 +340,19 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
                     )
                 )
 
-        if (temperature_low := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None:
+        if (temperature_low := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None and (
+            temperature_high := kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        ) is not None:
             if self.data.step >= 1:
                 temperature_low = int(temperature_low)
-            if temperature_low != self.target_temperature_low:
-                await self.async_call_api(
-                    self.coordinator.api.async_set_target_temperature_low(
-                        self.property_id,
-                        temperature_low,
-                    )
-                )
-
-        if (temperature_high := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None:
-            if self.data.step >= 1:
                 temperature_high = int(temperature_high)
-            if temperature_high != self.target_temperature_high:
-                await self.async_call_api(
-                    self.coordinator.api.async_set_target_temperature_high(
-                        self.property_id,
-                        temperature_high,
-                    )
+            await self.async_call_api(
+                self.coordinator.api.async_set_target_temperature_low_high(
+                    self.property_id,
+                    temperature_low,
+                    temperature_high,
                 )
+            )
 
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
