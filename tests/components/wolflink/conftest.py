@@ -94,7 +94,6 @@ def mock_wolflink() -> Generator[MagicMock]:
             ),
             RPMParameter(1000280001, "RPM Parameter", "Heating", 10005200000, 7000),
             FlowParameter(1100280001, "Flow Parameter", "Heating", 11005200000, 8000),
-            ),
             HoursParameter(7002800000, "Hours Parameter", "Heating", 7005200000, 1000),
             SimpleParameter(1002800000, "Simple Parameter", "DHW", 1005200000, 1000),
         ]
