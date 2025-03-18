@@ -36,6 +36,34 @@ class SqueezeboxEntity(Entity):
         ):
             self._manufacturer = "Logitech"
 
+        self._manufacturer = None
+
+        if "SqueezeLite" in self._player.model or "SqueezeLite" in self._player.model:
+            self._manufacturer = "Ralph Irving & Adrian Smith"
+        elif (
+            "Squeezebox" in self._player.model
+            or "Transporter" in self._player.model
+            or "Slim" in self._player.model
+            or "Jive" in self._player.model
+        ):
+            self._manufacturer = "Logitech"
+        else:
+            match self._player.model:
+                case "SqueezePlayer":
+                    self._manufacturer = "Stefan Hansel"
+                case "Squeezelite-X":
+                    self._manufacturer = "R G Dawson"
+                case "SqueezeLite-HA-Addon":
+                    self._manufacturer = "pssc"
+                case "RaopBridge":
+                    self._manufacturer = "philippe"
+                case "CastBridge":
+                    self._manufacturer = "philippe"
+                case "SB Player":
+                    self._manufacturer = "Wayne Tam"
+                case "WiiM Player":
+                    self._manufacturer = "LinkPlay"
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
