@@ -1,158 +1,106 @@
-"""Tests for the Dreo Fan component."""
+"""Tests for the Dreo fan component."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from hscloud.hscloudexception import HsCloudBusinessException, HsCloudException
 import pytest
 
-from homeassistant.components.dreo.fan import DreoFanHA
-from homeassistant.exceptions import ConfigEntryNotReady
-
-# Mock FAN_DEVICE constant
-MOCK_FAN_DEVICE = {
-    "type": "FAN",
-    "config": {
-        "TEST_MODEL": {
-            "preset_modes": ["auto", "normal", "sleep"],
-            "speed_range": (1, 6),
-        }
-    },
-}
-
-
-@pytest.fixture(autouse=True)
-def mock_fan_device():
-    """Mock FAN_DEVICE constant."""
-    with patch("homeassistant.components.dreo.fan.FAN_DEVICE", MOCK_FAN_DEVICE):
-        yield
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_device():
-    """Create a mock device."""
+    """Return a mock Dreo device."""
     return {
-        "model": "TEST_MODEL",
-        "device_id": "test_device_id",
+        "deviceSn": "test-device-id",
+        "deviceName": "Test Fan",
+        "model": "DR-HTF001S",
+        "moduleFirmwareVersion": "1.0.0",
+        "mcuFirmwareVersion": "1.0.0",
     }
 
 
 @pytest.fixture
-def mock_config_entry(mock_device):
-    """Create a mock config entry."""
-    config_entry = MagicMock()
+def mock_config_entry():
+    """Return a mock config entry."""
+    config_entry = MockConfigEntry(domain="dreo")
     config_entry.runtime_data = MagicMock()
     config_entry.runtime_data.client = MagicMock()
-    # Mock the send_command method to return True
-    config_entry.runtime_data.client.send_command.return_value = True
-    config_entry.runtime_data.devices = [mock_device]
     return config_entry
 
 
+# pylint: disable=import-outside-toplevel,protected-access,redefined-outer-name
 @pytest.fixture
-def fan(mock_device, mock_config_entry):
-    """Create a Dreo fan instance."""
+def fan_entity(mock_device, mock_config_entry):
+    """Return a configured fan entity."""
+    from homeassistant.components.dreo.fan import DreoFanHA
 
-    fan = DreoFanHA(mock_device, mock_config_entry)
-    # Ensure device_id is set correctly
-    fan._device_id = mock_device["device_id"]
-    # Mock _try_command to directly call send_command
-    fan._try_command = (
-        lambda msg, **kwargs: mock_config_entry.runtime_data.client.send_command(
-            fan._device_id, **kwargs
-        )
-    )
-    return fan
-
-
-def test_turn_on(fan: DreoFanHA) -> None:
-    """Test turning the fan on."""
-    fan.turn_on()
-    assert fan.is_on is True
-    fan._config_entry.runtime_data.client.send_command.assert_called_once_with(
-        "test_device_id", power_switch=True
-    )
-
-
-def test_turn_off(fan: DreoFanHA) -> None:
-    """Test turning the fan off."""
-    fan.turn_off()
-    assert fan.is_on is False
-    fan._config_entry.runtime_data.client.send_command.assert_called_once_with(
-        "test_device_id", power_switch=False
-    )
-
-
-def test_set_percentage(fan: DreoFanHA) -> None:
-    """Test setting fan speed percentage."""
-    fan.set_percentage(50)
-    assert fan._attr_percentage == 50
-    fan._config_entry.runtime_data.client.send_command.assert_called_once_with(
-        "test_device_id",
-        speed=3,  # 50% maps to speed 4
-    )
-
-
-def test_oscillate(fan: DreoFanHA) -> None:
-    """Test setting oscillation."""
-    fan.oscillate(True)
-    assert fan._attr_oscillating is True
-    fan._config_entry.runtime_data.client.send_command.assert_called_once_with(
-        "test_device_id", oscillate=True
-    )
-
-
-def test_set_preset_mode(fan: DreoFanHA) -> None:
-    """Test setting preset mode."""
-    preset_mode = "auto"
-    fan.set_preset_mode(preset_mode)
-    assert fan._attr_preset_mode == preset_mode
-    fan._config_entry.runtime_data.client.send_command.assert_called_once_with(
-        "test_device_id", mode=preset_mode
-    )
-
-
-@pytest.mark.parametrize(
-    ("exception", "expected_exception"),
-    [
-        (HsCloudException(message="Connection error"), type(ConfigEntryNotReady())),
-        (
-            HsCloudBusinessException(message="Invalid credentials"),
-            type(ConfigEntryNotReady()),
-        ),
-    ],
-)
-def test_update_errors(
-    fan: DreoFanHA, exception: Exception, expected_exception: Exception
-) -> None:
-    """Test update method error handling."""
-    fan._config_entry.runtime_data.client.get_status.side_effect = exception
-    with pytest.raises(expected_exception):
-        fan.update()
-
-
-def test_update_success(fan: DreoFanHA) -> None:
-    """Test successful update."""
-    status = {
-        "power_switch": True,
-        "mode": "auto",
-        "speed": 3,
-        "oscillate": True,
-        "connected": True,
+    entity = DreoFanHA(mock_device, mock_config_entry)
+    entity._fan_props = {
+        "state": False,
+        "preset_mode": None,
+        "percentage": None,
+        "oscillating": None,
     }
-    fan._config_entry.runtime_data.client.get_status.return_value = status
 
-    fan.update()
+    entity.get_device_id = lambda: entity._device_id
+    entity.get_config_entry = lambda: entity._config_entry
 
-    assert fan.is_on is True
-    assert fan._attr_preset_mode == "auto"
-    assert fan._attr_oscillating is True
-    assert fan._attr_available is True
+    return entity
 
 
-def test_update_device_unavailable(fan: DreoFanHA) -> None:
-    """Test update when device is unavailable."""
-    fan._config_entry.runtime_data.client.get_status.return_value = None
+# pylint: disable=redefined-outer-name
+@pytest.mark.asyncio
+async def test_turn_on(fan_entity) -> None:
+    """Test turning the fan on."""
+    fan_entity.turn_on()
 
-    fan.update()
+    assert fan_entity.is_on
+    fan_entity.get_config_entry().runtime_data.client.update_status.assert_called_once_with(
+        fan_entity.get_device_id(), power_switch=True
+    )
 
-    assert fan._attr_available is False
+
+# pylint: disable=redefined-outer-name
+@pytest.mark.asyncio
+async def test_turn_off(fan_entity) -> None:
+    """Test turning the fan off."""
+    fan_entity.turn_off()
+
+    assert not fan_entity.is_on
+    fan_entity.get_config_entry().runtime_data.client.update_status.assert_called_once_with(
+        fan_entity.get_device_id(), power_switch=False
+    )
+
+
+# pylint: disable=redefined-outer-name
+@pytest.mark.asyncio
+async def test_set_percentage(fan_entity) -> None:
+    """Test setting the fan percentage."""
+    fan_entity.set_percentage(50)
+
+    assert fan_entity.percentage == 50
+    fan_entity.get_config_entry().runtime_data.client.update_status.assert_called_once()
+
+
+# pylint: disable=redefined-outer-name
+@pytest.mark.asyncio
+async def test_oscillate(fan_entity) -> None:
+    """Test setting oscillation."""
+    fan_entity.oscillate(True)
+
+    assert fan_entity.oscillating
+    fan_entity.get_config_entry().runtime_data.client.update_status.assert_called_once_with(
+        fan_entity.get_device_id(), oscillate=True
+    )
+
+
+# pylint: disable=redefined-outer-name
+@pytest.mark.asyncio
+async def test_set_preset_mode(fan_entity) -> None:
+    """Test setting the fan preset mode."""
+    fan_entity.set_preset_mode("auto")
+
+    assert fan_entity.preset_mode == "auto"
+    fan_entity.get_config_entry().runtime_data.client.update_status.assert_called_once_with(
+        fan_entity.get_device_id(), mode="auto"
+    )

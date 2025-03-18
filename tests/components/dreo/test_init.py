@@ -1,4 +1,4 @@
-"""Tests for the Dreo integration."""  # noqa: INP001
+"""Tests for the Dreo integration."""
 
 from unittest.mock import MagicMock, patch
 
