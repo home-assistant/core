@@ -36,7 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
     )
     entry.runtime_data = TISData(api=tis_api)
 
-    hass.data.setdefault(DOMAIN, {"supported_platforms": PLATFORMS})
     try:
         await tis_api.connect()
     except ConnectionError as e:
