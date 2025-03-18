@@ -30,7 +30,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=""): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_MAC, default=""): str,
     }
 )
 
@@ -45,7 +44,7 @@ def _error_tuple(base: str, error_detail: Any) -> tuple[dict[str, str], dict[str
 class ZimiConfigErrors(StrEnum):
     """ZimiConfig errors."""
 
-    ALREADY_DISCOVERED = "already_discovered"
+    ALREADY_CONFIGURED = "already_configured"
     CANNOT_CONNECT = "cannot_connect"
     CONNECTION_REFUSED = "connection_refused"
     DISCOVERY_FAILURE = "discovery_failure"
@@ -111,7 +110,6 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.data[CONF_HOST] = user_input[CONF_HOST]
             self.data[CONF_PORT] = user_input[CONF_PORT]
-            self.data[CONF_MAC] = user_input[CONF_MAC]
 
             (errors, details) = await self.check_errors(
                 self.data[CONF_HOST], self.data[CONF_PORT], self.data[CONF_MAC]
@@ -132,7 +130,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             ):
                 (errors, details) = _error_tuple(
-                    ZimiConfigErrors.ALREADY_DISCOVERED, self.data[CONF_MAC]
+                    ZimiConfigErrors.ALREADY_CONFIGURED, self.data[CONF_MAC]
                 )
             else:
                 self._abort_if_unique_id_configured()
