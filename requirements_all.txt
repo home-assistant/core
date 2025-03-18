@@ -3080,7 +3080,7 @@ wirelesstagpy==0.8.1
 wled==0.21.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.19
+wolf-comm==0.0.23
 
 # homeassistant.components.wyoming
 wyoming==1.5.4
