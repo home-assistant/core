@@ -76,10 +76,9 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
 
     def _handle_coordinator_update(self) -> None:
         # If the coordinator has updated the map, we can update the image.
-        if self.coordinator.maps[self.map_flag].last_updated != self.image_last_updated:
-            self._attr_image_last_updated = self.coordinator.maps[
-                self.map_flag
-            ].last_updated
+        self._attr_image_last_updated = self.coordinator.maps[
+            self.map_flag
+        ].last_updated
 
         super()._handle_coordinator_update()
 

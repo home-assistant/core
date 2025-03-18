@@ -179,13 +179,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             return None
         img_byte_arr = io.BytesIO()
         parsed_map.image.data.save(img_byte_arr, format=MAP_FILE_FORMAT)
-        image = img_byte_arr.getvalue()
-        if self.current_map is not None and image != self.maps[self.current_map].image:
-            await self.map_storage.async_save_map(
-                self.current_map,
-                image,
-            )
-        return image
+        return img_byte_arr.getvalue()
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -241,6 +235,14 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
+            )
+        if (
+            self.current_map is not None
+            and parsed_image != self.maps[self.current_map].image
+        ):
+            await self.map_storage.async_save_map(
+                self.current_map,
+                parsed_image,
             )
         current_roborock_map_info = self.maps[self.current_map]
         current_roborock_map_info.image = parsed_image
