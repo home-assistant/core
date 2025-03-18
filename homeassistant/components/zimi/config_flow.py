@@ -119,6 +119,9 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.data[CONF_MAC] = details.get("mac", None)
 
         if self.api and not errors:
+            self.api.disconnect()
+            self.api = None
+
             await self.async_set_unique_id(self.data[CONF_MAC])
 
             # Check if we have (re)discovered a ZCC that is already configured
