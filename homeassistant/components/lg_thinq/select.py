@@ -115,6 +115,13 @@ DEVICE_TYPE_SELECT_MAP: dict[DeviceType, tuple[SelectEntityDescription, ...]] = 
     ),
     DeviceType.REFRIGERATOR: (SELECT_DESC[ThinQProperty.FRESH_AIR_FILTER],),
     DeviceType.STYLER: (OPERATION_SELECT_DESC[ThinQProperty.STYLER_OPERATION_MODE],),
+    DeviceType.VENTILATOR: (
+        AIR_FLOW_SELECT_DESC[ThinQProperty.WIND_STRENGTH],
+        SelectEntityDescription(
+            key=ThinQProperty.CURRENT_JOB_MODE,
+            translation_key="current_job_mode_ventilator",
+        ),
+    ),
     DeviceType.WASHCOMBO_MAIN: (
         OPERATION_SELECT_DESC[ThinQProperty.WASHER_OPERATION_MODE],
     ),

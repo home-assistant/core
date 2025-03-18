@@ -901,6 +901,14 @@
           "always": "[%key:component::lg_thinq::entity::sensor::monitoring_enabled::state::always%]"
         }
       },
+      "current_job_mode_ventilator": {
+        "name": "Operating mode",
+        "state": {
+          "vent_auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "vent_nature": "Bypass",
+          "vent_heat_exchange": "Heat exchange"
+        }
+      },
       "current_job_mode": {
         "name": "Operating mode",
         "state": {
