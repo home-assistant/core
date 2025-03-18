@@ -31,9 +31,6 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title="TIS Control Bridge", data=user_input
                 )
-            else:  # noqa: RET505
-                # If there are errors, show the form again with the error message
-                return self._show_setup_form(errors)
 
         # If user_input is None (initial step), show the setup form
         return self._show_setup_form(errors)
