@@ -236,10 +236,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
-        if (
-            self.current_map is not None
-            and parsed_image != self.maps[self.current_map].image
-        ):
+        if parsed_image != self.maps[self.current_map].image:
             await self.map_storage.async_save_map(
                 self.current_map,
                 parsed_image,
