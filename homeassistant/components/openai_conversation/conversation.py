@@ -140,9 +140,20 @@ async def _transform_stream(
                 ]
             }
         elif isinstance(event, ResponseIncompleteEvent):
-            raise HomeAssistantError(
-                f"OpenAI response incomplete: {event.response.incomplete_details.reason if event.response.incomplete_details else None}"
-            )
+            if (
+                event.response.incomplete_details
+                and event.response.incomplete_details.reason
+            ):
+                reason: str = event.response.incomplete_details.reason
+            else:
+                reason = "unknown reason"
+
+            if reason == "max_output_tokens":
+                reason = "max output tokens reached"
+            elif reason == "content_filter":
+                reason = "content filter triggered"
+
+            raise HomeAssistantError(f"OpenAI response incomplete: {reason}")
 
 
 class OpenAIConversationEntity(
