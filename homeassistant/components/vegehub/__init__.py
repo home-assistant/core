@@ -1,7 +1,6 @@
 """The Vegetronix VegeHub integration."""
 
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
 from http import HTTPStatus
 from typing import Any
 
@@ -27,14 +26,6 @@ from .const import DOMAIN, NAME, PLATFORMS
 from .coordinator import VegeHubConfigEntry, VegeHubCoordinator
 
 
-@dataclass
-class VegeHubData:
-    """Define a data class."""
-
-    coordinator: VegeHubCoordinator
-    vegehub: VegeHub
-
-
 # The integration is only set up through the UI (config flow)
 async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> bool:
     """Set up VegeHub from a config entry."""
@@ -52,9 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
     )
 
     # Initialize runtime data
-    entry.runtime_data = VegeHubData(
-        coordinator=VegeHubCoordinator(hass=hass, config_entry=entry),
-        vegehub=vegehub,
+    entry.runtime_data = VegeHubCoordinator(
+        hass=hass, config_entry=entry, vegehub=vegehub
     )
 
     async def unregister_webhook(_: Any) -> None:
@@ -68,9 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
             DOMAIN,
             webhook_name,
             entry.data[CONF_WEBHOOK_ID],
-            get_webhook_handler(
-                device_mac, entry.entry_id, entry.runtime_data.coordinator
-            ),
+            get_webhook_handler(device_mac, entry.entry_id, entry.runtime_data),
             allowed_methods=[METH_POST],
         )
 

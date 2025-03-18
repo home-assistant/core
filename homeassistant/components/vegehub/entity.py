@@ -1,7 +1,5 @@
 """Base entity for VegeHub."""
 
-from vegehub import VegeHub
-
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -15,7 +13,7 @@ class VegeHubEntity(CoordinatorEntity[VegeHubCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: VegeHubCoordinator, vegehub: VegeHub) -> None:
+    def __init__(self, coordinator: VegeHubCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         config_entry = coordinator.config_entry
@@ -26,6 +24,6 @@ class VegeHubEntity(CoordinatorEntity[VegeHubCoordinator]):
             manufacturer=MANUFACTURER,
             model=MODEL,
             connections={(CONNECTION_NETWORK_MAC, self._mac_address)},
-            sw_version=vegehub.sw_version,
-            configuration_url=vegehub.url,
+            sw_version=coordinator.vegehub.sw_version,
+            configuration_url=coordinator.vegehub.url,
         )

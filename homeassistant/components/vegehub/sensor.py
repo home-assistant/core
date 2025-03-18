@@ -1,7 +1,5 @@
 """Sensor configuration for VegeHub integration."""
 
-from vegehub import VegeHub
-
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfElectricPotential
@@ -19,17 +17,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up Vegetronix sensors from a config entry."""
     sensors: list[VegeHubSensor] = []
-    vegehub = config_entry.runtime_data.vegehub
+    coordinator = config_entry.runtime_data
 
     # We add up the number of sensors, plus the number of actuators, then add one
     # for battery reading, and one because the array is 1 based instead of 0 based.
     for i in range(
-        vegehub.num_sensors + vegehub.num_actuators + 1
+        coordinator.vegehub.num_sensors + coordinator.vegehub.num_actuators + 1
     ):  # Add 1 for battery
         sensor = VegeHubSensor(
             index=i + 1,
-            coordinator=config_entry.runtime_data.coordinator,
-            vegehub=vegehub,
+            coordinator=coordinator,
         )
         sensors.append(sensor)
 
@@ -50,10 +47,9 @@ class VegeHubSensor(VegeHubEntity, SensorEntity):
         self,
         index: int,
         coordinator: VegeHubCoordinator,
-        vegehub: VegeHub,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, vegehub)
+        super().__init__(coordinator)
         self._attr_translation_placeholders = {"index": str(index)}
         self._attr_available = False
         self._attr_unique_id = (

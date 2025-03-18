@@ -20,8 +20,11 @@ class VegeHubCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """The DataUpdateCoordinator for VegeHub."""
 
     config_entry: VegeHubConfigEntry
+    vegehub: VegeHub
 
-    def __init__(self, hass: HomeAssistant, config_entry: VegeHubConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: VegeHubConfigEntry, vegehub: VegeHub
+    ) -> None:
         """Initialize VegeHub data coordinator."""
         super().__init__(
             hass,
@@ -29,4 +32,5 @@ class VegeHubCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             name=f"{config_entry.unique_id} DataUpdateCoordinator",
             config_entry=config_entry,
         )
+        self.vegehub = vegehub
         self.device_id = config_entry.unique_id
