@@ -15,7 +15,7 @@ from .coordinator import (
 )
 
 
-class SqueezeboxEntity(Entity):
+class SqueezeboxEntity(CoordinatorEntity[SqueezeBoxPlayerUpdateCoordinator]):
     """Base entity class for Squeezebox entities."""
 
     def __init__(self, coordinator: SqueezeBoxPlayerUpdateCoordinator) -> None:
