@@ -333,6 +333,16 @@
           "very_bad": "Poor"
         }
       },
+      "carbon_dioxide": {
+        "name": "Carbon dioxide",
+        "state": {
+          "invalid": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::invalid%]",
+          "good": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::good%]",
+          "normal": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::normal%]",
+          "bad": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::bad%]",
+          "very_bad": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::very_bad%]"
+        }
+      },
       "monitoring_enabled": {
         "name": "Air quality sensor",
         "state": {
@@ -771,8 +781,46 @@
       "hop_oil_info": {
         "name": "Hops"
       },
+      "hop_oil_capsule_1": {
+        "name": "First hop",
+        "state": {
+          "cascade": "Cascade",
+          "chinook": "Chinook",
+          "goldings": "Goldings",
+          "fuggles": "Fuggles",
+          "hallertau": "Hallertau",
+          "citrussy": "Citrussy"
+        }
+      },
+      "hop_oil_capsule_2": {
+        "name": "Second hop",
+        "state": {
+          "cascade": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::cascade%]",
+          "chinook": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::chinook%]",
+          "goldings": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::goldings%]",
+          "fuggles": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::fuggles%]",
+          "hallertau": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::hallertau%]",
+          "citrussy": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::citrussy%]"
+        }
+      },
       "flavor_info": {
         "name": "Flavor"
+      },
+      "flavor_capsule_1": {
+        "name": "First flavor",
+        "state": {
+          "coriander": "Coriander",
+          "coriander_seed": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
+          "orange": "Orange"
+        }
+      },
+      "flavor_capsule_2": {
+        "name": "Second flavor",
+        "state": {
+          "coriander": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
+          "coriander_seed": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
+          "orange": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::orange%]"
+        }
       },
       "beer_remain": {
         "name": "Recipe progress"
