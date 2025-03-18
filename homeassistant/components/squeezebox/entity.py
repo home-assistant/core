@@ -25,18 +25,6 @@ class SqueezeboxEntity(CoordinatorEntity[SqueezeBoxPlayerUpdateCoordinator]):
         super().__init__(coordinator)
         self._coordinator = coordinator
         self._player = self._coordinator.player
-        self._manufacturer = None
-        if (
-            self._player.model.startswith("SqueezeLite")
-            or "SqueezePlay" in self._player.model
-        ):
-            self._manufacturer = "Ralph Irving"
-        elif (
-            "Squeezebox" in self._player.model
-            or "Transporter" in self._player.model
-            or "Slim" in self._player.model
-        ):
-            self._manufacturer = "Logitech"
 
         self._manufacturer = None
 
