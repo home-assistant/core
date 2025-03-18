@@ -1,7 +1,7 @@
 """Tests for home_connect select entities."""
 
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
@@ -50,7 +50,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.event import async_call_later
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -598,7 +597,6 @@ async def test_fetch_allowed_values_after_rate_limit_error(
     client: MagicMock,
 ) -> None:
     """Test fetch allowed values."""
-    retry_after = 42
 
     def get_settings_side_effect(ha_id: str):
         if ha_id != appliance_ha_id:
@@ -616,7 +614,7 @@ async def test_fetch_allowed_values_after_rate_limit_error(
     client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
     client.get_setting = AsyncMock(
         side_effect=[
-            TooManyRequestsError("error.key", retry_after=retry_after),
+            TooManyRequestsError("error.key", retry_after=0),
             GetSetting(
                 key=setting_key,
                 raw_key=setting_key.value,
@@ -629,17 +627,11 @@ async def test_fetch_allowed_values_after_rate_limit_error(
     )
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    with patch(
-        "homeassistant.components.home_connect.entity.async_call_later",
-        side_effect=lambda hass, delay, action: async_call_later(hass, 0, action),
-    ) as _async_call_later:
-        assert await integration_setup(client)
+    assert await integration_setup(client)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    _async_call_later.assert_called_once()
-    assert _async_call_later.call_args.args[1] == retry_after
     assert client.get_setting.call_count == 2
 
     entity_state = hass.states.get(entity_id)

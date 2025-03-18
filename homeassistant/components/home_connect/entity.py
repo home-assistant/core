@@ -145,11 +145,9 @@ def constraint_fetcher[_EntityT: HomeConnectEntity, **_P](
             try:
                 await func(self, *args, **kwargs)
             except TooManyRequestsError as err:
-                async_call_later(
-                    self.hass,
-                    err.retry_after or API_DEFAULT_RETRY_AFTER,
-                    handler,
-                )
+                if (retry_after := err.retry_after) is None:
+                    retry_after = API_DEFAULT_RETRY_AFTER
+                async_call_later(self.hass, retry_after, handler)
             except HomeConnectError as err:
                 _LOGGER.error(
                     "Error fetching constraints for %s: %s", self.entity_id, err

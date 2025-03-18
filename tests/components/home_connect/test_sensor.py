@@ -1,7 +1,7 @@
 """Tests for home_connect sensor entities."""
 
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
@@ -31,7 +31,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.event import async_call_later
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -731,7 +730,6 @@ async def test_sensor_unit_fetching_after_rate_limit_error(
     client: MagicMock,
 ) -> None:
     """Test that the sensor entities are capable of fetching units."""
-    retry_after = 42
 
     async def get_status_mock(ha_id: str) -> ArrayOfStatus:
         if ha_id != appliance_ha_id:
@@ -749,7 +747,7 @@ async def test_sensor_unit_fetching_after_rate_limit_error(
     client.get_status = AsyncMock(side_effect=get_status_mock)
     client.get_status_value = AsyncMock(
         side_effect=[
-            TooManyRequestsError("error.key", retry_after=retry_after),
+            TooManyRequestsError("error.key", retry_after=0),
             Status(
                 key=status_key,
                 raw_key=status_key.value,
@@ -760,17 +758,11 @@ async def test_sensor_unit_fetching_after_rate_limit_error(
     )
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-    with patch(
-        "homeassistant.components.home_connect.entity.async_call_later",
-        side_effect=lambda hass, delay, action: async_call_later(hass, 0, action),
-    ) as _async_call_later:
-        assert await integration_setup(client)
+    assert await integration_setup(client)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert config_entry.state == ConfigEntryState.LOADED
 
-    _async_call_later.assert_called_once()
-    assert _async_call_later.call_args.args[1] == retry_after
     assert client.get_status_value.call_count == 2
 
     entity_state = hass.states.get(entity_id)
