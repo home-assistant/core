@@ -38,6 +38,8 @@ from .coordinator import (
 )
 from .entity import RoborockCoordinatedEntityA01, RoborockCoordinatedEntityV1
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class RoborockSensorDescription(SensorEntityDescription):
