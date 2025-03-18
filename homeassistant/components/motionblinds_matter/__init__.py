@@ -1,1 +1,0 @@
-"""Motionblinds Matter virtual integration."""
