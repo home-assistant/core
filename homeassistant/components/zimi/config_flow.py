@@ -7,6 +7,7 @@ import logging
 import socket
 from typing import Any
 
+from strenum import StrEnum
 import voluptuous as vol
 from zcc import (
     ControlPoint,
@@ -41,8 +42,8 @@ def _error_tuple(base: str, error_detail: Any) -> tuple[dict[str, str], dict[str
     return ({"base": base}, {"error_detail": str(error_detail)})
 
 
-class ZimiConfigException(Exception):
-    """Base class for ZimiConfig exceptions."""
+class ZimiConfigErrors(StrEnum):
+    """ZimiConfig errors."""
 
     ALREADY_DISCOVERED = "already_discovered"
     CANNOT_CONNECT = "cannot_connect"
@@ -54,15 +55,6 @@ class ZimiConfigException(Exception):
     MISMATCHED_MAC = "mismatched_mac"
     TIMEOUT = "timeout"
     UNKNOWN = "unknown"
-
-    def __init__(self, *args, **kwargs) -> None:
-        """Initialise ZimiConfigException allowing passing of error_detail."""
-        super().__init__(*args)
-        self.error_base = args[0]
-        try:
-            self.error_detail = args[1]
-        except IndexError:
-            self.error_detail = None
 
 
 class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -140,7 +132,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             ):
                 (errors, details) = _error_tuple(
-                    ZimiConfigException.ALREADY_DISCOVERED, self.data[CONF_MAC]
+                    ZimiConfigErrors.ALREADY_DISCOVERED, self.data[CONF_MAC]
                 )
             else:
                 self._abort_if_unique_id_configured()
@@ -172,7 +164,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             hostbyname = socket.gethostbyname(host)
         except socket.gaierror as e:
-            return _error_tuple(ZimiConfigException.INVALID_HOST, e)
+            return _error_tuple(ZimiConfigErrors.INVALID_HOST, e)
         if hostbyname:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.settimeout(10)
@@ -180,22 +172,22 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
                 s.connect((host, port))
                 s.close()
             except ConnectionRefusedError as e:
-                return _error_tuple(ZimiConfigException.CONNECTION_REFUSED, e)
+                return _error_tuple(ZimiConfigErrors.CONNECTION_REFUSED, e)
             except TimeoutError as e:
-                return _error_tuple(ZimiConfigException.TIMEOUT, e)
+                return _error_tuple(ZimiConfigErrors.TIMEOUT, e)
             except socket.gaierror as e:
-                return _error_tuple(ZimiConfigException.CANNOT_CONNECT, e)
+                return _error_tuple(ZimiConfigErrors.CANNOT_CONNECT, e)
         else:
-            return _error_tuple(ZimiConfigException.INVALID_HOST, None)
+            return _error_tuple(ZimiConfigErrors.INVALID_HOST, None)
 
         if mac != "" and mac is format_mac(mac):
-            return _error_tuple(ZimiConfigException.INVALID_MAC, None)
+            return _error_tuple(ZimiConfigErrors.INVALID_MAC, None)
 
         if not self.api or not self.api.ready:
             try:
                 self.api = await async_connect_to_controller(host, port, fast=True)
             except ControlPointError as e:
-                return _error_tuple(ZimiConfigException.CANNOT_CONNECT, e)
+                return _error_tuple(ZimiConfigErrors.CANNOT_CONNECT, e)
 
         if self.api:
             if mac == "":  # If no mac was given, grab mac from zcc and return
@@ -204,8 +196,8 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
             if format_mac(mac) != format_mac(self.api.mac):
                 msg = f"{format_mac(mac)} != {format_mac(self.api.mac)}"
                 _LOGGER.error("Configured mac mismatch: %s", msg)
-                return _error_tuple(ZimiConfigException.MISMATCHED_MAC, msg)
+                return _error_tuple(ZimiConfigErrors.MISMATCHED_MAC, msg)
         else:
-            return _error_tuple(ZimiConfigException.CANNOT_CONNECT, None)
+            return _error_tuple(ZimiConfigErrors.CANNOT_CONNECT, None)
 
         return ({}, {})
