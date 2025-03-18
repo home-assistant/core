@@ -1,6 +1,5 @@
 """Support for Roborock vacuum class."""
 
-from dataclasses import asdict
 from typing import Any
 
 from roborock.code_mappings import RoborockStateCode
@@ -206,7 +205,14 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         """Get map information such as map id and room ids."""
         return {
             "maps": [
-                asdict(vacuum_map) for vacuum_map in self.coordinator.maps.values()
+                {
+                    "flag": vacuum_map.flag,
+                    "name": vacuum_map.name,
+                    # JsonValueType does not accept a int as a key - was not a
+                    # issue with previous asdict() implementation.
+                    "rooms": vacuum_map.rooms,  # type: ignore[dict-item]
+                }
+                for vacuum_map in self.coordinator.maps.values()
             ]
         }
 
