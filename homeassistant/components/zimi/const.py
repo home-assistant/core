@@ -2,7 +2,6 @@
 
 from homeassistant.const import Platform
 
-CONF_TITLE = "title"
 CONTROLLER = "zimi_controller"
 DEFAULT_PORT = 5003
 DOMAIN = "zimi"

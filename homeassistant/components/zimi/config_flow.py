@@ -21,13 +21,12 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.helpers.device_registry import format_mac
 
 from . import async_connect_to_controller
-from .const import CONF_TITLE, DEFAULT_PORT, DOMAIN, TITLE
+from .const import DEFAULT_PORT, DOMAIN, TITLE
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_TITLE, default=TITLE): str,
         vol.Required(CONF_HOST, default=""): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Optional(CONF_MAC, default=""): str,
@@ -108,7 +107,6 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
         details: dict[str, str] = {}
 
         if user_input is not None:
-            self.data[CONF_TITLE] = user_input[CONF_TITLE]
             self.data[CONF_HOST] = user_input[CONF_HOST]
             self.data[CONF_PORT] = user_input[CONF_PORT]
             self.data[CONF_MAC] = user_input[CONF_MAC]
@@ -123,7 +121,8 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(self.data[CONF_MAC])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=self.data[CONF_TITLE], data=self.data
+                    title=f"{TITLE} ({self.data[CONF_HOST]}:{self.data[CONF_PORT]})",
+                    data=self.data,
                 )
 
         return self.async_show_form(
@@ -176,7 +175,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.api:
             if mac == "":  # If no mac was given, grab mac from zcc and return
-                mac = self.api.mac
+                mac = format_mac(self.api.mac)
                 self.api.disconnect()
                 return ({}, {"mac": mac})
             if format_mac(mac) != format_mac(self.api.mac):
