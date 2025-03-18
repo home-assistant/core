@@ -40,8 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
     try:
         await tis_api.connect()
     except ConnectionError as e:
-        logging.error("error connecting to TIS api %s", e)
-        return False
+        raise ConfigEntryNotReady from e
     # add the tis api to the hass data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
