@@ -59,6 +59,7 @@ from .const import (
     GEN2_RELEASE_URL,
     LOGGER,
     RPC_INPUTS_EVENTS_TYPES,
+    SHAIR_MAX_WORK_HOURS,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHELLY_EMIT_EVENT_PATTERN,
@@ -655,3 +656,11 @@ def is_rpc_exclude_from_relay(
         return True
 
     return is_rpc_channel_type_light(settings, ch)
+
+
+def get_shelly_air_lamp_life(lamp_seconds: int) -> float:
+    """Return Shelly Air lamp life in percentage."""
+    lamp_hours = lamp_seconds / 3600
+    if lamp_hours >= SHAIR_MAX_WORK_HOURS:
+        return 0.0
+    return 100 * (1 - lamp_hours / SHAIR_MAX_WORK_HOURS)
