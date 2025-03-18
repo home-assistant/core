@@ -45,9 +45,7 @@ async def test_form(hass: HomeAssistant, info: dict[str, Any]) -> None:
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_IP_ADDRESS: IP,
-            },
+            {CONF_IP_ADDRESS: IP, CONF_PASSWORD: ""},
         )
         await hass.async_block_till_done()
 
@@ -178,6 +176,26 @@ async def test_zeroconf_wrong_auth(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_BASE: "invalid_auth"}
 
+    with (
+        patch(
+            "homeassistant.components.devolo_home_network.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.devolo_home_network.config_flow.Device",
+            new=MockDevice,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PASSWORD: "new-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_abort_zeroconf_wrong_device(hass: HomeAssistant) -> None:
     """Test we abort zeroconf for wrong devices."""
@@ -235,18 +253,43 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
 
-    with patch(
-        "homeassistant.components.devolo_home_network.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.devolo_home_network.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.devolo_home_network.config_flow.Device",
+            new=MockDeviceWrongPassword,
+        ),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_PASSWORD: "test-password-new"},
+            {CONF_PASSWORD: "test-wrong-password"},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reauth_successful"
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {CONF_BASE: "invalid_auth"}
+
+    with (
+        patch(
+            "homeassistant.components.devolo_home_network.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.devolo_home_network.config_flow.Device",
+            new=MockDevice,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "test-right-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
 
     await hass.config_entries.async_unload(entry.entry_id)

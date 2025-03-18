@@ -22,7 +22,7 @@ from .const import DOMAIN, PRODUCT, SERIAL_NUMBER, TITLE
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_IP_ADDRESS): str, vol.Optional(CONF_PASSWORD, default=""): str}
+    {vol.Required(CONF_IP_ADDRESS): str, vol.Optional(CONF_PASSWORD): str}
 )
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Optional(CONF_PASSWORD): str})
 
@@ -69,24 +69,22 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict = {}
 
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-            )
-
-        try:
-            info = await validate_input(self.hass, user_input)
-        except DeviceNotFound:
-            errors["base"] = "cannot_connect"
-        except DevicePasswordProtected:
-            errors["base"] = "invalid_auth"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            await self.async_set_unique_id(info[SERIAL_NUMBER], raise_on_progress=False)
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=info[TITLE], data=user_input)
+        if user_input is not None:
+            try:
+                info = await validate_input(self.hass, user_input)
+            except DeviceNotFound:
+                errors["base"] = "cannot_connect"
+            except DevicePasswordProtected:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(
+                    info[SERIAL_NUMBER], raise_on_progress=False
+                )
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=info[TITLE], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -117,6 +115,9 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by zeroconf."""
         title = self.context["title_placeholders"][CONF_NAME]
+        errors: dict = {}
+        data_schema: vol.Schema | None = None
+
         if user_input is not None:
             data = {
                 CONF_IP_ADDRESS: self.host,
@@ -125,17 +126,16 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await validate_input(self.hass, data)
             except DevicePasswordProtected:
-                return self.async_show_form(
-                    step_id="zeroconf_confirm",
-                    data_schema=STEP_REAUTH_DATA_SCHEMA,
-                    description_placeholders={"host_name": title},
-                    errors={"base": "invalid_auth"},
-                )
+                errors = {"base": "invalid_auth"}
+                data_schema = STEP_REAUTH_DATA_SCHEMA
             else:
                 return self.async_create_entry(title=title, data=data)
+
         return self.async_show_form(
             step_id="zeroconf_confirm",
+            data_schema=data_schema,
             description_placeholders={"host_name": title},
+            errors=errors,
         )
 
     async def async_step_reauth(
@@ -155,14 +155,21 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by reauthentication."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=STEP_REAUTH_DATA_SCHEMA,
-            )
+        errors: dict = {}
+        if user_input is not None:
+            data = {
+                CONF_IP_ADDRESS: self.host,
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+            try:
+                await validate_input(self.hass, data)
+            except DevicePasswordProtected:
+                errors = {"base": "invalid_auth"}
+            else:
+                return self.async_update_reload_and_abort(self._reauth_entry, data=data)
 
-        data = {
-            CONF_IP_ADDRESS: self.host,
-            CONF_PASSWORD: user_input[CONF_PASSWORD],
-        }
-        return self.async_update_reload_and_abort(self._reauth_entry, data=data)
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
+            errors=errors,
+        )
