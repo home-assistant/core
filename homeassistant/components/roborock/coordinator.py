@@ -279,8 +279,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
 
     async def _async_update_data(self) -> DeviceProp:
         """Update data via library."""
+        previous_state = self.roborock_device_info.props.status.state_name
         try:
-            previous_state = self.roborock_device_info.props.status.state_name
             # Update device props and standard api information
             await self._update_device_prop()
             # Set the new map id from the updated device props
@@ -289,14 +289,14 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
 
             # If the vacuum is currently cleaning and it has been IMAGE_CACHE_INTERVAL
             # since the last map update, you can update the map.
-            new_state = self.roborock_device_info.props.status
+            new_status = self.roborock_device_info.props.status
             if self.current_map is not None and (
                 (
-                    new_state.in_cleaning
+                    new_status.in_cleaning
                     and (dt_util.utcnow() - self.maps[self.current_map].last_updated)
                     > IMAGE_CACHE_INTERVAL
                 )
-                or previous_state != new_state.state_name
+                or previous_state != new_status.state_name
             ):
                 try:
                     await self.update_map()

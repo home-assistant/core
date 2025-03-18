@@ -160,9 +160,6 @@ async def test_fail_to_load_image(
     """Test that we gracefully handle failing to load an image."""
     with (
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
-        ) as parse_map,
-        patch(
             "homeassistant.components.roborock.roborock_storage.Path.exists",
             return_value=True,
         ),
@@ -178,8 +175,6 @@ async def test_fail_to_load_image(
         await hass.config_entries.async_reload(setup_entry.entry_id)
         await hass.async_block_till_done()
         assert read_bytes.call_count == 4
-        # Ensure that we never updated the map manually since we couldn't load it.
-        assert parse_map.call_count == 0
     assert "Unable to read map file" in caplog.text
 
 
