@@ -111,7 +111,6 @@ class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PASSWORD],
             )
             if not errors:
-                await self.async_set_unique_id(reconfigure_entry.data[CONF_EMAIL])
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     data_updates=user_input,
