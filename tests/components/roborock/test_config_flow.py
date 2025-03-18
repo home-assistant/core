@@ -275,6 +275,8 @@ async def test_reconfigure_flow_success(
     hass: HomeAssistant, bypass_api_fixture, mock_roborock_entry: MockConfigEntry
 ) -> None:
     """Handle the config flow and make sure it succeeds."""
+    assert mock_roborock_entry.unique_id == USER_EMAIL.lower()
+    assert mock_roborock_entry.title == USER_EMAIL
     result = await mock_roborock_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -302,4 +304,6 @@ async def test_reconfigure_flow_success(
 
     assert result["type"] is FlowResultType.ABORT
     assert mock_roborock_entry.title == "new_email@gmail.com"
+    assert mock_roborock_entry.unique_id == "new_email@gmail.com"
+
     assert len(mock_setup.mock_calls) == 1
