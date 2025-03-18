@@ -10,6 +10,7 @@ from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import (
+    CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
     CONF_USE_HTTPS,
     DOMAIN,
@@ -48,6 +49,7 @@ TEST_ITEM_NUMBER = "P000"
 TEST_CAM_MODEL = "RLC-123"
 TEST_DUO_MODEL = "Reolink Duo PoE"
 TEST_PRIVACY = True
+TEST_BC_PORT = 5678
 
 
 @pytest.fixture
@@ -132,17 +134,25 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.doorbell_led_list.return_value = ["stayoff", "auto"]
         host_mock.auto_track_method.return_value = 3
         host_mock.daynight_state.return_value = "Black&White"
+        host_mock.hub_alarm_tone_id.return_value = 1
+        host_mock.hub_visitor_tone_id.return_value = 1
 
         # Baichuan
         host_mock.baichuan = create_autospec(Baichuan)
         # Disable tcp push by default for tests
+        host_mock.baichuan.port = TEST_BC_PORT
         host_mock.baichuan.events_active = False
         host_mock.baichuan.privacy_mode.return_value = False
+        host_mock.baichuan.day_night_state.return_value = "day"
         host_mock.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
         host_mock.baichuan.abilities = {
             0: {"chnID": 0, "aitype": 34615},
             "Host": {"pushAlarm": 7},
         }
+        host_mock.baichuan.smart_location_list.return_value = [0]
+        host_mock.baichuan.smart_ai_type_list.return_value = ["people"]
+        host_mock.baichuan.smart_ai_index.return_value = 1
+        host_mock.baichuan.smart_ai_name.return_value = "zone1"
 
         yield host_mock_class
 
@@ -175,6 +185,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
+            CONF_BC_PORT: TEST_BC_PORT,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,

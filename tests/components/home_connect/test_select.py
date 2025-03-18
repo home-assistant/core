@@ -521,8 +521,17 @@ async def test_select_functionality(
         (
             "select.hood_ambient_light_color",
             SettingKey.BSH_COMMON_AMBIENT_LIGHT_COLOR,
-            [f"BSH.Common.EnumType.AmbientLightColor.Color{i}" for i in range(50)],
+            [f"BSH.Common.EnumType.AmbientLightColor.Color{i}" for i in range(1, 50)],
             {str(i) for i in range(1, 50)},
+        ),
+        (
+            "select.hood_ambient_light_color",
+            SettingKey.BSH_COMMON_AMBIENT_LIGHT_COLOR,
+            [
+                "A.Non.Documented.Option",
+                "BSH.Common.EnumType.AmbientLightColor.Color42",
+            ],
+            {"42"},
         ),
     ],
 )
@@ -677,6 +686,17 @@ async def test_select_entity_error(
                 "laundry_care_washer_enum_type_temperature_ul_warm",
                 "laundry_care_washer_enum_type_temperature_ul_hot",
                 "laundry_care_washer_enum_type_temperature_ul_extra_hot",
+            },
+        ),
+        (
+            "select.washer_temperature",
+            OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE,
+            [
+                "A.Non.Documented.Option",
+                "LaundryCare.Washer.EnumType.Temperature.UlWarm",
+            ],
+            {
+                "laundry_care_washer_enum_type_temperature_ul_warm",
             },
         ),
     ],

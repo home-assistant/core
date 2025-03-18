@@ -321,10 +321,14 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
-            Attribute.TEMPERATURE
-        ].unit
-        assert unit
+        # Offline third party thermostats may not have a unit
+        # Since climate always requires a unit, default to Celsius
+        if (
+            unit := self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
+                Attribute.TEMPERATURE
+            ].unit
+        ) is None:
+            return UnitOfTemperature.CELSIUS
         return UNIT_MAP[unit]
 
 
@@ -567,12 +571,15 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     def _determine_hvac_modes(self) -> list[HVACMode]:
         """Determine the supported HVAC modes."""
         modes = [HVACMode.OFF]
-        modes.extend(
-            state
-            for mode in self.get_attribute_value(
+        if (
+            ac_modes := self.get_attribute_value(
                 Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
             )
-            if (state := AC_MODE_TO_STATE.get(mode)) is not None
-            if state not in modes
-        )
+        ) is not None:
+            modes.extend(
+                state
+                for mode in ac_modes
+                if (state := AC_MODE_TO_STATE.get(mode)) is not None
+                if state not in modes
+            )
         return modes
