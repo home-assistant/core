@@ -462,11 +462,20 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Play a favorite."""
         uri = favorite.reference.get_uri()
         soco = self.coordinator.soco
-        if soco.music_source_from_uri(uri) in [
-            MUSIC_SRC_RADIO,
-            MUSIC_SRC_LINE_IN,
-        ]:
-            soco.play_uri(uri, title=favorite.title, timeout=LONG_SERVICE_TIMEOUT)
+        if (
+            soco.music_source_from_uri(uri)
+            in [
+                MUSIC_SRC_RADIO,
+                MUSIC_SRC_LINE_IN,
+            ]
+            or favorite.reference.item_class == "object.item.audioItem.audioBook"
+        ):
+            soco.play_uri(
+                uri,
+                title=favorite.title,
+                meta=favorite.resource_meta_data,
+                timeout=LONG_SERVICE_TIMEOUT,
+            )
         else:
             soco.clear_queue()
             soco.add_to_queue(favorite.reference, timeout=LONG_SERVICE_TIMEOUT)

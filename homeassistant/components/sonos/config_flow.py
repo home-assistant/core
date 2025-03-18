@@ -31,6 +31,8 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DO
         hostname = discovery_info.hostname
         if hostname is None or not hostname.lower().startswith("sonos"):
             return self.async_abort(reason="not_sonos_device")
+        if discovery_info.ip_address.version != 4:
+            return self.async_abort(reason="not_ipv4_address")
         if discovery_manager := self.hass.data.get(DATA_SONOS_DISCOVERY_MANAGER):
             host = discovery_info.host
             mdns_name = discovery_info.name

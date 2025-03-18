@@ -570,8 +570,8 @@ build.json @home-assistant/supervisor
 /tests/components/google_cloud/ @lufton @tronikos
 /homeassistant/components/google_drive/ @tronikos
 /tests/components/google_drive/ @tronikos
-/homeassistant/components/google_generative_ai_conversation/ @tronikos
-/tests/components/google_generative_ai_conversation/ @tronikos
+/homeassistant/components/google_generative_ai_conversation/ @tronikos @ivanlh
+/tests/components/google_generative_ai_conversation/ @tronikos @ivanlh
 /homeassistant/components/google_mail/ @tkdrob
 /tests/components/google_mail/ @tkdrob
 /homeassistant/components/google_photos/ @allenporter
@@ -1252,6 +1252,8 @@ build.json @home-assistant/supervisor
 /tests/components/refoss/ @ashionky
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
+/homeassistant/components/remote_calendar/ @Thomas55555
+/tests/components/remote_calendar/ @Thomas55555
 /homeassistant/components/renault/ @epenet
 /tests/components/renault/ @epenet
 /homeassistant/components/renson/ @jimmyd-be

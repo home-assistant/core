@@ -5265,6 +5265,11 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "remote_calendar": {
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "renault": {
       "name": "Renault",
       "integration_type": "hub",
@@ -7695,6 +7700,7 @@
     "plant",
     "proximity",
     "random",
+    "remote_calendar",
     "rpi_power",
     "schedule",
     "season",
