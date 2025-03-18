@@ -21,6 +21,7 @@
       }
     },
     "error": {
+      "already_discovered": "ZCC device {error_detail} is already discovered",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",

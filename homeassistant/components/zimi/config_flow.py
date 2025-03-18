@@ -44,11 +44,13 @@ def _error_tuple(base: str, error_detail: Any) -> tuple[dict[str, str], dict[str
 class ZimiConfigException(Exception):
     """Base class for ZimiConfig exceptions."""
 
+    ALREADY_DISCOVERED = "already_discovered"
     CANNOT_CONNECT = "cannot_connect"
     CONNECTION_REFUSED = "connection_refused"
     DISCOVERY_FAILURE = "discovery_failure"
     INVALID_HOST = "invalid_host"
     INVALID_MAC = "invalid_mac"
+    INVALID_PORT = "invalid_port"
     MISMATCHED_MAC = "mismatched_mac"
     TIMEOUT = "timeout"
     UNKNOWN = "unknown"
@@ -69,6 +71,11 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
     api: ControlPoint = None
     data: dict[str, Any]
 
+    def __del__(self):
+        """Disconnect from ZCC."""
+        if self.api:
+            self.api.disconnect()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
@@ -77,6 +84,9 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
         api_description: ControlPointDescription | None = None
 
         self.data = {}
+        self.data[CONF_HOST] = ""
+        self.data[CONF_PORT] = DEFAULT_PORT
+        self.data[CONF_MAC] = ""
 
         try:
             api_description = await ControlPointDiscoveryService().discover()
@@ -94,7 +104,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
             if self.api and self.api.ready:
-                self.data[CONF_MAC] = self.api.mac
+                self.data[CONF_MAC] = format_mac(self.api.mac)
 
         return await self.async_step_finish()
 
@@ -115,10 +125,24 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.data[CONF_HOST], self.data[CONF_PORT], self.data[CONF_MAC]
             )
 
-            if not errors:
-                if details:
-                    self.data[CONF_MAC] = details.get("mac", None)
-                await self.async_set_unique_id(self.data[CONF_MAC])
+            if details:
+                self.data[CONF_MAC] = details.get("mac", None)
+
+        if self.api and not errors:
+            await self.async_set_unique_id(self.data[CONF_MAC])
+
+            # Check if we have (re)discovered a ZCC that is already configured
+            # in the ZCC discovery step which will need manual configuration.
+            if (
+                self.unique_id
+                and self.hass.config_entries.async_entry_for_domain_unique_id(
+                    self.handler, self.unique_id
+                )
+            ):
+                (errors, details) = _error_tuple(
+                    ZimiConfigException.ALREADY_DISCOVERED, self.data[CONF_MAC]
+                )
+            else:
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=f"{TITLE} ({self.data[CONF_HOST]}:{self.data[CONF_PORT]})",
@@ -176,15 +200,12 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.api:
             if mac == "":  # If no mac was given, grab mac from zcc and return
                 mac = format_mac(self.api.mac)
-                self.api.disconnect()
                 return ({}, {"mac": mac})
             if format_mac(mac) != format_mac(self.api.mac):
                 msg = f"{format_mac(mac)} != {format_mac(self.api.mac)}"
                 _LOGGER.error("Configured mac mismatch: %s", msg)
-                self.api.disconnect()
                 return _error_tuple(ZimiConfigException.MISMATCHED_MAC, msg)
         else:
             return _error_tuple(ZimiConfigException.CANNOT_CONNECT, None)
 
-        self.api.disconnect()
         return ({}, {})
