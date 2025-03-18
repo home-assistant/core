@@ -49,9 +49,6 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
             return False, "cannot_connect"
         except HsCloudBusinessException:
             return False, "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception during Dreo login")
-            return False, "unknown"
         return True, None
 
     async def async_step_user(
