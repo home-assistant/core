@@ -49,7 +49,7 @@
         },
         "dashboard_path": {
           "name": "Dashboard path",
-          "description": "The URL path of the dashboard to show."
+          "description": "The URL path of the dashboard to show, defaults to lovelace if not specified."
         },
         "view_path": {
           "name": "View path",
