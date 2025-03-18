@@ -111,7 +111,6 @@ class QbusClimate(QbusEntity, ClimateEntity):
         state.write_regime(preset_mode)
 
         await self._async_publish_output_state(state)
-        self._attr_preset_mode = preset_mode
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -122,13 +121,11 @@ class QbusClimate(QbusEntity, ClimateEntity):
             state.write_set_temperature(temperature)
 
             await self._async_publish_output_state(state)
-            self._attr_target_temperature = temperature
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         # It is not supported to explicitly set the HVAC mode. The value
         # is determined automatically.
-        self._determine_hvac_mode_and_action()
 
     async def _state_received(self, msg: ReceiveMessage) -> None:
         state = self._message_factory.parse_output_state(
