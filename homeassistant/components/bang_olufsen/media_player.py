@@ -80,6 +80,7 @@ from .const import (
     CONNECTION_STATUS,
     DOMAIN,
     FALLBACK_SOURCES,
+    MANUFACTURER,
     VALID_MEDIA_TYPES,
     BangOlufsenMediaType,
     BangOlufsenSource,
@@ -200,7 +201,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{self._host}/#/",
             identifiers={(DOMAIN, self._unique_id)},
-            manufacturer="Bang & Olufsen",
+            manufacturer=MANUFACTURER,
             model=self._model,
             serial_number=self._unique_id,
         )
