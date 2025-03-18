@@ -51,4 +51,3 @@ class RoborockMapInfo:
     rooms: dict[int, str]
     image: bytes | None
     last_updated: datetime
-    last_status: str | None
