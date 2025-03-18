@@ -15,15 +15,8 @@ from homeassistant.core import HomeAssistant
 from .const import DEVICES_DICT, DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
-type TISConfigEntry = ConfigEntry[TISData]
+type TISConfigEntry = ConfigEntry[TISApi]
 protocol_handler = TISProtocolHandler()
-
-
-@dataclass
-class TISData:
-    """TISControl data stored in the ConfigEntry."""
-
-    api: TISApi
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
