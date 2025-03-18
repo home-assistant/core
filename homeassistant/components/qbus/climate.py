@@ -57,7 +57,7 @@ async def async_setup_entry(
 class QbusClimate(QbusEntity, ClimateEntity):
     """Representation of a Qbus climate entity."""
 
-    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+    _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
@@ -69,7 +69,7 @@ class QbusClimate(QbusEntity, ClimateEntity):
         super().__init__(hass, mqtt_output)
 
         self._attr_hvac_action = HVACAction.IDLE
-        self._attr_hvac_mode = HVACMode.OFF
+        self._attr_hvac_mode = HVACMode.HEAT
 
         set_temp: dict[str, Any] = mqtt_output.properties.get(
             KEY_PROPERTIES_SET_TEMPERATURE, {}
@@ -122,11 +122,6 @@ class QbusClimate(QbusEntity, ClimateEntity):
 
             await self._async_publish_output_state(state)
 
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set new target hvac mode."""
-        # It is not supported to explicitly set the HVAC mode. The value
-        # is determined automatically.
-
     async def _state_received(self, msg: ReceiveMessage) -> None:
         state = self._message_factory.parse_output_state(
             QbusMqttThermoState, msg.payload
@@ -144,7 +139,7 @@ class QbusClimate(QbusEntity, ClimateEntity):
         if target_temperature := state.read_set_temperature():
             self._attr_target_temperature = target_temperature
 
-        self._determine_hvac_mode_and_action()
+        self._set_hvac_action()
 
         # When the state type is "event", the payload only contains the changed
         # property. Request the state to get the full payload. However, changing
@@ -155,21 +150,15 @@ class QbusClimate(QbusEntity, ClimateEntity):
 
         self.async_schedule_update_ha_state()
 
-    def _determine_hvac_mode_and_action(self) -> None:
+    def _set_hvac_action(self) -> None:
         if self.target_temperature is None or self.current_temperature is None:
             self._attr_hvac_action = HVACAction.IDLE
-            self._attr_hvac_mode = HVACMode.OFF
             return
 
         self._attr_hvac_action = (
             HVACAction.HEATING
             if self.target_temperature > self.current_temperature
             else HVACAction.IDLE
-        )
-        self._attr_hvac_mode = (
-            HVACMode.HEAT
-            if self.target_temperature > self.current_temperature
-            else HVACMode.OFF
         )
 
     async def _async_request_state(self) -> None:
