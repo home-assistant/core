@@ -220,7 +220,7 @@ async def test_max_token_limit(
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert (
         result.response.speech["plain"]["speech"]
-        == "OpenAI response incomplete: max_output_tokens"
+        == "OpenAI response incomplete: max output tokens reached"
     ), result.response.speech
 
     # Length limit reached before any content is generated
@@ -244,7 +244,7 @@ async def test_max_token_limit(
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert (
         result.response.speech["plain"]["speech"]
-        == "OpenAI response incomplete: max_output_tokens"
+        == "OpenAI response incomplete: max output tokens reached"
     ), result.response.speech
 
 
