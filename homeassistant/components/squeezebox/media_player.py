@@ -215,9 +215,6 @@ class SqueezeBoxMediaPlayerEntity(
     def __init__(self, coordinator: SqueezeBoxPlayerUpdateCoordinator) -> None:
         """Initialize the SqueezeBox device."""
         super().__init__(coordinator)
-        SqueezeboxEntity.__init__(self, coordinator)
-        # player = coordinator.player
-        # self._player = player
         self._query_result: bool | dict = {}
         self._remove_dispatcher: Callable | None = None
         self._previous_media_position = 0
