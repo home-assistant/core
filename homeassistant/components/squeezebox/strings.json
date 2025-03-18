@@ -83,22 +83,22 @@
         "name": "Preset 6"
       },
       "brightness_up": {
-        "name": "Brightness Up"
+        "name": "Brightness up"
       },
       "brightness_down": {
-        "name": "Brightness Down"
+        "name": "Brightness down"
       },
       "bass_up": {
-        "name": "Bass Up"
+        "name": "Bass up"
       },
       "bass_down": {
-        "name": "Bass Down"
+        "name": "Bass down"
       },
       "treble_up": {
-        "name": "Treble Up"
+        "name": "Treble up"
       },
       "treble_down": {
-        "name": "Treble Down"
+        "name": "Treble down"
       }
     },
     "binary_sensor": {
