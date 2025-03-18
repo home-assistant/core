@@ -16,9 +16,11 @@ from homeassistant.components.climate import (
 from homeassistant.components.mqtt import ReceiveMessage, client as mqtt
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import QbusConfigEntry
 from .entity import QbusEntity, add_new_outputs
 
@@ -96,8 +98,14 @@ class QbusClimate(QbusEntity, ClimateEntity):
         """Set new target preset mode."""
 
         if preset_mode not in self._attr_preset_modes:
-            _LOGGER.warning("Invalid preset '%s'", preset_mode)
-            return
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_preset",
+                translation_placeholders={
+                    "preset": preset_mode,
+                    "options": ", ".join(self._attr_preset_modes),
+                },
+            )
 
         state = QbusMqttThermoState(id=self._mqtt_output.id, type=StateType.STATE)
         state.write_regime(preset_mode)
