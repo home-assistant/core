@@ -164,6 +164,12 @@
       },
       "temperature_offset": {
         "name": "Temperature offset"
+      },
+      "pir_occupied_to_unoccupied_delay": {
+        "name": "Occupied to unoccupied delay"
+      },
+      "auto_relock_timer": {
+        "name": "Automatic relock timer"
       }
     },
     "light": {
@@ -220,6 +226,15 @@
       },
       "laundry_washer_spin_speed": {
         "name": "Spin speed"
+      },
+      "local_config_disabled": {
+        "name": "Local Configuration"
+      },
+      "enable_one_touch_locking": {
+        "name": "One-Touch Locking"
+      },
+      "door_lock_sound_volume": {
+        "name": "Sound Volume"
       }
     },
     "sensor": {
@@ -278,6 +293,15 @@
       },
       "current_phase": {
         "name": "Current phase"
+      },
+      "min_pin_code_length": {
+        "name": "Min PIN Code Length"
+      },
+      "max_pin_code_length": {
+        "name": "Max PIN Code Length"
+      },
+      "window_covering_target_position": {
+        "name": "Target Open-to Position"
       }
     },
     "switch": {
