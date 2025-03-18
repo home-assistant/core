@@ -138,6 +138,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         # Disable tcp push by default for tests
         host_mock.baichuan.events_active = False
         host_mock.baichuan.privacy_mode.return_value = False
+        host_mock.baichuan.day_night_state.return_value = "day"
         host_mock.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
         host_mock.baichuan.abilities = {
             0: {"chnID": 0, "aitype": 34615},
