@@ -39,10 +39,10 @@
   },
   "exceptions": {
     "update_error": {
-      "message": "An error occurred while retrieving data from the Airly API: {error}"
+      "message": "An error occurred while retrieving data from the Airly API for {entry}: {error}"
     },
     "no_station": {
-      "message": "An error occurred while retrieving data from the Airly API: no measuring stations in this area"
+      "message": "An error occurred while retrieving data from the Airly API for {entry}: no measuring stations in this area"
     }
   }
 }

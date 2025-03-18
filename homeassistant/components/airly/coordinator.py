@@ -108,7 +108,10 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | float | i
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="update_error",
-                    translation_placeholders={"error": repr(error)},
+                    translation_placeholders={
+                        "entry": self.config_entry.title,
+                        "error": repr(error),
+                    },
                 ) from error
 
         _LOGGER.debug(
@@ -130,7 +133,11 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | float | i
         standards = measurements.current["standards"]
 
         if index["description"] == NO_AIRLY_SENSORS:
-            raise UpdateFailed(translation_domain=DOMAIN, translation_key="no_station")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_station",
+                translation_placeholders={"entry": self.config_entry.title},
+            )
         for value in values:
             data[value["name"]] = value["value"]
         for standard in standards:
