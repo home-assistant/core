@@ -405,6 +405,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(
         hass, websocket_try_parse_dsk_from_qr_code_string
     )
+    websocket_api.async_register_command(hass, websocket_lookup_device)
     websocket_api.async_register_command(hass, websocket_supports_feature)
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
@@ -1136,6 +1137,41 @@ async def websocket_try_parse_dsk_from_qr_code_string(
         msg[ID],
         await async_try_parse_dsk_from_qr_code_string(client, msg[QR_CODE_STRING]),
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/lookup_device",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(MANUFACTURER_ID): int,
+        vol.Required(PRODUCT_TYPE): int,
+        vol.Required(PRODUCT_ID): int,
+        vol.Optional(APPLICATION_VERSION): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_lookup_device(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Look up the definition of a given device in the configuration DB."""
+    device = await driver.config_manager.lookup_device(
+        msg[MANUFACTURER_ID],
+        msg[PRODUCT_TYPE],
+        msg[PRODUCT_ID],
+        msg.get(APPLICATION_VERSION),
+    )
+    if device is None:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, "Device not found")
+    else:
+        connection.send_result(msg[ID], device.to_dict())
 
 
 @websocket_api.require_admin
