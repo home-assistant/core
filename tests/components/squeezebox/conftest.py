@@ -269,6 +269,7 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         mock_player.title = None
         mock_player.image_url = None
         mock_player.model = "SqueezeLite"
+        mock_player.creator = "Ralph Irving & Adrian Smith"
 
         return mock_player
 
