@@ -36,8 +36,18 @@ class HomeeLock(HomeeEntity, LockEntity):
 
     @property
     def is_locked(self) -> bool:
-        """Return the current lock state."""
+        """Return if lock is locked."""
         return bool(self._attribute.current_value)
+
+    @property
+    def is_locking(self) -> bool:
+        """Return if lock is locking."""
+        return self._attribute.target_value > self._attribute.current_value
+
+    @property
+    def is_unlocking(self) -> bool:
+        """Return if lock is unlocking."""
+        return self._attribute.target_value < self._attribute.current_value
 
     @property
     def changed_by(self) -> str:

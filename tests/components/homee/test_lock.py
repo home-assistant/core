@@ -9,6 +9,7 @@ from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
+    LockState,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -51,6 +52,35 @@ async def test_lock_services(
         {ATTR_ENTITY_ID: "lock.test_lock"},
     )
     mock_homee.set_value.assert_called_once_with(1, 1, target_value)
+
+
+@pytest.mark.parametrize(
+    ("target_value", "current_value", "expected"),
+    [
+        (1.0, 1.0, LockState.LOCKED),
+        (0.0, 0.0, LockState.UNLOCKED),
+        (1.0, 0.0, LockState.LOCKING),
+        (0.0, 1.0, LockState.UNLOCKING),
+    ],
+)
+async def test_lock_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: MagicMock,
+    target_value: float,
+    current_value: float,
+    expected: LockState,
+) -> None:
+    """Test lock state."""
+    await setup_lock(hass, mock_config_entry, mock_homee)
+
+    attribute = mock_homee.nodes[0].attributes[0]
+    attribute.target_value = target_value
+    attribute.current_value = current_value
+    attribute.add_on_changed_listener.call_args_list[0][0][0](attribute)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("lock.test_lock").state == expected
 
 
 @pytest.mark.parametrize(
