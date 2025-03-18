@@ -229,6 +229,11 @@
       }
     }
   },
+  "exceptions": {
+    "update_error": {
+      "message": "An error occurred while retrieving {data_type} from the AccuWeather API: {error}"
+    }
+  },
   "system_health": {
     "info": {
       "can_reach_server": "Reach AccuWeather server",
