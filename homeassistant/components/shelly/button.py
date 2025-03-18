@@ -185,7 +185,7 @@ class ShellyBaseButton(
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
         try:
-            await self.press_method()
+            await self._press_method()
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
@@ -210,7 +210,7 @@ class ShellyBaseButton(
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
 
-    async def press_method(self) -> None:
+    async def _press_method(self) -> None:
         """Press method."""
         raise NotImplementedError
 
@@ -234,7 +234,7 @@ class ShellyButton(ShellyBaseButton):
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
 
-    async def press_method(self) -> None:
+    async def _press_method(self) -> None:
         """Press method."""
         method = getattr(self.coordinator.device, self.entity_description.press_action)
 
@@ -268,7 +268,7 @@ class ShellyBluTrvButton(ShellyBaseButton):
         )
         self._id = id_
 
-    async def press_method(self) -> None:
+    async def _press_method(self) -> None:
         """Press method."""
         method = getattr(self.coordinator.device, self.entity_description.press_action)
 
