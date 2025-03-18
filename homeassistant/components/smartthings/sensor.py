@@ -132,6 +132,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     capability_ignore_list: list[set[Capability]] | None = None
     options_attribute: Attribute | None = None
     exists_fn: Callable[[Status], bool] | None = None
+    use_temperature_unit: bool = False
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -572,6 +573,10 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.OVEN_SETPOINT,
                 translation_key="oven_setpoint",
+                device_class=SensorDeviceClass.TEMPERATURE,
+                use_temperature_unit=True,
+                # Set the value to None if it is 0 F (-17 C)
+                value_fn=lambda value: None if value in {0, -17} else value,
             )
         ]
     },
@@ -1023,7 +1028,10 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         attribute: Attribute,
     ) -> None:
         """Init the class."""
-        super().__init__(client, device, rooms, {capability})
+        capabilities_to_subscribe = {capability}
+        if entity_description.use_temperature_unit:
+            capabilities_to_subscribe.add(Capability.TEMPERATURE_MEASUREMENT)
+        super().__init__(client, device, rooms, capabilities_to_subscribe)
         self._attr_unique_id = f"{device.device.device_id}{entity_description.unique_id_separator}{entity_description.key}"
         self._attribute = attribute
         self.capability = capability
@@ -1038,7 +1046,12 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
-        unit = self._internal_state[self.capability][self._attribute].unit
+        if self.entity_description.use_temperature_unit:
+            unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
+                Attribute.TEMPERATURE
+            ].unit
+        else:
+            unit = self._internal_state[self.capability][self._attribute].unit
         return (
             UNITS.get(unit, unit)
             if unit
