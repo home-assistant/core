@@ -12,6 +12,8 @@ from . import HomeeConfigEntry
 from .entity import HomeeEntity
 from .helpers import get_name_for_enum
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
