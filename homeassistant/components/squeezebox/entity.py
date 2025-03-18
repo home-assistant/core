@@ -5,7 +5,7 @@ from homeassistant.helpers.device_registry import (
     DeviceInfo,
     format_mac,
 )
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, STATUS_QUERY_UUID
@@ -18,11 +18,13 @@ from .coordinator import (
 class SqueezeboxEntity(CoordinatorEntity[SqueezeBoxPlayerUpdateCoordinator]):
     """Base entity class for Squeezebox entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: SqueezeBoxPlayerUpdateCoordinator) -> None:
         """Initialize the SqueezeBox entity."""
+        super().__init__(coordinator)
         self._coordinator = coordinator
         self._player = self._coordinator.player
-        self._attr_has_entity_name = True
         self._manufacturer = None
         if (
             self._player.model.startswith("SqueezeLite")

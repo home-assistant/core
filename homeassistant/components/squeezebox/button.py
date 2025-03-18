@@ -7,9 +7,9 @@ import logging
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SqueezeboxConfigEntry
 from .const import SIGNAL_PLAYER_DISCOVERED
@@ -49,9 +49,6 @@ class SqueezeboxButtonEntityDescription(ButtonEntityDescription):
     """Squeezebox Button description."""
 
     press_action: str
-
-
-#    models: list[str] = field(default_factory=list)
 
 
 BUTTON_ENTITIES: tuple[SqueezeboxButtonEntityDescription, ...] = (
@@ -141,31 +138,33 @@ async def async_setup_entry(
             player_coordinator.player.model,
         )
 
-        async_add_entities(
+        entities: list[SqueezeboxButtonEntity] = []
+
+        entities.extend(
             SqueezeboxButtonEntity(player_coordinator, description)
             for description in BUTTON_ENTITIES
         )
 
-        async_add_entities(
+        entities.extend(
             SqueezeboxButtonEntity(player_coordinator, description)
             for description in TONE_BUTTON_ENTITIES
             if player_coordinator.player.model in HARDWARE_MODELS_WITH_TONE
         )
 
-        async_add_entities(
+        entities.extend(
             SqueezeboxButtonEntity(player_coordinator, description)
             for description in SCREEN_BUTTON_ENTITIES
             if player_coordinator.player.model in HARDWARE_MODELS_WITH_SCREEN
         )
+
+        async_add_entities(entities)
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_PLAYER_DISCOVERED, _player_discovered)
     )
 
 
-class SqueezeboxButtonEntity(
-    SqueezeboxEntity, ButtonEntity
-):
+class SqueezeboxButtonEntity(SqueezeboxEntity, ButtonEntity):
     """Representation of Buttons for Squeezebox entities."""
 
     def __init__(
@@ -175,9 +174,10 @@ class SqueezeboxButtonEntity(
     ) -> None:
         """Initialize the SqueezeBox Button."""
         super().__init__(coordinator)
-        SqueezeboxEntity.__init__(self, coordinator)
         self.entity_description: SqueezeboxButtonEntityDescription = entity_description
-        self._attr_unique_id = f"{self._player.name}_{self.entity_description.key}"
+        self._attr_unique_id = (
+            f"{format_mac(self._player.player_id)}_{self.entity_description.key}"
+        )
 
     async def async_press(self) -> None:
         """Execute the button action."""
