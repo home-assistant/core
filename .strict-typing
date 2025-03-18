@@ -103,6 +103,7 @@ homeassistant.components.auth.*
 homeassistant.components.automation.*
 homeassistant.components.awair.*
 homeassistant.components.axis.*
+homeassistant.components.azure_storage.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.bang_olufsen.*
@@ -119,6 +120,7 @@ homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
 homeassistant.components.bond.*
 homeassistant.components.braviatv.*
+homeassistant.components.bring.*
 homeassistant.components.brother.*
 homeassistant.components.browser.*
 homeassistant.components.bryant_evolution.*
@@ -134,6 +136,7 @@ homeassistant.components.clicksend.*
 homeassistant.components.climate.*
 homeassistant.components.cloud.*
 homeassistant.components.co2signal.*
+homeassistant.components.comelit.*
 homeassistant.components.command_line.*
 homeassistant.components.config.*
 homeassistant.components.configurator.*
@@ -217,6 +220,7 @@ homeassistant.components.goalzero.*
 homeassistant.components.google.*
 homeassistant.components.google_assistant_sdk.*
 homeassistant.components.google_cloud.*
+homeassistant.components.google_drive.*
 homeassistant.components.google_photos.*
 homeassistant.components.google_sheets.*
 homeassistant.components.govee_ble.*
@@ -227,10 +231,12 @@ homeassistant.components.guardian.*
 homeassistant.components.habitica.*
 homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
+homeassistant.components.heos.*
 homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
 homeassistant.components.history_stats.*
 homeassistant.components.holiday.*
+homeassistant.components.home_connect.*
 homeassistant.components.homeassistant.*
 homeassistant.components.homeassistant_alerts.*
 homeassistant.components.homeassistant_green.*
@@ -316,6 +322,7 @@ homeassistant.components.manual.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*
+homeassistant.components.mcp.*
 homeassistant.components.mcp_server.*
 homeassistant.components.mealie.*
 homeassistant.components.media_extractor.*
@@ -358,6 +365,7 @@ homeassistant.components.number.*
 homeassistant.components.nut.*
 homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
+homeassistant.components.onedrive.*
 homeassistant.components.onewire.*
 homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*
@@ -389,6 +397,7 @@ homeassistant.components.pure_energie.*
 homeassistant.components.purpleair.*
 homeassistant.components.pushbullet.*
 homeassistant.components.pvoutput.*
+homeassistant.components.pyload.*
 homeassistant.components.python_script.*
 homeassistant.components.qbus.*
 homeassistant.components.qnap_qsw.*
@@ -401,7 +410,9 @@ homeassistant.components.raspberry_pi.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
+homeassistant.components.remember_the_milk.*
 homeassistant.components.remote.*
+homeassistant.components.remote_calendar.*
 homeassistant.components.renault.*
 homeassistant.components.reolink.*
 homeassistant.components.repairs.*
@@ -432,6 +443,7 @@ homeassistant.components.select.*
 homeassistant.components.sensibo.*
 homeassistant.components.sensirion_ble.*
 homeassistant.components.sensor.*
+homeassistant.components.sensorpush_cloud.*
 homeassistant.components.sensoterra.*
 homeassistant.components.senz.*
 homeassistant.components.sfr_box.*
@@ -519,6 +531,7 @@ homeassistant.components.vallox.*
 homeassistant.components.valve.*
 homeassistant.components.velbus.*
 homeassistant.components.vlc_telnet.*
+homeassistant.components.vodafone_station.*
 homeassistant.components.wake_on_lan.*
 homeassistant.components.wake_word.*
 homeassistant.components.wallbox.*

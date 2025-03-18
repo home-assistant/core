@@ -7,20 +7,17 @@ import logging
 from aiopegelonline import PegelOnline
 from aiopegelonline.const import CONNECT_ERRORS
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_STATION
-from .coordinator import PegelOnlineDataUpdateCoordinator
+from .coordinator import PegelOnlineConfigEntry, PegelOnlineDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
-
-type PegelOnlineConfigEntry = ConfigEntry[PegelOnlineDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PegelOnlineConfigEntry) -> bool:
@@ -35,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PegelOnlineConfigEntry) 
     except CONNECT_ERRORS as err:
         raise ConfigEntryNotReady("Failed to connect") from err
 
-    coordinator = PegelOnlineDataUpdateCoordinator(hass, entry.title, api, station)
+    coordinator = PegelOnlineDataUpdateCoordinator(hass, entry, api, station)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -46,6 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PegelOnlineConfigEntry) 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: PegelOnlineConfigEntry
+) -> bool:
     """Unload PEGELONLINE entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

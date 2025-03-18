@@ -28,11 +28,11 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_USE_HTTPS, DOMAIN
+from .const import CONF_BC_PORT, CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
-from .util import ReolinkConfigEntry, ReolinkData, get_device_uid_and_ch
+from .util import ReolinkConfigEntry, ReolinkData, get_device_uid_and_ch, get_store
 from .views import PlaybackProxyView
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,7 +67,9 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ReolinkConfigEntry
 ) -> bool:
     """Set up Reolink from a config entry."""
-    host = ReolinkHost(hass, config_entry.data, config_entry.options)
+    host = ReolinkHost(
+        hass, config_entry.data, config_entry.options, config_entry.entry_id
+    )
 
     try:
         await host.async_init()
@@ -92,21 +94,37 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, host.stop)
     )
 
-    # update the port info if needed for the next time
+    # update the config info if needed for the next time
     if (
         host.api.port != config_entry.data[CONF_PORT]
         or host.api.use_https != config_entry.data[CONF_USE_HTTPS]
+        or host.api.supported(None, "privacy_mode")
+        != config_entry.data.get(CONF_SUPPORTS_PRIVACY_MODE)
+        or host.api.baichuan.port != config_entry.data.get(CONF_BC_PORT)
     ):
-        _LOGGER.warning(
-            "HTTP(s) port of Reolink %s, changed from %s to %s",
-            host.api.nvr_name,
-            config_entry.data[CONF_PORT],
-            host.api.port,
-        )
+        if host.api.port != config_entry.data[CONF_PORT]:
+            _LOGGER.warning(
+                "HTTP(s) port of Reolink %s, changed from %s to %s",
+                host.api.nvr_name,
+                config_entry.data[CONF_PORT],
+                host.api.port,
+            )
+        if (
+            config_entry.data.get(CONF_BC_PORT, host.api.baichuan.port)
+            != host.api.baichuan.port
+        ):
+            _LOGGER.warning(
+                "Baichuan port of Reolink %s, changed from %s to %s",
+                host.api.nvr_name,
+                config_entry.data.get(CONF_BC_PORT),
+                host.api.baichuan.port,
+            )
         data = {
             **config_entry.data,
             CONF_PORT: host.api.port,
             CONF_USE_HTTPS: host.api.use_https,
+            CONF_BC_PORT: host.api.baichuan.port,
+            CONF_SUPPORTS_PRIVACY_MODE: host.api.supported(None, "privacy_mode"),
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
 
@@ -246,6 +264,14 @@ async def async_unload_entry(
         host.cancel_refresh_privacy_mode()
 
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+
+async def async_remove_entry(
+    hass: HomeAssistant, config_entry: ReolinkConfigEntry
+) -> None:
+    """Handle removal of an entry."""
+    store = get_store(hass, config_entry.entry_id)
+    await store.async_remove()
 
 
 async def async_remove_config_entry_device(

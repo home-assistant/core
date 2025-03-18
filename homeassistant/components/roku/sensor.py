@@ -10,9 +10,9 @@ from rokuecp.models import Device as RokuDevice
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RokuConfigEntry
+from .coordinator import RokuConfigEntry
 from .entity import RokuEntity
 
 # Coordinator is used to centralize the data updates
@@ -45,7 +45,7 @@ SENSORS: tuple[RokuSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RokuConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roku sensor based on a config entry."""
     async_add_entities(

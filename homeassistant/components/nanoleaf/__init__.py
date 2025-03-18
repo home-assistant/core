@@ -8,7 +8,6 @@ import logging
 
 from aionanoleaf import EffectsEvent, Nanoleaf, StateEvent, TouchEvent
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_HOST,
@@ -22,14 +21,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, NANOLEAF_EVENT, TOUCH_GESTURE_TRIGGER_MAP, TOUCH_MODELS
-from .coordinator import NanoleafCoordinator
+from .coordinator import NanoleafConfigEntry, NanoleafCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BUTTON, Platform.EVENT, Platform.LIGHT]
-
-
-type NanoleafConfigEntry = ConfigEntry[NanoleafCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NanoleafConfigEntry) -> bool:
@@ -38,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NanoleafConfigEntry) -> 
         async_get_clientsession(hass), entry.data[CONF_HOST], entry.data[CONF_TOKEN]
     )
 
-    coordinator = NanoleafCoordinator(hass, nanoleaf)
+    coordinator = NanoleafCoordinator(hass, entry, nanoleaf)
 
     await coordinator.async_config_entry_first_refresh()
 

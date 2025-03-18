@@ -2,10 +2,10 @@
   {
     "mode": "ESP",
     "type": null,
-    "notes": "CHANGELOG (Current 2.5.2 vs. Previous 2.3.6):\\r\\nFixed incorrect device type detection for some devices\\r\\nFixed web interface not working on some devices\\r\\nFixed disabled SSID/pass fields\\r\\n",
+    "notes": "CHANGELOG (Current 2.7.5 vs. Previous 2.3.6):\\r\\nFixed incorrect device type detection for some devices\\r\\nFixed web interface not working on some devices\\r\\nFixed disabled SSID/pass fields\\r\\n",
     "rev": "20240830",
     "link": "https://smlight.tech/flasher/firmware/bin/slzb06x/core/slzb-06-v2.5.2-ota.bin",
-    "ver": "v2.5.2",
+    "ver": "v2.7.5",
     "dev": false,
     "prod": true,
     "baud": null

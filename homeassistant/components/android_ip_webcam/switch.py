@@ -11,7 +11,7 @@ from pydroid_ipcam import PyDroidIPCam
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AndroidIPCamConfigEntry, AndroidIPCamDataUpdateCoordinator
 from .entity import AndroidIPCamBaseEntity
@@ -112,7 +112,7 @@ SWITCH_TYPES: tuple[AndroidIPWebcamSwitchEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AndroidIPCamConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the IP Webcam switches from config entry."""
 

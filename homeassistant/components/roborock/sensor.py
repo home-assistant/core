@@ -28,12 +28,17 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import RoborockConfigEntry
-from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
+from .coordinator import (
+    RoborockConfigEntry,
+    RoborockDataUpdateCoordinator,
+    RoborockDataUpdateCoordinatorA01,
+)
 from .entity import RoborockCoordinatedEntityA01, RoborockCoordinatedEntityV1
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -43,6 +48,9 @@ class RoborockSensorDescription(SensorEntityDescription):
     value_fn: Callable[[DeviceProp], StateType | datetime.datetime]
 
     protocol_listener: RoborockDataProtocol | None = None
+
+    # If it is a dock entity
+    is_dock_entity: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -194,6 +202,7 @@ SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=RoborockDockErrorCode.keys(),
+        is_dock_entity=True,
     ),
     RoborockSensorDescription(
         key="mop_clean_remaining",
@@ -202,6 +211,7 @@ SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: data.status.rdt,
         translation_key="mop_drying_remaining_time",
         entity_category=EntityCategory.DIAGNOSTIC,
+        is_dock_entity=True,
     ),
 ]
 
@@ -292,7 +302,7 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Roborock vacuum sensors."""
     coordinators = config_entry.runtime_data
@@ -332,6 +342,7 @@ class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
             f"{description.key}_{coordinator.duid_slug}",
             coordinator,
             description.protocol_listener,
+            is_dock_entity=description.is_dock_entity,
         )
 
     @property

@@ -12,7 +12,7 @@ from gspread.exceptions import APIError
 from gspread.utils import ValueInputOption
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import (
@@ -20,11 +20,11 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import ConfigEntrySelector
 
 from .const import DEFAULT_ACCESS, DOMAIN
@@ -39,7 +39,7 @@ SERVICE_APPEND_SHEET = "append_sheet"
 
 SHEET_SERVICE_SCHEMA = vol.All(
     {
-        vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Optional(WORKSHEET): cv.string,
         vol.Required(DATA): vol.Any(cv.ensure_list, [dict]),
     },
@@ -81,12 +81,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleSheetsConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
-    ]
-    if len(loaded_entries) == 1:
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
         for service_name in hass.services.async_services_for_domain(DOMAIN):
             hass.services.async_remove(DOMAIN, service_name)
 

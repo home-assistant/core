@@ -11,6 +11,7 @@ from pypck.connection import (
 )
 from pypck.lcn_defs import LcnEvent
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components.lcn.const import DOMAIN
@@ -134,7 +135,7 @@ async def test_async_entry_reload_on_host_event_received(
 
 
 @patch("homeassistant.components.lcn.PchkConnectionManager", MockPchkConnectionManager)
-async def test_migrate_1_1(hass: HomeAssistant, entry) -> None:
+async def test_migrate_1_1(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test migration config entry."""
     entry_v1_1 = create_config_entry("pchk_v1_1", version=(1, 1))
     entry_v1_1.add_to_hass(hass)
@@ -143,14 +144,15 @@ async def test_migrate_1_1(hass: HomeAssistant, entry) -> None:
     await hass.async_block_till_done()
 
     entry_migrated = hass.config_entries.async_get_entry(entry_v1_1.entry_id)
+
     assert entry_migrated.state is ConfigEntryState.LOADED
     assert entry_migrated.version == 2
     assert entry_migrated.minor_version == 1
-    assert entry_migrated.data == entry.data
+    assert entry_migrated.data == snapshot
 
 
 @patch("homeassistant.components.lcn.PchkConnectionManager", MockPchkConnectionManager)
-async def test_migrate_1_2(hass: HomeAssistant, entry) -> None:
+async def test_migrate_1_2(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test migration config entry."""
     entry_v1_2 = create_config_entry("pchk_v1_2", version=(1, 2))
     entry_v1_2.add_to_hass(hass)
@@ -159,7 +161,8 @@ async def test_migrate_1_2(hass: HomeAssistant, entry) -> None:
     await hass.async_block_till_done()
 
     entry_migrated = hass.config_entries.async_get_entry(entry_v1_2.entry_id)
+
     assert entry_migrated.state is ConfigEntryState.LOADED
     assert entry_migrated.version == 2
     assert entry_migrated.minor_version == 1
-    assert entry_migrated.data == entry.data
+    assert entry_migrated.data == snapshot

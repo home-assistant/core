@@ -18,7 +18,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -46,6 +45,7 @@ from .const import (
     TRANSITION_JUMP,
     TRANSITION_STROBE,
 )
+from .coordinator import FluxLedConfigEntry
 from .discovery import (
     async_discover_device,
     async_discover_devices,
@@ -72,7 +72,7 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: FluxLedConfigEntry,
     ) -> FluxLedOptionsFlow:
         """Get the options flow for the Flux LED component."""
         return FluxLedOptionsFlow()
@@ -299,7 +299,7 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
             # AKA `HF-LPB100-ZJ200`
             return device
         bulb = async_wifi_bulb_for_host(host, discovery=device)
-        bulb.discovery = discovery  # type: ignore[assignment]
+        bulb.discovery = discovery
         try:
             await bulb.async_setup(lambda: None)
         finally:

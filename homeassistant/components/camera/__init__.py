@@ -1175,12 +1175,17 @@ async def async_handle_snapshot_service(
             f"Cannot write `{snapshot_file}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
         )
 
-    async with asyncio.timeout(CAMERA_IMAGE_TIMEOUT):
-        image = (
-            await _async_get_stream_image(camera, wait_for_next_keyframe=True)
-            if camera.use_stream_for_stills
-            else await camera.async_camera_image()
-        )
+    try:
+        async with asyncio.timeout(CAMERA_IMAGE_TIMEOUT):
+            image = (
+                await _async_get_stream_image(camera, wait_for_next_keyframe=True)
+                if camera.use_stream_for_stills
+                else await camera.async_camera_image()
+            )
+    except TimeoutError as err:
+        raise HomeAssistantError(
+            f"Unable to get snapshot: Timed out after {CAMERA_IMAGE_TIMEOUT} seconds"
+        ) from err
 
     if image is None:
         return
@@ -1194,7 +1199,7 @@ async def async_handle_snapshot_service(
     try:
         await hass.async_add_executor_job(_write_image, snapshot_file, image)
     except OSError as err:
-        _LOGGER.error("Can't write image to file: %s", err)
+        raise HomeAssistantError(f"Can't write image to file: {err}") from err
 
 
 async def async_handle_play_stream_service(
