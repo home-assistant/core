@@ -106,7 +106,6 @@
         "state_attributes": {
           "detected": {
             "state": {
-              "unknown": "Unknown",
               "none": "None",
               "mild": "Mild",
               "heavy": "Heavy",
@@ -139,9 +138,26 @@
       }
     },
     "sensor": {
+      "gas_detected": {
+        "state": {
+          "none": "None",
+          "mild": "Mild",
+          "heavy": "Heavy",
+          "test": "Test"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "none": "[%key:component::shelly::entity::sensor::gas_detected::state::none%]",
+              "mild": "[%key:component::shelly::entity::sensor::gas_detected::state::mild%]",
+              "heavy": "[%key:component::shelly::entity::sensor::gas_detected::state::heavy%]",
+              "test": "[%key:component::shelly::entity::sensor::gas_detected::state::test%]"
+            }
+          }
+        }
+      },
       "operation": {
         "state": {
-          "unknown": "Unknown",
           "warmup": "Warm-up",
           "normal": "Normal",
           "fault": "Fault"
@@ -157,6 +173,24 @@
           }
         }
       },
+      "self_test": {
+        "state": {
+          "not_completed": "Not completed",
+          "completed": "Completed",
+          "running": "Running",
+          "pending": "Pending"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "not_completed": "[%key:component::shelly::entity::sensor::self_test::state::not_completed%]",
+              "completed": "[%key:component::shelly::entity::sensor::self_test::state::completed%]",
+              "running": "[%key:component::shelly::entity::sensor::self_test::state::running%]",
+              "pending": "[%key:component::shelly::entity::sensor::self_test::state::pending%]"
+            }
+          }
+        }
+      },
       "valve_status": {
         "state": {
           "checking": "Checking",
@@ -164,8 +198,7 @@
           "closing": "Closing",
           "failure": "Failure",
           "opened": "Opened",
-          "opening": "Opening",
-          "unknown": "[%key:component::shelly::entity::sensor::operation::state::unknown%]"
+          "opening": "Opening"
         }
       }
     }
