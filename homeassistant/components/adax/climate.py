@@ -11,6 +11,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
+    HVACAction
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -123,9 +124,14 @@ class AdaxDevice(ClimateEntity):
             self._attr_current_temperature = room.get("temperature")
             self._attr_target_temperature = room.get("targetTemperature")
             if room["heatingEnabled"]:
+                if self._attr_current_temperature > self._attr_target_temperature:
+                    self._attr_hvac_action = HVACAction.IDLE
+                else:
+                    self._attr_hvac_action = HVACAction.HEATING
                 self._attr_hvac_mode = HVACMode.HEAT
                 self._attr_icon = "mdi:radiator"
             else:
+                self._attr_hvac_action = HVACAction.OFF
                 self._attr_hvac_mode = HVACMode.OFF
                 self._attr_icon = "mdi:radiator-off"
             return
@@ -136,6 +142,7 @@ class LocalAdaxDevice(ClimateEntity):
 
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_hvac_mode = HVACMode.HEAT
+    _attr_hvac_action = None
     _attr_max_temp = 35
     _attr_min_temp = 5
     _attr_supported_features = (
@@ -175,11 +182,16 @@ class LocalAdaxDevice(ClimateEntity):
         self._attr_current_temperature = data["current_temperature"]
         self._attr_available = self._attr_current_temperature is not None
         if (target_temp := data["target_temperature"]) == 0:
+            self._attr_hvac_action = HVACAction.OFF
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_icon = "mdi:radiator-off"
             if target_temp == 0:
                 self._attr_target_temperature = self._attr_min_temp
         else:
+            if self._attr_current_temperature > self._attr_target_temperature:
+                self._attr_hvac_action = HVACAction.IDLE
+            else:
+                self._attr_hvac_action = HVACAction.HEATING
             self._attr_hvac_mode = HVACMode.HEAT
             self._attr_icon = "mdi:radiator"
             self._attr_target_temperature = target_temp
