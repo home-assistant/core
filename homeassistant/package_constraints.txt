@@ -10,7 +10,7 @@ aiohttp==3.11.14
 aiohttp_cors==0.7.0
 aiousbwatcher==1.1.1
 aiozoneinfo==0.2.3
-annotatedyaml==0.4.2
+annotatedyaml==0.4.3
 astral==2.2
 async-interrupt==1.2.2
 async-upnp-client==0.43.0
