@@ -260,9 +260,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if listen_task in done:
         # If the listen task is already done, we need to raise ConfigEntryNotReady
-        listen_error = listen_task.exception()
+        if listen_error := listen_task.exception():
+            error_message = f"Client listen failed: {listen_error}"
+        else:
+            error_message = "Client connection was closed"
         driver_ready_task.cancel()
-        raise ConfigEntryNotReady(listen_error) from listen_error
+        raise ConfigEntryNotReady(error_message) from listen_error
 
     LOGGER.debug("Connection to Zwave JS Server initialized")
 
@@ -278,7 +281,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     with contextlib.suppress(NotConnected):
-        # If the client isn't connected the listen task will have an exception
+        # If the client isn't connected the listen task may have an exception
         # and we'll handle the clean up below.
         await driver_events.setup(driver)
 

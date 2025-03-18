@@ -179,6 +179,35 @@ async def test_listen_failure_during_setup_before_forward_entry(
     assert client.disconnect.call_count == 1
 
 
+async def test_listen_done_during_setup_before_forward_entry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
+) -> None:
+    """Test we handle listen task finishing during setup before forward entry."""
+
+    async def listen(driver_ready: asyncio.Event) -> None:
+        await listen_block.wait()
+        await listen_result
+
+    client.listen.side_effect = listen
+    listen_block.set()
+    listen_block.clear()
+    listen_result.set_result(None)
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    assert client.disconnect.call_count == 0
+
+    with patch("homeassistant.components.zwave_js.DRIVER_READY_TIMEOUT", new=0):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert client.disconnect.call_count == 1
+
+
 async def test_not_connected_during_setup_after_forward_entry(
     hass: HomeAssistant,
     client: MagicMock,
