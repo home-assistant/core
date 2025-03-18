@@ -229,6 +229,14 @@
       }
     }
   },
+  "exceptions": {
+    "current_conditions_update_error": {
+      "message": "An error occurred while retrieving weather current conditions data from the AccuWeather API: {error}"
+    },
+    "forecast_update_error": {
+      "message": "An error occurred while retrieving weather forecast data from the AccuWeather API: {error}"
+    }
+  },
   "system_health": {
     "info": {
       "can_reach_server": "Reach AccuWeather server",
