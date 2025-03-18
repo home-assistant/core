@@ -123,7 +123,7 @@ DEVICE_TYPE_SELECT_MAP: dict[DeviceType, tuple[SelectEntityDescription, ...]] = 
     ),
     DeviceType.WASHER: (OPERATION_SELECT_DESC[ThinQProperty.WASHER_OPERATION_MODE],),
     DeviceType.WASHTOWER_DRYER: (
-        OPERATION_SELECT_DESC[ThinQProperty.WASHER_OPERATION_MODE],
+        OPERATION_SELECT_DESC[ThinQProperty.DRYER_OPERATION_MODE],
     ),
     DeviceType.WASHTOWER: (
         OPERATION_SELECT_DESC[ThinQProperty.DRYER_OPERATION_MODE],
@@ -177,6 +177,13 @@ class ThinQSelectEntity(ThinQEntity, SelectEntity):
         super().__init__(coordinator, entity_description, property_id)
 
         self._attr_options = self.data.options if self.data.options is not None else []
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.device_state is None or (
+            self.device_state.device_is_on and self.device_state.remote_control_enabled
+        )
 
     def _update_status(self) -> None:
         """Update status itself."""
