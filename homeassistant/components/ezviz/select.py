@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 
 from pyezvizapi.constants import (
     BatteryCameraWorkMode,
     DeviceCatagories,
     DeviceSwitchType,
     SoundMode,
+    SupportExt,
 )
 from pyezvizapi.exceptions import HTTPError, PyEzvizError
 
@@ -21,6 +23,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -121,12 +125,17 @@ async def async_setup_entry(
         if switch == ALARM_SOUND_MODE_SELECT_TYPE.supported_switch
     )
 
-    entities_to_add.extend(
-        EzvizSelect(coordinator, camera, BATTERY_WORK_MODE_SELECT_TYPE)
-        for camera in coordinator.data
-        if coordinator.data[camera]["device_category"]
-        == DeviceCatagories.BATTERY_CAMERA_DEVICE_CATEGORY.value
-    )
+    for camera in coordinator.data:
+        device_category = coordinator.data[camera].get("device_category")
+        supportExt = coordinator.data[camera].get("supportExt")
+        if (
+            device_category == DeviceCatagories.BATTERY_CAMERA_DEVICE_CATEGORY.value
+            and supportExt
+            and str(SupportExt.SupportBatteryManage.value) in supportExt
+        ):
+            entities_to_add.append(
+                EzvizSelect(coordinator, camera, BATTERY_WORK_MODE_SELECT_TYPE)
+            )
 
     async_add_entities(entities_to_add)
 
