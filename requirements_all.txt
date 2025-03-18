@@ -2623,7 +2623,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.12.2
+reolink-aio==0.12.3b1
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2904,7 +2904,7 @@ thermopro-ble==0.11.0
 thingspeak==1.0.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==1.0.4
+thinqconnect==1.0.5
 
 # homeassistant.components.tikteck
 tikteck==0.4

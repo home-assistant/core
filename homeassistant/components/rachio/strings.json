@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to your Rachio device",
-        "description": "You will need the API Key from https://app.rach.io/. Go to Settings, then select 'GET API KEY'.",
+        "description": "You will need the API key from https://app.rach.io/. Go to Settings, then select 'GET API KEY'.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
@@ -70,7 +70,7 @@
     },
     "start_watering": {
       "name": "Start watering",
-      "description": "Start a single zone, a schedule or any number of smart hose timers.",
+      "description": "Starts a single zone, a schedule or any number of smart hose timers.",
       "fields": {
         "duration": {
           "name": "Duration",
@@ -80,7 +80,7 @@
     },
     "pause_watering": {
       "name": "Pause watering",
-      "description": "Pause any currently running zones or schedules.",
+      "description": "Pauses any currently running zones or schedules.",
       "fields": {
         "devices": {
           "name": "Devices",
@@ -94,7 +94,7 @@
     },
     "resume_watering": {
       "name": "Resume watering",
-      "description": "Resume any paused zone runs or schedules.",
+      "description": "Resumes any paused zone runs or schedules.",
       "fields": {
         "devices": {
           "name": "[%key:component::rachio::services::pause_watering::fields::devices::name%]",
@@ -104,7 +104,7 @@
     },
     "stop_watering": {
       "name": "Stop watering",
-      "description": "Stop any currently running zones or schedules.",
+      "description": "Stops any currently running zones or schedules.",
       "fields": {
         "devices": {
           "name": "[%key:component::rachio::services::pause_watering::fields::devices::name%]",

@@ -56,6 +56,9 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
                 translation_placeholders={"err": str(err)},
             ) from err
         try:
+            # calendar_from_ics will dynamically load packages
+            # the first time it is called, so we need to do it
+            # in a separate thread to avoid blocking the event loop
             return await self.hass.async_add_executor_job(
                 IcsCalendarStream.calendar_from_ics, res.text
             )

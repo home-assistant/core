@@ -228,7 +228,7 @@ async def setup_entry(
         yield mock_roborock_entry
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 async def cleanup_map_storage(
     hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
 ) -> Generator[pathlib.Path]:
