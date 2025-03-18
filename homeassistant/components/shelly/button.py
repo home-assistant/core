@@ -140,7 +140,7 @@ async def async_setup_entry(
         hass, config_entry.entry_id, partial(async_migrate_unique_ids, coordinator)
     )
 
-    entities: list[ShellyButton | RpcBluTrvButton] = []
+    entities: list[ShellyButton | ShellyBluTrvButton] = []
 
     entities.extend(
         ShellyButton(coordinator, button)
@@ -153,7 +153,7 @@ async def async_setup_entry(
             assert isinstance(coordinator, ShellyRpcCoordinator)
 
         entities.extend(
-            RpcBluTrvButton(coordinator, button, id_)
+            ShellyBluTrvButton(coordinator, button, id_)
             for id_ in blutrv_key_ids
             for button in BLU_TRV_BUTTONS
         )
@@ -161,7 +161,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ShellyButton(
+class ShellyBaseButton(
     CoordinatorEntity[ShellyRpcCoordinator | ShellyBlockCoordinator], ButtonEntity
 ):
     """Defines a Shelly base button."""
@@ -179,23 +179,13 @@ class ShellyButton(
     ) -> None:
         """Initialize Shelly button."""
         super().__init__(coordinator)
-        self.entity_description = description
 
-        self._attr_name = f"{coordinator.device.name} {description.name}"
-        self._attr_unique_id = f"{coordinator.mac}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
-        )
+        self.entity_description = description
 
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
-        method = getattr(self.coordinator.device, self.entity_description.press_action)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
         try:
-            await method()
+            await self.press_method()
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
@@ -220,11 +210,42 @@ class ShellyButton(
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
 
+    async def press_method(self) -> None:
+        """Press method."""
+        raise NotImplementedError
 
-class RpcBluTrvButton(CoordinatorEntity[ShellyRpcCoordinator], ButtonEntity):
-    """Represent a RPC BluTrv button."""
 
-    entity_description: ShellyButtonDescription[ShellyRpcCoordinator]
+class ShellyButton(ShellyBaseButton):
+    """Defines a Shelly button."""
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator,
+        description: ShellyButtonDescription[
+            ShellyRpcCoordinator | ShellyBlockCoordinator
+        ],
+    ) -> None:
+        """Initialize Shelly button."""
+        super().__init__(coordinator, description)
+
+        self._attr_name = f"{coordinator.device.name} {description.name}"
+        self._attr_unique_id = f"{coordinator.mac}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
+        )
+
+    async def press_method(self) -> None:
+        """Press method."""
+        method = getattr(self.coordinator.device, self.entity_description.press_action)
+
+        if TYPE_CHECKING:
+            assert method is not None
+
+        await method()
+
+
+class ShellyBluTrvButton(ShellyBaseButton):
+    """Represent a Shelly BLU TRV button."""
 
     def __init__(
         self,
@@ -233,8 +254,7 @@ class RpcBluTrvButton(CoordinatorEntity[ShellyRpcCoordinator], ButtonEntity):
         id_: int,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator)
-        self.entity_description = description
+        super().__init__(coordinator, description)
 
         ble_addr: str = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]["addr"]
         device_name = (
@@ -248,36 +268,11 @@ class RpcBluTrvButton(CoordinatorEntity[ShellyRpcCoordinator], ButtonEntity):
         )
         self._id = id_
 
-    async def async_press(self) -> None:
-        """Triggers the Shelly button press service."""
+    async def press_method(self) -> None:
+        """Press method."""
         method = getattr(self.coordinator.device, self.entity_description.press_action)
 
         if TYPE_CHECKING:
             assert method is not None
-            assert self.name is not None
 
-        try:
-            await method(self._id)
-        except DeviceConnectionError as err:
-            self.coordinator.last_update_success = False
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="device_communication_error",
-                translation_placeholders={
-                    "method": self.entity_description.press_action,
-                    "device": self.coordinator.device.name,
-                    "error": repr(err),
-                },
-            ) from err
-        except RpcCallError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="rpc_call_error",
-                translation_placeholders={
-                    "method": self.entity_description.press_action,
-                    "device": self.coordinator.device.name,
-                    "error": repr(err),
-                },
-            ) from err
-        except InvalidAuthError:
-            await self.coordinator.async_shutdown_device_and_start_reauth()
+        await method(self._id)
