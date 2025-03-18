@@ -316,7 +316,8 @@ async def test_map_status_change(
     old_body = await resp.read()
     assert old_body[0:4] == b"\x89PNG"
 
-    # Call a second time - this time forcing it to update - and save new image
+    # Call a second time. This interval does not directly trigger a map update, but does
+    # trigger a status update which detects the state has changed and uddates the map
     now = dt_util.utcnow() + V1_LOCAL_NOT_CLEANING_INTERVAL
 
     # Copy the device prop so we don't override it
