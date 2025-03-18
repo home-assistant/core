@@ -138,6 +138,24 @@
       }
     },
     "sensor": {
+      "gas_detected": {
+        "state": {
+          "none": "None",
+          "mild": "Mild",
+          "heavy": "Heavy",
+          "test": "Test"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "none": "[%key:component::shelly::entity::sensor::gas_detected::state::none%]",
+              "mild": "[%key:component::shelly::entity::sensor::gas_detected::state::mild%]",
+              "heavy": "[%key:component::shelly::entity::sensor::gas_detected::state::heavy%]",
+              "test": "[%key:component::shelly::entity::sensor::gas_detected::state::test%]"
+            }
+          }
+        }
+      },
       "operation": {
         "state": {
           "warmup": "Warm-up",
@@ -151,6 +169,24 @@
               "completed": "Completed",
               "running": "Running",
               "pending": "Pending"
+            }
+          }
+        }
+      },
+      "self_test": {
+        "state": {
+          "not_completed": "Not completed",
+          "completed": "Completed",
+          "running": "Running",
+          "pending": "Pending"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "not_completed": "[%key:component::shelly::entity::sensor::self_test::state::not_completed%]",
+              "completed": "[%key:component::shelly::entity::sensor::self_test::state::completed%]",
+              "running": "[%key:component::shelly::entity::sensor::self_test::state::running%]",
+              "pending": "[%key:component::shelly::entity::sensor::self_test::state::pending%]"
             }
           }
         }
