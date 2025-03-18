@@ -5661,21 +5661,21 @@ async def test_lookup_device(
         assert msg["error"]["code"] == ERR_NOT_FOUND
         assert msg["error"]["message"] == "Device not found"
 
-        # Test sending command with improper entry ID fails
-        await ws_client.send_json_auto_id(
-            {
-                TYPE: "zwave_js/lookup_device",
-                ENTRY_ID: "invalid_entry_id",
-                MANUFACTURER_ID: 1,
-                PRODUCT_TYPE: 1,
-                PRODUCT_ID: 1,
-                APPLICATION_VERSION: "1.0",
-            }
-        )
-        msg = await ws_client.receive_json()
-        assert not msg["success"]
-        assert msg["error"]["code"] == ERR_NOT_FOUND
-        assert msg["error"]["message"] == "Config entry invalid_entry_id not found"
+    # Test sending command with improper entry ID fails
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/lookup_device",
+            ENTRY_ID: "invalid_entry_id",
+            MANUFACTURER_ID: 1,
+            PRODUCT_TYPE: 1,
+            PRODUCT_ID: 1,
+            APPLICATION_VERSION: "1.0",
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert msg["error"]["message"] == "Config entry invalid_entry_id not found"
 
     # Test FailedCommand exception
     error_message = "Failed to execute lookup_device command"
