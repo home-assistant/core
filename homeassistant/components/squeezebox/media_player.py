@@ -179,9 +179,8 @@ def get_announce_timeout(extra: dict) -> int | None:
 
 
 class SqueezeBoxMediaPlayerEntity(
-    CoordinatorEntity[SqueezeBoxPlayerUpdateCoordinator],
-    MediaPlayerEntity,
     SqueezeboxEntity,
+    MediaPlayerEntity,
 ):
     """Representation of the media player features of a SqueezeBox device.
 
