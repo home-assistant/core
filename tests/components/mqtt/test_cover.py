@@ -938,23 +938,41 @@ async def test_send_stop_cover_command(
 
 
 @pytest.mark.parametrize(
-    "hass_config",
+    ("hass_config", "payload_stop"),
     [
-        {
-            mqtt.DOMAIN: {
-                cover.DOMAIN: {
-                    "name": "test",
-                    "state_topic": "state-topic",
-                    "tilt_command_topic": "tilt-command-topic",
-                    "payload_stop_tilt": "TILT_STOP",
-                    "qos": 2,
+        (
+            {
+                mqtt.DOMAIN: {
+                    cover.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "state-topic",
+                        "tilt_command_topic": "tilt-command-topic",
+                        "payload_stop_tilt": "TILT_STOP",
+                        "qos": 2,
+                    }
                 }
-            }
-        }
+            },
+            "TILT_STOP",
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    cover.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "state-topic",
+                        "tilt_command_topic": "tilt-command-topic",
+                        "qos": 2,
+                    }
+                }
+            },
+            "STOP",
+        ),
     ],
 )
 async def test_send_stop_tilt_command(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    payload_stop: str,
 ) -> None:
     """Test the sending of stop_cover_tilt."""
     mqtt_mock = await mqtt_mock_entry()
