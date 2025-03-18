@@ -251,11 +251,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     if driver_ready_task in pending:
-        error_message = (
-            "Client listen failed"
-            if listen_task.done() and listen_task.exception()
-            else "Driver ready timed out"
-        )
+        error_message = "Driver ready timed out"
+        if listen_task.done() and (listen_error := listen_task.exception()):
+            error_message = f"Client listen failed: {listen_error}"
         driver_ready_task.cancel()
         listen_task.cancel()
         raise ConfigEntryNotReady(error_message)
