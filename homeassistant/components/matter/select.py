@@ -435,4 +435,65 @@ DISCOVERY_SCHEMAS = [
         # don't discover this entry if the supported rinses list is empty
         secondary_value_is_not=[],
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="LocalConfigDisabled",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="local_config_disabled",
+            options=["Enable Local Configuration", "Disable Local Configuration"],
+            measurement_to_ha={
+                False: "Enable Local Configuration",
+                True: "Disable Local Configuration",
+            }.get,
+            ha_to_native_value={
+                "Enable Local Configuration": False,
+                "Disable Local Configuration": True,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(clusters.BasicInformation.Attributes.LocalConfigDisabled,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="EnableOneTouchLocking",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="enable_one_touch_locking",
+            options=["Enabled", "Disabled"],
+            measurement_to_ha={
+                False: "Disabled",
+                True: "Enabled",
+            }.get,
+            ha_to_native_value={
+                "Disabled": False,
+                "Enabled": True,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(clusters.DoorLock.Attributes.EnableOneTouchLocking,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="DoorLockSoundVolume",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="door_lock_sound_volume",
+            options=["Silent", "Low", "Medium", "High"],
+            measurement_to_ha={
+                0: "Silent",
+                1: "Low",
+                3: "Medium",
+                4: "High",
+            }.get,
+            ha_to_native_value={
+                "Silent": 0,
+                "Low": 1,
+                "Medium": 3,
+                "High": 2,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(clusters.DoorLock.Attributes.SoundVolume,),
+    ),
 ]
