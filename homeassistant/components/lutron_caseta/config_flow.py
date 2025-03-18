@@ -102,8 +102,10 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle pairing with the hub."""
         errors = {}
         # Abort if existing entry with matching host exists.
+        _LOGGER.warning("Starting link step")
         self._async_abort_entries_match({CONF_HOST: self.data[CONF_HOST]})
 
+        _LOGGER.warning("Starting link step - configure tls assets")
         self._configure_tls_assets()
 
         if (
@@ -113,6 +115,9 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
         ):
             self.tls_assets_validated = True
         self.attempted_tls_validation = True
+        _LOGGER.warning(
+            "Starting link step - tls assets validated: %s", self.tls_assets_validated
+        )
 
         if user_input is not None:
             if self.tls_assets_validated:
@@ -121,9 +126,11 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=self.bridge_id, data=self.data)
 
             assets = None
+            _LOGGER.warning("Starting link step - pairing")
             try:
                 assets = await async_pair(self.data[CONF_HOST])
             except (TimeoutError, OSError) as exc:
+                _LOGGER.warning("Pairing failed", exc_info=exc)
                 _LOGGER.debug("Pairing failed", exc_info=exc)
                 errors["base"] = "cannot_connect"
 
