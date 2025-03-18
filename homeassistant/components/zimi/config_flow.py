@@ -115,9 +115,6 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.data[CONF_HOST], self.data[CONF_PORT], self.data[CONF_MAC]
             )
 
-            if details:
-                self.data[CONF_MAC] = details.get("mac", None)
-
         if self.api and not errors:
             self.api.disconnect()
             self.api = None
@@ -192,8 +189,8 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.api:
             if mac == "":  # If no mac was given, grab mac from zcc and return
-                mac = format_mac(self.api.mac)
-                return ({}, {"mac": mac})
+                self.data[CONF_MAC] = format_mac(self.api.mac)
+                return ({}, {})
             if format_mac(mac) != format_mac(self.api.mac):
                 msg = f"{format_mac(mac)} != {format_mac(self.api.mac)}"
                 _LOGGER.error("Configured mac mismatch: %s", msg)
