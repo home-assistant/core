@@ -1,0 +1,62 @@
+"""The homee lock platform."""
+
+from typing import Any
+
+from pyHomee.const import AttributeChangedBy, AttributeType
+
+from homeassistant.components.lock import LockEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import HomeeConfigEntry
+from .entity import HomeeEntity
+from .helpers import get_name_for_enum
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: HomeeConfigEntry,
+    async_add_devices: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Add the homee platform for the lock component."""
+
+    for node in config_entry.runtime_data.nodes:
+        async_add_devices(
+            HomeeLock(attribute, config_entry)
+            for node in config_entry.runtime_data.nodes
+            for attribute in node.attributes
+            if (attribute.type == AttributeType.LOCK_STATE and attribute.editable)
+        )
+
+
+class HomeeLock(HomeeEntity, LockEntity):
+    """Representation of a homee lock."""
+
+    _attr_name = None
+
+    @property
+    def is_locked(self) -> bool:
+        """Return the current lock state."""
+        return bool(self._attribute.current_value)
+
+    @property
+    def changed_by(self) -> str:
+        """Return by what the lock was last changed."""
+        changed_id = str(self._attribute.changed_by_id)
+        changed_by_name = get_name_for_enum(
+            AttributeChangedBy, self._attribute.changed_by
+        )
+        if self._attribute.changed_by == AttributeChangedBy.USER:
+            changed_id = self._entry.runtime_data.get_user_by_id(
+                self._attribute.changed_by_id
+            ).username
+
+        return f"{changed_by_name}-{changed_id}"
+
+    async def async_lock(self, **kwargs: Any) -> None:
+        """Lock all or specified locks. A code to lock the lock with may be specified."""
+        await self.async_set_homee_value(0)
+
+    async def async_unlock(self, **kwargs: Any) -> None:
+        """Unlock all or specified locks. A code to unlock the lock with may be specified."""
+        await self.async_set_homee_value(1)
