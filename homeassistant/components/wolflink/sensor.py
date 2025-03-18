@@ -194,13 +194,8 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        attributes = {
+        return {
             "parameter_id": self.wolf_object.parameter_id,
             "value_id": self.wolf_object.value_id,
             "parent": self.wolf_object.parent,
         }
-        if self.wolf_object.bundle_id != "":
-            attributes["bundle_id"] = self.wolf_object.bundle_id
-        else:
-            attributes["bundle_id"] = "1000"
-        return attributes

@@ -108,7 +108,8 @@
           "cooling": "Cooling",
           "tpw": "TPW",
           "warmwasservorrang": "DHW priority",
-          "mindest_kombizeit": "Minimum combi time"
+          "mindest_kombizeit": "Minimum combi time",
+          "solarladung_aktiv": "Solar charge active"
         }
       }
     }

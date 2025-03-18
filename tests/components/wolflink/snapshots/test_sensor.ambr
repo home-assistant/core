@@ -69,7 +69,6 @@
 # name: test_sensors[sensor.energy_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'bundle_id': 2000,
       'device_class': 'energy',
       'friendly_name': 'Energy Parameter',
       'parameter_id': 6005200000,
@@ -122,7 +121,6 @@
 # name: test_sensors[sensor.flow_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'bundle_id': 8000,
       'device_class': 'volume_flow_rate',
       'friendly_name': 'Flow Parameter',
       'parameter_id': 11005200000,
@@ -175,7 +173,6 @@
 # name: test_sensors[sensor.frequency_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'bundle_id': 1000,
       'device_class': 'frequency',
       'friendly_name': 'Frequency Parameter',
       'parameter_id': 9005200000,
@@ -228,7 +225,6 @@
 # name: test_sensors[sensor.hours_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'bundle_id': 1000,
       'friendly_name': 'Hours Parameter',
       'icon': 'mdi:clock',
       'parameter_id': 7005200000,
@@ -281,7 +277,6 @@
 # name: test_sensors[sensor.list_item_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'bundle_id': 3001,
       'friendly_name': 'List Item Parameter',
       'parameter_id': 8005200000,
       'parent': 'Heating',
@@ -332,7 +327,6 @@
 # name: test_sensors[sensor.percentage_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'bundle_id': 1000,
       'friendly_name': 'Percentage Parameter',
       'parameter_id': 2005200000,
       'parent': 'Solar',
@@ -384,7 +378,6 @@
 # name: test_sensors[sensor.power_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'bundle_id': 1000,
       'device_class': 'power',
       'friendly_name': 'Power Parameter',
       'parameter_id': 5005200000,
@@ -437,7 +430,6 @@
 # name: test_sensors[sensor.pressure_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'bundle_id': 1000,
       'device_class': 'pressure',
       'friendly_name': 'Pressure Parameter',
       'parameter_id': 4005200000,
@@ -492,7 +484,6 @@
 # name: test_sensors[sensor.rpm_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'bundle_id': 7000,
       'friendly_name': 'RPM Parameter',
       'parameter_id': 10005200000,
       'parent': 'Heating',
@@ -545,7 +536,6 @@
 # name: test_sensors[sensor.simple_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'bundle_id': 1000,
       'friendly_name': 'Simple Parameter',
       'parameter_id': 1005200000,
       'parent': 'DHW',
@@ -596,7 +586,6 @@
 # name: test_sensors[sensor.temperature_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'bundle_id': 1000,
       'device_class': 'temperature',
       'friendly_name': 'Temperature Parameter',
       'parameter_id': 3005200000,
