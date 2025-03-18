@@ -123,7 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     vehicles: list[TeslaFleetVehicleData] = []
     energysites: list[TeslaFleetEnergyData] = []
     for product in products:
-        if "vin" in product and hasattr(tesla, "vehicle"):
+        if "vin" in product and Scope.VEHICLE_DEVICE_DATA in scopes:
             # Remove the protobuff 'cached_data' that we do not use to save memory
             product.pop("cached_data", None)
             vin = product["vin"]
@@ -155,7 +155,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                     signing=signing,
                 )
             )
-        elif "energy_site_id" in product and hasattr(tesla, "energy"):
+        elif "energy_site_id" in product and Scope.ENERGY_DEVICE_DATA in scopes:
             site_id = product["energy_site_id"]
             if not (
                 product["components"]["battery"]
@@ -222,7 +222,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     # Setup Platforms
     entry.runtime_data = TeslaFleetData(vehicles, energysites, scopes)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     return True
 
 
