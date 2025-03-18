@@ -374,6 +374,33 @@ async def test_block_sensor_unknown_value(
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize(
+    ("lamp_life_seconds", "percentage"),
+    [
+        (0 * 3600, "100.0"),  # 0 hours, 100% remaining
+        (16 * 3600, "99.8222222222222"),
+        (4500 * 3600, "50.0"),  # 4500 hours, 50% remaining
+        (9000 * 3600, "0.0"),  # 9000 hours, 0% remaining
+        (10000 * 3600, "0.0"),  # > 9000 hours, 0% remaining
+    ],
+)
+async def test_block_shelly_air_lamp_life(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    lamp_life_seconds: int,
+    percentage: float,
+) -> None:
+    """Test block Shelly Air lamp life percentage sensor."""
+    entity_id = f"{SENSOR_DOMAIN}.{'test_name_channel_1_lamp_life'}"
+    monkeypatch.setattr(
+        mock_block_device.blocks[RELAY_BLOCK_ID], "totalWorkTime", lamp_life_seconds
+    )
+    await init_integration(hass, 1)
+
+    assert hass.states.get(entity_id).state == percentage
+
+
 async def test_rpc_sensor(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
