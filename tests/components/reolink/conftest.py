@@ -146,6 +146,10 @@ def reolink_connect_class() -> Generator[MagicMock]:
             0: {"chnID": 0, "aitype": 34615},
             "Host": {"pushAlarm": 7},
         }
+        host_mock.baichuan.smart_location_list.return_value = [0]
+        host_mock.baichuan.smart_ai_type_list.return_value = ["people"]
+        host_mock.baichuan.smart_ai_index.return_value = 1
+        host_mock.baichuan.smart_ai_name.return_value = "zone1"
 
         yield host_mock_class
 

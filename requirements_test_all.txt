@@ -42,7 +42,7 @@ PlexAPI==4.15.16
 ProgettiHWSW==0.1.3
 
 # homeassistant.components.cast
-PyChromecast==14.0.5
+PyChromecast==14.0.6
 
 # homeassistant.components.flick_electric
 PyFlick==1.1.3
@@ -1199,7 +1199,7 @@ minio==7.1.12
 moat-ble==0.1.1
 
 # homeassistant.components.moehlenhoff_alpha2
-moehlenhoff-alpha2==1.3.1
+moehlenhoff-alpha2==1.4.0
 
 # homeassistant.components.monzo
 monzopy==1.4.2
@@ -2125,7 +2125,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.12.2
+reolink-aio==0.12.3b1
 
 # homeassistant.components.rflink
 rflink==0.0.66
@@ -2337,7 +2337,7 @@ thermobeacon-ble==0.8.1
 thermopro-ble==0.11.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==1.0.4
+thinqconnect==1.0.5
 
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3
@@ -2545,7 +2545,7 @@ zeversolar==0.3.2
 zha==0.0.52
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.61.0
+zwave-js-server-python==0.62.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
