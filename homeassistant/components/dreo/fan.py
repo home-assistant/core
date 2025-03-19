@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    _: HomeAssistant,
+    hass: HomeAssistant,
     config_entry: DreoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
