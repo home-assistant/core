@@ -35,10 +35,7 @@ rules:
   config-entry-unloading: done
   log-when-unavailable: todo
   entity-unavailable: done
-  action-exceptions:
-    status: exempt
-    comment: |
-      There are no service actions
+  action-exceptions: todo
   reauthentication-flow:
     status: exempt
     comment: |
