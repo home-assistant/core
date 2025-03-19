@@ -137,10 +137,7 @@ async def test_options_flow(
     assert result["data"] == {CONF_FALLBACK: CONST_OVERLAY_TADO_DEFAULT}
 
 
-async def test_homekit(
-    hass: HomeAssistant,
-    mock_tado_api: MagicMock,
-) -> None:
+async def test_homekit(hass: HomeAssistant, mock_tado_api: MagicMock) -> None:
     """Test that we abort from homekit if tado is already setup."""
 
     result = await hass.config_entries.flow.async_init(
