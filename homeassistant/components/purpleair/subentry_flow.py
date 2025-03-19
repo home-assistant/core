@@ -74,6 +74,9 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
         self._flow_data: dict[str, Any] = {}
         self._errors: dict[str, Any] = {}
 
+    # TODO: Getting the parent seems generally useful and could be in the base sub entry class for general use? # pylint: disable=fixme
+    # Copy pasted this logic from the sub entry proposal thread where others had the same questions and this pattern was recommended.
+    # Could not repro the None error logic so test coverage here is missing.
     def _get_parent_config_entry(self) -> ConfigEntry:
         if self.hass is None or self.handler is None:
             raise ValueError("Parent ConfigEntry not available")
@@ -183,6 +186,7 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
             return False
 
         # TODO: _raise_if_subentry_unique_id_exists() only tests uniqueness for this config entry, but sensors need to be unique globally. # pylint: disable=fixme
+        # Could be useful if the base sub entry class supports an options for globally unique testing not just testing for the current config entry.
         global_index_list: list[int] = [
             int(subentry.data[CONF_SENSOR_INDEX])
             for config_entry in self.hass.config_entries.async_loaded_entries(DOMAIN)

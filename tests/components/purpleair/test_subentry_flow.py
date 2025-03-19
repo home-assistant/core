@@ -172,6 +172,9 @@ async def test_duplicate_sensor(
     assert result[CONF_TYPE] is FlowResultType.FORM
     assert result[CONF_ERRORS] == {CONF_SENSOR_INDEX: CONF_ALREADY_CONFIGURED}
 
+    hass.config_entries.subentries.async_abort(result[CONF_FLOW_ID])
+    await hass.async_block_till_done()
+
 
 @pytest.mark.parametrize(
     ("get_nearby_sensors_mock", "get_nearby_sensors_errors"),
@@ -225,6 +228,78 @@ async def test_create_from_map_errors(
         await hass.async_block_till_done()
     assert result[CONF_TYPE] is FlowResultType.FORM
     assert result[CONF_ERRORS] == get_nearby_sensors_errors
+
+    hass.config_entries.subentries.async_abort(result[CONF_FLOW_ID])
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("get_sensors_mock", "get_sensors_errors"),
+    [
+        (AsyncMock(side_effect=Exception), {CONF_BASE: CONF_UNKNOWN}),
+        (AsyncMock(side_effect=PurpleAirError), {CONF_BASE: CONF_UNKNOWN}),
+        (AsyncMock(side_effect=InvalidApiKeyError), {CONF_BASE: CONF_INVALID_API_KEY}),
+        (AsyncMock(return_value=[]), {CONF_SENSOR_INDEX: CONF_NO_SENSOR_FOUND}),
+        (AsyncMock(return_value=None), {CONF_SENSOR_INDEX: CONF_NO_SENSOR_FOUND}),
+    ],
+)
+async def test_create_from_map_select_errors(
+    hass: HomeAssistant,
+    config_entry,
+    setup_config_entry,
+    mock_aiopurpleair,
+    api,
+    get_sensors_mock,
+    get_sensors_errors,
+) -> None:
+    """Test creating subentry from map with select errors."""
+
+    # User init
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, CONF_SENSOR), context={CONF_SOURCE: CONF_SOURCE_USER}
+    )
+    await hass.async_block_till_done()
+    assert result[CONF_TYPE] is FlowResultType.MENU
+    assert result[CONF_STEP_ID] == CONF_ADD_OPTIONS
+
+    # Add by map
+    result = await hass.config_entries.subentries.async_configure(
+        result[CONF_FLOW_ID], user_input={CONF_NEXT_STEP_ID: CONF_ADD_MAP_LOCATION}
+    )
+    await hass.async_block_till_done()
+    assert result[CONF_TYPE] is FlowResultType.FORM
+    assert result[CONF_STEP_ID] == CONF_ADD_MAP_LOCATION
+
+    # Map location
+    with patch.object(api, "sensors.async_get_nearby_sensors"):
+        result = await hass.config_entries.subentries.async_configure(
+            result[CONF_FLOW_ID],
+            user_input={
+                CONF_LOCATION: {
+                    CONF_LATITUDE: TEST_LATITUDE,
+                    CONF_LONGITUDE: TEST_LONGITUDE,
+                    CONF_RADIUS: TEST_RADIUS,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+    assert result[CONF_TYPE] is FlowResultType.FORM
+    assert result[CONF_STEP_ID] == CONF_SELECT_SENSOR
+
+    # Select and create
+    with patch.object(api.sensors, "async_get_sensors", get_sensors_mock):
+        result = await hass.config_entries.subentries.async_configure(
+            result[CONF_FLOW_ID],
+            user_input={
+                CONF_SENSOR_INDEX: str(TEST_SENSOR_INDEX1),
+            },
+        )
+        await hass.async_block_till_done()
+    assert result[CONF_TYPE] is FlowResultType.FORM
+    assert result[CONF_ERRORS] == get_sensors_errors
+
+    hass.config_entries.subentries.async_abort(result[CONF_FLOW_ID])
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
