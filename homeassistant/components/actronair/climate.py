@@ -272,12 +272,29 @@ class ActronAirZoneClimate(ActronAirZoneDevice, ClimateEntity):
         self._attr_supported_features = (
             ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         )
+
+        if zoneInfo.NV_ITC:
+            self._attr_supported_features = (
+                ClimateEntityFeature.TURN_OFF
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TARGET_TEMPERATURE
+            )
+            self._attr_target_temperature = zoneInfo.TemprSetPoint_Cool
+
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_unique_id = f"{DOMAIN}_zone_{zone_id}_climate"
         self.serial_number = serial_number
         self._is_on = self.status_coordinator.acSystemStatus.EnabledZones[
             self.zone_id - 1
         ]
+        if (
+            self.ac_data.RemoteZoneInfo[self.zone_id - 1].NV_ITD
+            and zoneInfo.LiveTemp_oC < 100.0
+        ):
+            self._attr_current_temperature = zoneInfo.LiveTemp_oC
+
+        if self.ac_data.RemoteZoneInfo[self.zone_id - 1].NV_IHD:
+            self._attr_current_humidity = zoneInfo.LiveHumidity_pc
 
     @property
     def name(self) -> str:
@@ -295,6 +312,42 @@ class ActronAirZoneClimate(ActronAirZoneDevice, ClimateEntity):
             self.zone_id - 1
         ]
         return HVACMode.HEAT_COOL if self._is_on else HVACMode.OFF
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Return the target temperature."""
+        self._attr_target_temperature = (
+            self.status_coordinator.acSystemStatus.RemoteZoneInfo[
+                self.zone_id - 1
+            ].TemprSetPoint_Cool
+        )
+        return self._attr_target_temperature
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        zoneInfo = self.status_coordinator.acSystemStatus.RemoteZoneInfo[
+            self.zone_id - 1
+        ]
+        if zoneInfo.LiveTemp_oC < 100.0 and zoneInfo.NV_ITD:
+            self._attr_current_temperature = (
+                self.status_coordinator.acSystemStatus.RemoteZoneInfo[
+                    self.zone_id - 1
+                ].LiveTemp_oC
+            )
+            return self._attr_current_temperature
+        return None
+
+    @property
+    def current_humidity(self) -> float | None:
+        """Return the current humidity."""
+        zoneInfo = self.status_coordinator.acSystemStatus.RemoteZoneInfo[
+            self.zone_id - 1
+        ]
+        if zoneInfo.LiveHumidity_pc is not None and zoneInfo.NV_IHD:
+            self._attr_current_humidity = zoneInfo.LiveHumidity_pc
+            return self._attr_current_humidity
+        return None
 
     @property
     def available(self) -> bool:
@@ -319,6 +372,18 @@ class ActronAirZoneClimate(ActronAirZoneDevice, ClimateEntity):
             }
         }
 
+    def getCommandJSONStringFromList(
+        self, literals: list[str], values: list[Any]
+    ) -> Any:
+        """Generate a JSON string command from lists of literals and values."""
+        if len(literals) != len(values):
+            raise ValueError("Lists 'literals' and 'values' must have the same length")
+
+        settings = {literals[i]: values[i] for i in range(len(literals))}
+        command = {"command": {"type": "set-settings"}}
+        command["command"].update(settings)
+        return command
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Turn the AC system ON or OFF."""
         if hvac_mode == HVACMode.HEAT_COOL:
@@ -335,3 +400,22 @@ class ActronAirZoneClimate(ActronAirZoneDevice, ClimateEntity):
             self._is_on = False
 
         await self.coordinator.async_request_refresh()  # Refresh state
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set the target temperature."""
+        temperature = kwargs.get("temperature")
+        if temperature is None:
+            return
+        keys = [
+            "RemoteZoneInfo[" + str(self.zone_id - 1) + "].TemperatureSetpoint_Cool_oC",
+            "RemoteZoneInfo["
+            + str(self.zone_id - 1)
+            + "].TemperatureSetpoint_Heat_oC,",
+        ]
+        values = [temperature, temperature]
+        command = self.getCommandJSONStringFromList(keys, values)
+        await self.status_coordinator.aa_api.async_sendCommand(
+            self.serial_number, command
+        )
+        self._attr_target_temperature = temperature
+        await self.status_coordinator.async_request_refresh()
