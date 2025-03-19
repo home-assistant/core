@@ -72,8 +72,6 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self.pin = user_input[CONF_PIN]
-            await self.async_set_unique_id(self.address, raise_on_progress=False)
-            self._abort_if_unique_id_configured()
             return await self.async_step_confirm()
 
         self._set_confirm_only()
