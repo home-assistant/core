@@ -59,7 +59,7 @@ rules:
   stale-devices:
     status: exempt
     comment: Stale not possible
-  diagnostics: todo
+  diagnostics: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
