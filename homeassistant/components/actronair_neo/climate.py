@@ -51,9 +51,9 @@ async def async_setup_entry(
 
     systems = coordinator.systems["_embedded"]["ac-system"]
     for system in systems:
-        description = system["description"]
+        name = system["description"]
         serial_number = system["serial"]
-        entities.append(ActronSystemClimate(coordinator, serial_number, description))
+        entities.append(ActronSystemClimate(coordinator, serial_number, name))
 
     # Add all switches
     async_add_entities(entities)
@@ -71,7 +71,7 @@ class ActronSystemClimate(
         self,
         coordinator: ActronNeoDataUpdateCoordinator,
         serial_number: str,
-        description: str,
+        name: str,
     ) -> None:
         """Initialize an Actron Air Neo unit."""
         super().__init__(coordinator)
@@ -79,7 +79,7 @@ class ActronSystemClimate(
         self._api: ActronNeoAPI = coordinator.api
         self._serial_number: str = serial_number
         self._status = coordinator.data[self._serial_number]
-        self._name: str = description
+        self._name: str = name
         self._attr_name: str = "AC Unit"
         self._attr_unique_id: str = self._serial_number
         self.attr_device_info = {
