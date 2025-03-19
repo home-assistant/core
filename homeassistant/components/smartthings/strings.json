@@ -23,7 +23,9 @@
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_account_mismatch": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account and pick the right location.",
-      "reauth_location_mismatch": "Authenticated location does not match the location to be reauthenticated. Please log in with the correct account and pick the right location."
+      "reauth_location_mismatch": "Authenticated location does not match the location to be reauthenticated. Please log in with the correct account and pick the right location.",
+      "missing_scopes": "Authentication failed. Please make sure you have granted all required permissions.",
+      "cloud_not_enabled": "Please make sure you run Home Assistant with `{default_config}` enabled in your configuration.yaml."
     }
   },
   "entity": {
@@ -387,6 +389,12 @@
           "freeze_protection": "Freeze protection"
         }
       }
+    }
+  },
+  "issues": {
+    "deprecated_binary_valve": {
+      "title": "Deprecated valve binary sensor detected in some automations or scripts",
+      "description": "The valve binary sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nA valve entity with controls is available and should be used going forward; Please use it on the above automations or scripts to fix this issue."
     }
   }
 }

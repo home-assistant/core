@@ -32,6 +32,8 @@ LIGHT_ATTRIBUTES = [
     AttributeType.DIMMING_LEVEL,
 ]
 
+PARALLEL_UPDATES = 0
+
 
 def is_light_node(node: HomeeNode) -> bool:
     """Determine if a node is controllable as a homee light based on its profile and attributes."""
