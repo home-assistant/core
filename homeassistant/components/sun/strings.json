@@ -27,6 +27,9 @@
       "solar_azimuth": { "name": "Solar azimuth" },
       "solar_elevation": { "name": "Solar elevation" },
       "solar_rising": { "name": "Solar rising" }
+    },
+    "binary_sensor": {
+      "solar_rising": { "name": "Solar rising" }
     }
   }
 }
