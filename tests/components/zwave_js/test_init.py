@@ -37,7 +37,11 @@ from homeassistant.setup import async_setup_component
 
 from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
 
-from tests.common import MockConfigEntry, async_get_persistent_notifications
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_get_persistent_notifications,
+)
 from tests.typing import WebSocketGenerator
 
 
@@ -160,49 +164,43 @@ async def test_driver_ready_timeout_during_setup(
     assert client.disconnect.call_count == 1
 
 
-@pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
-async def test_listen_failure_during_setup_before_forward_entry(
+@pytest.mark.parametrize("core_state", [CoreState.running, CoreState.stopping])
+@pytest.mark.parametrize(
+    ("listen_future_result_method", "listen_future_result"),
+    [
+        ("set_exception", BaseZwaveJSServerError("Boom")),
+        ("set_exception", Exception("Boom")),
+        ("set_result", None),
+    ],
+)
+async def test_listen_done_during_setup_before_forward_entry(
     hass: HomeAssistant,
     client: MagicMock,
-    error: Exception,
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
+    core_state: CoreState,
+    listen_future_result_method: str,
+    listen_future_result: Exception | None,
 ) -> None:
-    """Test we handle errors during setup before forward entry for client listen."""
-    client.listen.side_effect = error
+    """Test listen task finishing during setup before forward entry."""
+    assert hass.state is CoreState.running
+
+    async def listen(driver_ready: asyncio.Event) -> None:
+        await listen_block.wait()
+        await listen_result
+        async_fire_time_changed(hass, fire_all=True)
+
+    client.listen.side_effect = listen
+    hass.set_state(core_state)
+    listen_block.set()
+    getattr(listen_result, listen_future_result_method)(listen_future_result)
+
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     assert client.disconnect.call_count == 0
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert client.disconnect.call_count == 1
-
-
-async def test_listen_done_during_setup_before_forward_entry(
-    hass: HomeAssistant,
-    client: MagicMock,
-    listen_block: asyncio.Event,
-    listen_result: asyncio.Future[None],
-) -> None:
-    """Test we handle listen task finishing during setup before forward entry."""
-
-    async def listen(driver_ready: asyncio.Event) -> None:
-        await listen_block.wait()
-        await listen_result
-
-    client.listen.side_effect = listen
-    listen_block.set()
-    listen_block.clear()
-    listen_result.set_result(None)
-
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
-    entry.add_to_hass(hass)
-    assert client.disconnect.call_count == 0
-
-    with patch("homeassistant.components.zwave_js.DRIVER_READY_TIMEOUT", new=0):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert client.disconnect.call_count == 1
@@ -247,20 +245,31 @@ async def test_not_connected_during_setup_after_forward_entry(
     assert client.disconnect.call_count == 1
 
 
-@pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
-async def test_listen_failure_during_setup_after_forward_entry(
+@pytest.mark.parametrize("core_state", [CoreState.running, CoreState.stopping])
+@pytest.mark.parametrize(
+    ("listen_future_result_method", "listen_future_result"),
+    [
+        ("set_exception", BaseZwaveJSServerError("Boom")),
+        ("set_exception", Exception("Boom")),
+        ("set_result", None),
+    ],
+)
+async def test_listen_done_during_setup_after_forward_entry(
     hass: HomeAssistant,
     client: MagicMock,
-    error: Exception,
     listen_block: asyncio.Event,
     listen_result: asyncio.Future[None],
+    core_state: CoreState,
+    listen_future_result_method: str,
+    listen_future_result: Exception | None,
 ) -> None:
-    """Test we handle errors during setup after forward entry for client listen."""
+    """Test listen task finishing during setup after forward entry."""
+    assert hass.state is CoreState.running
 
     async def send_command_side_effect(*args: Any, **kwargs: Any) -> None:
         """Mock send command."""
         listen_block.set()
-        listen_result.set_exception(error)
+        getattr(listen_result, listen_future_result_method)(listen_future_result)
         # Yield to allow the listen task to run
         await asyncio.sleep(0)
 
@@ -272,6 +281,7 @@ async def test_listen_failure_during_setup_after_forward_entry(
         await listen_result
 
     client.listen.side_effect = listen
+    hass.set_state(core_state)
 
     entry = MockConfigEntry(
         domain="zwave_js",
@@ -302,19 +312,27 @@ async def test_listen_failure_during_setup_after_forward_entry(
         ),  # the home assistant stop event will handle the disconnect
     ],
 )
-@pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
-async def test_listen_failure_after_setup(
+@pytest.mark.parametrize(
+    ("listen_future_result_method", "listen_future_result"),
+    [
+        ("set_exception", BaseZwaveJSServerError("Boom")),
+        ("set_exception", Exception("Boom")),
+        ("set_result", None),
+    ],
+)
+async def test_listen_done_after_setup(
     hass: HomeAssistant,
     client: MagicMock,
     integration: MockConfigEntry,
     listen_block: asyncio.Event,
     listen_result: asyncio.Future[None],
-    error: Exception,
     core_state: CoreState,
+    listen_future_result_method: str,
+    listen_future_result: Exception | None,
     final_config_entry_state: ConfigEntryState,
     disconnect_call_count: int,
 ) -> None:
-    """Test we handle errors after setup for client listen."""
+    """Test listen task finishing after setup."""
     config_entry = integration
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.state is CoreState.running
@@ -322,7 +340,7 @@ async def test_listen_failure_after_setup(
 
     hass.set_state(core_state)
     listen_block.set()
-    listen_result.set_exception(error)
+    getattr(listen_result, listen_future_result_method)(listen_future_result)
     await hass.async_block_till_done()
 
     assert config_entry.state is final_config_entry_state

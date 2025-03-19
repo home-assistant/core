@@ -250,20 +250,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         timeout=DRIVER_READY_TIMEOUT,
     )
 
-    if driver_ready_task in pending:
+    if driver_ready_task in pending or listen_task in done:
         error_message = "Driver ready timed out"
-        if listen_task.done() and (listen_error := listen_task.exception()):
-            error_message = f"Client listen failed: {listen_error}"
-        driver_ready_task.cancel()
-        listen_task.cancel()
-        raise ConfigEntryNotReady(error_message)
-
-    if listen_task in done:
-        # If the listen task is already done, we need to raise ConfigEntryNotReady
-        if listen_error := listen_task.exception():
-            error_message = f"Client listen failed: {listen_error}"
+        listen_error: BaseException | None = None
+        if listen_task.done():
+            listen_error, error_message = _get_listen_task_error(listen_task)
         else:
-            error_message = "Client connection was closed"
+            listen_task.cancel()
         driver_ready_task.cancel()
         raise ConfigEntryNotReady(error_message) from listen_error
 
@@ -286,9 +279,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await driver_events.setup(driver)
 
     # If the listen task is already failed, we need to raise ConfigEntryNotReady
-    if listen_task.done() and (listen_error := listen_task.exception()) is not None:
+    if listen_task.done():
+        listen_error, error_message = _get_listen_task_error(listen_task)
         await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-        raise ConfigEntryNotReady(listen_error) from listen_error
+        raise ConfigEntryNotReady(error_message) from listen_error
 
     # Re-attach trigger listeners.
     # Schedule this call to make sure the config entry is loaded first.
@@ -305,6 +299,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.async_on_state_change(on_config_entry_loaded))
 
     return True
+
+
+def _get_listen_task_error(
+    listen_task: asyncio.Task,
+) -> tuple[BaseException | None, str]:
+    """Check the listen task for errors."""
+    if listen_error := listen_task.exception():
+        error_message = f"Client listen failed: {listen_error}"
+    else:
+        error_message = "Client connection was closed"
+    return listen_error, error_message
 
 
 class DriverEvents:
