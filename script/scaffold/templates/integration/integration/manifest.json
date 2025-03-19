@@ -1,6 +1,7 @@
 {
   "domain": "NEW_DOMAIN",
   "name": "NEW_NAME",
+  "version": "0.1.0",
   "codeowners": [],
   "config_flow": false,
   "dependencies": [],
