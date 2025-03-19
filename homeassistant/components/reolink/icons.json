@@ -350,6 +350,9 @@
       },
       "sub_bit_rate": {
         "default": "mdi:play-speed"
+      },
+      "scene_mode": {
+        "default": "mdi:view-list"
       }
     },
     "sensor": {
