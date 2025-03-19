@@ -43,37 +43,14 @@ class SqueezeboxButtonEntityDescription(ButtonEntityDescription):
     press_action: str
 
 
-BUTTON_ENTITIES: tuple[SqueezeboxButtonEntityDescription, ...] = (
+BUTTON_ENTITIES: tuple[SqueezeboxButtonEntityDescription, ...] = tuple(
     SqueezeboxButtonEntityDescription(
-        key="preset_1",
-        translation_key="preset_1",
-        press_action="preset_1.single",
-    ),
-    SqueezeboxButtonEntityDescription(
-        key="preset_2",
-        translation_key="preset_2",
-        press_action="preset_2.single",
-    ),
-    SqueezeboxButtonEntityDescription(
-        key="preset_3",
-        translation_key="preset_3",
-        press_action="preset_3.single",
-    ),
-    SqueezeboxButtonEntityDescription(
-        key="preset_4",
-        translation_key="preset_4",
-        press_action="preset_4.single",
-    ),
-    SqueezeboxButtonEntityDescription(
-        key="preset_5",
-        translation_key="preset_5",
-        press_action="preset_5.single",
-    ),
-    SqueezeboxButtonEntityDescription(
-        key="preset_6",
-        translation_key="preset_6",
-        press_action="preset_6.single",
-    ),
+        key=f"preset_{i}",
+        translation_key="preset",
+        translation_placeholders={"index": str(i)},
+        press_action=f"preset_{i}.single",
+    )
+    for i in range(1, 7)
 )
 
 SCREEN_BUTTON_ENTITIES: tuple[SqueezeboxButtonEntityDescription, ...] = (
@@ -159,6 +136,8 @@ async def async_setup_entry(
 class SqueezeboxButtonEntity(SqueezeboxEntity, ButtonEntity):
     """Representation of Buttons for Squeezebox entities."""
 
+    entity_description: SqueezeboxButtonEntityDescription
+
     def __init__(
         self,
         coordinator: SqueezeBoxPlayerUpdateCoordinator,
@@ -166,13 +145,11 @@ class SqueezeboxButtonEntity(SqueezeboxEntity, ButtonEntity):
     ) -> None:
         """Initialize the SqueezeBox Button."""
         super().__init__(coordinator)
-        self.entity_description: SqueezeboxButtonEntityDescription = entity_description
+        self.entity_description = entity_description
         self._attr_unique_id = (
-            f"{format_mac(self._player.player_id)}_{self.entity_description.key}"
+            f"{format_mac(self._player.player_id)}_{entity_description.key}"
         )
 
     async def async_press(self) -> None:
         """Execute the button action."""
-        all_params = ["button"]
-        all_params.extend([self.entity_description.press_action])
-        await self._player.async_query(*all_params)
+        await self._player.async_query("button", self.entity_description.press_action)

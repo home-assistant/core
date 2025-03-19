@@ -329,7 +329,7 @@ async def configure_squeezebox_media_player_button_platform(
     with (
         patch(
             "homeassistant.components.squeezebox.PLATFORMS",
-            [Platform.MEDIA_PLAYER, Platform.BUTTON],
+            [Platform.BUTTON],
         ),
         patch("homeassistant.components.squeezebox.Server", return_value=lms),
     ):

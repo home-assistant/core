@@ -64,23 +64,8 @@
   },
   "entity": {
     "button": {
-      "preset_1": {
-        "name": "Preset 1"
-      },
-      "preset_2": {
-        "name": "Preset 2"
-      },
-      "preset_3": {
-        "name": "Preset 3"
-      },
-      "preset_4": {
-        "name": "Preset 4"
-      },
-      "preset_5": {
-        "name": "Preset 5"
-      },
-      "preset_6": {
-        "name": "Preset 6"
+      "preset": {
+        "name": "Preset {index}"
       },
       "brightness_up": {
         "name": "Brightness up"
