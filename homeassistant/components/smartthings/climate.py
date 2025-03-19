@@ -29,8 +29,6 @@ from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN
 from .entity import SmartThingsEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 ATTR_OPERATION_STATE = "operation_state"
 MODE_TO_STATE = {
     "auto": HVACMode.HEAT_COOL,
@@ -583,9 +581,5 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                 for mode in ac_modes
                 if (state := AC_MODE_TO_STATE.get(mode)) is not None
                 if state not in modes
-            )
-        else:
-            _LOGGER.error(
-                "Device %s does not support AC modes", self.device.device.device_id
             )
         return modes
