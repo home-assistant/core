@@ -53,13 +53,6 @@ async def test_user_selection(hass: HomeAssistant) -> None:
             CONF_PIN: "1234",
         },
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Husqvarna Automower"
     assert result["result"].unique_id == "00000000-0000-0000-0000-000000000001"
@@ -99,13 +92,6 @@ async def test_user_selection_incorrect_pin(
             CONF_PIN: "1234",
         },
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -124,14 +110,6 @@ async def test_user_selection_incorrect_pin(
             CONF_PIN: "1234",
         },
     )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Husqvarna Automower"
-    assert result["result"].unique_id == "00000000-0000-0000-0000-000000000001"
 
     assert result["data"] == {
         CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
@@ -154,14 +132,6 @@ async def test_bluetooth(hass: HomeAssistant) -> None:
         user_input={CONF_PIN: "1234"},
     )
 
-    result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
-    assert result["step_id"] == "confirm"
-    assert result["context"]["unique_id"] == "00000000-0000-0000-0000-000000000003"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Husqvarna Automower"
     assert result["result"].unique_id == "00000000-0000-0000-0000-000000000003"
@@ -232,14 +202,6 @@ async def test_successful_reauth(
             CONF_PIN: "1234",
         },
     )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Husqvarna Automower"
-    assert result["result"].unique_id == "00000000-0000-0000-0000-000000000001"
 
     assert result["data"] == {
         CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
@@ -366,13 +328,6 @@ async def test_exception_connect(
             CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
             CONF_PIN: "1234",
         },
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
     )
 
     assert result["type"] is FlowResultType.ABORT
