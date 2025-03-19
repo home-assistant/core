@@ -134,6 +134,8 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.doorbell_led_list.return_value = ["stayoff", "auto"]
         host_mock.auto_track_method.return_value = 3
         host_mock.daynight_state.return_value = "Black&White"
+        host_mock.hub_alarm_tone_id.return_value = 1
+        host_mock.hub_visitor_tone_id.return_value = 1
 
         # Baichuan
         host_mock.baichuan = create_autospec(Baichuan)
@@ -141,6 +143,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.baichuan.port = TEST_BC_PORT
         host_mock.baichuan.events_active = False
         host_mock.baichuan.privacy_mode.return_value = False
+        host_mock.baichuan.day_night_state.return_value = "day"
         host_mock.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
         host_mock.baichuan.abilities = {
             0: {"chnID": 0, "aitype": 34615},
