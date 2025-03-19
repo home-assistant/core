@@ -172,6 +172,31 @@
           }
         }
       }
+    },
+    "binary_sensor": {
+      "fault_status": {
+        "name": "Fault status"
+      },
+      "rf_comm_status": {
+        "name": "RF comm status"
+      },
+      "battery_status": {
+        "name": "Battery status",
+        "state": {
+          "off": "OK",
+          "on": "Battery low"
+        }
+      },
+      "filter_dirty": {
+        "name": "Filter",
+        "state": {
+          "off": "OK",
+          "on": "Dirty"
+        }
+      },
+      "defrost": {
+        "name": "Defrost"
+      }
     }
   }
 }
