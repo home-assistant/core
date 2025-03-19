@@ -17,7 +17,11 @@ from aioshelly.const import (
 )
 import pytest
 
-from homeassistant.components.shelly.const import GEN1_RELEASE_URL, GEN2_RELEASE_URL
+from homeassistant.components.shelly.const import (
+    GEN1_RELEASE_URL,
+    GEN2_BETA_RELEASE_URL,
+    GEN2_RELEASE_URL,
+)
 from homeassistant.components.shelly.utils import (
     get_block_channel_name,
     get_block_device_sleep_period,
@@ -300,7 +304,7 @@ async def test_get_rpc_input_triggers(
         (1, MODEL_1, True, None),
         (2, MODEL_WALL_DISPLAY, False, None),
         (2, MODEL_PLUS_2PM_V2, False, GEN2_RELEASE_URL),
-        (2, MODEL_PLUS_2PM_V2, True, None),
+        (2, MODEL_PLUS_2PM_V2, True, GEN2_BETA_RELEASE_URL),
     ],
 )
 def test_get_release_url(

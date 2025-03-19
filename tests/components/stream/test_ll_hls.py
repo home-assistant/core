@@ -99,9 +99,9 @@ def make_segment_with_parts(
     if discontinuity:
         response.append("#EXT-X-DISCONTINUITY")
     response.extend(
-        f'#EXT-X-PART:DURATION={TEST_PART_DURATION:.3f},'
+        f"#EXT-X-PART:DURATION={TEST_PART_DURATION:.3f},"
         f'URI="./segment/{segment}.{i}.m4s"'
-        f'{",INDEPENDENT=YES" if i % independent_period == 0 else ""}'
+        f"{',INDEPENDENT=YES' if i % independent_period == 0 else ''}"
         for i in range(num_parts)
     )
     response.append(
@@ -202,7 +202,7 @@ async def test_ll_hls_stream(
     datetime_re = re.compile(r"#EXT-X-PROGRAM-DATE-TIME:(?P<datetime>.+)")
     inf_re = re.compile(r"#EXTINF:(?P<segment_duration>[0-9]{1,}.[0-9]{3,}),")
     # keep track of which tests were done (indexed by re)
-    tested = {regex: False for regex in (part_re, datetime_re, inf_re)}
+    tested = dict.fromkeys((part_re, datetime_re, inf_re), False)
     # keep track of times and durations along playlist for checking consistency
     part_durations = []
     segment_duration = 0

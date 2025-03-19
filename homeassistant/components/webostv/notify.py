@@ -1,20 +1,19 @@
-"""Support for LG WebOS TV notification service."""
+"""Support for LG webOS TV notification service."""
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
-from aiowebostv import WebOsClient, WebOsTvPairError
+from aiowebostv import WebOsClient
 
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ATTR_CONFIG_ENTRY_ID, WEBOSTV_EXCEPTIONS
-
-_LOGGER = logging.getLogger(__name__)
+from . import WebOsTvConfigEntry
+from .const import ATTR_CONFIG_ENTRY_ID, DOMAIN, WEBOSTV_EXCEPTIONS
 
 PARALLEL_UPDATES = 0
 
@@ -34,28 +33,48 @@ async def async_get_service(
     )
     assert config_entry is not None
 
-    return LgWebOSNotificationService(config_entry.runtime_data)
+    return LgWebOSNotificationService(config_entry)
 
 
 class LgWebOSNotificationService(BaseNotificationService):
-    """Implement the notification service for LG WebOS TV."""
+    """Implement the notification service for LG webOS TV."""
 
-    def __init__(self, client: WebOsClient) -> None:
+    def __init__(self, entry: WebOsTvConfigEntry) -> None:
         """Initialize the service."""
-        self._client = client
+        self._entry = entry
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the tv."""
-        try:
-            if not self._client.is_connected():
-                await self._client.connect()
+        client: WebOsClient = self._entry.runtime_data
+        data = kwargs[ATTR_DATA]
+        icon_path = data.get(ATTR_ICON) if data else None
 
-            data = kwargs[ATTR_DATA]
-            icon_path = data.get(ATTR_ICON) if data else None
-            await self._client.send_message(message, icon_path=icon_path)
-        except WebOsTvPairError:
-            _LOGGER.error("Pairing with TV failed")
-        except FileNotFoundError:
-            _LOGGER.error("Icon %s not found", icon_path)
-        except WEBOSTV_EXCEPTIONS:
-            _LOGGER.error("TV unreachable")
+        if not client.tv_state.is_on:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="notify_device_off",
+                translation_placeholders={
+                    "name": str(self._entry.title),
+                    "func": __name__,
+                },
+            )
+        try:
+            await client.send_message(message, icon_path=icon_path)
+        except FileNotFoundError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="notify_icon_not_found",
+                translation_placeholders={
+                    "name": str(self._entry.title),
+                    "icon_path": str(icon_path),
+                },
+            ) from error
+        except WEBOSTV_EXCEPTIONS as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="notify_communication_error",
+                translation_placeholders={
+                    "name": str(self._entry.title),
+                    "error": str(error),
+                },
+            ) from error

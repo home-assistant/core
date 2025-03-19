@@ -93,7 +93,7 @@ def raise_for_blocking_call(
             return
 
         if found_frame is None:
-            raise RuntimeError(  # noqa: TRY200
+            raise RuntimeError(  # noqa: B904
                 f"Caught blocking call to {func.__name__} "
                 f"with args {mapped_args.get('args')} "
                 f"in {offender_filename}, line {offender_lineno}: {offender_line} "

@@ -18,7 +18,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import PERCENTAGE, PRECISION_WHOLE, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import TeslaFleetConfigEntry
@@ -95,7 +95,7 @@ ENERGY_INFO_DESCRIPTIONS: tuple[TeslaFleetNumberBatteryEntityDescription, ...] =
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslaFleetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the TeslaFleet number platform from a config entry."""
 

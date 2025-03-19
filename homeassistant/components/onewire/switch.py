@@ -11,7 +11,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DEVICE_KEYS_0_3, DEVICE_KEYS_0_7, DEVICE_KEYS_A_B, READ_MODE_BOOL
 from .entity import OneWireEntity, OneWireEntityDescription
@@ -161,7 +161,7 @@ def get_sensor_types(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OneWireConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
 
@@ -182,9 +182,9 @@ async def async_setup_entry(
 
 def get_entities(
     onewire_hub: OneWireHub, devices: list[OWDeviceDescription]
-) -> list[OneWireSwitch]:
+) -> list[OneWireSwitchEntity]:
     """Get a list of entities."""
-    entities: list[OneWireSwitch] = []
+    entities: list[OneWireSwitchEntity] = []
 
     for device in devices:
         family = device.family
@@ -204,7 +204,7 @@ def get_entities(
         for description in get_sensor_types(device_sub_type)[family]:
             device_file = os.path.join(os.path.split(device.path)[0], description.key)
             entities.append(
-                OneWireSwitch(
+                OneWireSwitchEntity(
                     description=description,
                     device_id=device_id,
                     device_file=device_file,
@@ -216,7 +216,7 @@ def get_entities(
     return entities
 
 
-class OneWireSwitch(OneWireEntity, SwitchEntity):
+class OneWireSwitchEntity(OneWireEntity, SwitchEntity):
     """Implementation of a 1-Wire switch."""
 
     entity_description: OneWireSwitchEntityDescription

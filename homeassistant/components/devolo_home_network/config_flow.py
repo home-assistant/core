@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN, PRODUCT, SERIAL_NUMBER, TITLE
@@ -81,7 +82,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         if discovery_info.properties["MT"] in ["2600", "2601"]:

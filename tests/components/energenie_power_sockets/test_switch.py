@@ -6,7 +6,6 @@ from pyegps.exceptions import EgpsException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.energenie_power_sockets.const import DOMAIN
 from homeassistant.components.homeassistant import (
     DOMAIN as HOME_ASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -118,7 +117,6 @@ async def test_switch_setup(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.entry_id in hass.data[DOMAIN]
 
     state = hass.states.get(f"switch.{entity_name}")
     assert state == snapshot

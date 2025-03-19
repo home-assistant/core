@@ -1278,7 +1278,7 @@ async def test_options_flow_connection_type(
     # usage of the already running XKNX instance for gateway scanner
     gateway = _gateway_descriptor("192.168.0.1", 3675)
 
-    await knx.setup_integration({})
+    await knx.setup_integration()
     menu_step = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     with patch(

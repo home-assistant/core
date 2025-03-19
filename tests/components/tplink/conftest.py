@@ -10,7 +10,8 @@ import pytest
 from homeassistant.components.tplink import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import (
+from . import _mocked_device
+from .const import (
     ALIAS_CAMERA,
     CREATE_ENTRY_DATA_AES_CAMERA,
     CREATE_ENTRY_DATA_LEGACY,
@@ -26,7 +27,6 @@ from . import (
     MAC_ADDRESS2,
     MAC_ADDRESS3,
     MODEL_CAMERA,
-    _mocked_device,
 )
 
 from tests.common import MockConfigEntry
@@ -115,8 +115,12 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_init() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
+def mock_init() -> Generator[dict[str, AsyncMock]]:
+    """Override async_setup and async_setup_entry.
+
+    This fixture must be declared before the hass fixture to avoid errors
+    in the logs during teardown of the hass fixture which calls async_unload.
+    """
     with patch.multiple(
         "homeassistant.components.tplink",
         async_setup=DEFAULT,

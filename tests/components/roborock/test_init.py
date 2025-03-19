@@ -1,6 +1,8 @@
 """Test for Roborock init."""
 
 from copy import deepcopy
+from http import HTTPStatus
+import pathlib
 from unittest.mock import patch
 
 import pytest
@@ -13,12 +15,14 @@ from roborock import (
 
 from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .mock_data import HOME_DATA
 
 from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_unload_entry(
@@ -163,6 +167,68 @@ async def test_reauth_started(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
+@pytest.mark.parametrize("platforms", [[Platform.IMAGE]])
+async def test_remove_from_hass(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    cleanup_map_storage: pathlib.Path,
+) -> None:
+    """Test that removing from hass removes any existing images."""
+
+    # Ensure some image content is cached
+    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert resp.status == HTTPStatus.OK
+
+    assert not cleanup_map_storage.exists()
+
+    # Flush to disk
+    await hass.config_entries.async_unload(setup_entry.entry_id)
+    assert cleanup_map_storage.exists()
+    paths = list(cleanup_map_storage.walk())
+    assert len(paths) == 4  # Two map image and two directories
+
+    await hass.config_entries.async_remove(setup_entry.entry_id)
+    # After removal, directories should be empty.
+    assert not cleanup_map_storage.exists()
+
+
+@pytest.mark.parametrize("platforms", [[Platform.IMAGE]])
+async def test_oserror_remove_image(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+    cleanup_map_storage: pathlib.Path,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that we gracefully handle failing to remove an image."""
+
+    # Ensure some image content is cached
+    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    assert resp.status == HTTPStatus.OK
+
+    # Image content is saved when unloading
+    assert not cleanup_map_storage.exists()
+    await hass.config_entries.async_unload(setup_entry.entry_id)
+
+    assert cleanup_map_storage.exists()
+    paths = list(cleanup_map_storage.walk())
+    assert len(paths) == 4  # Two map image and two directories
+
+    with patch(
+        "homeassistant.components.roborock.roborock_storage.shutil.rmtree",
+        side_effect=OSError,
+    ):
+        await hass.config_entries.async_remove(setup_entry.entry_id)
+    assert "Unable to remove map files" in caplog.text
+
+
 async def test_not_supported_protocol(
     hass: HomeAssistant,
     bypass_api_fixture,
@@ -176,7 +242,7 @@ async def test_not_supported_protocol(
         "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
         return_value=home_data_copy,
     ):
-        await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
         await hass.async_block_till_done()
     assert "because its protocol version random" in caplog.text
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import fields
+from dataclasses import asdict, fields
 import datetime
 from math import floor
 from typing import TYPE_CHECKING
@@ -23,9 +23,6 @@ from dateutil.rrule import (
 )
 from habiticalib import ContentData, Frequency, TaskData, UserData
 
-from homeassistant.components.automation import automations_with_entity
-from homeassistant.components.script import scripts_with_entity
-from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 
@@ -33,6 +30,8 @@ def next_due_date(task: TaskData, today: datetime.datetime) -> datetime.date | N
     """Calculate due date for dailies and yesterdailies."""
 
     if task.everyX == 0 or not task.nextDue:  # grey dailies never become due
+        return None
+    if task.frequency is Frequency.WEEKLY and not any(asdict(task.repeat).values()):
         return None
 
     if TYPE_CHECKING:
@@ -55,13 +54,6 @@ def next_due_date(task: TaskData, today: datetime.datetime) -> datetime.date | N
             return dt_util.as_local(task.nextDue[1]).date()
 
     return dt_util.as_local(task.nextDue[0]).date()
-
-
-def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Get list of related automations and scripts."""
-    used_in = automations_with_entity(hass, entity_id)
-    used_in += scripts_with_entity(hass, entity_id)
-    return used_in
 
 
 FREQUENCY_MAP = {"daily": DAILY, "weekly": WEEKLY, "monthly": MONTHLY, "yearly": YEARLY}

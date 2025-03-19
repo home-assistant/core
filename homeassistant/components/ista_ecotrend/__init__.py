@@ -6,19 +6,16 @@ import logging
 
 from pyecotrend_ista import KeycloakError, LoginError, PyEcotrendIsta, ServerError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN
-from .coordinator import IstaCoordinator
+from .coordinator import IstaConfigEntry, IstaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-type IstaConfigEntry = ConfigEntry[IstaCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool:
@@ -42,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool
             translation_placeholders={CONF_EMAIL: entry.data[CONF_EMAIL]},
         ) from e
 
-    coordinator = IstaCoordinator(hass, ista)
+    coordinator = IstaCoordinator(hass, entry, ista)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

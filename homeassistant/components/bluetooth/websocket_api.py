@@ -7,7 +7,12 @@ from functools import lru_cache, partial
 import time
 from typing import Any
 
-from habluetooth import BluetoothScanningMode
+from habluetooth import (
+    BluetoothScanningMode,
+    HaBluetoothSlotAllocations,
+    HaScannerRegistration,
+    HaScannerRegistrationEvent,
+)
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 import voluptuous as vol
 
@@ -16,14 +21,18 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_bytes
 
 from .api import _get_manager, async_register_callback
+from .const import DOMAIN
 from .match import BluetoothCallbackMatcher
 from .models import BluetoothChange
+from .util import InvalidConfigEntryID, InvalidSource, config_entry_id_to_source
 
 
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the bluetooth websocket API."""
     websocket_api.async_register_command(hass, ws_subscribe_advertisements)
+    websocket_api.async_register_command(hass, ws_subscribe_connection_allocations)
+    websocket_api.async_register_command(hass, ws_subscribe_scanner_details)
 
 
 @lru_cache(maxsize=1024)
@@ -106,36 +115,23 @@ class _AdvertisementSubscription:
         self._async_added(self.pending_service_infos)
         self.pending_service_infos.clear()
 
-    def _async_added(self, service_infos: Iterable[BluetoothServiceInfoBleak]) -> None:
+    def _async_event_message(self, message: dict[str, Any]) -> None:
         self.connection.send_message(
-            json_bytes(
-                websocket_api.event_message(
-                    self.ws_msg_id,
-                    {
-                        "add": [
-                            serialize_service_info(service_info, self.time_diff)
-                            for service_info in service_infos
-                        ]
-                    },
-                )
-            )
+            json_bytes(websocket_api.event_message(self.ws_msg_id, message))
+        )
+
+    def _async_added(self, service_infos: Iterable[BluetoothServiceInfoBleak]) -> None:
+        self._async_event_message(
+            {
+                "add": [
+                    serialize_service_info(service_info, self.time_diff)
+                    for service_info in service_infos
+                ]
+            }
         )
 
     def _async_removed(self, address: str) -> None:
-        self.connection.send_message(
-            json_bytes(
-                websocket_api.event_message(
-                    self.ws_msg_id,
-                    {
-                        "remove": [
-                            {
-                                "address": address,
-                            }
-                        ]
-                    },
-                )
-            )
-        )
+        self._async_event_message({"remove": [{"address": address}]})
 
     @callback
     def _async_on_advertisement(
@@ -148,6 +144,7 @@ class _AdvertisementSubscription:
         self._async_added((service_info,))
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "bluetooth/subscribe_advertisements",
@@ -161,3 +158,98 @@ async def ws_subscribe_advertisements(
     _AdvertisementSubscription(
         hass, connection, msg["id"], BluetoothCallbackMatcher(connectable=False)
     ).async_start()
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "bluetooth/subscribe_connection_allocations",
+        vol.Optional("config_entry_id"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_subscribe_connection_allocations(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe advertisements websocket command."""
+    ws_msg_id = msg["id"]
+    source: str | None = None
+    if config_entry_id := msg.get("config_entry_id"):
+        try:
+            source = config_entry_id_to_source(hass, config_entry_id)
+        except InvalidConfigEntryID as err:
+            connection.send_error(ws_msg_id, "invalid_config_entry_id", str(err))
+            return
+        except InvalidSource as err:
+            connection.send_error(ws_msg_id, "invalid_source", str(err))
+            return
+
+    def _async_allocations_changed(allocations: HaBluetoothSlotAllocations) -> None:
+        connection.send_message(
+            json_bytes(websocket_api.event_message(ws_msg_id, [allocations]))
+        )
+
+    manager = _get_manager(hass)
+    connection.subscriptions[ws_msg_id] = manager.async_register_allocation_callback(
+        _async_allocations_changed, source
+    )
+    connection.send_message(json_bytes(websocket_api.result_message(ws_msg_id)))
+    if current_allocations := manager.async_current_allocations(source):
+        connection.send_message(
+            json_bytes(websocket_api.event_message(ws_msg_id, current_allocations))
+        )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "bluetooth/subscribe_scanner_details",
+        vol.Optional("config_entry_id"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_subscribe_scanner_details(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe scanner details websocket command."""
+    ws_msg_id = msg["id"]
+    source: str | None = None
+    if config_entry_id := msg.get("config_entry_id"):
+        if (
+            not (entry := hass.config_entries.async_get_entry(config_entry_id))
+            or entry.domain != DOMAIN
+        ):
+            connection.send_error(
+                ws_msg_id,
+                "invalid_config_entry_id",
+                f"Invalid config entry id: {config_entry_id}",
+            )
+            return
+        source = entry.unique_id
+        assert source is not None
+
+    def _async_event_message(message: dict[str, Any]) -> None:
+        connection.send_message(
+            json_bytes(websocket_api.event_message(ws_msg_id, message))
+        )
+
+    def _async_registration_changed(registration: HaScannerRegistration) -> None:
+        added_event = HaScannerRegistrationEvent.ADDED
+        event_type = "add" if registration.event == added_event else "remove"
+        _async_event_message({event_type: [registration.scanner.details]})
+
+    manager = _get_manager(hass)
+    connection.subscriptions[ws_msg_id] = (
+        manager.async_register_scanner_registration_callback(
+            _async_registration_changed, source
+        )
+    )
+    connection.send_message(json_bytes(websocket_api.result_message(ws_msg_id)))
+    if (scanners := manager.async_current_scanners()) and (
+        matching_scanners := [
+            scanner.details
+            for scanner in scanners
+            if source is None or scanner.source == source
+        ]
+    ):
+        _async_event_message({"add": matching_scanners})

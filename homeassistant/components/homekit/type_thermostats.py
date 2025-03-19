@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
+    ATTR_MAX_HUMIDITY,
     ATTR_MAX_TEMP,
     ATTR_MIN_HUMIDITY,
     ATTR_MIN_TEMP,
@@ -21,6 +22,7 @@ from homeassistant.components.climate import (
     ATTR_SWING_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    DEFAULT_MAX_HUMIDITY,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_HUMIDITY,
     DEFAULT_MIN_TEMP,
@@ -90,7 +92,7 @@ from .const import (
     SERV_FANV2,
     SERV_THERMOSTAT,
 )
-from .util import temperature_to_homekit, temperature_to_states
+from .util import get_min_max, temperature_to_homekit, temperature_to_states
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -208,7 +210,10 @@ class Thermostat(HomeAccessory):
         self.fan_chars: list[str] = []
 
         attributes = state.attributes
-        min_humidity = attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)
+        min_humidity, _ = get_min_max(
+            attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY),
+            attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY),
+        )
         features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
@@ -838,6 +843,9 @@ def _get_temperature_range_from_state(
         max_temp = round(temperature_to_homekit(max_temp, unit) * 2) / 2
     else:
         max_temp = default_max
+
+    # Handle reversed temperature range
+    min_temp, max_temp = get_min_max(min_temp, max_temp)
 
     # Homekit only supports 10-38, overwriting
     # the max to appears to work, but less than 0 causes

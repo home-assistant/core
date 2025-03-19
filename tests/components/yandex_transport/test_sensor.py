@@ -10,7 +10,7 @@ from homeassistant.components import sensor
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import assert_setup_component, load_fixture
 

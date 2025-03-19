@@ -1,0 +1,31 @@
+{
+  "components": {
+    "main": {
+      "powerMeter": {
+        "power": {
+          "value": 2859.743,
+          "unit": "W",
+          "timestamp": "2025-02-10T21:09:08.228Z"
+        }
+      },
+      "voltageMeasurement": {
+        "voltage": {
+          "value": null
+        }
+      },
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": null
+        }
+      },
+      "energyMeter": {
+        "energy": {
+          "value": 19978.536,
+          "unit": "kWh",
+          "timestamp": "2025-02-10T21:09:08.357Z"
+        }
+      },
+      "refresh": {}
+    }
+  }
+}
