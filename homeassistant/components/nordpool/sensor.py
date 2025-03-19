@@ -38,7 +38,7 @@ def validate_prices(
     if result is None:
         return None
     if result == 0:
-        return 0
+        return float(0)
     return result / 1000
 
 
@@ -404,6 +404,4 @@ class NordpoolDailyAveragePriceSensor(NordpoolBaseEntity, SensorEntity):
     def native_value(self) -> float | None:
         """Return value of sensor."""
         data = self.coordinator.get_data_current_day()
-        if (value := data.area_average.get(self.area)) is None:
-            return None
-        return value / 1000
+        return data.area_average[self.area] / 1000
