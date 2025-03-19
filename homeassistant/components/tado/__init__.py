@@ -8,7 +8,7 @@ import PyTado.exceptions
 from PyTado.interface import Tado
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -98,6 +98,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool:
+    """Migrate old entry."""
+
+    if entry.version < 2:
+        _LOGGER.debug("Migrating Tado entry to version 2. Current data: %s", entry.data)
+        data = dict(entry.data)
+        data.pop(CONF_USERNAME, None)
+        data.pop(CONF_PASSWORD, None)
+        hass.config_entries.async_update_entry(entry=entry, data=data, version=2)
+        _LOGGER.debug("Migration to version 2 successful")
     return True
 
 
