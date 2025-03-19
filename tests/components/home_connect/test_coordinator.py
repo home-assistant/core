@@ -394,7 +394,7 @@ async def test_devices_updated_while_event_stream_is_down(
     client: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that the devices added or deleted while the event stream is down are updated in the integration."""
+    """Test handling of devices added or deleted while event stream is down."""
 
     future = hass.loop.create_future()
 
