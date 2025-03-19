@@ -113,7 +113,7 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
                 cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
             ),
         },
-        ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN, LIGHT_DOMAIN),
+        ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN),
     )
 )
 
