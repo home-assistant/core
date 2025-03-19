@@ -115,6 +115,9 @@
   "exceptions": {
     "update_failed": {
       "message": "Error fetching data: {error}"
+    },
+    "cannot_authenticate": {
+      "message": "Error authenticating: {error}"
     }
   }
 }
