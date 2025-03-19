@@ -10,7 +10,7 @@ rules:
       There is no polling of the entities.
   brands: done
   common-modules: done
-  config-flow-test-coverage: todo
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency:
     status: done
