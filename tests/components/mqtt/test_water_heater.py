@@ -33,8 +33,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -714,7 +719,7 @@ async def test_temperature_unit(
 
 
 @pytest.mark.parametrize(
-    ("hass_config", "temperature_unit", "initial", "min_temp", "max_temp", "current"),
+    ("hass_config", "units", "initial", "min_temp", "max_temp", "current"),
     [
         (
             help_custom_config(
@@ -727,7 +732,7 @@ async def test_temperature_unit(
                     },
                 ),
             ),
-            UnitOfTemperature.CELSIUS,
+            METRIC_SYSTEM,
             _DEFAULT_MIN_TEMP_CELSIUS,
             _DEFAULT_MIN_TEMP_CELSIUS,
             _DEFAULT_MAX_TEMP_CELSIUS,
@@ -744,24 +749,7 @@ async def test_temperature_unit(
                     },
                 ),
             ),
-            UnitOfTemperature.KELVIN,
-            316,
-            316,
-            333,
-            322,
-        ),
-        (
-            help_custom_config(
-                water_heater.DOMAIN,
-                DEFAULT_CONFIG,
-                (
-                    {
-                        "temperature_unit": "F",
-                        "current_temperature_topic": "current_temperature",
-                    },
-                ),
-            ),
-            UnitOfTemperature.FAHRENHEIT,
+            US_CUSTOMARY_SYSTEM,
             DEFAULT_MIN_TEMP,
             DEFAULT_MIN_TEMP,
             DEFAULT_MAX_TEMP,
@@ -772,25 +760,25 @@ async def test_temperature_unit(
 async def test_alt_temperature_unit(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    temperature_unit: UnitOfTemperature,
+    units: UnitSystem,
     initial: float,
     min_temp: float,
     max_temp: float,
     current: float,
 ) -> None:
     """Test deriving the systems temperature unit."""
-    with patch.object(hass.config.units, "temperature_unit", temperature_unit):
-        await mqtt_mock_entry()
+    hass.config.units = units
+    await mqtt_mock_entry()
 
-        state = hass.states.get(ENTITY_WATER_HEATER)
-        assert state.attributes.get("temperature") == initial
-        assert state.attributes.get("min_temp") == min_temp
-        assert state.attributes.get("max_temp") == max_temp
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.attributes.get("temperature") == initial
+    assert state.attributes.get("min_temp") == min_temp
+    assert state.attributes.get("max_temp") == max_temp
 
-        async_fire_mqtt_message(hass, "current_temperature", "120")
+    async_fire_mqtt_message(hass, "current_temperature", "120")
 
-        state = hass.states.get(ENTITY_WATER_HEATER)
-        assert state.attributes.get("current_temperature") == current
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.attributes.get("current_temperature") == current
 
 
 async def test_setting_attribute_via_mqtt_json_message(

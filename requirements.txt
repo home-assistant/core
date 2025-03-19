@@ -5,11 +5,12 @@
 # Home Assistant Core
 aiodns==3.2.0
 aiohasupervisor==0.3.0
-aiohttp==3.11.13
+aiohttp==3.11.14
 aiohttp_cors==0.7.0
 aiohttp-fast-zlib==0.2.3
 aiohttp-asyncmdnsresolver==0.1.1
 aiozoneinfo==0.2.3
+annotatedyaml==0.4.4
 astral==2.2
 async-interrupt==1.2.2
 attrs==25.1.0
@@ -39,7 +40,7 @@ python-slugify==8.0.4
 PyYAML==6.0.2
 requests==2.32.3
 securetar==2025.2.1
-SQLAlchemy==2.0.38
+SQLAlchemy==2.0.39
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.12.2,<5.0
