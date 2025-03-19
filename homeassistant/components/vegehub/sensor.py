@@ -1,5 +1,7 @@
 """Sensor configuration for VegeHub integration."""
 
+from itertools import count
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfElectricPotential
@@ -19,16 +21,26 @@ async def async_setup_entry(
     sensors: list[VegeHubSensor] = []
     coordinator = config_entry.runtime_data
 
-    # We add up the number of sensors, plus the number of actuators, then add one
-    # for battery reading, and one because the array is 1 based instead of 0 based.
-    for i in range(
-        coordinator.vegehub.num_sensors + coordinator.vegehub.num_actuators + 1
-    ):  # Add 1 for battery
+    # This is the index in the updates from the VegeHub that will correspond to
+    # each sensor. This index is 1-based.
+    update_index = count(1)
+
+    # Add each analog sensor input
+    for _i in range(coordinator.vegehub.num_sensors):
         sensor = VegeHubSensor(
-            index=i + 1,
+            index=next(update_index),
             coordinator=coordinator,
         )
         sensors.append(sensor)
+
+    # Add the battery sensor
+    sensors.append(
+        VegeHubSensor(
+            index=next(update_index),
+            coordinator=coordinator,
+            translation_key="battery",
+        )
+    )
 
     async_add_entities(sensors)
 
@@ -37,7 +49,6 @@ class VegeHubSensor(VegeHubEntity, SensorEntity):
     """Class for VegeHub Analog Sensors."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "analog_sensor"
     _unit_of_measurement = UnitOfElectricPotential.VOLT
     _attr_device_class = SensorDeviceClass.VOLTAGE
     _attr_native_unit_of_measurement = _unit_of_measurement
@@ -47,10 +58,13 @@ class VegeHubSensor(VegeHubEntity, SensorEntity):
         self,
         index: int,
         coordinator: VegeHubCoordinator,
+        translation_key: str = "analog_sensor",
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_translation_placeholders = {"index": str(index)}
+        self._attr_translation_key = translation_key
+        if translation_key == "analog_sensor":
+            self._attr_translation_placeholders = {"index": str(index)}
         self._attr_available = False
         self._attr_unique_id = (
             f"{self._mac_address}_{index}".lower()
