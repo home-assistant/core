@@ -89,7 +89,7 @@ class ActronSystemClimate(
         self._name: str = name
         self._attr_name: None = None
         self._attr_unique_id: str = serial_number
-        self.attr_device_info = DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
             name=self._name,
             manufacturer="Actron Air",
