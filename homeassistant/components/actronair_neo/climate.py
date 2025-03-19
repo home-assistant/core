@@ -75,7 +75,6 @@ class ActronSystemClimate(
     ) -> None:
         """Initialize an Actron Air Neo unit."""
         super().__init__(coordinator)
-        self._coordinator: ActronNeoDataUpdateCoordinator = coordinator
         self._api: ActronNeoAPI = coordinator.api
         self._serial_number: str = serial_number
         self._status = coordinator.data[self._serial_number]
