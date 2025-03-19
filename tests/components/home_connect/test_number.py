@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 import random
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
@@ -342,6 +342,7 @@ async def test_number_entity_functionality(
 
 
 @pytest.mark.parametrize("appliance_ha_id", ["FridgeFreezer"], indirect=True)
+@pytest.mark.parametrize("retry_after", [0, None])
 @pytest.mark.parametrize(
     (
         "entity_id",
@@ -364,7 +365,9 @@ async def test_number_entity_functionality(
         ),
     ],
 )
+@patch("homeassistant.components.home_connect.entity.API_DEFAULT_RETRY_AFTER", new=0)
 async def test_fetch_constraints_after_rate_limit_error(
+    retry_after: int | None,
     appliance_ha_id: str,
     entity_id: str,
     setting_key: SettingKey,
@@ -397,7 +400,7 @@ async def test_fetch_constraints_after_rate_limit_error(
     client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
     client.get_setting = AsyncMock(
         side_effect=[
-            TooManyRequestsError("error.key", retry_after=0),
+            TooManyRequestsError("error.key", retry_after=retry_after),
             GetSetting(
                 key=setting_key,
                 raw_key=setting_key.value,
