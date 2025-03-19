@@ -77,10 +77,10 @@ class ActronSystemClimate(
         super().__init__(coordinator)
         self._api: ActronNeoAPI = coordinator.api
         self._serial_number: str = serial_number
-        self._status = coordinator.data[self._serial_number]
+        self._status = coordinator.data[serial_number]
         self._name: str = name
         self._attr_name: None = None
-        self._attr_unique_id: str = self._serial_number
+        self._attr_unique_id: str = serial_number
         self.attr_device_info = {
             "identifiers": {(DOMAIN, self._serial_number)},
             "name": self._name,
