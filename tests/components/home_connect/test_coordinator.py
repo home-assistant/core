@@ -1,17 +1,20 @@
 """Test for Home Connect coordinator."""
 
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
+    ArrayOfHomeAppliances,
     ArrayOfSettings,
     ArrayOfStatus,
     Event,
     EventKey,
     EventMessage,
     EventType,
+    HomeAppliance,
     Status,
     StatusKey,
 )
@@ -28,6 +31,7 @@ from homeassistant.components.home_connect.const import (
     BSH_DOOR_STATE_OPEN,
     BSH_EVENT_PRESENT_STATE_PRESENT,
     BSH_POWER_OFF,
+    DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntries, ConfigEntryState
 from homeassistant.const import EVENT_STATE_REPORTED, Platform
@@ -37,9 +41,10 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -379,3 +384,52 @@ async def test_event_listener_resilience(
     await hass.async_block_till_done()
 
     assert hass.states.is_state(entity_id, after_event_expected_state)
+
+
+async def test_devices_updated_while_event_stream_is_down(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that the devices added or deleted while the event stream is down are updated in the integration."""
+
+    future = hass.loop.create_future()
+
+    async def stream_exception():
+        yield await future
+
+    client.stream_all_events = MagicMock(
+        side_effect=[stream_exception(), client.stream_all_events()]
+    )
+
+    appliances: list[HomeAppliance] = (
+        client.get_home_appliances.return_value.homeappliances
+    )
+    assert len(appliances) >= 3
+    client.get_home_appliances = AsyncMock(
+        side_effect=[
+            ArrayOfHomeAppliances(appliances[:2]),
+            ArrayOfHomeAppliances(appliances[1:3]),
+        ]
+    )
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    for appliance in appliances[:2]:
+        assert device_registry.async_get_device({(DOMAIN, appliance.ha_id)})
+    assert not device_registry.async_get_device({(DOMAIN, appliances[2].ha_id)})
+
+    future.set_exception(HomeConnectRequestError())
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    assert not device_registry.async_get_device({(DOMAIN, appliances[0].ha_id)})
+    for appliance in appliances[2:3]:
+        assert device_registry.async_get_device({(DOMAIN, appliance.ha_id)})

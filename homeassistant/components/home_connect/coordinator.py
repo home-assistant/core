@@ -271,19 +271,9 @@ class HomeConnectCoordinator(
             # if there was a non-breaking error, we continue listening
             # but we need to refresh the data to get the possible changes
             # that happened while the event stream was interrupted
-            old_appliances = self.data.keys()
             await self._async_setup()
             await self.async_refresh()
 
-            for ha_id in old_appliances - self.data.keys():
-                device = self.device_registry.async_get_device(
-                    identifiers={(DOMAIN, ha_id)}
-                )
-                if device:
-                    self.device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
             # Trigger to delete the possible depaired device entities
             # from known_entities variable at common.py
             for listener, context in self._special_listeners.values():
@@ -341,6 +331,7 @@ class HomeConnectCoordinator(
 
     async def _async_setup(self) -> None:
         """Set up the devices."""
+        old_appliances = set(self.data.keys())
         try:
             appliances = await self.client.get_home_appliances()
         except UnauthorizedError as error:
@@ -376,6 +367,18 @@ class HomeConnectCoordinator(
                 )
             else:
                 self.data[appliance.ha_id].info.connected = appliance.connected
+                old_appliances.remove(appliance.ha_id)
+
+        for ha_id in old_appliances:
+            self.data.pop(ha_id, None)
+            device = self.device_registry.async_get_device(
+                identifiers={(DOMAIN, ha_id)}
+            )
+            if device:
+                self.device_registry.async_update_device(
+                    device_id=device.id,
+                    remove_config_entry_id=self.config_entry.entry_id,
+                )
 
     async def _get_appliance_data(
         self,
