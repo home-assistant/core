@@ -13,6 +13,7 @@ from homeassistant.components.blueprint import (
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -36,6 +37,7 @@ from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
     image as image_platform,
+    light as light_platform,
     number as number_platform,
     select as select_platform,
     sensor as sensor_platform,
@@ -104,11 +106,14 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
             vol.Optional(IMAGE_DOMAIN): vol.All(
                 cv.ensure_list, [image_platform.IMAGE_SCHEMA]
             ),
+            vol.Optional(LIGHT_DOMAIN): vol.All(
+                cv.ensure_list, [light_platform.LIGHT_SCHEMA]
+            ),
             vol.Optional(WEATHER_DOMAIN): vol.All(
                 cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
             ),
         },
-        ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN),
+        ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN, LIGHT_DOMAIN),
     )
 )
 
