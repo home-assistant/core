@@ -107,40 +107,29 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         LOGGER.debug("Found device: %s", title)
 
-        if user_input is not None:
-            mower = Mower(channel_id, self.address, self.pin)
+        mower = Mower(channel_id, self.address, self.pin)
 
-            try:
-                errors: dict[str, str] = {}
+        try:
+            errors: dict[str, str] = {}
 
-                if not await mower.connect(device):
-                    errors["base"] = "invalid_auth"
+            if not await mower.connect(device):
+                errors["base"] = "invalid_auth"
 
-                    return self.async_show_form(
-                        step_id="reauth_confirm",
-                        data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
-                        errors=errors,
-                    )
-            except (TimeoutError, BleakError):
-                return self.async_abort(reason="cannot_connect")
+                return self.async_show_form(
+                    step_id="reauth_confirm",
+                    data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
+                    errors=errors,
+                )
+        except (TimeoutError, BleakError):
+            return self.async_abort(reason="cannot_connect")
 
-            return self.async_create_entry(
-                title=title,
-                data={
-                    CONF_ADDRESS: self.address,
-                    CONF_CLIENT_ID: channel_id,
-                    CONF_PIN: self.pin,
-                },
-            )
-
-        self.context["title_placeholders"] = {
-            "name": title,
-        }
-
-        self._set_confirm_only()
-        return self.async_show_form(
-            step_id="confirm",
-            description_placeholders=self.context["title_placeholders"],
+        return self.async_create_entry(
+            title=title,
+            data={
+                CONF_ADDRESS: self.address,
+                CONF_CLIENT_ID: channel_id,
+                CONF_PIN: self.pin,
+            },
         )
 
     async def async_step_user(
