@@ -10,7 +10,7 @@ from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import LOGGER
 from .coordinator import HusqvarnaCoordinator
@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) ->
             hass, address, connectable=True
         ) or await get_device(address)
         if not await mower.connect(device):
-            raise ConfigEntryAuthFailed(f"Unable to connect to device {address}")
+            raise ConfigEntryNotReady
     except (TimeoutError, BleakError) as exception:
         raise ConfigEntryNotReady(
             f"Unable to connect to device {address} due to {exception}"
