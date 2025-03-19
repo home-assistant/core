@@ -149,9 +149,8 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
         """Set the option."""
         for map_id, map_ in self.coordinator.maps.items():
             if map_.name == option:
-                await self._send_command(
+                await self.send(
                     RoborockCommand.LOAD_MULTI_MAP,
-                    self.api,
                     [map_id],
                 )
                 # Update the current map id manually so that nothing gets broken
@@ -160,7 +159,6 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
                 # We need to wait after updating the map
                 # so that other commands will be executed correctly.
                 await asyncio.sleep(MAP_SLEEP)
-                await self.coordinator.async_refresh()
                 break
 
     @property
