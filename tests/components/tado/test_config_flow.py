@@ -83,10 +83,7 @@ async def test_auth_timeout(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_no_homes(
-    hass: HomeAssistant,
-    mock_tado_api: MagicMock,
-) -> None:
+async def test_no_homes(hass: HomeAssistant, mock_tado_api: MagicMock) -> None:
     """Test the full flow of the config flow."""
     mock_tado_api.get_me.return_value["homes"] = []
 
@@ -102,18 +99,7 @@ async def test_no_homes(
     assert result["reason"] == "no_homes"
 
 
-def _get_mock_tado_api(get_me=None) -> MagicMock:
-    mock_tado = MagicMock()
-    if isinstance(get_me, Exception):
-        type(mock_tado).get_me = MagicMock(side_effect=get_me)
-    else:
-        type(mock_tado).get_me = MagicMock(return_value=get_me)
-    return mock_tado
-
-
-async def test_tado_creation(
-    hass: HomeAssistant,
-) -> None:
+async def test_tado_creation(hass: HomeAssistant) -> None:
     """Test we handle Form Exceptions."""
 
     with patch(
