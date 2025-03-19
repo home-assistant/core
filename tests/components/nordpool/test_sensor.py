@@ -90,7 +90,6 @@ async def test_sensor_no_next_price(hass: HomeAssistant, load_int: ConfigEntry) 
     assert current_price is not None
     assert last_price is not None
     assert next_price is not None
-    assert next_price is not None
     assert current_price.state == "0.12666"  # SE3 2024-11-05T23:00:00Z
     assert last_price.state == "0.28914"  # SE3 2024-11-05T22:00:00Z
     assert next_price.state == "0.07406"  # SE3 2024-11-06T00:00:00Z"
