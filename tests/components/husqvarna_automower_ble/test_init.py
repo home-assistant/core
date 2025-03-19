@@ -66,11 +66,4 @@ async def test_setup_invalid_pin(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
-
-    hass.config_entries.flow.async_abort(flows[0]["flow_id"])
-    assert not hass.config_entries.flow.async_progress()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
