@@ -64,6 +64,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Bluesound entry."""
+    assert (
+        hasattr(config_entry, "runtime_data") and config_entry.runtime_data is not None
+    )
+
     bluesound_player = BluesoundPlayer(
         config_entry.runtime_data.coordinator,
         config_entry.data[CONF_HOST],
@@ -448,7 +452,9 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
             self.hass.config_entries.async_entries(DOMAIN)
         )
         sync_status_list = [
-            x.runtime_data.coordinator.data.sync_status for x in config_entries
+            x.runtime_data.coordinator.data.sync_status
+            for x in config_entries
+            if hasattr(x, "runtime_data") and x.runtime_data is not None
         ]
 
         leader_sync_status: SyncStatus | None = None
