@@ -68,6 +68,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[aux_ac]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'bf53a150-f8a4-45d1-aac4-86252475d551',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'AUX A/C on-off',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[base_electric_meter]
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
@@ -398,6 +431,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ks_oven_01061]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '9447959a-0dfa-6b27-d40d-650da525c53f',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'TP1X_DA-KS-OVEN-01061',
+    'model_id': None,
+    'name': 'Oven',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'AKS-WW-TP1X-21-OVEN_40211229',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ks_range_0101x]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -494,6 +560,39 @@
     'serial_number': None,
     'suggested_area': 'Theater',
     'sw_version': '1.0',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_sac_ehs_000001_sub]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '1f98ebd0-ac48-d802-7f62-000001200100',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'SAC_EHS_MONO',
+    'model_id': None,
+    'name': 'Eco Heating System',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '20240611.1',
     'via_device_id': None,
   })
 # ---
