@@ -142,6 +142,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_REFRESH_TOKEN: self.refresh_token},
             )
 
+        self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
         return self.async_update_reload_and_abort(
             self._get_reauth_entry(),
             data={CONF_REFRESH_TOKEN: self.refresh_token},
