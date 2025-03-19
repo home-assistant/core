@@ -115,6 +115,9 @@
   "exceptions": {
     "update_failed": {
       "message": "Error fetching data: {error}"
+    },
+    "cannot_execute_action": {
+      "message": "Cannot execute requested action: {error}"
     }
   }
 }
