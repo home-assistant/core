@@ -60,7 +60,9 @@ class SmartThingsEntity(Entity):
             self._attr_device_info.update(
                 {
                     "manufacturer": ocf.manufacturer_name,
-                    "model": ocf.model_number.split("|")[0],
+                    "model": (
+                        (ocf.model_number.split("|")[0]) if ocf.model_number else None
+                    ),
                     "hw_version": ocf.hardware_version,
                     "sw_version": ocf.firmware_version,
                 }

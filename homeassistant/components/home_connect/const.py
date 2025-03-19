@@ -10,6 +10,7 @@ from .utils import bsh_key_to_translation_key
 
 DOMAIN = "home_connect"
 
+API_DEFAULT_RETRY_AFTER = 60
 
 APPLIANCES_WITH_PROGRAMS = (
     "CleaningRobot",
@@ -284,7 +285,9 @@ SPIN_SPEED_OPTIONS = {
         "LaundryCare.Washer.EnumType.SpinSpeed.Off",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM400",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM600",
+        "LaundryCare.Washer.EnumType.SpinSpeed.RPM700",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM800",
+        "LaundryCare.Washer.EnumType.SpinSpeed.RPM900",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM1000",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM1200",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM1400",
