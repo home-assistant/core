@@ -1,8 +1,8 @@
 """Provides a select platform for Home Connect."""
 
 from collections.abc import Callable, Coroutine
-import contextlib
 from dataclasses import dataclass
+import logging
 from typing import Any, cast
 
 from aiohomeconnect.client import Client as HomeConnectClient
@@ -47,8 +47,10 @@ from .coordinator import (
     HomeConnectConfigEntry,
     HomeConnectCoordinator,
 )
-from .entity import HomeConnectEntity, HomeConnectOptionEntity
+from .entity import HomeConnectEntity, HomeConnectOptionEntity, constraint_fetcher
 from .utils import bsh_key_to_translation_key, get_dict_from_home_connect_error
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -458,17 +460,21 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
+        await self.async_fetch_options()
+
+    @constraint_fetcher
+    async def async_fetch_options(self) -> None:
+        """Fetch options from the API."""
         setting = self.appliance.settings.get(cast(SettingKey, self.bsh_key))
         if (
             not setting
             or not setting.constraints
             or not setting.constraints.allowed_values
         ):
-            with contextlib.suppress(HomeConnectError):
-                setting = await self.coordinator.client.get_setting(
-                    self.appliance.info.ha_id,
-                    setting_key=cast(SettingKey, self.bsh_key),
-                )
+            setting = await self.coordinator.client.get_setting(
+                self.appliance.info.ha_id,
+                setting_key=cast(SettingKey, self.bsh_key),
+            )
 
         if setting and setting.constraints and setting.constraints.allowed_values:
             self._attr_options = [
