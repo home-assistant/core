@@ -478,7 +478,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self._current_tado_hvac_mode == CONST_MODE_OFF:
-            return None
+            return TADO_DEFAULT_MIN_TEMP
         return self._tado_zone_data.target_temp
 
     async def set_timer(
