@@ -47,9 +47,9 @@ async def test_sensor_current_price_is_0(
     assert current_price is not None
     assert last_price is not None
     assert next_price is not None
-    assert current_price.state == "0.0"  # SE4 2024-11-06T17:00:00Z
-    assert last_price.state == "0.0"  # SE4 2024-11-06T18:00:00Z
-    assert next_price.state == "0.0"  # SE4 2024-11-06T19:00:00Z"
+    assert current_price.state == "0.0"  # SE4 2024-11-05T17:00:00Z
+    assert last_price.state == "0.0"  # SE4 2024-11-05T18:00:00Z
+    assert next_price.state == "0.0"  # SE4 2024-11-05T19:00:00Z"
 
 
 @pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
