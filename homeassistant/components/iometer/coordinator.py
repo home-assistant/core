@@ -32,7 +32,7 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
 
     config_entry: IOmeterConfigEntry
     client: IOmeterClient
-    _current_fw_version: str
+    current_fw_version: str = ""
 
     def __init__(
         self,
@@ -52,13 +52,6 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
         self.client = client
         self.identifier = config_entry.entry_id
 
-    async def _async_setup(self) -> None:
-        """Set up the device sw_version."""
-        status = await self.client.get_current_status()
-        self._current_fw_version = (
-            f"{status.device.core.version}/{status.device.bridge.version}"
-        )
-
     async def _async_update_data(self) -> IOmeterData:
         """Update data async."""
         try:
@@ -68,8 +61,7 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
             raise UpdateFailed(f"Error communicating with IOmeter: {error}") from error
 
         fw_version = f"{status.device.core.version}/{status.device.bridge.version}"
-
-        if fw_version != self._current_fw_version:
+        if self.current_fw_version and fw_version != self.current_fw_version:
             device_registry = dr.async_get(self.hass)
             device_entry = device_registry.async_get_device(
                 identifiers={(DOMAIN, status.device.id)}
@@ -79,6 +71,6 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
                 device_entry.id,
                 sw_version=fw_version,
             )
-            self._current_fw_version = fw_version
+        self.current_fw_version = fw_version
 
         return IOmeterData(reading=reading, status=status)
