@@ -144,16 +144,6 @@ class ActronSystemClimate(
         )
 
     @property
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return supported features."""
-        return (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.FAN_MODE
-            | ClimateEntityFeature.TURN_ON
-            | ClimateEntityFeature.TURN_OFF
-        )
-
-    @property
     def min_temp(self) -> float:
         """Return the minimum temperature that can be set."""
         return (
