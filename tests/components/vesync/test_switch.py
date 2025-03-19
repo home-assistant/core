@@ -59,24 +59,24 @@ async def test_switch_state(
 
 
 @pytest.mark.parametrize(
-    ("api_response", "expectation"),
-    [(False, pytest.raises(HomeAssistantError)), (True, NoException)],
+    ("action", "command"),
+    [
+        (SERVICE_TURN_ON, "pyvesync.vesyncfan.VeSyncHumid200300S.turn_on_display"),
+        (SERVICE_TURN_OFF, "pyvesync.vesyncfan.VeSyncHumid200300S.turn_off_display"),
+    ],
 )
-async def test_turn_on_display(
+async def test_turn_on_off_display_success(
     hass: HomeAssistant,
     humidifier_config_entry: MockConfigEntry,
-    api_response: bool,
-    expectation,
+    action: str,
+    command: str,
 ) -> None:
-    """Test turn_on method."""
+    """Test switch turn on and off command with success response."""
 
-    # turn_on_display returns False indicating failure in which case switch.turn_on_display
-    # raises HomeAssistantError.
     with (
-        expectation,
         patch(
-            "pyvesync.vesyncfan.VeSyncHumid200300S.turn_on_display",
-            return_value=api_response,
+            command,
+            return_value=True,
         ) as method_mock,
     ):
         with patch(
@@ -84,7 +84,7 @@ async def test_turn_on_display(
         ) as update_mock:
             await hass.services.async_call(
                 SWITCH_DOMAIN,
-                SERVICE_TURN_ON,
+                action,
                 {ATTR_ENTITY_ID: ENTITY_SWITCH_DISPLAY},
                 blocking=True,
             )
@@ -95,36 +95,33 @@ async def test_turn_on_display(
 
 
 @pytest.mark.parametrize(
-    ("api_response", "expectation"),
-    [(False, pytest.raises(HomeAssistantError)), (True, NoException)],
+    ("action", "command"),
+    [
+        (SERVICE_TURN_ON, "pyvesync.vesyncfan.VeSyncHumid200300S.turn_on_display"),
+        (SERVICE_TURN_OFF, "pyvesync.vesyncfan.VeSyncHumid200300S.turn_off_display"),
+    ],
 )
-async def test_turn_off_display(
+async def test_turn_on_off_display_raises_error(
     hass: HomeAssistant,
     humidifier_config_entry: MockConfigEntry,
-    api_response: bool,
-    expectation,
+    action: str,
+    command: str,
 ) -> None:
-    """Test turn_off method."""
+    """Test switch turn on and off command raises HomeAssistantError."""
 
-    # turn_off_display returns False indicating failure in which case switch.turn_off_display
-    # raises HomeAssistantError.
     with (
-        expectation,
         patch(
-            "pyvesync.vesyncfan.VeSyncHumid200300S.turn_off_display",
-            return_value=api_response,
+            command,
+            return_value=False,
         ) as method_mock,
     ):
-        with patch(
-            "homeassistant.components.vesync.switch.VeSyncSwitchEntity.schedule_update_ha_state"
-        ) as update_mock:
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 SWITCH_DOMAIN,
-                SERVICE_TURN_OFF,
+                action,
                 {ATTR_ENTITY_ID: ENTITY_SWITCH_DISPLAY},
                 blocking=True,
             )
 
         await hass.async_block_till_done()
         method_mock.assert_called_once()
-        update_mock.assert_called_once()

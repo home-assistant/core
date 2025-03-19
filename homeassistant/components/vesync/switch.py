@@ -121,7 +121,7 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if not self.entity_description.off_fn(self.device):
-            raise HomeAssistantError("An error occurred while turning on.")
+            raise HomeAssistantError("An error occurred while turning off.")
 
         self.schedule_update_ha_state()
 
