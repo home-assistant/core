@@ -280,7 +280,8 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         if hvac_mode == HVACMode.OFF:
             await self.async_turn_off()
             return
-
+        if hvac_mode == HVACMode.HEAT_COOL:
+            hvac_mode = HVACMode.AUTO
         # If device is off, turn on first.
         if not self.data.is_on:
             await self.async_turn_on()
@@ -305,7 +306,8 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             if hvac_mode == HVACMode.OFF:
                 await self.async_turn_off()
                 return
-
+            if hvac_mode == HVACMode.HEAT_COOL:
+                hvac_mode = HVACMode.AUTO
             # If device is off, turn on first.
             if not self.data.is_on:
                 await self.async_turn_on()
