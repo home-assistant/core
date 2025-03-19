@@ -66,6 +66,7 @@ class ActronSystemClimate(
 
     _attr_has_entity_name = True
     _attr_fan_modes = ["auto", "low", "medium", "high"]
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
@@ -118,11 +119,6 @@ class ActronSystemClimate(
     def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         return list(FAN_MODE_MAPPING.keys())
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the temperature unit."""
-        return UnitOfTemperature.CELSIUS
 
     @property
     def current_humidity(self) -> float:
