@@ -52,6 +52,7 @@
       "is_volume_flow_rate": "Current {entity_name} volume flow rate",
       "is_water": "Current {entity_name} water",
       "is_weight": "Current {entity_name} weight",
+      "is_wind_direction": "Current {entity_name} wind direction",
       "is_wind_speed": "Current {entity_name} wind speed"
     },
     "trigger_type": {
@@ -105,6 +106,7 @@
       "volume_flow_rate": "{entity_name} volume flow rate changes",
       "water": "{entity_name} water changes",
       "weight": "{entity_name} weight changes",
+      "wind_direction": "{entity_name} wind direction changes",
       "wind_speed": "{entity_name} wind speed changes"
     },
     "extra_fields": {
@@ -298,6 +300,9 @@
     },
     "weight": {
       "name": "Weight"
+    },
+    "wind_direction": {
+      "name": "Wind direction"
     },
     "wind_speed": {
       "name": "Wind speed"

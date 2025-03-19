@@ -7,7 +7,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from propcache.api import cached_property
-from teslemetry_stream import Signal
+from teslemetry_stream import Signal, TeslemetryStreamVehicle
+from teslemetry_stream.const import ShiftState
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -49,6 +50,7 @@ from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
 
+
 CHARGE_STATES = {
     "Starting": "starting",
     "Charging": "charging",
@@ -67,9 +69,9 @@ class TeslemetryVehicleSensorEntityDescription(SensorEntityDescription):
 
     polling: bool = False
     polling_value_fn: Callable[[StateType], StateType] = lambda x: x
-    polling_available_fn: Callable[[StateType], bool] = lambda x: x is not None
+    nullable: bool = False
     streaming_key: Signal | None = None
-    streaming_value_fn: Callable[[StateType], StateType] = lambda x: x
+    streaming_value_fn: Callable[[str | int | float], StateType] = lambda x: x
     streaming_firmware: str = "2024.26"
 
 
@@ -209,10 +211,10 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="drive_state_shift_state",
         polling=True,
-        polling_available_fn=lambda x: True,
+        nullable=True,
         polling_value_fn=lambda x: SHIFT_STATES.get(str(x), "p"),
         streaming_key=Signal.GEAR,
-        streaming_value_fn=lambda x: SHIFT_STATES.get(str(x)),
+        streaming_value_fn=lambda x: str(ShiftState.get(x, "P")).lower(),
         options=list(SHIFT_STATES.values()),
         device_class=SensorDeviceClass.ENUM,
         entity_registry_enabled_default=False,
@@ -349,21 +351,26 @@ class TeslemetryTimeEntityDescription(SensorEntityDescription):
     """Describes Teslemetry Sensor entity."""
 
     variance: int
-    streaming_key: Signal
+    streaming_listener: Callable[
+        [TeslemetryStreamVehicle, Callable[[float | None], None]],
+        Callable[[], None],
+    ]
     streaming_firmware: str = "2024.26"
+    streaming_value_fn: Callable[[float], float] = lambda x: x
 
 
 VEHICLE_TIME_DESCRIPTIONS: tuple[TeslemetryTimeEntityDescription, ...] = (
     TeslemetryTimeEntityDescription(
         key="charge_state_minutes_to_full_charge",
-        streaming_key=Signal.TIME_TO_FULL_CHARGE,
+        streaming_value_fn=lambda x: x * 60,
+        streaming_listener=lambda x, y: x.listen_TimeToFullCharge(y),
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         variance=4,
     ),
     TeslemetryTimeEntityDescription(
         key="drive_state_active_route_minutes_to_arrival",
-        streaming_key=Signal.MINUTES_TO_ARRIVAL,
+        streaming_listener=lambda x, y: x.listen_MinutesToArrival(y),
         device_class=SensorDeviceClass.TIMESTAMP,
         variance=1,
     ),
@@ -621,10 +628,10 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
 
     def _async_value_from_stream(self, value) -> None:
         """Update the value of the entity."""
-        if value is None:
-            self._attr_native_value = None
-        else:
+        if self.entity_description.nullable or value is not None:
             self._attr_native_value = self.entity_description.streaming_value_fn(value)
+        else:
+            self._attr_native_value = None
 
 
 class TeslemetryVehicleSensorEntity(TeslemetryVehicleEntity, SensorEntity):
@@ -643,7 +650,7 @@ class TeslemetryVehicleSensorEntity(TeslemetryVehicleEntity, SensorEntity):
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        if self.entity_description.polling_available_fn(self._value):
+        if self.entity_description.nullable or self._value is not None:
             self._attr_available = True
             self._attr_native_value = self.entity_description.polling_value_fn(
                 self._value
@@ -666,18 +673,22 @@ class TeslemetryStreamTimeSensorEntity(TeslemetryVehicleStreamEntity, SensorEnti
         """Initialize the sensor."""
         self.entity_description = description
         self._get_timestamp = ignore_variance(
-            func=lambda value: dt_util.now() + timedelta(minutes=value),
+            func=lambda value: dt_util.now()
+            + timedelta(minutes=description.streaming_value_fn(value)),
             ignored_variance=timedelta(minutes=description.variance),
         )
-        assert description.streaming_key
-        super().__init__(data, description.key, description.streaming_key)
+        super().__init__(data, description.key)
 
-    @cached_property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.stream.connected
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.entity_description.streaming_listener(
+                self.vehicle.stream_vehicle, self._value_callback
+            )
+        )
 
-    def _async_value_from_stream(self, value) -> None:
+    def _value_callback(self, value: float | None) -> None:
         """Update the value of the entity."""
         if value is None:
             self._attr_native_value = None

@@ -5,6 +5,7 @@ from http import HTTPStatus
 from unittest.mock import ANY
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components.kitchen_sink import DOMAIN
@@ -100,6 +101,25 @@ async def test_demo_statistics_growth(hass: HomeAssistant) -> None:
     )
     assert statistics[statistic_id][0]["sum"] > 2**20
     assert statistics[statistic_id][0]["sum"] <= (2**20 + 24)
+
+
+@pytest.mark.usefixtures("recorder_mock", "mock_history")
+async def test_statistics_issues(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that the kitchen sink sum statistics causes statistics issues."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await async_wait_recording_done(hass)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id({"type": "recorder/validate_statistics"})
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == snapshot
 
 
 @pytest.mark.freeze_time("2023-10-21")

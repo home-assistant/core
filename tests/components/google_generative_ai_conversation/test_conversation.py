@@ -1,12 +1,10 @@
 """Tests for the Google Generative AI Conversation integration conversation platform."""
 
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
-from google.ai.generativelanguage_v1beta.types.content import FunctionCall
-from google.api_core.exceptions import GoogleAPIError
-import google.generativeai.types as genai_types
+from google.genai.types import FunctionCall
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -21,6 +19,8 @@ from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, llm
+
+from . import CLIENT_ERROR_500
 
 from tests.common import MockConfigEntry
 
@@ -51,7 +51,7 @@ async def test_function_call(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test function calling."""
-    agent_id = mock_config_entry_with_assist.entry_id
+    agent_id = "conversation.google_generative_ai_conversation"
     context = Context()
 
     mock_tool = AsyncMock()
@@ -69,12 +69,12 @@ async def test_function_call(
 
     mock_get_tools.return_value = [mock_tool]
 
-    with patch("google.generativeai.GenerativeModel") as mock_model:
+    with patch("google.genai.chats.AsyncChats.create") as mock_create:
         mock_chat = AsyncMock()
-        mock_model.return_value.start_chat.return_value = mock_chat
-        chat_response = MagicMock()
-        mock_chat.send_message_async.return_value = chat_response
-        mock_part = MagicMock()
+        mock_create.return_value.send_message = mock_chat
+        chat_response = Mock(prompt_feedback=None)
+        mock_chat.return_value = chat_response
+        mock_part = Mock()
         mock_part.text = ""
         mock_part.function_call = FunctionCall(
             name="test_tool",
@@ -92,7 +92,7 @@ async def test_function_call(
             return {"result": "Test response"}
 
         mock_tool.async_call.side_effect = tool_call
-        chat_response.parts = [mock_part]
+        chat_response.candidates = [Mock(content=Mock(parts=[mock_part]))]
         result = await conversation.async_converse(
             hass,
             "Please call the test function",
@@ -104,20 +104,28 @@ async def test_function_call(
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
-    mock_tool_call = mock_chat.send_message_async.mock_calls[1][1][0]
-    mock_tool_call = type(mock_tool_call).to_dict(mock_tool_call)
-    assert mock_tool_call == {
+    mock_tool_call = mock_create.mock_calls[2][2]["message"]
+    assert mock_tool_call.model_dump() == {
         "parts": [
             {
+                "code_execution_result": None,
+                "executable_code": None,
+                "file_data": None,
+                "function_call": None,
                 "function_response": {
+                    "id": None,
                     "name": "test_tool",
                     "response": {
                         "result": "Test response",
                     },
                 },
+                "inline_data": None,
+                "text": None,
+                "thought": None,
+                "video_metadata": None,
             },
         ],
-        "role": "",
+        "role": None,
     }
 
     mock_tool.async_call.assert_awaited_once_with(
@@ -139,7 +147,7 @@ async def test_function_call(
             device_id="test_device",
         ),
     )
-    assert [tuple(mock_call) for mock_call in mock_model.mock_calls] == snapshot
+    assert [tuple(mock_call) for mock_call in mock_create.mock_calls] == snapshot
 
     # Test conversating tracing
     traces = trace.async_get_traces()
@@ -170,7 +178,7 @@ async def test_function_call_without_parameters(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test function calling without parameters."""
-    agent_id = mock_config_entry_with_assist.entry_id
+    agent_id = "conversation.google_generative_ai_conversation"
     context = Context()
 
     mock_tool = AsyncMock()
@@ -180,12 +188,12 @@ async def test_function_call_without_parameters(
 
     mock_get_tools.return_value = [mock_tool]
 
-    with patch("google.generativeai.GenerativeModel") as mock_model:
+    with patch("google.genai.chats.AsyncChats.create") as mock_create:
         mock_chat = AsyncMock()
-        mock_model.return_value.start_chat.return_value = mock_chat
-        chat_response = MagicMock()
-        mock_chat.send_message_async.return_value = chat_response
-        mock_part = MagicMock()
+        mock_create.return_value.send_message = mock_chat
+        chat_response = Mock(prompt_feedback=None)
+        mock_chat.return_value = chat_response
+        mock_part = Mock()
         mock_part.text = ""
         mock_part.function_call = FunctionCall(name="test_tool", args={})
 
@@ -197,7 +205,7 @@ async def test_function_call_without_parameters(
             return {"result": "Test response"}
 
         mock_tool.async_call.side_effect = tool_call
-        chat_response.parts = [mock_part]
+        chat_response.candidates = [Mock(content=Mock(parts=[mock_part]))]
         result = await conversation.async_converse(
             hass,
             "Please call the test function",
@@ -209,20 +217,28 @@ async def test_function_call_without_parameters(
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
-    mock_tool_call = mock_chat.send_message_async.mock_calls[1][1][0]
-    mock_tool_call = type(mock_tool_call).to_dict(mock_tool_call)
-    assert mock_tool_call == {
+    mock_tool_call = mock_create.mock_calls[2][2]["message"]
+    assert mock_tool_call.model_dump() == {
         "parts": [
             {
+                "code_execution_result": None,
+                "executable_code": None,
+                "file_data": None,
+                "function_call": None,
                 "function_response": {
+                    "id": None,
                     "name": "test_tool",
                     "response": {
                         "result": "Test response",
                     },
                 },
+                "inline_data": None,
+                "text": None,
+                "thought": None,
+                "video_metadata": None,
             },
         ],
-        "role": "",
+        "role": None,
     }
 
     mock_tool.async_call.assert_awaited_once_with(
@@ -241,7 +257,7 @@ async def test_function_call_without_parameters(
             device_id="test_device",
         ),
     )
-    assert [tuple(mock_call) for mock_call in mock_model.mock_calls] == snapshot
+    assert [tuple(mock_call) for mock_call in mock_create.mock_calls] == snapshot
 
 
 @patch(
@@ -254,7 +270,7 @@ async def test_function_exception(
     mock_config_entry_with_assist: MockConfigEntry,
 ) -> None:
     """Test exception in function calling."""
-    agent_id = mock_config_entry_with_assist.entry_id
+    agent_id = "conversation.google_generative_ai_conversation"
     context = Context()
 
     mock_tool = AsyncMock()
@@ -270,12 +286,12 @@ async def test_function_exception(
 
     mock_get_tools.return_value = [mock_tool]
 
-    with patch("google.generativeai.GenerativeModel") as mock_model:
+    with patch("google.genai.chats.AsyncChats.create") as mock_create:
         mock_chat = AsyncMock()
-        mock_model.return_value.start_chat.return_value = mock_chat
-        chat_response = MagicMock()
-        mock_chat.send_message_async.return_value = chat_response
-        mock_part = MagicMock()
+        mock_create.return_value.send_message = mock_chat
+        chat_response = Mock(prompt_feedback=None)
+        mock_chat.return_value = chat_response
+        mock_part = Mock()
         mock_part.text = ""
         mock_part.function_call = FunctionCall(name="test_tool", args={"param1": 1})
 
@@ -287,7 +303,7 @@ async def test_function_exception(
             raise HomeAssistantError("Test tool exception")
 
         mock_tool.async_call.side_effect = tool_call
-        chat_response.parts = [mock_part]
+        chat_response.candidates = [Mock(content=Mock(parts=[mock_part]))]
         result = await conversation.async_converse(
             hass,
             "Please call the test function",
@@ -299,21 +315,29 @@ async def test_function_exception(
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.as_dict()["speech"]["plain"]["speech"] == "Hi there!"
-    mock_tool_call = mock_chat.send_message_async.mock_calls[1][1][0]
-    mock_tool_call = type(mock_tool_call).to_dict(mock_tool_call)
-    assert mock_tool_call == {
+    mock_tool_call = mock_create.mock_calls[2][2]["message"]
+    assert mock_tool_call.model_dump() == {
         "parts": [
             {
+                "code_execution_result": None,
+                "executable_code": None,
+                "file_data": None,
+                "function_call": None,
                 "function_response": {
+                    "id": None,
                     "name": "test_tool",
                     "response": {
                         "error": "HomeAssistantError",
                         "error_text": "Test tool exception",
                     },
                 },
+                "inline_data": None,
+                "text": None,
+                "thought": None,
+                "video_metadata": None,
             },
         ],
-        "role": "",
+        "role": None,
     }
     mock_tool.async_call.assert_awaited_once_with(
         hass,
@@ -338,18 +362,22 @@ async def test_error_handling(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that client errors are caught."""
-    with patch("google.generativeai.GenerativeModel") as mock_model:
+    with patch("google.genai.chats.AsyncChats.create") as mock_create:
         mock_chat = AsyncMock()
-        mock_model.return_value.start_chat.return_value = mock_chat
-        mock_chat.send_message_async.side_effect = GoogleAPIError("some error")
+        mock_create.return_value.send_message = mock_chat
+        mock_chat.side_effect = CLIENT_ERROR_500
         result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+            hass,
+            "hello",
+            None,
+            Context(),
+            agent_id="conversation.google_generative_ai_conversation",
         )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
-        "Sorry, I had a problem talking to Google Generative AI: some error"
+        "Sorry, I had a problem talking to Google Generative AI: 500 internal-error. {'message': 'Internal Server Error', 'status': 'internal-error'}"
     )
 
 
@@ -358,20 +386,24 @@ async def test_blocked_response(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test blocked response."""
-    with patch("google.generativeai.GenerativeModel") as mock_model:
+    with patch("google.genai.chats.AsyncChats.create") as mock_create:
         mock_chat = AsyncMock()
-        mock_model.return_value.start_chat.return_value = mock_chat
-        mock_chat.send_message_async.side_effect = genai_types.StopCandidateException(
-            "finish_reason: SAFETY\n"
-        )
+        mock_create.return_value.send_message = mock_chat
+        chat_response = Mock(prompt_feedback=Mock(block_reason_message="SAFETY"))
+        mock_chat.return_value = chat_response
+
         result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+            hass,
+            "hello",
+            None,
+            Context(),
+            agent_id="conversation.google_generative_ai_conversation",
         )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
-        "The message got blocked by your safety settings"
+        "The message got blocked due to content violations, reason: SAFETY"
     )
 
 
@@ -380,14 +412,18 @@ async def test_empty_response(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test empty response."""
-    with patch("google.generativeai.GenerativeModel") as mock_model:
+    with patch("google.genai.chats.AsyncChats.create") as mock_create:
         mock_chat = AsyncMock()
-        mock_model.return_value.start_chat.return_value = mock_chat
-        chat_response = MagicMock()
-        mock_chat.send_message_async.return_value = chat_response
-        chat_response.parts = []
+        mock_create.return_value.send_message = mock_chat
+        chat_response = Mock(prompt_feedback=None)
+        mock_chat.return_value = chat_response
+        chat_response.candidates = [Mock(content=Mock(parts=[]))]
         result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+            hass,
+            "hello",
+            None,
+            Context(),
+            agent_id="conversation.google_generative_ai_conversation",
         )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
@@ -402,17 +438,19 @@ async def test_converse_error(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test handling ChatLog raising ConverseError."""
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={**mock_config_entry.options, CONF_LLM_HASS_API: "invalid_llm_api"},
-    )
+    with patch("google.genai.models.AsyncModels.get"):
+        hass.config_entries.async_update_entry(
+            mock_config_entry,
+            options={**mock_config_entry.options, CONF_LLM_HASS_API: "invalid_llm_api"},
+        )
+        await hass.async_block_till_done()
 
     result = await conversation.async_converse(
         hass,
         "hello",
         None,
         Context(),
-        agent_id=mock_config_entry.entry_id,
+        agent_id="conversation.google_generative_ai_conversation",
     )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
@@ -449,31 +487,85 @@ async def test_escape_decode() -> None:
 
 
 @pytest.mark.parametrize(
-    ("openapi", "protobuf"),
+    ("openapi", "genai_schema"),
     [
         (
             {"type": "string", "enum": ["a", "b", "c"]},
-            {"type_": "STRING", "enum": ["a", "b", "c"]},
+            {"type": "STRING", "enum": ["a", "b", "c"]},
+        ),
+        (
+            {"type": "string", "default": "default"},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "string", "pattern": "default"},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "string", "maxLength": 10},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "string", "minLength": 10},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "string", "title": "title"},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "string", "format": "enum", "enum": ["a", "b", "c"]},
+            {"type": "STRING", "format": "enum", "enum": ["a", "b", "c"]},
+        ),
+        (
+            {"type": "string", "format": "date-time"},
+            {"type": "STRING", "format": "date-time"},
+        ),
+        (
+            {"type": "string", "format": "byte"},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "number", "format": "float"},
+            {"type": "NUMBER", "format": "float"},
+        ),
+        (
+            {"type": "number", "format": "double"},
+            {"type": "NUMBER", "format": "double"},
+        ),
+        (
+            {"type": "number", "format": "hex"},
+            {"type": "NUMBER"},
+        ),
+        (
+            {"type": "number", "minimum": 1},
+            {"type": "NUMBER"},
+        ),
+        (
+            {"type": "integer", "format": "int32"},
+            {"type": "INTEGER", "format": "int32"},
+        ),
+        (
+            {"type": "integer", "format": "int64"},
+            {"type": "INTEGER", "format": "int64"},
+        ),
+        (
+            {"type": "integer", "format": "int8"},
+            {"type": "INTEGER"},
         ),
         (
             {"type": "integer", "enum": [1, 2, 3]},
-            {"type_": "STRING", "enum": ["1", "2", "3"]},
+            {"type": "STRING", "enum": ["1", "2", "3"]},
         ),
-        ({"anyOf": [{"type": "integer"}, {"type": "number"}]}, {"type_": "INTEGER"}),
         (
-            {
-                "anyOf": [
-                    {"anyOf": [{"type": "integer"}, {"type": "number"}]},
-                    {"anyOf": [{"type": "integer"}, {"type": "number"}]},
-                ]
-            },
-            {"type_": "INTEGER"},
+            {"anyOf": [{"type": "integer"}, {"type": "number"}]},
+            {},
         ),
-        ({"type": "string", "format": "lower"}, {"type_": "STRING"}),
-        ({"type": "boolean", "format": "bool"}, {"type_": "BOOLEAN"}),
+        ({"type": "string", "format": "lower"}, {"type": "STRING"}),
+        ({"type": "boolean", "format": "bool"}, {"type": "BOOLEAN"}),
         (
             {"type": "number", "format": "percent"},
-            {"type_": "NUMBER", "format_": "percent"},
+            {"type": "NUMBER"},
         ),
         (
             {
@@ -482,25 +574,47 @@ async def test_escape_decode() -> None:
                 "required": [],
             },
             {
-                "type_": "OBJECT",
-                "properties": {"var": {"type_": "STRING"}},
+                "type": "OBJECT",
+                "properties": {"var": {"type": "STRING"}},
                 "required": [],
             },
         ),
         (
-            {"type": "object", "additionalProperties": True},
+            {"type": "object", "additionalProperties": True, "minProperties": 1},
             {
-                "type_": "OBJECT",
-                "properties": {"json": {"type_": "STRING"}},
+                "type": "OBJECT",
+                "properties": {"json": {"type": "STRING"}},
+                "required": [],
+            },
+        ),
+        (
+            {"type": "object", "additionalProperties": True, "maxProperties": 1},
+            {
+                "type": "OBJECT",
+                "properties": {"json": {"type": "STRING"}},
                 "required": [],
             },
         ),
         (
             {"type": "array", "items": {"type": "string"}},
-            {"type_": "ARRAY", "items": {"type_": "STRING"}},
+            {"type": "ARRAY", "items": {"type": "STRING"}},
+        ),
+        (
+            {
+                "type": "array",
+                "items": {"type": "string"},
+                "minItems": 1,
+                "maxItems": 2,
+            },
+            {
+                "type": "ARRAY",
+                "items": {"type": "STRING"},
+                "min_items": 1,
+                "max_items": 2,
+            },
         ),
     ],
 )
-async def test_format_schema(openapi, protobuf) -> None:
+async def test_format_schema(openapi, genai_schema) -> None:
     """Test _format_schema."""
-    assert _format_schema(openapi) == protobuf
+    assert _format_schema(openapi) == genai_schema
