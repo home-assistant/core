@@ -692,6 +692,7 @@ async def test_select_source_line_in_tv(
                 "play_uri": 1,
                 "play_uri_uri": "x-sonosapi-radio:ST%3aetc",
                 "play_uri_title": "James Taylor Radio",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="100c2068ST%3a1683194971234567890" parentID="10fe2064myStations" restricted="true"><dc:title>James Taylor Radio</dc:title><upnp:class>object.item.audioItem.audioBroadcast.#station</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON60423_X_#Svc60423-99999999-Token</desc></item></DIDL-Lite>',
             },
         ),
         (
@@ -700,6 +701,16 @@ async def test_select_source_line_in_tv(
                 "play_uri": 1,
                 "play_uri_uri": "x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3aetc",
                 "play_uri_title": "66 - Watercolors",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="10090120Api%3atune%3aliveAudio%3ajazzcafe%3ae4b5402c-9999-9999-9999-4bc8e2cdccce" parentID="10086064live%3f93b0b9cb-9999-9999-9999-bcf75971fcfe" restricted="false"><dc:title>66 - Watercolors</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON9479_X_#Svc9479-99999999-Token</desc></item></DIDL-Lite>',
+            },
+        ),
+        (
+            "American Tall Tales",
+            {
+                "play_uri": 1,
+                "play_uri_uri": "x-rincon-cpcontainer:101340c8reftitle%C9F27_com?sid=239&flags=16584&sn=5",
+                "play_uri_title": "American Tall Tales",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="101340c8reftitleC9F27_com" parentID="101340c8reftitleC9F27_com" restricted="true"><dc:title>American Tall Tales</dc:title><upnp:class>object.item.audioItem.audioBook</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON61191_X_#Svc6-0-Token</desc></item></DIDL-Lite>',
             },
         ),
     ],
@@ -726,6 +737,7 @@ async def test_select_source_play_uri(
     soco_mock.play_uri.assert_called_with(
         result.get("play_uri_uri"),
         title=result.get("play_uri_title"),
+        meta=result.get("play_uri_meta"),
         timeout=LONG_SERVICE_TIMEOUT,
     )
 
