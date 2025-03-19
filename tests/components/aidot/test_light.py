@@ -150,9 +150,7 @@ async def test_dynamic_device_add(
     state = hass.states.get(ENTITY_LIGHT2)
     assert state is None
 
-    mocked_aidot_client.async_get_all_device = AsyncMock(
-        return_value=TEST_MULTI_DEVICE_LIST
-    )
+    mocked_aidot_client.async_get_all_device.return_value = TEST_MULTI_DEVICE_LIST
     freezer.tick(UPDATE_DEVICE_LIST_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

@@ -25,7 +25,7 @@ async def test_config_flow_cloud_login_success(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -51,13 +51,13 @@ async def test_config_flow_login_user_password_incorrect(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
     mocked_aidot_client.async_post_login = AsyncMock(
         side_effect=AidotUserOrPassIncorrect()
     )
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_COUNTRY: TEST_COUNTRY,
@@ -65,8 +65,9 @@ async def test_config_flow_login_user_password_incorrect(
             CONF_PASSWORD: "ErrorPassword",
         },
     )
-
-    assert result2["errors"] == {"base": "account_pwd_incorrect"}
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "account_pwd_incorrect"}
 
     mocked_aidot_client.async_post_login.side_effect = None
     mocked_aidot_client.async_post_login.return_value = TEST_LOGIN_RESP
@@ -79,6 +80,7 @@ async def test_config_flow_login_user_password_incorrect(
         },
     )
     await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_LOGIN_INFO: TEST_LOGIN_RESP}
 
 
@@ -91,7 +93,7 @@ async def test_form_abort_already_configured(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 

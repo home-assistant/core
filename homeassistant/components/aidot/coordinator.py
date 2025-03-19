@@ -55,11 +55,7 @@ class AidotDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceStatusData]):
         self.device_client = device_client
 
     async def _async_setup(self) -> None:
-        """Set up the coordinator.
-
-        Can be overwritten by integrations to load data or resources
-        only once during the first refresh.
-        """
+        """Set up the coordinator."""
         try:
             await self.device_client.async_login()
         except AidotUserOrPassIncorrect as error:
@@ -106,11 +102,7 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         self.previous_lists: set[str] = set()
 
     async def _async_setup(self) -> None:
-        """Set up the coordinator.
-
-        Can be overwritten by integrations to load data or resources
-        only once during the first refresh.
-        """
+        """Set up the coordinator."""
         try:
             await self.async_auto_login()
         except AidotUserOrPassIncorrect as error:
