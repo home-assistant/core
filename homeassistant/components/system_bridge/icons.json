@@ -20,6 +20,9 @@
     },
     "power_command": {
       "service": "mdi:power"
+    },
+    "display_control": {
+      "service": "mdi:monitor-edit"
     }
   }
 }
