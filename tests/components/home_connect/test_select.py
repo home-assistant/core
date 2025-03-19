@@ -21,6 +21,7 @@ from aiohomeconnect.model.error import (
     ActiveProgramNotSetError,
     HomeConnectError,
     SelectedProgramNotSetError,
+    TooManyRequestsError,
 )
 from aiohomeconnect.model.program import (
     EnumerateProgram,
@@ -50,7 +51,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -569,6 +570,139 @@ async def test_fetch_allowed_values(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert set(entity_state.attributes[ATTR_OPTIONS]) == expected_options
+
+
+@pytest.mark.parametrize("appliance_ha_id", ["Hood"], indirect=True)
+@pytest.mark.parametrize(
+    (
+        "entity_id",
+        "setting_key",
+        "allowed_values",
+        "expected_options",
+    ),
+    [
+        (
+            "select.hood_ambient_light_color",
+            SettingKey.BSH_COMMON_AMBIENT_LIGHT_COLOR,
+            [f"BSH.Common.EnumType.AmbientLightColor.Color{i}" for i in range(50)],
+            {str(i) for i in range(1, 50)},
+        ),
+    ],
+)
+async def test_fetch_allowed_values_after_rate_limit_error(
+    appliance_ha_id: str,
+    entity_id: str,
+    setting_key: SettingKey,
+    allowed_values: list[str | None],
+    expected_options: set[str],
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test fetch allowed values."""
+
+    def get_settings_side_effect(ha_id: str):
+        if ha_id != appliance_ha_id:
+            return ArrayOfSettings([])
+        return ArrayOfSettings(
+            [
+                GetSetting(
+                    key=setting_key,
+                    raw_key=setting_key.value,
+                    value="",  # Not important
+                )
+            ]
+        )
+
+    client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
+    client.get_setting = AsyncMock(
+        side_effect=[
+            TooManyRequestsError("error.key", retry_after=0),
+            GetSetting(
+                key=setting_key,
+                raw_key=setting_key.value,
+                value="",  # Not important
+                constraints=SettingConstraints(
+                    allowed_values=allowed_values,
+                ),
+            ),
+        ]
+    )
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert client.get_setting.call_count == 2
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert set(entity_state.attributes[ATTR_OPTIONS]) == expected_options
+
+
+@pytest.mark.parametrize("appliance_ha_id", ["Hood"], indirect=True)
+@pytest.mark.parametrize(
+    (
+        "entity_id",
+        "setting_key",
+        "exception",
+        "expected_options",
+    ),
+    [
+        (
+            "select.hood_ambient_light_color",
+            SettingKey.BSH_COMMON_AMBIENT_LIGHT_COLOR,
+            HomeConnectError(),
+            {
+                "b_s_h_common_enum_type_ambient_light_color_custom_color",
+                *{str(i) for i in range(1, 100)},
+            },
+        ),
+    ],
+)
+async def test_default_values_after_fetch_allowed_values_error(
+    appliance_ha_id: str,
+    entity_id: str,
+    setting_key: SettingKey,
+    exception: Exception,
+    expected_options: set[str],
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test fetch allowed values."""
+
+    def get_settings_side_effect(ha_id: str):
+        if ha_id != appliance_ha_id:
+            return ArrayOfSettings([])
+        return ArrayOfSettings(
+            [
+                GetSetting(
+                    key=setting_key,
+                    raw_key=setting_key.value,
+                    value="",  # Not important
+                )
+            ]
+        )
+
+    client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
+    client.get_setting = AsyncMock(side_effect=exception)
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert client.get_setting.call_count == 1
 
     entity_state = hass.states.get(entity_id)
     assert entity_state
