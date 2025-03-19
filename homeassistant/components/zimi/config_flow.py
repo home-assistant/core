@@ -49,9 +49,7 @@ class ZimiConfigErrors(StrEnum):
     CONNECTION_REFUSED = "connection_refused"
     DISCOVERY_FAILURE = "discovery_failure"
     INVALID_HOST = "invalid_host"
-    INVALID_MAC = "invalid_mac"
     INVALID_PORT = "invalid_port"
-    MISMATCHED_MAC = "mismatched_mac"
     TIMEOUT = "timeout"
     UNKNOWN = "unknown"
 
