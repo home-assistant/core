@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from numbers import Number
 from typing import TYPE_CHECKING, Final
 
@@ -82,8 +83,20 @@ def _is_valid_unit(unit: str, unit_type: str) -> bool:
     return False
 
 
+@dataclass(frozen=True, kw_only=True)
 class UnitSystem:
     """A container for units of measure."""
+
+    _name: str
+    accumulated_precipitation_unit: UnitOfPrecipitationDepth
+    area_unit: UnitOfArea
+    length_unit: UnitOfLength
+    mass_unit: UnitOfMass
+    pressure_unit: UnitOfPressure
+    temperature_unit: UnitOfTemperature
+    volume_unit: UnitOfVolume
+    wind_speed_unit: UnitOfSpeed
+    _conversions: dict[tuple[SensorDeviceClass | str | None, str | None], str]
 
     def __init__(
         self,
@@ -118,16 +131,18 @@ class UnitSystem:
         if errors:
             raise ValueError(errors)
 
-        self._name = name
-        self.accumulated_precipitation_unit = accumulated_precipitation
-        self.area_unit = area
-        self.length_unit = length
-        self.mass_unit = mass
-        self.pressure_unit = pressure
-        self.temperature_unit = temperature
-        self.volume_unit = volume
-        self.wind_speed_unit = wind_speed
-        self._conversions = conversions
+        object.__setattr__(self, "_name", name)
+        object.__setattr__(
+            self, "accumulated_precipitation_unit", accumulated_precipitation
+        )
+        object.__setattr__(self, "area_unit", area)
+        object.__setattr__(self, "length_unit", length)
+        object.__setattr__(self, "mass_unit", mass)
+        object.__setattr__(self, "pressure_unit", pressure)
+        object.__setattr__(self, "temperature_unit", temperature)
+        object.__setattr__(self, "volume_unit", volume)
+        object.__setattr__(self, "wind_speed_unit", wind_speed)
+        object.__setattr__(self, "_conversions", conversions)
 
     def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
