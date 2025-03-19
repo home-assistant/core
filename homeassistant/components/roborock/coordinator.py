@@ -29,6 +29,7 @@ from roborock.web_api import RoborockApiClient
 from vacuum_map_parser_base.config.color import ColorsPalette
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.config.size import Sizes
+from vacuum_map_parser_base.map_data import MapData
 from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
 from homeassistant.config_entries import ConfigEntry
@@ -168,18 +169,20 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             sw_version=self.roborock_device_info.device.fv,
         )
 
-    def parse_image(self, map_bytes: bytes) -> bytes | None:
-        """Parse map_bytes and store it as image bytes."""
+    def parse_map_data_v1(
+        self, map_bytes: bytes
+    ) -> tuple[bytes | None, MapData | None]:
+        """Parse map_bytes and return MapData and the image."""
         try:
             parsed_map = self.map_parser.parse(map_bytes)
         except (IndexError, ValueError) as err:
             _LOGGER.debug("Exception when parsing map contents: %s", err)
-            return None
+            return None, None
         if parsed_map.image is None:
-            return None
+            return None, None
         img_byte_arr = io.BytesIO()
         parsed_map.image.data.save(img_byte_arr, format=MAP_FILE_FORMAT)
-        return img_byte_arr.getvalue()
+        return img_byte_arr.getvalue(), parsed_map
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -206,6 +209,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 rooms={},
                 image=image,
                 last_updated=dt_util.utcnow() - IMAGE_CACHE_INTERVAL,
+                map_data=None,
             )
             for image, roborock_map in zip(stored_images, roborock_maps, strict=False)
         }
@@ -230,20 +234,21 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
-        parsed_image = self.parse_image(response)
-        if parsed_image is None:
+        parsed_image, parsed_map = self.parse_map_data_v1(response)
+        if parsed_image is None or parsed_map is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
+        current_roborock_map_info = self.maps[self.current_map]
         if parsed_image != self.maps[self.current_map].image:
             await self.map_storage.async_save_map(
                 self.current_map,
                 parsed_image,
             )
-            current_roborock_map_info = self.maps[self.current_map]
             current_roborock_map_info.image = parsed_image
             current_roborock_map_info.last_updated = dt_util.utcnow()
+        current_roborock_map_info.map_data = parsed_map
 
     async def _verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
