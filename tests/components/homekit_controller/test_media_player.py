@@ -437,7 +437,7 @@ async def test_turn_on(hass: HomeAssistant, get_next_aid: Callable[[], int]) -> 
     helper.async_assert_service_values(
         ServicesTypes.TELEVISION,
         {
-            CharacteristicsTypes.ACTIVE: True,
+            CharacteristicsTypes.ACTIVE: 1,
         },
     )
 
@@ -464,6 +464,6 @@ async def test_turn_off(hass: HomeAssistant, get_next_aid: Callable[[], int]) ->
     helper.async_assert_service_values(
         ServicesTypes.TELEVISION,
         {
-            CharacteristicsTypes.ACTIVE: False,
+            CharacteristicsTypes.ACTIVE: 0,
         },
     )

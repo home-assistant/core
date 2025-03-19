@@ -179,11 +179,11 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the tv on."""
-        await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: True})
+        await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: 1})
 
     async def async_turn_off(self) -> None:
         """Turn the tv off."""
-        await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
+        await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: 0})
 
     async def async_media_play(self) -> None:
         """Send play command."""
