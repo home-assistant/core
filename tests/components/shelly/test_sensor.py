@@ -411,7 +411,7 @@ async def test_block_sensor_values(
     assert (state := hass.states.get(entity_id))
     assert state.state == final_value
 
-    
+
 @pytest.mark.parametrize(
     ("lamp_life_seconds", "percentage"),
     [
