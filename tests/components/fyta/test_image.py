@@ -1,6 +1,7 @@
 """Test the Home Assistant fyta sensor module."""
 
 from datetime import timedelta
+from http import HTTPStatus
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -9,7 +10,7 @@ from fyta_cli.fyta_models import Plant
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.fyta.const import DOMAIN as FYTA_DOMAIN
+from homeassistant.components.fyta.const import CONF_USER_IMAGE, DOMAIN as FYTA_DOMAIN
 from homeassistant.components.image import ImageEntity
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -23,6 +24,7 @@ from tests.common import (
     load_json_object_fixture,
     snapshot_platform,
 )
+from tests.typing import ClientSessionGenerator
 
 
 async def test_all_entities(
@@ -107,6 +109,7 @@ async def test_update_image(
     await setup_platform(hass, mock_config_entry, [Platform.IMAGE])
 
     image_entity: ImageEntity = hass.data["domain_entities"]["image"]["image.gummibaum"]
+    image_state_1 = hass.states.get("image.gummibaum")
 
     assert image_entity.image_url == "http://www.plant_picture.com/picture"
 
@@ -126,4 +129,81 @@ async def test_update_image(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    image_state_2 = hass.states.get("image.gummibaum")
+
     assert image_entity.image_url == "http://www.plant_picture.com/picture1"
+    assert image_state_1 != image_state_2
+
+
+async def test_update_user_image_error(
+    freezer: FrozenDateTimeFactory,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_fyta_connector: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test error during user picture update."""
+
+    mock_fyta_connector.get_plant_image.return_value = AsyncMock(return_value=None)
+
+    await setup_platform(hass, mock_config_entry, [Platform.IMAGE])
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_USER_IMAGE: True}
+    )
+
+    mock_fyta_connector.get_plant_image.return_value = None
+
+    freezer.tick(delta=timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    image_entity: ImageEntity = hass.data["domain_entities"]["image"]["image.gummibaum"]
+
+    assert image_entity.image_url == "http://www.plant_picture.com/user_picture"
+    assert image_entity._cached_image is None
+
+    # Validate no image is available
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.gummibaum?token=1")
+    assert resp.status == 500
+
+
+async def test_update_user_image(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_fyta_connector: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test if entity user picture is updated."""
+
+    await setup_platform(hass, mock_config_entry, [Platform.IMAGE])
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_USER_IMAGE: True}
+    )
+
+    mock_fyta_connector.get_plant_image.return_value = (
+        "image/png",
+        bytes([100]),
+    )
+
+    freezer.tick(delta=timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    image_entity: ImageEntity = hass.data["domain_entities"]["image"]["image.gummibaum"]
+
+    assert image_entity.image_url == "http://www.plant_picture.com/user_picture"
+    image = image_entity._cached_image
+    assert image == snapshot
+
+    # Validate image
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.gummibaum?token=1")
+    assert resp.status == HTTPStatus.OK
+    body = await resp.read()
+    assert body == snapshot
