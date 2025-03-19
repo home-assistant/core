@@ -1,12 +1,7 @@
 rules:
   # Bronze
   action-setup: done
-  appropriate-polling:
-    status: todo
-    comment: |
-      The device currently polls every 30 seconds, which is a bit high when idle.
-      We should consider dynamic polling intervals (e.g. when cleaning) and
-      separate cloud vs local intervals.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow: done
@@ -33,7 +28,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: todo
   test-coverage: done
   # Gold
