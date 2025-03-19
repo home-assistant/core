@@ -107,8 +107,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bo
     if entry.version < 2:
         _LOGGER.debug("Migrating Tado entry to version 2. Current data: %s", entry.data)
         data = dict(entry.data)
-        data.pop(CONF_USERNAME, None)
-        data.pop(CONF_PASSWORD, None)
+        data.pop(CONF_USERNAME)
+        data.pop(CONF_PASSWORD)
         hass.config_entries.async_update_entry(entry=entry, data=data, version=2)
         _LOGGER.debug("Migration to version 2 successful")
     return True

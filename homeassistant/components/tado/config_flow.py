@@ -20,7 +20,6 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.zeroconf import (
@@ -37,13 +36,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-    }
-)
 
 
 class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
