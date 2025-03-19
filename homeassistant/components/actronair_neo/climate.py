@@ -123,11 +123,6 @@ class ActronSystemClimate(
         return FAN_MODE_MAPPING_REVERSE.get(fan_mode_without_cont, "AUTO")
 
     @property
-    def fan_modes(self) -> list[str]:
-        """Return the list of available fan modes."""
-        return list(FAN_MODE_MAPPING.keys())
-
-    @property
     def current_humidity(self) -> float:
         """Return the current humidity."""
         return self._status.get("MasterInfo", {}).get("LiveHumidity_pc")
