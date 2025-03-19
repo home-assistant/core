@@ -67,6 +67,12 @@ class ActronSystemClimate(
     _attr_has_entity_name = True
     _attr_fan_modes = ["auto", "low", "medium", "high"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
+    )
 
     def __init__(
         self,
