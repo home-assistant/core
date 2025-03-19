@@ -11,6 +11,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -88,16 +89,16 @@ class ActronSystemClimate(
         self._name: str = name
         self._attr_name: None = None
         self._attr_unique_id: str = serial_number
-        self.attr_device_info = {
-            "identifiers": {(DOMAIN, self._serial_number)},
-            "name": self._name,
-            "manufacturer": "Actron Air",
-            "model": self._status.get("AirconSystem", {}).get("MasterWCModel"),
-            "sw_version": self._status.get("AirconSystem", {}).get(
+        self.attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial_number)},
+            name=self._name,
+            manufacturer="Actron Air",
+            model=self._status.get("AirconSystem", {}).get("MasterWCModel"),
+            sw_version=self._status.get("AirconSystem", {}).get(
                 "MasterWCFirmwareVersion"
             ),
-            "serial_number": self._serial_number,
-        }
+            serial_number=serial_number,
+        )
 
     @property
     def hvac_mode(self) -> HVACMode:
