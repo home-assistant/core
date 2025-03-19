@@ -101,6 +101,7 @@ class HomeConnectCoordinator(
             CALLBACK_TYPE, tuple[CALLBACK_TYPE, tuple[EventKey, ...]]
         ] = {}
         self.device_registry = dr.async_get(self.hass)
+        self.data = {}
 
     @cached_property
     def context_listeners(self) -> dict[tuple[str, EventKey], list[CALLBACK_TYPE]]:
@@ -354,9 +355,6 @@ class HomeConnectCoordinator(
                 translation_key="fetch_api_error",
                 translation_placeholders=get_dict_from_home_connect_error(error),
             ) from error
-
-        if not self.data:
-            self.data = {}
 
         for appliance in appliances.homeappliances:
             self.device_registry.async_get_or_create(
