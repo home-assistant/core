@@ -49,7 +49,7 @@ DATA_SCHEMA = vol.Schema(
 class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tado."""
 
-    VERSION = 1
+    VERSION = 2
     login_task: asyncio.Task | None = None
     refresh_token: str | None = None
     tado: Tado | None = None
