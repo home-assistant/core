@@ -1,11 +1,14 @@
 """Support for Roborock vacuum class."""
 
-from dataclasses import asdict
 from typing import Any
 
 from roborock.code_mappings import RoborockStateCode
 from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import RoborockCommand
+from vacuum_map_parser_base.config.color import ColorsPalette
+from vacuum_map_parser_base.config.image_config import ImageConfig
+from vacuum_map_parser_base.config.size import Sizes
+from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -26,7 +29,6 @@ from .const import (
 )
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
-from .image import ColorsPalette, ImageConfig, RoborockMapDataParser, Sizes
 
 STATE_CODE_TO_STATE = {
     RoborockStateCode.starting: VacuumActivity.IDLE,  # "Starting"
@@ -53,6 +55,8 @@ STATE_CODE_TO_STATE = {
     RoborockStateCode.charging_complete: VacuumActivity.DOCKED,  # "Charging complete"
     RoborockStateCode.device_offline: VacuumActivity.ERROR,  # "Device offline"
 }
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -201,7 +205,14 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         """Get map information such as map id and room ids."""
         return {
             "maps": [
-                asdict(vacuum_map) for vacuum_map in self.coordinator.maps.values()
+                {
+                    "flag": vacuum_map.flag,
+                    "name": vacuum_map.name,
+                    # JsonValueType does not accept a int as a key - was not a
+                    # issue with previous asdict() implementation.
+                    "rooms": vacuum_map.rooms,  # type: ignore[dict-item]
+                }
+                for vacuum_map in self.coordinator.maps.values()
             ]
         }
 
