@@ -656,7 +656,7 @@ boto3==1.34.131
 botocore==1.34.131
 
 # homeassistant.components.bring
-bring-api==1.0.2
+bring-api==1.1.0
 
 # homeassistant.components.broadlink
 broadlink==0.19.0
