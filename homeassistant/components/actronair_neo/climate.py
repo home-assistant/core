@@ -162,7 +162,6 @@ class ActronSystemClimate(
         api_fan_mode = FAN_MODE_MAPPING.get(fan_mode.lower())
         await self._api.set_fan_mode(self._serial_number, fan_mode=api_fan_mode)
         self._attr_fan_mode = fan_mode
-        self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
@@ -178,7 +177,6 @@ class ActronSystemClimate(
             )
 
         self._attr_hvac_mode = hvac_mode
-        self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
@@ -206,11 +204,9 @@ class ActronSystemClimate(
         else:
             raise ValueError(f"Mode {hvac_mode} is invalid.")
         self._attr_target_temperature = temp
-        self.async_write_ha_state()
 
     async def async_turn_on_continuous(self, continuous: bool) -> None:
         """Set the continuous mode."""
         await self._api.set_fan_mode(
             self._serial_number, fan_mode=self._attr_fan_mode, continuous=continuous
         )
-        self.async_write_ha_state()
