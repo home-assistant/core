@@ -12,6 +12,7 @@ from typing import Any, Literal
 import aiohttp
 from aiohttp.web import Request
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS, Host
+from reolink_aio.baichuan import DEFAULT_BC_PORT
 from reolink_aio.enums import SubType
 from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
@@ -33,7 +34,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.storage import Store
 from homeassistant.util.ssl import SSLCipherList
 
-from .const import CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
+from .const import CONF_BC_PORT, CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
 from .exceptions import (
     PasswordIncompatible,
     ReolinkSetupException,
@@ -91,6 +92,7 @@ class ReolinkHost:
             protocol=options[CONF_PROTOCOL],
             timeout=DEFAULT_TIMEOUT,
             aiohttp_get_session_callback=get_aiohttp_session,
+            bc_port=config.get(CONF_BC_PORT, DEFAULT_BC_PORT),
         )
 
         self.last_wake: float = 0

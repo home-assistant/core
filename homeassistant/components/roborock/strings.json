@@ -181,6 +181,9 @@
       "countdown": {
         "name": "Countdown"
       },
+      "current_room": {
+        "name": "Current room"
+      },
       "dock_error": {
         "name": "Dock error",
         "state": {
