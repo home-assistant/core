@@ -34,13 +34,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def _error_tuple(base: str, error_detail: Any) -> tuple[dict[str, str], dict[str, str]]:
-    """Build an error and description tuple."""
-    if not error_detail:
-        return ({"base": base}, {})
-    return ({"base": base}, {"error_detail": str(error_detail)})
-
-
 class ZimiConfigErrors(StrEnum):
     """ZimiConfig errors."""
 
@@ -79,8 +72,8 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             api_description = await ControlPointDiscoveryService().discover()
-        except ControlPointError as _:
-            _LOGGER.error("ZCC Discovery failed - falling back to manual configuration")
+        except ControlPointError as e:
+            _LOGGER.error(e)
             return await self.async_step_finish()
 
         if api_description:
@@ -103,15 +96,12 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the final step."""
 
         errors: dict[str, str] = {}
-        details: dict[str, str] = {}
 
         if user_input is not None:
             self.data[CONF_HOST] = user_input[CONF_HOST]
             self.data[CONF_PORT] = user_input[CONF_PORT]
 
-            (errors, details) = await self.check_errors(
-                self.data[CONF_HOST], self.data[CONF_PORT]
-            )
+            errors = await self.check_errors(self.data[CONF_HOST], self.data[CONF_PORT])
 
         if self.api and not errors:
             self.api.disconnect()
@@ -127,9 +117,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.handler, self.unique_id
                 )
             ):
-                (errors, details) = _error_tuple(
-                    ZimiConfigErrors.ALREADY_CONFIGURED, self.data[CONF_MAC]
-                )
+                errors = {"base": ZimiConfigErrors.ALREADY_CONFIGURED}
             else:
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
@@ -143,24 +131,22 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA, self.data
             ),
             errors=errors,
-            description_placeholders=details,
         )
 
-    async def check_errors(
-        self, host: str, port: int
-    ) -> tuple[dict[str, str], dict[str, str]]:
+    async def check_errors(self, host: str, port: int) -> dict[str, str]:
         """Check for errors with configuration.
 
         1. Check connectivity to configured host and port; and
-        2. Connect to ZCC to get mac address
+        2. Connect to ZCC to get mac address and store in self.data
 
-        Return error and description dictionaries upon failure.
+        Return error dictionary upon failure.
         """
 
         try:
             hostbyname = socket.gethostbyname(host)
         except socket.gaierror as e:
-            return _error_tuple(ZimiConfigErrors.INVALID_HOST, e)
+            _LOGGER.error(e)
+            return {"base": ZimiConfigErrors.INVALID_HOST}
         if hostbyname:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.settimeout(10)
@@ -168,20 +154,24 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
                 s.connect((host, port))
                 s.close()
             except ConnectionRefusedError as e:
-                return _error_tuple(ZimiConfigErrors.CONNECTION_REFUSED, e)
+                _LOGGER.error(e)
+                return {"base": ZimiConfigErrors.CONNECTION_REFUSED}
             except TimeoutError as e:
-                return _error_tuple(ZimiConfigErrors.TIMEOUT, e)
+                _LOGGER.error(e)
+                return {"base": ZimiConfigErrors.TIMEOUT}
             except socket.gaierror as e:
-                return _error_tuple(ZimiConfigErrors.CANNOT_CONNECT, e)
+                _LOGGER.error(e)
+                return {"base": ZimiConfigErrors.CANNOT_CONNECT}
         else:
-            return _error_tuple(ZimiConfigErrors.INVALID_HOST, None)
+            return {"base": ZimiConfigErrors.INVALID_HOST}
 
         if not self.api or not self.api.ready:
             try:
                 self.api = await async_connect_to_controller(host, port, fast=True)
             except ControlPointError as e:
-                return _error_tuple(ZimiConfigErrors.CANNOT_CONNECT, e)
+                _LOGGER.error(e)
+                return {"base": ZimiConfigErrors.CANNOT_CONNECT}
 
         self.data[CONF_MAC] = format_mac(self.api.mac)
 
-        return ({}, {})
+        return {}
