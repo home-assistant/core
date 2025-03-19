@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "api_key": {
-        "title": "API Key",
+        "title": "[%key:common::config_flow::data::api_key%]",
         "description": "Enter PurpleAir API read key",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
@@ -37,18 +37,18 @@
   "config_subentries": {
     "sensor": {
       "initiate_flow": {
-        "user": "Add PurpleAir Sensor"
+        "user": "Add PurpleAir sensor"
       },
       "step": {
         "add_options": {
-          "title": "Add Sensor",
+          "title": "Add sensor",
           "menu_options": {
             "add_map_location": "Add sensor from map location",
             "add_sensor_index": "Add sensor by index and optional read key"
           }
         },
         "add_map_location": {
-          "title": "Add Sensor from Map",
+          "title": "Add sensor from map",
           "description": "Search for sensors in the circle on the map",
           "data": {
             "latitude": "[%key:common::config_flow::data::latitude%]",
@@ -57,18 +57,18 @@
           }
         },
         "select_sensor": {
-          "title": "Select Sensor",
+          "title": "Select sensor",
           "description": "Select sensor to add",
           "data": {
             "sensor_index": "Sensor"
           }
         },
         "add_sensor_index": {
-          "title": "Sensor Details",
+          "title": "Sensor details",
           "description": "Enter sensor identification details",
           "data": {
-            "sensor_index": "Sensor Index",
-            "sensor_read_key": "Sensor Read Key"
+            "sensor_index": "Sensor index",
+            "sensor_read_key": "Sensor read key"
           }
         }
       },
