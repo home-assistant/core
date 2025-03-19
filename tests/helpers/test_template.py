@@ -6840,3 +6840,33 @@ def test_sha512(hass: HomeAssistant) -> None:
         template.Template("{{ 'Home Assistant' | sha512 }}", hass).async_render()
         == "9e3c2cdd1fbab0037378d37e1baf8a3a4bf92c54b56ad1d459deee30ccbb2acbebd7a3614552ea08992ad27dedeb7b4c5473525ba90cb73dbe8b9ec5f69295bb"
     )
+
+
+def test_combine(hass: HomeAssistant) -> None:
+    """Test combine filter and function."""
+    assert template.Template(
+        "{{ {'a': 1, 'b': 2} | combine({'b': 3, 'c': 4}) }}", hass
+    ).async_render() == {"a": 1, "b": 3, "c": 4}
+
+    assert template.Template(
+        "{{ combine({'a': 1, 'b': 2}, {'b': 3, 'c': 4}) }}", hass
+    ).async_render() == {"a": 1, "b": 3, "c": 4}
+
+    assert template.Template(
+        "{{ combine({'a': 1, 'b': {'x': 1}}, {'b': {'y': 2}, 'c': 4}, recursive=True) }}",
+        hass,
+    ).async_render() == {"a": 1, "b": {"x": 1, "y": 2}, "c": 4}
+
+    # Test that recursive=False does not merge nested dictionaries
+    assert template.Template(
+        "{{ combine({'a': 1, 'b': {'x': 1}}, {'b': {'y': 2}, 'c': 4}, recursive=False) }}",
+        hass,
+    ).async_render() == {"a": 1, "b": {"y": 2}, "c": 4}
+
+    with pytest.raises(
+        TemplateError, match="combine expected at least 1 argument, got 0"
+    ):
+        template.Template("{{ combine() }}", hass).async_render()
+
+    with pytest.raises(TemplateError, match="combine expected a dict, got str"):
+        template.Template("{{ {'a': 1} | combine('not a dict') }}", hass).async_render()
