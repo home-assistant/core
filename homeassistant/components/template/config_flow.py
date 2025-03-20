@@ -208,7 +208,7 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 
     if domain == Platform.SWITCH:
         schema |= {
-            vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(CONF_STATE): selector.TemplateSelector(),
             vol.Optional(CONF_TURN_ON): selector.ActionSelector(),
             vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
         }
