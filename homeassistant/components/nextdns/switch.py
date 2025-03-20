@@ -586,7 +586,6 @@ class NextDnsSwitch(
                 translation_domain=DOMAIN,
                 translation_key="method_error",
                 translation_placeholders={
-                    "method": "set_setting",
                     "entity": self.entity_id,
                     "error": repr(err),
                 },

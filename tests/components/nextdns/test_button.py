@@ -73,7 +73,7 @@ async def test_button_failure(hass: HomeAssistant, exc: Exception) -> None:
         patch("homeassistant.components.nextdns.NextDns.clear_logs", side_effect=exc),
         pytest.raises(
             HomeAssistantError,
-            match="An error occurred while calling clear_logs method for button.fake_profile_clear_logs",
+            match="An error occurred while calling the NextDNS API method for button.fake_profile_clear_logs",
         ),
     ):
         await hass.services.async_call(

@@ -69,7 +69,6 @@ class NextDnsButton(
                 translation_domain=DOMAIN,
                 translation_key="method_error",
                 translation_placeholders={
-                    "method": "clear_logs",
                     "entity": self.entity_id,
                     "error": repr(err),
                 },
