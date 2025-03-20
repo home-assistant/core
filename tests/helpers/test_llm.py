@@ -575,52 +575,38 @@ async def test_assist_api_prompt(
             suggested_area="Test Area 2",
         )
     )
-    exposed_entities_prompt = """An overview of the areas and the devices in this smart home:
+    stateless_exposed_entities_prompt = """An overview of the areas and the devices in this smart home:
 - names: Kitchen
   domain: light
-  state: 'on'
-  attributes:
-    temperature: '0.9'
-    humidity: '65'
 - names: Living Room
   domain: light
-  state: 'on'
   areas: Test Area, Alternative name
 - names: Test Device, my test light
   domain: light
-  state: unavailable
   areas: Test Area, Alternative name
 - names: Test Service
   domain: light
-  state: unavailable
   areas: Test Area, Alternative name
 - names: Test Service
   domain: light
-  state: unavailable
   areas: Test Area, Alternative name
 - names: Test Service
   domain: light
-  state: unavailable
   areas: Test Area, Alternative name
 - names: Test Device 2
   domain: light
-  state: unavailable
   areas: Test Area 2
 - names: Test Device 3
   domain: light
-  state: unavailable
   areas: Test Area 2
 - names: Test Device 4
   domain: light
-  state: unavailable
   areas: Test Area 2
 - names: Unnamed Device
   domain: light
-  state: unavailable
   areas: Test Area 2
 - names: '1'
   domain: light
-  state: unavailable
   areas: Test Area 2
 """
     first_part_prompt = (
@@ -640,7 +626,7 @@ async def test_assist_api_prompt(
         f"""{first_part_prompt}
 {area_prompt}
 {no_timer_prompt}
-{exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}"""
     )
 
     # Verify that the get_home_state tool returns the same results as the exposed_entities_prompt
@@ -663,7 +649,7 @@ async def test_assist_api_prompt(
         f"""{first_part_prompt}
 {area_prompt}
 {no_timer_prompt}
-{exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}"""
     )
 
     # Add floor
@@ -678,7 +664,7 @@ async def test_assist_api_prompt(
         f"""{first_part_prompt}
 {area_prompt}
 {no_timer_prompt}
-{exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}"""
     )
 
     # Register device for timers
@@ -689,7 +675,7 @@ async def test_assist_api_prompt(
     assert api.api_prompt == (
         f"""{first_part_prompt}
 {area_prompt}
-{exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}"""
     )
 
 
