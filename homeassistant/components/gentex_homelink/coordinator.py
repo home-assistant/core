@@ -72,7 +72,6 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
-        _LOGGER.error("_async_update_data")
         if self.config_entry is None:
             _LOGGER.error("Config entry is empty, unable to update data")
             return {}
@@ -85,8 +84,6 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # data retrieved from API.
             try:
                 should_sync, devices = await self.provider.get_state()
-                _LOGGER.error(should_sync)
-                _LOGGER.error(devices)
             except Exception:
                 _LOGGER.exception(
                     "An unexpected error occurred retrieving HomeLink device state"

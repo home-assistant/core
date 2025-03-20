@@ -11,7 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
-from . import api
+from . import oauth2
 from .const import DOMAIN
 from .coordinator import HomeLinkCoordinator, HomeLinkData
 
@@ -23,8 +23,10 @@ type HomeLinkConfigEntry = ConfigEntry[HomeLinkData]
 async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> bool:
     """Set up homelink from a config entry."""
     logging.debug("Starting config entry setup")
+    auth_implementation = oauth2.SRPAuthImplementation(hass, DOMAIN)
+
     config_entry_oauth2_flow.async_register_implementation(
-        hass, DOMAIN, api.SRPAuthImplementation(hass, DOMAIN)
+        hass, DOMAIN, auth_implementation
     )
 
     implementation = (
@@ -34,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> 
     )
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    authenticated_session = api.AsyncConfigEntryAuth(
+    authenticated_session = oauth2.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass), session
     )
 
