@@ -42,7 +42,6 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import VolDictType
 
-from . import disconnect_client
 from .addon import get_addon_manager
 from .const import (
     ADDON_SLUG,
@@ -861,7 +860,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
                 and self.config_entry.state == ConfigEntryState.LOADED
             ):
                 # Disconnect integration before restarting add-on.
-                await disconnect_client(self.hass, self.config_entry)
+                await self.hass.config_entries.async_unload(self.config_entry.entry_id)
 
             return await self.async_step_start_addon()
 

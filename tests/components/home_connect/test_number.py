@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 import random
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
@@ -22,6 +22,7 @@ from aiohomeconnect.model.error import (
     HomeConnectApiError,
     HomeConnectError,
     SelectedProgramNotSetError,
+    TooManyRequestsError,
 )
 from aiohomeconnect.model.program import (
     ProgramDefinitionConstraints,
@@ -47,7 +48,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -338,6 +339,98 @@ async def test_number_entity_functionality(
         appliance_ha_id, setting_key=setting_key, value=value
     )
     assert hass.states.is_state(entity_id, str(float(value)))
+
+
+@pytest.mark.parametrize("appliance_ha_id", ["FridgeFreezer"], indirect=True)
+@pytest.mark.parametrize("retry_after", [0, None])
+@pytest.mark.parametrize(
+    (
+        "entity_id",
+        "setting_key",
+        "type",
+        "min_value",
+        "max_value",
+        "step_size",
+        "unit_of_measurement",
+    ),
+    [
+        (
+            f"{NUMBER_DOMAIN.lower()}.fridgefreezer_refrigerator_temperature",
+            SettingKey.REFRIGERATION_FRIDGE_FREEZER_SETPOINT_TEMPERATURE_REFRIGERATOR,
+            "Double",
+            7,
+            15,
+            5,
+            "°C",
+        ),
+    ],
+)
+@patch("homeassistant.components.home_connect.entity.API_DEFAULT_RETRY_AFTER", new=0)
+async def test_fetch_constraints_after_rate_limit_error(
+    retry_after: int | None,
+    appliance_ha_id: str,
+    entity_id: str,
+    setting_key: SettingKey,
+    type: str,
+    min_value: int,
+    max_value: int,
+    step_size: int,
+    unit_of_measurement: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test that, if a API rate limit error is raised, the constraints are fetched later."""
+
+    def get_settings_side_effect(ha_id: str):
+        if ha_id != appliance_ha_id:
+            return ArrayOfSettings([])
+        return ArrayOfSettings(
+            [
+                GetSetting(
+                    key=setting_key,
+                    raw_key=setting_key.value,
+                    value=random.randint(min_value, max_value),
+                )
+            ]
+        )
+
+    client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
+    client.get_setting = AsyncMock(
+        side_effect=[
+            TooManyRequestsError("error.key", retry_after=retry_after),
+            GetSetting(
+                key=setting_key,
+                raw_key=setting_key.value,
+                value=random.randint(min_value, max_value),
+                unit=unit_of_measurement,
+                type=type,
+                constraints=SettingConstraints(
+                    min=min_value,
+                    max=max_value,
+                    step_size=step_size,
+                ),
+            ),
+        ]
+    )
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert client.get_setting.call_count == 2
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    attributes = entity_state.attributes
+    assert attributes["min"] == min_value
+    assert attributes["max"] == max_value
+    assert attributes["step"] == step_size
+    assert attributes["unit_of_measurement"] == unit_of_measurement
 
 
 @pytest.mark.parametrize(

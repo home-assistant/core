@@ -10,7 +10,7 @@ aiohttp==3.11.14
 aiohttp_cors==0.7.0
 aiousbwatcher==1.1.1
 aiozoneinfo==0.2.3
-annotatedyaml==0.2.0
+annotatedyaml==0.4.4
 astral==2.2
 async-interrupt==1.2.2
 async-upnp-client==0.43.0
@@ -68,7 +68,7 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.4.0
 urllib3>=1.26.5,<2
-uv==0.6.1
+uv==0.6.8
 voluptuous-openapi==0.0.6
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
