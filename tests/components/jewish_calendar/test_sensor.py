@@ -14,6 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from .conftest import JewishCalendarTestParameters
+
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
@@ -160,10 +162,13 @@ TEST_PARAMS = [
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_jewish_calendar_sensor(
-    hass: HomeAssistant, jcal_params: dict, config_entry: MockConfigEntry, sensor: str
+    hass: HomeAssistant,
+    jcal_params: JewishCalendarTestParameters,
+    config_entry: MockConfigEntry,
+    sensor: str,
 ) -> None:
     """Test Jewish calendar sensor output."""
-    with freeze_time(test_time := jcal_params["test_time"]):
+    with freeze_time(test_time := jcal_params.test_time):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -172,14 +177,14 @@ async def test_jewish_calendar_sensor(
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    result = jcal_params["results"]["state"]
+    result = jcal_params.results["state"]
     if isinstance(result, dt):
         result = dt_util.as_utc(result).isoformat()
 
     sensor_object = hass.states.get(f"sensor.jewish_calendar_{sensor}")
     assert sensor_object.state == result
 
-    if attrs := getattr(jcal_params, "results", None):
+    if attrs := getattr(jcal_params.results, "attr", None):
         assert sensor_object.attributes == attrs
 
 
@@ -518,10 +523,12 @@ SHABBAT_PARAMS = [
 @pytest.mark.parametrize("jcal_params", SHABBAT_PARAMS, indirect=True)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_shabbat_times_sensor(
-    hass: HomeAssistant, jcal_params: dict, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    jcal_params: JewishCalendarTestParameters,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test sensor output for upcoming shabbat/yomtov times."""
-    with freeze_time(test_time := jcal_params["test_time"]):
+    with freeze_time(test_time := jcal_params.test_time):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -530,7 +537,7 @@ async def test_shabbat_times_sensor(
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    for sensor_type, result_value in jcal_params["results"].items():
+    for sensor_type, result_value in jcal_params.results.items():
         if not sensor_type.startswith(language := config_entry.data[CONF_LANGUAGE]):
             continue
 
