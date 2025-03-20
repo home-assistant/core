@@ -15,6 +15,7 @@
       }
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "station_not_found": "Station not found"
     },
     "abort": {

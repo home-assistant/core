@@ -8,22 +8,14 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TIME_ZONE, CONF_UNIT_SYSTEM
-from homeassistant.core import _LOGGER, HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
-from .const import (
-    CONF_STATION_ID,
-    DEFAULT_TIMEZONE,
-    DOMAIN,
-    NAME,
-    TIMEZONES,
-    UNIT_SYSTEMS,
-)
+from .const import CONF_STATION_ID, DEFAULT_TIMEZONE, DOMAIN, TIMEZONES, UNIT_SYSTEMS
 from .helpers import get_default_unit_system, get_station_unique_id
 
 DATA_SCHEMA_DICT = {
@@ -86,6 +78,9 @@ class NoaaTidesConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Step when user initializes a integration."""
 
+        errors: dict[str, str] | None = None
+        suggested_values: dict[str, Any] = self.init_data
+
         input_schema = vol.Schema(DATA_SCHEMA_DICT).extend(
             get_options_schema_dict(self.hass)
         )
@@ -107,24 +102,11 @@ class NoaaTidesConfigFlow(ConfigFlow, domain=DOMAIN):
                     Station, station_id, unit_system
                 )
             except KeyError:
-                _LOGGER.error(
-                    "%s Sensor station_id %s does not exist", NAME, station_id
-                )
-
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=self.add_suggested_values_to_schema(
-                        input_schema, user_input
-                    ),
-                    errors={"base": "station_not_found"},
-                )
-            except ConnectionError as exception:
-                _LOGGER.error(
-                    "Connection error during setup in %s sensor for station_id: %s",
-                    NAME,
-                    station_id,
-                )
-                raise PlatformNotReady from exception
+                errors = {"base": "station_not_found"}
+                suggested_values = user_input
+            except ConnectionError:
+                errors = {"base": "cannot_connect"}
+                suggested_values = user_input
             else:
                 return self.async_create_entry(
                     title=f"{station.name} ({station_id})",
@@ -140,6 +122,7 @@ class NoaaTidesConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                input_schema, self.init_data
+                input_schema, suggested_values
             ),
+            errors=errors,
         )
