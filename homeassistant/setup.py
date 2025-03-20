@@ -323,7 +323,7 @@ async def _async_setup_component(
             translation.async_load_integrations(hass, integration_set), loop=hass.loop
         )
     # Validate all dependencies exist and there are no circular dependencies
-    if not await integration.resolve_dependencies():
+    if await integration.resolve_dependencies() is None:
         return False
 
     # Process requirements as soon as possible, so we can import the component

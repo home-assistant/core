@@ -27,40 +27,91 @@ async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
     mock_integration(hass, MockModule("mod2", dependencies=["mod1"]))
     mock_integration(hass, MockModule("mod3", dependencies=["mod1"]))
     mod_4 = mock_integration(hass, MockModule("mod4", dependencies=["mod2", "mod3"]))
+    all_domains = {"mod1", "mod2", "mod3", "mod4"}
 
-    deps = await loader._async_component_dependencies(hass, mod_4)
-    assert deps == {"mod1", "mod2", "mod3", "mod4"}
+    deps = await loader._do_resolve_dependencies(mod_4, cache={})
+    assert deps == {"mod1", "mod2", "mod3"}
 
     # Create a circular dependency
     mock_integration(hass, MockModule("mod1", dependencies=["mod4"]))
     with pytest.raises(loader.CircularDependency):
-        await loader._async_component_dependencies(hass, mod_4)
+        await loader._do_resolve_dependencies(mod_4, cache={})
 
     # Create a different circular dependency
     mock_integration(hass, MockModule("mod1", dependencies=["mod3"]))
     with pytest.raises(loader.CircularDependency):
-        await loader._async_component_dependencies(hass, mod_4)
+        await loader._do_resolve_dependencies(mod_4, cache={})
 
     # Create a circular after_dependency
     mock_integration(
         hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod4"]})
     )
     with pytest.raises(loader.CircularDependency):
-        await loader._async_component_dependencies(hass, mod_4)
+        await loader._do_resolve_dependencies(
+            mod_4,
+            cache={},
+            possible_after_dependencies=all_domains,
+        )
 
     # Create a different circular after_dependency
     mock_integration(
         hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod3"]})
     )
     with pytest.raises(loader.CircularDependency):
-        await loader._async_component_dependencies(hass, mod_4)
+        await loader._do_resolve_dependencies(
+            mod_4,
+            cache={},
+            possible_after_dependencies=all_domains,
+        )
+
+    # Create a circular after_dependency without a hard dependency
+    mock_integration(
+        hass, MockModule("mod1", partial_manifest={"after_dependencies": ["mod4"]})
+    )
+    mod_4 = mock_integration(
+        hass, MockModule("mod4", partial_manifest={"after_dependencies": ["mod2"]})
+    )
+    with pytest.raises(loader.CircularDependency):
+        await loader._do_resolve_dependencies(
+            mod_4,
+            cache={},
+            possible_after_dependencies=all_domains,
+        )
+
+    result = await loader.resolve_integrations_after_dependencies(hass, (mod_4,))
+    assert result == {}
+    result = await loader.resolve_integrations_after_dependencies(
+        hass, (mod_4,), ignore_exceptions=True
+    )
+    assert result["mod4"] == {"mod4", "mod2", "mod1"}
 
 
 async def test_nonexistent_component_dependencies(hass: HomeAssistant) -> None:
     """Test if we can detect nonexistent dependencies of components."""
     mod_1 = mock_integration(hass, MockModule("mod1", dependencies=["nonexistent"]))
+    mod_2 = mock_integration(hass, MockModule("mod2", dependencies=["mod1"]))
+
+    assert await mod_2.resolve_dependencies() is None
+    assert mod_2.all_dependencies_resolved
     with pytest.raises(loader.IntegrationNotFound):
-        await loader._async_component_dependencies(hass, mod_1)
+        mod_2.all_dependencies  # noqa: B018
+
+    assert mod_1.all_dependencies_resolved
+    assert await mod_1.resolve_dependencies() is None
+    with pytest.raises(loader.IntegrationNotFound):
+        mod_1.all_dependencies  # noqa: B018
+
+    result = await loader.resolve_integrations_dependencies(hass, (mod_2, mod_1))
+    assert result == {}
+
+    mod_1 = mock_integration(
+        hass,
+        MockModule("mod1", partial_manifest={"after_dependencies": ["non.existent"]}),
+    )
+    mod_2 = mock_integration(hass, MockModule("mod2", dependencies=["mod1"]))
+
+    result = await loader.resolve_integrations_after_dependencies(hass, (mod_2, mod_1))
+    assert result == {}
 
 
 def test_component_loader(hass: HomeAssistant) -> None:
