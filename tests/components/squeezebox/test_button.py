@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 async def test_squeezebox_press(
     hass: HomeAssistant, configured_player_with_button: MagicMock
 ) -> None:
-    """Test turn on service call."""
+    """Test press service call."""
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
