@@ -5332,6 +5332,10 @@ async def test_scheduling_reload_unknown_entry(hass: HomeAssistant) -> None:
         ({"vendor": "zoo"}, "already_configured"),
         ({"ip": "9.9.9.9"}, "already_configured"),
         ({"ip": "7.7.7.7"}, "no_match"),  # ignored
+        (
+            {"host": "4.4.4.4", "ip": "5.5.5.5", "port": 42},
+            "no_match",
+        ),  # source="reconfigure"
         # The next two data sets ensure options or data match
         # as options previously shadowed data when matching.
         ({"vendor": "data"}, "already_configured"),
@@ -5371,6 +5375,11 @@ async def test_async_abort_entries_match(
         domain="comp",
         data={"vendor": "data"},
         options={"vendor": "options"},
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp",
+        data={"ip": "5.5.5.5", "host": "4.4.4.4", "port": 42},
+        source=config_entries.SOURCE_RECONFIGURE,
     ).add_to_hass(hass)
 
     mock_setup_entry = AsyncMock(return_value=True)

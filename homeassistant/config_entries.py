@@ -2894,14 +2894,20 @@ class ConfigFlow(ConfigEntryBaseFlow):
 
     @callback
     def _async_abort_entries_match(
-        self, match_dict: dict[str, Any] | None = None
+        self,
+        match_dict: dict[str, Any] | None = None,
     ) -> None:
         """Abort if current entries match all data.
 
         Requires `already_configured` in strings.json in user visible flows.
         """
         _async_abort_entries_match(
-            self._async_current_entries(include_ignore=False), match_dict
+            [
+                entry
+                for entry in self._async_current_entries(include_ignore=False)
+                if entry.source != SOURCE_RECONFIGURE
+            ],
+            match_dict,
         )
 
     @callback
