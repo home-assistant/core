@@ -5,6 +5,7 @@ import datetime as dt
 from typing import NamedTuple
 from unittest.mock import AsyncMock, patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.jewish_calendar.const import (
@@ -18,7 +19,7 @@ from homeassistant.const import CONF_LANGUAGE, CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 class _LocationData(NamedTuple):
@@ -136,3 +137,19 @@ def config_entry(
         data={CONF_LANGUAGE: language, **param_data},
         options=param_options,
     )
+
+
+@pytest.fixture
+async def setup_at_time(
+    test_time: dt.datetime, hass: HomeAssistant, config_entry: MockConfigEntry
+) -> HomeAssistant:
+    """Set up the jewish_calendar integration at a specific time."""
+    with freeze_time(test_time):
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        future = test_time + dt.timedelta(seconds=30)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+    return hass

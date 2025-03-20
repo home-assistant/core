@@ -1,21 +1,20 @@
 """The tests for the Jewish calendar sensors."""
 
-from datetime import datetime as dt, timedelta
+from datetime import datetime as dt
 from typing import Any
 
-from freezegun import freeze_time
 from hdate.holidays import HolidayDatabase
 from hdate.parasha import Parasha
 import pytest
 
 from homeassistant.components.jewish_calendar.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_LANGUAGE, CONF_PLATFORM
+from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("language", ["english", "hebrew"])
@@ -161,25 +160,12 @@ TEST_PARAMS = [
     TEST_PARAMS,
     indirect=["location_data", "test_time", "results", "language"],
 )
-@pytest.mark.usefixtures("location_data")
+@pytest.mark.usefixtures("location_data", "test_time", "setup_at_time")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_jewish_calendar_sensor(
-    hass: HomeAssistant,
-    test_time: dt,
-    results: dict[str, Any],
-    config_entry: MockConfigEntry,
-    sensor: str,
+    hass: HomeAssistant, results: dict[str, Any], sensor: str
 ) -> None:
     """Test Jewish calendar sensor output."""
-    with freeze_time(test_time):
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        future = test_time + timedelta(seconds=30)
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
     result = results["state"]
     if isinstance(result, dt):
         result = dt_util.as_utc(result).isoformat()
@@ -507,93 +493,67 @@ SHABBAT_PARAMS = [
     SHABBAT_PARAMS,
     indirect=True,
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.usefixtures("location_data", "havdalah_offset")
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "location_data",
+    "test_time",
+    "havdalah_offset",
+    "setup_at_time",
+)
 async def test_shabbat_times_sensor(
-    hass: HomeAssistant,
-    test_time: dt,
-    results: dict[str, Any],
-    config_entry: MockConfigEntry,
+    hass: HomeAssistant, results: dict[str, Any], language: str
 ) -> None:
     """Test sensor output for upcoming shabbat/yomtov times."""
-    with freeze_time(test_time):
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        future = test_time + timedelta(seconds=30)
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
     for sensor_type, result_value in results.items():
-        if not sensor_type.startswith(language := config_entry.data[CONF_LANGUAGE]):
+        if not sensor_type.startswith(language):
             continue
 
         sensor_type = sensor_type.replace(f"{language}_", "")
 
-        result_value = (
-            dt_util.as_utc(result_value).isoformat()
-            if isinstance(result_value, dt)
-            else result_value
-        )
+        if isinstance(result_value, dt):
+            result_value = dt_util.as_utc(result_value).isoformat()
 
         assert hass.states.get(f"sensor.jewish_calendar_{sensor_type}").state == str(
             result_value
         ), f"Value for {sensor_type}"
 
 
-OMER_PARAMS = [
-    pytest.param(dt(2019, 4, 21, 0), "1", id="first_day_of_omer"),
-    pytest.param(dt(2019, 4, 21, 23), "2", id="first_day_of_omer_after_tzeit"),
-    pytest.param(dt(2019, 5, 23, 0), "33", id="lag_baomer"),
-    pytest.param(dt(2019, 6, 8, 0), "49", id="last_day_of_omer"),
-    pytest.param(dt(2019, 6, 9, 0), "0", id="shavuot_no_omer"),
-    pytest.param(dt(2019, 1, 1, 0), "0", id="jan_1st_no_omer"),
-]
-
-
-@pytest.mark.parametrize(("test_time", "results"), OMER_PARAMS, indirect=True)
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_omer_sensor(
-    hass: HomeAssistant, config_entry: MockConfigEntry, test_time: dt, results: str
-) -> None:
+@pytest.mark.parametrize(
+    ("test_time", "results"),
+    [
+        pytest.param(dt(2019, 4, 21, 0), "1", id="first_day_of_omer"),
+        pytest.param(dt(2019, 4, 21, 23), "2", id="first_day_of_omer_after_tzeit"),
+        pytest.param(dt(2019, 5, 23, 0), "33", id="lag_baomer"),
+        pytest.param(dt(2019, 6, 8, 0), "49", id="last_day_of_omer"),
+        pytest.param(dt(2019, 6, 9, 0), "0", id="shavuot_no_omer"),
+        pytest.param(dt(2019, 1, 1, 0), "0", id="jan_1st_no_omer"),
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "setup_at_time", "test_time"
+)
+async def test_omer_sensor(hass: HomeAssistant, results: str) -> None:
     """Test Omer Count sensor output."""
-    with freeze_time(test_time):
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        future = test_time + timedelta(seconds=30)
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
     assert hass.states.get("sensor.jewish_calendar_day_of_the_omer").state == results
 
 
-DAFYOMI_PARAMS = [
-    pytest.param(dt(2014, 4, 28, 0), "Beitzah 29", id="randomly_picked_date"),
-    pytest.param(dt(2020, 1, 4, 0), "Niddah 73", id="end_of_cycle13"),
-    pytest.param(dt(2020, 1, 5, 0), "Berachos 2", id="start_of_cycle14"),
-    pytest.param(dt(2020, 3, 7, 0), "Berachos 64", id="cycle14_end_of_berachos"),
-    pytest.param(dt(2020, 3, 8, 0), "Shabbos 2", id="cycle14_start_of_shabbos"),
-]
-
-
-@pytest.mark.parametrize(("test_time", "results"), DAFYOMI_PARAMS, indirect=True)
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_dafyomi_sensor(
-    hass: HomeAssistant, config_entry: MockConfigEntry, test_time: dt, results: str
-) -> None:
+@pytest.mark.parametrize(
+    ("test_time", "results"),
+    [
+        pytest.param(dt(2014, 4, 28, 0), "Beitzah 29", id="randomly_picked_date"),
+        pytest.param(dt(2020, 1, 4, 0), "Niddah 73", id="end_of_cycle13"),
+        pytest.param(dt(2020, 1, 5, 0), "Berachos 2", id="start_of_cycle14"),
+        pytest.param(dt(2020, 3, 7, 0), "Berachos 64", id="cycle14_end_of_berachos"),
+        pytest.param(dt(2020, 3, 8, 0), "Shabbos 2", id="cycle14_start_of_shabbos"),
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "setup_at_time", "test_time"
+)
+async def test_dafyomi_sensor(hass: HomeAssistant, results: str) -> None:
     """Test Daf Yomi sensor output."""
-    with freeze_time(test_time):
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        future = test_time + timedelta(seconds=30)
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
     assert hass.states.get("sensor.jewish_calendar_daf_yomi").state == results
 
 
