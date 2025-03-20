@@ -2233,16 +2233,18 @@ class ConfigEntries:
         return await entry.async_unload(self.hass)
 
     @callback
-    def async_schedule_reload(self, entry_id: str) -> None:
+    def async_schedule_reload(
+        self, entry_id: str, *, cancel_reauth: bool = True
+    ) -> None:
         """Schedule a config entry to be reloaded."""
         entry = self.async_get_known_entry(entry_id)
         entry.async_cancel_retry_setup()
         self.hass.async_create_task(
-            self.async_reload(entry_id),
+            self.async_reload(entry_id, cancel_reauth=cancel_reauth),
             f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
         )
 
-    async def async_reload(self, entry_id: str) -> bool:
+    async def async_reload(self, entry_id: str, *, cancel_reauth: bool = True) -> bool:
         """Reload an entry.
 
         When reloading from an integration is is preferable to
@@ -2261,8 +2263,9 @@ class ConfigEntries:
         entry.async_cancel_retry_setup()
 
         # Abort any in-progress reauth flow and linked issues
-        _abort_reauth_flows(self.hass, entry.domain, entry_id)
-        _remove_reauth_issue(self.hass, entry.domain, entry_id)
+        if cancel_reauth:
+            _abort_reauth_flows(self.hass, entry.domain, entry_id)
+            _remove_reauth_issue(self.hass, entry.domain, entry_id)
 
         if entry.domain not in self.hass.config.components:
             # If the component is not loaded, just load it as
@@ -3263,7 +3266,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
             options=options,
         )
         if reload_even_if_entry_is_unchanged or result:
-            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            self.hass.config_entries.async_schedule_reload(
+                entry.entry_id, cancel_reauth=self.source != SOURCE_REAUTH
+            )
         if reason is UNDEFINED:
             reason = "reauth_successful"
             if self.source == SOURCE_RECONFIGURE:
