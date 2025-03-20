@@ -49,6 +49,7 @@ def location_data(request: pytest.FixtureRequest) -> _LocationData | None:
     """Return data based on location name."""
     if not hasattr(request, "param"):
         return None
+
     return LOCATIONS[request.param]
 
 
@@ -83,11 +84,8 @@ def results(request: pytest.FixtureRequest, location_data: _LocationData) -> Ite
 
 @pytest.fixture
 def havdalah_offset(request: pytest.FixtureRequest) -> int | None:
-    """Return a default havdalah offset of 0 if not specified."""
-    if not hasattr(request, "param"):
-        return None
-
-    return request.param
+    """Return a None if default havdalah offset is not specified."""
+    return getattr(request, "param", None)
 
 
 @pytest.fixture
