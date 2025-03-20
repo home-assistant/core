@@ -7,18 +7,16 @@ import logging
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 import noaa_coops as coops
-import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_TIME_ZONE, CONF_UNIT_SYSTEM
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -28,6 +26,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import NoaaTidesConfigEntry
 from .const import (
     CONF_STATION_ID,
     DEFAULT_TIMEZONE,
@@ -36,7 +35,6 @@ from .const import (
     TIMEZONES,
     UNIT_SYSTEMS,
 )
-from .errors import StationNotFound
 from .helpers import get_default_unit_system, get_station_unique_id
 
 if TYPE_CHECKING:
@@ -151,44 +149,27 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NoaaTidesConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add NOAA Tides sensor entry."""
 
-    station_id = entry.data.get(CONF_STATION_ID)
-    name = entry.title
-    timezone = entry.options.get(CONF_TIME_ZONE, DEFAULT_TIMEZONE)
-    unit_system = entry.options.get(CONF_UNIT_SYSTEM, get_default_unit_system(hass))
+    data = entry.runtime_data
 
-    if station_id is None:
-        _LOGGER.error("Station ID is required")
-        raise StationNotFound
-
-    try:
-        station = await hass.async_add_executor_job(
-            coops.Station, station_id, unit_system
-        )
-    except KeyError as exception:
-        _LOGGER.error("%s sensor station_id %s does not exist", NAME, station_id)
-        raise StationNotFound from exception
-    except requests.exceptions.ConnectionError as exception:
-        _LOGGER.error(
-            "Connection error during setup in %s sensor for station_id: %s",
-            NAME,
-            station_id,
-        )
-        raise PlatformNotReady from exception
-
-    device_id = get_station_unique_id(station_id)
+    device_id = get_station_unique_id(data.station_id)
     device_info = DeviceInfo(
         identifiers={(DOMAIN, device_id)},
-        name=name,
+        name=data.name,
         entry_type=DeviceEntryType.SERVICE,
     )
 
     summary_sensor = NOAATidesAndCurrentsSensor(
-        name, station_id, timezone, unit_system, station, device_info=device_info
+        name=data.name,
+        station_id=data.station_id,
+        timezone=data.timezone,
+        unit_system=data.unit_system,
+        station=data.station,
+        device_info=device_info,
     )
 
     async_add_entities([summary_sensor], True)
