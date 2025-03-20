@@ -67,6 +67,7 @@ async def test_number(
     reolink_connect.set_volume.reset_mock(side_effect=True)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_smart_ai_number(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
