@@ -3,7 +3,6 @@
 from unittest.mock import patch
 
 from noaa_coops.station import Station
-import pytest
 from requests.exceptions import ConnectionError
 
 from homeassistant import config_entries
@@ -16,7 +15,6 @@ from homeassistant.components.noaa_tides.const import (
 from homeassistant.const import CONF_TIME_ZONE, CONF_UNIT_SYSTEM
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import PlatformNotReady
 
 from tests.common import MockConfigEntry
 
@@ -127,12 +125,14 @@ async def test_abort_on_connection_error(hass: HomeAssistant) -> None:
         raise ConnectionError
 
     with (
-        pytest.raises(PlatformNotReady),
         patch.object(Station, "get_metadata", mock_get_metadata),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_STATION_ID: VALID_STATION_ID}
         )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"]["base"] == "cannot_connect"
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:
@@ -149,18 +149,18 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    def mock_get_metadata(self: Station):
+        self.name = VALID_STATION_NAME
+
+    with patch.object(Station, "get_metadata", mock_get_metadata):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    def mock_get_metadata(self: Station):
-        self.name = VALID_STATION_NAME
-
     with (
-        patch.object(Station, "get_metadata", mock_get_metadata),
         patch(
             "homeassistant.components.noaa_tides.async_setup_entry",
             return_value=True,
