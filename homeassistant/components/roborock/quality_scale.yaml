@@ -64,7 +64,7 @@ rules:
     status: exempt
     comment: There are no noisy entities.
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:
