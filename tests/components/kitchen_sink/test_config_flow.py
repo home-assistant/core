@@ -1,6 +1,7 @@
 """Test the Everything but the Kitchen Sink config flow."""
 
 from collections.abc import Generator
+from types import MappingProxyType
 from unittest.mock import patch
 
 import pytest
@@ -130,7 +131,7 @@ async def test_subentry_flow(hass: HomeAssistant) -> None:
     subentry_id = list(config_entry.subentries)[0]
     assert config_entry.subentries == {
         subentry_id: config_entries.ConfigSubentry(
-            data={"state": 15},
+            data=MappingProxyType({"state": 15}),
             subentry_id=subentry_id,
             subentry_type="entity",
             title="Sensor 1",
@@ -148,12 +149,12 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         subentries_data=[
-            config_entries.ConfigSubentryData(
-                data={"state": 15},
-                subentry_id="mock_id",
+            config_entries.ConfigSubentryDataWithId(
+                data=MappingProxyType({"state": 15}),
                 subentry_type="entity",
                 title="Sensor 1",
                 unique_id=None,
+                subentry_id=subentry_id,
             )
         ],
     )
@@ -168,16 +169,16 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_sensor"
 
-    result = await hass.config_entries.subentries.async_configure(
+    sub_result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={"name": "Renamed sensor 1", "state": 5},
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
+    assert sub_result["type"] is FlowResultType.ABORT
+    assert sub_result["reason"] == "reconfigure_successful"
 
     assert config_entry.subentries == {
         subentry_id: config_entries.ConfigSubentry(
-            data={"state": 5},
+            data=MappingProxyType({"state": 5}),
             subentry_id=subentry_id,
             subentry_type="entity",
             title="Renamed sensor 1",
