@@ -131,18 +131,16 @@ class UnitSystem:
         if errors:
             raise ValueError(errors)
 
-        object.__setattr__(self, "_name", name)
-        object.__setattr__(
-            self, "accumulated_precipitation_unit", accumulated_precipitation
-        )
-        object.__setattr__(self, "area_unit", area)
-        object.__setattr__(self, "length_unit", length)
-        object.__setattr__(self, "mass_unit", mass)
-        object.__setattr__(self, "pressure_unit", pressure)
-        object.__setattr__(self, "temperature_unit", temperature)
-        object.__setattr__(self, "volume_unit", volume)
-        object.__setattr__(self, "wind_speed_unit", wind_speed)
-        object.__setattr__(self, "_conversions", conversions)
+        super().__setattr__("_name", name)
+        super().__setattr__("accumulated_precipitation_unit", accumulated_precipitation)
+        super().__setattr__("area_unit", area)
+        super().__setattr__("length_unit", length)
+        super().__setattr__("mass_unit", mass)
+        super().__setattr__("pressure_unit", pressure)
+        super().__setattr__("temperature_unit", temperature)
+        super().__setattr__("volume_unit", volume)
+        super().__setattr__("wind_speed_unit", wind_speed)
+        super().__setattr__("_conversions", conversions)
 
     def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
