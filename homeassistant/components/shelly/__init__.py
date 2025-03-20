@@ -12,6 +12,7 @@ from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
     MacAddressMismatchError,
+    RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice, bluetooth_mac_from_primary_mac
 import voluptuous as vol
@@ -275,7 +276,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             runtime_data.script_events = await get_rpc_scripts_event_types(
                 device, ignore_scripts=[BLE_SCRIPT_NAME]
             )
-        except (DeviceConnectionError, MacAddressMismatchError) as err:
+        except (DeviceConnectionError, MacAddressMismatchError, RpcCallError) as err:
             await device.shutdown()
             raise ConfigEntryNotReady(repr(err)) from err
         except InvalidAuthError as err:
