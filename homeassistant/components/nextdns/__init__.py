@@ -101,7 +101,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NextDnsConfigEntry) -> b
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="auth_error",
-            translation_placeholders={"entry": entry.title},
         ) from err
 
     tasks = []

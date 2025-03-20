@@ -361,6 +361,9 @@
     }
   },
   "exceptions": {
+    "auth_error": {
+      "message": "Authentication failed, please update your API key"
+    },
     "cannot_connect": {
       "message": "An error occurred while connecting to the NextDNS API for {entry}: {error}"
     },

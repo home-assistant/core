@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
-from nextdns import AnalyticsStatus, ApiError
+from nextdns import AnalyticsStatus, ApiError, InvalidApiKeyError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -73,4 +73,9 @@ class NextDnsButton(
                     "entity": self.entity_id,
                     "error": repr(err),
                 },
+            ) from err
+        except InvalidApiKeyError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
             ) from err

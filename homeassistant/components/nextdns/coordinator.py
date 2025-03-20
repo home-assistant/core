@@ -91,7 +91,6 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator[CoordinatorDataT]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_error",
-                translation_placeholders={"entry": self.config_entry.title},
             ) from err
 
     async def _async_update_data_internal(self) -> CoordinatorDataT:

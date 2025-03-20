@@ -8,12 +8,12 @@ from typing import Any
 
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
-from nextdns import ApiError, Settings
+from nextdns import ApiError, InvalidApiKeyError, Settings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -590,6 +590,11 @@ class NextDnsSwitch(
                     "entity": self.entity_id,
                     "error": repr(err),
                 },
+            ) from err
+        except InvalidApiKeyError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
             ) from err
 
         if result:
