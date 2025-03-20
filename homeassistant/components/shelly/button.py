@@ -190,9 +190,9 @@ class ShellyBaseButton(
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="device_communication_error",
+                translation_key="device_communication_action_error",
                 translation_placeholders={
-                    "method": self.entity_description.press_action,
+                    "entity": self.entity_id,
                     "device": self.coordinator.device.name,
                     "error": repr(err),
                 },
@@ -200,9 +200,9 @@ class ShellyBaseButton(
         except RpcCallError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="rpc_call_error",
+                translation_key="rpc_call_action_error",
                 translation_placeholders={
-                    "method": self.entity_description.press_action,
+                    "entity": self.entity_id,
                     "device": self.coordinator.device.name,
                     "error": repr(err),
                 },
