@@ -25,5 +25,22 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "watching": {
+        "name": "Active clients",
+        "unit_of_measurement": "clients"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "audio_codec": "Audio codec"
+        }
+      }
+    }
   }
 }

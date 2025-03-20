@@ -11,13 +11,13 @@ from wled import Segment
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WLEDConfigEntry
 from .const import ATTR_INTENSITY, ATTR_SPEED
 from .coordinator import WLEDDataUpdateCoordinator
+from .entity import WLEDEntity
 from .helpers import wled_exception_handler
-from .models import WLEDEntity
 
 PARALLEL_UPDATES = 1
 
@@ -25,7 +25,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WLEDConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WLED number based on a config entry."""
     coordinator = entry.runtime_data
@@ -44,7 +44,7 @@ async def async_setup_entry(
 class WLEDNumberEntityDescription(NumberEntityDescription):
     """Class describing WLED number entities."""
 
-    value_fn: Callable[[Segment], float | None]
+    value_fn: Callable[[Segment], int | None]
 
 
 NUMBERS = [
@@ -64,7 +64,7 @@ NUMBERS = [
         native_step=1,
         native_min_value=0,
         native_max_value=255,
-        value_fn=lambda segment: segment.intensity,
+        value_fn=lambda segment: int(segment.intensity),
     ),
 ]
 
@@ -100,7 +100,7 @@ class WLEDNumber(WLEDEntity, NumberEntity):
         """Return True if entity is available."""
         try:
             self.coordinator.data.state.segments[self._segment]
-        except IndexError:
+        except KeyError:
             return False
 
         return super().available
@@ -130,10 +130,14 @@ class WLEDNumber(WLEDEntity, NumberEntity):
 def async_update_segments(
     coordinator: WLEDDataUpdateCoordinator,
     current_ids: set[int],
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Update segments."""
-    segment_ids = {segment.segment_id for segment in coordinator.data.state.segments}
+    segment_ids = {
+        segment.segment_id
+        for segment in coordinator.data.state.segments.values()
+        if segment.segment_id is not None
+    }
 
     new_entities: list[WLEDNumber] = []
 

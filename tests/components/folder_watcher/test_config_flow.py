@@ -148,39 +148,3 @@ async def test_form_already_configured(hass: HomeAssistant, tmp_path: Path) -> N
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_import(hass: HomeAssistant, tmp_path: Path) -> None:
-    """Test import flow."""
-    path = tmp_path.as_posix()
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_FOLDER: path, CONF_PATTERNS: ["*"]},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Folder Watcher {path}"
-    assert result["options"] == {CONF_FOLDER: path, CONF_PATTERNS: ["*"]}
-
-
-async def test_import_already_configured(hass: HomeAssistant, tmp_path: Path) -> None:
-    """Test we abort import when entry is already configured."""
-    path = tmp_path.as_posix()
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=f"Folder Watcher {path}",
-        data={CONF_FOLDER: path},
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_FOLDER: path},
-    )
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"

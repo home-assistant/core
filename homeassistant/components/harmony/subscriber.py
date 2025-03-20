@@ -10,8 +10,8 @@ from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 
 _LOGGER = logging.getLogger(__name__)
 
-NoParamCallback = HassJob[[], Any] | None
-ActivityCallback = HassJob[[tuple], Any] | None
+type NoParamCallback = HassJob[[], Any] | None
+type ActivityCallback = HassJob[[tuple], Any] | None
 
 
 class HarmonyCallback(NamedTuple):

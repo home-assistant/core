@@ -11,10 +11,11 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DOMAIN,
-    PLATFORM_SCHEMA,
+    DOMAIN as COVER_DOMAIN,
+    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
+    CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -31,16 +32,15 @@ from homeassistant.const import (
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entity import GroupEntity
@@ -55,9 +55,9 @@ DEFAULT_NAME = "Cover Group"
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
+        vol.Required(CONF_ENTITIES): cv.entities_domain(COVER_DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
@@ -83,7 +83,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Cover Group config entry."""
     registry = er.async_get(hass)
@@ -181,21 +181,25 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Move the covers up."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER, data, blocking=True, context=self._context
+            COVER_DOMAIN, SERVICE_OPEN_COVER, data, blocking=True, context=self._context
         )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Move the covers down."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER, data, blocking=True, context=self._context
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Fire the stop action."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_STOP]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_STOP_COVER, data, blocking=True, context=self._context
+            COVER_DOMAIN, SERVICE_STOP_COVER, data, blocking=True, context=self._context
         )
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -205,7 +209,7 @@ class CoverGroup(GroupEntity, CoverEntity):
             ATTR_POSITION: kwargs[ATTR_POSITION],
         }
         await self.hass.services.async_call(
-            DOMAIN,
+            COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
             data,
             blocking=True,
@@ -216,21 +220,33 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Tilt covers open."""
         data = {ATTR_ENTITY_ID: self._tilts[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_OPEN_COVER_TILT, data, blocking=True, context=self._context
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER_TILT,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt covers closed."""
         data = {ATTR_ENTITY_ID: self._tilts[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_CLOSE_COVER_TILT, data, blocking=True, context=self._context
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER_TILT,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop cover tilt."""
         data = {ATTR_ENTITY_ID: self._tilts[KEY_STOP]}
         await self.hass.services.async_call(
-            DOMAIN, SERVICE_STOP_COVER_TILT, data, blocking=True, context=self._context
+            COVER_DOMAIN,
+            SERVICE_STOP_COVER_TILT,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
@@ -240,7 +256,7 @@ class CoverGroup(GroupEntity, CoverEntity):
             ATTR_TILT_POSITION: kwargs[ATTR_TILT_POSITION],
         }
         await self.hass.services.async_call(
-            DOMAIN,
+            COVER_DOMAIN,
             SERVICE_SET_COVER_TILT_POSITION,
             data,
             blocking=True,
@@ -269,15 +285,15 @@ class CoverGroup(GroupEntity, CoverEntity):
         for entity_id in self._entity_ids:
             if not (state := self.hass.states.get(entity_id)):
                 continue
-            if state.state == STATE_OPEN:
+            if state.state == CoverState.OPEN:
                 self._attr_is_closed = False
                 continue
-            if state.state == STATE_CLOSED:
+            if state.state == CoverState.CLOSED:
                 continue
-            if state.state == STATE_CLOSING:
+            if state.state == CoverState.CLOSING:
                 self._attr_is_closing = True
                 continue
-            if state.state == STATE_OPENING:
+            if state.state == CoverState.OPENING:
                 self._attr_is_opening = True
                 continue
         if not valid_state:

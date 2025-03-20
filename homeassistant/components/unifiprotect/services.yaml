@@ -22,18 +22,6 @@ remove_doorbell_text:
       required: true
       selector:
         text:
-set_default_doorbell_text:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: unifiprotect
-    message:
-      example: Welcome!
-      required: true
-      selector:
-        text:
 set_chime_paired_doorbells:
   fields:
     device_id:
@@ -65,3 +53,10 @@ remove_privacy_zone:
       required: true
       selector:
         text:
+get_user_keyring_info:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: unifiprotect

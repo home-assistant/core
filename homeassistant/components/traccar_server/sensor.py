@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, Literal, TypeVar, cast
+from typing import Any, Literal
 
 from pytraccar import DeviceModel, GeofenceModel, PositionModel
 
@@ -17,18 +17,16 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfSpeed
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import TraccarServerCoordinator
 from .entity import TraccarServerEntity
 
-_T = TypeVar("_T")
-
 
 @dataclass(frozen=True, kw_only=True)
-class TraccarServerSensorEntityDescription(Generic[_T], SensorEntityDescription):
+class TraccarServerSensorEntityDescription[_T](SensorEntityDescription):
     """Describe Traccar Server sensor entity."""
 
     data_key: Literal["position", "device", "geofence", "attributes"]
@@ -37,7 +35,9 @@ class TraccarServerSensorEntityDescription(Generic[_T], SensorEntityDescription)
     value_fn: Callable[[_T], StateType]
 
 
-TRACCAR_SERVER_SENSOR_ENTITY_DESCRIPTIONS = (
+TRACCAR_SERVER_SENSOR_ENTITY_DESCRIPTIONS: tuple[
+    TraccarServerSensorEntityDescription[Any], ...
+] = (
     TraccarServerSensorEntityDescription[PositionModel](
         key="attributes.batteryLevel",
         data_key="position",
@@ -45,7 +45,7 @@ TRACCAR_SERVER_SENSOR_ENTITY_DESCRIPTIONS = (
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        value_fn=lambda x: x["attributes"].get("batteryLevel", -1),
+        value_fn=lambda x: x["attributes"].get("batteryLevel"),
     ),
     TraccarServerSensorEntityDescription[PositionModel](
         key="speed",
@@ -83,7 +83,7 @@ TRACCAR_SERVER_SENSOR_ENTITY_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor entities."""
     coordinator: TraccarServerCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -91,18 +91,18 @@ async def async_setup_entry(
         TraccarServerSensor(
             coordinator=coordinator,
             device=entry["device"],
-            description=cast(TraccarServerSensorEntityDescription, description),
+            description=description,
         )
         for entry in coordinator.data.values()
         for description in TRACCAR_SERVER_SENSOR_ENTITY_DESCRIPTIONS
     )
 
 
-class TraccarServerSensor(TraccarServerEntity, SensorEntity):
+class TraccarServerSensor[_T](TraccarServerEntity, SensorEntity):
     """Represent a tracked device."""
 
     _attr_has_entity_name = True
-    entity_description: TraccarServerSensorEntityDescription
+    entity_description: TraccarServerSensorEntityDescription[_T]
 
     def __init__(
         self,

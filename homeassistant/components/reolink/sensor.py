@@ -8,26 +8,28 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from reolink_aio.api import Host
+from reolink_aio.enums import BatteryEnum
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import ReolinkData
-from .const import DOMAIN
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
+from .util import ReolinkConfigEntry, ReolinkData
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -37,7 +39,7 @@ class ReolinkSensorEntityDescription(
 ):
     """A class that describes sensor entities for a camera channel."""
 
-    value: Callable[[Host, int], int | float]
+    value: Callable[[Host, int], StateType]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,7 +49,7 @@ class ReolinkHostSensorEntityDescription(
 ):
     """A class that describes host sensor entities."""
 
-    value: Callable[[Host], int | None]
+    value: Callable[[Host], StateType]
 
 
 SENSORS = (
@@ -58,7 +60,63 @@ SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda api, ch: api.ptz_pan_position(ch),
-        supported=lambda api, ch: api.supported(ch, "ptz_position"),
+        supported=lambda api, ch: api.supported(ch, "ptz_pan_position"),
+    ),
+    ReolinkSensorEntityDescription(
+        key="ptz_tilt_position",
+        cmd_key="GetPtzCurPos",
+        translation_key="ptz_tilt_position",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda api, ch: api.ptz_tilt_position(ch),
+        supported=lambda api, ch: api.supported(ch, "ptz_tilt_position"),
+    ),
+    ReolinkSensorEntityDescription(
+        key="battery_percent",
+        cmd_id=252,
+        cmd_key="GetBatteryInfo",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda api, ch: api.battery_percentage(ch),
+        supported=lambda api, ch: api.supported(ch, "battery"),
+    ),
+    ReolinkSensorEntityDescription(
+        key="battery_temperature",
+        cmd_id=252,
+        cmd_key="GetBatteryInfo",
+        translation_key="battery_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value=lambda api, ch: api.battery_temperature(ch),
+        supported=lambda api, ch: api.supported(ch, "battery"),
+    ),
+    ReolinkSensorEntityDescription(
+        key="battery_state",
+        cmd_id=252,
+        cmd_key="GetBatteryInfo",
+        translation_key="battery_state",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        options=[state.name for state in BatteryEnum],
+        value=lambda api, ch: BatteryEnum(api.battery_status(ch)).name,
+        supported=lambda api, ch: api.supported(ch, "battery"),
+    ),
+    ReolinkSensorEntityDescription(
+        key="day_night_state",
+        cmd_id=33,
+        cmd_key="296",
+        translation_key="day_night_state",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=["day", "night", "led_day"],
+        value=lambda api, ch: api.baichuan.day_night_state(ch),
+        supported=lambda api, ch: api.supported(ch, "day_night_state"),
     ),
 )
 
@@ -72,6 +130,17 @@ HOST_SENSORS = (
         entity_registry_enabled_default=False,
         value=lambda api: api.wifi_signal,
         supported=lambda api: api.supported(None, "wifi") and api.wifi_connection,
+    ),
+    ReolinkHostSensorEntityDescription(
+        key="cpu_usage",
+        cmd_key="GetPerformance",
+        translation_key="cpu_usage",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value=lambda api: api.cpu_usage,
+        supported=lambda api: api.supported(None, "performance"),
     ),
 )
 
@@ -91,11 +160,11 @@ HDD_SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ReolinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink IP Camera."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
     entities: list[
         ReolinkSensorEntity | ReolinkHostSensorEntity | ReolinkHddSensorEntity
@@ -106,19 +175,15 @@ async def async_setup_entry(
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(
-        [
-            ReolinkHostSensorEntity(reolink_data, entity_description)
-            for entity_description in HOST_SENSORS
-            if entity_description.supported(reolink_data.host.api)
-        ]
+        ReolinkHostSensorEntity(reolink_data, entity_description)
+        for entity_description in HOST_SENSORS
+        if entity_description.supported(reolink_data.host.api)
     )
     entities.extend(
-        [
-            ReolinkHddSensorEntity(reolink_data, hdd_index, entity_description)
-            for entity_description in HDD_SENSORS
-            for hdd_index in reolink_data.host.api.hdd_list
-            if entity_description.supported(reolink_data.host.api, hdd_index)
-        ]
+        ReolinkHddSensorEntity(reolink_data, hdd_index, entity_description)
+        for entity_description in HDD_SENSORS
+        for hdd_index in reolink_data.host.api.hdd_list
+        if entity_description.supported(reolink_data.host.api, hdd_index)
     )
     async_add_entities(entities)
 

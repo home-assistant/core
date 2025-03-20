@@ -225,6 +225,23 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25.0
     assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 22.8
 
+    state = hass.states.get("climate.aux_heat")
+    assert state.state == HVACMode.HEAT
+    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) is None
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 22
+    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.IDLE
+    assert state.attributes.get(ATTR_HVAC_MODES) == [
+        HVACMode.OFF,
+        HVACMode.COOL,
+        HVACMode.HEAT,
+        HVACMode.FAN_ONLY,
+        HVACMode.DRY,
+    ]
+    assert state.attributes.get(ATTR_MAX_TEMP) == 30
+    assert state.attributes.get(ATTR_MIN_TEMP) == 15
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
+    assert state.attributes.get(ATTR_TEMPERATURE) == 20.0
+
     HVAC_MOCK_CHANGED = copy.deepcopy(HVAC_MOCK)
     HVAC_MOCK_CHANGED[API_SYSTEMS][0][API_DATA][0][API_MAX_TEMP] = 25
     HVAC_MOCK_CHANGED[API_SYSTEMS][0][API_DATA][0][API_MIN_TEMP] = 10
@@ -248,7 +265,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
         ),
     ):
         async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("climate.salon")
     assert state.attributes.get(ATTR_MAX_TEMP) == 25

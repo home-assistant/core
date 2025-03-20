@@ -5,14 +5,13 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from pyoctoprintapi import ApiError, OctoprintClient, OctoprintException
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components import ssdp, zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
@@ -25,7 +24,9 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import DOMAIN
@@ -63,7 +64,9 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a config flow for OctoPrint."""
         self._sessions: list[aiohttp.ClientSession] = []
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         # When coming back from the progress steps, the user_input is stored in the
         # instance variable instead of being passed in
@@ -82,7 +85,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
                 raise err from None
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
 
             if errors:
@@ -102,7 +105,9 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         self._user_input = user_input
         return await self.async_step_get_api_key()
 
-    async def async_step_get_api_key(self, user_input=None):
+    async def async_step_get_api_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Get an Application Api Key."""
         if not self.api_key_task:
             self.api_key_task = self.hass.async_create_task(
@@ -120,7 +125,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         except OctoprintException:
             _LOGGER.exception("Failed to get an application key")
             return self.async_show_progress_done(next_step_id="auth_failed")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Failed to get an application key")
             return self.async_show_progress_done(next_step_id="auth_failed")
         finally:
@@ -128,7 +133,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_progress_done(next_step_id="user")
 
-    async def _finish_config(self, user_input: dict):
+    async def _finish_config(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Finish the configuration setup."""
         existing_entry = await self.async_set_unique_id(self.unique_id)
         if existing_entry is not None:
@@ -154,16 +159,16 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
-    async def async_step_auth_failed(self, user_input):
+    async def async_step_auth_failed(self, user_input: None) -> ConfigFlowResult:
         """Handle api fetch failure."""
         return self.async_abort(reason="auth_failed")
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery flow."""
         uuid = discovery_info.properties["uuid"]
@@ -189,7 +194,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle ssdp discovery flow."""
         uuid = discovery_info.upnp["UDN"][5:]
@@ -199,7 +204,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         url = URL(discovery_info.upnp["presentationURL"])
         self.context.update(
             {
-                "title_placeholders": {CONF_HOST: url.host},
+                "title_placeholders": {CONF_HOST: url.host or "-"},
                 "configuration_url": discovery_info.upnp["presentationURL"],
             }
         )
@@ -213,13 +218,15 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_reauth(self, config: Mapping[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauthorization request from Octoprint."""
-        self._reauth_data = dict(config)
+        self._reauth_data = dict(entry_data)
 
         self.context.update(
             {
-                "title_placeholders": {CONF_HOST: config[CONF_HOST]},
+                "title_placeholders": {CONF_HOST: entry_data[CONF_HOST]},
             }
         )
 
@@ -248,15 +255,17 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         self._user_input = self._reauth_data
         return await self.async_step_get_api_key()
 
-    async def _async_get_auth_key(self):
+    async def _async_get_auth_key(self) -> None:
         """Get application api key."""
+        if TYPE_CHECKING:
+            assert self._user_input is not None
         octoprint = self._get_octoprint_client(self._user_input)
 
         self._user_input[CONF_API_KEY] = await octoprint.request_app_key(
             "Home Assistant", self._user_input[CONF_USERNAME], 300
         )
 
-    def _get_octoprint_client(self, user_input: dict) -> OctoprintClient:
+    def _get_octoprint_client(self, user_input: dict[str, Any]) -> OctoprintClient:
         """Build an octoprint client from the user_input."""
         verify_ssl = user_input.get(CONF_VERIFY_SSL, True)
 
@@ -277,7 +286,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
             path=user_input[CONF_PATH],
         )
 
-    def async_remove(self):
+    def async_remove(self) -> None:
         """Detach the session."""
         for session in self._sessions:
             session.detach()

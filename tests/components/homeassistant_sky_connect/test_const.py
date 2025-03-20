@@ -19,7 +19,7 @@ def test_hardware_variant(
     assert HardwareVariant.from_usb_product_name(usb_product_name) == expected_variant
 
 
-def test_hardware_variant_invalid():
+def test_hardware_variant_invalid() -> None:
     """Test hardware variant parsing with an invalid product."""
     with pytest.raises(
         ValueError, match=r"^Unknown SkyConnect product name: Some other product$"

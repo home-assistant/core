@@ -9,12 +9,13 @@ from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import ShellyBlockEntity, ShellyRpcEntity
@@ -24,7 +25,7 @@ from .utils import get_device_entry_gen, get_rpc_key_ids
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up covers for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
@@ -37,7 +38,7 @@ async def async_setup_entry(
 def async_setup_block_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up cover for device."""
     coordinator = config_entry.runtime_data.block
@@ -54,7 +55,7 @@ def async_setup_block_entry(
 def async_setup_rpc_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
     coordinator = config_entry.runtime_data.rpc
@@ -157,6 +158,13 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
         self._id = id_
         if self.status["pos_control"]:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
+        if coordinator.device.config[f"cover:{id_}"].get("slat", {}).get("enable"):
+            self._attr_supported_features |= (
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.STOP_TILT
+                | CoverEntityFeature.SET_TILT_POSITION
+            )
 
     @property
     def is_closed(self) -> bool | None:
@@ -170,6 +178,14 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
             return None
 
         return cast(int, self.status["current_pos"])
+
+    @property
+    def current_cover_tilt_position(self) -> int | None:
+        """Return current position of cover tilt."""
+        if "slat_pos" not in self.status:
+            return None
+
+        return cast(int, self.status["slat_pos"])
 
     @property
     def is_closing(self) -> bool:
@@ -196,5 +212,24 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
         )
 
     async def async_stop_cover(self, **_kwargs: Any) -> None:
+        """Stop the cover."""
+        await self.call_rpc("Cover.Stop", {"id": self._id})
+
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open the cover tilt."""
+        await self.call_rpc("Cover.GoToPosition", {"id": self._id, "slat_pos": 100})
+
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close the cover tilt."""
+        await self.call_rpc("Cover.GoToPosition", {"id": self._id, "slat_pos": 0})
+
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Move the cover tilt to a specific position."""
+        await self.call_rpc(
+            "Cover.GoToPosition",
+            {"id": self._id, "slat_pos": kwargs[ATTR_TILT_POSITION]},
+        )
+
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.call_rpc("Cover.Stop", {"id": self._id})

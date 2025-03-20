@@ -8,13 +8,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, DOMAIN
-from .coordinator import AmberUpdateCoordinator
+from .const import ATTRIBUTION
+from .coordinator import AmberConfigEntry, AmberUpdateCoordinator
 
 PRICE_SPIKE_ICONS = {
     "none": "mdi:power-plug",
@@ -71,18 +70,38 @@ class AmberPriceSpikeBinarySensor(AmberPriceGridSensor):
         }
 
 
+class AmberDemandWindowBinarySensor(AmberPriceGridSensor):
+    """Sensor to show whether demand window is active."""
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        grid = self.coordinator.data["grid"]
+        if "demand_window" in grid:
+            return grid["demand_window"]  # type: ignore[no-any-return]
+        return None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: AmberConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
-    coordinator: AmberUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     price_spike_description = BinarySensorEntityDescription(
         key="price_spike",
         name=f"{entry.title} - Price Spike",
     )
+    demand_window_description = BinarySensorEntityDescription(
+        key="demand_window",
+        name=f"{entry.title} - Demand Window",
+        translation_key="demand_window",
+    )
     async_add_entities(
-        [AmberPriceSpikeBinarySensor(coordinator, price_spike_description)]
+        [
+            AmberPriceSpikeBinarySensor(coordinator, price_spike_description),
+            AmberDemandWindowBinarySensor(coordinator, demand_window_description),
+        ]
     )

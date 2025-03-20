@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Collection
+from dataclasses import dataclass
 import datetime
+from functools import partial
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
 import os
 import socket
 import ssl
 from tempfile import NamedTemporaryFile
-from typing import Any, Final, Required, TypedDict, cast
-from urllib.parse import quote_plus, urljoin
+from typing import Any, Final, TypedDict, cast
 
 from aiohttp import web
 from aiohttp.abc import AbstractStreamWriter
@@ -20,7 +22,6 @@ from aiohttp.streams import StreamReader
 from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 from aiohttp.web_protocol import RequestHandler
-from aiohttp_fast_url_dispatcher import FastUrlDispatcher, attach_fast_url_dispatcher
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -29,25 +30,21 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
-from homeassistant.core import (
-    Event,
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+    SERVER_PORT,
 )
-from homeassistant.exceptions import (
-    HomeAssistantError,
-    ServiceValidationError,
-    Unauthorized,
-    UnknownUser,
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import (
+    config_validation as cv,
+    frame,
+    issue_registry as ir,
+    storage,
 )
-from homeassistant.helpers import storage
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.http import (
-    KEY_ALLOW_CONFIGRED_CORS,
+    KEY_ALLOW_CONFIGURED_CORS,
     KEY_AUTHENTICATED,  # noqa: F401
     KEY_HASS,
     HomeAssistantView,
@@ -66,14 +63,9 @@ from homeassistant.util import dt as dt_util, ssl as ssl_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
-from .auth import async_setup_auth, async_sign_path
+from .auth import async_setup_auth
 from .ban import setup_bans
-from .const import (  # noqa: F401
-    DOMAIN,
-    KEY_HASS_REFRESH_TOKEN_ID,
-    KEY_HASS_USER,
-    StrictConnectionMode,
-)
+from .const import DOMAIN, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
 from .decorators import require_admin  # noqa: F401
 from .forwarded import async_setup_forwarded
@@ -96,7 +88,6 @@ CONF_TRUSTED_PROXIES: Final = "trusted_proxies"
 CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
 CONF_SSL_PROFILE: Final = "ssl_profile"
-CONF_STRICT_CONNECTION: Final = "strict_connection"
 
 SSL_MODERN: Final = "modern"
 SSL_INTERMEDIATE: Final = "intermediate"
@@ -146,14 +137,26 @@ HTTP_SCHEMA: Final = vol.All(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
             vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
-            vol.Optional(
-                CONF_STRICT_CONNECTION, default=StrictConnectionMode.DISABLED
-            ): vol.Coerce(StrictConnectionMode),
         }
     ),
 )
 
 CONFIG_SCHEMA: Final = vol.Schema({DOMAIN: HTTP_SCHEMA}, extra=vol.ALLOW_EXTRA)
+
+
+@dataclass(slots=True)
+class StaticPathConfig:
+    """Configuration for a static path."""
+
+    url_path: str
+    path: str
+    cache_headers: bool = True
+
+
+_STATIC_CLASSES = {
+    True: CachingStaticResource,
+    False: web.StaticResource,
+}
 
 
 class ConfData(TypedDict, total=False):
@@ -172,7 +175,6 @@ class ConfData(TypedDict, total=False):
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
-    strict_connection: Required[StrictConnectionMode]
 
 
 @bind_hass
@@ -241,7 +243,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
         use_x_frame_options=use_x_frame_options,
-        strict_connection_non_cloud=conf[CONF_STRICT_CONNECTION],
     )
 
     async def stop_server(event: Event) -> None:
@@ -271,7 +272,32 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         local_ip, host, server_port, ssl_certificate is not None
     )
 
-    _setup_services(hass, conf)
+    @callback
+    def _async_check_ssl_issue(_: Event) -> None:
+        if (
+            ssl_certificate is not None
+            and (hass.config.external_url or hass.config.internal_url) is None
+        ):
+            # pylint: disable-next=import-outside-toplevel
+            from homeassistant.components.cloud import (
+                CloudNotAvailable,
+                async_remote_ui_url,
+            )
+
+            try:
+                async_remote_ui_url(hass)
+            except CloudNotAvailable:
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "ssl_configured_without_configured_urls",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="ssl_configured_without_configured_urls",
+                )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_check_ssl_issue)
+
     return True
 
 
@@ -304,9 +330,20 @@ class HomeAssistantApplication(web.Application):
             protocol,
             writer,
             task,
-            loop=self._loop,
+            # loop will never be None when called from aiohttp
+            loop=self._loop,  # type: ignore[arg-type]
             client_max_size=self._client_max_size,
         )
+
+
+async def _serve_file_with_cache_headers(
+    path: str, request: web.Request
+) -> web.FileResponse:
+    return web.FileResponse(path, headers=CACHE_HEADERS)
+
+
+async def _serve_file(path: str, request: web.Request) -> web.FileResponse:
+    return web.FileResponse(path)
 
 
 class HomeAssistantHTTP:
@@ -332,10 +369,6 @@ class HomeAssistantHTTP:
                 "max_field_size": MAX_LINE_SIZE,
             },
         )
-        # By default aiohttp does a linear search for routing rules,
-        # we have a lot of routes, so use a dict lookup with a fallback
-        # to the linear search.
-        attach_fast_url_dispatcher(self.app, FastUrlDispatcher())
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
@@ -356,7 +389,6 @@ class HomeAssistantHTTP:
         login_threshold: int,
         is_ban_enabled: bool,
         use_x_frame_options: bool,
-        strict_connection_non_cloud: StrictConnectionMode,
     ) -> None:
         """Initialize the server."""
         self.app[KEY_HASS] = self.hass
@@ -373,7 +405,7 @@ class HomeAssistantHTTP:
         if is_ban_enabled:
             setup_bans(self.hass, self.app, login_threshold)
 
-        await async_setup_auth(self.hass, self.app, strict_connection_non_cloud)
+        await async_setup_auth(self.hass, self.app)
 
         setup_headers(self.app, use_x_frame_options)
         setup_cors(self.app, cors_origins)
@@ -425,34 +457,71 @@ class HomeAssistantHTTP:
             # Should be instance of aiohttp.web_exceptions._HTTPMove.
             raise redirect_exc(redirect_to)  # type: ignore[arg-type,misc]
 
-        self.app[KEY_ALLOW_CONFIGRED_CORS](
+        self.app[KEY_ALLOW_CONFIGURED_CORS](
             self.app.router.add_route("GET", url, redirect)
         )
+
+    def _make_static_resources(
+        self, configs: Collection[StaticPathConfig]
+    ) -> dict[str, CachingStaticResource | web.StaticResource | None]:
+        """Create a list of static resources."""
+        return {
+            config.url_path: _STATIC_CLASSES[config.cache_headers](
+                config.url_path, config.path
+            )
+            if os.path.isdir(config.path)
+            else None
+            for config in configs
+        }
+
+    async def async_register_static_paths(
+        self, configs: Collection[StaticPathConfig]
+    ) -> None:
+        """Register a folder or file to serve as a static path."""
+        resources = await self.hass.async_add_executor_job(
+            self._make_static_resources, configs
+        )
+        self._async_register_static_paths(configs, resources)
+
+    @callback
+    def _async_register_static_paths(
+        self,
+        configs: Collection[StaticPathConfig],
+        resources: dict[str, CachingStaticResource | web.StaticResource | None],
+    ) -> None:
+        """Register a folders or files to serve as a static path."""
+        app = self.app
+        allow_cors = app[KEY_ALLOW_CONFIGURED_CORS]
+        for config in configs:
+            if resource := resources[config.url_path]:
+                app.router.register_resource(resource)
+                allow_cors(resource)
+
+            target = (
+                _serve_file_with_cache_headers if config.cache_headers else _serve_file
+            )
+            allow_cors(
+                self.app.router.add_route(
+                    "GET", config.url_path, partial(target, config.path)
+                )
+            )
 
     def register_static_path(
         self, url_path: str, path: str, cache_headers: bool = True
     ) -> None:
         """Register a folder or file to serve as a static path."""
-        if os.path.isdir(path):
-            if cache_headers:
-                resource: CachingStaticResource | web.StaticResource = (
-                    CachingStaticResource(url_path, path)
-                )
-            else:
-                resource = web.StaticResource(url_path, path)
-            self.app.router.register_resource(resource)
-            self.app[KEY_ALLOW_CONFIGRED_CORS](resource)
-            return
-
-        async def serve_file(request: web.Request) -> web.FileResponse:
-            """Serve file from disk."""
-            if cache_headers:
-                return web.FileResponse(path, headers=CACHE_HEADERS)
-            return web.FileResponse(path)
-
-        self.app[KEY_ALLOW_CONFIGRED_CORS](
-            self.app.router.add_route("GET", url_path, serve_file)
+        frame.report_usage(
+            "calls hass.http.register_static_path which is deprecated because "
+            "it does blocking I/O in the event loop, instead "
+            "call `await hass.http.async_register_static_paths("
+            f'[StaticPathConfig("{url_path}", "{path}", {cache_headers})])`',
+            exclude_integrations={"http"},
+            core_behavior=frame.ReportBehavior.LOG,
+            breaks_in_ha_version="2025.7",
         )
+        configs = [StaticPathConfig(url_path, path, cache_headers)]
+        resources = self._make_static_resources(configs)
+        self._async_register_static_paths(configs, resources)
 
     def _create_ssl_context(self) -> ssl.SSLContext | None:
         context: ssl.SSLContext | None = None
@@ -602,61 +671,3 @@ async def start_http_server_and_save_config(
         ]
 
     store.async_delay_save(lambda: conf, SAVE_DELAY)
-
-
-@callback
-def _setup_services(hass: HomeAssistant, conf: ConfData) -> None:
-    """Set up services for HTTP component."""
-
-    async def create_temporary_strict_connection_url(
-        call: ServiceCall,
-    ) -> ServiceResponse:
-        """Create a strict connection url and return it."""
-        # Copied form homeassistant/helpers/service.py#_async_admin_handler
-        # as the helper supports no responses yet
-        if call.context.user_id:
-            user = await hass.auth.async_get_user(call.context.user_id)
-            if user is None:
-                raise UnknownUser(context=call.context)
-            if not user.is_admin:
-                raise Unauthorized(context=call.context)
-
-        if conf[CONF_STRICT_CONNECTION] is StrictConnectionMode.DISABLED:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="strict_connection_not_enabled_non_cloud",
-            )
-
-        try:
-            url = get_url(
-                hass, prefer_external=True, allow_internal=False, allow_cloud=False
-            )
-        except NoURLAvailableError as ex:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_external_url_available",
-            ) from ex
-
-        # to avoid circular import
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.auth import STRICT_CONNECTION_URL
-
-        path = async_sign_path(
-            hass,
-            STRICT_CONNECTION_URL,
-            datetime.timedelta(hours=1),
-            use_content_user=True,
-        )
-        url = urljoin(url, path)
-
-        return {
-            "url": f"https://login.home-assistant.io?u={quote_plus(url)}",
-            "direct_url": url,
-        }
-
-    hass.services.async_register(
-        DOMAIN,
-        "create_temporary_strict_connection_url",
-        create_temporary_strict_connection_url,
-        supports_response=SupportsResponse.ONLY,
-    )

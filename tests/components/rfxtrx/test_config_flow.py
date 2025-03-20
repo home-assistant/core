@@ -29,7 +29,9 @@ def com_port():
     return port
 
 
-async def start_options_flow(hass, entry):
+async def start_options_flow(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> config_entries.ConfigFlowResult:
     """Start the options flow with the entry under test."""
     entry.add_to_hass(hass)
 
@@ -426,7 +428,11 @@ async def test_options_add_duplicate_device(hass: HomeAssistant) -> None:
     assert result["errors"]["event_code"] == "already_configured_device"
 
 
-async def test_options_replace_sensor_device(hass: HomeAssistant) -> None:
+async def test_options_replace_sensor_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we can replace a sensor device."""
 
     entry = MockConfigEntry(
@@ -486,7 +492,6 @@ async def test_options_replace_sensor_device(hass: HomeAssistant) -> None:
     )
     assert state
 
-    device_registry = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     old_device = next(
@@ -532,8 +537,6 @@ async def test_options_replace_sensor_device(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(
         "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_signal_strength"
@@ -583,7 +586,11 @@ async def test_options_replace_sensor_device(hass: HomeAssistant) -> None:
     assert not state
 
 
-async def test_options_replace_control_device(hass: HomeAssistant) -> None:
+async def test_options_replace_control_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we can replace a control device."""
 
     entry = MockConfigEntry(
@@ -619,7 +626,6 @@ async def test_options_replace_control_device(hass: HomeAssistant) -> None:
     state = hass.states.get("switch.ac_1118cdea_2")
     assert state
 
-    device_registry = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     old_device = next(
@@ -666,8 +672,6 @@ async def test_options_replace_control_device(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
-
     entry = entity_registry.async_get("binary_sensor.ac_118cdea_2")
     assert entry
     assert entry.device_id == new_device
@@ -686,7 +690,9 @@ async def test_options_replace_control_device(hass: HomeAssistant) -> None:
     assert not state
 
 
-async def test_options_add_and_configure_device(hass: HomeAssistant) -> None:
+async def test_options_add_and_configure_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test we can add a device."""
 
     entry = MockConfigEntry(
@@ -720,7 +726,6 @@ async def test_options_add_and_configure_device(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={
             "data_bits": 4,
-            "off_delay": "abcdef",
             "command_on": "xyz",
             "command_off": "xyz",
         },
@@ -729,7 +734,6 @@ async def test_options_add_and_configure_device(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "set_device_options"
     assert result["errors"]
-    assert result["errors"]["off_delay"] == "invalid_input_off_delay"
     assert result["errors"]["command_on"] == "invalid_input_2262_on"
     assert result["errors"]["command_off"] == "invalid_input_2262_off"
 
@@ -739,7 +743,7 @@ async def test_options_add_and_configure_device(hass: HomeAssistant) -> None:
             "data_bits": 4,
             "command_on": "0xE",
             "command_off": "0x7",
-            "off_delay": "9",
+            "off_delay": 9,
         },
     )
 
@@ -752,12 +756,11 @@ async def test_options_add_and_configure_device(hass: HomeAssistant) -> None:
     assert entry.data["devices"]["0913000022670e013970"]
     assert entry.data["devices"]["0913000022670e013970"]["off_delay"] == 9
 
-    state = hass.states.get("binary_sensor.pt2262_22670e")
+    state = hass.states.get("binary_sensor.pt2262_226700")
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get("friendly_name") == "PT2262 22670e"
+    assert state.attributes.get("friendly_name") == "PT2262 226700"
 
-    device_registry = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     assert device_entries[0].id
@@ -795,7 +798,9 @@ async def test_options_add_and_configure_device(hass: HomeAssistant) -> None:
     assert "delay_off" not in entry.data["devices"]["0913000022670e013970"]
 
 
-async def test_options_configure_rfy_cover_device(hass: HomeAssistant) -> None:
+async def test_options_configure_rfy_cover_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test we can configure the venetion blind mode of an Rfy cover."""
 
     entry = MockConfigEntry(
@@ -842,7 +847,6 @@ async def test_options_configure_rfy_cover_device(hass: HomeAssistant) -> None:
         entry.data["devices"]["0C1a0000010203010000000000"]["device_id"], list
     )
 
-    device_registry = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     assert device_entries[0].id
@@ -896,16 +900,17 @@ def test_get_serial_by_id_no_dir() -> None:
 
 def test_get_serial_by_id() -> None:
     """Test serial by id conversion."""
-    p1 = patch("os.path.isdir", MagicMock(return_value=True))
-    p2 = patch("os.scandir")
 
     def _realpath(path):
         if path is sentinel.matched_link:
             return sentinel.path
         return sentinel.serial_link_path
 
-    p3 = patch("os.path.realpath", side_effect=_realpath)
-    with p1 as is_dir_mock, p2 as scan_mock, p3:
+    with (
+        patch("os.path.isdir", MagicMock(return_value=True)) as is_dir_mock,
+        patch("os.scandir") as scan_mock,
+        patch("os.path.realpath", side_effect=_realpath),
+    ):
         res = config_flow.get_serial_by_id(sentinel.path)
         assert res is sentinel.path
         assert is_dir_mock.call_count == 1

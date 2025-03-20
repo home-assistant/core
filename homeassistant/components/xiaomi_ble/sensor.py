@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from xiaomi_ble import DeviceClass, SensorUpdate, Units
 from xiaomi_ble.parser import ExtendedSensorDeviceClass
 
-from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataUpdate,
     PassiveBluetoothProcessorEntity,
@@ -18,11 +19,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-    CONDUCTIVITY,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfConductivity,
     UnitOfElectricPotential,
     UnitOfMass,
     UnitOfPressure,
@@ -30,15 +31,12 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
-from .const import DOMAIN
-from .coordinator import (
-    XiaomiActiveBluetoothProcessorCoordinator,
-    XiaomiPassiveBluetoothDataProcessor,
-)
+from .coordinator import XiaomiPassiveBluetoothDataProcessor
 from .device import device_key_to_bluetooth_entity_key
+from .types import XiaomiBLEConfigEntry
 
 SENSOR_DESCRIPTIONS = {
     (DeviceClass.BATTERY, Units.PERCENTAGE): SensorEntityDescription(
@@ -50,8 +48,8 @@ SENSOR_DESCRIPTIONS = {
     ),
     (DeviceClass.CONDUCTIVITY, Units.CONDUCTIVITY): SensorEntityDescription(
         key=str(Units.CONDUCTIVITY),
-        device_class=None,
-        native_unit_of_measurement=CONDUCTIVITY,
+        device_class=SensorDeviceClass.CONDUCTIVITY,
+        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS_PER_CM,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (
@@ -157,12 +155,30 @@ SENSOR_DESCRIPTIONS = {
     (ExtendedSensorDeviceClass.LOCK_METHOD, None): SensorEntityDescription(
         key=str(ExtendedSensorDeviceClass.LOCK_METHOD), icon="mdi:key-variant"
     ),
+    # Duration of detected status (in minutes) for Occpancy Sensor
+    (
+        ExtendedSensorDeviceClass.DURATION_DETECTED,
+        Units.TIME_MINUTES,
+    ): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.DURATION_DETECTED),
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Duration of cleared status (in minutes) for Occpancy Sensor
+    (
+        ExtendedSensorDeviceClass.DURATION_CLEARED,
+        Units.TIME_MINUTES,
+    ): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.DURATION_CLEARED),
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 
 def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
-) -> PassiveBluetoothDataUpdate:
+) -> PassiveBluetoothDataUpdate[float | None]:
     """Convert a sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
@@ -177,7 +193,9 @@ def sensor_update_to_bluetooth_data_update(
             if description.device_class
         },
         entity_data={
-            device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
+            device_key_to_bluetooth_entity_key(device_key): cast(
+                float | None, sensor_values.native_value
+            )
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
         entity_names={
@@ -189,13 +207,11 @@ def sensor_update_to_bluetooth_data_update(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: XiaomiBLEConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi BLE sensors."""
-    coordinator: XiaomiActiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator = entry.runtime_data
     processor = XiaomiPassiveBluetoothDataProcessor(
         sensor_update_to_bluetooth_data_update
     )
@@ -210,7 +226,7 @@ async def async_setup_entry(
 
 
 class XiaomiBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[XiaomiPassiveBluetoothDataProcessor],
+    PassiveBluetoothProcessorEntity[XiaomiPassiveBluetoothDataProcessor[float | None]],
     SensorEntity,
 ):
     """Representation of a xiaomi ble sensor."""

@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_UNAVAILABLE,
     UnitOfTemperature,
 )
@@ -197,6 +198,35 @@ async def test_unload_remove(hass: HomeAssistant, fritz: Mock) -> None:
     assert entry.state is ConfigEntryState.NOT_LOADED
     state = hass.states.get(entity_id)
     assert state is None
+
+
+async def test_logout_on_stop(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test we log out from fritzbox when Home Assistants stops."""
+    fritz().get_devices.return_value = [FritzDeviceSwitchMock()]
+    entity_id = f"{SWITCH_DOMAIN}.{CONF_FAKE_NAME}"
+
+    entry = MockConfigEntry(
+        domain=FB_DOMAIN,
+        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        unique_id=entity_id,
+    )
+    entry.add_to_hass(hass)
+
+    config_entries = hass.config_entries.async_entries(FB_DOMAIN)
+    assert len(config_entries) == 1
+    assert entry is config_entries[0]
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    state = hass.states.get(entity_id)
+    assert state
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert fritz().logout.call_count == 1
 
 
 async def test_remove_device(

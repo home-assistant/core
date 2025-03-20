@@ -34,7 +34,10 @@ from homeassistant.helpers import (
     entity_platform,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ENDPOINT, DOMAIN, ERROR_REQUEST_RETRY, SET_SOUND_SETTING
@@ -63,7 +66,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up songpal media player."""
     name = config_entry.data[CONF_NAME]
@@ -140,7 +143,12 @@ class SongpalEntity(MediaPlayerEntity):
 
     async def _get_sound_modes_info(self):
         """Get available sound modes and the active one."""
-        settings = await self._dev.get_sound_settings("soundField")
+        for settings in await self._dev.get_sound_settings():
+            if settings.target == "soundField":
+                break
+        else:
+            return None, {}
+
         if isinstance(settings, Setting):
             settings = [settings]
 
@@ -162,7 +170,7 @@ class SongpalEntity(MediaPlayerEntity):
 
     async def async_activate_websocket(self):
         """Activate websocket for listening if wanted."""
-        _LOGGER.info("Activating websocket connection")
+        _LOGGER.debug("Activating websocket connection")
 
         async def _volume_changed(volume: VolumeChange):
             _LOGGER.debug("Volume changed: %s", volume)
@@ -396,7 +404,7 @@ class SongpalEntity(MediaPlayerEntity):
     async def async_turn_on(self) -> None:
         """Turn the device on."""
         try:
-            return await self._dev.set_power(True)
+            await self._dev.set_power(True)
         except SongpalException as ex:
             if ex.code == ERROR_REQUEST_RETRY:
                 _LOGGER.debug(
@@ -408,7 +416,7 @@ class SongpalEntity(MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn the device off."""
         try:
-            return await self._dev.set_power(False)
+            await self._dev.set_power(False)
         except SongpalException as ex:
             if ex.code == ERROR_REQUEST_RETRY:
                 _LOGGER.debug(

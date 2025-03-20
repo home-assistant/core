@@ -21,7 +21,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -32,14 +31,26 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_platform,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import EcobeeData
-from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
+from . import EcobeeConfigEntry, EcobeeData
+from .const import (
+    _LOGGER,
+    ATTR_ACTIVE_SENSORS,
+    ATTR_AVAILABLE_SENSORS,
+    DOMAIN,
+    ECOBEE_AUX_HEAT_ONLY,
+    ECOBEE_MODEL_TO_NAME,
+    MANUFACTURER,
+)
 from .util import ecobee_date, ecobee_time, is_indefinite_hold
 
 ATTR_COOL_TEMP = "cool_temp"
@@ -56,6 +67,8 @@ ATTR_DST_ENABLED = "dst_enabled"
 ATTR_MIC_ENABLED = "mic_enabled"
 ATTR_AUTO_AWAY = "auto_away"
 ATTR_FOLLOW_ME = "follow_me"
+ATTR_SENSOR_LIST = "device_ids"
+ATTR_PRESET_MODE = "preset_mode"
 
 DEFAULT_RESUME_ALL = False
 PRESET_AWAY_INDEFINITELY = "away_indefinitely"
@@ -69,9 +82,6 @@ DEFAULT_MIN_HUMIDITY = 15
 DEFAULT_MAX_HUMIDITY = 50
 HUMIDIFIER_MANUAL_MODE = "manual"
 
-ECOBEE_AUX_HEAT_ONLY = "auxHeatOnly"
-
-
 # Order matters, because for reverse mapping we don't want to map HEAT to AUX
 ECOBEE_HVAC_TO_HASS = collections.OrderedDict(
     [
@@ -79,9 +89,13 @@ ECOBEE_HVAC_TO_HASS = collections.OrderedDict(
         ("cool", HVACMode.COOL),
         ("auto", HVACMode.HEAT_COOL),
         ("off", HVACMode.OFF),
-        ("auxHeatOnly", HVACMode.HEAT),
+        (ECOBEE_AUX_HEAT_ONLY, HVACMode.HEAT),
     ]
 )
+# Reverse key/value pair, drop auxHeatOnly as it doesn't map to specific HASS mode
+HASS_TO_ECOBEE_HVAC = {
+    v: k for k, v in ECOBEE_HVAC_TO_HASS.items() if k != ECOBEE_AUX_HEAT_ONLY
+}
 
 ECOBEE_HVAC_ACTION_TO_HASS = {
     # Map to None if we do not know how to represent.
@@ -122,6 +136,7 @@ SERVICE_SET_FAN_MIN_ON_TIME = "set_fan_min_on_time"
 SERVICE_SET_DST_MODE = "set_dst_mode"
 SERVICE_SET_MIC_MODE = "set_mic_mode"
 SERVICE_SET_OCCUPANCY_MODES = "set_occupancy_modes"
+SERVICE_SET_SENSORS_USED_IN_CLIMATE = "set_sensors_used_in_climate"
 
 DTGROUP_START_INCLUSIVE_MSG = (
     f"{ATTR_START_DATE} and {ATTR_START_TIME} must be specified together"
@@ -188,12 +203,12 @@ SUPPORT_FLAGS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EcobeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ecobee thermostat."""
 
-    data = hass.data[DOMAIN]
+    data = config_entry.runtime_data
     entities = []
 
     for index in range(len(data.ecobee.thermostats)):
@@ -210,7 +225,7 @@ async def async_setup_entry(
                 thermostat["name"],
                 thermostat["modelNumber"],
             )
-        entities.append(Thermostat(data, index, thermostat))
+        entities.append(Thermostat(data, index, thermostat, hass))
 
     async_add_entities(entities, True)
 
@@ -320,6 +335,15 @@ async def async_setup_entry(
         "set_occupancy_modes",
     )
 
+    platform.async_register_entity_service(
+        SERVICE_SET_SENSORS_USED_IN_CLIMATE,
+        {
+            vol.Optional(ATTR_PRESET_MODE): cv.string,
+            vol.Required(ATTR_SENSOR_LIST): cv.ensure_list,
+        },
+        "set_sensors_used_in_climate",
+    )
+
 
 class Thermostat(ClimateEntity):
     """A thermostat class for Ecobee."""
@@ -331,11 +355,14 @@ class Thermostat(ClimateEntity):
     _attr_fan_modes = [FAN_AUTO, FAN_ON]
     _attr_name = None
     _attr_has_entity_name = True
-    _enable_turn_on_off_backwards_compatibility = False
     _attr_translation_key = "ecobee"
 
     def __init__(
-        self, data: EcobeeData, thermostat_index: int, thermostat: dict
+        self,
+        data: EcobeeData,
+        thermostat_index: int,
+        thermostat: dict,
+        hass: HomeAssistant,
     ) -> None:
         """Initialize the thermostat."""
         self.data = data
@@ -345,6 +372,7 @@ class Thermostat(ClimateEntity):
         self.vacation = None
         self._last_active_hvac_mode = HVACMode.HEAT_COOL
         self._last_hvac_mode_before_aux_heat = HVACMode.HEAT_COOL
+        self._hass = hass
 
         self._attr_hvac_modes = []
         if self.settings["heatStages"] or self.settings["hasHeatPump"]:
@@ -354,7 +382,11 @@ class Thermostat(ClimateEntity):
         if len(self._attr_hvac_modes) == 2:
             self._attr_hvac_modes.insert(0, HVACMode.HEAT_COOL)
         self._attr_hvac_modes.append(HVACMode.OFF)
-
+        self._sensors = self.remote_sensors
+        self._preset_modes = {
+            comfort["climateRef"]: comfort["name"]
+            for comfort in self.thermostat["program"]["climates"]
+        }
         self.update_without_throttle = False
 
     async def async_update(self) -> None:
@@ -379,8 +411,6 @@ class Thermostat(ClimateEntity):
         supported = SUPPORT_FLAGS
         if self.has_humidifier_control:
             supported = supported | ClimateEntityFeature.TARGET_HUMIDITY
-        if self.has_aux_heat:
-            supported = supported | ClimateEntityFeature.AUX_HEAT
         if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
             supported = (
                 supported | ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
@@ -440,11 +470,6 @@ class Thermostat(ClimateEntity):
             bool(self.settings.get("hasHumidifier"))
             and self.settings.get("humidifierMode") == HUMIDIFIER_MANUAL_MODE
         )
-
-    @property
-    def has_aux_heat(self) -> bool:
-        """Return true if the ecobee has a heat pump."""
-        return bool(self.settings.get(HAS_HEAT_PUMP))
 
     @property
     def target_humidity(self) -> int | None:
@@ -552,6 +577,8 @@ class Thermostat(ClimateEntity):
 
         return HVACAction.IDLE
 
+    _unrecorded_attributes = frozenset({ATTR_AVAILABLE_SENSORS, ATTR_ACTIVE_SENSORS})
+
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific state attributes."""
@@ -563,25 +590,61 @@ class Thermostat(ClimateEntity):
             ),
             "equipment_running": status,
             "fan_min_on_time": self.settings["fanMinOnTime"],
+            ATTR_AVAILABLE_SENSORS: self.remote_sensor_devices,
+            ATTR_ACTIVE_SENSORS: self.active_sensor_devices_in_preset_mode,
         }
 
     @property
-    def is_aux_heat(self) -> bool:
-        """Return true if aux heater."""
-        return self.settings["hvacMode"] == ECOBEE_AUX_HEAT_ONLY
+    def remote_sensors(self) -> list:
+        """Return the remote sensor names of the thermostat."""
+        sensors_info = self.thermostat.get("remoteSensors", [])
+        return [sensor["name"] for sensor in sensors_info if sensor.get("name")]
 
-    def turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        _LOGGER.debug("Setting HVAC mode to auxHeatOnly to turn on aux heat")
-        self._last_hvac_mode_before_aux_heat = self.hvac_mode
-        self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
-        self.update_without_throttle = True
+    @property
+    def remote_sensor_devices(self) -> list:
+        """Return the remote sensor device name_by_user or name for the thermostat."""
+        return sorted(
+            [
+                f"{item['name_by_user']} ({item['id']})"
+                for item in self.remote_sensor_ids_names
+            ]
+        )
 
-    def turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        _LOGGER.debug("Setting HVAC mode to last mode to disable aux heat")
-        self.set_hvac_mode(self._last_hvac_mode_before_aux_heat)
-        self.update_without_throttle = True
+    @property
+    def remote_sensor_ids_names(self) -> list:
+        """Return the remote sensor device id and name_by_user for the thermostat."""
+        sensors_info = self.thermostat.get("remoteSensors", [])
+        device_registry = dr.async_get(self._hass)
+
+        return [
+            {
+                "id": device.id,
+                "name_by_user": device.name_by_user
+                if device.name_by_user
+                else device.name,
+            }
+            for device in device_registry.devices.values()
+            for sensor_info in sensors_info
+            if device.name == sensor_info["name"]
+        ]
+
+    @property
+    def active_sensors_in_preset_mode(self) -> list:
+        """Return the currently active/participating sensors."""
+        # https://support.ecobee.com/s/articles/SmartSensors-Sensor-Participation
+        # During a manual hold, the ecobee will follow the Sensor Participation
+        # rules for the Home Comfort Settings
+        mode = self._preset_modes.get(self.preset_mode, "Home")
+        return self._sensors_in_preset_mode(mode)
+
+    @property
+    def active_sensor_devices_in_preset_mode(self) -> list:
+        """Return the currently active/participating sensor devices."""
+        # https://support.ecobee.com/s/articles/SmartSensors-Sensor-Participation
+        # During a manual hold, the ecobee will follow the Sensor Participation
+        # rules for the Home Comfort Settings
+        mode = self._preset_modes.get(self.preset_mode, "Home")
+        return self._sensor_devices_in_preset_mode(mode)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Activate a preset."""
@@ -691,7 +754,7 @@ class Thermostat(ClimateEntity):
             holdHours=self.hold_hours(),
         )
 
-        _LOGGER.info("Setting fan mode to: %s", fan_mode)
+        _LOGGER.debug("Setting fan mode to: %s", fan_mode)
 
     def set_temp_hold(self, temp):
         """Set temperature hold in modes other than auto.
@@ -740,9 +803,7 @@ class Thermostat(ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
-        ecobee_value = next(
-            (k for k, v in ECOBEE_HVAC_TO_HASS.items() if v == hvac_mode), None
-        )
+        ecobee_value = HASS_TO_ECOBEE_HVAC.get(hvac_mode)
         if ecobee_value is None:
             _LOGGER.error("Invalid mode for set_hvac_mode: %s", hvac_mode)
             return
@@ -760,6 +821,115 @@ class Thermostat(ClimateEntity):
             self.thermostat_index, "true" if resume_all else "false"
         )
         self.update_without_throttle = True
+
+    def set_sensors_used_in_climate(
+        self, device_ids: list[str], preset_mode: str | None = None
+    ) -> None:
+        """Set the sensors used on a climate for a thermostat."""
+        if preset_mode is None:
+            preset_mode = self.preset_mode
+
+        # Check if climate is an available preset option.
+        elif preset_mode not in self._preset_modes.values():
+            if self.preset_modes:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_preset",
+                    translation_placeholders={
+                        "options": ", ".join(self._preset_modes.values())
+                    },
+                )
+
+        # Get device name from device id.
+        device_registry = dr.async_get(self.hass)
+        sensor_names: list[str] = []
+        sensor_ids: list[str] = []
+        for device_id in device_ids:
+            device = device_registry.async_get(device_id)
+            if device and device.name:
+                r_sensors = self.thermostat.get("remoteSensors", [])
+                ecobee_identifier = next(
+                    (
+                        identifier
+                        for identifier in device.identifiers
+                        if identifier[0] == "ecobee"
+                    ),
+                    None,
+                )
+                if ecobee_identifier:
+                    code = ecobee_identifier[1]
+                    for r_sensor in r_sensors:
+                        if (  # occurs if remote sensor
+                            len(code) == 4 and r_sensor.get("code") == code
+                        ) or (  # occurs if thermostat
+                            len(code) != 4 and r_sensor.get("type") == "thermostat"
+                        ):
+                            sensor_ids.append(r_sensor.get("id"))  # noqa: PERF401
+                    sensor_names.append(device.name)
+
+        # Ensure sensors provided are available for thermostat or not empty.
+        if not set(sensor_names).issubset(set(self._sensors)) or not sensor_names:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_sensor",
+                translation_placeholders={
+                    "options": ", ".join(
+                        [
+                            f"{item['name_by_user']} ({item['id']})"
+                            for item in self.remote_sensor_ids_names
+                        ]
+                    )
+                },
+            )
+
+        # Check that an id was found for each sensor
+        if len(device_ids) != len(sensor_ids):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="sensor_lookup_failed"
+            )
+
+        # Check if sensors are currently used on the climate for the thermostat.
+        current_sensors_in_climate = self._sensors_in_preset_mode(preset_mode)
+        if set(sensor_names) == set(current_sensors_in_climate):
+            _LOGGER.debug(
+                "This action would not be an update, current sensors on climate (%s) are: %s",
+                preset_mode,
+                ", ".join(current_sensors_in_climate),
+            )
+            return
+
+        _LOGGER.debug(
+            "Setting sensors %s to be used on thermostat %s for program %s",
+            sensor_names,
+            self.device_info.get("name"),
+            preset_mode,
+        )
+        self.data.ecobee.update_climate_sensors(
+            self.thermostat_index, preset_mode, sensor_ids=sensor_ids
+        )
+        self.update_without_throttle = True
+
+    def _sensors_in_preset_mode(self, preset_mode: str | None) -> list[str]:
+        """Return current sensors used in climate."""
+        climates = self.thermostat["program"]["climates"]
+        for climate in climates:
+            if climate.get("name") == preset_mode:
+                return [sensor["name"] for sensor in climate["sensors"]]
+
+        return []
+
+    def _sensor_devices_in_preset_mode(self, preset_mode: str | None) -> list[str]:
+        """Return current sensor device name_by_user or name used in climate."""
+        device_registry = dr.async_get(self._hass)
+        sensor_names = self._sensors_in_preset_mode(preset_mode)
+        return sorted(
+            [
+                device.name_by_user if device.name_by_user else device.name
+                for device in device_registry.devices.values()
+                for sensor_name in sensor_names
+                if device.name == sensor_name
+            ]
+        )
 
     def hold_preference(self):
         """Return user preference setting for hold time."""

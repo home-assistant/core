@@ -8,10 +8,11 @@ from typing import TYPE_CHECKING, cast
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import Event, EventStateChangedData
+from homeassistant.util.collection import chunked_or_all
 
 from ..db_schema import StatesMeta
 from ..queries import find_all_states_metadata_ids, find_states_metadata_ids
-from ..util import chunked, execute_stmt_lambda_element
+from ..util import execute_stmt_lambda_element
 from . import BaseLRUTableManager
 
 if TYPE_CHECKING:
@@ -22,6 +23,8 @@ CACHE_SIZE = 8192
 
 class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
     """Manage the StatesMeta table."""
+
+    active = True
 
     def __init__(self, recorder: Recorder) -> None:
         """Initialize the states meta manager."""
@@ -106,7 +109,7 @@ class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
         update_cache = from_recorder or not self._did_first_load
 
         with session.no_autoflush:
-            for missing_chunk in chunked(missing, self.recorder.max_bind_vars):
+            for missing_chunk in chunked_or_all(missing, self.recorder.max_bind_vars):
                 for metadata_id, entity_id in execute_stmt_lambda_element(
                     session, find_states_metadata_ids(missing_chunk)
                 ):

@@ -26,10 +26,10 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -85,10 +85,10 @@ async def test_full_flow(
     assert result["options"] == {CONF_CHANNELS: ["UC_x5XG1OV2P6uZZ5FSM9Ttw"]}
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_flow_abort_without_channel(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
 ) -> None:
     """Check abort flow if user has no channel."""
     result = await hass.config_entries.flow.async_init(
@@ -126,10 +126,10 @@ async def test_flow_abort_without_channel(
         assert result["reason"] == "no_channel"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_flow_abort_without_subscriptions(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
 ) -> None:
     """Check abort flow if user has no subscriptions."""
     result = await hass.config_entries.flow.async_init(
@@ -167,10 +167,10 @@ async def test_flow_abort_without_subscriptions(
         assert result["reason"] == "no_subscriptions"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_flow_http_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -211,7 +211,7 @@ async def test_flow_http_error(
 
 
 @pytest.mark.parametrize(
-    ("fixture", "abort_reason", "placeholders", "calls", "access_token"),
+    ("fixture", "abort_reason", "placeholders", "call_count", "access_token"),
     [
         (
             "get_channel",
@@ -229,16 +229,16 @@ async def test_flow_http_error(
         ),
     ],
 )
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
-    hass_client_no_auth,
+    hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host,
     config_entry: MockConfigEntry,
     fixture: str,
     abort_reason: str,
     placeholders: dict[str, str],
-    calls: int,
+    call_count: int,
     access_token: str,
 ) -> None:
     """Test the re-authentication case updates the correct config entry.
@@ -303,7 +303,7 @@ async def test_reauth(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == abort_reason
     assert result["description_placeholders"] == placeholders
-    assert len(mock_setup.mock_calls) == calls
+    assert len(mock_setup.mock_calls) == call_count
 
     assert config_entry.unique_id == "UC_x5XG1OV2P6uZZ5FSM9Ttw"
     assert "token" in config_entry.data
@@ -312,10 +312,10 @@ async def test_reauth(
     assert config_entry.data["token"]["refresh_token"] == "mock-refresh-token"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_flow_exception(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(

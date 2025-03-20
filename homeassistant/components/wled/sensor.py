@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from wled import Device as WLEDDevice
 
@@ -22,13 +22,13 @@ from homeassistant.const import (
     UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
 from . import WLEDConfigEntry
 from .coordinator import WLEDDataUpdateCoordinator
-from .models import WLEDEntity
+from .entity import WLEDEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -71,7 +71,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda device: (utcnow() - timedelta(seconds=device.info.uptime)),
+        value_fn=lambda device: (utcnow() - device.info.uptime),
     ),
     WLEDSensorEntityDescription(
         key="free_heap",
@@ -128,7 +128,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WLEDConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WLED sensor based on a config entry."""
     coordinator = entry.runtime_data

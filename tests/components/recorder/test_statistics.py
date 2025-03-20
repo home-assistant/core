@@ -1,7 +1,9 @@
 """The tests for sensor recorder platform."""
 
+from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 from sqlalchemy import select
@@ -15,17 +17,22 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
+    PlatformCompiledStatistics,
     _generate_max_mean_min_statistic_in_sub_period_stmt,
-    _generate_statistics_at_time_stmt,
+    _generate_statistics_at_time_stmt_dependent_sub_query,
+    _generate_statistics_at_time_stmt_group_by,
     _generate_statistics_during_period_stmt,
     async_add_external_statistics,
     async_import_statistics,
+    async_list_statistic_ids,
     get_last_short_term_statistics,
     get_last_statistics,
     get_latest_short_term_statistics_with_session,
     get_metadata,
+    get_metadata_with_session,
     get_short_term_statistics_run_cache,
     list_statistic_ids,
+    validate_statistics,
 )
 from homeassistant.components.recorder.table_managers.statistics_meta import (
     _generate_get_metadata_stmt,
@@ -36,22 +43,43 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
     async_record_states,
+    async_recorder_block_till_done,
     async_wait_recording_done,
     do_adhoc_statistics,
+    get_start_time,
     statistics_during_period,
 )
 
-from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
+from tests.common import MockPlatform, mock_platform
+from tests.typing import RecorderInstanceContextManager, WebSocketGenerator
+
+
+@pytest.fixture
+def multiple_start_time_chunk_sizes(
+    ids_for_start_time_chunk_sizes: int,
+) -> Generator[None]:
+    """Fixture to test different chunk sizes for start time query.
+
+    Force the statistics query to use different chunk sizes for start time query.
+
+    In effect this forces _statistics_at_time
+    to call _generate_statistics_at_time_stmt_group_by multiple times.
+    """
+    with patch(
+        "homeassistant.components.recorder.statistics.MAX_IDS_FOR_INDEXED_GROUP_BY",
+        ids_for_start_time_chunk_sizes,
+    ):
+        yield
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -59,6 +87,15 @@ async def mock_recorder_before_hass(
 @pytest.fixture
 def setup_recorder(recorder_mock: Recorder) -> None:
     """Set up recorder."""
+
+
+async def _setup_mock_domain(
+    hass: HomeAssistant,
+    platform: Any | None = None,  # There's no RecorderPlatform class yet
+) -> None:
+    """Set up a mock domain."""
+    mock_platform(hass, "some_domain.recorder", platform or MockPlatform())
+    assert await async_setup_component(hass, "some_domain", {})
 
 
 def test_converters_align_with_sensor() -> None:
@@ -293,14 +330,17 @@ def mock_sensor_statistics():
         }
 
     def get_fake_stats(_hass, session, start, _end):
+        instance = recorder.get_instance(_hass)
         return statistics.PlatformCompiledStatistics(
             [
                 sensor_stats("sensor.test1", start),
                 sensor_stats("sensor.test2", start),
                 sensor_stats("sensor.test3", start),
             ],
-            get_metadata(
-                _hass, statistic_ids={"sensor.test1", "sensor.test2", "sensor.test3"}
+            get_metadata_with_session(
+                instance,
+                session,
+                statistic_ids={"sensor.test1", "sensor.test2", "sensor.test3"},
             ),
         )
 
@@ -317,12 +357,12 @@ def mock_from_stats():
     counter = 0
     real_from_stats = StatisticsShortTerm.from_stats
 
-    def from_stats(metadata_id, stats):
+    def from_stats(metadata_id, stats, now_timestamp):
         nonlocal counter
         if counter == 0 and metadata_id == 2:
             counter += 1
             return None
-        return real_from_stats(metadata_id, stats)
+        return real_from_stats(metadata_id, stats, now_timestamp)
 
     with patch(
         "homeassistant.components.recorder.statistics.StatisticsShortTerm.from_stats",
@@ -338,7 +378,7 @@ async def test_compile_periodic_statistics_exception(
     """Test exception handling when compiling periodic statistics."""
     await async_setup_component(hass, "sensor", {})
 
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
     do_adhoc_statistics(hass, start=now)
     do_adhoc_statistics(hass, start=now + timedelta(minutes=5))
     await async_wait_recording_done(hass)
@@ -1093,6 +1133,7 @@ async def test_import_statistics_errors(
     assert get_metadata(hass, statistic_ids={"sensor.total_energy_import"}) == {}
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
 async def test_daily_statistics_sum(
@@ -1102,7 +1143,7 @@ async def test_daily_statistics_sum(
     timezone,
 ) -> None:
     """Test daily statistics."""
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -1273,6 +1314,215 @@ async def test_daily_statistics_sum(
     assert stats == {}
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
+@pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
+@pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
+async def test_multiple_daily_statistics_sum(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+    timezone,
+) -> None:
+    """Test daily statistics."""
+    await hass.config.async_set_time_zone(timezone)
+    await async_wait_recording_done(hass)
+    assert "Compiling statistics for" not in caplog.text
+    assert "Statistics already compiled" not in caplog.text
+
+    zero = dt_util.utcnow()
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2022-10-03 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2022-10-03 23:00:00"))
+    period3 = dt_util.as_utc(dt_util.parse_datetime("2022-10-04 00:00:00"))
+    period4 = dt_util.as_utc(dt_util.parse_datetime("2022-10-04 23:00:00"))
+    period5 = dt_util.as_utc(dt_util.parse_datetime("2022-10-05 00:00:00"))
+    period6 = dt_util.as_utc(dt_util.parse_datetime("2022-10-05 23:00:00"))
+
+    external_statistics = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 2,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 3,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 4,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 5,
+        },
+        {
+            "start": period5,
+            "last_reset": None,
+            "state": 4,
+            "sum": 6,
+        },
+        {
+            "start": period6,
+            "last_reset": None,
+            "state": 5,
+            "sum": 7,
+        },
+    )
+    external_metadata1 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy 1",
+        "source": "test",
+        "statistic_id": "test:total_energy_import2",
+        "unit_of_measurement": "kWh",
+    }
+    external_metadata2 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy 2",
+        "source": "test",
+        "statistic_id": "test:total_energy_import1",
+        "unit_of_measurement": "kWh",
+    }
+
+    async_add_external_statistics(hass, external_metadata1, external_statistics)
+    async_add_external_statistics(hass, external_metadata2, external_statistics)
+
+    await async_wait_recording_done(hass)
+    stats = statistics_during_period(
+        hass,
+        zero,
+        period="day",
+        statistic_ids={"test:total_energy_import1", "test:total_energy_import2"},
+    )
+    day1_start = dt_util.as_utc(dt_util.parse_datetime("2022-10-03 00:00:00"))
+    day1_end = dt_util.as_utc(dt_util.parse_datetime("2022-10-04 00:00:00"))
+    day2_start = dt_util.as_utc(dt_util.parse_datetime("2022-10-04 00:00:00"))
+    day2_end = dt_util.as_utc(dt_util.parse_datetime("2022-10-05 00:00:00"))
+    day3_start = dt_util.as_utc(dt_util.parse_datetime("2022-10-05 00:00:00"))
+    day3_end = dt_util.as_utc(dt_util.parse_datetime("2022-10-06 00:00:00"))
+    expected_stats_inner = [
+        {
+            "start": day1_start.timestamp(),
+            "end": day1_end.timestamp(),
+            "last_reset": None,
+            "state": 1.0,
+            "sum": 3.0,
+        },
+        {
+            "start": day2_start.timestamp(),
+            "end": day2_end.timestamp(),
+            "last_reset": None,
+            "state": 3.0,
+            "sum": 5.0,
+        },
+        {
+            "start": day3_start.timestamp(),
+            "end": day3_end.timestamp(),
+            "last_reset": None,
+            "state": 5.0,
+            "sum": 7.0,
+        },
+    ]
+    expected_stats = {
+        "test:total_energy_import1": expected_stats_inner,
+        "test:total_energy_import2": expected_stats_inner,
+    }
+    assert stats == expected_stats
+
+    # Get change
+    stats = statistics_during_period(
+        hass,
+        start_time=period1,
+        statistic_ids={"test:total_energy_import1", "test:total_energy_import2"},
+        period="day",
+        types={"change"},
+    )
+    expected_inner = [
+        {
+            "start": day1_start.timestamp(),
+            "end": day1_end.timestamp(),
+            "change": 3.0,
+        },
+        {
+            "start": day2_start.timestamp(),
+            "end": day2_end.timestamp(),
+            "change": 2.0,
+        },
+        {
+            "start": day3_start.timestamp(),
+            "end": day3_end.timestamp(),
+            "change": 2.0,
+        },
+    ]
+    assert stats == {
+        "test:total_energy_import1": expected_inner,
+        "test:total_energy_import2": expected_inner,
+    }
+
+    # Get data with start during the first period
+    stats = statistics_during_period(
+        hass,
+        start_time=period1 + timedelta(hours=1),
+        statistic_ids={"test:total_energy_import1", "test:total_energy_import2"},
+        period="day",
+    )
+    assert stats == expected_stats
+
+    # Get data with end during the third period
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        end_time=period6 - timedelta(hours=1),
+        statistic_ids={"test:total_energy_import1", "test:total_energy_import2"},
+        period="day",
+    )
+    assert stats == expected_stats
+
+    # Try to get data for entities which do not exist
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids={
+            "not",
+            "the",
+            "same",
+            "test:total_energy_import1",
+            "test:total_energy_import2",
+        },
+        period="day",
+    )
+    assert stats == expected_stats
+
+    # Use 5minute to ensure table switch works
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids=[
+            "test:total_energy_import1",
+            "with_other",
+            "test:total_energy_import2",
+        ],
+        period="5minute",
+    )
+    assert stats == {}
+
+    # Ensure future date has not data
+    future = dt_util.as_utc(dt_util.parse_datetime("2221-11-01 00:00:00"))
+    stats = statistics_during_period(
+        hass, start_time=future, end_time=future, period="day"
+    )
+    assert stats == {}
+
+
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
 async def test_weekly_statistics_mean(
@@ -1282,7 +1532,7 @@ async def test_weekly_statistics_mean(
     timezone,
 ) -> None:
     """Test weekly statistics."""
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -1408,6 +1658,7 @@ async def test_weekly_statistics_mean(
     assert stats == {}
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
 async def test_weekly_statistics_sum(
@@ -1417,7 +1668,7 @@ async def test_weekly_statistics_sum(
     timezone,
 ) -> None:
     """Test weekly statistics."""
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -1588,6 +1839,7 @@ async def test_weekly_statistics_sum(
     assert stats == {}
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
 async def test_monthly_statistics_sum(
@@ -1597,7 +1849,7 @@ async def test_monthly_statistics_sum(
     timezone,
 ) -> None:
     """Test monthly statistics."""
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -1894,20 +2146,43 @@ def test_cache_key_for_generate_max_mean_min_statistic_in_sub_period_stmt() -> N
     assert cache_key_1 != cache_key_3
 
 
-def test_cache_key_for_generate_statistics_at_time_stmt() -> None:
-    """Test cache key for _generate_statistics_at_time_stmt."""
-    stmt = _generate_statistics_at_time_stmt(StatisticsShortTerm, {0}, 0.0, set())
+def test_cache_key_for_generate_statistics_at_time_stmt_group_by() -> None:
+    """Test cache key for _generate_statistics_at_time_stmt_group_by."""
+    stmt = _generate_statistics_at_time_stmt_group_by(
+        StatisticsShortTerm, {0}, 0.0, set()
+    )
     cache_key_1 = stmt._generate_cache_key()
-    stmt2 = _generate_statistics_at_time_stmt(StatisticsShortTerm, {0}, 0.0, set())
+    stmt2 = _generate_statistics_at_time_stmt_group_by(
+        StatisticsShortTerm, {0}, 0.0, set()
+    )
     cache_key_2 = stmt2._generate_cache_key()
     assert cache_key_1 == cache_key_2
-    stmt3 = _generate_statistics_at_time_stmt(
+    stmt3 = _generate_statistics_at_time_stmt_group_by(
         StatisticsShortTerm, {0}, 0.0, {"sum", "mean"}
     )
     cache_key_3 = stmt3._generate_cache_key()
     assert cache_key_1 != cache_key_3
 
 
+def test_cache_key_for_generate_statistics_at_time_stmt_dependent_sub_query() -> None:
+    """Test cache key for _generate_statistics_at_time_stmt_dependent_sub_query."""
+    stmt = _generate_statistics_at_time_stmt_dependent_sub_query(
+        StatisticsShortTerm, {0}, 0.0, set()
+    )
+    cache_key_1 = stmt._generate_cache_key()
+    stmt2 = _generate_statistics_at_time_stmt_dependent_sub_query(
+        StatisticsShortTerm, {0}, 0.0, set()
+    )
+    cache_key_2 = stmt2._generate_cache_key()
+    assert cache_key_1 == cache_key_2
+    stmt3 = _generate_statistics_at_time_stmt_dependent_sub_query(
+        StatisticsShortTerm, {0}, 0.0, {"sum", "mean"}
+    )
+    cache_key_3 = stmt3._generate_cache_key()
+    assert cache_key_1 != cache_key_3
+
+
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
 async def test_change(
@@ -1917,7 +2192,7 @@ async def test_change(
     timezone,
 ) -> None:
     """Test deriving change from sum statistic."""
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -2243,6 +2518,392 @@ async def test_change(
     assert stats == {}
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
+@pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
+@pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
+async def test_change_multiple(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+    timezone,
+) -> None:
+    """Test deriving change from sum statistic."""
+    await hass.config.async_set_time_zone(timezone)
+    await async_wait_recording_done(hass)
+    assert "Compiling statistics for" not in caplog.text
+    assert "Statistics already compiled" not in caplog.text
+
+    zero = dt_util.utcnow()
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00"))
+    period3 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00"))
+    period4 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00"))
+
+    external_statistics = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 2,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 3,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 5,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 8,
+        },
+    )
+    external_metadata1 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "recorder",
+        "statistic_id": "sensor.total_energy_import1",
+        "unit_of_measurement": "kWh",
+    }
+    external_metadata2 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "recorder",
+        "statistic_id": "sensor.total_energy_import2",
+        "unit_of_measurement": "kWh",
+    }
+    async_import_statistics(hass, external_metadata1, external_statistics)
+    async_import_statistics(hass, external_metadata2, external_statistics)
+    await async_wait_recording_done(hass)
+    # Get change from far in the past
+    stats = statistics_during_period(
+        hass,
+        zero,
+        period="hour",
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        types={"change"},
+    )
+    hour1_start = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00"))
+    hour1_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00"))
+    hour2_start = hour1_end
+    hour2_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00"))
+    hour3_start = hour2_end
+    hour3_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00"))
+    hour4_start = hour3_end
+    hour4_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 04:00:00"))
+    expected_inner = [
+        {
+            "start": hour1_start.timestamp(),
+            "end": hour1_end.timestamp(),
+            "change": 2.0,
+        },
+        {
+            "start": hour2_start.timestamp(),
+            "end": hour2_end.timestamp(),
+            "change": 1.0,
+        },
+        {
+            "start": hour3_start.timestamp(),
+            "end": hour3_end.timestamp(),
+            "change": 2.0,
+        },
+        {
+            "start": hour4_start.timestamp(),
+            "end": hour4_end.timestamp(),
+            "change": 3.0,
+        },
+    ]
+    expected_stats = {
+        "sensor.total_energy_import1": expected_inner,
+        "sensor.total_energy_import2": expected_inner,
+    }
+    assert stats == expected_stats
+
+    # Get change + sum from far in the past
+    stats = statistics_during_period(
+        hass,
+        zero,
+        period="hour",
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        types={"change", "sum"},
+    )
+    hour1_start = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00"))
+    hour1_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00"))
+    hour2_start = hour1_end
+    hour2_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00"))
+    hour3_start = hour2_end
+    hour3_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00"))
+    hour4_start = hour3_end
+    hour4_end = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 04:00:00"))
+    expected_inner = [
+        {
+            "start": hour1_start.timestamp(),
+            "end": hour1_end.timestamp(),
+            "change": 2.0,
+            "sum": 2.0,
+        },
+        {
+            "start": hour2_start.timestamp(),
+            "end": hour2_end.timestamp(),
+            "change": 1.0,
+            "sum": 3.0,
+        },
+        {
+            "start": hour3_start.timestamp(),
+            "end": hour3_end.timestamp(),
+            "change": 2.0,
+            "sum": 5.0,
+        },
+        {
+            "start": hour4_start.timestamp(),
+            "end": hour4_end.timestamp(),
+            "change": 3.0,
+            "sum": 8.0,
+        },
+    ]
+    expected_stats_change_sum = {
+        "sensor.total_energy_import1": expected_inner,
+        "sensor.total_energy_import2": expected_inner,
+    }
+    assert stats == expected_stats_change_sum
+
+    # Get change from far in the past with unit conversion
+    stats = statistics_during_period(
+        hass,
+        start_time=hour1_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+        units={"energy": "Wh"},
+    )
+    expected_inner = [
+        {
+            "start": hour1_start.timestamp(),
+            "end": hour1_end.timestamp(),
+            "change": 2.0 * 1000,
+        },
+        {
+            "start": hour2_start.timestamp(),
+            "end": hour2_end.timestamp(),
+            "change": 1.0 * 1000,
+        },
+        {
+            "start": hour3_start.timestamp(),
+            "end": hour3_end.timestamp(),
+            "change": 2.0 * 1000,
+        },
+        {
+            "start": hour4_start.timestamp(),
+            "end": hour4_end.timestamp(),
+            "change": 3.0 * 1000,
+        },
+    ]
+    expected_stats_wh = {
+        "sensor.total_energy_import1": expected_inner,
+        "sensor.total_energy_import2": expected_inner,
+    }
+    assert stats == expected_stats_wh
+
+    # Get change from far in the past with implicit unit conversion
+    hass.states.async_set(
+        "sensor.total_energy_import1", "unknown", {"unit_of_measurement": "MWh"}
+    )
+    hass.states.async_set(
+        "sensor.total_energy_import2", "unknown", {"unit_of_measurement": "MWh"}
+    )
+    stats = statistics_during_period(
+        hass,
+        start_time=hour1_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+    )
+    expected_inner = [
+        {
+            "start": hour1_start.timestamp(),
+            "end": hour1_end.timestamp(),
+            "change": 2.0 / 1000,
+        },
+        {
+            "start": hour2_start.timestamp(),
+            "end": hour2_end.timestamp(),
+            "change": 1.0 / 1000,
+        },
+        {
+            "start": hour3_start.timestamp(),
+            "end": hour3_end.timestamp(),
+            "change": 2.0 / 1000,
+        },
+        {
+            "start": hour4_start.timestamp(),
+            "end": hour4_end.timestamp(),
+            "change": 3.0 / 1000,
+        },
+    ]
+    expected_stats_mwh = {
+        "sensor.total_energy_import1": expected_inner,
+        "sensor.total_energy_import2": expected_inner,
+    }
+    assert stats == expected_stats_mwh
+    hass.states.async_remove("sensor.total_energy_import1")
+    hass.states.async_remove("sensor.total_energy_import2")
+
+    # Get change from the first recorded hour
+    stats = statistics_during_period(
+        hass,
+        start_time=hour1_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+    )
+    assert stats == expected_stats
+
+    # Get change from the first recorded hour with unit conversion
+    stats = statistics_during_period(
+        hass,
+        start_time=hour1_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+        units={"energy": "Wh"},
+    )
+    assert stats == expected_stats_wh
+
+    # Get change from the first recorded hour with implicit unit conversion
+    hass.states.async_set(
+        "sensor.total_energy_import1", "unknown", {"unit_of_measurement": "MWh"}
+    )
+    hass.states.async_set(
+        "sensor.total_energy_import2", "unknown", {"unit_of_measurement": "MWh"}
+    )
+    stats = statistics_during_period(
+        hass,
+        start_time=hour1_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+    )
+    assert stats == expected_stats_mwh
+    hass.states.async_remove("sensor.total_energy_import1")
+    hass.states.async_remove("sensor.total_energy_import2")
+
+    # Get change from the second recorded hour
+    stats = statistics_during_period(
+        hass,
+        start_time=hour2_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+    )
+    assert stats == {
+        "sensor.total_energy_import1": expected_stats["sensor.total_energy_import1"][
+            1:4
+        ],
+        "sensor.total_energy_import2": expected_stats["sensor.total_energy_import2"][
+            1:4
+        ],
+    }
+
+    # Get change from the second recorded hour with unit conversion
+    stats = statistics_during_period(
+        hass,
+        start_time=hour2_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+        units={"energy": "Wh"},
+    )
+    assert stats == {
+        "sensor.total_energy_import1": expected_stats_wh["sensor.total_energy_import1"][
+            1:4
+        ],
+        "sensor.total_energy_import2": expected_stats_wh["sensor.total_energy_import2"][
+            1:4
+        ],
+    }
+
+    # Get change from the second recorded hour with implicit unit conversion
+    hass.states.async_set(
+        "sensor.total_energy_import1", "unknown", {"unit_of_measurement": "MWh"}
+    )
+    hass.states.async_set(
+        "sensor.total_energy_import2", "unknown", {"unit_of_measurement": "MWh"}
+    )
+    stats = statistics_during_period(
+        hass,
+        start_time=hour2_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+    )
+    assert stats == {
+        "sensor.total_energy_import1": expected_stats_mwh[
+            "sensor.total_energy_import1"
+        ][1:4],
+        "sensor.total_energy_import2": expected_stats_mwh[
+            "sensor.total_energy_import2"
+        ][1:4],
+    }
+    hass.states.async_remove("sensor.total_energy_import1")
+    hass.states.async_remove("sensor.total_energy_import2")
+
+    # Get change from the second until the third recorded hour
+    stats = statistics_during_period(
+        hass,
+        start_time=hour2_start,
+        end_time=hour4_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+    )
+    assert stats == {
+        "sensor.total_energy_import1": expected_stats["sensor.total_energy_import1"][
+            1:3
+        ],
+        "sensor.total_energy_import2": expected_stats["sensor.total_energy_import2"][
+            1:3
+        ],
+    }
+
+    # Get change from the fourth recorded hour
+    stats = statistics_during_period(
+        hass,
+        start_time=hour4_start,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+    )
+    assert stats == {
+        "sensor.total_energy_import1": expected_stats["sensor.total_energy_import1"][
+            3:4
+        ],
+        "sensor.total_energy_import2": expected_stats["sensor.total_energy_import2"][
+            3:4
+        ],
+    }
+
+    # Test change with a far future start date
+    future = dt_util.as_utc(dt_util.parse_datetime("2221-11-01 00:00:00"))
+    stats = statistics_during_period(
+        hass,
+        start_time=future,
+        statistic_ids={"sensor.total_energy_import1", "sensor.total_energy_import2"},
+        period="hour",
+        types={"change"},
+    )
+    assert stats == {}
+
+
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
 async def test_change_with_none(
@@ -2256,7 +2917,7 @@ async def test_change_with_none(
     This tests the behavior when some record has None sum. The calculated change
     is not expected to be correct, but we should not raise on this error.
     """
-    hass.config.set_time_zone(timezone)
+    await hass.config.async_set_time_zone(timezone)
     await async_wait_recording_done(hass)
     assert "Compiling statistics for" not in caplog.text
     assert "Statistics already compiled" not in caplog.text
@@ -2468,3 +3129,162 @@ async def test_change_with_none(
         types={"change"},
     )
     assert stats == {}
+
+
+async def test_recorder_platform_with_statistics(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test recorder platform."""
+    instance = recorder.get_instance(hass)
+    recorder_data = hass.data["recorder"]
+    assert not recorder_data.recorder_platforms
+
+    def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
+        return PlatformCompiledStatistics([], {})
+
+    def _mock_list_statistic_ids(*args: Any, **kwargs: Any) -> dict:
+        return {}
+
+    def _mock_validate_statistics(*args: Any) -> dict:
+        return {}
+
+    recorder_platform = Mock(
+        compile_statistics=Mock(wraps=_mock_compile_statistics),
+        list_statistic_ids=Mock(wraps=_mock_list_statistic_ids),
+        update_statistics_issues=Mock(),
+        validate_statistics=Mock(wraps=_mock_validate_statistics),
+    )
+
+    await _setup_mock_domain(hass, recorder_platform)
+
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    assert recorder_data.recorder_platforms == {"some_domain": recorder_platform}
+
+    recorder_platform.compile_statistics.assert_not_called()
+    recorder_platform.list_statistic_ids.assert_not_called()
+    recorder_platform.update_statistics_issues.assert_not_called()
+    recorder_platform.validate_statistics.assert_not_called()
+
+    # Test compile statistics + update statistics issues
+    # Issues are updated hourly when minutes = 50, trigger one hour later to make
+    # sure statistics is not suppressed by an existing row in StatisticsRuns
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    recorder_platform.compile_statistics.assert_called_once_with(
+        hass, ANY, zero, zero + timedelta(minutes=5)
+    )
+    recorder_platform.update_statistics_issues.assert_called_once_with(hass, ANY)
+    recorder_platform.list_statistic_ids.assert_not_called()
+    recorder_platform.validate_statistics.assert_not_called()
+
+    # Test list statistic IDs
+    await async_list_statistic_ids(hass)
+    recorder_platform.compile_statistics.assert_called_once()
+    recorder_platform.list_statistic_ids.assert_called_once_with(
+        hass, statistic_ids=None, statistic_type=None
+    )
+    recorder_platform.update_statistics_issues.assert_called_once()
+    recorder_platform.validate_statistics.assert_not_called()
+
+    # Test validate statistics
+    await instance.async_add_executor_job(
+        validate_statistics,
+        hass,
+    )
+    recorder_platform.compile_statistics.assert_called_once()
+    recorder_platform.list_statistic_ids.assert_called_once()
+    recorder_platform.update_statistics_issues.assert_called_once()
+    recorder_platform.validate_statistics.assert_called_once_with(hass)
+
+
+async def test_recorder_platform_without_statistics(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test recorder platform."""
+    recorder_data = hass.data["recorder"]
+    assert recorder_data.recorder_platforms == {}
+
+    await _setup_mock_domain(hass)
+
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    assert recorder_data.recorder_platforms == {}
+
+
+@pytest.mark.parametrize(
+    "supported_methods",
+    [
+        ("compile_statistics",),
+        ("list_statistic_ids",),
+        ("update_statistics_issues",),
+        ("validate_statistics",),
+    ],
+)
+async def test_recorder_platform_with_partial_statistics_support(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+    supported_methods: tuple[str, ...],
+) -> None:
+    """Test recorder platform."""
+    instance = recorder.get_instance(hass)
+    recorder_data = hass.data["recorder"]
+    assert not recorder_data.recorder_platforms
+
+    def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
+        return PlatformCompiledStatistics([], {})
+
+    def _mock_list_statistic_ids(*args: Any, **kwargs: Any) -> dict:
+        return {}
+
+    def _mock_validate_statistics(*args: Any) -> dict:
+        return {}
+
+    mock_impl = {
+        "compile_statistics": _mock_compile_statistics,
+        "list_statistic_ids": _mock_list_statistic_ids,
+        "update_statistics_issues": None,
+        "validate_statistics": _mock_validate_statistics,
+    }
+
+    kwargs = {meth: Mock(wraps=mock_impl[meth]) for meth in supported_methods}
+
+    recorder_platform = Mock(
+        spec=supported_methods,
+        **kwargs,
+    )
+
+    await _setup_mock_domain(hass, recorder_platform)
+
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    assert recorder_data.recorder_platforms == {"some_domain": recorder_platform}
+
+    for meth in supported_methods:
+        getattr(recorder_platform, meth).assert_not_called()
+
+    # Test compile statistics + update statistics issues
+    # Issues are updated hourly when minutes = 50, trigger one hour later to make
+    # sure statistics is not suppressed by an existing row in StatisticsRuns
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    # Test list statistic IDs
+    await async_list_statistic_ids(hass)
+
+    # Test validate statistics
+    await instance.async_add_executor_job(
+        validate_statistics,
+        hass,
+    )
+
+    for meth in supported_methods:
+        getattr(recorder_platform, meth).assert_called_once()

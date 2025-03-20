@@ -10,7 +10,7 @@ from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from .common import replace_value_of_zwave_value
 
@@ -21,6 +21,7 @@ MULTILEVEL_SWITCH_SELECT_ENTITY = "select.front_door_siren"
 
 async def test_default_tone_select(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     client: MagicMock,
     aeotec_zw164_siren: Node,
     integration: ConfigEntry,
@@ -64,7 +65,6 @@ async def test_default_tone_select(
         "30DOOR~1 (27 sec)",
     ]
 
-    entity_registry = er.async_get(hass)
     entity_entry = entity_registry.async_get(DEFAULT_TONE_SELECT_ENTITY)
 
     assert entity_entry
@@ -118,6 +118,7 @@ async def test_default_tone_select(
 
 async def test_protection_select(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     client: MagicMock,
     inovelli_lzw36: Node,
     integration: ConfigEntry,
@@ -135,7 +136,6 @@ async def test_protection_select(
         "NoOperationPossible",
     ]
 
-    entity_registry = er.async_get(hass)
     entity_entry = entity_registry.async_get(PROTECTION_SELECT_ENTITY)
 
     assert entity_entry
@@ -298,17 +298,21 @@ async def test_multilevel_switch_select_no_value(
 
 
 async def test_config_parameter_select(
-    hass: HomeAssistant, climate_adc_t3000, integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    climate_adc_t3000,
+    integration,
 ) -> None:
     """Test config parameter select is created."""
     select_entity_id = "select.adc_t3000_hvac_system_type"
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(select_entity_id)
+    entity_entry = entity_registry.async_get(select_entity_id)
     assert entity_entry
     assert entity_entry.disabled
     assert entity_entry.entity_category == EntityCategory.CONFIG
 
-    updated_entry = ent_reg.async_update_entity(select_entity_id, disabled_by=None)
+    updated_entry = entity_registry.async_update_entity(
+        select_entity_id, disabled_by=None
+    )
     assert updated_entry != entity_entry
     assert updated_entry.disabled is False
 

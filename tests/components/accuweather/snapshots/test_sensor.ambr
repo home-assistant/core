@@ -1,4 +1,68 @@
 # serializer version: 1
+# name: test_sensor[sensor.home_air_quality_day_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'good',
+        'moderate',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_air_quality_day_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Air quality day 0',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'air_quality',
+    'unique_id': '0123456-airquality-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.home_air_quality_day_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'device_class': 'enum',
+      'friendly_name': 'Home Air quality day 0',
+      'options': list([
+        'good',
+        'moderate',
+        'unhealthy',
+        'very_unhealthy',
+        'hazardous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_air_quality_day_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'good',
+  })
+# ---
 # name: test_sensor[sensor.home_air_quality_day_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -7,14 +71,14 @@
     'capabilities': dict({
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -31,12 +95,12 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:air-filter',
+    'original_icon': None,
     'original_name': 'Air quality day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'air_quality_1d',
+    'translation_key': 'air_quality',
     'unique_id': '0123456-airquality-1',
     'unit_of_measurement': None,
   })
@@ -47,14 +111,12 @@
       'attribution': 'Data provided by AccuWeather',
       'device_class': 'enum',
       'friendly_name': 'Home Air quality day 1',
-      'icon': 'mdi:air-filter',
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'context': <ANY>,
@@ -73,14 +135,14 @@
     'capabilities': dict({
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -97,12 +159,12 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:air-filter',
+    'original_icon': None,
     'original_name': 'Air quality day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'air_quality_2d',
+    'translation_key': 'air_quality',
     'unique_id': '0123456-airquality-2',
     'unit_of_measurement': None,
   })
@@ -113,14 +175,12 @@
       'attribution': 'Data provided by AccuWeather',
       'device_class': 'enum',
       'friendly_name': 'Home Air quality day 2',
-      'icon': 'mdi:air-filter',
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'context': <ANY>,
@@ -139,14 +199,14 @@
     'capabilities': dict({
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -163,12 +223,12 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:air-filter',
+    'original_icon': None,
     'original_name': 'Air quality day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'air_quality_3d',
+    'translation_key': 'air_quality',
     'unique_id': '0123456-airquality-3',
     'unit_of_measurement': None,
   })
@@ -179,14 +239,12 @@
       'attribution': 'Data provided by AccuWeather',
       'device_class': 'enum',
       'friendly_name': 'Home Air quality day 3',
-      'icon': 'mdi:air-filter',
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'context': <ANY>,
@@ -205,14 +263,14 @@
     'capabilities': dict({
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -229,12 +287,12 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:air-filter',
+    'original_icon': None,
     'original_name': 'Air quality day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'air_quality_4d',
+    'translation_key': 'air_quality',
     'unique_id': '0123456-airquality-4',
     'unit_of_measurement': None,
   })
@@ -245,84 +303,16 @@
       'attribution': 'Data provided by AccuWeather',
       'device_class': 'enum',
       'friendly_name': 'Home Air quality day 4',
-      'icon': 'mdi:air-filter',
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_air_quality_day_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'good',
-  })
-# ---
-# name: test_sensor[sensor.home_air_quality_today-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'good',
-        'hazardous',
-        'high',
-        'low',
-        'moderate',
-        'unhealthy',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_air_quality_today',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:air-filter',
-    'original_name': 'Air quality today',
-    'platform': 'accuweather',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'air_quality_0d',
-    'unique_id': '0123456-airquality-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.home_air_quality_today-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by AccuWeather',
-      'device_class': 'enum',
-      'friendly_name': 'Home Air quality today',
-      'icon': 'mdi:air-filter',
-      'options': list([
-        'good',
-        'hazardous',
-        'high',
-        'low',
-        'moderate',
-        'unhealthy',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_air_quality_today',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -338,6 +328,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -390,6 +381,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -409,7 +401,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-    'original_icon': 'mdi:weather-fog',
+    'original_icon': None,
     'original_name': 'Cloud ceiling',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -425,7 +417,6 @@
       'attribution': 'Data provided by AccuWeather',
       'device_class': 'distance',
       'friendly_name': 'Home Cloud ceiling',
-      'icon': 'mdi:weather-fog',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
     }),
@@ -446,6 +437,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -462,7 +454,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -477,7 +469,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover',
-      'icon': 'mdi:weather-cloudy',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -489,6 +480,55 @@
     'state': '10',
   })
 # ---
+# name: test_sensor[sensor.home_cloud_cover_day_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_cloud_cover_day_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cloud cover day 0',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cloud_cover_day',
+    'unique_id': '0123456-cloudcoverday-0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[sensor.home_cloud_cover_day_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'friendly_name': 'Home Cloud cover day 0',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_cloud_cover_day_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '58',
+  })
+# ---
 # name: test_sensor[sensor.home_cloud_cover_day_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -496,6 +536,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -512,12 +553,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'cloud_cover_day_1d',
+    'translation_key': 'cloud_cover_day',
     'unique_id': '0123456-cloudcoverday-1',
     'unit_of_measurement': '%',
   })
@@ -527,7 +568,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover day 1',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -545,6 +585,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -561,12 +602,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'cloud_cover_day_2d',
+    'translation_key': 'cloud_cover_day',
     'unique_id': '0123456-cloudcoverday-2',
     'unit_of_measurement': '%',
   })
@@ -576,7 +617,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover day 2',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -594,6 +634,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -610,12 +651,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'cloud_cover_day_3d',
+    'translation_key': 'cloud_cover_day',
     'unique_id': '0123456-cloudcoverday-3',
     'unit_of_measurement': '%',
   })
@@ -625,7 +666,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover day 3',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -643,6 +683,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -659,12 +700,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'cloud_cover_day_4d',
+    'translation_key': 'cloud_cover_day',
     'unique_id': '0123456-cloudcoverday-4',
     'unit_of_measurement': '%',
   })
@@ -674,7 +715,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover day 4',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -685,6 +725,55 @@
     'state': '50',
   })
 # ---
+# name: test_sensor[sensor.home_cloud_cover_night_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_cloud_cover_night_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cloud cover night 0',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cloud_cover_night',
+    'unique_id': '0123456-cloudcovernight-0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[sensor.home_cloud_cover_night_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'friendly_name': 'Home Cloud cover night 0',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_cloud_cover_night_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '65',
+  })
+# ---
 # name: test_sensor[sensor.home_cloud_cover_night_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -692,6 +781,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -708,12 +798,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'cloud_cover_night_1d',
+    'translation_key': 'cloud_cover_night',
     'unique_id': '0123456-cloudcovernight-1',
     'unit_of_measurement': '%',
   })
@@ -723,7 +813,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover night 1',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -741,6 +830,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -757,12 +847,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'cloud_cover_night_2d',
+    'translation_key': 'cloud_cover_night',
     'unique_id': '0123456-cloudcovernight-2',
     'unit_of_measurement': '%',
   })
@@ -772,7 +862,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover night 2',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -790,6 +879,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -806,12 +896,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'cloud_cover_night_3d',
+    'translation_key': 'cloud_cover_night',
     'unique_id': '0123456-cloudcovernight-3',
     'unit_of_measurement': '%',
   })
@@ -821,7 +911,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover night 3',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -839,6 +928,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -855,12 +945,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
+    'original_icon': None,
     'original_name': 'Cloud cover night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'cloud_cover_night_4d',
+    'translation_key': 'cloud_cover_night',
     'unique_id': '0123456-cloudcovernight-4',
     'unit_of_measurement': '%',
   })
@@ -870,7 +960,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Cloud cover night 4',
-      'icon': 'mdi:weather-cloudy',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -881,19 +970,20 @@
     'state': '13',
   })
 # ---
-# name: test_sensor[sensor.home_cloud_cover_today-entry]
+# name: test_sensor[sensor.home_condition_day_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_cloud_cover_today',
+    'entity_id': 'sensor.home_condition_day_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -904,79 +994,28 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
-    'original_name': 'Cloud cover today',
+    'original_icon': None,
+    'original_name': 'Condition day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'cloud_cover_day_0d',
-    'unique_id': '0123456-cloudcoverday-0',
-    'unit_of_measurement': '%',
+    'translation_key': 'condition_day',
+    'unique_id': '0123456-longphraseday-0',
+    'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.home_cloud_cover_today-state]
+# name: test_sensor[sensor.home_condition_day_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
-      'friendly_name': 'Home Cloud cover today',
-      'icon': 'mdi:weather-cloudy',
-      'unit_of_measurement': '%',
+      'friendly_name': 'Home Condition day 0',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_cloud_cover_today',
+    'entity_id': 'sensor.home_condition_day_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '58',
-  })
-# ---
-# name: test_sensor[sensor.home_cloud_cover_tonight-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_cloud_cover_tonight',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy',
-    'original_name': 'Cloud cover tonight',
-    'platform': 'accuweather',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'cloud_cover_night_0d',
-    'unique_id': '0123456-cloudcovernight-0',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor[sensor.home_cloud_cover_tonight-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by AccuWeather',
-      'friendly_name': 'Home Cloud cover tonight',
-      'icon': 'mdi:weather-cloudy',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_cloud_cover_tonight',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '65',
+    'state': 'Clouds and sunshine with a couple of showers and a thunderstorm around late this afternoon',
   })
 # ---
 # name: test_sensor[sensor.home_condition_day_1-entry]
@@ -986,6 +1025,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1007,7 +1047,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'condition_day_1d',
+    'translation_key': 'condition_day',
     'unique_id': '0123456-longphraseday-1',
     'unit_of_measurement': None,
   })
@@ -1033,6 +1073,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1054,7 +1095,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'condition_day_2d',
+    'translation_key': 'condition_day',
     'unique_id': '0123456-longphraseday-2',
     'unit_of_measurement': None,
   })
@@ -1080,6 +1121,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1101,7 +1143,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'condition_day_3d',
+    'translation_key': 'condition_day',
     'unique_id': '0123456-longphraseday-3',
     'unit_of_measurement': None,
   })
@@ -1127,6 +1169,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1148,7 +1191,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'condition_day_4d',
+    'translation_key': 'condition_day',
     'unique_id': '0123456-longphraseday-4',
     'unit_of_measurement': None,
   })
@@ -1167,6 +1210,54 @@
     'state': 'Intervals of clouds and sunshine',
   })
 # ---
+# name: test_sensor[sensor.home_condition_night_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_condition_night_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Condition night 0',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'condition_night',
+    'unique_id': '0123456-longphrasenight-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.home_condition_night_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'friendly_name': 'Home Condition night 0',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_condition_night_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Partly cloudy',
+  })
+# ---
 # name: test_sensor[sensor.home_condition_night_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1174,6 +1265,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1195,7 +1287,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'condition_night_1d',
+    'translation_key': 'condition_night',
     'unique_id': '0123456-longphrasenight-1',
     'unit_of_measurement': None,
   })
@@ -1221,6 +1313,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1242,7 +1335,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'condition_night_2d',
+    'translation_key': 'condition_night',
     'unique_id': '0123456-longphrasenight-2',
     'unit_of_measurement': None,
   })
@@ -1268,6 +1361,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1289,7 +1383,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'condition_night_3d',
+    'translation_key': 'condition_night',
     'unique_id': '0123456-longphrasenight-3',
     'unit_of_measurement': None,
   })
@@ -1315,6 +1409,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1336,7 +1431,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'condition_night_4d',
+    'translation_key': 'condition_night',
     'unique_id': '0123456-longphrasenight-4',
     'unit_of_measurement': None,
   })
@@ -1355,100 +1450,6 @@
     'state': 'Mostly clear',
   })
 # ---
-# name: test_sensor[sensor.home_condition_today-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_condition_today',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Condition today',
-    'platform': 'accuweather',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'condition_day_0d',
-    'unique_id': '0123456-longphraseday-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.home_condition_today-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by AccuWeather',
-      'friendly_name': 'Home Condition today',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_condition_today',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Clouds and sunshine with a couple of showers and a thunderstorm around late this afternoon',
-  })
-# ---
-# name: test_sensor[sensor.home_condition_tonight-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_condition_tonight',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Condition tonight',
-    'platform': 'accuweather',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'condition_night_0d',
-    'unique_id': '0123456-longphrasenight-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.home_condition_tonight-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by AccuWeather',
-      'friendly_name': 'Home Condition tonight',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_condition_tonight',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Partly cloudy',
-  })
-# ---
 # name: test_sensor[sensor.home_dew_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1458,6 +1459,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1501,6 +1503,56 @@
     'state': '16.2',
   })
 # ---
+# name: test_sensor[sensor.home_grass_pollen_day_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_grass_pollen_day_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Grass pollen day 0',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'grass_pollen',
+    'unique_id': '0123456-grass-0',
+    'unit_of_measurement': 'p/m³',
+  })
+# ---
+# name: test_sensor[sensor.home_grass_pollen_day_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'friendly_name': 'Home Grass pollen day 0',
+      'level': 'low',
+      'unit_of_measurement': 'p/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_grass_pollen_day_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensor[sensor.home_grass_pollen_day_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1508,6 +1560,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1524,12 +1577,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:grass',
+    'original_icon': None,
     'original_name': 'Grass pollen day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'grass_pollen_1d',
+    'translation_key': 'grass_pollen',
     'unique_id': '0123456-grass-1',
     'unit_of_measurement': 'p/m³',
   })
@@ -1539,7 +1592,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Grass pollen day 1',
-      'icon': 'mdi:grass',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -1558,6 +1610,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1574,12 +1627,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:grass',
+    'original_icon': None,
     'original_name': 'Grass pollen day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'grass_pollen_2d',
+    'translation_key': 'grass_pollen',
     'unique_id': '0123456-grass-2',
     'unit_of_measurement': 'p/m³',
   })
@@ -1589,7 +1642,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Grass pollen day 2',
-      'icon': 'mdi:grass',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -1608,6 +1660,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1624,12 +1677,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:grass',
+    'original_icon': None,
     'original_name': 'Grass pollen day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'grass_pollen_3d',
+    'translation_key': 'grass_pollen',
     'unique_id': '0123456-grass-3',
     'unit_of_measurement': 'p/m³',
   })
@@ -1639,7 +1692,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Grass pollen day 3',
-      'icon': 'mdi:grass',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -1658,6 +1710,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1674,12 +1727,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:grass',
+    'original_icon': None,
     'original_name': 'Grass pollen day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'grass_pollen_4d',
+    'translation_key': 'grass_pollen',
     'unique_id': '0123456-grass-4',
     'unit_of_measurement': 'p/m³',
   })
@@ -1689,7 +1742,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Grass pollen day 4',
-      'icon': 'mdi:grass',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -1701,19 +1753,20 @@
     'state': '0',
   })
 # ---
-# name: test_sensor[sensor.home_grass_pollen_today-entry]
+# name: test_sensor[sensor.home_hours_of_sun_day_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_grass_pollen_today',
+    'entity_id': 'sensor.home_hours_of_sun_day_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1724,31 +1777,29 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:grass',
-    'original_name': 'Grass pollen today',
+    'original_icon': None,
+    'original_name': 'Hours of sun day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'grass_pollen_0d',
-    'unique_id': '0123456-grass-0',
-    'unit_of_measurement': 'p/m³',
+    'translation_key': 'hours_of_sun',
+    'unique_id': '0123456-hoursofsun-0',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor[sensor.home_grass_pollen_today-state]
+# name: test_sensor[sensor.home_hours_of_sun_day_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
-      'friendly_name': 'Home Grass pollen today',
-      'icon': 'mdi:grass',
-      'level': 'low',
-      'unit_of_measurement': 'p/m³',
+      'friendly_name': 'Home Hours of sun day 0',
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_grass_pollen_today',
+    'entity_id': 'sensor.home_hours_of_sun_day_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '7.2',
   })
 # ---
 # name: test_sensor[sensor.home_hours_of_sun_day_1-entry]
@@ -1758,6 +1809,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1774,12 +1826,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-partly-cloudy',
+    'original_icon': None,
     'original_name': 'Hours of sun day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'hours_of_sun_1d',
+    'translation_key': 'hours_of_sun',
     'unique_id': '0123456-hoursofsun-1',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
@@ -1789,7 +1841,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Hours of sun day 1',
-      'icon': 'mdi:weather-partly-cloudy',
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
@@ -1807,6 +1858,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1823,12 +1875,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-partly-cloudy',
+    'original_icon': None,
     'original_name': 'Hours of sun day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'hours_of_sun_2d',
+    'translation_key': 'hours_of_sun',
     'unique_id': '0123456-hoursofsun-2',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
@@ -1838,7 +1890,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Hours of sun day 2',
-      'icon': 'mdi:weather-partly-cloudy',
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
@@ -1856,6 +1907,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1872,12 +1924,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-partly-cloudy',
+    'original_icon': None,
     'original_name': 'Hours of sun day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'hours_of_sun_3d',
+    'translation_key': 'hours_of_sun',
     'unique_id': '0123456-hoursofsun-3',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
@@ -1887,7 +1939,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Hours of sun day 3',
-      'icon': 'mdi:weather-partly-cloudy',
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
@@ -1905,6 +1956,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1921,12 +1973,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-partly-cloudy',
+    'original_icon': None,
     'original_name': 'Hours of sun day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'hours_of_sun_4d',
+    'translation_key': 'hours_of_sun',
     'unique_id': '0123456-hoursofsun-4',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
@@ -1936,7 +1988,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Hours of sun day 4',
-      'icon': 'mdi:weather-partly-cloudy',
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
@@ -1947,19 +1998,73 @@
     'state': '9.2',
   })
 # ---
-# name: test_sensor[sensor.home_hours_of_sun_today-entry]
+# name: test_sensor[sensor.home_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'humidity',
+    'unique_id': '0123456-relativehumidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[sensor.home_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'device_class': 'humidity',
+      'friendly_name': 'Home Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '67',
+  })
+# ---
+# name: test_sensor[sensor.home_mold_pollen_day_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_hours_of_sun_today',
+    'entity_id': 'sensor.home_mold_pollen_day_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1970,30 +2075,30 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-partly-cloudy',
-    'original_name': 'Hours of sun today',
+    'original_icon': None,
+    'original_name': 'Mold pollen day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'hours_of_sun_0d',
-    'unique_id': '0123456-hoursofsun-0',
-    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    'translation_key': 'mold_pollen',
+    'unique_id': '0123456-mold-0',
+    'unit_of_measurement': 'p/m³',
   })
 # ---
-# name: test_sensor[sensor.home_hours_of_sun_today-state]
+# name: test_sensor[sensor.home_mold_pollen_day_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
-      'friendly_name': 'Home Hours of sun today',
-      'icon': 'mdi:weather-partly-cloudy',
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      'friendly_name': 'Home Mold pollen day 0',
+      'level': 'low',
+      'unit_of_measurement': 'p/m³',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_hours_of_sun_today',
+    'entity_id': 'sensor.home_mold_pollen_day_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '7.2',
+    'state': '0',
   })
 # ---
 # name: test_sensor[sensor.home_mold_pollen_day_1-entry]
@@ -2003,6 +2108,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2019,12 +2125,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:blur',
+    'original_icon': None,
     'original_name': 'Mold pollen day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'mold_pollen_1d',
+    'translation_key': 'mold_pollen',
     'unique_id': '0123456-mold-1',
     'unit_of_measurement': 'p/m³',
   })
@@ -2034,7 +2140,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Mold pollen day 1',
-      'icon': 'mdi:blur',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -2053,6 +2158,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2069,12 +2175,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:blur',
+    'original_icon': None,
     'original_name': 'Mold pollen day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'mold_pollen_2d',
+    'translation_key': 'mold_pollen',
     'unique_id': '0123456-mold-2',
     'unit_of_measurement': 'p/m³',
   })
@@ -2084,7 +2190,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Mold pollen day 2',
-      'icon': 'mdi:blur',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -2103,6 +2208,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2119,12 +2225,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:blur',
+    'original_icon': None,
     'original_name': 'Mold pollen day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'mold_pollen_3d',
+    'translation_key': 'mold_pollen',
     'unique_id': '0123456-mold-3',
     'unit_of_measurement': 'p/m³',
   })
@@ -2134,7 +2240,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Mold pollen day 3',
-      'icon': 'mdi:blur',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -2153,6 +2258,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2169,12 +2275,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:blur',
+    'original_icon': None,
     'original_name': 'Mold pollen day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'mold_pollen_4d',
+    'translation_key': 'mold_pollen',
     'unique_id': '0123456-mold-4',
     'unit_of_measurement': 'p/m³',
   })
@@ -2184,62 +2290,11 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Mold pollen day 4',
-      'icon': 'mdi:blur',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_mold_pollen_day_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensor[sensor.home_mold_pollen_today-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_mold_pollen_today',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:blur',
-    'original_name': 'Mold pollen today',
-    'platform': 'accuweather',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'mold_pollen_0d',
-    'unique_id': '0123456-mold-0',
-    'unit_of_measurement': 'p/m³',
-  })
-# ---
-# name: test_sensor[sensor.home_mold_pollen_today-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by AccuWeather',
-      'friendly_name': 'Home Mold pollen today',
-      'icon': 'mdi:blur',
-      'level': 'low',
-      'unit_of_measurement': 'p/m³',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_mold_pollen_today',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2255,6 +2310,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2299,6 +2355,62 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensor[sensor.home_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Pressure',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pressure',
+    'unique_id': '0123456-pressure',
+    'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+  })
+# ---
+# name: test_sensor[sensor.home_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'device_class': 'pressure',
+      'friendly_name': 'Home Pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1012.0',
+  })
+# ---
 # name: test_sensor[sensor.home_pressure_tendency-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2312,6 +2424,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2328,7 +2441,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:gauge',
+    'original_icon': None,
     'original_name': 'Pressure tendency',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -2344,7 +2457,6 @@
       'attribution': 'Data provided by AccuWeather',
       'device_class': 'enum',
       'friendly_name': 'Home Pressure tendency',
-      'icon': 'mdi:gauge',
       'options': list([
         'falling',
         'rising',
@@ -2359,6 +2471,56 @@
     'state': 'falling',
   })
 # ---
+# name: test_sensor[sensor.home_ragweed_pollen_day_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_ragweed_pollen_day_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ragweed pollen day 0',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'ragweed_pollen',
+    'unique_id': '0123456-ragweed-0',
+    'unit_of_measurement': 'p/m³',
+  })
+# ---
+# name: test_sensor[sensor.home_ragweed_pollen_day_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'friendly_name': 'Home Ragweed pollen day 0',
+      'level': 'low',
+      'unit_of_measurement': 'p/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_ragweed_pollen_day_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensor[sensor.home_ragweed_pollen_day_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2366,6 +2528,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2382,12 +2545,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:sprout',
+    'original_icon': None,
     'original_name': 'Ragweed pollen day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'ragweed_pollen_1d',
+    'translation_key': 'ragweed_pollen',
     'unique_id': '0123456-ragweed-1',
     'unit_of_measurement': 'p/m³',
   })
@@ -2397,7 +2560,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Ragweed pollen day 1',
-      'icon': 'mdi:sprout',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -2416,6 +2578,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2432,12 +2595,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:sprout',
+    'original_icon': None,
     'original_name': 'Ragweed pollen day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'ragweed_pollen_2d',
+    'translation_key': 'ragweed_pollen',
     'unique_id': '0123456-ragweed-2',
     'unit_of_measurement': 'p/m³',
   })
@@ -2447,7 +2610,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Ragweed pollen day 2',
-      'icon': 'mdi:sprout',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -2466,6 +2628,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2482,12 +2645,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:sprout',
+    'original_icon': None,
     'original_name': 'Ragweed pollen day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'ragweed_pollen_3d',
+    'translation_key': 'ragweed_pollen',
     'unique_id': '0123456-ragweed-3',
     'unit_of_measurement': 'p/m³',
   })
@@ -2497,7 +2660,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Ragweed pollen day 3',
-      'icon': 'mdi:sprout',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -2516,6 +2678,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2532,12 +2695,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:sprout',
+    'original_icon': None,
     'original_name': 'Ragweed pollen day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'ragweed_pollen_4d',
+    'translation_key': 'ragweed_pollen',
     'unique_id': '0123456-ragweed-4',
     'unit_of_measurement': 'p/m³',
   })
@@ -2547,62 +2710,11 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Ragweed pollen day 4',
-      'icon': 'mdi:sprout',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_ragweed_pollen_day_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensor[sensor.home_ragweed_pollen_today-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_ragweed_pollen_today',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:sprout',
-    'original_name': 'Ragweed pollen today',
-    'platform': 'accuweather',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'ragweed_pollen_0d',
-    'unique_id': '0123456-ragweed-0',
-    'unit_of_measurement': 'p/m³',
-  })
-# ---
-# name: test_sensor[sensor.home_ragweed_pollen_today-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by AccuWeather',
-      'friendly_name': 'Home Ragweed pollen today',
-      'icon': 'mdi:sprout',
-      'level': 'low',
-      'unit_of_measurement': 'p/m³',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_ragweed_pollen_today',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2618,6 +2730,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2661,6 +2774,56 @@
     'state': '25.1',
   })
 # ---
+# name: test_sensor[sensor.home_realfeel_temperature_max_day_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_realfeel_temperature_max_day_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'RealFeel temperature max day 0',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'realfeel_temperature_max',
+    'unique_id': '0123456-realfeeltemperaturemax-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor[sensor.home_realfeel_temperature_max_day_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'device_class': 'temperature',
+      'friendly_name': 'Home RealFeel temperature max day 0',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_realfeel_temperature_max_day_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '29.8',
+  })
+# ---
 # name: test_sensor[sensor.home_realfeel_temperature_max_day_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2668,6 +2831,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2689,7 +2853,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_max_1d',
+    'translation_key': 'realfeel_temperature_max',
     'unique_id': '0123456-realfeeltemperaturemax-1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -2717,6 +2881,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2738,7 +2903,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_max_2d',
+    'translation_key': 'realfeel_temperature_max',
     'unique_id': '0123456-realfeeltemperaturemax-2',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -2766,6 +2931,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2787,7 +2953,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_max_3d',
+    'translation_key': 'realfeel_temperature_max',
     'unique_id': '0123456-realfeeltemperaturemax-3',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -2815,6 +2981,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2836,7 +3003,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_max_4d',
+    'translation_key': 'realfeel_temperature_max',
     'unique_id': '0123456-realfeeltemperaturemax-4',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -2857,19 +3024,20 @@
     'state': '22.2',
   })
 # ---
-# name: test_sensor[sensor.home_realfeel_temperature_max_today-entry]
+# name: test_sensor[sensor.home_realfeel_temperature_min_day_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_realfeel_temperature_max_today',
+    'entity_id': 'sensor.home_realfeel_temperature_min_day_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2881,29 +3049,29 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'RealFeel temperature max today',
+    'original_name': 'RealFeel temperature min day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_max_0d',
-    'unique_id': '0123456-realfeeltemperaturemax-0',
+    'translation_key': 'realfeel_temperature_min',
+    'unique_id': '0123456-realfeeltemperaturemin-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor[sensor.home_realfeel_temperature_max_today-state]
+# name: test_sensor[sensor.home_realfeel_temperature_min_day_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'device_class': 'temperature',
-      'friendly_name': 'Home RealFeel temperature max today',
+      'friendly_name': 'Home RealFeel temperature min day 0',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_realfeel_temperature_max_today',
+    'entity_id': 'sensor.home_realfeel_temperature_min_day_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '29.8',
+    'state': '15.1',
   })
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_min_day_1-entry]
@@ -2913,6 +3081,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2934,7 +3103,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_min_1d',
+    'translation_key': 'realfeel_temperature_min',
     'unique_id': '0123456-realfeeltemperaturemin-1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -2962,6 +3131,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2983,7 +3153,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_min_2d',
+    'translation_key': 'realfeel_temperature_min',
     'unique_id': '0123456-realfeeltemperaturemin-2',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -3011,6 +3181,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3032,7 +3203,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_min_3d',
+    'translation_key': 'realfeel_temperature_min',
     'unique_id': '0123456-realfeeltemperaturemin-3',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -3060,6 +3231,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3081,7 +3253,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_min_4d',
+    'translation_key': 'realfeel_temperature_min',
     'unique_id': '0123456-realfeeltemperaturemin-4',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -3102,55 +3274,6 @@
     'state': '11.3',
   })
 # ---
-# name: test_sensor[sensor.home_realfeel_temperature_min_today-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_realfeel_temperature_min_today',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'RealFeel temperature min today',
-    'platform': 'accuweather',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'realfeel_temperature_min_0d',
-    'unique_id': '0123456-realfeeltemperaturemin-0',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensor[sensor.home_realfeel_temperature_min_today-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by AccuWeather',
-      'device_class': 'temperature',
-      'friendly_name': 'Home RealFeel temperature min today',
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_realfeel_temperature_min_today',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '15.1',
-  })
-# ---
 # name: test_sensor[sensor.home_realfeel_temperature_shade-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3160,6 +3283,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3203,6 +3327,56 @@
     'state': '21.1',
   })
 # ---
+# name: test_sensor[sensor.home_realfeel_temperature_shade_max_day_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_realfeel_temperature_shade_max_day_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'RealFeel temperature shade max day 0',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'realfeel_temperature_shade_max',
+    'unique_id': '0123456-realfeeltemperatureshademax-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor[sensor.home_realfeel_temperature_shade_max_day_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'device_class': 'temperature',
+      'friendly_name': 'Home RealFeel temperature shade max day 0',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_realfeel_temperature_shade_max_day_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '28.0',
+  })
+# ---
 # name: test_sensor[sensor.home_realfeel_temperature_shade_max_day_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3210,6 +3384,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3231,7 +3406,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_shade_max_1d',
+    'translation_key': 'realfeel_temperature_shade_max',
     'unique_id': '0123456-realfeeltemperatureshademax-1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -3259,6 +3434,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3280,7 +3456,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_shade_max_2d',
+    'translation_key': 'realfeel_temperature_shade_max',
     'unique_id': '0123456-realfeeltemperatureshademax-2',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -3308,6 +3484,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3329,7 +3506,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_shade_max_3d',
+    'translation_key': 'realfeel_temperature_shade_max',
     'unique_id': '0123456-realfeeltemperatureshademax-3',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -3357,6 +3534,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3378,7 +3556,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_shade_max_4d',
+    'translation_key': 'realfeel_temperature_shade_max',
     'unique_id': '0123456-realfeeltemperatureshademax-4',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -3399,19 +3577,20 @@
     'state': '19.5',
   })
 # ---
-# name: test_sensor[sensor.home_realfeel_temperature_shade_max_today-entry]
+# name: test_sensor[sensor.home_realfeel_temperature_shade_min_day_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_realfeel_temperature_shade_max_today',
+    'entity_id': 'sensor.home_realfeel_temperature_shade_min_day_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3423,29 +3602,29 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'RealFeel temperature shade max today',
+    'original_name': 'RealFeel temperature shade min day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_shade_max_0d',
-    'unique_id': '0123456-realfeeltemperatureshademax-0',
+    'translation_key': 'realfeel_temperature_shade_min',
+    'unique_id': '0123456-realfeeltemperatureshademin-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor[sensor.home_realfeel_temperature_shade_max_today-state]
+# name: test_sensor[sensor.home_realfeel_temperature_shade_min_day_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'device_class': 'temperature',
-      'friendly_name': 'Home RealFeel temperature shade max today',
+      'friendly_name': 'Home RealFeel temperature shade min day 0',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_realfeel_temperature_shade_max_today',
+    'entity_id': 'sensor.home_realfeel_temperature_shade_min_day_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '28.0',
+    'state': '15.1',
   })
 # ---
 # name: test_sensor[sensor.home_realfeel_temperature_shade_min_day_1-entry]
@@ -3455,6 +3634,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3476,7 +3656,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_shade_min_1d',
+    'translation_key': 'realfeel_temperature_shade_min',
     'unique_id': '0123456-realfeeltemperatureshademin-1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -3504,6 +3684,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3525,7 +3706,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_shade_min_2d',
+    'translation_key': 'realfeel_temperature_shade_min',
     'unique_id': '0123456-realfeeltemperatureshademin-2',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -3553,6 +3734,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3574,7 +3756,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_shade_min_3d',
+    'translation_key': 'realfeel_temperature_shade_min',
     'unique_id': '0123456-realfeeltemperatureshademin-3',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -3602,6 +3784,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3623,7 +3806,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_shade_min_4d',
+    'translation_key': 'realfeel_temperature_shade_min',
     'unique_id': '0123456-realfeeltemperatureshademin-4',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -3644,19 +3827,20 @@
     'state': '11.3',
   })
 # ---
-# name: test_sensor[sensor.home_realfeel_temperature_shade_min_today-entry]
+# name: test_sensor[sensor.home_solar_irradiance_day_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_realfeel_temperature_shade_min_today',
+    'entity_id': 'sensor.home_solar_irradiance_day_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3666,31 +3850,31 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
-    'original_name': 'RealFeel temperature shade min today',
+    'original_name': 'Solar irradiance day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'realfeel_temperature_shade_min_0d',
-    'unique_id': '0123456-realfeeltemperatureshademin-0',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'translation_key': 'solar_irradiance_day',
+    'unique_id': '0123456-solarirradianceday-0',
+    'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
   })
 # ---
-# name: test_sensor[sensor.home_realfeel_temperature_shade_min_today-state]
+# name: test_sensor[sensor.home_solar_irradiance_day_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
-      'device_class': 'temperature',
-      'friendly_name': 'Home RealFeel temperature shade min today',
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'device_class': 'irradiance',
+      'friendly_name': 'Home Solar irradiance day 0',
+      'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_realfeel_temperature_shade_min_today',
+    'entity_id': 'sensor.home_solar_irradiance_day_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '15.1',
+    'state': '7447.1',
   })
 # ---
 # name: test_sensor[sensor.home_solar_irradiance_day_1-entry]
@@ -3700,6 +3884,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3715,13 +3900,13 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'solar_irradiance_day_1d',
+    'translation_key': 'solar_irradiance_day',
     'unique_id': '0123456-solarirradianceday-1',
     'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
   })
@@ -3730,8 +3915,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance day 1',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -3749,6 +3934,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3764,13 +3950,13 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'solar_irradiance_day_2d',
+    'translation_key': 'solar_irradiance_day',
     'unique_id': '0123456-solarirradianceday-2',
     'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
   })
@@ -3779,8 +3965,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance day 2',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -3798,6 +3984,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3813,13 +4000,13 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'solar_irradiance_day_3d',
+    'translation_key': 'solar_irradiance_day',
     'unique_id': '0123456-solarirradianceday-3',
     'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
   })
@@ -3828,8 +4015,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance day 3',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -3847,6 +4034,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3862,13 +4050,13 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'solar_irradiance_day_4d',
+    'translation_key': 'solar_irradiance_day',
     'unique_id': '0123456-solarirradianceday-4',
     'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
   })
@@ -3877,8 +4065,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance day 4',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -3889,6 +4077,56 @@
     'state': '7447.1',
   })
 # ---
+# name: test_sensor[sensor.home_solar_irradiance_night_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_solar_irradiance_night_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
+    'original_name': 'Solar irradiance night 0',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'solar_irradiance_night',
+    'unique_id': '0123456-solarirradiancenight-0',
+    'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+  })
+# ---
+# name: test_sensor[sensor.home_solar_irradiance_night_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
+      'friendly_name': 'Home Solar irradiance night 0',
+      'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_solar_irradiance_night_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '271.6',
+  })
+# ---
 # name: test_sensor[sensor.home_solar_irradiance_night_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3896,6 +4134,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3911,13 +4150,13 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'solar_irradiance_night_1d',
+    'translation_key': 'solar_irradiance_night',
     'unique_id': '0123456-solarirradiancenight-1',
     'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
   })
@@ -3926,8 +4165,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance night 1',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -3945,6 +4184,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3960,13 +4200,13 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'solar_irradiance_night_2d',
+    'translation_key': 'solar_irradiance_night',
     'unique_id': '0123456-solarirradiancenight-2',
     'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
   })
@@ -3975,8 +4215,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance night 2',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -3994,6 +4234,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4009,13 +4250,13 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'solar_irradiance_night_3d',
+    'translation_key': 'solar_irradiance_night',
     'unique_id': '0123456-solarirradiancenight-3',
     'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
   })
@@ -4024,8 +4265,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance night 3',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -4043,6 +4284,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4058,13 +4300,13 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
     'original_name': 'Solar irradiance night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'solar_irradiance_night_4d',
+    'translation_key': 'solar_irradiance_night',
     'unique_id': '0123456-solarirradiancenight-4',
     'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
   })
@@ -4073,8 +4315,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
+      'device_class': 'irradiance',
       'friendly_name': 'Home Solar irradiance night 4',
-      'icon': 'mdi:weather-sunny',
       'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
     }),
     'context': <ANY>,
@@ -4085,19 +4327,73 @@
     'state': '276.1',
   })
 # ---
-# name: test_sensor[sensor.home_solar_irradiance_today-entry]
+# name: test_sensor[sensor.home_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': '0123456-temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor[sensor.home_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'device_class': 'temperature',
+      'friendly_name': 'Home Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22.6',
+  })
+# ---
+# name: test_sensor[sensor.home_thunderstorm_probability_day_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_solar_irradiance_today',
+    'entity_id': 'sensor.home_thunderstorm_probability_day_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4108,79 +4404,29 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
-    'original_name': 'Solar irradiance today',
+    'original_icon': None,
+    'original_name': 'Thunderstorm probability day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'solar_irradiance_day_0d',
-    'unique_id': '0123456-solarirradianceday-0',
-    'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+    'translation_key': 'thunderstorm_probability_day',
+    'unique_id': '0123456-thunderstormprobabilityday-0',
+    'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[sensor.home_solar_irradiance_today-state]
+# name: test_sensor[sensor.home_thunderstorm_probability_day_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
-      'friendly_name': 'Home Solar irradiance today',
-      'icon': 'mdi:weather-sunny',
-      'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+      'friendly_name': 'Home Thunderstorm probability day 0',
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_solar_irradiance_today',
+    'entity_id': 'sensor.home_thunderstorm_probability_day_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '7447.1',
-  })
-# ---
-# name: test_sensor[sensor.home_solar_irradiance_tonight-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_solar_irradiance_tonight',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
-    'original_name': 'Solar irradiance tonight',
-    'platform': 'accuweather',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'solar_irradiance_night_0d',
-    'unique_id': '0123456-solarirradiancenight-0',
-    'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
-  })
-# ---
-# name: test_sensor[sensor.home_solar_irradiance_tonight-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by AccuWeather',
-      'friendly_name': 'Home Solar irradiance tonight',
-      'icon': 'mdi:weather-sunny',
-      'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_solar_irradiance_tonight',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '271.6',
+    'state': '40',
   })
 # ---
 # name: test_sensor[sensor.home_thunderstorm_probability_day_1-entry]
@@ -4190,6 +4436,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4206,12 +4453,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'thunderstorm_probability_day_1d',
+    'translation_key': 'thunderstorm_probability_day',
     'unique_id': '0123456-thunderstormprobabilityday-1',
     'unit_of_measurement': '%',
   })
@@ -4221,7 +4468,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability day 1',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4239,6 +4485,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4255,12 +4502,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'thunderstorm_probability_day_2d',
+    'translation_key': 'thunderstorm_probability_day',
     'unique_id': '0123456-thunderstormprobabilityday-2',
     'unit_of_measurement': '%',
   })
@@ -4270,7 +4517,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability day 2',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4288,6 +4534,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4304,12 +4551,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'thunderstorm_probability_day_3d',
+    'translation_key': 'thunderstorm_probability_day',
     'unique_id': '0123456-thunderstormprobabilityday-3',
     'unit_of_measurement': '%',
   })
@@ -4319,7 +4566,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability day 3',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4337,6 +4583,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4353,12 +4600,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'thunderstorm_probability_day_4d',
+    'translation_key': 'thunderstorm_probability_day',
     'unique_id': '0123456-thunderstormprobabilityday-4',
     'unit_of_measurement': '%',
   })
@@ -4368,7 +4615,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability day 4',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4379,6 +4625,55 @@
     'state': '0',
   })
 # ---
+# name: test_sensor[sensor.home_thunderstorm_probability_night_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_thunderstorm_probability_night_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thunderstorm probability night 0',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'thunderstorm_probability_night',
+    'unique_id': '0123456-thunderstormprobabilitynight-0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[sensor.home_thunderstorm_probability_night_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'friendly_name': 'Home Thunderstorm probability night 0',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_thunderstorm_probability_night_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
 # name: test_sensor[sensor.home_thunderstorm_probability_night_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4386,6 +4681,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4402,12 +4698,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'thunderstorm_probability_night_1d',
+    'translation_key': 'thunderstorm_probability_night',
     'unique_id': '0123456-thunderstormprobabilitynight-1',
     'unit_of_measurement': '%',
   })
@@ -4417,7 +4713,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability night 1',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4435,6 +4730,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4451,12 +4747,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'thunderstorm_probability_night_2d',
+    'translation_key': 'thunderstorm_probability_night',
     'unique_id': '0123456-thunderstormprobabilitynight-2',
     'unit_of_measurement': '%',
   })
@@ -4466,7 +4762,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability night 2',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4484,6 +4779,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4500,12 +4796,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'thunderstorm_probability_night_3d',
+    'translation_key': 'thunderstorm_probability_night',
     'unique_id': '0123456-thunderstormprobabilitynight-3',
     'unit_of_measurement': '%',
   })
@@ -4515,7 +4811,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability night 3',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4533,6 +4828,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4549,12 +4845,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
+    'original_icon': None,
     'original_name': 'Thunderstorm probability night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'thunderstorm_probability_night_4d',
+    'translation_key': 'thunderstorm_probability_night',
     'unique_id': '0123456-thunderstormprobabilitynight-4',
     'unit_of_measurement': '%',
   })
@@ -4564,7 +4860,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Thunderstorm probability night 4',
-      'icon': 'mdi:weather-lightning',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4575,19 +4870,20 @@
     'state': '0',
   })
 # ---
-# name: test_sensor[sensor.home_thunderstorm_probability_today-entry]
+# name: test_sensor[sensor.home_tree_pollen_day_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_thunderstorm_probability_today',
+    'entity_id': 'sensor.home_tree_pollen_day_0',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4598,79 +4894,30 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
-    'original_name': 'Thunderstorm probability today',
+    'original_icon': None,
+    'original_name': 'Tree pollen day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'thunderstorm_probability_day_0d',
-    'unique_id': '0123456-thunderstormprobabilityday-0',
-    'unit_of_measurement': '%',
+    'translation_key': 'tree_pollen',
+    'unique_id': '0123456-tree-0',
+    'unit_of_measurement': 'p/m³',
   })
 # ---
-# name: test_sensor[sensor.home_thunderstorm_probability_today-state]
+# name: test_sensor[sensor.home_tree_pollen_day_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
-      'friendly_name': 'Home Thunderstorm probability today',
-      'icon': 'mdi:weather-lightning',
-      'unit_of_measurement': '%',
+      'friendly_name': 'Home Tree pollen day 0',
+      'level': 'low',
+      'unit_of_measurement': 'p/m³',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_thunderstorm_probability_today',
+    'entity_id': 'sensor.home_tree_pollen_day_0',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '40',
-  })
-# ---
-# name: test_sensor[sensor.home_thunderstorm_probability_tonight-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_thunderstorm_probability_tonight',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-lightning',
-    'original_name': 'Thunderstorm probability tonight',
-    'platform': 'accuweather',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'thunderstorm_probability_night_0d',
-    'unique_id': '0123456-thunderstormprobabilitynight-0',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor[sensor.home_thunderstorm_probability_tonight-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by AccuWeather',
-      'friendly_name': 'Home Thunderstorm probability tonight',
-      'icon': 'mdi:weather-lightning',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_thunderstorm_probability_tonight',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '40',
+    'state': '0',
   })
 # ---
 # name: test_sensor[sensor.home_tree_pollen_day_1-entry]
@@ -4680,6 +4927,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4696,12 +4944,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:tree-outline',
+    'original_icon': None,
     'original_name': 'Tree pollen day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'tree_pollen_1d',
+    'translation_key': 'tree_pollen',
     'unique_id': '0123456-tree-1',
     'unit_of_measurement': 'p/m³',
   })
@@ -4711,7 +4959,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Tree pollen day 1',
-      'icon': 'mdi:tree-outline',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -4730,6 +4977,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4746,12 +4994,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:tree-outline',
+    'original_icon': None,
     'original_name': 'Tree pollen day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'tree_pollen_2d',
+    'translation_key': 'tree_pollen',
     'unique_id': '0123456-tree-2',
     'unit_of_measurement': 'p/m³',
   })
@@ -4761,7 +5009,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Tree pollen day 2',
-      'icon': 'mdi:tree-outline',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -4780,6 +5027,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4796,12 +5044,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:tree-outline',
+    'original_icon': None,
     'original_name': 'Tree pollen day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'tree_pollen_3d',
+    'translation_key': 'tree_pollen',
     'unique_id': '0123456-tree-3',
     'unit_of_measurement': 'p/m³',
   })
@@ -4811,7 +5059,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Tree pollen day 3',
-      'icon': 'mdi:tree-outline',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
@@ -4830,6 +5077,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4846,12 +5094,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:tree-outline',
+    'original_icon': None,
     'original_name': 'Tree pollen day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'tree_pollen_4d',
+    'translation_key': 'tree_pollen',
     'unique_id': '0123456-tree-4',
     'unit_of_measurement': 'p/m³',
   })
@@ -4861,62 +5109,11 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home Tree pollen day 4',
-      'icon': 'mdi:tree-outline',
       'level': 'low',
       'unit_of_measurement': 'p/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_tree_pollen_day_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensor[sensor.home_tree_pollen_today-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_tree_pollen_today',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:tree-outline',
-    'original_name': 'Tree pollen today',
-    'platform': 'accuweather',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'tree_pollen_0d',
-    'unique_id': '0123456-tree-0',
-    'unit_of_measurement': 'p/m³',
-  })
-# ---
-# name: test_sensor[sensor.home_tree_pollen_today-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by AccuWeather',
-      'friendly_name': 'Home Tree pollen today',
-      'icon': 'mdi:tree-outline',
-      'level': 'low',
-      'unit_of_measurement': 'p/m³',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_tree_pollen_today',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4932,6 +5129,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4948,7 +5146,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_icon': None,
     'original_name': 'UV index',
     'platform': 'accuweather',
     'previous_unique_id': None,
@@ -4963,7 +5161,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home UV index',
-      'icon': 'mdi:weather-sunny',
       'level': 'High',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'UV index',
@@ -4976,6 +5173,56 @@
     'state': '6',
   })
 # ---
+# name: test_sensor[sensor.home_uv_index_day_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_uv_index_day_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'UV index day 0',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'uv_index_forecast',
+    'unique_id': '0123456-uvindex-0',
+    'unit_of_measurement': 'UV index',
+  })
+# ---
+# name: test_sensor[sensor.home_uv_index_day_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'friendly_name': 'Home UV index day 0',
+      'level': 'moderate',
+      'unit_of_measurement': 'UV index',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_uv_index_day_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
 # name: test_sensor[sensor.home_uv_index_day_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4983,6 +5230,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -4999,12 +5247,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_icon': None,
     'original_name': 'UV index day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'uv_index_1d',
+    'translation_key': 'uv_index_forecast',
     'unique_id': '0123456-uvindex-1',
     'unit_of_measurement': 'UV index',
   })
@@ -5014,7 +5262,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home UV index day 1',
-      'icon': 'mdi:weather-sunny',
       'level': 'high',
       'unit_of_measurement': 'UV index',
     }),
@@ -5033,6 +5280,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -5049,12 +5297,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_icon': None,
     'original_name': 'UV index day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'uv_index_2d',
+    'translation_key': 'uv_index_forecast',
     'unique_id': '0123456-uvindex-2',
     'unit_of_measurement': 'UV index',
   })
@@ -5064,7 +5312,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home UV index day 2',
-      'icon': 'mdi:weather-sunny',
       'level': 'high',
       'unit_of_measurement': 'UV index',
     }),
@@ -5083,6 +5330,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -5099,12 +5347,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_icon': None,
     'original_name': 'UV index day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'uv_index_3d',
+    'translation_key': 'uv_index_forecast',
     'unique_id': '0123456-uvindex-3',
     'unit_of_measurement': 'UV index',
   })
@@ -5114,7 +5362,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home UV index day 3',
-      'icon': 'mdi:weather-sunny',
       'level': 'high',
       'unit_of_measurement': 'UV index',
     }),
@@ -5133,6 +5380,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -5149,12 +5397,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
+    'original_icon': None,
     'original_name': 'UV index day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'uv_index_4d',
+    'translation_key': 'uv_index_forecast',
     'unique_id': '0123456-uvindex-4',
     'unit_of_measurement': 'UV index',
   })
@@ -5164,7 +5412,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by AccuWeather',
       'friendly_name': 'Home UV index day 4',
-      'icon': 'mdi:weather-sunny',
       'level': 'high',
       'unit_of_measurement': 'UV index',
     }),
@@ -5176,56 +5423,6 @@
     'state': '7',
   })
 # ---
-# name: test_sensor[sensor.home_uv_index_today-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_uv_index_today',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-sunny',
-    'original_name': 'UV index today',
-    'platform': 'accuweather',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'uv_index_0d',
-    'unique_id': '0123456-uvindex-0',
-    'unit_of_measurement': 'UV index',
-  })
-# ---
-# name: test_sensor[sensor.home_uv_index_today-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by AccuWeather',
-      'friendly_name': 'Home UV index today',
-      'icon': 'mdi:weather-sunny',
-      'level': 'moderate',
-      'unit_of_measurement': 'UV index',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_uv_index_today',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '5',
-  })
-# ---
 # name: test_sensor[sensor.home_wet_bulb_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5235,6 +5432,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -5287,6 +5485,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -5339,6 +5538,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -5382,6 +5582,57 @@
     'state': '20.3',
   })
 # ---
+# name: test_sensor[sensor.home_wind_gust_speed_day_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_wind_gust_speed_day_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind gust speed day 0',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wind_gust_speed_day',
+    'unique_id': '0123456-windgustday-0',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensor[sensor.home_wind_gust_speed_day_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'device_class': 'wind_speed',
+      'direction': 'S',
+      'friendly_name': 'Home Wind gust speed day 0',
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_wind_gust_speed_day_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '29.6',
+  })
+# ---
 # name: test_sensor[sensor.home_wind_gust_speed_day_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5389,6 +5640,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -5410,7 +5662,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_gust_speed_day_1d',
+    'translation_key': 'wind_gust_speed_day',
     'unique_id': '0123456-windgustday-1',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -5439,6 +5691,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -5460,7 +5713,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_gust_speed_day_2d',
+    'translation_key': 'wind_gust_speed_day',
     'unique_id': '0123456-windgustday-2',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -5489,6 +5742,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -5510,7 +5764,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_gust_speed_day_3d',
+    'translation_key': 'wind_gust_speed_day',
     'unique_id': '0123456-windgustday-3',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -5539,6 +5793,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -5560,7 +5815,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_gust_speed_day_4d',
+    'translation_key': 'wind_gust_speed_day',
     'unique_id': '0123456-windgustday-4',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -5582,6 +5837,57 @@
     'state': '27.8',
   })
 # ---
+# name: test_sensor[sensor.home_wind_gust_speed_night_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_wind_gust_speed_night_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind gust speed night 0',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wind_gust_speed_night',
+    'unique_id': '0123456-windgustnight-0',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensor[sensor.home_wind_gust_speed_night_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'device_class': 'wind_speed',
+      'direction': 'WSW',
+      'friendly_name': 'Home Wind gust speed night 0',
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_wind_gust_speed_night_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '18.5',
+  })
+# ---
 # name: test_sensor[sensor.home_wind_gust_speed_night_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5589,6 +5895,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -5610,7 +5917,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_gust_speed_night_1d',
+    'translation_key': 'wind_gust_speed_night',
     'unique_id': '0123456-windgustnight-1',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -5639,6 +5946,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -5660,7 +5968,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_gust_speed_night_2d',
+    'translation_key': 'wind_gust_speed_night',
     'unique_id': '0123456-windgustnight-2',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -5689,6 +5997,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -5710,7 +6019,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_gust_speed_night_3d',
+    'translation_key': 'wind_gust_speed_night',
     'unique_id': '0123456-windgustnight-3',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -5739,6 +6048,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -5760,7 +6070,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_gust_speed_night_4d',
+    'translation_key': 'wind_gust_speed_night',
     'unique_id': '0123456-windgustnight-4',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -5782,106 +6092,6 @@
     'state': '18.5',
   })
 # ---
-# name: test_sensor[sensor.home_wind_gust_speed_today-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_wind_gust_speed_today',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
-    'original_icon': None,
-    'original_name': 'Wind gust speed today',
-    'platform': 'accuweather',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'wind_gust_speed_day_0d',
-    'unique_id': '0123456-windgustday-0',
-    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-  })
-# ---
-# name: test_sensor[sensor.home_wind_gust_speed_today-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by AccuWeather',
-      'device_class': 'wind_speed',
-      'direction': 'S',
-      'friendly_name': 'Home Wind gust speed today',
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_wind_gust_speed_today',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '29.6',
-  })
-# ---
-# name: test_sensor[sensor.home_wind_gust_speed_tonight-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_wind_gust_speed_tonight',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
-    'original_icon': None,
-    'original_name': 'Wind gust speed tonight',
-    'platform': 'accuweather',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'wind_gust_speed_night_0d',
-    'unique_id': '0123456-windgustnight-0',
-    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-  })
-# ---
-# name: test_sensor[sensor.home_wind_gust_speed_tonight-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by AccuWeather',
-      'device_class': 'wind_speed',
-      'direction': 'WSW',
-      'friendly_name': 'Home Wind gust speed tonight',
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_wind_gust_speed_tonight',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '18.5',
-  })
-# ---
 # name: test_sensor[sensor.home_wind_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5891,6 +6101,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -5934,6 +6145,57 @@
     'state': '14.5',
   })
 # ---
+# name: test_sensor[sensor.home_wind_speed_day_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_wind_speed_day_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind speed day 0',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wind_speed_day',
+    'unique_id': '0123456-windday-0',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensor[sensor.home_wind_speed_day_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'device_class': 'wind_speed',
+      'direction': 'SSE',
+      'friendly_name': 'Home Wind speed day 0',
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_wind_speed_day_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13.0',
+  })
+# ---
 # name: test_sensor[sensor.home_wind_speed_day_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5941,6 +6203,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -5962,7 +6225,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_speed_day_1d',
+    'translation_key': 'wind_speed_day',
     'unique_id': '0123456-windday-1',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -5991,6 +6254,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -6012,7 +6276,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_speed_day_2d',
+    'translation_key': 'wind_speed_day',
     'unique_id': '0123456-windday-2',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -6041,6 +6305,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -6062,7 +6327,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_speed_day_3d',
+    'translation_key': 'wind_speed_day',
     'unique_id': '0123456-windday-3',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -6091,6 +6356,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -6112,7 +6378,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_speed_day_4d',
+    'translation_key': 'wind_speed_day',
     'unique_id': '0123456-windday-4',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -6134,6 +6400,57 @@
     'state': '18.5',
   })
 # ---
+# name: test_sensor[sensor.home_wind_speed_night_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_wind_speed_night_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind speed night 0',
+    'platform': 'accuweather',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wind_speed_night',
+    'unique_id': '0123456-windnight-0',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensor[sensor.home_wind_speed_night_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by AccuWeather',
+      'device_class': 'wind_speed',
+      'direction': 'WNW',
+      'friendly_name': 'Home Wind speed night 0',
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_wind_speed_night_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.4',
+  })
+# ---
 # name: test_sensor[sensor.home_wind_speed_night_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6141,6 +6458,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -6162,7 +6480,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_speed_night_1d',
+    'translation_key': 'wind_speed_night',
     'unique_id': '0123456-windnight-1',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -6191,6 +6509,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -6212,7 +6531,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_speed_night_2d',
+    'translation_key': 'wind_speed_night',
     'unique_id': '0123456-windnight-2',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -6241,6 +6560,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -6262,7 +6582,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_speed_night_3d',
+    'translation_key': 'wind_speed_night',
     'unique_id': '0123456-windnight-3',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -6291,6 +6611,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -6312,7 +6633,7 @@
     'platform': 'accuweather',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_speed_night_4d',
+    'translation_key': 'wind_speed_night',
     'unique_id': '0123456-windnight-4',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
@@ -6332,105 +6653,5 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '9.3',
-  })
-# ---
-# name: test_sensor[sensor.home_wind_speed_today-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_wind_speed_today',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
-    'original_icon': None,
-    'original_name': 'Wind speed today',
-    'platform': 'accuweather',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'wind_speed_day_0d',
-    'unique_id': '0123456-windday-0',
-    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-  })
-# ---
-# name: test_sensor[sensor.home_wind_speed_today-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by AccuWeather',
-      'device_class': 'wind_speed',
-      'direction': 'SSE',
-      'friendly_name': 'Home Wind speed today',
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_wind_speed_today',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '13.0',
-  })
-# ---
-# name: test_sensor[sensor.home_wind_speed_tonight-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.home_wind_speed_tonight',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
-    'original_icon': None,
-    'original_name': 'Wind speed tonight',
-    'platform': 'accuweather',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'wind_speed_night_0d',
-    'unique_id': '0123456-windnight-0',
-    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-  })
-# ---
-# name: test_sensor[sensor.home_wind_speed_tonight-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by AccuWeather',
-      'device_class': 'wind_speed',
-      'direction': 'WNW',
-      'friendly_name': 'Home Wind speed tonight',
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.home_wind_speed_tonight',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '7.4',
   })
 # ---

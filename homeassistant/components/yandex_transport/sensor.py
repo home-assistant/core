@@ -5,21 +5,21 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from aioymaps import CaptchaError, YandexMapsRequester
+from aioymaps import CaptchaError, NoSessionError, YandexMapsRequester
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ DEFAULT_NAME = "Yandex Transport"
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_ID): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -88,7 +88,7 @@ class DiscoverYandexTransport(SensorEntity):
         closer_time = None
         try:
             yandex_reply = await self.requester.get_stop_info(self._stop_id)
-        except CaptchaError as ex:
+        except (CaptchaError, NoSessionError) as ex:
             _LOGGER.error(
                 "%s. You may need to disable the integration for some time",
                 ex,

@@ -23,7 +23,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.nettigo_air_monitor_sds011_pm2_5")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "11.0"
+    assert state.state == "11.03"
 
 
 async def test_config_not_ready(hass: HomeAssistant) -> None:

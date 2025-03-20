@@ -5,22 +5,21 @@ from __future__ import annotations
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WLEDConfigEntry
 from .coordinator import WLEDDataUpdateCoordinator
+from .entity import WLEDEntity
 from .helpers import wled_exception_handler
-from .models import WLEDEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WLEDConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WLED button based on a config entry."""
-    coordinator = entry.runtime_data
-    async_add_entities([WLEDRestartButton(coordinator)])
+    async_add_entities([WLEDRestartButton(entry.runtime_data)])
 
 
 class WLEDRestartButton(WLEDEntity, ButtonEntity):

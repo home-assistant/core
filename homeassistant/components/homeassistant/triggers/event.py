@@ -60,7 +60,6 @@ async def async_attach_trigger(
     trigger_data = trigger_info["trigger_data"]
     variables = trigger_info["variables"]
 
-    template.attach(hass, config[CONF_EVENT_TYPE])
     event_types = template.render_complex(
         config[CONF_EVENT_TYPE], variables, limited=True
     )
@@ -72,7 +71,6 @@ async def async_attach_trigger(
     event_data_items: ItemsView | None = None
     if CONF_EVENT_DATA in config:
         # Render the schema input
-        template.attach(hass, config[CONF_EVENT_DATA])
         event_data = {}
         event_data.update(
             template.render_complex(config[CONF_EVENT_DATA], variables, limited=True)
@@ -94,7 +92,6 @@ async def async_attach_trigger(
     event_context_items: ItemsView | None = None
     if CONF_EVENT_CONTEXT in config:
         # Render the schema input
-        template.attach(hass, config[CONF_EVENT_CONTEXT])
         event_context = {}
         event_context.update(
             template.render_complex(config[CONF_EVENT_CONTEXT], variables, limited=True)
@@ -154,7 +151,8 @@ async def async_attach_trigger(
                 # If event doesn't match, skip event
                 return
 
-        hass.async_run_hass_job(
+        hass.loop.call_soon(
+            hass.async_run_hass_job,
             job,
             {
                 "trigger": {

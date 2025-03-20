@@ -14,8 +14,8 @@ import voluptuous as vol
 from homeassistant.components.scene import Scene
 from homeassistant.const import CONF_PLATFORM, CONF_TIMEOUT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -42,7 +42,7 @@ async def async_setup_platform(
     token = config.get(CONF_TOKEN)
     timeout = config.get(CONF_TIMEOUT)
 
-    headers = {AUTHORIZATION: f"Bearer {token}"}
+    headers: dict[str, str] = {AUTHORIZATION: f"Bearer {token}"}
 
     url = "https://api.lifx.com/v1/scenes"
 

@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
+import pytest
 from tesla_powerwall import MetersAggregatesResponse
 from tesla_powerwall.error import MissingAttributeError
 
@@ -18,16 +19,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .mocks import MOCK_GATEWAY_DIN, _mock_powerwall_with_fixtures
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_sensors(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry) -> None:
     """Test creation of the sensors."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
@@ -46,7 +46,6 @@ async def test_sensors(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(
         identifiers={("powerwall", MOCK_GATEWAY_DIN)},
     )
@@ -244,12 +243,13 @@ async def test_sensors_with_empty_meters(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.mysite_solar_power") is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_unique_id_migrate(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test we can migrate unique ids of the sensors."""
-    device_registry = dr.async_get(hass)
-    ent_reg = er.async_get(hass)
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
 
@@ -261,7 +261,7 @@ async def test_unique_id_migrate(
         identifiers={("powerwall", old_unique_id)},
         manufacturer="Tesla",
     )
-    old_mysite_load_power_entity = ent_reg.async_get_or_create(
+    old_mysite_load_power_entity = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
         unique_id=f"{old_unique_id}_load_instant_power",
@@ -292,13 +292,13 @@ async def test_unique_id_migrate(
     assert reg_device is not None
 
     assert (
-        ent_reg.async_get_entity_id(
+        entity_registry.async_get_entity_id(
             "sensor", DOMAIN, f"{old_unique_id}_load_instant_power"
         )
         is None
     )
     assert (
-        ent_reg.async_get_entity_id(
+        entity_registry.async_get_entity_id(
             "sensor", DOMAIN, f"{new_unique_id}_load_instant_power"
         )
         is not None

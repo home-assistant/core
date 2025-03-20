@@ -4,12 +4,21 @@ import copy
 import dataclasses
 from unittest.mock import patch
 
-from homeassistant.components import ssdp
 from homeassistant.components.songpal.const import CONF_ENDPOINT, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    SOURCE_SSDP,
+    SOURCE_USER,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from . import (
     CONF_DATA,
@@ -25,13 +34,13 @@ from tests.common import MockConfigEntry
 
 UDN = "uuid:1234"
 
-SSDP_DATA = ssdp.SsdpServiceInfo(
+SSDP_DATA = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location=f"http://{HOST}:52323/dmr.xml",
     upnp={
-        ssdp.ATTR_UPNP_UDN: UDN,
-        ssdp.ATTR_UPNP_FRIENDLY_NAME: FRIENDLY_NAME,
+        ATTR_UPNP_UDN: UDN,
+        ATTR_UPNP_FRIENDLY_NAME: FRIENDLY_NAME,
         "X_ScalarWebAPI_DeviceInfo": {
             "X_ScalarWebAPI_BaseURL": ENDPOINT,
             "X_ScalarWebAPI_ServiceList": {
@@ -42,7 +51,7 @@ SSDP_DATA = ssdp.SsdpServiceInfo(
 )
 
 
-def _flow_next(hass, flow_id):
+def _flow_next(hass: HomeAssistant, flow_id: str) -> ConfigFlowResult:
     return next(
         flow
         for flow in hass.config_entries.flow.async_progress()
@@ -143,7 +152,7 @@ async def test_flow_import_without_name(hass: HomeAssistant) -> None:
     mocked_device.get_interface_information.assert_called_once()
 
 
-def _create_mock_config_entry(hass):
+def _create_mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="uuid:0000",

@@ -41,7 +41,7 @@ REGIONS = {
 
 
 @pytest.fixture(autouse=True)
-def mock_get_regions() -> Generator[None, AsyncMock, None]:
+def mock_get_regions() -> Generator[AsyncMock]:
     """Mock the get_regions method."""
 
     with patch(

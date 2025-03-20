@@ -15,10 +15,10 @@
       "service_data_uuid": "0000fcd2-0000-1000-8000-00805f9b34fb"
     }
   ],
-  "codeowners": ["@Ernst79"],
+  "codeowners": ["@Ernst79", "@thecode"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/bthome",
   "iot_class": "local_push",
-  "requirements": ["bthome-ble==3.8.1"]
+  "requirements": ["bthome-ble==3.12.4"]
 }

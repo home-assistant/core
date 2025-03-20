@@ -37,7 +37,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, STATE_OFF
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
@@ -92,7 +92,7 @@ SERVICE_DELETE_SCHEMA = COMMAND_SCHEMA.extend(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Broadlink remote."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
@@ -149,7 +149,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 try:
                     codes = self._codes[device][cmd]
                 except KeyError as err:
-                    raise ValueError(f"Command not found: {repr(cmd)}") from err
+                    raise ValueError(f"Command not found: {cmd!r}") from err
 
                 if isinstance(codes, list):
                     codes = codes[:]
@@ -160,7 +160,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 try:
                     codes[idx] = data_packet(code)
                 except ValueError as err:
-                    raise ValueError(f"Invalid code: {repr(code)}") from err
+                    raise ValueError(f"Invalid code: {code!r}") from err
 
             code_list.append(codes)
         return code_list
@@ -377,7 +377,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                     device.api.check_frequency
                 )
                 if is_found:
-                    _LOGGER.info("Radiofrequency detected: %s MHz", frequency)
+                    _LOGGER.debug("Radiofrequency detected: %s MHz", frequency)
                     break
             else:
                 await device.async_request(device.api.cancel_sweep_frequency)
@@ -448,7 +448,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         try:
             codes = self._codes[subdevice]
         except KeyError as err:
-            err_msg = f"Device not found: {repr(subdevice)}"
+            err_msg = f"Device not found: {subdevice!r}"
             _LOGGER.error("Failed to call %s. %s", service, err_msg)
             raise ValueError(err_msg) from err
 
@@ -461,9 +461,9 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         if cmds_not_found:
             if len(cmds_not_found) == 1:
-                err_msg = f"Command not found: {repr(cmds_not_found[0])}"
+                err_msg = f"Command not found: {cmds_not_found[0]!r}"
             else:
-                err_msg = f"Commands not found: {repr(cmds_not_found)}"
+                err_msg = f"Commands not found: {cmds_not_found!r}"
 
             if len(cmds_not_found) == len(commands):
                 _LOGGER.error("Failed to call %s. %s", service, err_msg)

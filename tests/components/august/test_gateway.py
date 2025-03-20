@@ -1,5 +1,6 @@
 """The gateway tests for the august platform."""
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from yalexs.authenticator_common import AuthenticationState
@@ -16,27 +17,25 @@ async def test_refresh_access_token(hass: HomeAssistant) -> None:
     await _patched_refresh_access_token(hass, "new_token", 5678)
 
 
-@patch("homeassistant.components.august.gateway.ApiAsync.async_get_operable_locks")
-@patch("homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate")
-@patch("homeassistant.components.august.gateway.AuthenticatorAsync.should_refresh")
-@patch(
-    "homeassistant.components.august.gateway.AuthenticatorAsync.async_refresh_access_token"
-)
+@patch("yalexs.manager.gateway.ApiAsync.async_get_operable_locks")
+@patch("yalexs.manager.gateway.AuthenticatorAsync.async_authenticate")
+@patch("yalexs.manager.gateway.AuthenticatorAsync.should_refresh")
+@patch("yalexs.manager.gateway.AuthenticatorAsync.async_refresh_access_token")
 async def _patched_refresh_access_token(
-    hass,
-    new_token,
-    new_token_expire_time,
+    hass: HomeAssistant,
+    new_token: str,
+    new_token_expire_time: int,
     refresh_access_token_mock,
     should_refresh_mock,
     authenticate_mock,
     async_get_operable_locks_mock,
-):
+) -> None:
     authenticate_mock.side_effect = MagicMock(
         return_value=_mock_august_authentication(
             "original_token", 1234, AuthenticationState.AUTHENTICATED
         )
     )
-    august_gateway = AugustGateway(hass, MagicMock())
+    august_gateway = AugustGateway(Path(hass.config.config_dir), MagicMock())
     mocked_config = _mock_get_config()
     await august_gateway.async_setup(mocked_config[DOMAIN])
     await august_gateway.async_authenticate()
@@ -51,5 +50,5 @@ async def _patched_refresh_access_token(
     )
     await august_gateway.async_refresh_access_token_if_needed()
     refresh_access_token_mock.assert_called()
-    assert august_gateway.access_token == new_token
+    assert await august_gateway.async_get_access_token() == new_token
     assert august_gateway.authentication.access_token_expires == new_token_expire_time

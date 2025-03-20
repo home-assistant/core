@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/vultr",
   "iot_class": "cloud_polling",
   "loggers": ["vultr"],
+  "quality_scale": "legacy",
   "requirements": ["vultr==0.1.2"]
 }

@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, TypeVar
+from typing import Any, cast
 
 from linear_garage_door import Linear
 from linear_garage_door.errors import InvalidLoginError
@@ -18,8 +18,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-_T = TypeVar("_T")
 
 
 @dataclass
@@ -36,15 +34,16 @@ class LinearUpdateCoordinator(DataUpdateCoordinator[dict[str, LinearDevice]]):
     _devices: list[dict[str, Any]] | None = None
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize DataUpdateCoordinator for Linear."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Linear Garage Door",
             update_interval=timedelta(seconds=60),
         )
-        self.site_id = self.config_entry.data["site_id"]
+        self.site_id = config_entry.data["site_id"]
 
     async def _async_update_data(self) -> dict[str, LinearDevice]:
         """Get the data for Linear."""
@@ -58,12 +57,12 @@ class LinearUpdateCoordinator(DataUpdateCoordinator[dict[str, LinearDevice]]):
             for device in self._devices:
                 device_id = str(device["id"])
                 state = await linear.get_device_state(device_id)
-                data[device_id] = LinearDevice(device["name"], state)
+                data[device_id] = LinearDevice(cast(str, device["name"]), state)
             return data
 
         return await self.execute(update_data)
 
-    async def execute(self, func: Callable[[Linear], Awaitable[_T]]) -> _T:
+    async def execute[_T](self, func: Callable[[Linear], Awaitable[_T]]) -> _T:
         """Execute an API call."""
         linear = Linear()
         try:

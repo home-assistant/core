@@ -5,6 +5,7 @@ import json
 import logging
 from typing import Any
 
+from aiohttp import ClientResponse
 import pytest
 
 from homeassistant.components.alexa import DOMAIN, smart_home
@@ -17,7 +18,9 @@ from .test_common import get_new_request
 from tests.typing import ClientSessionGenerator
 
 
-async def do_http_discovery(config, hass, hass_client):
+async def do_http_discovery(
+    config: dict[str, Any], hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> ClientResponse:
     """Submit a request to the Smart Home HTTP API."""
     await async_setup_component(hass, DOMAIN, config)
     http_client = await hass_client()

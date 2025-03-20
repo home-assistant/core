@@ -7,24 +7,26 @@ from typing import Any
 from tessie_api import schedule_software_update
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, TessieUpdateStatus
-from .coordinator import TessieStateUpdateCoordinator
+from . import TessieConfigEntry
+from .const import TessieUpdateStatus
 from .entity import TessieEntity
+from .models import TessieVehicleData
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tessie Update platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
-    async_add_entities(
-        TessieUpdateEntity(vehicle.state_coordinator) for vehicle in data
-    )
+    async_add_entities(TessieUpdateEntity(vehicle) for vehicle in data.vehicles)
 
 
 class TessieUpdateEntity(TessieEntity, UpdateEntity):
@@ -34,10 +36,10 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
     ) -> None:
         """Initialize the Update."""
-        super().__init__(coordinator, "update")
+        super().__init__(vehicle, "update")
 
     @property
     def supported_features(self) -> UpdateEntityFeature:
@@ -69,14 +71,22 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
         return self.installed_version
 
     @property
-    def in_progress(self) -> bool | int | None:
+    def in_progress(self) -> bool:
+        """Update installation progress."""
+        return (
+            self.get("vehicle_state_software_update_status")
+            == TessieUpdateStatus.INSTALLING
+        )
+
+    @property
+    def update_percentage(self) -> int | None:
         """Update installation progress."""
         if (
             self.get("vehicle_state_software_update_status")
             == TessieUpdateStatus.INSTALLING
         ):
             return self.get("vehicle_state_software_update_install_perc")
-        return False
+        return None
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any

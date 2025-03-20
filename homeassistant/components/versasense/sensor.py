@@ -30,7 +30,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the sensor platform."""
     if discovery_info is None:
-        return None
+        return
 
     consumer = hass.data[DOMAIN][KEY_CONSUMER]
 

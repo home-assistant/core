@@ -44,7 +44,7 @@ def get_pyegps_device_mock() -> MagicMock:
     fkObj = FakePowerStrip(
         devId=DEMO_CONFIG_DATA[CONF_DEVICE_API_ID], number_of_sockets=4
     )
-    fkObj.release = lambda: True
+    fkObj.release = lambda: None
     fkObj._status = [0, 1, 0, 1]
 
     usb_device_mock = MagicMock(wraps=fkObj)
@@ -58,7 +58,7 @@ def get_pyegps_device_mock() -> MagicMock:
 
 
 @pytest.fixture(name="mock_get_device")
-def patch_get_device(pyegps_device_mock: MagicMock) -> Generator[MagicMock, None, None]:
+def patch_get_device(pyegps_device_mock: MagicMock) -> Generator[MagicMock]:
     """Fixture to patch the `get_device` api method."""
     with (
         patch("homeassistant.components.energenie_power_sockets.get_device") as m1,
@@ -74,7 +74,7 @@ def patch_get_device(pyegps_device_mock: MagicMock) -> Generator[MagicMock, None
 @pytest.fixture(name="mock_search_for_devices")
 def patch_search_devices(
     pyegps_device_mock: MagicMock,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Fixture to patch the `search_for_devices` api method."""
     with patch(
         "homeassistant.components.energenie_power_sockets.config_flow.search_for_devices",

@@ -6,9 +6,9 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
+DEFAULT_TIME_ZONE = dt_util.get_default_time_zone()
 TEST_TIME_ZONE = "America/Los_Angeles"
 
 
@@ -25,9 +25,19 @@ def test_get_time_zone_retrieves_valid_time_zone() -> None:
     assert dt_util.get_time_zone(TEST_TIME_ZONE) is not None
 
 
+async def test_async_get_time_zone_retrieves_valid_time_zone() -> None:
+    """Test getting a time zone."""
+    assert await dt_util.async_get_time_zone(TEST_TIME_ZONE) is not None
+
+
 def test_get_time_zone_returns_none_for_garbage_time_zone() -> None:
     """Test getting a non existing time zone."""
     assert dt_util.get_time_zone("Non existing time zone") is None
+
+
+async def test_async_get_time_zone_returns_none_for_garbage_time_zone() -> None:
+    """Test getting a non existing time zone."""
+    assert await dt_util.async_get_time_zone("Non existing time zone") is None
 
 
 def test_set_default_time_zone() -> None:
@@ -106,10 +116,14 @@ def test_utc_from_timestamp() -> None:
     )
 
 
-def test_timestamp_to_utc() -> None:
+def test_timestamp_to_utc(caplog: pytest.LogCaptureFixture) -> None:
     """Test we can convert a utc datetime to a timestamp."""
     utc_now = dt_util.utcnow()
     assert dt_util.utc_to_timestamp(utc_now) == utc_now.timestamp()
+    assert (
+        "utc_to_timestamp is a deprecated function which will be removed "
+        "in HA Core 2026.1. Use datetime.timestamp instead" in caplog.text
+    )
 
 
 def test_as_timestamp() -> None:
@@ -284,12 +298,12 @@ def test_parse_time_expression() -> None:
 
     assert list(range(0, 60, 5)) == dt_util.parse_time_expression("/5", 0, 59)
 
-    assert [1, 2, 3] == dt_util.parse_time_expression([2, 1, 3], 0, 59)
+    assert dt_util.parse_time_expression([2, 1, 3], 0, 59) == [1, 2, 3]
 
     assert list(range(24)) == dt_util.parse_time_expression("*", 0, 23)
 
-    assert [42] == dt_util.parse_time_expression(42, 0, 59)
-    assert [42] == dt_util.parse_time_expression("42", 0, 59)
+    assert dt_util.parse_time_expression(42, 0, 59) == [42]
+    assert dt_util.parse_time_expression("42", 0, 59) == [42]
 
     with pytest.raises(ValueError):
         dt_util.parse_time_expression(61, 0, 60)

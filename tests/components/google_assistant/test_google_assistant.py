@@ -1,10 +1,12 @@
 """The tests for the Google Assistant component."""
 
+from asyncio import AbstractEventLoop
 from http import HTTPStatus
 import json
 from unittest.mock import patch
 
 from aiohttp.hdrs import AUTHORIZATION
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import const, core, setup
@@ -14,15 +16,13 @@ from homeassistant.components import (
     light,
     media_player,
 )
-from homeassistant.const import (
-    CLOUD_NEVER_EXPOSED_ENTITIES,
-    EntityCategory,
-    Platform,
-    UnitOfTemperature,
-)
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, EntityCategory, Platform
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import DEMO_DEVICES
+
+from tests.typing import ClientSessionGenerator
 
 API_PASSWORD = "test1234"
 
@@ -32,13 +32,17 @@ ACCESS_TOKEN = "superdoublesecret"
 
 
 @pytest.fixture
-def auth_header(hass_access_token):
+def auth_header(hass_access_token: str) -> dict[str, str]:
     """Generate an HTTP header with bearer token authorization."""
     return {AUTHORIZATION: f"Bearer {hass_access_token}"}
 
 
 @pytest.fixture
-def assistant_client(event_loop, hass, hass_client_no_auth):
+def assistant_client(
+    event_loop: AbstractEventLoop,
+    hass: core.HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> TestClient:
     """Create web client for the Google Assistant API."""
     loop = event_loop
     loop.run_until_complete(
@@ -83,7 +87,9 @@ async def wanted_platforms_only() -> None:
 
 
 @pytest.fixture
-def hass_fixture(event_loop, hass):
+def hass_fixture(
+    event_loop: AbstractEventLoop, hass: core.HomeAssistant
+) -> core.HomeAssistant:
     """Set up a Home Assistant instance for these tests."""
     loop = event_loop
 
@@ -265,7 +271,7 @@ async def test_query_climate_request_f(
 ) -> None:
     """Test a query request."""
     # Mock demo devices as fahrenheit to see if we convert to celsius
-    hass_fixture.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
+    hass_fixture.config.units = US_CUSTOMARY_SYSTEM
     for entity_id in ("climate.hvac", "climate.heatpump", "climate.ecobee"):
         state = hass_fixture.states.get(entity_id)
         attr = dict(state.attributes)
@@ -322,7 +328,6 @@ async def test_query_climate_request_f(
         "thermostatHumidityAmbient": 54.2,
         "currentFanSpeedSetting": "on_high",
     }
-    hass_fixture.config.units.temperature_unit = UnitOfTemperature.CELSIUS
 
 
 async def test_query_humidifier_request(
@@ -481,7 +486,7 @@ async def test_execute_request(hass_fixture, assistant_client, auth_header) -> N
     assert kitchen.attributes.get(light.ATTR_RGB_COLOR) == (255, 0, 0)
 
     bed = hass_fixture.states.get("light.bed_light")
-    assert bed.attributes.get(light.ATTR_COLOR_TEMP) == 212
+    assert bed.attributes.get(light.ATTR_COLOR_TEMP_KELVIN) == 4700
 
     assert hass_fixture.states.get("switch.decorative_lights").state == "off"
 

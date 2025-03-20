@@ -17,7 +17,7 @@ PLATFORMS: list[Platform] = [Platform.TODO]
 
 STORAGE_PATH = ".storage/local_todo.{key}.ics"
 
-LocalTodoConfigEntry = ConfigEntry[LocalTodoListStore]
+type LocalTodoConfigEntry = ConfigEntry[LocalTodoListStore]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LocalTodoConfigEntry) -> bool:

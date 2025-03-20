@@ -6,16 +6,19 @@ from homeassistant.components import mqtt
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import slugify
 
+from .const import DOMAIN
 from .definitions import SENSORS, DSMRReaderSensorEntityDescription
 
 
 async def async_setup_entry(
     _: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up DSMR Reader sensors from config entry."""
     async_add_entities(DSMRSensor(description, config_entry) for description in SENSORS)
@@ -53,6 +56,20 @@ class DSMRSensor(SensorEntity):
 
             self.async_write_ha_state()
 
-        await mqtt.async_subscribe(
-            self.hass, self.entity_description.key, message_received, 1
-        )
+        try:
+            await mqtt.async_subscribe(
+                self.hass, self.entity_description.key, message_received, 1
+            )
+        except HomeAssistantError:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"cannot_subscribe_mqtt_topic_{self.entity_description.key}",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="cannot_subscribe_mqtt_topic",
+                translation_placeholders={
+                    "topic": self.entity_description.key,
+                    "topic_title": self.entity_description.key.split("/")[-1],
+                },
+            )

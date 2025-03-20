@@ -10,16 +10,12 @@ from miio import DeviceException
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_GATEWAY, DOMAIN
 
@@ -33,7 +29,7 @@ XIAOMI_STATE_ARMING_VALUE = "oning"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi Gateway Alarm from a config entry."""
     entities = []
@@ -54,6 +50,7 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
 
     _attr_icon = "mdi:shield-home"
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
+    _attr_code_arm_required = False
 
     def __init__(
         self, gateway_device, gateway_name, model, mac_address, gateway_device_id
@@ -105,11 +102,11 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         self._attr_available = True
 
         if state == XIAOMI_STATE_ARMED_VALUE:
-            self._attr_state = STATE_ALARM_ARMED_AWAY
+            self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
         elif state == XIAOMI_STATE_DISARMED_VALUE:
-            self._attr_state = STATE_ALARM_DISARMED
+            self._attr_alarm_state = AlarmControlPanelState.DISARMED
         elif state == XIAOMI_STATE_ARMING_VALUE:
-            self._attr_state = STATE_ALARM_ARMING
+            self._attr_alarm_state = AlarmControlPanelState.ARMING
         else:
             _LOGGER.warning(
                 "New state (%s) doesn't match expected values: %s/%s/%s",
@@ -118,6 +115,6 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
                 XIAOMI_STATE_DISARMED_VALUE,
                 XIAOMI_STATE_ARMING_VALUE,
             )
-            self._attr_state = None
+            self._attr_alarm_state = None
 
-        _LOGGER.debug("State value: %s", self._attr_state)
+        _LOGGER.debug("State value: %s", self._attr_alarm_state)

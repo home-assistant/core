@@ -7,7 +7,6 @@ from dataclasses import dataclass
 
 from yalexs_ble import ConnectionInfo, LockInfo, LockState
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -21,9 +20,9 @@ from homeassistant.const import (
     UnitOfElectricPotential,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import YALEXSBLEConfigEntry
 from .entity import YALEXSBLEEntity
 from .models import YaleXSBLEData
 
@@ -75,11 +74,11 @@ SENSORS: tuple[YaleXSBLESensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: YALEXSBLEConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YALE XS Bluetooth sensors."""
-    data: YaleXSBLEData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     async_add_entities(YaleXSBLESensor(description, data) for description in SENSORS)
 
 

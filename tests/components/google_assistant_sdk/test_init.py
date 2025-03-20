@@ -149,6 +149,7 @@ async def test_send_text_command(
     mock_text_assistant.assert_called_once_with(
         ExpectedCredentials(), expected_language_code, audio_out=False
     )
+    # pylint:disable-next=unnecessary-dunder-call
     mock_text_assistant.assert_has_calls([call().__enter__().assist(command)])
 
 

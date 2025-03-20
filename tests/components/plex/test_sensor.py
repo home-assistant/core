@@ -74,6 +74,7 @@ class MockPlexTVEpisode(MockPlexMedia):
 
 async def test_library_sensor_values(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
     setup_plex_server,
     mock_websocket,
@@ -118,7 +119,6 @@ async def test_library_sensor_values(
     assert hass.states.get("sensor.plex_server_1_library_tv_shows") is None
 
     # Enable sensor and validate values
-    entity_registry = er.async_get(hass)
     entity_registry.async_update_entity(
         entity_id="sensor.plex_server_1_library_tv_shows", disabled_by=None
     )

@@ -89,7 +89,9 @@ async def test_step_user_unexpected_exception(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
 
-        assert result["type"] is FlowResultType.ABORT
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "unknown"}
+        hass.config_entries.flow.async_abort(result["flow_id"])
 
 
 async def test_step_user(hass: HomeAssistant) -> None:
@@ -188,7 +190,7 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"] is None
+        assert result["data"] == {}
 
         assert dict(config_entry.data) == {
             CONF_HEADLINE_FILTER: deepcopy(DUMMY_DATA[CONF_HEADLINE_FILTER]),
@@ -300,10 +302,14 @@ async def test_options_flow_unexpected_exception(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] is FlowResultType.ABORT
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "unknown"}
+        hass.config_entries.options.async_abort(result["flow_id"])
 
 
-async def test_options_flow_entity_removal(hass: HomeAssistant) -> None:
+async def test_options_flow_entity_removal(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test if old entities are removed."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -341,7 +347,6 @@ async def test_options_flow_entity_removal(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
-        entity_registry: er = er.async_get(hass)
         entries = er.async_entries_for_config_entry(
             entity_registry, config_entry.entry_id
         )

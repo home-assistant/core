@@ -24,11 +24,11 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_FUEL_TYPES, CONF_STATIONS
+from .const import CONF_FUEL_TYPES, CONF_STATIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-TankerkoenigConfigEntry = ConfigEntry["TankerkoenigDataUpdateCoordinator"]
+type TankerkoenigConfigEntry = ConfigEntry[TankerkoenigDataUpdateCoordinator]
 
 
 class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInfo]]):
@@ -39,7 +39,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
     def __init__(
         self,
         hass: HomeAssistant,
-        name: str,
+        config_entry: TankerkoenigConfigEntry,
         update_interval: int,
     ) -> None:
         """Initialize the data object."""
@@ -47,7 +47,8 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
         super().__init__(
             hass=hass,
             logger=_LOGGER,
-            name=name,
+            config_entry=config_entry,
+            name=config_entry.unique_id or DOMAIN,
             update_interval=timedelta(minutes=update_interval),
         )
 

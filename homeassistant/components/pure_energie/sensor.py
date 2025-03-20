@@ -12,15 +12,18 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import PureEnergieData, PureEnergieDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import (
+    PureEnergieConfigEntry,
+    PureEnergieData,
+    PureEnergieDataUpdateCoordinator,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -59,12 +62,13 @@ SENSORS: tuple[PureEnergieSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PureEnergieConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Pure Energie Sensors based on a config entry."""
     async_add_entities(
         PureEnergieSensorEntity(
-            coordinator=hass.data[DOMAIN][entry.entry_id],
             description=description,
             entry=entry,
         )
@@ -83,21 +87,22 @@ class PureEnergieSensorEntity(
     def __init__(
         self,
         *,
-        coordinator: PureEnergieDataUpdateCoordinator,
         description: PureEnergieSensorEntityDescription,
-        entry: ConfigEntry,
+        entry: PureEnergieConfigEntry,
     ) -> None:
         """Initialize Pure Energie sensor."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator=entry.runtime_data)
         self.entity_id = f"{SENSOR_DOMAIN}.pem_{description.key}"
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.data.device.n2g_id}_{description.key}"
+        self._attr_unique_id = (
+            f"{entry.runtime_data.data.device.n2g_id}_{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.data.device.n2g_id)},
-            configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
-            sw_version=coordinator.data.device.firmware,
-            manufacturer=coordinator.data.device.manufacturer,
-            model=coordinator.data.device.model,
+            identifiers={(DOMAIN, entry.runtime_data.data.device.n2g_id)},
+            configuration_url=f"http://{entry.runtime_data.config_entry.data[CONF_HOST]}",
+            sw_version=entry.runtime_data.data.device.firmware,
+            manufacturer=entry.runtime_data.data.device.manufacturer,
+            model=entry.runtime_data.data.device.model,
             name=entry.title,
         )
 

@@ -96,9 +96,7 @@ async def test_state_diff_event(hass: HomeAssistant) -> None:
     message = _state_diff_event(last_state_event)
     assert message == {
         "c": {
-            "light.window": {
-                "+": {"lc": new_state.last_changed.timestamp(), "s": "off"}
-            }
+            "light.window": {"+": {"lc": new_state.last_changed_timestamp, "s": "off"}}
         }
     }
 
@@ -117,7 +115,7 @@ async def test_state_diff_event(hass: HomeAssistant) -> None:
             "light.window": {
                 "+": {
                     "c": {"parent_id": "new-parent-id"},
-                    "lc": new_state.last_changed.timestamp(),
+                    "lc": new_state.last_changed_timestamp,
                     "s": "red",
                 }
             }
@@ -144,7 +142,7 @@ async def test_state_diff_event(hass: HomeAssistant) -> None:
                         "parent_id": "another-new-parent-id",
                         "user_id": "new-user-id",
                     },
-                    "lc": new_state.last_changed.timestamp(),
+                    "lc": new_state.last_changed_timestamp,
                     "s": "green",
                 }
             }
@@ -168,7 +166,7 @@ async def test_state_diff_event(hass: HomeAssistant) -> None:
             "light.window": {
                 "+": {
                     "c": {"user_id": "another-new-user-id"},
-                    "lc": new_state.last_changed.timestamp(),
+                    "lc": new_state.last_changed_timestamp,
                     "s": "blue",
                 }
             }
@@ -194,7 +192,7 @@ async def test_state_diff_event(hass: HomeAssistant) -> None:
             "light.window": {
                 "+": {
                     "c": "id-new",
-                    "lc": new_state.last_changed.timestamp(),
+                    "lc": new_state.last_changed_timestamp,
                     "s": "yellow",
                 }
             }
@@ -216,7 +214,7 @@ async def test_state_diff_event(hass: HomeAssistant) -> None:
                 "+": {
                     "a": {"new": "attr"},
                     "c": {"id": new_context.id, "parent_id": None, "user_id": None},
-                    "lc": new_state.last_changed.timestamp(),
+                    "lc": new_state.last_changed_timestamp,
                     "s": "purple",
                 }
             }
@@ -232,7 +230,7 @@ async def test_state_diff_event(hass: HomeAssistant) -> None:
     assert message == {
         "c": {
             "light.window": {
-                "+": {"lc": new_state.last_changed.timestamp(), "s": "green"},
+                "+": {"lc": new_state.last_changed_timestamp, "s": "green"},
                 "-": {"a": ["new"]},
             }
         }
@@ -254,7 +252,7 @@ async def test_state_diff_event(hass: HomeAssistant) -> None:
             "light.window": {
                 "+": {
                     "a": {"list_attr": ["a", "b", "c", "d"], "list_attr_2": ["a", "b"]},
-                    "lu": new_state.last_updated.timestamp(),
+                    "lu": new_state.last_updated_timestamp,
                 }
             }
         }
@@ -275,7 +273,7 @@ async def test_state_diff_event(hass: HomeAssistant) -> None:
             "light.window": {
                 "+": {
                     "a": {"list_attr": ["a", "b", "c", "e"]},
-                    "lu": new_state.last_updated.timestamp(),
+                    "lu": new_state.last_updated_timestamp,
                 },
                 "-": {"a": ["list_attr_2"]},
             }

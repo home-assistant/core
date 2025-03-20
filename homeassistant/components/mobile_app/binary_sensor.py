@@ -8,7 +8,7 @@ from homeassistant.const import CONF_WEBHOOK_ID, STATE_ON
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_SENSOR_ATTRIBUTES,
@@ -28,7 +28,7 @@ from .entity import MobileAppEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up mobile app binary sensor from a config entry."""
     entities = []
@@ -69,7 +69,7 @@ async def async_setup_entry(
 
 
 class MobileAppBinarySensor(MobileAppEntity, BinarySensorEntity):
-    """Representation of an mobile app binary sensor."""
+    """Representation of a mobile app binary sensor."""
 
     async def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""

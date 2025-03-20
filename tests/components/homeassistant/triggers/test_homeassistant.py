@@ -27,8 +27,9 @@ from tests.common import async_mock_service
         }
     ],
 )
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_if_fires_on_hass_start(
-    hass: HomeAssistant, mock_hass_config: None, hass_config: ConfigType
+    hass: HomeAssistant, hass_config: ConfigType
 ) -> None:
     """Test the firing when Home Assistant starts."""
     calls = async_mock_service(hass, "test", "automation")

@@ -9,7 +9,7 @@ from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_FLOW_TYPE,
@@ -18,7 +18,7 @@ from .const import (
     MODEL_AIRQUALITYMONITOR_S1,
     MODEL_AIRQUALITYMONITOR_V1,
 )
-from .device import XiaomiMiioEntity
+from .entity import XiaomiMiioEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -242,7 +242,7 @@ DEVICE_MAP: dict[str, dict[str, Callable]] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi Air Quality from a config entry."""
     entities = []

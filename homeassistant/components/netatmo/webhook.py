@@ -38,7 +38,7 @@ async def async_handle_webhook(
         data = await request.json()
     except ValueError as err:
         _LOGGER.error("Error in data: %s", err)
-        return None
+        return
 
     _LOGGER.debug("Got webhook data: %s", data)
 

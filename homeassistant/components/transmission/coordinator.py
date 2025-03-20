@@ -27,17 +27,21 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type TransmissionConfigEntry = ConfigEntry[TransmissionDataUpdateCoordinator]
+
 
 class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
     """Transmission dataupdate coordinator class."""
 
-    config_entry: ConfigEntry
+    config_entry: TransmissionConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, api: transmission_rpc.Client
+        self,
+        hass: HomeAssistant,
+        entry: TransmissionConfigEntry,
+        api: transmission_rpc.Client,
     ) -> None:
         """Initialize the Transmission RPC API."""
-        self.config_entry = entry
         self.api = api
         self.host = entry.data[CONF_HOST]
         self._session: transmission_rpc.Session | None = None
@@ -47,6 +51,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         self.torrents: list[transmission_rpc.Torrent] = []
         super().__init__(
             hass,
+            config_entry=entry,
             name=f"{DOMAIN} - {self.host}",
             logger=_LOGGER,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
@@ -55,12 +60,12 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
     @property
     def limit(self) -> int:
         """Return limit."""
-        return self.config_entry.data.get(CONF_LIMIT, DEFAULT_LIMIT)
+        return self.config_entry.options.get(CONF_LIMIT, DEFAULT_LIMIT)
 
     @property
     def order(self) -> str:
         """Return order."""
-        return self.config_entry.data.get(CONF_ORDER, DEFAULT_ORDER)
+        return self.config_entry.options.get(CONF_ORDER, DEFAULT_ORDER)
 
     async def _async_update_data(self) -> SessionStats:
         """Update transmission data."""
@@ -93,46 +98,59 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
     def check_completed_torrent(self) -> None:
         """Get completed torrent functionality."""
-        old_completed_torrent_names = {
-            torrent.name for torrent in self._completed_torrents
-        }
+        old_completed_torrents = {torrent.id for torrent in self._completed_torrents}
 
         current_completed_torrents = [
             torrent for torrent in self.torrents if torrent.status == "seeding"
         ]
 
         for torrent in current_completed_torrents:
-            if torrent.name not in old_completed_torrent_names:
+            if torrent.id not in old_completed_torrents:
                 self.hass.bus.fire(
-                    EVENT_DOWNLOADED_TORRENT, {"name": torrent.name, "id": torrent.id}
+                    EVENT_DOWNLOADED_TORRENT,
+                    {
+                        "name": torrent.name,
+                        "id": torrent.id,
+                        "download_path": torrent.download_dir,
+                    },
                 )
 
         self._completed_torrents = current_completed_torrents
 
     def check_started_torrent(self) -> None:
         """Get started torrent functionality."""
-        old_started_torrent_names = {torrent.name for torrent in self._started_torrents}
+        old_started_torrents = {torrent.id for torrent in self._started_torrents}
 
         current_started_torrents = [
             torrent for torrent in self.torrents if torrent.status == "downloading"
         ]
 
         for torrent in current_started_torrents:
-            if torrent.name not in old_started_torrent_names:
+            if torrent.id not in old_started_torrents:
                 self.hass.bus.fire(
-                    EVENT_STARTED_TORRENT, {"name": torrent.name, "id": torrent.id}
+                    EVENT_STARTED_TORRENT,
+                    {
+                        "name": torrent.name,
+                        "id": torrent.id,
+                        "download_path": torrent.download_dir,
+                    },
                 )
 
         self._started_torrents = current_started_torrents
 
     def check_removed_torrent(self) -> None:
         """Get removed torrent functionality."""
-        current_torrent_names = {torrent.name for torrent in self.torrents}
+        current_torrents = {torrent.id for torrent in self.torrents}
 
         for torrent in self._all_torrents:
-            if torrent.name not in current_torrent_names:
+            if torrent.id not in current_torrents:
                 self.hass.bus.fire(
-                    EVENT_REMOVED_TORRENT, {"name": torrent.name, "id": torrent.id}
+                    EVENT_REMOVED_TORRENT,
+                    {
+                        "name": torrent.name,
+                        "id": torrent.id,
+                        "download_path": torrent.download_dir,
+                    },
                 )
 
         self._all_torrents = self.torrents.copy()

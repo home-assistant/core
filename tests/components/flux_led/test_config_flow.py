@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
+from homeassistant.components.flux_led.config_flow import FluxLedConfigFlow
 from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
@@ -26,6 +26,7 @@ from homeassistant.components.flux_led.const import (
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import (
     DEFAULT_ENTRY_TITLE,
@@ -406,17 +407,34 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
-    with _patch_discovery(), _patch_wifibulb():
+    real_is_matching = FluxLedConfigFlow.is_matching
+    return_values = []
+
+    def is_matching(self, other_flow) -> bool:
+        return_values.append(real_is_matching(self, other_flow))
+        return return_values[-1]
+
+    with (
+        _patch_discovery(),
+        _patch_wifibulb(),
+        patch.object(
+            FluxLedConfigFlow, "is_matching", wraps=is_matching, autospec=True
+        ),
+    ):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 hostname="any",
                 ip=IP_ADDRESS,
                 macaddress="000000000000",
             ),
         )
         await hass.async_block_till_done()
+
+    # Ensure the is_matching method returned True
+    assert return_values == [True]
+
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "already_in_progress"
 

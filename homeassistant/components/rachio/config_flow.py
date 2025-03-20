@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from rachiopy import Rachio
 from requests.exceptions import ConnectTimeout
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -19,6 +19,10 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 from .const import (
     CONF_MANUAL_RUN_MINS,
@@ -67,7 +71,9 @@ class RachioConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -80,7 +86,7 @@ class RachioConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -89,13 +95,11 @@ class RachioConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_homekit(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle HomeKit discovery."""
         self._async_abort_entries_match()
-        await self.async_set_unique_id(
-            discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID]
-        )
+        await self.async_set_unique_id(discovery_info.properties[ATTR_PROPERTIES_ID])
         self._abort_if_unique_id_configured()
         return await self.async_step_user()
 
@@ -105,17 +109,15 @@ class RachioConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for Rachio."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, int] | None = None
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

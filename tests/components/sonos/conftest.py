@@ -1,23 +1,33 @@
 """Configuration for Sonos tests."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine, Generator
 from copy import copy
 from ipaddress import ip_address
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from soco import SoCo
 from soco.alarms import Alarms
+from soco.data_structures import (
+    DidlFavorite,
+    DidlMusicTrack,
+    DidlPlaylistContainer,
+    SearchResult,
+)
 from soco.events_base import Event as SonosEvent
 
-from homeassistant.components import ssdp, zeroconf
+from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
 
 class SonosMockEventListener:
@@ -77,7 +87,7 @@ class SonosMockService:
 class SonosMockEvent:
     """Mock a sonos Event used in callbacks."""
 
-    def __init__(self, soco, service, variables):
+    def __init__(self, soco, service, variables) -> None:
         """Initialize the instance."""
         self.sid = f"{soco.uid}_sub0000000001"
         self.seq = "0"
@@ -100,7 +110,7 @@ class SonosMockEvent:
 @pytest.fixture
 def zeroconf_payload():
     """Return a default zeroconf payload."""
-    return zeroconf.ZeroconfServiceInfo(
+    return ZeroconfServiceInfo(
         ip_address=ip_address("192.168.4.2"),
         ip_addresses=[ip_address("192.168.4.2")],
         hostname="Sonos-aaa",
@@ -118,7 +128,9 @@ async def async_autosetup_sonos(async_setup_sonos):
 
 
 @pytest.fixture
-def async_setup_sonos(hass, config_entry, fire_zgs_event):
+def async_setup_sonos(
+    hass: HomeAssistant, config_entry: MockConfigEntry, fire_zgs_event
+) -> Callable[[], Coroutine[Any, Any, None]]:
     """Return a coroutine to set up a Sonos integration instance on demand."""
 
     async def _wrapper():
@@ -134,7 +146,7 @@ def async_setup_sonos(hass, config_entry, fire_zgs_event):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture():
+def config_entry_fixture() -> MockConfigEntry:
     """Create a mock Sonos config entry."""
     return MockConfigEntry(domain=DOMAIN, title="Sonos")
 
@@ -179,6 +191,8 @@ class SoCoMockFactory:
         current_track_info_empty,
         battery_info,
         alarm_clock,
+        sonos_playlists: SearchResult,
+        sonos_queue: list[DidlMusicTrack],
     ) -> None:
         """Initialize the mock factory."""
         self.mock_list: dict[str, MockSoCo] = {}
@@ -187,6 +201,8 @@ class SoCoMockFactory:
         self.current_track_info = current_track_info_empty
         self.battery_info = battery_info
         self.alarm_clock = alarm_clock
+        self.sonos_playlists = sonos_playlists
+        self.sonos_queue = sonos_queue
 
     def cache_mock(
         self, mock_soco: MockSoCo, ip_address: str, name: str = "Zone A"
@@ -199,11 +215,14 @@ class SoCoMockFactory:
         mock_soco.music_library = self.music_library
         mock_soco.get_current_track_info.return_value = self.current_track_info
         mock_soco.music_source_from_uri = SoCo.music_source_from_uri
+        mock_soco.get_sonos_playlists.return_value = self.sonos_playlists
+        mock_soco.get_queue.return_value = self.sonos_queue
         my_speaker_info = self.speaker_info.copy()
         my_speaker_info["zone_name"] = name
         my_speaker_info["uid"] = mock_soco.uid
         mock_soco.get_speaker_info = Mock(return_value=my_speaker_info)
         mock_soco.add_to_queue = Mock(return_value=10)
+        mock_soco.add_uri_to_queue = Mock(return_value=10)
 
         mock_soco.avTransport = SonosMockService("AVTransport", ip_address)
         mock_soco.renderingControl = SonosMockService("RenderingControl", ip_address)
@@ -235,13 +254,50 @@ def patch_gethostbyname(host: str) -> str:
     return host
 
 
+@pytest.fixture(name="soco_sharelink")
+def soco_sharelink():
+    """Fixture to mock soco.plugins.sharelink.ShareLinkPlugin."""
+    with patch("homeassistant.components.sonos.speaker.ShareLinkPlugin") as mock_share:
+        mock_instance = MagicMock()
+        mock_instance.is_share_link.return_value = True
+        mock_instance.add_share_link_to_queue.return_value = 10
+        mock_share.return_value = mock_instance
+        yield mock_instance
+
+
+@pytest.fixture(name="sonos_websocket")
+def sonos_websocket():
+    """Fixture to mock SonosWebSocket."""
+    with patch(
+        "homeassistant.components.sonos.speaker.SonosWebsocket"
+    ) as mock_sonos_ws:
+        mock_instance = AsyncMock()
+        mock_instance.play_clip = AsyncMock()
+        mock_instance.play_clip.return_value = [{"success": 1}, {}]
+        mock_sonos_ws.return_value = mock_instance
+        yield mock_instance
+
+
 @pytest.fixture(name="soco_factory")
 def soco_factory(
-    music_library, speaker_info, current_track_info_empty, battery_info, alarm_clock
+    music_library,
+    speaker_info,
+    current_track_info_empty,
+    battery_info,
+    alarm_clock,
+    sonos_playlists: SearchResult,
+    sonos_websocket,
+    sonos_queue: list[DidlMusicTrack],
 ):
     """Create factory for instantiating SoCo mocks."""
     factory = SoCoMockFactory(
-        music_library, speaker_info, current_track_info_empty, battery_info, alarm_clock
+        music_library,
+        speaker_info,
+        current_track_info_empty,
+        battery_info,
+        alarm_clock,
+        sonos_playlists,
+        sonos_queue=sonos_queue,
     )
     with (
         patch("homeassistant.components.sonos.SoCo", new=factory.get_mock),
@@ -258,7 +314,7 @@ def soco_fixture(soco_factory):
 
 
 @pytest.fixture(autouse=True)
-async def silent_ssdp_scanner(hass):
+def silent_ssdp_scanner() -> Generator[None]:
     """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
     with (
         patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
@@ -278,14 +334,20 @@ async def silent_ssdp_scanner(hass):
 def discover_fixture(soco):
     """Create a mock soco discover fixture."""
 
-    def do_callback(hass, callback, *args, **kwargs):
+    def do_callback(
+        hass: HomeAssistant,
+        callback: Callable[
+            [SsdpServiceInfo, ssdp.SsdpChange], Coroutine[Any, Any, None] | None
+        ],
+        match_dict: dict[str, str] | None = None,
+    ) -> MagicMock:
         callback(
-            ssdp.SsdpServiceInfo(
+            SsdpServiceInfo(
                 ssdp_location=f"http://{soco.ip_address}/",
                 ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
                 ssdp_usn=f"uuid:{soco.uid}_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1",
                 upnp={
-                    ssdp.ATTR_UPNP_UDN: f"uuid:{soco.uid}",
+                    ATTR_UPNP_UDN: f"uuid:{soco.uid}",
                 },
             ),
             ssdp.SsdpChange.ALIVE,
@@ -304,15 +366,61 @@ def config_fixture():
     return {DOMAIN: {MP_DOMAIN: {CONF_HOSTS: ["192.168.42.2"]}}}
 
 
+@pytest.fixture(name="sonos_favorites")
+def sonos_favorites_fixture() -> SearchResult:
+    """Create sonos favorites fixture."""
+    favorites = load_json_value_fixture("sonos_favorites.json", "sonos")
+    favorite_list = [DidlFavorite.from_dict(fav) for fav in favorites]
+    return SearchResult(favorite_list, "favorites", 3, 3, 1)
+
+
+@pytest.fixture(name="sonos_playlists")
+def sonos_playlists_fixture() -> SearchResult:
+    """Create sonos playlist fixture."""
+    playlists = load_json_value_fixture("sonos_playlists.json", "sonos")
+    playlists_list = [DidlPlaylistContainer.from_dict(pl) for pl in playlists]
+    return SearchResult(playlists_list, "sonos_playlists", 1, 1, 0)
+
+
+@pytest.fixture(name="sonos_queue")
+def sonos_queue() -> list[DidlMusicTrack]:
+    """Create sonos queue fixture."""
+    queue = load_json_value_fixture("sonos_queue.json", "sonos")
+    return [DidlMusicTrack.from_dict(track) for track in queue]
+
+
 class MockMusicServiceItem:
     """Mocks a Soco MusicServiceItem."""
 
-    def __init__(self, title: str, item_id: str, parent_id: str, item_class: str):
+    def __init__(
+        self,
+        title: str,
+        item_id: str,
+        parent_id: str,
+        item_class: str,
+        album_art_uri: None | str = None,
+    ) -> None:
         """Initialize the mock item."""
         self.title = title
         self.item_id = item_id
         self.item_class = item_class
         self.parent_id = parent_id
+        self.album_art_uri: None | str = album_art_uri
+
+
+def list_from_json_fixture(file_name: str) -> list[MockMusicServiceItem]:
+    """Create a list of music service items from a json fixture file."""
+    item_list = load_json_value_fixture(file_name, "sonos")
+    return [
+        MockMusicServiceItem(
+            item.get("title"),
+            item.get("item_id"),
+            item.get("parent_id"),
+            item.get("item_class"),
+            item.get("album_art_uri"),
+        )
+        for item in item_list
+    ]
 
 
 def mock_browse_by_idstring(
@@ -389,6 +497,10 @@ def mock_browse_by_idstring(
                 "object.container.album.musicAlbum",
             ),
         ]
+    if search_type == "tracks":
+        return list_from_json_fixture("music_library_tracks.json")
+    if search_type == "albums" and idstring == "A:ALBUM":
+        return list_from_json_fixture("music_library_albums.json")
     return []
 
 
@@ -405,15 +517,26 @@ def mock_get_music_library_information(
                 "object.container.album.musicAlbum",
             )
         ]
+    return []
+
+
+@pytest.fixture(name="music_library_browse_categories")
+def music_library_browse_categories() -> list[MockMusicServiceItem]:
+    """Create fixture for top-level music library categories."""
+    return list_from_json_fixture("music_library_categories.json")
 
 
 @pytest.fixture(name="music_library")
-def music_library_fixture():
+def music_library_fixture(
+    sonos_favorites: SearchResult,
+    music_library_browse_categories: list[MockMusicServiceItem],
+) -> Mock:
     """Create music_library fixture."""
     music_library = MagicMock()
-    music_library.get_sonos_favorites.return_value.update_id = 1
-    music_library.browse_by_idstring = mock_browse_by_idstring
+    music_library.get_sonos_favorites.return_value = sonos_favorites
+    music_library.browse_by_idstring = Mock(side_effect=mock_browse_by_idstring)
     music_library.get_music_library_information = mock_get_music_library_information
+    music_library.browse = Mock(return_value=music_library_browse_categories)
     return music_library
 
 
@@ -421,6 +544,7 @@ def music_library_fixture():
 def alarm_clock_fixture():
     """Create alarmClock fixture."""
     alarm_clock = SonosMockService("AlarmClock")
+    # pylint: disable-next=attribute-defined-outside-init
     alarm_clock.ListAlarms = Mock()
     alarm_clock.ListAlarms.return_value = {
         "CurrentAlarmListVersion": "RINCON_test:14",
@@ -438,6 +562,7 @@ def alarm_clock_fixture():
 def alarm_clock_fixture_extended():
     """Create alarmClock fixture."""
     alarm_clock = SonosMockService("AlarmClock")
+    # pylint: disable-next=attribute-defined-outside-init
     alarm_clock.ListAlarms = Mock()
     alarm_clock.ListAlarms.return_value = {
         "CurrentAlarmListVersion": "RINCON_test:15",
@@ -455,13 +580,19 @@ def alarm_clock_fixture_extended():
     return alarm_clock
 
 
+@pytest.fixture(name="speaker_model")
+def speaker_model_fixture(request: pytest.FixtureRequest):
+    """Create fixture for the speaker model."""
+    return getattr(request, "param", "Model Name")
+
+
 @pytest.fixture(name="speaker_info")
-def speaker_info_fixture():
+def speaker_info_fixture(speaker_model):
     """Create speaker_info fixture."""
     return {
         "zone_name": "Zone A",
         "uid": "RINCON_test",
-        "model_name": "Model Name",
+        "model_name": speaker_model,
         "model_number": "S12",
         "hardware_version": "1.20.1.6-1.1",
         "software_version": "49.2-64250",
@@ -581,12 +712,6 @@ def tv_event_fixture(soco):
     return SonosMockEvent(soco, soco.avTransport, variables)
 
 
-@pytest.fixture(autouse=True)
-def mock_get_source_ip(mock_get_source_ip):
-    """Mock network util's async_get_source_ip in all sonos tests."""
-    return mock_get_source_ip
-
-
 @pytest.fixture(name="zgs_discovery", scope="package")
 def zgs_discovery_fixture():
     """Load ZoneGroupState discovery payload and return it."""
@@ -594,7 +719,9 @@ def zgs_discovery_fixture():
 
 
 @pytest.fixture(name="fire_zgs_event")
-def zgs_event_fixture(hass: HomeAssistant, soco: SoCo, zgs_discovery: str):
+def zgs_event_fixture(
+    hass: HomeAssistant, soco: SoCo, zgs_discovery: str
+) -> Callable[[], Coroutine[Any, Any, None]]:
     """Create alarm_event fixture."""
     variables = {"ZoneGroupState": zgs_discovery}
 
@@ -606,3 +733,26 @@ def zgs_event_fixture(hass: HomeAssistant, soco: SoCo, zgs_discovery: str):
         await hass.async_block_till_done(wait_background_tasks=True)
 
     return _wrapper
+
+
+@pytest.fixture(name="sonos_setup_two_speakers")
+async def sonos_setup_two_speakers(
+    hass: HomeAssistant, soco_factory: SoCoMockFactory
+) -> list[MockSoCo]:
+    """Set up home assistant with two Sonos Speakers."""
+    soco_lr = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "media_player": {
+                    "interface_addr": "127.0.0.1",
+                    "hosts": ["10.10.10.1", "10.10.10.2"],
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    return [soco_lr, soco_br]

@@ -30,10 +30,10 @@ from .json import find_paths_unserializable_data, json_bytes, json_dumps
 _LOGGER = logging.getLogger(__name__)
 
 
-AllowCorsType = Callable[[AbstractRoute | AbstractResource], None]
+type AllowCorsType = Callable[[AbstractRoute | AbstractResource], None]
 KEY_AUTHENTICATED: Final = "ha_authenticated"
 KEY_ALLOW_ALL_CORS = AppKey[AllowCorsType]("allow_all_cors")
-KEY_ALLOW_CONFIGRED_CORS = AppKey[AllowCorsType]("allow_configured_cors")
+KEY_ALLOW_CONFIGURED_CORS = AppKey[AllowCorsType]("allow_configured_cors")
 KEY_HASS: AppKey[HomeAssistant] = AppKey("hass")
 
 current_request: ContextVar[Request | None] = ContextVar(
@@ -46,9 +46,9 @@ def request_handler_factory(
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]:
     """Wrap the handler classes."""
     is_coroutinefunction = asyncio.iscoroutinefunction(handler)
-    assert is_coroutinefunction or is_callback(
-        handler
-    ), "Handler should be a coroutine or a callback."
+    assert is_coroutinefunction or is_callback(handler), (
+        "Handler should be a coroutine or a callback."
+    )
 
     async def handle(request: web.Request) -> web.StreamResponse:
         """Handle incoming request."""
@@ -181,7 +181,7 @@ class HomeAssistantView:
         if self.cors_allowed:
             allow_cors = app.get(KEY_ALLOW_ALL_CORS)
         else:
-            allow_cors = app.get(KEY_ALLOW_CONFIGRED_CORS)
+            allow_cors = app.get(KEY_ALLOW_CONFIGURED_CORS)
 
         if allow_cors:
             for route in routes:

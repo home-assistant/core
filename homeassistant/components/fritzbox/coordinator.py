@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
-FritzboxConfigEntry = ConfigEntry["FritzboxDataUpdateCoordinator"]
+type FritzboxConfigEntry = ConfigEntry[FritzboxDataUpdateCoordinator]
 
 
 @dataclass
@@ -27,6 +27,7 @@ class FritzboxCoordinatorData:
 
     devices: dict[str, FritzhomeDevice]
     templates: dict[str, FritzhomeTemplate]
+    supported_color_properties: dict[str, tuple[dict, list]]
 
 
 class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorData]):
@@ -37,19 +38,20 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
     fritz: Fritzhome
     has_templates: bool
 
-    def __init__(self, hass: HomeAssistant, name: str) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: FritzboxConfigEntry) -> None:
         """Initialize the Fritzbox Smarthome device coordinator."""
         super().__init__(
             hass,
             LOGGER,
-            name=name,
+            config_entry=config_entry,
+            name=config_entry.entry_id,
             update_interval=timedelta(seconds=30),
         )
 
         self.new_devices: set[str] = set()
         self.new_templates: set[str] = set()
 
-        self.data = FritzboxCoordinatorData({}, {})
+        self.data = FritzboxCoordinatorData({}, {}, {})
 
     async def async_setup(self) -> None:
         """Set up the coordinator."""
@@ -120,6 +122,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
         devices = self.fritz.get_devices()
         device_data = {}
+        supported_color_properties = self.data.supported_color_properties
         for device in devices:
             # assume device as unavailable, see #55799
             if (
@@ -136,6 +139,13 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
             device_data[device.ain] = device
 
+            # pre-load supported colors and color temps for new devices
+            if device.has_color and device.ain not in supported_color_properties:
+                supported_color_properties[device.ain] = (
+                    device.get_colors(),
+                    device.get_color_temps(),
+                )
+
         template_data = {}
         if self.has_templates:
             templates = self.fritz.get_templates()
@@ -145,7 +155,11 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         self.new_devices = device_data.keys() - self.data.devices.keys()
         self.new_templates = template_data.keys() - self.data.templates.keys()
 
-        return FritzboxCoordinatorData(devices=device_data, templates=template_data)
+        return FritzboxCoordinatorData(
+            devices=device_data,
+            templates=template_data,
+            supported_color_properties=supported_color_properties,
+        )
 
     async def _async_update_data(self) -> FritzboxCoordinatorData:
         """Fetch all device data."""

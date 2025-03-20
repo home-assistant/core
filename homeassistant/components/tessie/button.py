@@ -15,13 +15,14 @@ from tessie_api import (
 )
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import TessieStateUpdateCoordinator
+from . import TessieConfigEntry
 from .entity import TessieEntity
+from .models import TessieVehicleData
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,14 +48,16 @@ DESCRIPTIONS: tuple[TessieButtonEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tessie Button platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
-        TessieButtonEntity(vehicle.state_coordinator, description)
-        for vehicle in data
+        TessieButtonEntity(vehicle, description)
+        for vehicle in data.vehicles
         for description in DESCRIPTIONS
     )
 
@@ -66,11 +69,11 @@ class TessieButtonEntity(TessieEntity, ButtonEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
         description: TessieButtonEntityDescription,
     ) -> None:
         """Initialize the Button."""
-        super().__init__(coordinator, description.key)
+        super().__init__(vehicle, description.key)
         self.entity_description = description
 
     async def async_press(self) -> None:

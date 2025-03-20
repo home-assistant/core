@@ -5,9 +5,13 @@ import logging
 from aip import AipSpeech
 import voluptuous as vol
 
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import (
+    CONF_LANG,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
+    Provider,
+)
 from homeassistant.const import CONF_API_KEY
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +26,7 @@ CONF_PITCH = "pitch"
 CONF_VOLUME = "volume"
 CONF_PERSON = "person"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORTED_LANGUAGES),
         vol.Required(CONF_APP_ID): cv.string,

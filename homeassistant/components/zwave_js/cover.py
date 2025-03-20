@@ -19,6 +19,7 @@ from zwave_js_server.const.command_class.multilevel_switch import (
 from zwave_js_server.const.command_class.window_covering import (
     NO_POSITION_PROPERTY_KEYS,
     NO_POSITION_SUFFIX,
+    WINDOW_COVERING_LEVEL_CHANGE_DOWN_PROPERTY,
     WINDOW_COVERING_LEVEL_CHANGE_UP_PROPERTY,
     SlatStates,
 )
@@ -36,7 +37,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     COVER_POSITION_PROPERTY_KEYS,
@@ -54,10 +55,10 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Cover from Config Entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_cover(info: ZwaveDiscoveryInfo) -> None:
@@ -341,6 +342,20 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
         super().__init__(config_entry, driver, info)
         pos_value: ZwaveValue | None = None
         tilt_value: ZwaveValue | None = None
+        self._up_value = cast(
+            ZwaveValue,
+            self.get_zwave_value(
+                WINDOW_COVERING_LEVEL_CHANGE_UP_PROPERTY,
+                value_property_key=info.primary_value.property_key,
+            ),
+        )
+        self._down_value = cast(
+            ZwaveValue,
+            self.get_zwave_value(
+                WINDOW_COVERING_LEVEL_CHANGE_DOWN_PROPERTY,
+                value_property_key=info.primary_value.property_key,
+            ),
+        )
 
         # If primary value is for position, we have to search for a tilt value
         if info.primary_value.property_key in COVER_POSITION_PROPERTY_KEYS:
@@ -401,6 +416,18 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
     def _tilt_range(self) -> int:
         """Return range of valid tilt positions."""
         return abs(SlatStates.CLOSED_2 - SlatStates.CLOSED_1)
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        await self._async_set_value(self._up_value, True)
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        await self._async_set_value(self._down_value, True)
+
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Stop the cover."""
+        await self._async_set_value(self._up_value, False)
 
 
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):

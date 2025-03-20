@@ -12,15 +12,14 @@ from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import ValueDataType
 from zwave_js_server.util.node import dump_node_state
 
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.diagnostics.util import async_redact_data
+from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DATA_CLIENT, DOMAIN, USER_AGENT
+from .const import DATA_CLIENT, USER_AGENT
 from .helpers import (
     ZwaveValueMatcher,
     get_home_and_node_id_from_device_entry,
@@ -81,7 +80,7 @@ def get_device_entities(
         er.async_get(hass), device.id, include_disabled_entities=True
     )
     entities = []
-    for entry in entity_entries:
+    for entry in sorted(entity_entries):
         # Skip entities that are not part of this integration
         if entry.config_entry_id != config_entry.entry_id:
             continue
@@ -148,7 +147,7 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
-    client: Client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: Client = config_entry.runtime_data[DATA_CLIENT]
     identifiers = get_home_and_node_id_from_device_entry(device)
     node_id = identifiers[1] if identifiers else None
     driver = client.driver

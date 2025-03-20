@@ -35,7 +35,7 @@ async def _async_validate_country_and_province(
             DOMAIN,
             "bad_country",
             is_fixable=True,
-            is_persistent=True,
+            is_persistent=False,
             severity=IssueSeverity.ERROR,
             translation_key="bad_country",
             translation_placeholders={"title": entry.title},
@@ -59,7 +59,7 @@ async def _async_validate_country_and_province(
             DOMAIN,
             "bad_province",
             is_fixable=True,
-            is_persistent=True,
+            is_persistent=False,
             severity=IssueSeverity.ERROR,
             translation_key="bad_province",
             translation_placeholders={

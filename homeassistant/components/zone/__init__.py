@@ -45,7 +45,7 @@ from homeassistant.helpers import (
     service,
     storage,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 from homeassistant.util.location import distance
 
@@ -62,7 +62,7 @@ ENTITY_ID_HOME = ENTITY_ID_FORMAT.format(HOME_ZONE)
 ICON_HOME = "mdi:home"
 ICON_IMPORT = "mdi:import"
 
-CREATE_FIELDS = {
+CREATE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_LATITUDE): cv.latitude,
     vol.Required(CONF_LONGITUDE): cv.longitude,
@@ -72,7 +72,7 @@ CREATE_FIELDS = {
 }
 
 
-UPDATE_FIELDS = {
+UPDATE_FIELDS: VolDictType = {
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_LATITUDE): cv.latitude,
     vol.Optional(CONF_LONGITUDE): cv.longitude,
@@ -302,7 +302,7 @@ def _home_conf(hass: HomeAssistant) -> dict:
         CONF_NAME: hass.config.location_name,
         CONF_LATITUDE: hass.config.latitude,
         CONF_LONGITUDE: hass.config.longitude,
-        CONF_RADIUS: DEFAULT_RADIUS,
+        CONF_RADIUS: hass.config.radius,
         CONF_ICON: ICON_HOME,
         CONF_PASSIVE: False,
     }
@@ -363,7 +363,7 @@ class Zone(collection.CollectionEntity):
         """Return entity instance initialized from storage."""
         zone = cls(config)
         zone.editable = True
-        zone._generate_attrs()  # noqa: SLF001
+        zone._generate_attrs()
         return zone
 
     @classmethod
@@ -371,7 +371,7 @@ class Zone(collection.CollectionEntity):
         """Return entity instance initialized from yaml."""
         zone = cls(config)
         zone.editable = False
-        zone._generate_attrs()  # noqa: SLF001
+        zone._generate_attrs()
         return zone
 
     @property

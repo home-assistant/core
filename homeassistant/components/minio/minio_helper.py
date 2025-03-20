@@ -116,7 +116,7 @@ class MinioEventThread(threading.Thread):
 
     def run(self):
         """Create MinioClient and run the loop."""
-        _LOGGER.info("Running MinioEventThread")
+        _LOGGER.debug("Running MinioEventThread")
 
         self._should_stop = False
 
@@ -125,7 +125,7 @@ class MinioEventThread(threading.Thread):
         )
 
         while not self._should_stop:
-            _LOGGER.info("Connecting to minio event stream")
+            _LOGGER.debug("Connecting to minio event stream")
             response = None
             try:
                 response = get_minio_notification_response(
@@ -160,8 +160,7 @@ class MinioEventThread(threading.Thread):
                     presigned_url = minio_client.presigned_get_object(bucket, key)
                 # Fail gracefully. If for whatever reason this stops working,
                 # it shouldn't prevent it from firing events.
-                # pylint: disable-next=broad-except
-                except Exception as error:
+                except Exception as error:  # noqa: BLE001
                     _LOGGER.error("Failed to generate presigned url: %s", error)
 
                 queue_entry = {

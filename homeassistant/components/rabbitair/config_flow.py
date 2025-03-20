@@ -14,6 +14,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -73,7 +74,7 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_host"
             except TimeoutConnect:
                 errors["base"] = "timeout_connect"
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:  # noqa: BLE001
                 _LOGGER.debug("Unexpected exception: %s", err)
                 errors["base"] = "unknown"
             else:
@@ -99,7 +100,7 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         mac = dr.format_mac(discovery_info.properties["id"])

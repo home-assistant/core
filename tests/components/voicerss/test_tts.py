@@ -1,6 +1,8 @@
 """The tests for the VoiceRSS speech platform."""
 
 from http import HTTPStatus
+from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -29,14 +31,13 @@ FORM_DATA = {
 
 
 @pytest.fixture(autouse=True)
-def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock):
+def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock: MagicMock) -> None:
     """Mock writing tags."""
 
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> None:
     """Mock the TTS cache dir with empty dir."""
-    return mock_tts_cache_dir
 
 
 async def test_setup_component(hass: HomeAssistant) -> None:
@@ -199,7 +200,7 @@ async def test_service_say_error(
 
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.NOT_FOUND
+        == HTTPStatus.INTERNAL_SERVER_ERROR
     )
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == FORM_DATA
@@ -233,7 +234,7 @@ async def test_service_say_timeout(
 
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.NOT_FOUND
+        == HTTPStatus.INTERNAL_SERVER_ERROR
     )
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == FORM_DATA
@@ -272,7 +273,7 @@ async def test_service_say_error_msg(
 
     assert (
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
-        == HTTPStatus.NOT_FOUND
+        == HTTPStatus.INTERNAL_SERVER_ERROR
     )
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == FORM_DATA

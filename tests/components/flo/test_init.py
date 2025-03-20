@@ -1,22 +1,32 @@
 """Test init."""
 
-from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+import pytest
+from syrupy import SnapshotAssertion
+
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import device_registry as dr
 
-from .common import TEST_PASSWORD, TEST_USER_ID
+from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("aioclient_mock_fixture")
 async def test_setup_entry(
-    hass: HomeAssistant, config_entry, aioclient_mock_fixture
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test migration of config entry from v1."""
     config_entry.add_to_hass(hass)
-    assert await async_setup_component(
-        hass, FLO_DOMAIN, {CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD}
-    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 2
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert (
+        dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+        == snapshot
+    )
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED

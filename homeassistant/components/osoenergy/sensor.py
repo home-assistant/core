@@ -13,13 +13,18 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfVolume
+from homeassistant.const import (
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import OSOEnergyEntity
 from .const import DOMAIN
+from .entity import OSOEnergyEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -101,11 +106,41 @@ SENSOR_TYPES: dict[str, OSOEnergySensorEntityDescription] = {
         native_unit_of_measurement=UnitOfVolume.LITERS,
         value_fn=lambda entity_data: entity_data.state,
     ),
+    "temperature_top": OSOEnergySensorEntityDescription(
+        key="temperature_top",
+        translation_key="temperature_top",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda entity_data: entity_data.state,
+    ),
+    "temperature_mid": OSOEnergySensorEntityDescription(
+        key="temperature_mid",
+        translation_key="temperature_mid",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda entity_data: entity_data.state,
+    ),
+    "temperature_low": OSOEnergySensorEntityDescription(
+        key="temperature_low",
+        translation_key="temperature_low",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda entity_data: entity_data.state,
+    ),
+    "temperature_one": OSOEnergySensorEntityDescription(
+        key="temperature_one",
+        translation_key="temperature_one",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda entity_data: entity_data.state,
+    ),
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OSO Energy sensor."""
     osoenergy = hass.data[DOMAIN][entry.entry_id]

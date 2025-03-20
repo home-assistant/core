@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from aioairzone_cloud.exceptions import AirzoneTimeout
+
 from homeassistant.components.airzone_cloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -50,3 +52,20 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_init_api_timeout(hass: HomeAssistant) -> None:
+    """Test API timeouts when loading the Airzone Cloud integration."""
+
+    with patch(
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
+        side_effect=AirzoneTimeout,
+    ):
+        config_entry = MockConfigEntry(
+            data=CONFIG,
+            domain=DOMAIN,
+            unique_id="airzone_cloud_unique_id",
+        )
+        config_entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id) is False

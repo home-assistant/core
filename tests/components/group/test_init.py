@@ -11,6 +11,7 @@ import pytest
 
 from homeassistant.components import group
 from homeassistant.components.group.registry import GroupIntegrationRegistry
+from homeassistant.components.lock import LockState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
@@ -19,17 +20,13 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_CLOSED,
     STATE_HOME,
-    STATE_LOCKED,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
-    STATE_OPEN,
     STATE_UNKNOWN,
-    STATE_UNLOCKED,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 from homeassistant.setup import async_setup_component
 
 from . import common
@@ -402,13 +399,13 @@ async def test_expand_entity_ids_does_not_return_duplicates(
         order=None,
     )
 
-    assert ["light.bowl", "light.ceiling"] == sorted(
+    assert sorted(
         group.expand_entity_ids(hass, [test_group.entity_id, "light.Ceiling"])
-    )
+    ) == ["light.bowl", "light.ceiling"]
 
-    assert ["light.bowl", "light.ceiling"] == sorted(
+    assert sorted(
         group.expand_entity_ids(hass, ["light.bowl", test_group.entity_id])
-    )
+    ) == ["light.bowl", "light.ceiling"]
 
 
 async def test_expand_entity_ids_recursive(hass: HomeAssistant) -> None:
@@ -436,7 +433,7 @@ async def test_expand_entity_ids_recursive(hass: HomeAssistant) -> None:
 
 async def test_expand_entity_ids_ignores_non_strings(hass: HomeAssistant) -> None:
     """Test that non string elements in lists are ignored."""
-    assert [] == group.expand_entity_ids(hass, [5, True])
+    assert group.expand_entity_ids(hass, [5, True]) == []
 
 
 async def test_get_entity_ids(hass: HomeAssistant) -> None:
@@ -457,9 +454,10 @@ async def test_get_entity_ids(hass: HomeAssistant) -> None:
         order=None,
     )
 
-    assert ["light.bowl", "light.ceiling"] == sorted(
-        group.get_entity_ids(hass, test_group.entity_id)
-    )
+    assert sorted(group.get_entity_ids(hass, test_group.entity_id)) == [
+        "light.bowl",
+        "light.ceiling",
+    ]
 
 
 async def test_get_entity_ids_with_domain_filter(hass: HomeAssistant) -> None:
@@ -479,19 +477,19 @@ async def test_get_entity_ids_with_domain_filter(hass: HomeAssistant) -> None:
         order=None,
     )
 
-    assert ["switch.ac"] == group.get_entity_ids(
+    assert group.get_entity_ids(
         hass, mixed_group.entity_id, domain_filter="switch"
-    )
+    ) == ["switch.ac"]
 
 
 async def test_get_entity_ids_with_non_existing_group_name(hass: HomeAssistant) -> None:
     """Test get_entity_ids with a non existing group."""
-    assert [] == group.get_entity_ids(hass, "non_existing")
+    assert group.get_entity_ids(hass, "non_existing") == []
 
 
 async def test_get_entity_ids_with_non_group_state(hass: HomeAssistant) -> None:
     """Test get_entity_ids with a non group state."""
-    assert [] == group.get_entity_ids(hass, "switch.AC")
+    assert group.get_entity_ids(hass, "switch.AC") == []
 
 
 async def test_group_being_init_before_first_tracked_state_is_set_to_on(
@@ -617,12 +615,12 @@ async def test_expand_entity_ids_expands_nested_groups(hass: HomeAssistant) -> N
         order=None,
     )
 
-    assert [
+    assert sorted(group.expand_entity_ids(hass, ["group.group_of_groups"])) == [
         "light.test_1",
         "light.test_2",
         "switch.test_1",
         "switch.test_2",
-    ] == sorted(group.expand_entity_ids(hass, ["group.group_of_groups"]))
+    ]
 
 
 async def test_set_assumed_state_based_on_tracked(hass: HomeAssistant) -> None:
@@ -736,36 +734,78 @@ async def test_is_on(hass: HomeAssistant) -> None:
         ),
         (
             ("cover", "cover"),
-            (STATE_OPEN, STATE_CLOSED),
+            (LockState.OPEN, STATE_CLOSED),
             (STATE_CLOSED, STATE_CLOSED),
-            (STATE_OPEN, True),
+            (LockState.OPEN, True),
             (STATE_CLOSED, False),
         ),
         (
             ("lock", "lock"),
-            (STATE_UNLOCKED, STATE_LOCKED),
-            (STATE_LOCKED, STATE_LOCKED),
-            (STATE_UNLOCKED, True),
-            (STATE_LOCKED, False),
+            (LockState.UNLOCKED, LockState.LOCKED),
+            (LockState.LOCKED, LockState.LOCKED),
+            (LockState.UNLOCKED, True),
+            (LockState.LOCKED, False),
         ),
         (
             ("cover", "lock"),
-            (STATE_OPEN, STATE_LOCKED),
-            (STATE_CLOSED, STATE_LOCKED),
+            (LockState.OPEN, LockState.LOCKED),
+            (STATE_CLOSED, LockState.LOCKED),
             (STATE_ON, True),
             (STATE_OFF, False),
         ),
         (
             ("cover", "lock"),
-            (STATE_OPEN, STATE_UNLOCKED),
-            (STATE_CLOSED, STATE_LOCKED),
+            (LockState.OPEN, LockState.UNLOCKED),
+            (STATE_CLOSED, LockState.LOCKED),
             (STATE_ON, True),
             (STATE_OFF, False),
         ),
         (
             ("cover", "lock", "light"),
-            (STATE_OPEN, STATE_LOCKED, STATE_ON),
-            (STATE_CLOSED, STATE_LOCKED, STATE_OFF),
+            (LockState.OPEN, LockState.LOCKED, STATE_ON),
+            (STATE_CLOSED, LockState.LOCKED, STATE_OFF),
+            (STATE_ON, True),
+            (STATE_OFF, False),
+        ),
+        (
+            ("lock", "lock"),
+            (LockState.OPEN, LockState.LOCKED),
+            (LockState.LOCKED, LockState.LOCKED),
+            (LockState.UNLOCKED, True),
+            (LockState.LOCKED, False),
+        ),
+        (
+            ("lock", "lock"),
+            (LockState.OPENING, LockState.LOCKED),
+            (LockState.LOCKED, LockState.LOCKED),
+            (LockState.UNLOCKED, True),
+            (LockState.LOCKED, False),
+        ),
+        (
+            ("lock", "lock"),
+            (LockState.UNLOCKING, LockState.LOCKED),
+            (LockState.LOCKED, LockState.LOCKED),
+            (LockState.UNLOCKED, True),
+            (LockState.LOCKED, False),
+        ),
+        (
+            ("lock", "lock"),
+            (LockState.LOCKING, LockState.LOCKED),
+            (LockState.LOCKED, LockState.LOCKED),
+            (LockState.UNLOCKED, True),
+            (LockState.LOCKED, False),
+        ),
+        (
+            ("lock", "lock"),
+            (LockState.JAMMED, LockState.LOCKED),
+            (LockState.LOCKED, LockState.LOCKED),
+            (LockState.LOCKED, False),
+            (LockState.LOCKED, False),
+        ),
+        (
+            ("cover", "lock"),
+            (LockState.OPEN, LockState.OPEN),
+            (STATE_CLOSED, LockState.LOCKED),
             (STATE_ON, True),
             (STATE_OFF, False),
         ),
@@ -855,10 +895,6 @@ async def test_reloading_groups(hass: HomeAssistant) -> None:
         "group.test_group",
     ]
     assert hass.bus.async_listeners()["state_changed"] == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["hello.world"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["light.bowl"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -874,9 +910,6 @@ async def test_reloading_groups(hass: HomeAssistant) -> None:
         "group.hello",
     ]
     assert hass.bus.async_listeners()["state_changed"] == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["light.bowl"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.one"]) == 1
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS]["test.two"]) == 1
 
 
 async def test_modify_group(hass: HomeAssistant) -> None:
@@ -1198,7 +1231,7 @@ async def test_group_mixed_domains_on(hass: HomeAssistant) -> None:
     hass.states.async_set("binary_sensor.alexander_garage_side_door_open", "on")
     hass.states.async_set("cover.small_garage_door", "open")
 
-    for domain in ["lock", "binary_sensor", "cover"]:
+    for domain in ("lock", "binary_sensor", "cover"):
         assert await async_setup_component(hass, domain, {})
     assert await async_setup_component(
         hass,
@@ -1223,7 +1256,7 @@ async def test_group_mixed_domains_off(hass: HomeAssistant) -> None:
     hass.states.async_set("binary_sensor.alexander_garage_side_door_open", "off")
     hass.states.async_set("cover.small_garage_door", "closed")
 
-    for domain in ["lock", "binary_sensor", "cover"]:
+    for domain in ("lock", "binary_sensor", "cover"):
         assert await async_setup_component(hass, domain, {})
     assert await async_setup_component(
         hass,
@@ -1247,6 +1280,8 @@ async def test_group_mixed_domains_off(hass: HomeAssistant) -> None:
     [
         (("locked", "locked", "unlocked"), "unlocked"),
         (("locked", "locked", "locked"), "locked"),
+        (("locked", "locked", "open"), "unlocked"),
+        (("locked", "unlocked", "open"), "unlocked"),
     ],
 )
 async def test_group_locks(hass: HomeAssistant, states, group_state) -> None:
@@ -1447,28 +1482,67 @@ async def test_group_vacuum_on(hass: HomeAssistant) -> None:
     assert hass.states.get("group.group_zero").state == STATE_ON
 
 
-async def test_device_tracker_not_home(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("entity_state_list", "group_state"),
+    [
+        (
+            {
+                "device_tracker.one": "not_home",
+                "device_tracker.two": "not_home",
+                "device_tracker.three": "not_home",
+            },
+            "not_home",
+        ),
+        (
+            {
+                "device_tracker.one": "home",
+                "device_tracker.two": "not_home",
+                "device_tracker.three": "not_home",
+            },
+            "home",
+        ),
+        (
+            {
+                "device_tracker.one": "home",
+                "device_tracker.two": "elsewhere",
+                "device_tracker.three": "not_home",
+            },
+            "home",
+        ),
+        (
+            {
+                "device_tracker.one": "not_home",
+                "device_tracker.two": "elsewhere",
+                "device_tracker.three": "not_home",
+            },
+            "not_home",
+        ),
+    ],
+)
+async def test_device_tracker_or_person_not_home(
+    hass: HomeAssistant,
+    entity_state_list: dict[str, str],
+    group_state: str,
+) -> None:
     """Test group of device_tracker not_home."""
     await async_setup_component(hass, "device_tracker", {})
+    await async_setup_component(hass, "person", {})
     await hass.async_block_till_done()
-    hass.states.async_set("device_tracker.one", "not_home")
-    hass.states.async_set("device_tracker.two", "not_home")
-    hass.states.async_set("device_tracker.three", "not_home")
+    for entity_id, state in entity_state_list.items():
+        hass.states.async_set(entity_id, state)
 
     assert await async_setup_component(
         hass,
         "group",
         {
             "group": {
-                "group_zero": {
-                    "entities": "device_tracker.one, device_tracker.two, device_tracker.three"
-                },
+                "group_zero": {"entities": ", ".join(entity_state_list)},
             }
         },
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("group.group_zero").state == "not_home"
+    assert hass.states.get("group.group_zero").state == group_state
 
 
 async def test_light_removed(hass: HomeAssistant) -> None:

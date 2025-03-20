@@ -1,12 +1,13 @@
 """Config flow for Kostal Plenticore Solar Inverter integration."""
 
 import logging
+from typing import Any
 
 from aiohttp.client_exceptions import ClientError
 from pykoplenti import ApiClient, AuthenticationException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -44,10 +45,11 @@ class KostalPlenticoreConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
-        hostname = None
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
@@ -59,11 +61,10 @@ class KostalPlenticoreConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Error response: %s", ex)
             except (ClientError, TimeoutError):
                 errors[CONF_HOST] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors[CONF_BASE] = "unknown"
-
-            if not errors:
+            else:
                 return self.async_create_entry(title=hostname, data=user_input)
 
         return self.async_show_form(

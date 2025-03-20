@@ -38,4 +38,4 @@ async def test_diagnostics(
         hass, hass_client, mock_config_entry
     )
 
-    assert result["entry"] == entry_dict
+    assert result["entry"] == entry_dict | {"discovery_keys": {}}

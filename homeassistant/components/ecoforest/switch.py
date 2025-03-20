@@ -4,17 +4,16 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import Any
 
 from pyecoforest.api import EcoforestApi
 from pyecoforest.models.device import Device
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import EcoforestCoordinator
+from .coordinator import EcoforestConfigEntry
 from .entity import EcoforestEntity
 
 
@@ -38,11 +37,11 @@ SWITCH_TYPES: tuple[EcoforestSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EcoforestConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ecoforest switch platform."""
-    coordinator: EcoforestCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     entities = [
         EcoforestSwitchEntity(coordinator, description) for description in SWITCH_TYPES
@@ -61,12 +60,12 @@ class EcoforestSwitchEntity(EcoforestEntity, SwitchEntity):
         """Return the state of the ecoforest device."""
         return self.entity_description.value_fn(self.data)
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the ecoforest device."""
         await self.entity_description.switch_fn(self.coordinator.api, True)
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the ecoforest device."""
         await self.entity_description.switch_fn(self.coordinator.api, False)
         await self.coordinator.async_request_refresh()

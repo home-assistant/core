@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components import camera, image_processing as ip
 from homeassistant.components.openalpr_cloud.image_processing import OPENALPR_API_URL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_capture_events, load_fixture
@@ -15,13 +15,13 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
-async def setup_homeassistant(hass: HomeAssistant):
+async def setup_homeassistant(hass: HomeAssistant) -> None:
     """Set up the homeassistant integration."""
     await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture
-async def setup_openalpr_cloud(hass):
+async def setup_openalpr_cloud(hass: HomeAssistant) -> None:
     """Set up openalpr cloud."""
     config = {
         ip.DOMAIN: {
@@ -43,7 +43,7 @@ async def setup_openalpr_cloud(hass):
 
 
 @pytest.fixture
-async def alpr_events(hass):
+async def alpr_events(hass: HomeAssistant) -> list[Event]:
     """Listen for events."""
     return async_capture_events(hass, "image_processing.found_plate")
 

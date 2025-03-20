@@ -1,6 +1,6 @@
 """Config flow for Enigma2."""
 
-from typing import Any
+from typing import Any, cast
 
 from aiohttp.client_exceptions import ClientError
 from openwebif.api import OpenWebIfDevice
@@ -8,7 +8,12 @@ from openwebif.error import InvalidAuthError
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -17,10 +22,14 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
 from .const import (
     CONF_DEEP_STANDBY,
@@ -53,6 +62,32 @@ CONFIG_SCHEMA = vol.Schema(
         ): selector.BooleanSelector(),
     }
 )
+
+
+async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Get the options schema."""
+    entry = cast(SchemaOptionsFlowHandler, handler.parent_handler).config_entry
+    bouquets = [
+        b[1] for b in (await entry.runtime_data.device.get_all_bouquets())["bouquets"]
+    ]
+
+    return vol.Schema(
+        {
+            vol.Optional(CONF_DEEP_STANDBY): selector.BooleanSelector(),
+            vol.Optional(CONF_SOURCE_BOUQUET): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=bouquets,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            vol.Optional(CONF_USE_CHANNEL_ICON): selector.BooleanSelector(),
+        }
+    )
+
+
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(get_options_schema),
+}
 
 
 class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -95,10 +130,11 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             errors = {"base": "invalid_auth"}
         except ClientError:
             errors = {"base": "cannot_connect"}
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             errors = {"base": "unknown"}
         else:
-            await self.async_set_unique_id(about["info"]["ifaces"][0]["mac"])
+            unique_id = about["info"]["ifaces"][0]["mac"] or self.unique_id
+            await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
         return errors
@@ -116,50 +152,8 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             )
         return self.async_create_entry(data=user_input, title=user_input[CONF_HOST])
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Handle the import step."""
-        if CONF_PORT not in user_input:
-            user_input[CONF_PORT] = DEFAULT_PORT
-        if CONF_SSL not in user_input:
-            user_input[CONF_SSL] = DEFAULT_SSL
-        user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
-
-        data = {key: user_input[key] for key in user_input if key in self.DATA_KEYS}
-        options = {
-            key: user_input[key] for key in user_input if key in self.OPTIONS_KEYS
-        }
-
-        if errors := await self.validate_user_input(user_input):
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"deprecated_yaml_{DOMAIN}_import_issue_{errors["base"]}",
-                breaks_in_ha_version="2024.11.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.WARNING,
-                translation_key=f"deprecated_yaml_import_issue_{errors["base"]}",
-                translation_placeholders={
-                    "url": "/config/integrations/dashboard/add?domain=enigma2"
-                },
-            )
-            return self.async_abort(reason=errors["base"])
-
-        async_create_issue(
-            self.hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.11.0",
-            is_fixable=False,
-            is_persistent=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Enigma2",
-            },
-        )
-        return self.async_create_entry(
-            data=data, title=data[CONF_HOST], options=options
-        )
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

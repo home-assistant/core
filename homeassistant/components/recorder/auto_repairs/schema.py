@@ -55,7 +55,7 @@ def validate_table_schema_supports_utf8(
         schema_errors = _validate_table_schema_supports_utf8(
             instance, table_object, columns
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error when validating DB schema")
 
     _log_schema_errors(table_object, schema_errors)
@@ -76,7 +76,7 @@ def validate_table_schema_has_correct_collation(
         schema_errors = _validate_table_schema_has_correct_collation(
             instance, table_object
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error when validating DB schema")
 
     _log_schema_errors(table_object, schema_errors)
@@ -158,7 +158,7 @@ def validate_db_schema_precision(
         return schema_errors
     try:
         schema_errors = _validate_db_schema_precision(instance, table_object)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error when validating DB schema")
 
     _log_schema_errors(table_object, schema_errors)
@@ -175,7 +175,7 @@ def _validate_db_schema_precision(
     # Mark the session as read_only to ensure that the test data is not committed
     # to the database and we always rollback when the scope is exited
     with session_scope(session=instance.get_session(), read_only=True) as session:
-        db_object = table_object(**{column: PRECISE_NUMBER for column in columns})
+        db_object = table_object(**dict.fromkeys(columns, PRECISE_NUMBER))
         table = table_object.__tablename__
         try:
             session.add(db_object)
@@ -184,7 +184,7 @@ def _validate_db_schema_precision(
             _check_columns(
                 schema_errors=schema_errors,
                 stored={column: getattr(db_object, column) for column in columns},
-                expected={column: PRECISE_NUMBER for column in columns},
+                expected=dict.fromkeys(columns, PRECISE_NUMBER),
                 columns=columns,
                 table_name=table,
                 supports="double precision",

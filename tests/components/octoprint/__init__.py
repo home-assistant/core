@@ -14,6 +14,8 @@ from pyoctoprintapi import (
 
 from homeassistant.components.octoprint import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from tests.common import MockConfigEntry
@@ -33,11 +35,11 @@ DEFAULT_PRINTER = {
 
 
 async def init_integration(
-    hass,
-    platform,
+    hass: HomeAssistant,
+    platform: Platform,
     printer: dict[str, Any] | UndefinedType | None = UNDEFINED,
     job: dict[str, Any] | None = None,
-):
+) -> None:
     """Set up the octoprint integration in Home Assistant."""
     printer_info: OctoprintPrinterInfo | None = None
     if printer is UNDEFINED:

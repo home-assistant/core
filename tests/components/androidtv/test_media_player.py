@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from adb_shell.exceptions import TcpTimeoutException as AdbShellTimeoutException
 from androidtv.constants import APPS as ANDROIDTV_APPS, KEYS
@@ -11,22 +11,16 @@ from androidtv.exceptions import LockNotAcquiredException
 import pytest
 
 from homeassistant.components.androidtv.const import (
-    CONF_ADB_SERVER_IP,
-    CONF_ADB_SERVER_PORT,
-    CONF_ADBKEY,
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
-    CONF_SCREENCAP,
+    CONF_SCREENCAP_INTERVAL,
     CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
     CONF_TURN_ON_COMMAND,
     DEFAULT_ADB_SERVER_PORT,
     DEFAULT_PORT,
-    DEVICE_ANDROIDTV,
-    DEVICE_FIRETV,
     DOMAIN,
 )
-from homeassistant.components.androidtv.entity import PREFIX_ANDROIDTV, PREFIX_FIRETV
 from homeassistant.components.androidtv.media_player import (
     ATTR_DEVICE_PATH,
     ATTR_LOCAL_PATH,
@@ -57,9 +51,6 @@ from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -74,142 +65,40 @@ from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
 from . import patchers
+from .common import (
+    CONFIG_ANDROID_ADB_SERVER,
+    CONFIG_ANDROID_DEFAULT,
+    CONFIG_ANDROID_PYTHON_ADB,
+    CONFIG_ANDROID_PYTHON_ADB_KEY,
+    CONFIG_ANDROID_PYTHON_ADB_YAML,
+    CONFIG_FIRETV_ADB_SERVER,
+    CONFIG_FIRETV_DEFAULT,
+    CONFIG_FIRETV_PYTHON_ADB,
+    SHELL_RESPONSE_OFF,
+    SHELL_RESPONSE_STANDBY,
+    TEST_ENTITY_NAME,
+    TEST_HOST_NAME,
+    setup_mock_entry,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
-HOST = "127.0.0.1"
-
-ADB_PATCH_KEY = "patch_key"
-TEST_ENTITY_NAME = "entity_name"
-
 MSG_RECONNECT = {
     patchers.KEY_PYTHON: (
-        f"ADB connection to {HOST}:{DEFAULT_PORT} successfully established"
+        f"ADB connection to {TEST_HOST_NAME}:{DEFAULT_PORT} successfully established"
     ),
     patchers.KEY_SERVER: (
-        f"ADB connection to {HOST}:{DEFAULT_PORT} via ADB server"
+        f"ADB connection to {TEST_HOST_NAME}:{DEFAULT_PORT} via ADB server"
         f" {patchers.ADB_SERVER_HOST}:{DEFAULT_ADB_SERVER_PORT} successfully"
         " established"
     ),
 }
 
-SHELL_RESPONSE_OFF = ""
-SHELL_RESPONSE_STANDBY = "1"
 
-# Android device with Python ADB implementation
-CONFIG_ANDROID_PYTHON_ADB = {
-    ADB_PATCH_KEY: patchers.KEY_PYTHON,
-    TEST_ENTITY_NAME: f"{PREFIX_ANDROIDTV} {HOST}",
-    DOMAIN: {
-        CONF_HOST: HOST,
-        CONF_PORT: DEFAULT_PORT,
-        CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
-    },
-}
-
-# Android device with Python ADB implementation imported from YAML
-CONFIG_ANDROID_PYTHON_ADB_YAML = {
-    ADB_PATCH_KEY: patchers.KEY_PYTHON,
-    TEST_ENTITY_NAME: "ADB yaml import",
-    DOMAIN: {
-        CONF_NAME: "ADB yaml import",
-        **CONFIG_ANDROID_PYTHON_ADB[DOMAIN],
-    },
-}
-
-# Android device with Python ADB implementation with custom adbkey
-CONFIG_ANDROID_PYTHON_ADB_KEY = {
-    ADB_PATCH_KEY: patchers.KEY_PYTHON,
-    TEST_ENTITY_NAME: CONFIG_ANDROID_PYTHON_ADB[TEST_ENTITY_NAME],
-    DOMAIN: {
-        **CONFIG_ANDROID_PYTHON_ADB[DOMAIN],
-        CONF_ADBKEY: "user_provided_adbkey",
-    },
-}
-
-# Android device with ADB server
-CONFIG_ANDROID_ADB_SERVER = {
-    ADB_PATCH_KEY: patchers.KEY_SERVER,
-    TEST_ENTITY_NAME: f"{PREFIX_ANDROIDTV} {HOST}",
-    DOMAIN: {
-        CONF_HOST: HOST,
-        CONF_PORT: DEFAULT_PORT,
-        CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
-        CONF_ADB_SERVER_IP: patchers.ADB_SERVER_HOST,
-        CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
-    },
-}
-
-# Fire TV device with Python ADB implementation
-CONFIG_FIRETV_PYTHON_ADB = {
-    ADB_PATCH_KEY: patchers.KEY_PYTHON,
-    TEST_ENTITY_NAME: f"{PREFIX_FIRETV} {HOST}",
-    DOMAIN: {
-        CONF_HOST: HOST,
-        CONF_PORT: DEFAULT_PORT,
-        CONF_DEVICE_CLASS: DEVICE_FIRETV,
-    },
-}
-
-# Fire TV device with ADB server
-CONFIG_FIRETV_ADB_SERVER = {
-    ADB_PATCH_KEY: patchers.KEY_SERVER,
-    TEST_ENTITY_NAME: f"{PREFIX_FIRETV} {HOST}",
-    DOMAIN: {
-        CONF_HOST: HOST,
-        CONF_PORT: DEFAULT_PORT,
-        CONF_DEVICE_CLASS: DEVICE_FIRETV,
-        CONF_ADB_SERVER_IP: patchers.ADB_SERVER_HOST,
-        CONF_ADB_SERVER_PORT: DEFAULT_ADB_SERVER_PORT,
-    },
-}
-
-CONFIG_ANDROID_DEFAULT = CONFIG_ANDROID_PYTHON_ADB
-CONFIG_FIRETV_DEFAULT = CONFIG_FIRETV_PYTHON_ADB
-
-
-@pytest.fixture(autouse=True)
-def adb_device_tcp_fixture() -> None:
-    """Patch ADB Device TCP."""
-    with patch(
-        "androidtv.adb_manager.adb_manager_async.AdbDeviceTcpAsync",
-        patchers.AdbDeviceTcpAsyncFake,
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def load_adbkey_fixture() -> None:
-    """Patch load_adbkey."""
-    with patch(
-        "homeassistant.components.androidtv.ADBPythonSync.load_adbkey",
-        return_value="signer for testing",
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def keygen_fixture() -> None:
-    """Patch keygen."""
-    with patch(
-        "homeassistant.components.androidtv.keygen",
-        return_value=Mock(),
-    ):
-        yield
-
-
-def _setup(config) -> tuple[str, str, MockConfigEntry]:
-    """Perform common setup tasks for the tests."""
-    patch_key = config[ADB_PATCH_KEY]
-    entity_id = f"{MP_DOMAIN}.{slugify(config[TEST_ENTITY_NAME])}"
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=config[DOMAIN],
-        unique_id="a1:b1:c1:d1:e1:f1",
-    )
-
-    return patch_key, entity_id, config_entry
+def _setup(config: dict[str, Any]) -> tuple[str, str, MockConfigEntry]:
+    """Prepare mock entry for the media player tests."""
+    return setup_mock_entry(config, MP_DOMAIN)
 
 
 @pytest.mark.parametrize(
@@ -912,6 +801,9 @@ async def test_get_image_http(
     """
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry, options={CONF_SCREENCAP_INTERVAL: 2}
+    )
 
     with (
         patchers.patch_connect(True)[patch_key],
@@ -939,21 +831,27 @@ async def test_get_image_http(
     content = await resp.read()
     assert content == b"image"
 
-    next_update = utcnow() + timedelta(seconds=30)
+    next_update = utcnow() + timedelta(minutes=1)
     with (
         patchers.patch_shell("11")[patch_key],
         patchers.PATCH_SCREENCAP as patch_screen_cap,
-        patch("homeassistant.util.utcnow", return_value=next_update),
+        patch(
+            "homeassistant.components.androidtv.media_player.utcnow",
+            return_value=next_update,
+        ),
     ):
         async_fire_time_changed(hass, next_update, True)
         await hass.async_block_till_done()
         patch_screen_cap.assert_not_called()
 
-    next_update = utcnow() + timedelta(seconds=60)
+    next_update = utcnow() + timedelta(minutes=2)
     with (
         patchers.patch_shell("11")[patch_key],
         patchers.PATCH_SCREENCAP as patch_screen_cap,
-        patch("homeassistant.util.utcnow", return_value=next_update),
+        patch(
+            "homeassistant.components.androidtv.media_player.utcnow",
+            return_value=next_update,
+        ),
     ):
         async_fire_time_changed(hass, next_update, True)
         await hass.async_block_till_done()
@@ -965,6 +863,9 @@ async def test_get_image_http_fail(hass: HomeAssistant) -> None:
 
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry, options={CONF_SCREENCAP_INTERVAL: 2}
+    )
 
     with (
         patchers.patch_connect(True)[patch_key],
@@ -996,7 +897,7 @@ async def test_get_image_disabled(hass: HomeAssistant) -> None:
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
-        config_entry, options={CONF_SCREENCAP: False}
+        config_entry, options={CONF_SCREENCAP_INTERVAL: 0}
     )
 
     with (
@@ -1181,7 +1082,7 @@ async def test_connection_closed_on_ha_stop(hass: HomeAssistant) -> None:
             assert adb_close.called
 
 
-async def test_exception(hass: HomeAssistant) -> None:
+async def test_exception(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test that the ADB connection gets closed when there is an unforeseen exception.
 
     HA will attempt to reconnect on the next update.
@@ -1201,12 +1102,21 @@ async def test_exception(hass: HomeAssistant) -> None:
         assert state is not None
         assert state.state == STATE_OFF
 
+        caplog.clear()
+        caplog.set_level(logging.ERROR)
+
         # When an unforeseen exception occurs, we close the ADB connection and raise the exception
-        with patchers.PATCH_ANDROIDTV_UPDATE_EXCEPTION, pytest.raises(Exception):
+        with patchers.PATCH_ANDROIDTV_UPDATE_EXCEPTION:
             await async_update_entity(hass, entity_id)
-            state = hass.states.get(entity_id)
-            assert state is not None
-            assert state.state == STATE_UNAVAILABLE
+
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
+        assert len(caplog.record_tuples) == 1
+        assert caplog.record_tuples[0][1] == logging.ERROR
+        assert caplog.record_tuples[0][2].startswith(
+            "Unexpected exception executing an ADB command"
+        )
 
         # On the next update, HA will reconnect to the device
         await async_update_entity(hass, entity_id)
@@ -1235,7 +1145,7 @@ async def test_options_reload(hass: HomeAssistant) -> None:
         with patchers.PATCH_SETUP_ENTRY as setup_entry_call:
             # change an option that not require integration reload
             hass.config_entries.async_update_entry(
-                config_entry, options={CONF_SCREENCAP: False}
+                config_entry, options={CONF_EXCLUDE_UNNAMED_APPS: True}
             )
             await hass.async_block_till_done()
 

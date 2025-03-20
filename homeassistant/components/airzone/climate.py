@@ -48,10 +48,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import API_TEMPERATURE_STEP, DOMAIN, TEMP_UNIT_LIB_TO_HASS
-from .coordinator import AirzoneUpdateCoordinator
+from .const import API_TEMPERATURE_STEP, TEMP_UNIT_LIB_TO_HASS
+from .coordinator import AirzoneConfigEntry, AirzoneUpdateCoordinator
 from .entity import AirzoneZoneEntity
 
 BASE_FAN_SPEEDS: Final[dict[int, str]] = {
@@ -84,6 +84,7 @@ HVAC_MODE_LIB_TO_HASS: Final[dict[OperationMode, HVACMode]] = {
     OperationMode.HEATING: HVACMode.HEAT,
     OperationMode.FAN: HVACMode.FAN_ONLY,
     OperationMode.DRY: HVACMode.DRY,
+    OperationMode.AUX_HEATING: HVACMode.HEAT,
     OperationMode.AUTO: HVACMode.HEAT_COOL,
 }
 HVAC_MODE_HASS_TO_LIB: Final[dict[HVACMode, OperationMode]] = {
@@ -97,19 +98,35 @@ HVAC_MODE_HASS_TO_LIB: Final[dict[HVACMode, OperationMode]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirzoneConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add Airzone sensors from a config_entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        AirzoneClimate(
-            coordinator,
-            entry,
-            system_zone_id,
-            zone_data,
-        )
-        for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items()
-    )
+    """Add Airzone climate from a config_entry."""
+    coordinator = entry.runtime_data
+
+    added_zones: set[str] = set()
+
+    def _async_entity_listener() -> None:
+        """Handle additions of climate."""
+
+        zones_data = coordinator.data.get(AZD_ZONES, {})
+        received_zones = set(zones_data)
+        new_zones = received_zones - added_zones
+        if new_zones:
+            async_add_entities(
+                AirzoneClimate(
+                    coordinator,
+                    entry,
+                    system_zone_id,
+                    zones_data.get(system_zone_id),
+                )
+                for system_zone_id in new_zones
+            )
+            added_zones.update(new_zones)
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_entity_listener))
+    _async_entity_listener()
 
 
 class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
@@ -118,7 +135,6 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
     _attr_name = None
     _speeds: dict[int, str] = {}
     _speeds_reverse: dict[str, int] = {}
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -140,9 +156,10 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         self._attr_temperature_unit = TEMP_UNIT_LIB_TO_HASS[
             self.get_airzone_value(AZD_TEMP_UNIT)
         ]
-        self._attr_hvac_modes = [
+        _attr_hvac_modes = [
             HVAC_MODE_LIB_TO_HASS[mode] for mode in self.get_airzone_value(AZD_MODES)
         ]
+        self._attr_hvac_modes = list(dict.fromkeys(_attr_hvac_modes))
         if (
             self.get_airzone_value(AZD_SPEED) is not None
             and self.get_airzone_value(AZD_SPEEDS) is not None
@@ -256,12 +273,18 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         self._attr_min_temp = self.get_airzone_value(AZD_TEMP_MIN)
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
             self._attr_fan_mode = self._speeds.get(self.get_airzone_value(AZD_SPEED))
-        if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
+        if (
+            self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            and self._attr_hvac_mode == HVACMode.HEAT_COOL
+        ):
             self._attr_target_temperature_high = self.get_airzone_value(
                 AZD_COOL_TEMP_SET
             )
             self._attr_target_temperature_low = self.get_airzone_value(
                 AZD_HEAT_TEMP_SET
             )
+            self._attr_target_temperature = None
         else:
+            self._attr_target_temperature_high = None
+            self._attr_target_temperature_low = None
             self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)

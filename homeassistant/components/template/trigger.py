@@ -49,9 +49,7 @@ async def async_attach_trigger(
     """Listen for state changes based on configuration."""
     trigger_data = trigger_info["trigger_data"]
     value_template: Template = config[CONF_VALUE_TEMPLATE]
-    value_template.hass = hass
     time_delta = config.get(CONF_FOR)
-    template.attach(hass, time_delta)
     delay_cancel = None
     job = HassJob(action)
     armed = False

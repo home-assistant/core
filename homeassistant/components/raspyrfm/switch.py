@@ -13,7 +13,10 @@ from raspyrfm_client.device_implementations.gateway.manufacturer.gateway_constan
 from raspyrfm_client.device_implementations.manufacturer_constants import Manufacturer
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -22,7 +25,7 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -34,7 +37,7 @@ CONF_CHANNEL_CONFIG = "channel_config"
 DEFAULT_HOST = "127.0.0.1"
 
 # define configuration parameters
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT): cv.port,

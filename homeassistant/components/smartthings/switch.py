@@ -2,60 +2,71 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import Any
 
-from pysmartthings import Capability
+from pysmartthings import Attribute, Capability, Command
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SmartThingsEntity
-from .const import DATA_BROKERS, DOMAIN
+from . import SmartThingsConfigEntry
+from .const import MAIN
+from .entity import SmartThingsEntity
+
+CAPABILITIES = (
+    Capability.SWITCH_LEVEL,
+    Capability.COLOR_CONTROL,
+    Capability.COLOR_TEMPERATURE,
+    Capability.FAN_SPEED,
+)
+
+AC_CAPABILITIES = (
+    Capability.AIR_CONDITIONER_MODE,
+    Capability.AIR_CONDITIONER_FAN_MODE,
+    Capability.TEMPERATURE_MEASUREMENT,
+    Capability.THERMOSTAT_COOLING_SETPOINT,
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: SmartThingsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add switches for a config entry."""
-    broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
+    entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsSwitch(device)
-        for device in broker.devices.values()
-        if broker.any_assigned(device.device_id, "switch")
+        SmartThingsSwitch(
+            entry_data.client, device, entry_data.rooms, {Capability.SWITCH}
+        )
+        for device in entry_data.devices.values()
+        if Capability.SWITCH in device.status[MAIN]
+        and not any(capability in device.status[MAIN] for capability in CAPABILITIES)
+        and not all(capability in device.status[MAIN] for capability in AC_CAPABILITIES)
     )
-
-
-def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
-    """Return all capabilities supported if minimum required are present."""
-    # Must be able to be turned on/off.
-    if Capability.switch in capabilities:
-        return [Capability.switch, Capability.energy_meter, Capability.power_meter]
-    return None
 
 
 class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
     """Define a SmartThings switch."""
 
+    _attr_name = None
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self._device.switch_off(set_status=True)
-        # State is set optimistically in the command above, therefore update
-        # the entity state ahead of receiving the confirming push updates
-        self.async_write_ha_state()
+        await self.execute_device_command(
+            Capability.SWITCH,
+            Command.OFF,
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self._device.switch_on(set_status=True)
-        # State is set optimistically in the command above, therefore update
-        # the entity state ahead of receiving the confirming push updates
-        self.async_write_ha_state()
+        await self.execute_device_command(
+            Capability.SWITCH,
+            Command.ON,
+        )
 
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return self._device.status.switch
+        return self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on"

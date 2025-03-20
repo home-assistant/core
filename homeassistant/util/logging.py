@@ -9,7 +9,7 @@ import logging
 import logging.handlers
 import queue
 import traceback
-from typing import Any, TypeVar, TypeVarTuple, cast, overload
+from typing import Any, cast, overload
 
 from homeassistant.core import (
     HassJobType,
@@ -17,9 +17,6 @@ from homeassistant.core import (
     callback,
     get_hassjob_callable_job_type,
 )
-
-_T = TypeVar("_T")
-_Ts = TypeVarTuple("_Ts")
 
 
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
@@ -80,7 +77,7 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
     listener.start()
 
 
-def log_exception(format_err: Callable[[*_Ts], Any], *args: *_Ts) -> None:
+def log_exception[*_Ts](format_err: Callable[[*_Ts], Any], *args: *_Ts) -> None:
     """Log an exception with additional context."""
     module = inspect.getmodule(inspect.stack(context=0)[1].frame)
     if module is not None:
@@ -98,7 +95,7 @@ def log_exception(format_err: Callable[[*_Ts], Any], *args: *_Ts) -> None:
     logging.getLogger(module_name).error("%s\n%s", friendly_msg, exc_msg)
 
 
-async def _async_wrapper(
+async def _async_wrapper[*_Ts](
     async_func: Callable[[*_Ts], Coroutine[Any, Any, None]],
     format_err: Callable[[*_Ts], Any],
     *args: *_Ts,
@@ -106,33 +103,33 @@ async def _async_wrapper(
     """Catch and log exception."""
     try:
         await async_func(*args)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         log_exception(format_err, *args)
 
 
-def _sync_wrapper(
+def _sync_wrapper[*_Ts](
     func: Callable[[*_Ts], Any], format_err: Callable[[*_Ts], Any], *args: *_Ts
 ) -> None:
     """Catch and log exception."""
     try:
         func(*args)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         log_exception(format_err, *args)
 
 
 @callback
-def _callback_wrapper(
+def _callback_wrapper[*_Ts](
     func: Callable[[*_Ts], Any], format_err: Callable[[*_Ts], Any], *args: *_Ts
 ) -> None:
     """Catch and log exception."""
     try:
         func(*args)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         log_exception(format_err, *args)
 
 
 @overload
-def catch_log_exception(
+def catch_log_exception[*_Ts](
     func: Callable[[*_Ts], Coroutine[Any, Any, Any]],
     format_err: Callable[[*_Ts], Any],
     job_type: HassJobType | None = None,
@@ -140,14 +137,14 @@ def catch_log_exception(
 
 
 @overload
-def catch_log_exception(
+def catch_log_exception[*_Ts](
     func: Callable[[*_Ts], Any],
     format_err: Callable[[*_Ts], Any],
     job_type: HassJobType | None = None,
 ) -> Callable[[*_Ts], None] | Callable[[*_Ts], Coroutine[Any, Any, None]]: ...
 
 
-def catch_log_exception(
+def catch_log_exception[*_Ts](
     func: Callable[[*_Ts], Any],
     format_err: Callable[[*_Ts], Any],
     job_type: HassJobType | None = None,
@@ -170,7 +167,7 @@ def catch_log_exception(
     return wraps(func)(partial(_sync_wrapper, func, format_err))  # type: ignore[return-value]
 
 
-def catch_log_coro_exception(
+def catch_log_coro_exception[_T, *_Ts](
     target: Coroutine[Any, Any, _T], format_err: Callable[[*_Ts], Any], *args: *_Ts
 ) -> Coroutine[Any, Any, _T | None]:
     """Decorate a coroutine to catch and log exceptions."""
@@ -179,14 +176,14 @@ def catch_log_coro_exception(
         """Catch and log exception."""
         try:
             return await target
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             log_exception(format_err, *args)
             return None
 
     return coro_wrapper(*args)
 
 
-def async_create_catching_coro(
+def async_create_catching_coro[_T](
     target: Coroutine[Any, Any, _T],
 ) -> Coroutine[Any, Any, _T | None]:
     """Wrap a coroutine to catch and log exceptions.
@@ -199,8 +196,8 @@ def async_create_catching_coro(
     trace = traceback.extract_stack()
     return catch_log_coro_exception(
         target,
-        lambda: "Exception in {} called from\n {}".format(
-            target.__name__,
-            "".join(traceback.format_list(trace[:-1])),
+        lambda: (
+            f"Exception in {target.__name__} called from\n"
+            + "".join(traceback.format_list(trace[:-1]))
         ),
     )

@@ -1,9 +1,19 @@
 {
   "services": {
-    "add_doorbell_text": "mdi:message-plus",
-    "remove_doorbell_text": "mdi:message-minus",
-    "set_default_doorbell_text": "mdi:message-processing",
-    "set_chime_paired_doorbells": "mdi:bell-cog",
-    "remove_privacy_zone": "mdi:eye-minus"
+    "add_doorbell_text": {
+      "service": "mdi:message-plus"
+    },
+    "remove_doorbell_text": {
+      "service": "mdi:message-minus"
+    },
+    "set_chime_paired_doorbells": {
+      "service": "mdi:bell-cog"
+    },
+    "remove_privacy_zone": {
+      "service": "mdi:eye-minus"
+    },
+    "get_user_keyring_info": {
+      "service": "mdi:key-chain"
+    }
   }
 }

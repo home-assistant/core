@@ -4,22 +4,17 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Generic
 
-from deebot_client.capabilities import CapabilitySetTypes, VacuumCapabilities
+from deebot_client.capabilities import CapabilitySetTypes
 from deebot_client.device import Device
 from deebot_client.events import WaterInfoEvent, WorkModeEvent
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
-from .entity import (
-    CapabilityDevice,
-    EcovacsCapabilityEntityDescription,
-    EcovacsDescriptionEntity,
-    EventT,
-)
+from .entity import EcovacsCapabilityEntityDescription, EcovacsDescriptionEntity, EventT
 from .util import get_name_key, get_supported_entitites
 
 
@@ -37,7 +32,6 @@ class EcovacsSelectEntityDescription(
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
     EcovacsSelectEntityDescription[WaterInfoEvent](
-        device_capabilities=VacuumCapabilities,
         capability_fn=lambda caps: caps.water,
         current_option_fn=lambda e: get_name_key(e.amount),
         options_fn=lambda water: [get_name_key(amount) for amount in water.types],
@@ -46,7 +40,6 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
     ),
     EcovacsSelectEntityDescription[WorkModeEvent](
-        device_capabilities=VacuumCapabilities,
         capability_fn=lambda caps: caps.clean.work_mode,
         current_option_fn=lambda e: get_name_key(e.mode),
         options_fn=lambda cap: [get_name_key(mode) for mode in cap.types],
@@ -61,7 +54,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EcovacsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
     controller = config_entry.runtime_data
@@ -73,7 +66,7 @@ async def async_setup_entry(
 
 
 class EcovacsSelectEntity(
-    EcovacsDescriptionEntity[CapabilityDevice, CapabilitySetTypes[EventT, str]],
+    EcovacsDescriptionEntity[CapabilitySetTypes[EventT, [str], str]],
     SelectEntity,
 ):
     """Ecovacs select entity."""
@@ -84,7 +77,7 @@ class EcovacsSelectEntity(
     def __init__(
         self,
         device: Device,
-        capability: CapabilitySetTypes[EventT, str],
+        capability: CapabilitySetTypes[EventT, [str], str],
         entity_description: EcovacsSelectEntityDescription,
         **kwargs: Any,
     ) -> None:

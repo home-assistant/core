@@ -9,7 +9,7 @@ from typing import Any
 from starline import StarlineApi, StarlineDevice
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
@@ -65,17 +65,24 @@ class StarlineAccount:
             )
             self._api.set_slnet_token(slnet_token)
             self._api.set_user_id(user_id)
-            self._hass.config_entries.async_update_entry(
-                self._config_entry,
-                data={
+            self._hass.add_job(
+                self._save_slnet_token,
+                {
                     **self._config_entry.data,
                     DATA_SLNET_TOKEN: slnet_token,
                     DATA_EXPIRES: slnet_token_expires,
                     DATA_USER_ID: user_id,
                 },
             )
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             _LOGGER.error("Error updating SLNet token: %s", err)
+
+    @callback
+    def _save_slnet_token(self, data) -> None:
+        self._hass.config_entries.async_update_entry(
+            self._config_entry,
+            data=data,
+        )
 
     def _update_data(self):
         """Update StarLine data."""
@@ -173,6 +180,7 @@ class StarlineAccount:
             "online": device.online,
         }
 
+    # Deprecated and should be removed in 2025.8
     @staticmethod
     def engine_attrs(device: StarlineDevice) -> dict[str, Any]:
         """Attributes for engine switch."""

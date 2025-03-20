@@ -1,67 +1,50 @@
 # serializer version: 1
-# name: test_default_prompt[None]
+# name: test_function_call
   list([
     dict({
-      'content': '''
-        This smart home is controlled by Home Assistant.
-        
-        An overview of the areas and the devices in this smart home:
-        
-        Test Area:
-        - Test Device (Test Model)
-        
-        Test Area 2:
-        - Test Device 2
-        - Test Device 3 (Test Model 3A)
-        - Test Device 4
-        - 1 (3)
-        
-        Answer the user's questions about the world truthfully.
-        
-        If the user wants to control a device, reject the request and suggest using the Home Assistant app.
-      ''',
-      'role': 'system',
-    }),
-    dict({
-      'content': 'hello',
+      'content': 'Please call the test function',
       'role': 'user',
     }),
     dict({
-      'content': 'Hello, how can I help you?',
+      'agent_id': 'conversation.openai',
+      'content': None,
       'role': 'assistant',
-    }),
-  ])
-# ---
-# name: test_default_prompt[conversation.openai]
-  list([
-    dict({
-      'content': '''
-        This smart home is controlled by Home Assistant.
-        
-        An overview of the areas and the devices in this smart home:
-        
-        Test Area:
-        - Test Device (Test Model)
-        
-        Test Area 2:
-        - Test Device 2
-        - Test Device 3 (Test Model 3A)
-        - Test Device 4
-        - 1 (3)
-        
-        Answer the user's questions about the world truthfully.
-        
-        If the user wants to control a device, reject the request and suggest using the Home Assistant app.
-      ''',
-      'role': 'system',
+      'tool_calls': list([
+        dict({
+          'id': 'call_call_1',
+          'tool_args': dict({
+            'param1': 'call1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+        dict({
+          'id': 'call_call_2',
+          'tool_args': dict({
+            'param1': 'call2',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
     }),
     dict({
-      'content': 'hello',
-      'role': 'user',
+      'agent_id': 'conversation.openai',
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_1',
+      'tool_name': 'test_tool',
+      'tool_result': 'value1',
     }),
     dict({
-      'content': 'Hello, how can I help you?',
+      'agent_id': 'conversation.openai',
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_2',
+      'tool_name': 'test_tool',
+      'tool_result': 'value2',
+    }),
+    dict({
+      'agent_id': 'conversation.openai',
+      'content': 'Cool',
       'role': 'assistant',
+      'tool_calls': None,
     }),
   ])
 # ---

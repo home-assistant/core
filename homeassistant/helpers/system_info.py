@@ -5,7 +5,6 @@ from __future__ import annotations
 from functools import cache
 from getpass import getuser
 import logging
-import os
 import platform
 from typing import TYPE_CHECKING, Any
 
@@ -13,16 +12,21 @@ from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 from homeassistant.util.package import is_docker_env, is_virtual_env
+from homeassistant.util.system_info import is_official_image
 
+from .hassio import is_hassio
 from .importlib import async_import_module
+from .singleton import singleton
 
 _LOGGER = logging.getLogger(__name__)
 
+_DATA_MAC_VER = "system_info_mac_ver"
 
-@cache
-def is_official_image() -> bool:
-    """Return True if Home Assistant is running in an official container."""
-    return os.path.isfile("/OFFICIAL_IMAGE")
+
+@singleton(_DATA_MAC_VER)
+async def async_get_mac_ver(hass: HomeAssistant) -> str:
+    """Return the macOS version."""
+    return (await hass.async_add_executor_job(platform.mac_ver))[0]
 
 
 # Cache the result of getuser() because it can call getpwuid() which
@@ -43,13 +47,13 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     else:
         hassio = await async_import_module(hass, "homeassistant.components.hassio")
 
-    is_hassio = hassio.is_hassio(hass)
+    is_hassio_ = is_hassio(hass)
 
     info_object = {
         "installation_type": "Unknown",
         "version": current_version,
         "dev": "dev" in current_version,
-        "hassio": is_hassio,
+        "hassio": is_hassio_,
         "virtualenv": is_virtual_env(),
         "python_version": platform.python_version(),
         "docker": False,
@@ -61,11 +65,14 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
 
     try:
         info_object["user"] = cached_get_user()
-    except KeyError:
+    except (KeyError, OSError):
+        # OSError on python >= 3.13, KeyError on python < 3.13
+        # KeyError can be removed when 3.12 support is dropped
+        # see https://docs.python.org/3/whatsnew/3.13.html
         info_object["user"] = None
 
     if platform.system() == "Darwin":
-        info_object["os_version"] = platform.mac_ver()[0]
+        info_object["os_version"] = await async_get_mac_ver(hass)
     elif platform.system() == "Linux":
         info_object["docker"] = is_docker_env()
 
@@ -80,7 +87,7 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
         info_object["installation_type"] = "Home Assistant Core"
 
     # Enrich with Supervisor information
-    if is_hassio:
+    if is_hassio_:
         if not (info := hassio.get_info(hass)):
             _LOGGER.warning("No Home Assistant Supervisor info available")
             info = {}

@@ -16,6 +16,7 @@ from homeassistant.components.media_player import (
     MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import (
     HomeAssistant,
@@ -40,19 +41,13 @@ _LOGGER = logging.getLogger(__name__)
 CONF_CUSTOMIZE_ENTITIES = "customize"
 CONF_DEFAULT_STREAM_QUERY = "default_query"
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_DEFAULT_STREAM_QUERY): cv.string,
-                vol.Optional(CONF_CUSTOMIZE_ENTITIES): vol.Schema(
-                    {cv.entity_id: vol.Schema({cv.string: cv.string})}
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Media Extractor from a config entry."""
+
+    return True
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -60,11 +55,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def extract_media_url(call: ServiceCall) -> ServiceResponse:
         """Extract media url."""
-        youtube_dl = YoutubeDL(
-            {"quiet": True, "logger": _LOGGER, "format": call.data[ATTR_FORMAT_QUERY]}
-        )
 
         def extract_info() -> dict[str, Any]:
+            youtube_dl = YoutubeDL(
+                {
+                    "quiet": True,
+                    "logger": _LOGGER,
+                    "format": call.data[ATTR_FORMAT_QUERY],
+                }
+            )
             return cast(
                 dict[str, Any],
                 youtube_dl.extract_info(
@@ -93,7 +92,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def play_media(call: ServiceCall) -> None:
         """Get stream URL and send it to the play_media service."""
-        MediaExtractor(hass, config[DOMAIN], call.data).extract_and_send()
+        MediaExtractor(hass, config.get(DOMAIN, {}), call.data).extract_and_send()
 
     default_format_query = config.get(DOMAIN, {}).get(
         CONF_DEFAULT_STREAM_QUERY, DEFAULT_STREAM_QUERY

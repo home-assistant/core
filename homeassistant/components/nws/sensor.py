@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from types import MappingProxyType
 from typing import Any
 
@@ -12,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -24,12 +24,12 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     TimestampDataUpdateCoordinator,
 )
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import parse_datetime
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
     PressureConverter,
@@ -37,8 +37,8 @@ from homeassistant.util.unit_conversion import (
 )
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import NWSData, base_unique_id, device_info
-from .const import ATTRIBUTION, CONF_STATION, DOMAIN, OBSERVATION_VALID_TIME
+from . import NWSConfigEntry, NWSData, base_unique_id, device_info
+from .const import ATTRIBUTION, CONF_STATION
 
 PARALLEL_UPDATES = 0
 
@@ -114,6 +114,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         icon="mdi:compass-rose",
         native_unit_of_measurement=DEGREE,
         unit_convert=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     NWSSensorEntityDescription(
         key="barometricPressure",
@@ -139,14 +140,21 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.METERS,
         unit_convert=UnitOfLength.MILES,
     ),
+    NWSSensorEntityDescription(
+        key="timestamp",
+        name="Latest Observation Time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NWSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the NWS weather platform."""
-    nws_data: NWSData = hass.data[DOMAIN][entry.entry_id]
+    nws_data = entry.runtime_data
     station = entry.data[CONF_STATION]
 
     async_add_entities(
@@ -192,7 +200,7 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
         )
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | datetime | None:
         """Return the state."""
         if (
             not (observation := self._nws.observation)
@@ -225,16 +233,6 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
             return round(value, 1)
         if unit_of_measurement == PERCENTAGE:
             return round(value)
+        if self.device_class == SensorDeviceClass.TIMESTAMP:
+            return parse_datetime(value)
         return value
-
-    @property
-    def available(self) -> bool:
-        """Return if state is available."""
-        if self.coordinator.last_update_success_time:
-            last_success_time = (
-                utcnow() - self.coordinator.last_update_success_time
-                < OBSERVATION_VALID_TIME
-            )
-        else:
-            last_success_time = False
-        return self.coordinator.last_update_success or last_success_time

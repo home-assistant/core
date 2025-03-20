@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aioambient import OpenAPI
 import pytest
 
-from homeassistant.components import ambient_network
+from homeassistant.components.ambient_network.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import (
@@ -18,7 +18,7 @@ from tests.common import (
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.ambient_network.async_setup_entry", return_value=True
@@ -66,10 +66,10 @@ async def mock_aioambient(open_api: OpenAPI):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(request) -> MockConfigEntry:
+def config_entry_fixture(request: pytest.FixtureRequest) -> MockConfigEntry:
     """Mock config entry."""
     return MockConfigEntry(
-        domain=ambient_network.DOMAIN,
+        domain=DOMAIN,
         title=f"Station {request.param[0]}",
         data={"mac": request.param},
     )

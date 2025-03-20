@@ -20,8 +20,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import gather_with_limited_concurrency
 
 from .const import DOMAIN
+from .coordinator import DeviceCoordinator, async_register_device
 from .models import WemoConfigEntryData, WemoData, async_wemo_data
-from .wemo_device import DeviceCoordinator, async_register_device
 
 # Max number of devices to initialize at once. This limit is in place to
 # avoid tying up too many executor threads with WeMo device setup.
@@ -44,8 +44,8 @@ WEMO_MODEL_DISPATCH = {
 
 _LOGGER = logging.getLogger(__name__)
 
-DispatchCallback = Callable[[DeviceCoordinator], Coroutine[Any, Any, None]]
-HostPortTuple = tuple[str, int | None]
+type DispatchCallback = Callable[[DeviceCoordinator], Coroutine[Any, Any, None]]
+type HostPortTuple = tuple[str, int | None]
 
 
 def coerce_host_port(value: str) -> HostPortTuple:
@@ -144,6 +144,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     dispatcher = wemo_data.config_entry_data.dispatcher
     if unload_ok := await dispatcher.async_unload_platforms(hass):
+        for coordinator in list(
+            wemo_data.config_entry_data.device_coordinators.values()
+        ):
+            await coordinator.async_shutdown()
         assert not wemo_data.config_entry_data.device_coordinators
         wemo_data.config_entry_data = None  # type: ignore[assignment]
     return unload_ok

@@ -9,13 +9,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RadarrEntity
-from .const import DOMAIN, HEALTH_ISSUES
+from .const import HEALTH_ISSUES
+from .coordinator import RadarrConfigEntry
+from .entity import RadarrEntity
 
 BINARY_SENSOR_TYPE = BinarySensorEntityDescription(
     key="health",
@@ -27,11 +27,11 @@ BINARY_SENSOR_TYPE = BinarySensorEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: RadarrConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Radarr sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]["health"]
+    coordinator = entry.runtime_data.health
     async_add_entities([RadarrBinarySensor(coordinator, BINARY_SENSOR_TYPE)])
 
 

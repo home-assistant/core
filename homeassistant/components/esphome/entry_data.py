@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from functools import partial
@@ -30,6 +31,7 @@ from aioesphomeapi import (
     LightInfo,
     LockInfo,
     MediaPlayerInfo,
+    MediaPlayerSupportedFormat,
     NumberInfo,
     SelectInfo,
     SensorInfo,
@@ -38,6 +40,7 @@ from aioesphomeapi import (
     TextInfo,
     TextSensorInfo,
     TimeInfo,
+    UpdateInfo,
     UserService,
     ValveInfo,
     build_unique_id,
@@ -45,6 +48,7 @@ from aioesphomeapi import (
 from aioesphomeapi.model import ButtonInfo
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
 
+from homeassistant.components.assist_satellite import AssistSatelliteConfiguration
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -53,6 +57,9 @@ from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 from .dashboard import async_get_dashboard
+
+type ESPHomeConfigEntry = ConfigEntry[RuntimeEntryData]
+
 
 INFO_TO_COMPONENT_TYPE: Final = {v: k for k, v in COMPONENT_TYPE_TO_INFO.items()}
 
@@ -82,6 +89,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     TextInfo: Platform.TEXT,
     TextSensorInfo: Platform.SENSOR,
     TimeInfo: Platform.TIME,
+    UpdateInfo: Platform.UPDATE,
     ValveInfo: Platform.VALVE,
 }
 
@@ -106,7 +114,9 @@ class RuntimeEntryData:
     title: str
     client: APIClient
     store: ESPHomeStorage
-    state: dict[type[EntityState], dict[int, EntityState]] = field(default_factory=dict)
+    state: defaultdict[type[EntityState], dict[int, EntityState]] = field(
+        default_factory=lambda: defaultdict(dict)
+    )
     # When the disconnect callback is called, we mark all states
     # as stale so we will always dispatch a state update when the
     # device reconnects. This is the same format as state_subscriptions.
@@ -140,6 +150,15 @@ class RuntimeEntryData:
         tuple[type[EntityInfo], int], list[Callable[[EntityInfo], None]]
     ] = field(default_factory=dict)
     original_options: dict[str, Any] = field(default_factory=dict)
+    media_player_formats: dict[str, list[MediaPlayerSupportedFormat]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
+    assist_satellite_config_update_callbacks: list[
+        Callable[[AssistSatelliteConfiguration], None]
+    ] = field(default_factory=list)
+    assist_satellite_set_wake_word_callbacks: list[Callable[[str], None]] = field(
+        default_factory=list
+    )
 
     @property
     def name(self) -> str:
@@ -244,7 +263,10 @@ class RuntimeEntryData:
                 callback_(static_info)
 
     async def _ensure_platforms_loaded(
-        self, hass: HomeAssistant, entry: ConfigEntry, platforms: set[Platform]
+        self,
+        hass: HomeAssistant,
+        entry: ESPHomeConfigEntry,
+        platforms: set[Platform],
     ) -> None:
         async with self.platform_load_lock:
             if needed := platforms - self.loaded_platforms:
@@ -252,7 +274,11 @@ class RuntimeEntryData:
             self.loaded_platforms |= needed
 
     async def async_update_static_infos(
-        self, hass: HomeAssistant, entry: ConfigEntry, infos: list[EntityInfo], mac: str
+        self,
+        hass: HomeAssistant,
+        entry: ESPHomeConfigEntry,
+        infos: list[EntityInfo],
+        mac: str,
     ) -> None:
         """Distribute an update of static infos to all platforms."""
         # First, load all platforms
@@ -374,7 +400,7 @@ class RuntimeEntryData:
         if subscription := self.state_subscriptions.get(subscription_key):
             try:
                 subscription()
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 # If we allow this exception to raise it will
                 # make it all the way to data_received in aioesphomeapi
                 # which will cause the connection to be closed.
@@ -443,7 +469,7 @@ class RuntimeEntryData:
             await self.store.async_save(self._pending_storage())
 
     async def async_update_listener(
-        self, hass: HomeAssistant, entry: ConfigEntry
+        self, hass: HomeAssistant, entry: ESPHomeConfigEntry
     ) -> None:
         """Handle options update."""
         if self.original_options == entry.options:
@@ -485,3 +511,35 @@ class RuntimeEntryData:
         # We use this to determine if a deep sleep device should
         # be marked as unavailable or not.
         self.expected_disconnect = True
+
+    @callback
+    def async_register_assist_satellite_config_updated_callback(
+        self,
+        callback_: Callable[[AssistSatelliteConfiguration], None],
+    ) -> CALLBACK_TYPE:
+        """Register to receive callbacks when the Assist satellite's configuration is updated."""
+        self.assist_satellite_config_update_callbacks.append(callback_)
+        return lambda: self.assist_satellite_config_update_callbacks.remove(callback_)
+
+    @callback
+    def async_assist_satellite_config_updated(
+        self, config: AssistSatelliteConfiguration
+    ) -> None:
+        """Notify listeners that the Assist satellite configuration has been updated."""
+        for callback_ in self.assist_satellite_config_update_callbacks.copy():
+            callback_(config)
+
+    @callback
+    def async_register_assist_satellite_set_wake_word_callback(
+        self,
+        callback_: Callable[[str], None],
+    ) -> CALLBACK_TYPE:
+        """Register to receive callbacks when the Assist satellite's wake word is set."""
+        self.assist_satellite_set_wake_word_callbacks.append(callback_)
+        return lambda: self.assist_satellite_set_wake_word_callbacks.remove(callback_)
+
+    @callback
+    def async_assist_satellite_set_wake_word(self, wake_word_id: str) -> None:
+        """Notify listeners that the Assist satellite wake word has been set."""
+        for callback_ in self.assist_satellite_set_wake_word_callbacks.copy():
+            callback_(wake_word_id)

@@ -5,13 +5,15 @@ from unittest.mock import AsyncMock, patch
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 import pytest
 
-from homeassistant.components.purpleair import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.components.purpleair.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import TEST_API_KEY, TEST_SENSOR_INDEX1, TEST_SENSOR_INDEX2
+
+from tests.common import MockConfigEntry
 
 TEST_LATITUDE = 51.5285582
 TEST_LONGITUDE = -0.2416796
@@ -127,19 +129,11 @@ async def test_reauth(
     mock_aiopurpleair,
     check_api_key_errors,
     check_api_key_mock,
-    config_entry,
+    config_entry: MockConfigEntry,
     setup_config_entry,
 ) -> None:
     """Test re-auth (including errors)."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-            "unique_id": config_entry.unique_id,
-        },
-        data={"api_key": TEST_API_KEY},
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -275,7 +269,10 @@ async def test_options_add_sensor_duplicate(
 
 
 async def test_options_remove_sensor(
-    hass: HomeAssistant, config_entry, setup_config_entry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry,
+    setup_config_entry,
 ) -> None:
     """Test removing a sensor via the options flow."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -288,10 +285,10 @@ async def test_options_remove_sensor(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "remove_sensor"
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, str(TEST_SENSOR_INDEX1))}
     )
+    assert device_entry is not None
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={"sensor_device_id": device_entry.id},

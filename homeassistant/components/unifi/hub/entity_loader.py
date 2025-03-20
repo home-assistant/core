@@ -7,9 +7,10 @@ Make sure expected clients are available for platforms.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine, Sequence
 from datetime import timedelta
 from functools import partial
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from aiounifi.interfaces.api_handlers import ItemEvent
 
@@ -18,7 +19,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_entries_for_config_entry
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from ..const import LOGGER, UNIFI_WIRELESS_CLIENTS
 from ..entity import UnifiEntity, UnifiEntityDescription
@@ -27,6 +28,7 @@ if TYPE_CHECKING:
     from .hub import UnifiHub
 
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
+POLL_INTERVAL = timedelta(seconds=10)
 
 
 class UnifiEntityLoader:
@@ -44,9 +46,28 @@ class UnifiEntityLoader:
             hub.api.port_forwarding.update,
             hub.api.sites.update,
             hub.api.system_information.update,
+            hub.api.firewall_policies.update,
+            hub.api.traffic_rules.update,
+            hub.api.traffic_routes.update,
             hub.api.wlans.update,
         )
+        self.polling_api_updaters = (
+            hub.api.traffic_rules.update,
+            hub.api.traffic_routes.update,
+        )
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
+
+        self._dataUpdateCoordinator = DataUpdateCoordinator(
+            hub.hass,
+            LOGGER,
+            name="Unifi entity poller",
+            update_method=self._update_pollable_api_data,
+            update_interval=POLL_INTERVAL,
+        )
+
+        self._update_listener = self._dataUpdateCoordinator.async_add_listener(
+            update_callback=lambda: None
+        )
 
         self.platforms: list[
             tuple[
@@ -66,15 +87,24 @@ class UnifiEntityLoader:
         self._restore_inactive_clients()
         self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
 
-    async def _refresh_api_data(self) -> None:
-        """Refresh API data from network application."""
+    async def _refresh_data(
+        self, updaters: Sequence[Callable[[], Coroutine[Any, Any, None]]]
+    ) -> None:
         results = await asyncio.gather(
-            *[update() for update in self.api_updaters],
+            *[update() for update in updaters],
             return_exceptions=True,
         )
         for result in results:
             if result is not None:
                 LOGGER.warning("Exception on update %s", result)
+
+    async def _update_pollable_api_data(self) -> None:
+        """Refresh API data for pollable updaters."""
+        await self._refresh_data(self.polling_api_updaters)
+
+    async def _refresh_api_data(self) -> None:
+        """Refresh API data from network application."""
+        await self._refresh_data(self.api_updaters)
 
     @callback
     def _restore_inactive_clients(self) -> None:
@@ -86,7 +116,7 @@ class UnifiEntityLoader:
         entity_registry = er.async_get(self.hub.hass)
         macs: list[str] = [
             entry.unique_id.split("-", 1)[1]
-            for entry in async_entries_for_config_entry(
+            for entry in er.async_entries_for_config_entry(
                 entity_registry, config.entry.entry_id
             )
             if entry.domain == Platform.DEVICE_TRACKER and "-" in entry.unique_id

@@ -19,6 +19,13 @@
               "auto": "mdi:arrow-oscillating",
               "off": "mdi:arrow-oscillating-off"
             }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "rangefull": "mdi:pan-horizontal",
+              "auto": "mdi:compare-horizontal",
+              "off": "mdi:arrow-oscillating-off"
+            }
           }
         }
       }
@@ -75,6 +82,8 @@
     }
   },
   "services": {
-    "randomize_device_tracker_data": "mdi:dice-multiple"
+    "randomize_device_tracker_data": {
+      "service": "mdi:dice-multiple"
+    }
   }
 }

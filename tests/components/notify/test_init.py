@@ -56,7 +56,7 @@ async def help_async_setup_entry_init(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> bool:
     """Set up test config entry."""
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+    await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
     return True
 
 

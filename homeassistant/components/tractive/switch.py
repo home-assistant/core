@@ -9,19 +9,15 @@ from typing import Any, Literal, cast
 from aiotractive.exceptions import TractiveError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Trackables, TractiveClient
+from . import Trackables, TractiveClient, TractiveConfigEntry
 from .const import (
     ATTR_BUZZER,
     ATTR_LED,
     ATTR_LIVE_TRACKING,
-    CLIENT,
-    DOMAIN,
-    TRACKABLES,
     TRACKER_SWITCH_STATUS_UPDATED,
 )
 from .entity import TractiveEntity
@@ -59,11 +55,13 @@ SWITCH_TYPES: tuple[TractiveSwitchEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TractiveConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tractive switches."""
-    client = hass.data[DOMAIN][entry.entry_id][CLIENT]
-    trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
+    client = entry.runtime_data.client
+    trackables = entry.runtime_data.trackables
 
     entities = [
         TractiveSwitch(client, item, description)

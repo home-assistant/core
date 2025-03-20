@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate, ParamSpec
+from typing import Any, Concatenate
 
 from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import MatterError
@@ -17,8 +17,6 @@ from homeassistant.core import HomeAssistant, callback
 
 from .adapter import MatterAdapter
 from .helpers import MissingNode, get_matter, node_from_ha_device_id
-
-_P = ParamSpec("_P")
 
 ID = "id"
 TYPE = "type"
@@ -93,7 +91,7 @@ def async_get_matter_adapter(
     return _get_matter
 
 
-def async_handle_failed_command(
+def async_handle_failed_command[**_P](
     func: Callable[
         Concatenate[HomeAssistant, ActiveConnection, dict[str, Any], _P],
         Coroutine[Any, Any, None],

@@ -23,8 +23,7 @@ from pyoverkiz.obfuscate import obfuscate_id
 from pyoverkiz.utils import generate_local_server, is_overkiz_gateway
 import voluptuous as vol
 
-from homeassistant.components import dhcp, zeroconf
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -34,6 +33,8 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_API_TYPE, CONF_HUB, DEFAULT_SERVER, DOMAIN, LOGGER
 
@@ -47,7 +48,6 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _reauth_entry: ConfigEntry | None = None
     _api_type: APIType = APIType.CLOUD
     _user: str | None = None
     _server: str = DEFAULT_SERVER
@@ -77,7 +77,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
             for gateway in gateways:
                 if is_overkiz_gateway(gateway.id):
                     gateway_id = gateway.id
-                    await self.async_set_unique_id(gateway_id)
+                    await self.async_set_unique_id(gateway_id, raise_on_progress=False)
 
         return user_input
 
@@ -152,9 +152,11 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
             except BadCredentialsException as exception:
                 # If authentication with CozyTouch auth server is valid, but token is invalid
                 # for Overkiz API server, the hardware is not supported.
-                if user_input[CONF_HUB] == Server.ATLANTIC_COZYTOUCH and not isinstance(
-                    exception, CozyTouchBadCredentialsException
-                ):
+                if user_input[CONF_HUB] in {
+                    Server.ATLANTIC_COZYTOUCH,
+                    Server.SAUTER_COZYTOUCH,
+                    Server.THERMOR_COZYTOUCH,
+                } and not isinstance(exception, CozyTouchBadCredentialsException):
                     description_placeholders["unsupported_device"] = "CozyTouch"
                     errors["base"] = "unsupported_hardware"
                 else:
@@ -170,30 +172,16 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
                 # the Overkiz API server. Login will return unknown user.
                 description_placeholders["unsupported_device"] = "Somfy Protect"
                 errors["base"] = "unsupported_hardware"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
             else:
-                if self._reauth_entry:
-                    if self._reauth_entry.unique_id != self.unique_id:
-                        return self.async_abort(reason="reauth_wrong_account")
+                if self.source == SOURCE_REAUTH:
+                    self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
 
-                    # Update existing entry during reauth
-                    self.hass.config_entries.async_update_entry(
-                        self._reauth_entry,
-                        data={
-                            **self._reauth_entry.data,
-                            **user_input,
-                        },
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data_updates=user_input
                     )
-
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(
-                            self._reauth_entry.entry_id
-                        )
-                    )
-
-                    return self.async_abort(reason="reauth_successful")
 
                 # Create new entry
                 self._abort_if_unique_id_configured()
@@ -253,30 +241,16 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
                 # the Overkiz API server. Login will return unknown user.
                 description_placeholders["unsupported_device"] = "Somfy Protect"
                 errors["base"] = "unsupported_hardware"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
             else:
-                if self._reauth_entry:
-                    if self._reauth_entry.unique_id != self.unique_id:
-                        return self.async_abort(reason="reauth_wrong_account")
+                if self.source == SOURCE_REAUTH:
+                    self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
 
-                    # Update existing entry during reauth
-                    self.hass.config_entries.async_update_entry(
-                        self._reauth_entry,
-                        data={
-                            **self._reauth_entry.data,
-                            **user_input,
-                        },
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data_updates=user_input
                     )
-
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(
-                            self._reauth_entry.entry_id
-                        )
-                    )
-
-                    return self.async_abort(reason="reauth_successful")
 
                 # Create new entry
                 self._abort_if_unique_id_configured()
@@ -300,7 +274,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
         hostname = discovery_info.hostname
@@ -311,7 +285,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._process_discovery(gateway_id)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle ZeroConf discovery."""
         properties = discovery_info.properties
@@ -346,21 +320,15 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth."""
-        self._reauth_entry = cast(
-            ConfigEntry,
-            self.hass.config_entries.async_get_entry(self.context["entry_id"]),
-        )
+        # overkiz entries always have unique IDs
+        self.context["title_placeholders"] = {"gateway_id": cast(str, self.unique_id)}
 
-        self.context["title_placeholders"] = {
-            "gateway_id": self._reauth_entry.unique_id
-        }
-
-        self._user = self._reauth_entry.data[CONF_USERNAME]
-        self._server = self._reauth_entry.data[CONF_HUB]
-        self._api_type = self._reauth_entry.data.get(CONF_API_TYPE, APIType.CLOUD)
+        self._user = entry_data[CONF_USERNAME]
+        self._server = entry_data[CONF_HUB]
+        self._api_type = entry_data.get(CONF_API_TYPE, APIType.CLOUD)
 
         if self._api_type == APIType.LOCAL:
-            self._host = self._reauth_entry.data[CONF_HOST]
+            self._host = entry_data[CONF_HOST]
 
         return await self.async_step_user(dict(entry_data))
 

@@ -3,6 +3,8 @@
 import asyncio
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
 from homeassistant.components.switch import (
@@ -232,9 +234,8 @@ async def test_state_reporting_all(hass: HomeAssistant) -> None:
     assert hass.states.get("switch.switch_group").state == STATE_UNAVAILABLE
 
 
-async def test_service_calls(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_service_calls(hass: HomeAssistant) -> None:
     """Test service calls."""
     await async_setup_component(
         hass,

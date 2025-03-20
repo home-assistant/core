@@ -1,0 +1,10 @@
+{
+  "domain": "israel_rail",
+  "name": "Israel Railways",
+  "codeowners": ["@shaiu"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/israel_rail",
+  "iot_class": "cloud_polling",
+  "loggers": ["israelrailapi"],
+  "requirements": ["israel-rail-api==0.1.2"]
+}

@@ -10,13 +10,16 @@ from synology_dsm.api.surveillance_station.camera import SynoCamera
 from synology_dsm.exceptions import SynologyDSMNotLoggedInException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_TIMEOUT, CONF_VERIFY_SSL
+from homeassistant.const import CONF_MAC, CONF_SCAN_INTERVAL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 
 from .common import SynoApi, raise_config_entry_auth_error
 from .const import (
+    CONF_BACKUP_PATH,
+    CONF_BACKUP_SHARE,
+    DATA_BACKUP_AGENT_LISTENERS,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     EXCEPTION_DETAILS,
@@ -32,9 +35,6 @@ from .coordinator import (
 )
 from .models import SynologyDSMData
 from .service import async_setup_services
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,10 +63,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL}
         )
-    if entry.options.get(CONF_TIMEOUT):
-        options = dict(entry.options)
-        options.pop(CONF_TIMEOUT)
-        hass.config_entries.async_update_entry(entry, data=entry.data, options=options)
+    if CONF_BACKUP_SHARE not in entry.options:
+        hass.config_entries.async_update_entry(
+            entry,
+            options={**entry.options, CONF_BACKUP_SHARE: None, CONF_BACKUP_PATH: None},
+        )
+    if CONF_SCAN_INTERVAL in entry.options:
+        current_options = {**entry.options}
+        current_options.pop(CONF_SCAN_INTERVAL)
+        hass.config_entries.async_update_entry(entry, options=current_options)
 
     # Continue setup
     api = SynoApi(hass, entry)
@@ -124,6 +129,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.unique_id] = synology_data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+    if entry.options[CONF_BACKUP_SHARE]:
+
+        def async_notify_backup_listeners() -> None:
+            for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
+                listener()
+
+        entry.async_on_unload(
+            entry.async_on_state_change(async_notify_backup_listeners)
+        )
 
     return True
 

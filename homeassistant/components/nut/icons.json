@@ -1,59 +1,17 @@
 {
   "entity": {
     "sensor": {
-      "ups_status_display": {
+      "ambient_humidity_status": {
         "default": "mdi:information-outline"
       },
-      "ups_status": {
+      "ambient_temperature_status": {
         "default": "mdi:information-outline"
       },
-      "ups_alarm": {
-        "default": "mdi:alarm"
-      },
-      "ups_load": {
-        "default": "mdi:gauge"
-      },
-      "ups_load_high": {
-        "default": "mdi:gauge"
-      },
-      "ups_id": {
+      "battery_alarm_threshold": {
         "default": "mdi:information-outline"
       },
-      "ups_test_result": {
-        "default": "mdi:information-outline"
-      },
-      "ups_test_date": {
-        "default": "mdi:calendar"
-      },
-      "ups_display_language": {
-        "default": "mdi:information-outline"
-      },
-      "ups_contacts": {
-        "default": "mdi:information-outline"
-      },
-      "ups_efficiency": {
-        "default": "mdi:gauge"
-      },
-      "ups_beeper_status": {
-        "default": "mdi:information-outline"
-      },
-      "ups_type": {
-        "default": "mdi:information-outline"
-      },
-      "ups_watchdog_status": {
-        "default": "mdi:information-outline"
-      },
-      "ups_start_auto": {
-        "default": "mdi:information-outline"
-      },
-      "ups_start_battery": {
-        "default": "mdi:information-outline"
-      },
-      "ups_start_reboot": {
-        "default": "mdi:information-outline"
-      },
-      "ups_shutdown": {
-        "default": "mdi:information-outline"
+      "battery_capacity": {
+        "default": "mdi:flash"
       },
       "battery_charge_low": {
         "default": "mdi:gauge"
@@ -65,12 +23,6 @@
         "default": "mdi:gauge"
       },
       "battery_charger_status": {
-        "default": "mdi:information-outline"
-      },
-      "battery_capacity": {
-        "default": "mdi:flash"
-      },
-      "battery_alarm_threshold": {
         "default": "mdi:information-outline"
       },
       "battery_date": {
@@ -88,20 +40,35 @@
       "battery_type": {
         "default": "mdi:information-outline"
       },
+      "input_bypass_phases": {
+        "default": "mdi:information-outline"
+      },
+      "input_current_status": {
+        "default": "mdi:information-outline"
+      },
+      "input_frequency_status": {
+        "default": "mdi:information-outline"
+      },
+      "input_load": {
+        "default": "mdi:gauge"
+      },
+      "input_phases": {
+        "default": "mdi:information-outline"
+      },
+      "input_power": {
+        "default": "mdi:gauge"
+      },
       "input_sensitivity": {
         "default": "mdi:information-outline"
       },
       "input_transfer_reason": {
         "default": "mdi:information-outline"
       },
-      "input_frequency_status": {
+      "input_voltage_status": {
         "default": "mdi:information-outline"
       },
-      "input_bypass_phases": {
-        "default": "mdi:information-outline"
-      },
-      "input_phases": {
-        "default": "mdi:information-outline"
+      "outlet_voltage": {
+        "default": "mdi:gauge"
       },
       "output_l1_power_percent": {
         "default": "mdi:gauge"
@@ -113,6 +80,60 @@
         "default": "mdi:gauge"
       },
       "output_phases": {
+        "default": "mdi:information-outline"
+      },
+      "ups_alarm": {
+        "default": "mdi:alarm"
+      },
+      "ups_beeper_status": {
+        "default": "mdi:information-outline"
+      },
+      "ups_contacts": {
+        "default": "mdi:information-outline"
+      },
+      "ups_display_language": {
+        "default": "mdi:information-outline"
+      },
+      "ups_efficiency": {
+        "default": "mdi:gauge"
+      },
+      "ups_id": {
+        "default": "mdi:information-outline"
+      },
+      "ups_load": {
+        "default": "mdi:gauge"
+      },
+      "ups_load_high": {
+        "default": "mdi:gauge"
+      },
+      "ups_shutdown": {
+        "default": "mdi:information-outline"
+      },
+      "ups_start_auto": {
+        "default": "mdi:information-outline"
+      },
+      "ups_start_battery": {
+        "default": "mdi:information-outline"
+      },
+      "ups_start_reboot": {
+        "default": "mdi:information-outline"
+      },
+      "ups_status": {
+        "default": "mdi:information-outline"
+      },
+      "ups_status_display": {
+        "default": "mdi:information-outline"
+      },
+      "ups_test_date": {
+        "default": "mdi:calendar"
+      },
+      "ups_test_result": {
+        "default": "mdi:information-outline"
+      },
+      "ups_type": {
+        "default": "mdi:information-outline"
+      },
+      "ups_watchdog_status": {
         "default": "mdi:information-outline"
       }
     }

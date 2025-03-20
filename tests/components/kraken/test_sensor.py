@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pykrakenapi.pykrakenapi import KrakenAPIError
+import pytest
 
 from homeassistant.components.kraken.const import (
     CONF_TRACKED_ASSET_PAIRS,
@@ -26,10 +27,10 @@ from .const import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test that sensor has a value."""
     with (

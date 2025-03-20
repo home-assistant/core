@@ -18,13 +18,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_EURO, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ElecPricesDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import ElecPricesDataUpdateCoordinator
 from .helpers import make_sensor_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -148,7 +148,9 @@ _PRICE_SENSOR_ATTRIBUTES_MAP = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the electricity price sensor from config_entry."""
     coordinator: ElecPricesDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]

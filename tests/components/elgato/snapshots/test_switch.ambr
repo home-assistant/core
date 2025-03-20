@@ -19,6 +19,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -49,6 +50,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -71,8 +73,10 @@
     }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light Mini',
+    'model_id': None,
     'name': 'Frenck',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
     'suggested_area': None,
     'sw_version': '1.0.4 (229)',
@@ -99,6 +103,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -129,6 +134,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -151,8 +157,10 @@
     }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light Mini',
+    'model_id': None,
     'name': 'Frenck',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
     'suggested_area': None,
     'sw_version': '1.0.4 (229)',

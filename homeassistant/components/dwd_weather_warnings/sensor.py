@@ -3,9 +3,9 @@
 Data is fetched from DWD:
 https://rcccm.dwd.de/DE/wetter/warnungen_aktuell/objekt_einbindung/objekteinbindung.html
 
-Warnungen vor extremem Unwetter (Stufe 4)
+Warnungen vor extremem Unwetter (Stufe 4)  # codespell:ignore vor,extremem
 Unwetterwarnungen (Stufe 3)
-Warnungen vor markantem Wetter (Stufe 2)
+Warnungen vor markantem Wetter (Stufe 2)  # codespell:ignore vor
 Wetterwarnungen (Stufe 1)
 """
 
@@ -16,7 +16,7 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -36,7 +36,6 @@ from .const import (
     ATTR_REGION_NAME,
     ATTR_WARNING_COUNT,
     CURRENT_WARNING_SENSOR,
-    DEFAULT_NAME,
     DOMAIN,
 )
 from .coordinator import DwdWeatherWarningsConfigEntry, DwdWeatherWarningsCoordinator
@@ -56,17 +55,17 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DwdWeatherWarningsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities from config entry."""
     coordinator = entry.runtime_data
 
+    unique_id = entry.unique_id
+    assert unique_id
+
     async_add_entities(
-        [
-            DwdWeatherWarningsSensor(coordinator, entry, description)
-            for description in SENSOR_TYPES
-        ],
-        True,
+        DwdWeatherWarningsSensor(coordinator, description, unique_id)
+        for description in SENSOR_TYPES
     )
 
 
@@ -81,18 +80,18 @@ class DwdWeatherWarningsSensor(
     def __init__(
         self,
         coordinator: DwdWeatherWarningsCoordinator,
-        entry: DwdWeatherWarningsConfigEntry,
         description: SensorEntityDescription,
+        unique_id: str,
     ) -> None:
         """Initialize a DWD-Weather-Warnings sensor."""
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}-{description.key}"
+        self._attr_unique_id = f"{unique_id}-{description.key}"
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=f"{DEFAULT_NAME} {entry.title}",
+            identifiers={(DOMAIN, unique_id)},
+            name=coordinator.api.warncell_name,
             entry_type=DeviceEntryType.SERVICE,
         )
 

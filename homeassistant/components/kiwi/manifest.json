@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/kiwi",
   "iot_class": "cloud_polling",
   "loggers": ["kiwiki"],
+  "quality_scale": "legacy",
   "requirements": ["kiwiki-client==0.1.1"]
 }

@@ -10,22 +10,22 @@ from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ColorMode,
     LightEntity,
     LightEntityDescription,
     filter_supported_color_modes,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
-from . import HomeAssistantTuyaData
-from .base import IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType, WorkMode
+from . import TuyaConfigEntry
+from .const import TUYA_DISCOVERY_NEW, DPCode, DPType, WorkMode
+from .entity import IntegerTypeData, TuyaEntity
 from .util import remap_value
 
 
@@ -49,6 +49,9 @@ DEFAULT_COLOR_TYPE_DATA_V2 = ColorTypeData(
     s_type=IntegerTypeData(DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=1000, step=1),
     v_type=IntegerTypeData(DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=1000, step=1),
 )
+
+MAX_MIREDS = 500  # 2000 K
+MIN_MIREDS = 153  # 6500 K
 
 
 @dataclass(frozen=True)
@@ -258,6 +261,15 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Gardening system
+    # https://developer.tuya.com/en/docs/iot/categorysz?id=Kaiuz4e6h7up0
+    "sz": (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            brightness=DPCode.BRIGHT_VALUE,
+            translation_key="light",
+        ),
+    ),
     # Dimmer Switch
     # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
     "tgkg": (
@@ -313,6 +325,18 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
             brightness_max=DPCode.BRIGHTNESS_MAX_1,
             brightness_min=DPCode.BRIGHTNESS_MIN_1,
+        ),
+    ),
+    # Outdoor Flood Light
+    # Not documented
+    "tyd": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            name=None,
+            color_mode=DPCode.WORK_MODE,
+            brightness=DPCode.BRIGHT_VALUE,
+            color_temp=DPCode.TEMP_VALUE,
+            color_data=DPCode.COLOUR_DATA,
         ),
     ),
     # Solar Light
@@ -380,6 +404,10 @@ LIGHTS["cz"] = LIGHTS["kg"]
 # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
 LIGHTS["pc"] = LIGHTS["kg"]
 
+# Smart Camera - Low power consumption camera (duplicate of `sp`)
+# Undocumented, see https://github.com/home-assistant/core/issues/132844
+LIGHTS["dghsxj"] = LIGHTS["sp"]
+
 # Dimmer (duplicate of `tgq`)
 # https://developer.tuya.com/en/docs/iot/tgq?id=Kaof8ke9il4k4
 LIGHTS["tdq"] = LIGHTS["tgq"]
@@ -409,10 +437,12 @@ class ColorData:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up tuya light dynamically through tuya discovery."""
-    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     @callback
     def async_discover_device(device_ids: list[str]):
@@ -449,6 +479,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
     _color_mode: DPCode | None = None
     _color_temp: IntegerTypeData | None = None
     _fixed_color_mode: ColorMode | None = None
+    _attr_min_color_temp_kelvin = 2000  # 500 Mireds
+    _attr_max_color_temp_kelvin = 6500  # 153 Mireds
 
     def __init__(
         self,
@@ -524,7 +556,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         """Turn on or control the light."""
         commands = [{"code": self.entity_description.key, "value": True}]
 
-        if self._color_temp and ATTR_COLOR_TEMP in kwargs:
+        if self._color_temp and ATTR_COLOR_TEMP_KELVIN in kwargs:
             if self._color_mode_dpcode:
                 commands += [
                     {
@@ -538,9 +570,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     "code": self._color_temp.dpcode,
                     "value": round(
                         self._color_temp.remap_value_from(
-                            kwargs[ATTR_COLOR_TEMP],
-                            self.min_mireds,
-                            self.max_mireds,
+                            color_util.color_temperature_kelvin_to_mired(
+                                kwargs[ATTR_COLOR_TEMP_KELVIN]
+                            ),
+                            MIN_MIREDS,
+                            MAX_MIREDS,
                             reverse=True,
                         )
                     ),
@@ -552,7 +586,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             or (
                 ATTR_BRIGHTNESS in kwargs
                 and self.color_mode == ColorMode.HS
-                and ATTR_COLOR_TEMP not in kwargs
+                and ATTR_COLOR_TEMP_KELVIN not in kwargs
             )
         ):
             if self._color_mode_dpcode:
@@ -680,8 +714,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         return round(brightness)
 
     @property
-    def color_temp(self) -> int | None:
-        """Return the color_temp of the light."""
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
         if not self._color_temp:
             return None
 
@@ -689,9 +723,9 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         if temperature is None:
             return None
 
-        return round(
+        return color_util.color_temperature_mired_to_kelvin(
             self._color_temp.remap_value_to(
-                temperature, self.min_mireds, self.max_mireds, reverse=True
+                temperature, MIN_MIREDS, MAX_MIREDS, reverse=True
             )
         )
 

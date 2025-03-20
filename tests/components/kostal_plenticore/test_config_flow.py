@@ -25,7 +25,7 @@ def mock_apiclient() -> ApiClient:
 
 
 @pytest.fixture
-def mock_apiclient_class(mock_apiclient) -> Generator[type[ApiClient], None, None]:
+def mock_apiclient_class(mock_apiclient) -> Generator[type[ApiClient]]:
     """Return a mocked ApiClient class."""
     with patch(
         "homeassistant.components.kostal_plenticore.config_flow.ApiClient",

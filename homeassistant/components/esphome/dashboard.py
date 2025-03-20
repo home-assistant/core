@@ -1,35 +1,31 @@
-"""Files to interact with a the ESPHome dashboard."""
+"""Files to interact with an ESPHome dashboard."""
 
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 import logging
 from typing import Any
 
-import aiohttp
-from awesomeversion import AwesomeVersion
-from esphome_dashboard_api import ConfiguredDevice, ESPHomeDashboardAPI
-
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
+from .coordinator import ESPHomeDashboardCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-KEY_DASHBOARD_MANAGER = "esphome_dashboard_manager"
+KEY_DASHBOARD_MANAGER: HassKey[ESPHomeDashboardManager] = HassKey(
+    "esphome_dashboard_manager"
+)
 
 STORAGE_KEY = "esphome.dashboard"
 STORAGE_VERSION = 1
-
-MIN_VERSION_SUPPORTS_UPDATE = AwesomeVersion("2023.1.0")
 
 
 async def async_setup(hass: HomeAssistant) -> None:
@@ -40,7 +36,7 @@ async def async_setup(hass: HomeAssistant) -> None:
     await async_get_or_create_dashboard_manager(hass)
 
 
-@singleton(KEY_DASHBOARD_MANAGER)
+@singleton(KEY_DASHBOARD_MANAGER, async_=True)
 async def async_get_or_create_dashboard_manager(
     hass: HomeAssistant,
 ) -> ESPHomeDashboardManager:
@@ -58,7 +54,7 @@ class ESPHomeDashboardManager:
         self._hass = hass
         self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
         self._data: dict[str, Any] | None = None
-        self._current_dashboard: ESPHomeDashboard | None = None
+        self._current_dashboard: ESPHomeDashboardCoordinator | None = None
         self._cancel_shutdown: CALLBACK_TYPE | None = None
 
     async def async_setup(self) -> None:
@@ -70,7 +66,7 @@ class ESPHomeDashboardManager:
             )
 
     @callback
-    def async_get(self) -> ESPHomeDashboard | None:
+    def async_get(self) -> ESPHomeDashboardCoordinator | None:
         """Get the current dashboard."""
         return self._current_dashboard
 
@@ -92,7 +88,7 @@ class ESPHomeDashboardManager:
                 self._cancel_shutdown = None
             self._current_dashboard = None
 
-        dashboard = ESPHomeDashboard(
+        dashboard = ESPHomeDashboardCoordinator(
             hass, addon_slug, url, async_get_clientsession(hass)
         )
         await dashboard.async_request_refresh()
@@ -112,8 +108,7 @@ class ESPHomeDashboardManager:
 
         reloads = [
             hass.config_entries.async_reload(entry.entry_id)
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.state == ConfigEntryState.LOADED
+            for entry in hass.config_entries.async_loaded_entries(DOMAIN)
         ]
         # Re-auth flows will check the dashboard for encryption key when the form is requested
         # but we only trigger reauth if the dashboard is available.
@@ -138,7 +133,7 @@ class ESPHomeDashboardManager:
 
 
 @callback
-def async_get_dashboard(hass: HomeAssistant) -> ESPHomeDashboard | None:
+def async_get_dashboard(hass: HomeAssistant) -> ESPHomeDashboardCoordinator | None:
     """Get an instance of the dashboard if set.
 
     This is only safe to call after `async_setup` has been completed.
@@ -147,7 +142,7 @@ def async_get_dashboard(hass: HomeAssistant) -> ESPHomeDashboard | None:
     where manager can be an asyncio.Event instead of the actual manager
     because the singleton decorator is not yet done.
     """
-    manager: ESPHomeDashboardManager | None = hass.data.get(KEY_DASHBOARD_MANAGER)
+    manager = hass.data.get(KEY_DASHBOARD_MANAGER)
     return manager.async_get() if manager else None
 
 
@@ -157,43 +152,3 @@ async def async_set_dashboard_info(
     """Set the dashboard info."""
     manager = await async_get_or_create_dashboard_manager(hass)
     await manager.async_set_dashboard_info(addon_slug, host, port)
-
-
-class ESPHomeDashboard(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):  # pylint: disable=hass-enforce-coordinator-module
-    """Class to interact with the ESPHome dashboard."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        addon_slug: str,
-        url: str,
-        session: aiohttp.ClientSession,
-    ) -> None:
-        """Initialize."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="ESPHome Dashboard",
-            update_interval=timedelta(minutes=5),
-            always_update=False,
-        )
-        self.addon_slug = addon_slug
-        self.url = url
-        self.api = ESPHomeDashboardAPI(url, session)
-        self.supports_update: bool | None = None
-
-    async def _async_update_data(self) -> dict:
-        """Fetch device data."""
-        devices = await self.api.get_devices()
-        configured_devices = devices["configured"]
-
-        if (
-            self.supports_update is None
-            and configured_devices
-            and (current_version := configured_devices[0].get("current_version"))
-        ):
-            self.supports_update = (
-                AwesomeVersion(current_version) > MIN_VERSION_SUPPORTS_UPDATE
-            )
-
-        return {dev["name"]: dev for dev in configured_devices}

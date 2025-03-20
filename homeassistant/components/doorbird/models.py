@@ -5,7 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntry
+
 from .device import ConfiguredDoorBird
+
+type DoorBirdConfigEntry = ConfigEntry[DoorBirdData]
 
 
 @dataclass

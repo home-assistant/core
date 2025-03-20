@@ -29,7 +29,7 @@ def rename_keys(project_id, to_migrate):
     from_key_data = lokalise.keys_list({"filter_keys": ",".join(to_migrate)})
     if len(from_key_data) != len(to_migrate):
         print(
-            f"Lookin up keys in Lokalise returns {len(from_key_data)} results, expected {len(to_migrate)}"
+            f"Looking up keys in Lokalise returns {len(from_key_data)} results, expected {len(to_migrate)}"
         )
         return
 
@@ -72,7 +72,7 @@ def list_keys_helper(lokalise, keys, params={}, *, validate=True):
             continue
 
         print(
-            f"Lookin up keys in Lokalise returns {len(from_key_data)} results, expected {len(keys)}"
+            f"Looking up keys in Lokalise returns {len(from_key_data)} results, expected {len(keys)}"
         )
         searched = set(filter_keys)
         returned = set(create_lookup(from_key_data))

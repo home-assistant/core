@@ -10,11 +10,14 @@ from aiohttp import ClientConnectorError
 from aiomusiccast import MusicCastConnectionException, MusicCastDevice
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
-from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 
 from . import get_upnp_desc
 from .const import CONF_SERIAL, CONF_UPNP_DESC, DOMAIN
@@ -33,7 +36,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         # Request user input, unless we are preparing discovery flow
         if user_input is None:
@@ -51,7 +54,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             )
         except (MusicCastConnectionException, ClientConnectorError):
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -73,9 +76,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self._show_setup_form(errors)
 
-    def _show_setup_form(
-        self, errors: dict | None = None
-    ) -> data_entry_flow.ConfigFlowResult:
+    def _show_setup_form(self, errors: dict | None = None) -> ConfigFlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -84,15 +85,15 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
-    ) -> data_entry_flow.ConfigFlowResult:
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle ssdp discoveries."""
         if not await MusicCastDevice.check_yamaha_ssdp(
             discovery_info.ssdp_location, async_get_clientsession(self.hass)
         ):
             return self.async_abort(reason="yxc_control_url_missing")
 
-        self.serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+        self.serial_number = discovery_info.upnp[ATTR_UPNP_SERIAL]
         self.upnp_description = discovery_info.ssdp_location
 
         # ssdp_location and hostname have been checked in check_yamaha_ssdp so it is safe to ignore type assignment
@@ -108,18 +109,14 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    "name": discovery_info.upnp.get(
-                        ssdp.ATTR_UPNP_FRIENDLY_NAME, self.host
-                    )
+                    "name": discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME, self.host)
                 }
             }
         )
 
         return await self.async_step_confirm()
 
-    async def async_step_confirm(
-        self, user_input=None
-    ) -> data_entry_flow.ConfigFlowResult:
+    async def async_step_confirm(self, user_input=None) -> ConfigFlowResult:
         """Allow the user to confirm adding the device."""
         if user_input is not None:
             return self.async_create_entry(

@@ -14,33 +14,26 @@ import voluptuous as vol
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
     Camera,
 )
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_FFMPEG_ARGUMENTS,
-    DATA_COORDINATOR,
-    DEFAULT_FFMPEG_ARGUMENTS,
-    DOMAIN,
-    MANUFACTURER,
-)
-from .coordinator import CanaryDataUpdateCoordinator
+from .const import CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS, DOMAIN, MANUFACTURER
+from .coordinator import CanaryConfigEntry, CanaryDataUpdateCoordinator
 
 FORCE_CAMERA_REFRESH_INTERVAL: Final = timedelta(minutes=15)
 
 PLATFORM_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_FFMPEG_ARGUMENTS),
-    PARENT_PLATFORM_SCHEMA.extend(
+    CAMERA_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(
                 CONF_FFMPEG_ARGUMENTS, default=DEFAULT_FFMPEG_ARGUMENTS
@@ -54,13 +47,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: CanaryConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Canary sensors based on a config entry."""
-    coordinator: CanaryDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = entry.runtime_data
     ffmpeg_arguments: str = entry.options.get(
         CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
     )

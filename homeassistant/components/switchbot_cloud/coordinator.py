@@ -6,32 +6,38 @@ from typing import Any
 
 from switchbot_api import CannotConnect, Device, Remote, SwitchBotAPI
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SCAN_INTERVAL
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = getLogger(__name__)
 
-Status = dict[str, Any] | None
+type Status = dict[str, Any] | None
 
 
 class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
     """SwitchBot Cloud coordinator."""
 
+    config_entry: ConfigEntry
     _api: SwitchBotAPI
     _device_id: str
-    _should_poll = False
 
     def __init__(
-        self, hass: HomeAssistant, api: SwitchBotAPI, device: Device | Remote
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        api: SwitchBotAPI,
+        device: Device | Remote,
     ) -> None:
         """Initialize SwitchBot Cloud."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self._api = api
         self._device_id = device.device_id

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
@@ -16,6 +16,8 @@ from .api import AsyncConfigEntryAuth
 from .const import DATA_AUTH, DATA_HASS_CONFIG, DOMAIN
 from .services import async_setup_services
 
+type GoogleMailConfigEntry = ConfigEntry[AsyncConfigEntryAuth]
+
 PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -28,13 +30,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GoogleMailConfigEntry) -> bool:
     """Set up Google Mail from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
-    auth = AsyncConfigEntryAuth(session)
+    auth = AsyncConfigEntryAuth(hass, session)
     await auth.check_and_refresh_token()
-    hass.data[DOMAIN][entry.entry_id] = auth
+    entry.runtime_data = auth
 
     hass.async_create_task(
         discovery.async_load_platform(
@@ -55,17 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GoogleMailConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
-    ]
-    if len(loaded_entries) == 1:
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
         for service_name in hass.services.async_services_for_domain(DOMAIN):
             hass.services.async_remove(DOMAIN, service_name)
 
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

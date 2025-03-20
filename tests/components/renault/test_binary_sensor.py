@@ -18,7 +18,7 @@ pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicle
 
 
 @pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None, None, None]:
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.renault.PLATFORMS", [Platform.BINARY_SENSOR]):
         yield

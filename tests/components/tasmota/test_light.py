@@ -2,6 +2,7 @@
 
 import copy
 import json
+from typing import Any
 from unittest.mock import patch
 
 from hatasmota.const import CONF_MAC
@@ -1107,7 +1108,7 @@ async def test_sending_mqtt_commands_rgbww(
     )
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_turn_on(hass, "light.tasmota_test", color_temp=200)
+    await common.async_turn_on(hass, "light.tasmota_test", color_temp_kelvin=5000)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
         "NoDelay;Power1 ON;NoDelay;CT 200",
@@ -1349,7 +1350,9 @@ async def test_transition(
     assert state.attributes.get("color_temp") == 153
 
     # Set color_temp of the light from 153 to 500 @ 50%: Speed should be 6*2*2=24
-    await common.async_turn_on(hass, "light.tasmota_test", color_temp=500, transition=6)
+    await common.async_turn_on(
+        hass, "light.tasmota_test", color_temp_kelvin=2000, transition=6
+    )
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
         "NoDelay;Fade2 1;NoDelay;Speed2 24;NoDelay;Power1 ON;NoDelay;CT 500",
@@ -1368,7 +1371,9 @@ async def test_transition(
     assert state.attributes.get("color_temp") == 500
 
     # Set color_temp of the light from 500 to 326 @ 50%: Speed should be 6*2*2*2=48->40
-    await common.async_turn_on(hass, "light.tasmota_test", color_temp=326, transition=6)
+    await common.async_turn_on(
+        hass, "light.tasmota_test", color_temp_kelvin=3067, transition=6
+    )
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
         "NoDelay;Fade2 1;NoDelay;Speed2 40;NoDelay;Power1 ON;NoDelay;CT 326",
@@ -1478,7 +1483,13 @@ async def test_relay_as_light(
     assert state is not None
 
 
-async def _test_split_light(hass, mqtt_mock, config, num_lights, num_switches):
+async def _test_split_light(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    config: dict[str, Any],
+    num_lights: int,
+    num_switches: int,
+) -> None:
     """Test multi-channel light split to single-channel dimmers."""
     mac = config["mac"]
 
@@ -1503,7 +1514,7 @@ async def _test_split_light(hass, mqtt_mock, config, num_lights, num_switches):
         await common.async_turn_on(hass, entity)
         mqtt_mock.async_publish.assert_called_once_with(
             "tasmota_49A3BC/cmnd/Backlog",
-            f"NoDelay;Power{idx+num_switches+1} ON",
+            f"NoDelay;Power{idx + num_switches + 1} ON",
             0,
             False,
         )
@@ -1513,7 +1524,7 @@ async def _test_split_light(hass, mqtt_mock, config, num_lights, num_switches):
         await common.async_turn_on(hass, entity, brightness=(idx + 1) * 25.5)
         mqtt_mock.async_publish.assert_called_once_with(
             "tasmota_49A3BC/cmnd/Backlog",
-            f"NoDelay;Channel{idx+num_switches+1} {(idx+1)*10}",
+            f"NoDelay;Channel{idx + num_switches + 1} {(idx + 1) * 10}",
             0,
             False,
         )
@@ -1553,7 +1564,12 @@ async def test_split_light2(
     await _test_split_light(hass, mqtt_mock, config, 5, 2)
 
 
-async def _test_unlinked_light(hass, mqtt_mock, config, num_switches):
+async def _test_unlinked_light(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    config: dict[str, Any],
+    num_switches: int,
+) -> None:
     """Test rgbww light split to rgb+ww."""
     mac = config["mac"]
     num_lights = 2
@@ -1579,7 +1595,7 @@ async def _test_unlinked_light(hass, mqtt_mock, config, num_switches):
         await common.async_turn_on(hass, entity)
         mqtt_mock.async_publish.assert_called_once_with(
             "tasmota_49A3BC/cmnd/Backlog",
-            f"NoDelay;Power{idx+num_switches+1} ON",
+            f"NoDelay;Power{idx + num_switches + 1} ON",
             0,
             False,
         )
@@ -1589,7 +1605,7 @@ async def _test_unlinked_light(hass, mqtt_mock, config, num_switches):
         await common.async_turn_on(hass, entity, brightness=(idx + 1) * 25.5)
         mqtt_mock.async_publish.assert_called_once_with(
             "tasmota_49A3BC/cmnd/Backlog",
-            f"NoDelay;Dimmer{idx+1} {(idx+1)*10}",
+            f"NoDelay;Dimmer{idx + 1} {(idx + 1) * 10}",
             0,
             False,
         )

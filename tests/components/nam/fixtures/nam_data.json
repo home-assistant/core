@@ -15,6 +15,7 @@
     { "value_type": "BME280_temperature", "value": "7.56" },
     { "value_type": "BME280_humidity", "value": "45.69" },
     { "value_type": "BME280_pressure", "value": "101101.17" },
+    { "value_type": "DS18B20_temperature", "value": "12.56" },
     { "value_type": "BMP_temperature", "value": "7.56" },
     { "value_type": "BMP_pressure", "value": "103201.18" },
     { "value_type": "BMP280_temperature", "value": "5.56" },
@@ -25,6 +26,7 @@
     { "value_type": "temperature", "value": "6.26" },
     { "value_type": "HECA_temperature", "value": "7.95" },
     { "value_type": "HECA_humidity", "value": "49.97" },
+    { "value_type": "ambient_light", "value": "298.45" },
     { "value_type": "signal", "value": "-72" }
   ]
 }

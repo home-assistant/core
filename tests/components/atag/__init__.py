@@ -1,6 +1,8 @@
 """Tests for the Atag integration."""
 
-from homeassistant.components.atag import DOMAIN, AtagException
+from pyatag import AtagException
+
+from homeassistant.components.atag import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 

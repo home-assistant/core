@@ -26,7 +26,7 @@ async def test_create_fan_speed_number_entities(hass: HomeAssistant) -> None:
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
     state = hass.states.get("number.downstairs_east_wing_fan_speed")
@@ -40,7 +40,7 @@ async def test_create_fan_speed_number_entities(hass: HomeAssistant) -> None:
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(
-        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+        state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
 

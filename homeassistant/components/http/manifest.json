@@ -1,7 +1,6 @@
 {
   "domain": "http",
   "name": "HTTP",
-  "after_dependencies": ["isal"],
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/http",
   "integration_type": "system",

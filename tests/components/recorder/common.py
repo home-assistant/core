@@ -15,7 +15,7 @@ from typing import Any, Literal, cast
 from unittest.mock import MagicMock, patch, sentinel
 
 from freezegun import freeze_time
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event as sqlalchemy_event
 from sqlalchemy.orm.session import Session
 
 from homeassistant import core as ha
@@ -37,7 +37,8 @@ from homeassistant.components.recorder.db_schema import (
 from homeassistant.components.recorder.tasks import RecorderTask, StatisticsTask
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import Event, HomeAssistant, State
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers import recorder as recorder_helper
+from homeassistant.util import dt as dt_util
 
 from . import db_schema_0
 
@@ -79,10 +80,23 @@ async def async_block_recorder(hass: HomeAssistant, seconds: float) -> None:
     await event.wait()
 
 
+async def async_wait_recorder(hass: HomeAssistant) -> bool:
+    """Wait for recorder to initialize and return connection status."""
+    return await hass.data[recorder_helper.DATA_RECORDER].db_connected
+
+
+def get_start_time(start: datetime) -> datetime:
+    """Calculate a valid start time for statistics."""
+    start_minutes = start.minute - start.minute % 5
+    return start.replace(minute=start_minutes, second=0, microsecond=0)
+
+
 def do_adhoc_statistics(hass: HomeAssistant, **kwargs: Any) -> None:
     """Trigger an adhoc statistics run."""
     if not (start := kwargs.get("start")):
         start = statistics.get_start_time()
+    elif (start.minute % 5) != 0 or start.second != 0 or start.microsecond != 0:
+        raise ValueError(f"Statistics must start on 5 minute boundary got {start}")
     get_instance(hass).queue_task(StatisticsTask(start, False))
 
 
@@ -138,7 +152,7 @@ async def async_recorder_block_till_done(hass: HomeAssistant) -> None:
 
 def corrupt_db_file(test_db_file):
     """Corrupt an sqlite3 database file."""
-    with open(test_db_file, "w+") as fhandle:
+    with open(test_db_file, "w+", encoding="utf8") as fhandle:
         fhandle.seek(200)
         fhandle.write("I am a corrupt db" * 100)
 
@@ -257,12 +271,16 @@ def assert_dict_of_states_equal_without_context_and_last_changed(
         )
 
 
-async def async_record_states(hass: HomeAssistant):
+async def async_record_states(
+    hass: HomeAssistant,
+) -> tuple[datetime, datetime, dict[str, list[State | None]]]:
     """Record some test states."""
     return await hass.async_add_executor_job(record_states, hass)
 
 
-def record_states(hass):
+def record_states(
+    hass: HomeAssistant,
+) -> tuple[datetime, datetime, dict[str, list[State | None]]]:
     """Record some test states.
 
     We inject a bunch of state updates temperature sensors.
@@ -291,11 +309,11 @@ def record_states(hass):
         wait_recording_done(hass)
         return hass.states.get(entity_id)
 
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     one = zero + timedelta(seconds=1 * 5)
     two = one + timedelta(seconds=15 * 5)
     three = two + timedelta(seconds=30 * 5)
-    four = three + timedelta(seconds=15 * 5)
+    four = three + timedelta(seconds=14 * 5)
 
     states = {mp: [], sns1: [], sns2: [], sns3: [], sns4: []}
     with freeze_time(one) as freezer:
@@ -396,7 +414,15 @@ def create_engine_test_for_schema_version_postfix(
     schema_module = get_schema_module_path(schema_version_postfix)
     importlib.import_module(schema_module)
     old_db_schema = sys.modules[schema_module]
+    instance: Recorder | None = None
+    if "hass" in kwargs:
+        hass: HomeAssistant = kwargs.pop("hass")
+        instance = recorder.get_instance(hass)
     engine = create_engine(*args, **kwargs)
+    if instance is not None:
+        instance = recorder.get_instance(hass)
+        instance.engine = engine
+        sqlalchemy_event.listen(engine, "connect", instance._setup_recorder_connection)
     old_db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
         session.add(
@@ -417,7 +443,7 @@ def get_schema_module_path(schema_version_postfix: str) -> str:
 
 
 @contextmanager
-def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
+def old_db_schema(hass: HomeAssistant, schema_version_postfix: str) -> Iterator[None]:
     """Fixture to initialize the db with the old schema."""
     schema_module = get_schema_module_path(schema_version_postfix)
     importlib.import_module(schema_module)
@@ -425,20 +451,19 @@ def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
 
     with (
         patch.object(recorder, "db_schema", old_db_schema),
-        patch.object(
-            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-        ),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration, "non_live_data_migration_needed", return_value=False),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
         patch.object(core, "StateAttributes", old_db_schema.StateAttributes),
-        patch.object(migration.EntityIDMigration, "task", core.RecorderTask),
         patch(
             CREATE_ENGINE_TARGET,
             new=partial(
                 create_engine_test_for_schema_version_postfix,
+                hass=hass,
                 schema_version_postfix=schema_version_postfix,
             ),
         ),

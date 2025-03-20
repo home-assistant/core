@@ -1,5 +1,52 @@
 # serializer version: 1
-# name: test_climate_entity
+# name: test_climate_entity[climate.device_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 10,
+      'preset_modes': list([
+        'away',
+        'home',
+        'boost',
+      ]),
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.device_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'flexit_bacnet',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': '0000-0001',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_entity[climate.device_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.0,
@@ -27,51 +74,5 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'fan_only',
-  })
-# ---
-# name: test_climate_entity.1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'hvac_modes': list([
-        <HVACMode.OFF: 'off'>,
-        <HVACMode.FAN_ONLY: 'fan_only'>,
-      ]),
-      'max_temp': 30,
-      'min_temp': 10,
-      'preset_modes': list([
-        'away',
-        'home',
-        'boost',
-      ]),
-      'target_temp_step': 0.5,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'climate',
-    'entity_category': None,
-    'entity_id': 'climate.device_name',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'flexit_bacnet',
-    'previous_unique_id': None,
-    'supported_features': <ClimateEntityFeature: 401>,
-    'translation_key': None,
-    'unique_id': '0000-0001',
-    'unit_of_measurement': None,
   })
 # ---

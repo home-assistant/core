@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
@@ -32,8 +32,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -44,7 +44,7 @@ IH_DEVICE_INTESISHOME = "IntesisHome"
 IH_DEVICE_AIRCONWITHME = "airconwithme"
 IH_DEVICE_ANYWAIR = "anywair"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -147,7 +147,6 @@ class IntesisAC(ClimateEntity):
 
     _attr_should_poll = False
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, ih_device_id, ih_device, controller):
         """Initialize the thermostat."""

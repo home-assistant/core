@@ -7,21 +7,41 @@ from typing import Any
 from brother import Brother, SnmpError, UnsupportedModelError
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
+from homeassistant.components.snmp import async_get_snmp_engine
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.network import is_host_valid
 
 from .const import DOMAIN, PRINTER_TYPES
-from .utils import get_snmp_engine
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=""): str,
+        vol.Required(CONF_HOST): str,
         vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES),
     }
 )
+RECONFIGURE_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+
+
+async def validate_input(
+    hass: HomeAssistant, user_input: dict[str, Any], expected_mac: str | None = None
+) -> tuple[str, str]:
+    """Validate the user input."""
+    if not is_host_valid(user_input[CONF_HOST]):
+        raise InvalidHost
+
+    snmp_engine = await async_get_snmp_engine(hass)
+
+    brother = await Brother.create(user_input[CONF_HOST], snmp_engine=snmp_engine)
+    await brother.async_update()
+
+    if expected_mac is not None and brother.serial.lower() != expected_mac:
+        raise AnotherDevice
+
+    return (brother.model, brother.serial)
 
 
 class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -42,21 +62,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                if not is_host_valid(user_input[CONF_HOST]):
-                    raise InvalidHost
-
-                snmp_engine = get_snmp_engine(self.hass)
-
-                brother = await Brother.create(
-                    user_input[CONF_HOST], snmp_engine=snmp_engine
-                )
-                await brother.async_update()
-
-                await self.async_set_unique_id(brother.serial.lower())
-                self._abort_if_unique_id_configured()
-
-                title = f"{brother.model} {brother.serial}"
-                return self.async_create_entry(title=title, data=user_input)
+                model, serial = await validate_input(self.hass, user_input)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
             except (ConnectionError, TimeoutError):
@@ -65,13 +71,19 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "snmp_error"
             except UnsupportedModelError:
                 return self.async_abort(reason="unsupported_model")
+            else:
+                await self.async_set_unique_id(serial.lower())
+                self._abort_if_unique_id_configured()
+
+                title = f"{model} {serial}"
+                return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self.host = discovery_info.host
@@ -79,7 +91,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
         # Do not probe the device if the host is already configured
         self._async_abort_entries_match({CONF_HOST: self.host})
 
-        snmp_engine = get_snmp_engine(self.hass)
+        snmp_engine = await async_get_snmp_engine(self.hass)
         model = discovery_info.properties.get("product")
 
         try:
@@ -127,6 +139,44 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        entry = self._get_reconfigure_entry()
+        errors = {}
+
+        if user_input is not None:
+            try:
+                await validate_input(self.hass, user_input, entry.unique_id)
+            except InvalidHost:
+                errors[CONF_HOST] = "wrong_host"
+            except (ConnectionError, TimeoutError):
+                errors["base"] = "cannot_connect"
+            except SnmpError:
+                errors["base"] = "snmp_error"
+            except AnotherDevice:
+                errors["base"] = "another_device"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_HOST: user_input[CONF_HOST]},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=RECONFIGURE_SCHEMA,
+                suggested_values=entry.data | (user_input or {}),
+            ),
+            description_placeholders={"printer_name": entry.title},
+            errors=errors,
+        )
+
 
 class InvalidHost(HomeAssistantError):
     """Error to indicate that hostname/IP address is invalid."""
+
+
+class AnotherDevice(HomeAssistantError):
+    """Error to indicate that hostname/IP address belongs to another device."""

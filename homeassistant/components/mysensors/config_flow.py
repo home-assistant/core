@@ -20,8 +20,8 @@ from homeassistant.components.mqtt import (
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import callback
-from homeassistant.helpers import selector
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_BAUD_RATE,
@@ -153,7 +153,7 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self._async_create_entry(user_input)
 
         user_input = user_input or {}
-        schema = {
+        schema: VolDictType = {
             vol.Required(
                 CONF_DEVICE, default=user_input.get(CONF_DEVICE, "/dev/ttyACM0")
             ): str,
@@ -164,9 +164,8 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         schema.update(_get_schema_common(user_input))
 
-        schema = vol.Schema(schema)
         return self.async_show_form(
-            step_id="gw_serial", data_schema=schema, errors=errors
+            step_id="gw_serial", data_schema=vol.Schema(schema), errors=errors
         )
 
     async def async_step_gw_tcp(
@@ -182,7 +181,7 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self._async_create_entry(user_input)
 
         user_input = user_input or {}
-        schema = {
+        schema: VolDictType = {
             vol.Required(
                 CONF_DEVICE, default=user_input.get(CONF_DEVICE, "127.0.0.1")
             ): str,
@@ -192,8 +191,9 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         schema.update(_get_schema_common(user_input))
 
-        schema = vol.Schema(schema)
-        return self.async_show_form(step_id="gw_tcp", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="gw_tcp", data_schema=vol.Schema(schema), errors=errors
+        )
 
     def _check_topic_exists(self, topic: str) -> bool:
         for other_config in self._async_current_entries():
@@ -243,7 +243,7 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self._async_create_entry(user_input)
 
         user_input = user_input or {}
-        schema = {
+        schema: VolDictType = {
             vol.Required(
                 CONF_TOPIC_IN_PREFIX, default=user_input.get(CONF_TOPIC_IN_PREFIX, "")
             ): str,
@@ -254,9 +254,8 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         schema.update(_get_schema_common(user_input))
 
-        schema = vol.Schema(schema)
         return self.async_show_form(
-            step_id="gw_mqtt", data_schema=schema, errors=errors
+            step_id="gw_mqtt", data_schema=vol.Schema(schema), errors=errors
         )
 
     @callback

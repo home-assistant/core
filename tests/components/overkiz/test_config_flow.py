@@ -17,11 +17,11 @@ from pyoverkiz.exceptions import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.overkiz.const import DOMAIN
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -573,15 +573,7 @@ async def test_cloud_reauth_success(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=mock_entry.data,
-    )
+    result = await mock_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
@@ -623,15 +615,7 @@ async def test_cloud_reauth_wrong_account(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=mock_entry.data,
-    )
+    result = await mock_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
@@ -672,15 +656,7 @@ async def test_local_reauth_success(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=mock_entry.data,
-    )
+    result = await mock_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "local_or_cloud"
@@ -731,15 +707,7 @@ async def test_local_reauth_wrong_account(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=mock_entry.data,
-    )
+    result = await mock_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "local_or_cloud"
 
@@ -774,7 +742,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     """Test that DHCP discovery for new bridge works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             hostname="gateway-1234-5678-9123",
             ip="192.168.1.4",
             macaddress="f8811a000000",
@@ -833,7 +801,7 @@ async def test_dhcp_flow_already_configured(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             hostname="gateway-1234-5678-9123",
             ip="192.168.1.4",
             macaddress="f8811a000000",

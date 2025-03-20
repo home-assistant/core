@@ -10,9 +10,12 @@ from typing import Generic, TypeVar
 from pydeconz.interfaces.sensors import SensorResources
 from pydeconz.models.event import EventType
 from pydeconz.models.sensor import SensorBase as PydeconzSensorBase
+from pydeconz.models.sensor.air_purifier import AirPurifier
 from pydeconz.models.sensor.air_quality import AirQuality
+from pydeconz.models.sensor.carbon_dioxide import CarbonDioxide
 from pydeconz.models.sensor.consumption import Consumption
 from pydeconz.models.sensor.daylight import DAYLIGHT_STATUS, Daylight
+from pydeconz.models.sensor.formaldehyde import Formaldehyde
 from pydeconz.models.sensor.generic_status import GenericStatus
 from pydeconz.models.sensor.humidity import Humidity
 from pydeconz.models.sensor.light_level import LightLevel
@@ -25,13 +28,12 @@ from pydeconz.models.sensor.temperature import Temperature
 from pydeconz.models.sensor.time import Time
 
 from homeassistant.components.sensor import (
-    DOMAIN,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
@@ -45,14 +47,16 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
+from . import DeconzConfigEntry
 from .const import ATTR_DARK, ATTR_ON
-from .deconz_device import DeconzDevice
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 PROVIDES_EXTRA_ATTRIBUTES = (
@@ -75,9 +79,12 @@ ATTR_EVENT_ID = "event_id"
 
 T = TypeVar(
     "T",
+    AirPurifier,
     AirQuality,
+    CarbonDioxide,
     Consumption,
     Daylight,
+    Formaldehyde,
     GenericStatus,
     Humidity,
     LightLevel,
@@ -104,6 +111,19 @@ class DeconzSensorDescription(Generic[T], SensorEntityDescription):
 
 
 ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
+    DeconzSensorDescription[AirPurifier](
+        key="air_purifier_filter_run_time",
+        supported_fn=lambda device: True,
+        update_key="filterruntime",
+        name_suffix="Filter time",
+        value_fn=lambda device: device.filter_run_time,
+        instance_check=AirPurifier,
+        device_class=SensorDeviceClass.DURATION,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.DAYS,
+        suggested_display_precision=1,
+    ),
     DeconzSensorDescription[AirQuality](
         key="air_quality",
         supported_fn=lambda device: device.supports_air_quality,
@@ -155,6 +175,16 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
+    DeconzSensorDescription[CarbonDioxide](
+        key="carbon_dioxide",
+        supported_fn=lambda device: True,
+        update_key="measured_value",
+        value_fn=lambda device: device.carbon_dioxide,
+        instance_check=CarbonDioxide,
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+    ),
     DeconzSensorDescription[Consumption](
         key="consumption",
         supported_fn=lambda device: device.consumption is not None,
@@ -173,6 +203,16 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         instance_check=Daylight,
         icon="mdi:white-balance-sunny",
         entity_registry_enabled_default=False,
+    ),
+    DeconzSensorDescription[Formaldehyde](
+        key="formaldehyde",
+        supported_fn=lambda device: True,
+        update_key="measured_value",
+        value_fn=lambda device: device.formaldehyde,
+        instance_check=Formaldehyde,
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
     ),
     DeconzSensorDescription[GenericStatus](
         key="status",
@@ -291,12 +331,12 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DeconzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the deCONZ sensors."""
-    hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[DOMAIN] = set()
+    hub = config_entry.runtime_data
+    hub.entities[SENSOR_DOMAIN] = set()
 
     known_device_entities: dict[str, set[str]] = {
         description.key: set()
@@ -353,7 +393,7 @@ async def async_setup_entry(
 class DeconzSensor(DeconzDevice[SensorResources], SensorEntity):
     """Representation of a deCONZ sensor."""
 
-    TYPE = DOMAIN
+    TYPE = SENSOR_DOMAIN
     entity_description: DeconzSensorDescription
 
     def __init__(
@@ -428,7 +468,7 @@ class DeconzBatteryTracker:
         sensor_id: str,
         hub: DeconzHub,
         description: DeconzSensorDescription,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up tracker."""
         self.sensor = hub.api.sensors[sensor_id]

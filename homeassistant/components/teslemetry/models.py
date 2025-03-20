@@ -3,13 +3,20 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import Scope
+from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .coordinator import (
-    TeslemetryEnergyDataCoordinator,
+    TeslemetryEnergyHistoryCoordinator,
+    TeslemetryEnergySiteInfoCoordinator,
+    TeslemetryEnergySiteLiveCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
 
@@ -28,8 +35,14 @@ class TeslemetryVehicleData:
     """Data for a vehicle in the Teslemetry integration."""
 
     api: VehicleSpecific
+    config_entry: ConfigEntry
     coordinator: TeslemetryVehicleDataCoordinator
+    stream: TeslemetryStream
+    stream_vehicle: TeslemetryStreamVehicle
     vin: str
+    firmware: str
+    device: DeviceInfo
+    remove_listener: Callable
     wakelock = asyncio.Lock()
 
 
@@ -38,6 +51,8 @@ class TeslemetryEnergyData:
     """Data for a vehicle in the Teslemetry integration."""
 
     api: EnergySpecific
-    coordinator: TeslemetryEnergyDataCoordinator
+    live_coordinator: TeslemetryEnergySiteLiveCoordinator | None
+    info_coordinator: TeslemetryEnergySiteInfoCoordinator
+    history_coordinator: TeslemetryEnergyHistoryCoordinator | None
     id: int
-    info: dict[str, str]
+    device: DeviceInfo

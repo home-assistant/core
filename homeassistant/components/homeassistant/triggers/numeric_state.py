@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 import voluptuous as vol
 
@@ -41,10 +41,8 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-_T = TypeVar("_T", bound=dict[str, Any])
 
-
-def validate_above_below(value: _T) -> _T:
+def validate_above_below[_T: dict[str, Any]](value: _T) -> _T:
     """Validate that above and below can co-exist."""
     above = value.get(CONF_ABOVE)
     below = value.get(CONF_BELOW)
@@ -110,7 +108,6 @@ async def async_attach_trigger(
     below = config.get(CONF_BELOW)
     above = config.get(CONF_ABOVE)
     time_delta = config.get(CONF_FOR)
-    template.attach(hass, time_delta)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     unsub_track_same: dict[str, Callable[[], None]] = {}
     armed_entities: set[str] = set()
@@ -120,9 +117,6 @@ async def async_attach_trigger(
 
     trigger_data = trigger_info["trigger_data"]
     _variables = trigger_info["variables"] or {}
-
-    if value_template is not None:
-        value_template.hass = hass
 
     def variables(entity_id: str) -> dict[str, Any]:
         """Return a dict with trigger variables."""

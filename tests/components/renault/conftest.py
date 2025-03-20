@@ -1,6 +1,6 @@
 """Provide common Renault fixtures."""
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
 import contextlib
 from types import MappingProxyType
 from typing import Any
@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.renault.async_setup_entry", return_value=True
@@ -200,7 +200,7 @@ def patch_fixtures_with_no_data():
 
 
 @contextlib.contextmanager
-def _patch_fixtures_with_side_effect(side_effect: Any):
+def _patch_fixtures_with_side_effect(side_effect: Any) -> Iterator[None]:
     """Mock fixtures."""
     with (
         patch(

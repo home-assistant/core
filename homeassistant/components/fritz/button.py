@@ -5,22 +5,29 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Final
+from typing import Any, Final
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import AvmWrapper, FritzData, FritzDevice, FritzDeviceBase, _is_tracked
-from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, DATA_FRITZ, DOMAIN, MeshRoles
+from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, DOMAIN, MeshRoles
+from .coordinator import (
+    FRITZ_DATA_KEY,
+    AvmWrapper,
+    FritzConfigEntry,
+    FritzData,
+    FritzDevice,
+    _is_tracked,
+)
+from .entity import FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 class FritzButtonDescription(ButtonEntityDescription):
     """Class to describe a Button entity."""
 
-    press_action: Callable
+    press_action: Callable[[AvmWrapper], Any]
 
 
 BUTTONS: Final = [
@@ -64,12 +71,12 @@ BUTTONS: Final = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: FritzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set buttons for device."""
     _LOGGER.debug("Setting up buttons")
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = entry.runtime_data
 
     entities_list: list[ButtonEntity] = [
         FritzButton(avm_wrapper, entry.title, button) for button in BUTTONS
@@ -79,7 +86,7 @@ async def async_setup_entry(
         async_add_entities(entities_list)
         return
 
-    data_fritz: FritzData = hass.data[DATA_FRITZ]
+    data_fritz = hass.data[FRITZ_DATA_KEY]
     entities_list += _async_wol_buttons_list(avm_wrapper, data_fritz)
 
     async_add_entities(entities_list)

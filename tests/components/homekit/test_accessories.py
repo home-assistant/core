@@ -47,8 +47,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     __version__ as hass_version,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
+from homeassistant.core import Event, HomeAssistant
 
 from tests.common import async_mock_service
 
@@ -66,9 +65,7 @@ async def test_accessory_cancels_track_state_change_on_stop(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ):
         acc.run()
-    assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS][entity_id]) == 1
     await acc.stop()
-    assert entity_id not in hass.data[TRACK_STATE_CHANGE_CALLBACKS]
 
 
 async def test_home_accessory(hass: HomeAssistant, hk_driver) -> None:
@@ -124,7 +121,7 @@ async def test_home_accessory(hass: HomeAssistant, hk_driver) -> None:
     serv = acc3.services[0]  # SERV_ACCESSORY_INFO
     assert (
         serv.get_characteristic(CHAR_NAME).value
-        == "Home Accessory that exceeds the maximum maximum maximum maximum "
+        == "Home Accessory that exceeds the maximum maximum maximum maximum"
     )
     assert (
         serv.get_characteristic(CHAR_MANUFACTURER).value
@@ -157,7 +154,7 @@ async def test_home_accessory(hass: HomeAssistant, hk_driver) -> None:
     serv = acc4.services[0]  # SERV_ACCESSORY_INFO
     assert (
         serv.get_characteristic(CHAR_NAME).value
-        == "Home Accessory that exceeds the maximum maximum maximum maximum "
+        == "Home Accessory that exceeds the maximum maximum maximum maximum"
     )
     assert (
         serv.get_characteristic(CHAR_MANUFACTURER).value
@@ -670,7 +667,9 @@ async def test_battery_appears_after_startup(
     assert acc._char_battery is None
 
 
-async def test_call_service(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_call_service(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test call_service method."""
     entity_id = "homekit.accessory"
     hass.states.async_set(entity_id, None)

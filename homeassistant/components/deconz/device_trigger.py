@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.device_automation.exceptions import (
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
@@ -22,7 +22,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
+from . import DOMAIN, DeconzConfigEntry
 from .deconz_event import (
     CONF_DECONZ_EVENT,
     CONF_GESTURE,
@@ -31,7 +31,6 @@ from .deconz_event import (
     DeconzPresenceEvent,
     DeconzRelativeRotaryEvent,
 )
-from .hub import DeconzHub
 
 CONF_SUBTYPE = "subtype"
 
@@ -167,6 +166,30 @@ FRIENDS_OF_HUE_SWITCH = {
     (CONF_SHORT_RELEASE, CONF_BOTTOM_BUTTONS): {CONF_EVENT: 6002},
     (CONF_LONG_PRESS, CONF_BOTTOM_BUTTONS): {CONF_EVENT: 6001},
     (CONF_LONG_RELEASE, CONF_BOTTOM_BUTTONS): {CONF_EVENT: 6003},
+}
+
+RODRET_REMOTE_MODEL = "RODRET Dimmer"
+RODRET_REMOTE = {
+    (CONF_SHORT_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1002},
+    (CONF_LONG_PRESS, CONF_TURN_ON): {CONF_EVENT: 1001},
+    (CONF_LONG_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1003},
+    (CONF_SHORT_RELEASE, CONF_TURN_OFF): {CONF_EVENT: 2002},
+    (CONF_LONG_PRESS, CONF_TURN_OFF): {CONF_EVENT: 2001},
+    (CONF_LONG_RELEASE, CONF_TURN_OFF): {CONF_EVENT: 2003},
+}
+
+SOMRIG_REMOTE_MODEL = "SOMRIG shortcut button"
+SOMRIG_REMOTE = {
+    (CONF_SHORT_PRESS, CONF_BUTTON_1): {CONF_EVENT: 1000},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1002},
+    (CONF_LONG_PRESS, CONF_BUTTON_1): {CONF_EVENT: 1001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_1): {CONF_EVENT: 1003},
+    (CONF_DOUBLE_PRESS, CONF_BUTTON_1): {CONF_EVENT: 1004},
+    (CONF_SHORT_PRESS, CONF_BUTTON_2): {CONF_EVENT: 2000},
+    (CONF_SHORT_RELEASE, CONF_BUTTON_2): {CONF_EVENT: 2002},
+    (CONF_LONG_PRESS, CONF_BUTTON_2): {CONF_EVENT: 2001},
+    (CONF_LONG_RELEASE, CONF_BUTTON_2): {CONF_EVENT: 2003},
+    (CONF_DOUBLE_PRESS, CONF_BUTTON_2): {CONF_EVENT: 2004},
 }
 
 STYRBAR_REMOTE_MODEL = "Remote Control N2"
@@ -347,7 +370,8 @@ AQARA_SINGLE_WALL_SWITCH = {
     (CONF_DOUBLE_PRESS, CONF_TURN_ON): {CONF_EVENT: 1004},
 }
 
-AQARA_MINI_SWITCH_MODEL = "lumi.remote.b1acn01"
+AQARA_MINI_SWITCH_WXKG11LM_MODEL = "lumi.remote.b1acn01"
+AQARA_MINI_SWITCH_WBR02D_MODEL = "lumi.remote.b1acn02"
 AQARA_MINI_SWITCH = {
     (CONF_SHORT_PRESS, CONF_TURN_ON): {CONF_EVENT: 1002},
     (CONF_DOUBLE_PRESS, CONF_TURN_ON): {CONF_EVENT: 1004},
@@ -599,6 +623,8 @@ REMOTES = {
     HUE_TAP_REMOTE_MODEL: HUE_TAP_REMOTE,
     HUE_WALL_REMOTE_MODEL: HUE_WALL_REMOTE,
     FRIENDS_OF_HUE_SWITCH_MODEL: FRIENDS_OF_HUE_SWITCH,
+    RODRET_REMOTE_MODEL: RODRET_REMOTE,
+    SOMRIG_REMOTE_MODEL: SOMRIG_REMOTE,
     STYRBAR_REMOTE_MODEL: STYRBAR_REMOTE,
     SYMFONISK_SOUND_CONTROLLER_MODEL: SYMFONISK_SOUND_CONTROLLER,
     TRADFRI_ON_OFF_SWITCH_MODEL: TRADFRI_ON_OFF_SWITCH,
@@ -615,7 +641,8 @@ REMOTES = {
     AQARA_SINGLE_WALL_SWITCH_QBKG11LM_MODEL: AQARA_SINGLE_WALL_SWITCH_QBKG11LM,
     AQARA_SINGLE_WALL_SWITCH_WXKG03LM_MODEL: AQARA_SINGLE_WALL_SWITCH,
     AQARA_SINGLE_WALL_SWITCH_WXKG06LM_MODEL: AQARA_SINGLE_WALL_SWITCH,
-    AQARA_MINI_SWITCH_MODEL: AQARA_MINI_SWITCH,
+    AQARA_MINI_SWITCH_WXKG11LM_MODEL: AQARA_MINI_SWITCH,
+    AQARA_MINI_SWITCH_WBR02D_MODEL: AQARA_MINI_SWITCH,
     AQARA_ROUND_SWITCH_MODEL: AQARA_ROUND_SWITCH,
     AQARA_SQUARE_SWITCH_MODEL: AQARA_SQUARE_SWITCH,
     AQARA_SQUARE_SWITCH_WXKG11LM_2016_MODEL: AQARA_SQUARE_SWITCH_WXKG11LM_2016,
@@ -656,9 +683,9 @@ def _get_deconz_event_from_device(
     device: dr.DeviceEntry,
 ) -> DeconzAlarmEvent | DeconzEvent | DeconzPresenceEvent | DeconzRelativeRotaryEvent:
     """Resolve deconz event from device."""
-    hubs: dict[str, DeconzHub] = hass.data.get(DOMAIN, {})
-    for hub in hubs.values():
-        for deconz_event in hub.events:
+    entry: DeconzConfigEntry
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        for deconz_event in entry.runtime_data.events:
             if device.id == deconz_event.device_id:
                 return deconz_event
 

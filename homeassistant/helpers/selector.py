@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from enum import IntFlag, StrEnum
+from enum import StrEnum
 from functools import cache
-from typing import Any, Generic, Literal, Required, TypedDict, TypeVar, cast
+import importlib
+from typing import Any, Literal, Required, TypedDict, cast
 from uuid import UUID
 
 import voluptuous as vol
@@ -19,8 +20,6 @@ from homeassistant.util.yaml import dumper
 from . import config_validation as cv
 
 SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
-
-_T = TypeVar("_T", bound=Mapping[str, Any])
 
 
 def _get_selector_class(config: Any) -> type[Selector]:
@@ -61,7 +60,7 @@ def validate_selector(config: Any) -> dict:
     }
 
 
-class Selector(Generic[_T]):
+class Selector[_T: Mapping[str, Any]]:
     """Base class for selectors."""
 
     CONFIG_SCHEMA: Callable
@@ -76,69 +75,36 @@ class Selector(Generic[_T]):
 
         self.config = self.CONFIG_SCHEMA(config)
 
+    def __eq__(self, other: object) -> bool:
+        """Check equality."""
+        if not isinstance(other, Selector):
+            return NotImplemented
+
+        return self.selector_type == other.selector_type and self.config == other.config
+
     def serialize(self) -> dict[str, dict[str, _T]]:
         """Serialize Selector for voluptuous_serialize."""
         return {"selector": {self.selector_type: self.config}}
 
 
 @cache
-def _entity_features() -> dict[str, type[IntFlag]]:
-    """Return a cached lookup of entity feature enums."""
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.components.alarm_control_panel import (
-        AlarmControlPanelEntityFeature,
-    )
-    from homeassistant.components.calendar import CalendarEntityFeature
-    from homeassistant.components.camera import CameraEntityFeature
-    from homeassistant.components.climate import ClimateEntityFeature
-    from homeassistant.components.cover import CoverEntityFeature
-    from homeassistant.components.fan import FanEntityFeature
-    from homeassistant.components.humidifier import HumidifierEntityFeature
-    from homeassistant.components.lawn_mower import LawnMowerEntityFeature
-    from homeassistant.components.light import LightEntityFeature
-    from homeassistant.components.lock import LockEntityFeature
-    from homeassistant.components.media_player import MediaPlayerEntityFeature
-    from homeassistant.components.notify import NotifyEntityFeature
-    from homeassistant.components.remote import RemoteEntityFeature
-    from homeassistant.components.siren import SirenEntityFeature
-    from homeassistant.components.todo import TodoListEntityFeature
-    from homeassistant.components.update import UpdateEntityFeature
-    from homeassistant.components.vacuum import VacuumEntityFeature
-    from homeassistant.components.valve import ValveEntityFeature
-    from homeassistant.components.water_heater import WaterHeaterEntityFeature
-    from homeassistant.components.weather import WeatherEntityFeature
+def _entity_feature_flag(domain: str, enum_name: str, feature_name: str) -> int:
+    """Return a cached lookup of an entity feature enum.
 
-    return {
-        "AlarmControlPanelEntityFeature": AlarmControlPanelEntityFeature,
-        "CalendarEntityFeature": CalendarEntityFeature,
-        "CameraEntityFeature": CameraEntityFeature,
-        "ClimateEntityFeature": ClimateEntityFeature,
-        "CoverEntityFeature": CoverEntityFeature,
-        "FanEntityFeature": FanEntityFeature,
-        "HumidifierEntityFeature": HumidifierEntityFeature,
-        "LawnMowerEntityFeature": LawnMowerEntityFeature,
-        "LightEntityFeature": LightEntityFeature,
-        "LockEntityFeature": LockEntityFeature,
-        "MediaPlayerEntityFeature": MediaPlayerEntityFeature,
-        "NotifyEntityFeature": NotifyEntityFeature,
-        "RemoteEntityFeature": RemoteEntityFeature,
-        "SirenEntityFeature": SirenEntityFeature,
-        "TodoListEntityFeature": TodoListEntityFeature,
-        "UpdateEntityFeature": UpdateEntityFeature,
-        "VacuumEntityFeature": VacuumEntityFeature,
-        "ValveEntityFeature": ValveEntityFeature,
-        "WaterHeaterEntityFeature": WaterHeaterEntityFeature,
-        "WeatherEntityFeature": WeatherEntityFeature,
-    }
+    This will import a module from disk and is run from an executor when
+    loading the services schema files.
+    """
+    module = importlib.import_module(f"homeassistant.components.{domain}")
+    enum = getattr(module, enum_name)
+    feature = getattr(enum, feature_name)
+    return cast(int, feature.value)
 
 
 def _validate_supported_feature(supported_feature: str) -> int:
     """Validate a supported feature and resolve an enum string to its value."""
 
-    known_entity_features = _entity_features()
-
     try:
-        _, enum, feature = supported_feature.split(".", 2)
+        domain, enum, feature = supported_feature.split(".", 2)
     except ValueError as exc:
         raise vol.Invalid(
             f"Invalid supported feature '{supported_feature}', expected "
@@ -146,8 +112,8 @@ def _validate_supported_feature(supported_feature: str) -> int:
         ) from exc
 
     try:
-        return cast(int, getattr(known_entity_features[enum], feature).value)
-    except (AttributeError, KeyError) as exc:
+        return _entity_feature_flag(domain, enum, feature)
+    except (ModuleNotFoundError, AttributeError) as exc:
         raise vol.Invalid(f"Unknown supported feature '{supported_feature}'") from exc
 
 
@@ -198,6 +164,8 @@ DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         vol.Optional("manufacturer"): str,
         # Model of device
         vol.Optional("model"): str,
+        # Model ID of device
+        vol.Optional("model_id"): str,
         # Device has to contain entities matching this selector
         vol.Optional("entity"): vol.All(
             cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
@@ -212,6 +180,7 @@ class DeviceFilterSelectorConfig(TypedDict, total=False):
     integration: str
     manufacturer: str
     model: str
+    model_id: str
 
 
 class ActionSelectorConfig(TypedDict):
@@ -319,7 +288,7 @@ class AssistPipelineSelector(Selector[AssistPipelineSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema({})
 
-    def __init__(self, config: AssistPipelineSelectorConfig) -> None:
+    def __init__(self, config: AssistPipelineSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -471,10 +440,10 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         range_min = self.config.get("min")
         range_max = self.config.get("max")
 
-        if not range_min:
+        if range_min is None:
             range_min = self.config.get("min_mireds")
 
-        if not range_max:
+        if range_max is None:
             range_max = self.config.get("max_mireds")
 
         value: int = vol.All(
@@ -558,7 +527,7 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
         }
     )
 
-    def __init__(self, config: ConstantSelectorConfig | None = None) -> None:
+    def __init__(self, config: ConstantSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -601,7 +570,7 @@ class QrCodeSelector(Selector[QrCodeSelectorConfig]):
         }
     )
 
-    def __init__(self, config: QrCodeSelectorConfig | None = None) -> None:
+    def __init__(self, config: QrCodeSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -629,7 +598,7 @@ class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
         }
     )
 
-    def __init__(self, config: ConversationAgentSelectorConfig) -> None:
+    def __init__(self, config: ConversationAgentSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -759,6 +728,8 @@ class DurationSelectorConfig(TypedDict, total=False):
     """Class to represent a duration selector config."""
 
     enable_day: bool
+    enable_millisecond: bool
+    allow_negative: bool
 
 
 @SELECTORS.register("duration")
@@ -772,6 +743,10 @@ class DurationSelector(Selector[DurationSelectorConfig]):
             # Enable day field in frontend. A selection with `days` set is allowed
             # even if `enable_day` is not set
             vol.Optional("enable_day"): cv.boolean,
+            # Enable millisecond field in frontend.
+            vol.Optional("enable_millisecond"): cv.boolean,
+            # Allow negative durations. Will default to False in HA Core 2025.6.0.
+            vol.Optional("allow_negative"): cv.boolean,
         }
     )
 
@@ -781,7 +756,10 @@ class DurationSelector(Selector[DurationSelectorConfig]):
 
     def __call__(self, data: Any) -> dict[str, float]:
         """Validate the passed selection."""
-        cv.time_period_dict(data)
+        if self.config.get("allow_negative", True):
+            cv.time_period_dict(data)
+        else:
+            cv.positive_time_period_dict(data)
         return cast(dict[str, float], data)
 
 
@@ -855,7 +833,7 @@ class FloorSelectorConfig(TypedDict, total=False):
 
 
 @SELECTORS.register("floor")
-class FloorSelector(Selector[AreaSelectorConfig]):
+class FloorSelector(Selector[FloorSelectorConfig]):
     """Selector of a single or list of floors."""
 
     selector_type = "floor"
@@ -969,7 +947,7 @@ class LanguageSelector(Selector[LanguageSelectorConfig]):
         }
     )
 
-    def __init__(self, config: LanguageSelectorConfig) -> None:
+    def __init__(self, config: LanguageSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -1158,7 +1136,7 @@ class SelectOptionDict(TypedDict):
 
 
 class SelectSelectorMode(StrEnum):
-    """Possible modes for a number selector."""
+    """Possible modes for a select selector."""
 
     LIST = "list"
     DROPDOWN = "dropdown"
@@ -1194,7 +1172,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         }
     )
 
-    def __init__(self, config: SelectSelectorConfig | None = None) -> None:
+    def __init__(self, config: SelectSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -1210,7 +1188,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
                     for option in cast(Sequence[SelectOptionDict], config_options)
                 ]
 
-        parent_schema = vol.In(options)
+        parent_schema: vol.In | vol.Any = vol.In(options)
         if self.config["custom_value"]:
             parent_schema = vol.Any(parent_schema, str)
 
@@ -1469,7 +1447,7 @@ class FileSelector(Selector[FileSelectorConfig]):
         }
     )
 
-    def __init__(self, config: FileSelectorConfig | None = None) -> None:
+    def __init__(self, config: FileSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 

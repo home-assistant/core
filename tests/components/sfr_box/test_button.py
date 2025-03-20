@@ -18,7 +18,7 @@ pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get
 
 
 @pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None, None, None]:
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS_WITH_AUTH."""
     with (
         patch(

@@ -11,16 +11,15 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import GitHubDataUpdateCoordinator
+from .coordinator import GithubConfigEntry, GitHubDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -37,7 +36,6 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     GitHubSensorEntityDescription(
         key="discussions_count",
         translation_key="discussions_count",
-        native_unit_of_measurement="Discussions",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["discussion"]["total"],
@@ -45,7 +43,6 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     GitHubSensorEntityDescription(
         key="stargazers_count",
         translation_key="stargazers_count",
-        native_unit_of_measurement="Stars",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["stargazers_count"],
@@ -53,7 +50,6 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     GitHubSensorEntityDescription(
         key="subscribers_count",
         translation_key="subscribers_count",
-        native_unit_of_measurement="Watchers",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["watchers"]["total"],
@@ -61,7 +57,6 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     GitHubSensorEntityDescription(
         key="forks_count",
         translation_key="forks_count",
-        native_unit_of_measurement="Forks",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["forks_count"],
@@ -69,7 +64,6 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     GitHubSensorEntityDescription(
         key="issues_count",
         translation_key="issues_count",
-        native_unit_of_measurement="Issues",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["issue"]["total"],
@@ -77,7 +71,6 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     GitHubSensorEntityDescription(
         key="pulls_count",
         translation_key="pulls_count",
-        native_unit_of_measurement="Pull Requests",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data["pull_request"]["total"],
@@ -145,11 +138,11 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: GithubConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up GitHub sensor based on a config entry."""
-    repositories: dict[str, GitHubDataUpdateCoordinator] = hass.data[DOMAIN]
+    repositories = entry.runtime_data
     async_add_entities(
         (
             GitHubSensorEntity(coordinator, description)

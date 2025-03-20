@@ -1,42 +1,143 @@
 """Conversation support for OpenAI."""
 
-from typing import Literal
+from collections.abc import AsyncGenerator, Callable
+import json
+from typing import Any, Literal
 
 import openai
+from openai._streaming import AsyncStream
+from openai.types.responses import (
+    EasyInputMessageParam,
+    FunctionToolParam,
+    ResponseFunctionCallArgumentsDeltaEvent,
+    ResponseFunctionCallArgumentsDoneEvent,
+    ResponseFunctionToolCall,
+    ResponseFunctionToolCallParam,
+    ResponseInputParam,
+    ResponseOutputItemAddedEvent,
+    ResponseOutputMessage,
+    ResponseStreamEvent,
+    ResponseTextDeltaEvent,
+    ToolParam,
+)
+from openai.types.responses.response_input_param import FunctionCallOutput
+from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import intent, template
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import ulid
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, intent, llm
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import OpenAIConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
-    DEFAULT_CHAT_MODEL,
-    DEFAULT_MAX_TOKENS,
-    DEFAULT_PROMPT,
-    DEFAULT_TEMPERATURE,
-    DEFAULT_TOP_P,
     DOMAIN,
     LOGGER,
+    RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_REASONING_EFFORT,
+    RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_TOP_P,
 )
+
+# Max number of back and forth with the LLM to generate a response
+MAX_TOOL_ITERATIONS = 10
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: OpenAIConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
     agent = OpenAIConversationEntity(config_entry)
     async_add_entities([agent])
+
+
+def _format_tool(
+    tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
+) -> FunctionToolParam:
+    """Format tool specification."""
+    return FunctionToolParam(
+        type="function",
+        name=tool.name,
+        parameters=convert(tool.parameters, custom_serializer=custom_serializer),
+        description=tool.description,
+        strict=False,
+    )
+
+
+def _convert_content_to_param(
+    content: conversation.Content,
+) -> ResponseInputParam:
+    """Convert any native chat message for this agent to the native format."""
+    messages: ResponseInputParam = []
+    if isinstance(content, conversation.ToolResultContent):
+        return [
+            FunctionCallOutput(
+                type="function_call_output",
+                call_id=content.tool_call_id,
+                output=json.dumps(content.tool_result),
+            )
+        ]
+
+    if content.content:
+        role: Literal["user", "assistant", "system", "developer"] = content.role
+        if role == "system":
+            role = "developer"
+        messages.append(
+            EasyInputMessageParam(type="message", role=role, content=content.content)
+        )
+
+    if isinstance(content, conversation.AssistantContent) and content.tool_calls:
+        messages.extend(
+            # https://github.com/openai/openai-python/issues/2205
+            ResponseFunctionToolCallParam(  # type: ignore[typeddict-item]
+                type="function_call",
+                name=tool_call.tool_name,
+                arguments=json.dumps(tool_call.tool_args),
+                call_id=tool_call.id,
+            )
+            for tool_call in content.tool_calls
+        )
+    return messages
+
+
+async def _transform_stream(
+    result: AsyncStream[ResponseStreamEvent],
+) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
+    """Transform an OpenAI delta stream into HA format."""
+    async for event in result:
+        LOGGER.debug("Received event: %s", event)
+
+        if isinstance(event, ResponseOutputItemAddedEvent):
+            if isinstance(event.item, ResponseOutputMessage):
+                yield {"role": event.item.role}
+            elif isinstance(event.item, ResponseFunctionToolCall):
+                current_tool_call = event.item
+        elif isinstance(event, ResponseTextDeltaEvent):
+            yield {"content": event.delta}
+        elif isinstance(event, ResponseFunctionCallArgumentsDeltaEvent):
+            current_tool_call.arguments += event.delta
+        elif isinstance(event, ResponseFunctionCallArgumentsDoneEvent):
+            current_tool_call.status = "completed"
+            yield {
+                "tool_calls": [
+                    llm.ToolInput(
+                        id=current_tool_call.call_id,
+                        tool_name=current_tool_call.name,
+                        tool_args=json.loads(current_tool_call.arguments),
+                    )
+                ]
+            }
 
 
 class OpenAIConversationEntity(
@@ -45,13 +146,23 @@ class OpenAIConversationEntity(
     """OpenAI conversation agent."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: OpenAIConfigEntry) -> None:
         """Initialize the agent."""
         self.entry = entry
-        self.history: dict[str, list[dict]] = {}
-        self._attr_name = entry.title
         self._attr_unique_id = entry.entry_id
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=entry.title,
+            manufacturer="OpenAI",
+            model="ChatGPT",
+            entry_type=dr.DeviceEntryType.SERVICE,
+        )
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            self._attr_supported_features = (
+                conversation.ConversationEntityFeature.CONTROL
+            )
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -65,82 +176,102 @@ class OpenAIConversationEntity(
             self.hass, "conversation", self.entry.entry_id, self.entity_id
         )
         conversation.async_set_agent(self.hass, self.entry, self)
+        self.entry.async_on_unload(
+            self.entry.add_update_listener(self._async_entry_update_listener)
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from Home Assistant."""
         conversation.async_unset_agent(self.hass, self.entry)
         await super().async_will_remove_from_hass()
 
-    async def async_process(
-        self, user_input: conversation.ConversationInput
+    async def _async_handle_message(
+        self,
+        user_input: conversation.ConversationInput,
+        chat_log: conversation.ChatLog,
     ) -> conversation.ConversationResult:
-        """Process a sentence."""
-        raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
-        model = self.entry.options.get(CONF_CHAT_MODEL, DEFAULT_CHAT_MODEL)
-        max_tokens = self.entry.options.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-        top_p = self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P)
-        temperature = self.entry.options.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE)
-
-        if user_input.conversation_id in self.history:
-            conversation_id = user_input.conversation_id
-            messages = self.history[conversation_id]
-        else:
-            conversation_id = ulid.ulid_now()
-            try:
-                prompt = self._async_generate_prompt(raw_prompt)
-            except TemplateError as err:
-                LOGGER.error("Error rendering prompt: %s", err)
-                intent_response = intent.IntentResponse(language=user_input.language)
-                intent_response.async_set_error(
-                    intent.IntentResponseErrorCode.UNKNOWN,
-                    f"Sorry, I had a problem with my template: {err}",
-                )
-                return conversation.ConversationResult(
-                    response=intent_response, conversation_id=conversation_id
-                )
-            messages = [{"role": "system", "content": prompt}]
-
-        messages.append({"role": "user", "content": user_input.text})
-
-        LOGGER.debug("Prompt for %s: %s", model, messages)
-
-        client = self.hass.data[DOMAIN][self.entry.entry_id]
+        """Call the API."""
+        options = self.entry.options
 
         try:
-            result = await client.chat.completions.create(
-                model=model,
-                messages=messages,
-                max_tokens=max_tokens,
-                top_p=top_p,
-                temperature=temperature,
-                user=conversation_id,
+            await chat_log.async_update_llm_data(
+                DOMAIN,
+                user_input,
+                options.get(CONF_LLM_HASS_API),
+                options.get(CONF_PROMPT),
             )
-        except openai.OpenAIError as err:
-            intent_response = intent.IntentResponse(language=user_input.language)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
-                f"Sorry, I had a problem talking to OpenAI: {err}",
-            )
-            return conversation.ConversationResult(
-                response=intent_response, conversation_id=conversation_id
-            )
+        except conversation.ConverseError as err:
+            return err.as_conversation_result()
 
-        LOGGER.debug("Response %s", result)
-        response = result.choices[0].message.model_dump(include={"role", "content"})
-        messages.append(response)
-        self.history[conversation_id] = messages
+        tools: list[ToolParam] | None = None
+        if chat_log.llm_api:
+            tools = [
+                _format_tool(tool, chat_log.llm_api.custom_serializer)
+                for tool in chat_log.llm_api.tools
+            ]
+
+        model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        messages = [
+            m
+            for content in chat_log.content
+            for m in _convert_content_to_param(content)
+        ]
+
+        client = self.entry.runtime_data
+
+        # To prevent infinite loops, we limit the number of iterations
+        for _iteration in range(MAX_TOOL_ITERATIONS):
+            model_args = {
+                "model": model,
+                "input": messages,
+                "max_output_tokens": options.get(
+                    CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
+                ),
+                "top_p": options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+                "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
+                "user": chat_log.conversation_id,
+                "store": False,
+                "stream": True,
+            }
+            if tools:
+                model_args["tools"] = tools
+
+            if model.startswith("o"):
+                model_args["reasoning"] = {
+                    "effort": options.get(
+                        CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
+                    )
+                }
+
+            try:
+                result = await client.responses.create(**model_args)
+            except openai.RateLimitError as err:
+                LOGGER.error("Rate limited by OpenAI: %s", err)
+                raise HomeAssistantError("Rate limited or insufficient funds") from err
+            except openai.OpenAIError as err:
+                LOGGER.error("Error talking to OpenAI: %s", err)
+                raise HomeAssistantError("Error talking to OpenAI") from err
+
+            async for content in chat_log.async_add_delta_content_stream(
+                user_input.agent_id, _transform_stream(result)
+            ):
+                messages.extend(_convert_content_to_param(content))
+
+            if not chat_log.unresponded_tool_results:
+                break
 
         intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(response["content"])
+        assert type(chat_log.content[-1]) is conversation.AssistantContent
+        intent_response.async_set_speech(chat_log.content[-1].content or "")
         return conversation.ConversationResult(
-            response=intent_response, conversation_id=conversation_id
+            response=intent_response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
         )
 
-    def _async_generate_prompt(self, raw_prompt: str) -> str:
-        """Generate a prompt for the user."""
-        return template.Template(raw_prompt, self.hass).async_render(
-            {
-                "ha_name": self.hass.config.location_name,
-            },
-            parse_result=False,
-        )
+    async def _async_entry_update_listener(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Handle options update."""
+        # Reload as we update device info + entity name + supported features
+        await hass.config_entries.async_reload(entry.entry_id)

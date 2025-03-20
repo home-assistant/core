@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import lawn_mower
 from homeassistant.components.lawn_mower import (
+    ENTITY_ID_FORMAT,
     LawnMowerActivity,
     LawnMowerEntity,
     LawnMowerEntityFeature,
@@ -18,36 +19,27 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import (
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_RETAIN,
-    DEFAULT_OPTIMISTIC,
-    DEFAULT_RETAIN,
-)
-from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entity_entry_helper,
-    write_state_on_attr_change,
-)
+from .const import CONF_RETAIN, DEFAULT_OPTIMISTIC, DEFAULT_RETAIN
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 CONF_ACTIVITY_STATE_TOPIC = "activity_state_topic"
 CONF_ACTIVITY_VALUE_TEMPLATE = "activity_value_template"
@@ -59,7 +51,6 @@ CONF_START_MOWING_COMMAND_TOPIC = "start_mowing_command_topic"
 CONF_START_MOWING_COMMAND_TEMPLATE = "start_mowing_command_template"
 
 DEFAULT_NAME = "MQTT Lawn Mower"
-ENTITY_ID_FORMAT = lawn_mower.DOMAIN + ".{}"
 
 MQTT_LAWN_MOWER_ATTRIBUTES_BLOCKED: frozenset[str] = frozenset()
 
@@ -89,10 +80,10 @@ DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EX
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT lawn mower through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttLawnMower,
@@ -114,7 +105,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
@@ -150,57 +141,45 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
             config.get(CONF_START_MOWING_COMMAND_TEMPLATE), entity=self
         ).async_render
 
+    @callback
+    def _message_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages."""
+        payload = str(self._value_template(msg.payload))
+        if not payload:
+            _LOGGER.debug(
+                "Invalid empty activity payload from topic %s, for entity %s",
+                msg.topic,
+                self.entity_id,
+            )
+            return
+        if payload.lower() == "none":
+            self._attr_activity = None
+            return
+
+        try:
+            self._attr_activity = LawnMowerActivity(payload)
+        except ValueError:
+            _LOGGER.error(
+                "Invalid activity for %s: '%s' (valid activities: %s)",
+                self.entity_id,
+                payload,
+                [option.value for option in LawnMowerActivity],
+            )
+            return
+
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"_attr_activity"})
-        def message_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages."""
-            payload = str(self._value_template(msg.payload))
-            if not payload:
-                _LOGGER.debug(
-                    "Invalid empty activity payload from topic %s, for entity %s",
-                    msg.topic,
-                    self.entity_id,
-                )
-                return
-            if payload.lower() == "none":
-                self._attr_activity = None
-                return
-
-            try:
-                self._attr_activity = LawnMowerActivity(payload)
-            except ValueError:
-                _LOGGER.error(
-                    "Invalid activity for %s: '%s' (valid activities: %s)",
-                    self.entity_id,
-                    payload,
-                    [option.value for option in LawnMowerActivity],
-                )
-                return
-
-        if self._config.get(CONF_ACTIVITY_STATE_TOPIC) is None:
+        if not self.add_subscription(
+            CONF_ACTIVITY_STATE_TOPIC, self._message_received, {"_attr_activity"}
+        ):
             # Force into optimistic mode.
             self._attr_assumed_state = True
-        else:
-            self._sub_state = subscription.async_prepare_subscribe_topics(
-                self.hass,
-                self._sub_state,
-                {
-                    CONF_ACTIVITY_STATE_TOPIC: {
-                        "topic": self._config.get(CONF_ACTIVITY_STATE_TOPIC),
-                        "msg_callback": message_received,
-                        "qos": self._config[CONF_QOS],
-                        "encoding": self._config[CONF_ENCODING] or None,
-                    }
-                },
-            )
+            return
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
         if self._attr_assumed_state and (
             last_state := await self.async_get_last_state()
@@ -214,14 +193,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
         if self._attr_assumed_state:
             self._attr_activity = activity
             self.async_write_ha_state()
-
-        await self.async_publish(
-            self._command_topics[option],
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
-        )
+        await self.async_publish_with_config(self._command_topics[option], payload)
 
     async def async_start_mowing(self) -> None:
         """Start or resume mowing."""

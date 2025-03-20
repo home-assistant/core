@@ -4,14 +4,11 @@ from __future__ import annotations
 
 import binascii
 import logging
+from typing import TYPE_CHECKING
 
 from pysnmp.error import PySnmpError
 from pysnmp.hlapi.asyncio import (
     CommunityData,
-    ContextData,
-    ObjectIdentity,
-    ObjectType,
-    SnmpEngine,
     Udp6TransportTarget,
     UdpTransportTarget,
     UsmUserData,
@@ -21,13 +18,13 @@ from pysnmp.hlapi.asyncio import (
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -43,10 +40,11 @@ from .const import (
     DEFAULT_VERSION,
     SNMP_VERSIONS,
 )
+from .util import RequestArgsType, async_create_request_cmd_args
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_BASEOID): cv.string,
         vol.Required(CONF_HOST): cv.string,
@@ -61,8 +59,8 @@ async def async_get_scanner(
     hass: HomeAssistant, config: ConfigType
 ) -> SnmpScanner | None:
     """Validate the configuration and return an SNMP scanner."""
-    scanner = SnmpScanner(config[DOMAIN])
-    await scanner.async_init()
+    scanner = SnmpScanner(config[DEVICE_TRACKER_DOMAIN])
+    await scanner.async_init(hass)
 
     return scanner if scanner.success_init else None
 
@@ -99,33 +97,29 @@ class SnmpScanner(DeviceScanner):
             if not privkey:
                 privproto = "none"
 
-            request_args = [
-                SnmpEngine(),
-                UsmUserData(
-                    community,
-                    authKey=authkey or None,
-                    privKey=privkey or None,
-                    authProtocol=authproto,
-                    privProtocol=privproto,
-                ),
-                target,
-                ContextData(),
-            ]
+            self._auth_data = UsmUserData(
+                community,
+                authKey=authkey or None,
+                privKey=privkey or None,
+                authProtocol=authproto,
+                privProtocol=privproto,
+            )
         else:
-            request_args = [
-                SnmpEngine(),
-                CommunityData(community, mpModel=SNMP_VERSIONS[DEFAULT_VERSION]),
-                target,
-                ContextData(),
-            ]
+            self._auth_data = CommunityData(
+                community, mpModel=SNMP_VERSIONS[DEFAULT_VERSION]
+            )
 
-        self.request_args = request_args
+        self._target = target
+        self.request_args: RequestArgsType | None = None
         self.baseoid = baseoid
         self.last_results = []
         self.success_init = False
 
-    async def async_init(self):
+    async def async_init(self, hass: HomeAssistant) -> None:
         """Make a one-off read to check if the target device is reachable and readable."""
+        self.request_args = await async_create_request_cmd_args(
+            hass, self._auth_data, self._target, self.baseoid
+        )
         data = await self.async_get_snmp_data()
         self.success_init = data is not None
 
@@ -134,7 +128,7 @@ class SnmpScanner(DeviceScanner):
         await self._async_update_info()
         return [client["mac"] for client in self.last_results if client.get("mac")]
 
-    async def async_get_device_name(self, device):
+    async def async_get_device_name(self, device: str) -> str | None:
         """Return the name of the given device or None if we don't know."""
         # We have no names
         return None
@@ -156,25 +150,31 @@ class SnmpScanner(DeviceScanner):
     async def async_get_snmp_data(self):
         """Fetch MAC addresses from access point via SNMP."""
         devices = []
+        if TYPE_CHECKING:
+            assert self.request_args is not None
 
+        engine, auth_data, target, context_data, object_type = self.request_args
         walker = bulkWalkCmd(
-            *self.request_args,
+            engine,
+            auth_data,
+            target,
+            context_data,
             0,
             50,
-            ObjectType(ObjectIdentity(self.baseoid)),
+            object_type,
             lexicographicMode=False,
         )
         async for errindication, errstatus, errindex, res in walker:
             if errindication:
                 _LOGGER.error("SNMPLIB error: %s", errindication)
-                return
+                return None
             if errstatus:
                 _LOGGER.error(
                     "SNMP error: %s at %s",
                     errstatus.prettyPrint(),
-                    errindex and res[int(errindex) - 1][0] or "?",
+                    (errindex and res[int(errindex) - 1][0]) or "?",
                 )
-                return
+                return None
 
             for _oid, value in res:
                 if not isEndOfMib(res):

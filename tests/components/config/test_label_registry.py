@@ -1,5 +1,8 @@
 """Test label registry API."""
 
+from datetime import datetime
+
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.config import label_registry
@@ -21,9 +24,15 @@ async def client_fixture(
 async def test_list_labels(
     client: MockHAClientWebSocket,
     label_registry: lr.LabelRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test list entries."""
+    created_1 = datetime.fromisoformat("2024-07-16T13:30:00.900075+00:00")
+    freezer.move_to(created_1)
     label_registry.async_create("mock 1")
+
+    created_2 = datetime.fromisoformat("2024-07-16T13:45:00.900075+00:00")
+    freezer.move_to(created_2)
     label_registry.async_create(
         name="mock 2",
         color="#00FF00",
@@ -33,6 +42,12 @@ async def test_list_labels(
 
     assert len(label_registry.labels) == 2
 
+    # update mock 1 to change modified_at
+    label_registry.async_update(
+        "mock_1",
+        name="Mock 1...",
+    )
+
     await client.send_json_auto_id({"type": "config/label_registry/list"})
 
     msg = await client.receive_json()
@@ -40,16 +55,20 @@ async def test_list_labels(
     assert len(msg["result"]) == len(label_registry.labels)
     assert msg["result"][0] == {
         "color": None,
+        "created_at": created_1.timestamp(),
         "description": None,
         "icon": None,
         "label_id": "mock_1",
-        "name": "mock 1",
+        "modified_at": created_2.timestamp(),
+        "name": "Mock 1...",
     }
     assert msg["result"][1] == {
         "color": "#00FF00",
+        "created_at": created_2.timestamp(),
         "description": "This is the second label",
         "icon": "mdi:two",
         "label_id": "mock_2",
+        "modified_at": created_2.timestamp(),
         "name": "mock 2",
     }
 
@@ -57,8 +76,11 @@ async def test_list_labels(
 async def test_create_label(
     client: MockHAClientWebSocket,
     label_registry: lr.LabelRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test create entry."""
+    created_1 = datetime.fromisoformat("2024-07-16T13:30:00.900075+00:00")
+    freezer.move_to(created_1)
     await client.send_json_auto_id(
         {
             "name": "MOCK",
@@ -71,12 +93,16 @@ async def test_create_label(
     assert len(label_registry.labels) == 1
     assert msg["result"] == {
         "color": None,
+        "created_at": created_1.timestamp(),
         "description": None,
         "icon": None,
         "label_id": "mock",
         "name": "MOCK",
+        "modified_at": created_1.timestamp(),
     }
 
+    created_2 = datetime.fromisoformat("2024-07-17T13:30:00.900075+00:00")
+    freezer.move_to(created_2)
     await client.send_json_auto_id(
         {
             "id": 2,
@@ -93,12 +119,16 @@ async def test_create_label(
     assert len(label_registry.labels) == 2
     assert msg["result"] == {
         "color": "#00FF00",
+        "created_at": created_2.timestamp(),
         "description": "This is the second label",
         "icon": "mdi:two",
         "label_id": "mockery",
+        "modified_at": created_2.timestamp(),
         "name": "MOCKERY",
     }
 
+    created_3 = datetime.fromisoformat("2024-07-18T13:30:00.900075+00:00")
+    freezer.move_to(created_3)
     await client.send_json_auto_id(
         {
             "name": "MAGIC",
@@ -114,9 +144,11 @@ async def test_create_label(
     assert len(label_registry.labels) == 3
     assert msg["result"] == {
         "color": "indigo",
+        "created_at": created_3.timestamp(),
         "description": "This is the third label",
         "icon": "mdi:three",
         "label_id": "magic",
+        "modified_at": created_3.timestamp(),
         "name": "MAGIC",
     }
 
@@ -182,10 +214,16 @@ async def test_delete_non_existing_label(
 async def test_update_label(
     client: MockHAClientWebSocket,
     label_registry: lr.LabelRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update entry."""
+    created_at = datetime.fromisoformat("2024-07-16T13:30:00.900075+00:00")
+    freezer.move_to(created_at)
     label = label_registry.async_create("mock")
     assert len(label_registry.labels) == 1
+
+    modified_at = datetime.fromisoformat("2024-07-16T13:45:00.900075+00:00")
+    freezer.move_to(modified_at)
 
     await client.send_json_auto_id(
         {
@@ -203,11 +241,16 @@ async def test_update_label(
     assert len(label_registry.labels) == 1
     assert msg["result"] == {
         "color": "#00FF00",
+        "created_at": created_at.timestamp(),
         "description": "This is a label description",
         "icon": "mdi:test",
         "label_id": "mock",
+        "modified_at": modified_at.timestamp(),
         "name": "UPDATED",
     }
+
+    modified_at = datetime.fromisoformat("2024-07-16T13:50:00.900075+00:00")
+    freezer.move_to(modified_at)
 
     await client.send_json_auto_id(
         {
@@ -225,11 +268,16 @@ async def test_update_label(
     assert len(label_registry.labels) == 1
     assert msg["result"] == {
         "color": None,
+        "created_at": created_at.timestamp(),
         "description": None,
         "icon": None,
         "label_id": "mock",
+        "modified_at": modified_at.timestamp(),
         "name": "UPDATED AGAIN",
     }
+
+    modified_at = datetime.fromisoformat("2024-07-16T13:55:00.900075+00:00")
+    freezer.move_to(modified_at)
 
     await client.send_json_auto_id(
         {
@@ -247,9 +295,11 @@ async def test_update_label(
     assert len(label_registry.labels) == 1
     assert msg["result"] == {
         "color": "primary",
+        "created_at": created_at.timestamp(),
         "description": None,
         "icon": None,
         "label_id": "mock",
+        "modified_at": modified_at.timestamp(),
         "name": "UPDATED YET AGAIN",
     }
 

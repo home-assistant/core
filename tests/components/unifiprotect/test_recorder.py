@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 
-from pyunifiprotect.data import Camera, Event, EventType
+from uiprotect.data import Camera, Event, EventType, ModelType
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
@@ -40,6 +40,7 @@ async def test_exclude_attributes(
     )
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=1),
@@ -50,7 +51,7 @@ async def test_exclude_attributes(
         camera_id=doorbell.id,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_motion_detected = True
     new_camera.last_motion_event_id = event.id
 

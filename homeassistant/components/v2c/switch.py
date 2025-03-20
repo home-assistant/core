@@ -17,12 +17,10 @@ from pytrydan.models.trydan import (
 )
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import V2CUpdateCoordinator
+from .coordinator import V2CConfigEntry, V2CUpdateCoordinator
 from .entity import V2CBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,11 +78,11 @@ TRYDAN_SWITCHES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: V2CConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up V2C switch platform."""
-    coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         V2CSwitchEntity(coordinator, description, config_entry.entry_id)
@@ -112,12 +110,12 @@ class V2CSwitchEntity(V2CBaseEntity, SwitchEntity):
         """Return the state of the EVSE switch."""
         return self.entity_description.value_fn(self.data)
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the EVSE switch."""
         await self.entity_description.turn_on_fn(self.coordinator.evse)
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the EVSE switch."""
         await self.entity_description.turn_off_fn(self.coordinator.evse)
         await self.coordinator.async_request_refresh()

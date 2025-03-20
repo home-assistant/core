@@ -2,29 +2,27 @@
 
 from __future__ import annotations
 
-from nexia.home import NexiaHome
 from nexia.thermostat import NexiaThermostat
 
 from homeassistant.components.number import NumberEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatEntity
+from .types import NexiaConfigEntry
 from .util import percent_conv
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: NexiaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for a Nexia device."""
-    coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    nexia_home: NexiaHome = coordinator.nexia_home
+    coordinator = config_entry.runtime_data
+    nexia_home = coordinator.nexia_home
 
     entities: list[NexiaThermostatEntity] = []
     for thermostat_id in nexia_home.get_thermostat_ids():

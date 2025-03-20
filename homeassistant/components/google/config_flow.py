@@ -11,7 +11,12 @@ from gcal_sync.api import GoogleCalendarService
 from gcal_sync.exceptions import ApiException, ApiForbiddenException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -24,7 +29,6 @@ from .api import (
     InvalidCredential,
     OAuthError,
     async_create_device_flow,
-    get_feature_access,
 )
 from .const import (
     CONF_CALENDAR_ACCESS,
@@ -74,7 +78,6 @@ class OAuth2FlowHandler(
     def __init__(self) -> None:
         """Set up instance."""
         super().__init__()
-        self._reauth_config_entry: ConfigEntry | None = None
         self._device_flow: DeviceFlow | None = None
         # First attempt is device auth, then fallback to web auth
         self._web_auth = False
@@ -93,18 +96,6 @@ class OAuth2FlowHandler(
             "access_type": "offline",
             "prompt": "consent",
         }
-
-    async def async_step_import(self, info: dict[str, Any]) -> ConfigFlowResult:
-        """Import existing auth into a new config entry."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-        implementations = await config_entry_oauth2_flow.async_get_implementations(
-            self.hass, self.DOMAIN
-        )
-        assert len(implementations) == 1
-        self.flow_impl = list(implementations.values())[0]
-        self.external_data = info
-        return await super().async_step_creation(info)
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
@@ -129,11 +120,11 @@ class OAuth2FlowHandler(
                     self.flow_impl,
                 )
                 return self.async_abort(reason="oauth_error")
-            calendar_access = get_feature_access(self.hass)
-            if self._reauth_config_entry and self._reauth_config_entry.options:
-                calendar_access = FeatureAccess[
-                    self._reauth_config_entry.options[CONF_CALENDAR_ACCESS]
-                ]
+            calendar_access = DEFAULT_FEATURE_ACCESS
+            if self.source == SOURCE_REAUTH and (
+                reauth_options := self._get_reauth_entry().options
+            ):
+                calendar_access = FeatureAccess[reauth_options[CONF_CALENDAR_ACCESS]]
             try:
                 device_flow = await async_create_device_flow(
                     self.hass,
@@ -190,14 +181,10 @@ class OAuth2FlowHandler(
         data[CONF_CREDENTIAL_TYPE] = (
             CredentialType.WEB_AUTH if self._web_auth else CredentialType.DEVICE_AUTH
         )
-        if self._reauth_config_entry:
-            self.hass.config_entries.async_update_entry(
-                self._reauth_config_entry, data=data
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
             )
-            await self.hass.config_entries.async_reload(
-                self._reauth_config_entry.entry_id
-            )
-            return self.async_abort(reason="reauth_successful")
         calendar_service = GoogleCalendarService(
             AccessTokenAuthImpl(
                 async_get_clientsession(self.hass), data["token"]["access_token"]
@@ -226,7 +213,7 @@ class OAuth2FlowHandler(
             title=primary_calendar.id,
             data=data,
             options={
-                CONF_CALENDAR_ACCESS: get_feature_access(self.hass).name,
+                CONF_CALENDAR_ACCESS: DEFAULT_FEATURE_ACCESS.name,
             },
         )
 
@@ -234,9 +221,6 @@ class OAuth2FlowHandler(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_config_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         self._web_auth = entry_data.get(CONF_CREDENTIAL_TYPE) == CredentialType.WEB_AUTH
         return await self.async_step_reauth_confirm()
 
@@ -254,15 +238,11 @@ class OAuth2FlowHandler(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Create an options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Google Calendar options flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

@@ -7,9 +7,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from . import SamsungTVConfigEntry
 from .bridge import SamsungTVBridge
 from .const import DOMAIN
+from .coordinator import SamsungTVConfigEntry
 
 
 @callback
@@ -58,7 +58,7 @@ def async_get_client_by_device_entry(
     for config_entry_id in device.config_entries:
         entry = hass.config_entries.async_get_entry(config_entry_id)
         if entry and entry.domain == DOMAIN and entry.state is ConfigEntryState.LOADED:
-            return entry.runtime_data
+            return entry.runtime_data.bridge
 
     raise ValueError(
         f"Device {device.id} is not from an existing {DOMAIN} config entry"

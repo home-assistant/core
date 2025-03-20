@@ -7,13 +7,16 @@ from datetime import datetime, time, timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from pytrafikverket import TrafikverketTrain
-from pytrafikverket.exceptions import (
+from pytrafikverket import (
     InvalidAuthentication,
+    MultipleTrainStationsFound,
     NoTrainAnnouncementFound,
+    NoTrainStationFound,
+    StationInfoModel,
+    TrafikverketTrain,
+    TrainStopModel,
     UnknownError,
 )
-from pytrafikverket.trafikverket_train import StationInfo, TrainStop
 
 from homeassistant.const import CONF_API_KEY, CONF_WEEKDAY
 from homeassistant.core import HomeAssistant
@@ -22,7 +25,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_FILTER_PRODUCT, CONF_TIME, DOMAIN
+from .const import CONF_FILTER_PRODUCT, CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 from .util import next_departuredate
 
 if TYPE_CHECKING:
@@ -35,7 +38,7 @@ class TrainData:
 
     departure_time: datetime | None
     departure_state: str
-    cancelled: bool
+    cancelled: bool | None
     delayed_time: int | None
     planned_time: datetime | None
     estimated_time: datetime | None
@@ -69,43 +72,58 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
     """A Trafikverket Data Update Coordinator."""
 
     config_entry: TVTrainConfigEntry
+    from_station: StationInfoModel
+    to_station: StationInfoModel
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        to_station: StationInfo,
-        from_station: StationInfo,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: TVTrainConfigEntry) -> None:
         """Initialize the Trafikverket coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=TIME_BETWEEN_UPDATES,
         )
         self._train_api = TrafikverketTrain(
-            async_get_clientsession(hass), self.config_entry.data[CONF_API_KEY]
+            async_get_clientsession(hass), config_entry.data[CONF_API_KEY]
         )
-        self.from_station: StationInfo = from_station
-        self.to_station: StationInfo = to_station
-        self._time: time | None = dt_util.parse_time(self.config_entry.data[CONF_TIME])
-        self._weekdays: list[str] = self.config_entry.data[CONF_WEEKDAY]
-        self._filter_product: str | None = self.config_entry.options.get(
-            CONF_FILTER_PRODUCT
-        )
+        self._time: time | None = dt_util.parse_time(config_entry.data[CONF_TIME])
+        self._weekdays: list[str] = config_entry.data[CONF_WEEKDAY]
+        self._filter_product: str | None = config_entry.options.get(CONF_FILTER_PRODUCT)
+
+    async def _async_setup(self) -> None:
+        """Initiate stations."""
+        try:
+            self.to_station = (
+                await self._train_api.async_get_train_station_from_signature(
+                    self.config_entry.data[CONF_TO]
+                )
+            )
+            self.from_station = (
+                await self._train_api.async_get_train_station_from_signature(
+                    self.config_entry.data[CONF_FROM]
+                )
+            )
+        except InvalidAuthentication as error:
+            raise ConfigEntryAuthFailed from error
+        except (NoTrainStationFound, MultipleTrainStationsFound) as error:
+            raise UpdateFailed(
+                f"Problem when trying station {self.config_entry.data[CONF_FROM]} to"
+                f" {self.config_entry.data[CONF_TO]}. Error: {error} "
+            ) from error
 
     async def _async_update_data(self) -> TrainData:
         """Fetch data from Trafikverket."""
 
         when = dt_util.now()
-        state: TrainStop | None = None
-        states: list[TrainStop] | None = None
+        state: TrainStopModel | None = None
+        states: list[TrainStopModel] | None = None
         if self._time:
             departure_day = next_departuredate(self._weekdays)
             when = datetime.combine(
                 departure_day,
                 self._time,
-                dt_util.get_time_zone(self.hass.config.time_zone),
+                dt_util.get_default_time_zone(),
             )
         try:
             if self._time:

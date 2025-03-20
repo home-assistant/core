@@ -2,17 +2,18 @@
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.button.const import SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .helper import get_and_check_entity_basics
+from .helper import HomeFactory, get_and_check_entity_basics
 
 
 async def test_hmip_garage_door_controller_button(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, default_mock_hap_factory
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    default_mock_hap_factory: HomeFactory,
 ) -> None:
     """Test HomematicipGarageDoorControllerButton."""
     entity_id = "button.garagentor"

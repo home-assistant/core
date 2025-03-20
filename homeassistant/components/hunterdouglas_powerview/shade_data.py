@@ -3,15 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import fields
-import logging
 from typing import Any
 
 from aiopvapi.resources.model import PowerviewData
 from aiopvapi.resources.shade import BaseShade, ShadePosition
 
 from .util import async_map_data_by_id
-
-_LOGGER = logging.getLogger(__name__)
 
 POSITION_FIELDS = [field for field in fields(ShadePosition) if field.name != "velocity"]
 

@@ -6,16 +6,14 @@ from collections.abc import Callable, Coroutine
 from functools import wraps
 import json
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeGuard, TypeVar
+from typing import Any, Concatenate, TypeGuard
+
+from homematicip.base.enums import FunctionalChannelType
+from homematicip.device import Device
 
 from homeassistant.exceptions import HomeAssistantError
 
-from . import HomematicipGenericEntity
-
-_HomematicipGenericEntityT = TypeVar(
-    "_HomematicipGenericEntityT", bound=HomematicipGenericEntity
-)
-_P = ParamSpec("_P")
+from .entity import HomematicipGenericEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +26,7 @@ def is_error_response(response: Any) -> TypeGuard[dict[str, Any]]:
     return False
 
 
-def handle_errors(
+def handle_errors[_HomematicipGenericEntityT: HomematicipGenericEntity, **_P](
     func: Callable[
         Concatenate[_HomematicipGenericEntityT, _P], Coroutine[Any, Any, Any]
     ],
@@ -52,3 +50,12 @@ def handle_errors(
             )
 
     return inner
+
+
+def get_channels_from_device(device: Device, channel_type: FunctionalChannelType):
+    """Get all channels matching with channel_type from device."""
+    return [
+        ch
+        for ch in device.functionalChannels
+        if ch.functionalChannelType == channel_type
+    ]

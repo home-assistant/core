@@ -22,7 +22,7 @@ from homeassistant.components.androidtv.const import (
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
-    CONF_SCREENCAP,
+    CONF_SCREENCAP_INTERVAL,
     CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
     CONF_TURN_ON_COMMAND,
@@ -73,7 +73,7 @@ CONNECT_METHOD = (
 class MockConfigDevice:
     """Mock class to emulate Android device."""
 
-    def __init__(self, eth_mac=ETH_MAC, wifi_mac=None):
+    def __init__(self, eth_mac=ETH_MAC, wifi_mac=None) -> None:
         """Initialize a fake device to test config flow."""
         self.available = True
         self.device_properties = {PROP_ETHMAC: eth_mac, PROP_WIFIMAC: wifi_mac}
@@ -501,7 +501,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             user_input={
                 CONF_GET_SOURCES: True,
                 CONF_EXCLUDE_UNNAMED_APPS: True,
-                CONF_SCREENCAP: True,
+                CONF_SCREENCAP_INTERVAL: 1,
                 CONF_TURN_OFF_COMMAND: "off",
                 CONF_TURN_ON_COMMAND: "on",
             },
@@ -515,6 +515,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
         assert config_entry.options[CONF_GET_SOURCES] is True
         assert config_entry.options[CONF_EXCLUDE_UNNAMED_APPS] is True
-        assert config_entry.options[CONF_SCREENCAP] is True
+        assert config_entry.options[CONF_SCREENCAP_INTERVAL] == 1
         assert config_entry.options[CONF_TURN_OFF_COMMAND] == "off"
         assert config_entry.options[CONF_TURN_ON_COMMAND] == "on"

@@ -7,11 +7,10 @@ import socket
 from unittest.mock import patch
 
 import pytest
-from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
-from pyunifiprotect.data import NVR, Bootstrap, CloudAccount
+from uiprotect import NotAuthorized, NvrError, ProtectApiClient
+from uiprotect.data import NVR, Bootstrap, CloudAccount
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, ssdp
 from homeassistant.components.unifiprotect.const import (
     CONF_ALL_UPDATES,
     CONF_DISABLE_RTSP,
@@ -23,6 +22,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from . import (
     DEVICE_HOSTNAME,
@@ -37,13 +38,13 @@ from .conftest import MAC_ADDR
 
 from tests.common import MockConfigEntry
 
-DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
+DHCP_DISCOVERY = DhcpServiceInfo(
     hostname=DEVICE_HOSTNAME,
     ip=DEVICE_IP_ADDRESS,
     macaddress=DEVICE_MAC_ADDRESS.lower().replace(":", ""),
 )
 SSDP_DISCOVERY = (
-    ssdp.SsdpServiceInfo(
+    SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
         ssdp_location=f"http://{DEVICE_IP_ADDRESS}:41417/rootDesc.xml",
@@ -224,13 +225,7 @@ async def test_form_reauth_auth(
     )
     mock_config.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config.entry_id,
-        },
-    )
+    result = await mock_config.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -344,7 +339,7 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
     ],
 )
 async def test_discovered_by_ssdp_or_dhcp(
-    hass: HomeAssistant, source: str, data: dhcp.DhcpServiceInfo | ssdp.SsdpServiceInfo
+    hass: HomeAssistant, source: str, data: DhcpServiceInfo | SsdpServiceInfo
 ) -> None:
     """Test we handoff to unifi-discovery when discovered via ssdp or dhcp."""
 

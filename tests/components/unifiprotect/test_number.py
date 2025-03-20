@@ -6,7 +6,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import Camera, Doorlock, IRLEDMode, Light
+from uiprotect.data import Camera, Doorlock, IRLEDMode, Light
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.number import (
@@ -69,14 +69,16 @@ async def test_number_lock_remove(
 
 
 async def test_number_setup_light(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
 ) -> None:
     """Test number entity setup for light devices."""
 
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.NUMBER, 2, 2)
 
-    entity_registry = er.async_get(hass)
     for description in LIGHT_NUMBERS:
         unique_id, entity_id = ids_from_device_description(
             Platform.NUMBER, light, description
@@ -93,7 +95,10 @@ async def test_number_setup_light(
 
 
 async def test_number_setup_camera_all(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    camera: Camera,
 ) -> None:
     """Test number entity setup for camera devices (all features)."""
 
@@ -104,8 +109,6 @@ async def test_number_setup_camera_all(
     camera.isp_settings.ir_led_mode = IRLEDMode.CUSTOM
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.NUMBER, 5, 5)
-
-    entity_registry = er.async_get(hass)
 
     for description in CAMERA_NUMBERS:
         unique_id, entity_id = ids_from_device_description(
@@ -159,7 +162,7 @@ async def test_number_light_sensitivity(
     description = LIGHT_NUMBERS[0]
     assert description.ufp_set_method is not None
 
-    light.__fields__["set_sensitivity"] = Mock(final=False)
+    light.__pydantic_fields__["set_sensitivity"] = Mock(final=False, frozen=False)
     light.set_sensitivity = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, light, description)
@@ -181,7 +184,7 @@ async def test_number_light_duration(
 
     description = LIGHT_NUMBERS[1]
 
-    light.__fields__["set_duration"] = Mock(final=False)
+    light.__pydantic_fields__["set_duration"] = Mock(final=False, frozen=False)
     light.set_duration = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, light, description)
@@ -207,7 +210,9 @@ async def test_number_camera_simple(
 
     assert description.ufp_set_method is not None
 
-    camera.__fields__[description.ufp_set_method] = Mock(final=False)
+    camera.__pydantic_fields__[description.ufp_set_method] = Mock(
+        final=False, frozen=False
+    )
     setattr(camera, description.ufp_set_method, AsyncMock())
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, camera, description)
@@ -227,7 +232,9 @@ async def test_number_lock_auto_close(
 
     description = DOORLOCK_NUMBERS[0]
 
-    doorlock.__fields__["set_auto_close_time"] = Mock(final=False)
+    doorlock.__pydantic_fields__["set_auto_close_time"] = Mock(
+        final=False, frozen=False
+    )
     doorlock.set_auto_close_time = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, doorlock, description)

@@ -18,6 +18,8 @@ from homeassistant.helpers.trigger_template_entity import (
 LOGGER = logging.getLogger(__package__)
 
 CONF_COMMAND_TIMEOUT = "command_timeout"
+CONF_JSON_ATTRIBUTES = "json_attributes"
+CONF_JSON_ATTRIBUTES_PATH = "json_attributes_path"
 DEFAULT_TIMEOUT = 15
 DOMAIN = "command_line"
 PLATFORMS = [

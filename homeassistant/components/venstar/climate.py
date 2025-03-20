@@ -10,7 +10,7 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     PRESET_AWAY,
     PRESET_NONE,
     ClimateEntity,
@@ -32,11 +32,13 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import VenstarDataUpdateCoordinator, VenstarEntity
 from .const import (
     _LOGGER,
     ATTR_FAN_STATE,
@@ -46,8 +48,10 @@ from .const import (
     DOMAIN,
     HOLD_MODE_TEMPERATURE,
 )
+from .coordinator import VenstarDataUpdateCoordinator
+from .entity import VenstarEntity
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
@@ -65,7 +69,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Venstar thermostat."""
     venstar_data_coordinator = hass.data[DOMAIN][config_entry.entry_id]
@@ -109,7 +113,6 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF, HVACMode.AUTO]
     _attr_precision = PRECISION_HALVES
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

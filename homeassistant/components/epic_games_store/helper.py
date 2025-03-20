@@ -60,12 +60,12 @@ def get_game_url(raw_game_data: dict[str, Any], language: str) -> str:
     url_slug: str | None = None
     try:
         url_slug = raw_game_data["offerMappings"][0]["pageSlug"]
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         with contextlib.suppress(Exception):
             url_slug = raw_game_data["catalogNs"]["mappings"][0]["pageSlug"]
 
     if not url_slug:
-        url_slug = raw_game_data["urlSlug"]
+        url_slug = raw_game_data["productSlug"]
 
     return f"https://store.epicgames.com/{language}/{url_bundle_or_product}/{url_slug}"
 

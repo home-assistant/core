@@ -1,10 +1,12 @@
 """Test Bluetooth LE device tracker."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 from bleak import BleakError
 from freezegun import freeze_time
+import pytest
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.bluetooth_le_tracker import device_tracker
@@ -16,8 +18,7 @@ from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
-    DOMAIN,
-    legacy,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
 )
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
@@ -31,7 +32,7 @@ from tests.components.bluetooth import generate_advertisement_data, generate_ble
 class MockBleakClient:
     """Mock BleakClient."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Mock BleakClient."""
 
     async def __aenter__(self, *args, **kwargs):
@@ -66,16 +67,13 @@ class MockBleakClientBattery5(MockBleakClient):
         return b"\x05"
 
 
-async def test_do_not_see_device_if_time_not_updated(
-    hass: HomeAssistant,
-    mock_bluetooth: None,
-    mock_device_tracker_conf: list[legacy.Device],
-) -> None:
+@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+async def test_do_not_see_device_if_time_not_updated(hass: HomeAssistant) -> None:
     """Test device going not_home after consider_home threshold from first scan if the subsequent scans have not incremented last seen time."""
 
     address = "DE:AD:BE:EF:13:37"
     name = "Mock device name"
-    entity_id = f"{DOMAIN}.{slugify(name)}"
+    entity_id = f"{DEVICE_TRACKER_DOMAIN}.{slugify(name)}"
 
     with patch(
         "homeassistant.components.bluetooth.async_discovered_service_info"
@@ -103,7 +101,9 @@ async def test_do_not_see_device_if_time_not_updated(
             CONF_TRACK_NEW: True,
             CONF_CONSIDER_HOME: timedelta(minutes=10),
         }
-        result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        result = await async_setup_component(
+            hass, DEVICE_TRACKER_DOMAIN, {DEVICE_TRACKER_DOMAIN: config}
+        )
         await hass.async_block_till_done()
         assert result
 
@@ -132,16 +132,13 @@ async def test_do_not_see_device_if_time_not_updated(
     assert state.state == "not_home"
 
 
-async def test_see_device_if_time_updated(
-    hass: HomeAssistant,
-    mock_bluetooth: None,
-    mock_device_tracker_conf: list[legacy.Device],
-) -> None:
+@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+async def test_see_device_if_time_updated(hass: HomeAssistant) -> None:
     """Test device remaining home after consider_home threshold from first scan if the subsequent scans have incremented last seen time."""
 
     address = "DE:AD:BE:EF:13:37"
     name = "Mock device name"
-    entity_id = f"{DOMAIN}.{slugify(name)}"
+    entity_id = f"{DEVICE_TRACKER_DOMAIN}.{slugify(name)}"
 
     with patch(
         "homeassistant.components.bluetooth.async_discovered_service_info"
@@ -169,7 +166,9 @@ async def test_see_device_if_time_updated(
             CONF_TRACK_NEW: True,
             CONF_CONSIDER_HOME: timedelta(minutes=10),
         }
-        result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        result = await async_setup_component(
+            hass, DEVICE_TRACKER_DOMAIN, {DEVICE_TRACKER_DOMAIN: config}
+        )
         assert result
 
         # Tick until device seen enough times for to be registered for tracking
@@ -214,16 +213,13 @@ async def test_see_device_if_time_updated(
     assert state.state == "home"
 
 
-async def test_preserve_new_tracked_device_name(
-    hass: HomeAssistant,
-    mock_bluetooth: None,
-    mock_device_tracker_conf: list[legacy.Device],
-) -> None:
-    """Test preserving tracked device name across new seens."""
+@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+async def test_preserve_new_tracked_device_name(hass: HomeAssistant) -> None:
+    """Test preserving tracked device name across new seens."""  # codespell:ignore seens
 
     address = "DE:AD:BE:EF:13:37"
     name = "Mock device name"
-    entity_id = f"{DOMAIN}.{slugify(name)}"
+    entity_id = f"{DEVICE_TRACKER_DOMAIN}.{slugify(name)}"
 
     with patch(
         "homeassistant.components.bluetooth.async_discovered_service_info"
@@ -250,7 +246,9 @@ async def test_preserve_new_tracked_device_name(
             CONF_SCAN_INTERVAL: timedelta(minutes=1),
             CONF_TRACK_NEW: True,
         }
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        assert await async_setup_component(
+            hass, DEVICE_TRACKER_DOMAIN, {DEVICE_TRACKER_DOMAIN: config}
+        )
         await hass.async_block_till_done()
 
         # Seen once here; return without name when seen subsequent times
@@ -284,16 +282,13 @@ async def test_preserve_new_tracked_device_name(
     assert state.name == name
 
 
-async def test_tracking_battery_times_out(
-    hass: HomeAssistant,
-    mock_bluetooth: None,
-    mock_device_tracker_conf: list[legacy.Device],
-) -> None:
+@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+async def test_tracking_battery_times_out(hass: HomeAssistant) -> None:
     """Test tracking the battery times out."""
 
     address = "DE:AD:BE:EF:13:37"
     name = "Mock device name"
-    entity_id = f"{DOMAIN}.{slugify(name)}"
+    entity_id = f"{DEVICE_TRACKER_DOMAIN}.{slugify(name)}"
 
     with patch(
         "homeassistant.components.bluetooth.async_discovered_service_info"
@@ -322,7 +317,9 @@ async def test_tracking_battery_times_out(
             CONF_TRACK_BATTERY_INTERVAL: timedelta(minutes=2),
             CONF_TRACK_NEW: True,
         }
-        result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        result = await async_setup_component(
+            hass, DEVICE_TRACKER_DOMAIN, {DEVICE_TRACKER_DOMAIN: config}
+        )
         await hass.async_block_till_done()
         assert result
 
@@ -353,16 +350,13 @@ async def test_tracking_battery_times_out(
     assert "battery" not in state.attributes
 
 
-async def test_tracking_battery_fails(
-    hass: HomeAssistant,
-    mock_bluetooth: None,
-    mock_device_tracker_conf: list[legacy.Device],
-) -> None:
+@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+async def test_tracking_battery_fails(hass: HomeAssistant) -> None:
     """Test tracking the battery fails."""
 
     address = "DE:AD:BE:EF:13:37"
     name = "Mock device name"
-    entity_id = f"{DOMAIN}.{slugify(name)}"
+    entity_id = f"{DEVICE_TRACKER_DOMAIN}.{slugify(name)}"
 
     with patch(
         "homeassistant.components.bluetooth.async_discovered_service_info"
@@ -391,7 +385,9 @@ async def test_tracking_battery_fails(
             CONF_TRACK_BATTERY_INTERVAL: timedelta(minutes=2),
             CONF_TRACK_NEW: True,
         }
-        result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        result = await async_setup_component(
+            hass, DEVICE_TRACKER_DOMAIN, {DEVICE_TRACKER_DOMAIN: config}
+        )
         assert result
 
         # Tick until device seen enough times for to be registered for tracking
@@ -421,16 +417,13 @@ async def test_tracking_battery_fails(
     assert "battery" not in state.attributes
 
 
-async def test_tracking_battery_successful(
-    hass: HomeAssistant,
-    mock_bluetooth: None,
-    mock_device_tracker_conf: list[legacy.Device],
-) -> None:
+@pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
+async def test_tracking_battery_successful(hass: HomeAssistant) -> None:
     """Test tracking the battery gets a value."""
 
     address = "DE:AD:BE:EF:13:37"
     name = "Mock device name"
-    entity_id = f"{DOMAIN}.{slugify(name)}"
+    entity_id = f"{DEVICE_TRACKER_DOMAIN}.{slugify(name)}"
 
     with patch(
         "homeassistant.components.bluetooth.async_discovered_service_info"
@@ -459,7 +452,9 @@ async def test_tracking_battery_successful(
             CONF_TRACK_BATTERY_INTERVAL: timedelta(minutes=2),
             CONF_TRACK_NEW: True,
         }
-        result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        result = await async_setup_component(
+            hass, DEVICE_TRACKER_DOMAIN, {DEVICE_TRACKER_DOMAIN: config}
+        )
         await hass.async_block_till_done()
         assert result
 

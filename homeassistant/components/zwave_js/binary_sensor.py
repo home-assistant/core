@@ -22,7 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -248,13 +248,23 @@ BOOLEAN_SENSOR_MAPPINGS: dict[int, BinarySensorEntityDescription] = {
 }
 
 
+@callback
+def is_valid_notification_binary_sensor(
+    info: ZwaveDiscoveryInfo,
+) -> bool | NotificationZWaveJSEntityDescription:
+    """Return if the notification CC Value is valid as binary sensor."""
+    if not info.primary_value.metadata.states:
+        return False
+    return len(info.primary_value.metadata.states) > 1
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave binary sensor from config entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_binary_sensor(info: ZwaveDiscoveryInfo) -> None:
@@ -264,16 +274,18 @@ async def async_setup_entry(
         entities: list[BinarySensorEntity] = []
 
         if info.platform_hint == "notification":
+            # ensure the notification CC Value is valid as binary sensor
+            if not is_valid_notification_binary_sensor(info):
+                return
             # Get all sensors from Notification CC states
             for state_key in info.primary_value.metadata.states:
                 # ignore idle key (0)
                 if state_key == "0":
                     continue
-
+                # get (optional) description for this state
                 notification_description: (
                     NotificationZWaveJSEntityDescription | None
                 ) = None
-
                 for description in NOTIFICATION_SENSOR_MAPPINGS:
                     if (
                         int(description.key)
@@ -289,7 +301,6 @@ async def async_setup_entry(
                     and notification_description.off_state == state_key
                 ):
                     continue
-
                 entities.append(
                     ZWaveNotificationBinarySensor(
                         config_entry, driver, info, state_key, notification_description

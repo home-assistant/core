@@ -1,13 +1,13 @@
 """Ecovacs image entities."""
 
-from deebot_client.capabilities import CapabilityMap, VacuumCapabilities
+from deebot_client.capabilities import CapabilityMap
 from deebot_client.device import Device
 from deebot_client.events.map import CachedMapInfoEvent, MapChangedEvent
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
 from .entity import EcovacsEntity
@@ -16,22 +16,22 @@ from .entity import EcovacsEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EcovacsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
     controller = config_entry.runtime_data
-    entities = []
-    for device in controller.devices(VacuumCapabilities):
-        capabilities: VacuumCapabilities = device.capabilities
-        if caps := capabilities.map:
-            entities.append(EcovacsMap(device, caps, hass))
+    entities = [
+        EcovacsMap(device, caps, hass)
+        for device in controller.devices
+        if (caps := device.capabilities.map)
+    ]
 
     if entities:
         async_add_entities(entities)
 
 
 class EcovacsMap(
-    EcovacsEntity[VacuumCapabilities, CapabilityMap],
+    EcovacsEntity[CapabilityMap],
     ImageEntity,
 ):
     """Ecovacs map."""

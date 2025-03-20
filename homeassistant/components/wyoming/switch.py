@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import restore_state
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import WyomingSatelliteEntity
@@ -21,15 +21,15 @@ if TYPE_CHECKING:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up VoIP switch entities."""
     item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
 
     # Setup is only forwarded for satellites
-    assert item.satellite is not None
+    assert item.device is not None
 
-    async_add_entities([WyomingSatelliteMuteSwitch(item.satellite.device)])
+    async_add_entities([WyomingSatelliteMuteSwitch(item.device)])
 
 
 class WyomingSatelliteMuteSwitch(
@@ -51,6 +51,7 @@ class WyomingSatelliteMuteSwitch(
 
         # Default to off
         self._attr_is_on = (state is not None) and (state.state == STATE_ON)
+        self._device.set_is_muted(self._attr_is_on)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""

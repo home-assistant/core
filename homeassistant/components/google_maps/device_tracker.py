@@ -10,7 +10,7 @@ from locationsharinglib.locationsharinglibexceptions import InvalidCookies
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as PLATFORM_SCHEMA_BASE,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     SeeCallback,
     SourceType,
 )
@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
@@ -40,7 +40,7 @@ CREDENTIALS_FILE = ".google_maps_location_sharing.cookies"
 
 # the parent "device_tracker" have marked the schemas as legacy, so this
 # need to be refactored as part of a bigger rewrite.
-PLATFORM_SCHEMA = PLATFORM_SCHEMA_BASE.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_MAX_GPS_ACCURACY, default=100000): vol.Coerce(float),
@@ -100,7 +100,7 @@ class GoogleMapsScanner:
                 self.max_gps_accuracy is not None
                 and person.accuracy > self.max_gps_accuracy
             ):
-                _LOGGER.info(
+                _LOGGER.debug(
                     (
                         "Ignoring %s update because expected GPS "
                         "accuracy %s is not met: %s"

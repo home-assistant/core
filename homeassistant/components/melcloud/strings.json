@@ -11,10 +11,20 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Melcloud integration needs to re-authenticate your connection details",
+        "description": "The MELCloud integration needs to re-authenticate your connection details",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure your MELCloud",
+        "description": "Reconfigure the entry to obtain a new token, for your account: `{username}`.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Enter the (new) password for MELCloud."
         }
       }
     },
@@ -25,7 +35,10 @@
     },
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "already_configured": "MELCloud integration already configured for this email. Access token has been refreshed."
+      "already_configured": "MELCloud integration already configured for this email. Access token has been refreshed.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
   },
   "services": {
@@ -57,7 +70,7 @@
     },
     "deprecated_yaml_import_issue_cannot_connect": {
       "title": "The MELCloud YAML configuration import failed",
-      "description": "Configuring MELCloud using YAML is being removed but there was an connection error importing your YAML configuration.\n\nEnsure connection to MELCloud works and restart Home Assistant to try again or remove the MELCloud YAML configuration from your configuration.yaml file and continue to [set up the integration](/config/integrations/dashboard/add?domain=melcoud) manually."
+      "description": "Configuring MELCloud using YAML is being removed but there was a connection error importing your YAML configuration.\n\nEnsure connection to MELCloud works and restart Home Assistant to try again or remove the MELCloud YAML configuration from your configuration.yaml file and continue to [set up the integration](/config/integrations/dashboard/add?domain=melcoud) manually."
     }
   },
   "entity": {

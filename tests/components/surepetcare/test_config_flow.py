@@ -6,6 +6,7 @@ from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 
 from homeassistant import config_entries
 from homeassistant.components.surepetcare.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -24,7 +25,7 @@ async def test_form(hass: HomeAssistant, surepetcare: NonCallableMagicMock) -> N
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    assert not result["errors"]
 
     with patch(
         "homeassistant.components.surepetcare.async_setup_entry",
@@ -146,41 +147,43 @@ async def test_flow_entry_already_exists(
     assert result["reason"] == "already_configured"
 
 
-async def test_reauthentication(hass: HomeAssistant) -> None:
+async def test_reauthentication(
+    hass: HomeAssistant, surepetcare: NonCallableMagicMock
+) -> None:
     """Test surepetcare reauthentication."""
     old_entry = MockConfigEntry(
         domain="surepetcare",
-        data=INPUT_DATA,
+        data={
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: "token",
+        },
         unique_id="test-username",
     )
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "reauth_confirm"
 
-    with patch(
-        "homeassistant.components.surepetcare.config_flow.surepy.client.SureAPIClient.get_token",
-        return_value={"token": "token"},
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"password": "test-password"},
-        )
-        await hass.async_block_till_done()
+    surepetcare.get_token.return_value = "token2"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"password": "test-password2"},
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
+
+    assert old_entry.data == {
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password2",
+        CONF_TOKEN: "token2",
+    }
 
 
 async def test_reauthentication_failure(hass: HomeAssistant) -> None:
@@ -192,15 +195,7 @@ async def test_reauthentication_failure(hass: HomeAssistant) -> None:
     )
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -230,15 +225,7 @@ async def test_reauthentication_cannot_connect(hass: HomeAssistant) -> None:
     )
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -268,15 +255,7 @@ async def test_reauthentication_unknown_failure(hass: HomeAssistant) -> None:
     )
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}

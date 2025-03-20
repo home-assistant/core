@@ -14,7 +14,7 @@ from homeassistant.core import (
     is_callback,
     is_callback_check_partial,
 )
-import homeassistant.util.logging as logging_util
+from homeassistant.util import logging as logging_util
 
 
 async def test_logging_with_queue_handler() -> None:
@@ -80,7 +80,7 @@ async def test_async_create_catching_coro(
     """Test exception logging of wrapped coroutine."""
 
     async def job():
-        raise Exception("This is a bad coroutine")
+        raise Exception("This is a bad coroutine")  # noqa: TRY002
 
     hass.async_create_task(logging_util.async_create_catching_coro(job()))
     await hass.async_block_till_done()

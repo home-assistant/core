@@ -10,7 +10,9 @@ from homeassistant.helpers import entity_registry as er
 from . import MAC, setup_onvif_integration
 
 
-async def test_reboot_button(hass: HomeAssistant) -> None:
+async def test_reboot_button(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test states of the Reboot button."""
     await setup_onvif_integration(hass)
 
@@ -19,8 +21,7 @@ async def test_reboot_button(hass: HomeAssistant) -> None:
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_DEVICE_CLASS) == ButtonDeviceClass.RESTART
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("button.testcamera_reboot")
+    entry = entity_registry.async_get("button.testcamera_reboot")
     assert entry
     assert entry.unique_id == f"{MAC}_reboot"
 
@@ -42,7 +43,9 @@ async def test_reboot_button_press(hass: HomeAssistant) -> None:
     devicemgmt.SystemReboot.assert_called_once()
 
 
-async def test_set_dateandtime_button(hass: HomeAssistant) -> None:
+async def test_set_dateandtime_button(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test states of the SetDateAndTime button."""
     await setup_onvif_integration(hass)
 
@@ -50,8 +53,7 @@ async def test_set_dateandtime_button(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_UNKNOWN
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("button.testcamera_set_system_date_and_time")
+    entry = entity_registry.async_get("button.testcamera_set_system_date_and_time")
     assert entry
     assert entry.unique_id == f"{MAC}_setsystemdatetime"
 

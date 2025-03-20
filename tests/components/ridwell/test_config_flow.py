@@ -13,6 +13,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_PASSWORD, TEST_USERNAME
 
+from tests.common import MockConfigEntry
+
 
 @pytest.mark.parametrize(
     ("get_client_response", "errors"),
@@ -65,12 +67,10 @@ async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) 
 
 
 async def test_step_reauth(
-    hass: HomeAssistant, config, config_entry, setup_config_entry
+    hass: HomeAssistant, config, config_entry: MockConfigEntry, setup_config_entry
 ) -> None:
     """Test a full reauth flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=config
-    )
+    result = await config_entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_PASSWORD: "new_password"},

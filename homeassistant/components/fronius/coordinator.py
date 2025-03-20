@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
 from pyfronius import BadStatusError, FroniusError
 
@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    DOMAIN,
     SOLAR_NET_ID_POWER_FLOW,
     SOLAR_NET_ID_SYSTEM,
     FroniusDeviceInfo,
@@ -31,8 +32,6 @@ from .sensor import (
 if TYPE_CHECKING:
     from . import FroniusSolarNet
     from .sensor import _FroniusSensorEntity
-
-    _FroniusEntityT = TypeVar("_FroniusEntityT", bound=_FroniusSensorEntity)
 
 
 class FroniusCoordinatorBase(
@@ -69,7 +68,11 @@ class FroniusCoordinatorBase(
                 self._failed_update_count += 1
                 if self._failed_update_count == self.MAX_FAILED_UPDATES:
                     self.update_interval = self.error_interval
-                raise UpdateFailed(err) from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_failed",
+                    translation_placeholders={"fronius_error": str(err)},
+                ) from err
 
             if self._failed_update_count != 0:
                 self._failed_update_count = 0
@@ -84,7 +87,7 @@ class FroniusCoordinatorBase(
             return data
 
     @callback
-    def add_entities_for_seen_keys(
+    def add_entities_for_seen_keys[_FroniusEntityT: _FroniusSensorEntity](
         self,
         async_add_entities: AddEntitiesCallback,
         entity_constructor: type[_FroniusEntityT],

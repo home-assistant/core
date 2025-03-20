@@ -1,5 +1,6 @@
 """The tests for the demo light component."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -8,11 +9,10 @@ from homeassistant.components.demo import DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
-    ATTR_KELVIN,
-    ATTR_MAX_MIREDS,
-    ATTR_MIN_MIREDS,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
@@ -27,7 +27,7 @@ ENTITY_LIGHT = "light.bed_light"
 
 
 @pytest.fixture
-async def light_only() -> None:
+def light_only() -> Generator[None]:
     """Enable only the light platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
@@ -37,7 +37,7 @@ async def light_only() -> None:
 
 
 @pytest.fixture(autouse=True)
-async def setup_comp(hass, light_only):
+async def setup_comp(hass: HomeAssistant, light_only: None) -> None:
     """Set up demo component."""
     assert await async_setup_component(
         hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": DOMAIN}}
@@ -72,31 +72,39 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
     )
 
     state = hass.states.get(ENTITY_LIGHT)
-    assert state.attributes.get(ATTR_RGB_COLOR) == (250, 252, 255)
-    assert state.attributes.get(ATTR_XY_COLOR) == (0.319, 0.326)
+    assert state.attributes.get(ATTR_RGB_COLOR) == (251, 253, 255)
+    assert state.attributes.get(ATTR_XY_COLOR) == (0.319, 0.327)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_EFFECT: "none", ATTR_COLOR_TEMP: 400},
+        {
+            ATTR_ENTITY_ID: ENTITY_LIGHT,
+            ATTR_EFFECT: "none",
+            ATTR_COLOR_TEMP_KELVIN: 2500,
+        },
         blocking=True,
     )
 
     state = hass.states.get(ENTITY_LIGHT)
-    assert state.attributes.get(ATTR_COLOR_TEMP) == 400
-    assert state.attributes.get(ATTR_MIN_MIREDS) == 153
-    assert state.attributes.get(ATTR_MAX_MIREDS) == 500
+    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) == 2500
+    assert state.attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN) == 6535
+    assert state.attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN) == 2000
     assert state.attributes.get(ATTR_EFFECT) == "none"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS_PCT: 50, ATTR_KELVIN: 3000},
+        {
+            ATTR_ENTITY_ID: ENTITY_LIGHT,
+            ATTR_BRIGHTNESS_PCT: 50,
+            ATTR_COLOR_TEMP_KELVIN: 3000,
+        },
         blocking=True,
     )
 
     state = hass.states.get(ENTITY_LIGHT)
-    assert state.attributes.get(ATTR_COLOR_TEMP) == 333
+    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) == 3000
     assert state.attributes.get(ATTR_BRIGHTNESS) == 128
 
 

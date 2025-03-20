@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.energyzero.async_setup_entry", return_value=True
@@ -29,12 +29,13 @@ def mock_config_entry() -> MockConfigEntry:
         title="energy",
         domain=DOMAIN,
         data={},
-        unique_id="unique_thingy",
+        unique_id=DOMAIN,
+        entry_id="12345",
     )
 
 
 @pytest.fixture
-def mock_energyzero() -> Generator[MagicMock, None, None]:
+def mock_energyzero() -> Generator[MagicMock]:
     """Return a mocked EnergyZero client."""
     with patch(
         "homeassistant.components.energyzero.coordinator.EnergyZero", autospec=True

@@ -1,0 +1,178 @@
+# serializer version: 1
+# name: test_available_update_can_be_installed[update.mock_title_fritz_os-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.mock_title_fritz_os',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'FRITZ!OS',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'supported_features': <UpdateEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': '1C:ED:6F:12:34:11-update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_available_update_can_be_installed[update.mock_title_fritz_os-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/fritz/icon.png',
+      'friendly_name': 'Mock Title FRITZ!OS',
+      'in_progress': False,
+      'installed_version': '7.29',
+      'latest_version': '7.50',
+      'release_summary': None,
+      'release_url': 'http://download.avm.de/fritzbox/fritzbox-7530-ax/deutschland/fritz.os/info_de.txt',
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 1>,
+      'title': 'FRITZ!OS',
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.mock_title_fritz_os',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_update_available[update.mock_title_fritz_os-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.mock_title_fritz_os',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'FRITZ!OS',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'supported_features': <UpdateEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': '1C:ED:6F:12:34:11-update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_available[update.mock_title_fritz_os-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/fritz/icon.png',
+      'friendly_name': 'Mock Title FRITZ!OS',
+      'in_progress': False,
+      'installed_version': '7.29',
+      'latest_version': '7.50',
+      'release_summary': None,
+      'release_url': 'http://download.avm.de/fritzbox/fritzbox-7530-ax/deutschland/fritz.os/info_de.txt',
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 1>,
+      'title': 'FRITZ!OS',
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.mock_title_fritz_os',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_update_entities_initialized[update.mock_title_fritz_os-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.mock_title_fritz_os',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'FRITZ!OS',
+    'platform': 'fritz',
+    'previous_unique_id': None,
+    'supported_features': <UpdateEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': '1C:ED:6F:12:34:11-update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_entities_initialized[update.mock_title_fritz_os-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/fritz/icon.png',
+      'friendly_name': 'Mock Title FRITZ!OS',
+      'in_progress': False,
+      'installed_version': '7.29',
+      'latest_version': '7.29',
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 1>,
+      'title': 'FRITZ!OS',
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.mock_title_fritz_os',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

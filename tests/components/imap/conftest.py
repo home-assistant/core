@@ -10,7 +10,7 @@ from .const import EMPTY_SEARCH_RESPONSE, TEST_FETCH_RESPONSE_TEXT_PLAIN
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.imap.async_setup_entry", return_value=True
@@ -62,7 +62,7 @@ async def mock_imap_protocol(
     imap_pending_idle: bool,
     imap_login_state: str,
     imap_select_state: str,
-) -> AsyncGenerator[MagicMock, None]:
+) -> AsyncGenerator[MagicMock]:
     """Mock the aioimaplib IMAP protocol handler."""
 
     with patch(

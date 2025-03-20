@@ -2,107 +2,130 @@
 
 from __future__ import annotations
 
+from functools import partial
+import logging
+
 from hdate import Location
-import voluptuous as vol
 
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.const import (
+    CONF_ELEVATION,
+    CONF_LANGUAGE,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_TIME_ZONE,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 
-DOMAIN = "jewish_calendar"
+from .const import (
+    CONF_CANDLE_LIGHT_MINUTES,
+    CONF_DIASPORA,
+    CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_CANDLE_LIGHT,
+    DEFAULT_DIASPORA,
+    DEFAULT_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_LANGUAGE,
+)
+from .entity import JewishCalendarConfigEntry, JewishCalendarData
+
+_LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-CONF_DIASPORA = "diaspora"
-CONF_LANGUAGE = "language"
-CONF_CANDLE_LIGHT_MINUTES = "candle_lighting_minutes_before_sunset"
-CONF_HAVDALAH_OFFSET_MINUTES = "havdalah_minutes_after_sunset"
 
-CANDLE_LIGHT_DEFAULT = 18
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
+) -> bool:
+    """Set up a configuration entry for Jewish calendar."""
+    language = config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
+    diaspora = config_entry.data.get(CONF_DIASPORA, DEFAULT_DIASPORA)
+    candle_lighting_offset = config_entry.options.get(
+        CONF_CANDLE_LIGHT_MINUTES, DEFAULT_CANDLE_LIGHT
+    )
+    havdalah_offset = config_entry.options.get(
+        CONF_HAVDALAH_OFFSET_MINUTES, DEFAULT_HAVDALAH_OFFSET_MINUTES
+    )
 
-DEFAULT_NAME = "Jewish Calendar"
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_DIASPORA, default=False): cv.boolean,
-                vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
-                vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
-                vol.Optional(CONF_LANGUAGE, default="english"): vol.In(
-                    ["hebrew", "english"]
-                ),
-                vol.Optional(
-                    CONF_CANDLE_LIGHT_MINUTES, default=CANDLE_LIGHT_DEFAULT
-                ): int,
-                # Default of 0 means use 8.5 degrees / 'three_stars' time.
-                vol.Optional(CONF_HAVDALAH_OFFSET_MINUTES, default=0): int,
-            }
+    location = await hass.async_add_executor_job(
+        partial(
+            Location,
+            name=hass.config.location_name,
+            diaspora=diaspora,
+            latitude=config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
+            longitude=config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+            altitude=config_entry.data.get(CONF_ELEVATION, hass.config.elevation),
+            timezone=config_entry.data.get(CONF_TIME_ZONE, hass.config.time_zone),
         )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+    )
 
-
-def get_unique_prefix(
-    location: Location,
-    language: str,
-    candle_lighting_offset: int | None,
-    havdalah_offset: int | None,
-) -> str:
-    """Create a prefix for unique ids."""
-    config_properties = [
-        location.latitude,
-        location.longitude,
-        location.timezone,
-        location.altitude,
-        location.diaspora,
+    config_entry.runtime_data = JewishCalendarData(
         language,
+        diaspora,
+        location,
         candle_lighting_offset,
         havdalah_offset,
-    ]
-    prefix = "_".join(map(str, config_properties))
-    return f"{prefix}"
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Jewish Calendar component."""
-    if DOMAIN not in config:
-        return True
-
-    name = config[DOMAIN][CONF_NAME]
-    language = config[DOMAIN][CONF_LANGUAGE]
-
-    latitude = config[DOMAIN].get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config[DOMAIN].get(CONF_LONGITUDE, hass.config.longitude)
-    diaspora = config[DOMAIN][CONF_DIASPORA]
-
-    candle_lighting_offset = config[DOMAIN][CONF_CANDLE_LIGHT_MINUTES]
-    havdalah_offset = config[DOMAIN][CONF_HAVDALAH_OFFSET_MINUTES]
-
-    location = Location(
-        latitude=latitude,
-        longitude=longitude,
-        timezone=hass.config.time_zone,
-        diaspora=diaspora,
     )
 
-    prefix = get_unique_prefix(
-        location, language, candle_lighting_offset, havdalah_offset
-    )
-    hass.data[DOMAIN] = {
-        "location": location,
-        "name": name,
-        "language": language,
-        "candle_lighting_offset": candle_lighting_offset,
-        "havdalah_offset": havdalah_offset,
-        "diaspora": diaspora,
-        "prefix": prefix,
-    }
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    for platform in PLATFORMS:
-        hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
+    async def update_listener(
+        hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
+    ) -> None:
+        # Trigger update of states for all platforms
+        await hass.config_entries.async_reload(config_entry.entry_id)
+
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
+    return True
+
+
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
+) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
+) -> bool:
+    """Migrate old entry."""
+
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    @callback
+    def update_unique_id(
+        entity_entry: er.RegistryEntry,
+    ) -> dict[str, str] | None:
+        """Update unique ID of entity entry."""
+        key_translations = {
+            "first_light": "alot_hashachar",
+            "talit": "talit_and_tefillin",
+            "sunrise": "netz_hachama",
+            "gra_end_shma": "sof_zman_shema_gra",
+            "mga_end_shma": "sof_zman_shema_mga",
+            "gra_end_tfila": "sof_zman_tfilla_gra",
+            "mga_end_tfila": "sof_zman_tfilla_mga",
+            "midday": "chatzot_hayom",
+            "big_mincha": "mincha_gedola",
+            "small_mincha": "mincha_ketana",
+            "plag_mincha": "plag_hamincha",
+            "sunset": "shkia",
+            "first_stars": "tset_hakohavim_tsom",
+            "three_stars": "tset_hakohavim_shabbat",
+        }
+        new_keys = tuple(key_translations.values())
+        if not entity_entry.unique_id.endswith(new_keys):
+            old_key = entity_entry.unique_id.split("-")[1]
+            new_unique_id = f"{config_entry.entry_id}-{key_translations[old_key]}"
+            return {"new_unique_id": new_unique_id}
+        return None
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if config_entry.version == 1:
+        await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+        hass.config_entries.async_update_entry(config_entry, version=2)
 
     return True

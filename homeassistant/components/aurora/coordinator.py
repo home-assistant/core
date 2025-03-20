@@ -8,36 +8,41 @@ import logging
 from aiohttp import ClientError
 from auroranoaa import AuroraForecast
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import CONF_THRESHOLD, DEFAULT_THRESHOLD
+
 _LOGGER = logging.getLogger(__name__)
+
+type AuroraConfigEntry = ConfigEntry[AuroraDataUpdateCoordinator]
 
 
 class AuroraDataUpdateCoordinator(DataUpdateCoordinator[int]):
     """Class to manage fetching data from the NOAA Aurora API."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        api: AuroraForecast,
-        latitude: float,
-        longitude: float,
-        threshold: float,
-    ) -> None:
+    config_entry: AuroraConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: AuroraConfigEntry) -> None:
         """Initialize the data updater."""
 
         super().__init__(
             hass=hass,
             logger=_LOGGER,
+            config_entry=config_entry,
             name="Aurora",
             update_interval=timedelta(minutes=5),
         )
 
-        self.api = api
-        self.latitude = int(latitude)
-        self.longitude = int(longitude)
-        self.threshold = int(threshold)
+        self.api = AuroraForecast(async_get_clientsession(hass))
+        self.latitude = round(self.config_entry.data[CONF_LATITUDE])
+        self.longitude = round(self.config_entry.data[CONF_LONGITUDE])
+        self.threshold = int(
+            self.config_entry.options.get(CONF_THRESHOLD, DEFAULT_THRESHOLD)
+        )
 
     async def _async_update_data(self) -> int:
         """Fetch the data from the NOAA Aurora Forecast."""

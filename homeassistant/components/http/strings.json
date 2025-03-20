@@ -1,16 +1,8 @@
 {
-  "exceptions": {
-    "strict_connection_not_enabled_non_cloud": {
-      "message": "Strict connection is not enabled for non-cloud requests"
-    },
-    "no_external_url_available": {
-      "message": "No external URL available"
-    }
-  },
-  "services": {
-    "create_temporary_strict_connection_url": {
-      "name": "Create a temporary strict connection URL",
-      "description": "Create a temporary strict connection URL, which can be used to login on another device."
+  "issues": {
+    "ssl_configured_without_configured_urls": {
+      "title": "SSL is configured without an external URL or internal URL",
+      "description": "Home Assistant detected that SSL has been set up on your instance, however, no custom external internet URL has been set.\n\nThis may result in unexpected behavior. Text-to-speech may fail, and integrations may not be able to connect back to your instance correctly.\n\nTo address this issue, go to Settings > System > Network; under the \"Home Assistant URL\" section, configure your new \"Internet\" and \"Local network\" addresses that match your new SSL configuration."
     }
   }
 }

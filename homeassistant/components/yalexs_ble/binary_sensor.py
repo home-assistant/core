@@ -4,26 +4,24 @@ from __future__ import annotations
 
 from yalexs_ble import ConnectionInfo, DoorStatus, LockInfo, LockState
 
-from homeassistant import config_entries
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import YALEXSBLEConfigEntry
 from .entity import YALEXSBLEEntity
-from .models import YaleXSBLEData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: YALEXSBLEConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YALE XS binary sensors."""
-    data: YaleXSBLEData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     lock = data.lock
     if lock.lock_info and lock.lock_info.door_sense:
         async_add_entities([YaleXSBLEDoorSensor(data)])

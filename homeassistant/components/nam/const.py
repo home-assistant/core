@@ -11,6 +11,7 @@ SUFFIX_P1: Final = "_p1"
 SUFFIX_P2: Final = "_p2"
 SUFFIX_P4: Final = "_p4"
 
+ATTR_BH1750_ILLUMINANCE: Final = "bh1750_illuminance"
 ATTR_BME280_HUMIDITY: Final = "bme280_humidity"
 ATTR_BME280_PRESSURE: Final = "bme280_pressure"
 ATTR_BME280_TEMPERATURE: Final = "bme280_temperature"
@@ -20,6 +21,7 @@ ATTR_BMP280_PRESSURE: Final = "bmp280_pressure"
 ATTR_BMP280_TEMPERATURE: Final = "bmp280_temperature"
 ATTR_DHT22_HUMIDITY: Final = "dht22_humidity"
 ATTR_DHT22_TEMPERATURE: Final = "dht22_temperature"
+ATTR_DS18B20_TEMPERATURE: Final = "ds18b20_temperature"
 ATTR_HECA_HUMIDITY: Final = "heca_humidity"
 ATTR_HECA_TEMPERATURE: Final = "heca_temperature"
 ATTR_MHZ14A_CARBON_DIOXIDE: Final = "mhz14a_carbon_dioxide"
@@ -46,7 +48,7 @@ ATTR_SPS30_P2: Final = f"{ATTR_SPS30}{SUFFIX_P2}"
 ATTR_SPS30_P4: Final = f"{ATTR_SPS30}{SUFFIX_P4}"
 ATTR_UPTIME: Final = "uptime"
 
-DEFAULT_UPDATE_INTERVAL: Final = timedelta(minutes=6)
+DEFAULT_UPDATE_INTERVAL: Final = timedelta(minutes=4)
 DOMAIN: Final = "nam"
 MANUFACTURER: Final = "Nettigo"
 

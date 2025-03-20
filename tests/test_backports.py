@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from functools import cached_property
+from functools import cached_property  # pylint: disable=hass-deprecated-import
 from types import ModuleType
 from typing import Any
 
@@ -14,7 +14,7 @@ from homeassistant.backports import (
     functools as backports_functools,
 )
 
-from tests.common import import_and_test_deprecated_alias
+from .common import import_and_test_deprecated_alias
 
 
 @pytest.mark.parametrize(

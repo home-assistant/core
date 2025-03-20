@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -20,7 +20,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -30,7 +30,7 @@ CONF_PIPELINE = "pipeline"
 
 DOMAIN = "gstreamer"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_NAME): cv.string, vol.Optional(CONF_PIPELINE): cv.string}
 )
 

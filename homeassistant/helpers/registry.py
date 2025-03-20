@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections import UserDict
+from collections import UserDict, defaultdict
 from collections.abc import Mapping, Sequence, ValuesView
-from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal
 
 from homeassistant.core import CoreState, HomeAssistant, callback
 
@@ -15,12 +15,10 @@ if TYPE_CHECKING:
 SAVE_DELAY = 10
 SAVE_DELAY_LONG = 180
 
-
-_DataT = TypeVar("_DataT")
-_StoreDataT = TypeVar("_StoreDataT", bound=Mapping[str, Any] | Sequence[Any])
+type RegistryIndexType = defaultdict[str, dict[str, Literal[True]]]
 
 
-class BaseRegistryItems(UserDict[str, _DataT], ABC):
+class BaseRegistryItems[_DataT](UserDict[str, _DataT], ABC):
     """Base class for registry items."""
 
     data: dict[str, _DataT]
@@ -46,7 +44,7 @@ class BaseRegistryItems(UserDict[str, _DataT], ABC):
         self._index_entry(key, entry)
 
     def _unindex_entry_value(
-        self, key: str, value: str, index: dict[str, dict[str, Literal[True]]]
+        self, key: str, value: str, index: RegistryIndexType
     ) -> None:
         """Unindex an entry value.
 
@@ -65,7 +63,7 @@ class BaseRegistryItems(UserDict[str, _DataT], ABC):
         super().__delitem__(key)
 
 
-class BaseRegistry(ABC, Generic[_StoreDataT]):
+class BaseRegistry[_StoreDataT: Mapping[str, Any] | Sequence[Any]](ABC):
     """Class to implement a registry."""
 
     hass: HomeAssistant

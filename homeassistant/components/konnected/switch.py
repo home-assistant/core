@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_ACTIVATION,
@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches attached to a Konnected device from a config entry."""
     data = hass.data[KONNECTED_DOMAIN]
@@ -102,13 +102,12 @@ class KonnectedSwitch(SwitchEntity):
         if resp.get(ATTR_STATE) is not None:
             self._set_state(self._boolean_state(resp.get(ATTR_STATE)))
 
-    def _boolean_state(self, int_state):
-        if int_state is None:
-            return False
+    def _boolean_state(self, int_state: int | None) -> bool | None:
         if int_state == 0:
             return self._activation == STATE_LOW
         if int_state == 1:
             return self._activation == STATE_HIGH
+        return None
 
     def _set_state(self, state):
         self._attr_is_on = state

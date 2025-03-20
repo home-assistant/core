@@ -1,11 +1,23 @@
 """Tests for the bluetooth component."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 from bleak_retry_connector import bleak_manager
 from dbus_fast.aio import message_bus
+from habluetooth import BaseHaRemoteScanner
 import habluetooth.util as habluetooth_utils
 import pytest
+
+from homeassistant.components import bluetooth
+from homeassistant.core import HomeAssistant
+
+from . import (
+    HCI0_SOURCE_ADDRESS,
+    HCI1_SOURCE_ADDRESS,
+    NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS,
+    FakeScanner,
+)
 
 
 @pytest.fixture(name="disable_bluez_manager_socket", autouse=True, scope="package")
@@ -74,7 +86,7 @@ def mock_operating_system_90():
 
 
 @pytest.fixture(name="macos_adapter")
-def macos_adapter():
+def macos_adapter() -> Generator[None]:
     """Fixture that mocks the macos adapter."""
     with (
         patch("bleak.get_platform_scanner_backend_type"),
@@ -109,7 +121,7 @@ def windows_adapter():
 
 
 @pytest.fixture(name="no_adapters")
-def no_adapter_fixture():
+def no_adapter_fixture() -> Generator[None]:
     """Fixture that mocks no adapters on Linux."""
     with (
         patch(
@@ -137,7 +149,7 @@ def no_adapter_fixture():
 
 
 @pytest.fixture(name="one_adapter")
-def one_adapter_fixture():
+def one_adapter_fixture() -> Generator[None]:
     """Fixture that mocks one adapter on Linux."""
     with (
         patch(
@@ -176,7 +188,7 @@ def one_adapter_fixture():
 
 
 @pytest.fixture(name="two_adapters")
-def two_adapters_fixture():
+def two_adapters_fixture() -> Generator[None]:
     """Fixture that mocks two adapters on Linux."""
     with (
         patch(
@@ -303,3 +315,37 @@ def disable_new_discovery_flows_fixture():
         "homeassistant.components.bluetooth.manager.discovery_flow.async_create_flow"
     ) as mock_create_flow:
         yield mock_create_flow
+
+
+@pytest.fixture
+def register_hci0_scanner(hass: HomeAssistant) -> Generator[None]:
+    """Register an hci0 scanner."""
+    hci0_scanner = FakeScanner(HCI0_SOURCE_ADDRESS, "hci0")
+    hci0_scanner.connectable = True
+    cancel = bluetooth.async_register_scanner(hass, hci0_scanner, connection_slots=5)
+    yield
+    cancel()
+    bluetooth.async_remove_scanner(hass, hci0_scanner.source)
+
+
+@pytest.fixture
+def register_hci1_scanner(hass: HomeAssistant) -> Generator[None]:
+    """Register an hci1 scanner."""
+    hci1_scanner = FakeScanner(HCI1_SOURCE_ADDRESS, "hci1")
+    hci1_scanner.connectable = True
+    cancel = bluetooth.async_register_scanner(hass, hci1_scanner, connection_slots=5)
+    yield
+    cancel()
+    bluetooth.async_remove_scanner(hass, hci1_scanner.source)
+
+
+@pytest.fixture
+def register_non_connectable_scanner(hass: HomeAssistant) -> Generator[None]:
+    """Register an non connectable remote scanner."""
+    remote_scanner = BaseHaRemoteScanner(
+        NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS, "non connectable", None, False
+    )
+    cancel = bluetooth.async_register_scanner(hass, remote_scanner)
+    yield
+    cancel()
+    bluetooth.async_remove_scanner(hass, remote_scanner.source)

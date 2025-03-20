@@ -6,27 +6,26 @@ from datetime import datetime
 import logging
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
 from .coordinator import RainbirdScheduleUpdateCoordinator
+from .types import RainbirdConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: RainbirdConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry for a Rain Bird irrigation calendar."""
-    data = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     if not data.model_info.model_info.max_programs:
         return
 
@@ -73,7 +72,7 @@ class RainBirdCalendarEntity(
         schedule = self.coordinator.data
         if not schedule:
             return None
-        cursor = schedule.timeline_tz(dt_util.DEFAULT_TIME_ZONE).active_after(
+        cursor = schedule.timeline_tz(dt_util.get_default_time_zone()).active_after(
             dt_util.now()
         )
         program_event = next(cursor, None)

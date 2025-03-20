@@ -19,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import MULTI_SENSOR_TOKEN, mock_responses, setup_platform
 
@@ -28,7 +28,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
-def enable_all_entities(entity_registry_enabled_by_default):
+def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
 
 

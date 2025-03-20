@@ -5,12 +5,13 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from eternalegypt.eternalegypt import Information
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -18,11 +19,10 @@ from homeassistant.const import (
     UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import ModemData
-from .const import DOMAIN
+from .coordinator import NetgearLTEConfigEntry
 from .entity import LTEEntity
 
 
@@ -30,7 +30,7 @@ from .entity import LTEEntity
 class NetgearLTESensorEntityDescription(SensorEntityDescription):
     """Class describing Netgear LTE entities."""
 
-    value_fn: Callable[[ModemData], StateType] | None = None
+    value_fn: Callable[[Information], StateType] | None = None
 
 
 SENSORS: tuple[NetgearLTESensorEntityDescription, ...] = (
@@ -38,13 +38,13 @@ SENSORS: tuple[NetgearLTESensorEntityDescription, ...] = (
         key="sms",
         translation_key="sms",
         native_unit_of_measurement="unread",
-        value_fn=lambda modem_data: sum(1 for x in modem_data.data.sms if x.unread),
+        value_fn=lambda data: sum(1 for x in data.sms if x.unread),
     ),
     NetgearLTESensorEntityDescription(
         key="sms_total",
         translation_key="sms_total",
         native_unit_of_measurement="messages",
-        value_fn=lambda modem_data: len(modem_data.data.sms),
+        value_fn=lambda data: len(data.sms),
     ),
     NetgearLTESensorEntityDescription(
         key="usage",
@@ -54,7 +54,7 @@ SENSORS: tuple[NetgearLTESensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         suggested_display_precision=1,
-        value_fn=lambda modem_data: modem_data.data.usage,
+        value_fn=lambda data: data.usage,
     ),
     NetgearLTESensorEntityDescription(
         key="radio_quality",
@@ -125,14 +125,12 @@ SENSORS: tuple[NetgearLTESensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NetgearLTEConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netgear LTE sensor."""
-    modem_data = hass.data[DOMAIN].get_modem_data(entry.data)
-
-    async_add_entities(
-        NetgearLTESensor(entry, modem_data, sensor) for sensor in SENSORS
-    )
+    async_add_entities(NetgearLTESensor(entry, description) for description in SENSORS)
 
 
 class NetgearLTESensor(LTEEntity, SensorEntity):
@@ -144,5 +142,5 @@ class NetgearLTESensor(LTEEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self.entity_description.value_fn is not None:
-            return self.entity_description.value_fn(self.modem_data)
-        return getattr(self.modem_data.data, self.entity_description.key)
+            return self.entity_description.value_fn(self.coordinator.data)
+        return getattr(self.coordinator.data, self.entity_description.key)

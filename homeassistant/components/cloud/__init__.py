@@ -6,15 +6,13 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 from enum import Enum
+import logging
 from typing import cast
-from urllib.parse import quote_plus, urljoin
 
 from hass_nabucasa import Cloud
 import voluptuous as vol
 
-from homeassistant.components import alexa, google_assistant, http
-from homeassistant.components.auth import STRICT_CONNECTION_URL
-from homeassistant.components.http.auth import async_sign_path
+from homeassistant.components import alexa, google_assistant
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import (
     CONF_DESCRIPTION,
@@ -22,23 +20,11 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     EVENT_HOMEASSISTANT_STOP,
+    FORMAT_DATETIME,
     Platform,
 )
-from homeassistant.core import (
-    Event,
-    HassJob,
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
-from homeassistant.exceptions import (
-    HomeAssistantError,
-    ServiceValidationError,
-    Unauthorized,
-    UnknownUser,
-)
+from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
@@ -47,20 +33,25 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
+from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.signal_type import SignalType
 
-from . import account_link, http_api
+# Pre-import backup to avoid it being imported
+# later when the import executor is busy and delaying
+# startup
+from . import (
+    account_link,
+    backup,  # noqa: F401
+    http_api,
+)
 from .client import CloudClient
 from .const import (
     CONF_ACCOUNT_LINK_SERVER,
     CONF_ACCOUNTS_SERVER,
     CONF_ACME_SERVER,
     CONF_ALEXA,
-    CONF_ALEXA_SERVER,
     CONF_ALIASES,
     CONF_CLOUDHOOK_SERVER,
     CONF_COGNITO_CLIENT_ID,
@@ -72,11 +63,14 @@ from .const import (
     CONF_SERVICEHANDLERS_SERVER,
     CONF_THINGTALK_SERVER,
     CONF_USER_POOL_ID,
+    DATA_CLOUD,
+    DATA_CLOUD_LOG_HANDLER,
     DATA_PLATFORMS_SETUP,
     DOMAIN,
     MODE_DEV,
     MODE_PROD,
 )
+from .helpers import FixedSizeQueueLogHandler
 from .prefs import CloudPreferences
 from .repairs import async_manage_legacy_subscription_issue
 from .subscription import async_subscription_info
@@ -137,7 +131,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ACCOUNT_LINK_SERVER): str,
                 vol.Optional(CONF_ACCOUNTS_SERVER): str,
                 vol.Optional(CONF_ACME_SERVER): str,
-                vol.Optional(CONF_ALEXA_SERVER): str,
                 vol.Optional(CONF_CLOUDHOOK_SERVER): str,
                 vol.Optional(CONF_RELAYER_SERVER): str,
                 vol.Optional(CONF_REMOTESTATE_SERVER): str,
@@ -172,14 +165,14 @@ def async_is_logged_in(hass: HomeAssistant) -> bool:
 
     Note: This returns True even if not currently connected to the cloud.
     """
-    return DOMAIN in hass.data and hass.data[DOMAIN].is_logged_in
+    return DATA_CLOUD in hass.data and hass.data[DATA_CLOUD].is_logged_in
 
 
 @bind_hass
 @callback
 def async_is_connected(hass: HomeAssistant) -> bool:
     """Test if connected to the cloud."""
-    return DOMAIN in hass.data and hass.data[DOMAIN].iot.connected
+    return DATA_CLOUD in hass.data and hass.data[DATA_CLOUD].iot.connected
 
 
 @callback
@@ -195,7 +188,7 @@ def async_listen_connection_change(
 @callback
 def async_active_subscription(hass: HomeAssistant) -> bool:
     """Test if user has an active subscription."""
-    return async_is_logged_in(hass) and not hass.data[DOMAIN].subscription_expired
+    return async_is_logged_in(hass) and not hass.data[DATA_CLOUD].subscription_expired
 
 
 async def async_get_or_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
@@ -206,7 +199,7 @@ async def async_get_or_create_cloudhook(hass: HomeAssistant, webhook_id: str) ->
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
 
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     cloudhooks = cloud.client.cloudhooks
     if hook := cloudhooks.get(webhook_id):
         return cast(str, hook["cloudhook_url"])
@@ -223,7 +216,7 @@ async def async_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
 
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     hook = await cloud.cloudhooks.async_create(webhook_id, True)
     cloudhook_url: str = hook["cloudhook_url"]
     return cloudhook_url
@@ -232,10 +225,10 @@ async def async_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
 @bind_hass
 async def async_delete_cloudhook(hass: HomeAssistant, webhook_id: str) -> None:
     """Delete a cloudhook."""
-    if DOMAIN not in hass.data:
+    if DATA_CLOUD not in hass.data:
         raise CloudNotAvailable
 
-    await hass.data[DOMAIN].cloudhooks.async_delete(webhook_id)
+    await hass.data[DATA_CLOUD].cloudhooks.async_delete(webhook_id)
 
 
 @bind_hass
@@ -245,10 +238,10 @@ def async_remote_ui_url(hass: HomeAssistant) -> str:
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
 
-    if not hass.data[DOMAIN].client.prefs.remote_enabled:
+    if not hass.data[DATA_CLOUD].client.prefs.remote_enabled:
         raise CloudNotAvailable
 
-    if not (remote_domain := hass.data[DOMAIN].client.prefs.remote_domain):
+    if not (remote_domain := hass.data[DATA_CLOUD].client.prefs.remote_domain):
         raise CloudNotAvailable
 
     return f"https://{remote_domain}"
@@ -256,6 +249,8 @@ def async_remote_ui_url(hass: HomeAssistant) -> str:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Home Assistant cloud."""
+    log_handler = hass.data[DATA_CLOUD_LOG_HANDLER] = await _setup_log_handler(hass)
+
     # Process configs
     if DOMAIN in config:
         kwargs = dict(config[DOMAIN])
@@ -273,11 +268,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Initialize Cloud
     websession = async_get_clientsession(hass)
     client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
-    cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
+    cloud = hass.data[DATA_CLOUD] = Cloud(client, **kwargs)
 
     async def _shutdown(event: Event) -> None:
         """Shutdown event."""
         await cloud.stop()
+        logging.root.removeHandler(log_handler)
+        del hass.data[DATA_CLOUD_LOG_HANDLER]
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
@@ -390,9 +387,7 @@ def _remote_handle_prefs_updated(cloud: Cloud[CloudClient]) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    stt_tts_entities_added: asyncio.Event = hass.data[DATA_PLATFORMS_SETUP][
-        "stt_tts_entities_added"
-    ]
+    stt_tts_entities_added = hass.data[DATA_PLATFORMS_SETUP]["stt_tts_entities_added"]
     stt_tts_entities_added.set()
 
     return True
@@ -419,49 +414,18 @@ def _setup_services(hass: HomeAssistant, prefs: CloudPreferences) -> None:
         hass, DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
     )
 
-    async def create_temporary_strict_connection_url(
-        call: ServiceCall,
-    ) -> ServiceResponse:
-        """Create a strict connection url and return it."""
-        # Copied form homeassistant/helpers/service.py#_async_admin_handler
-        # as the helper supports no responses yet
-        if call.context.user_id:
-            user = await hass.auth.async_get_user(call.context.user_id)
-            if user is None:
-                raise UnknownUser(context=call.context)
-            if not user.is_admin:
-                raise Unauthorized(context=call.context)
 
-        if prefs.strict_connection is http.const.StrictConnectionMode.DISABLED:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="strict_connection_not_enabled",
-            )
-
-        try:
-            url = get_url(hass, require_cloud=True)
-        except NoURLAvailableError as ex:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_url_available",
-            ) from ex
-
-        path = async_sign_path(
-            hass,
-            STRICT_CONNECTION_URL,
-            timedelta(hours=1),
-            use_content_user=True,
-        )
-        url = urljoin(url, path)
-
-        return {
-            "url": f"https://login.home-assistant.io?u={quote_plus(url)}",
-            "direct_url": url,
-        }
-
-    hass.services.async_register(
-        DOMAIN,
-        "create_temporary_strict_connection_url",
-        create_temporary_strict_connection_url,
-        supports_response=SupportsResponse.ONLY,
+async def _setup_log_handler(hass: HomeAssistant) -> FixedSizeQueueLogHandler:
+    fmt = (
+        "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
     )
+    handler = FixedSizeQueueLogHandler()
+    handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
+
+    integration = await async_get_integration(hass, DOMAIN)
+    loggers: set[str] = {integration.pkg_path, *(integration.loggers or [])}
+
+    for logger_name in loggers:
+        logging.getLogger(logger_name).addHandler(handler)
+
+    return handler

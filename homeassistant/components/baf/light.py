@@ -6,35 +6,29 @@ from typing import Any
 
 from aiobafi6 import Device, OffOnAuto
 
-from homeassistant import config_entries
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ColorMode,
     LightEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired,
-    color_temperature_mired_to_kelvin,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import BAFConfigEntry
 from .entity import BAFEntity
-from .models import BAFData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: BAFConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up BAF lights."""
-    data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    if data.device.has_light:
-        klass = BAFFanLight if data.device.has_fan else BAFStandaloneLight
-        async_add_entities([klass(data.device)])
+    device = entry.runtime_data
+    if device.has_light:
+        klass = BAFFanLight if device.has_fan else BAFStandaloneLight
+        async_add_entities([klass(device)])
 
 
 class BAFLight(BAFEntity, LightEntity):
@@ -79,25 +73,17 @@ class BAFStandaloneLight(BAFLight):
     def __init__(self, device: Device) -> None:
         """Init a standalone light."""
         super().__init__(device)
-        self._attr_min_mireds = color_temperature_kelvin_to_mired(
-            device.light_warmest_color_temperature
-        )
-        self._attr_max_mireds = color_temperature_kelvin_to_mired(
-            device.light_coolest_color_temperature
-        )
+        self._attr_max_color_temp_kelvin = device.light_warmest_color_temperature
+        self._attr_min_color_temp_kelvin = device.light_coolest_color_temperature
 
     @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
         super()._async_update_attrs()
-        self._attr_color_temp = color_temperature_kelvin_to_mired(
-            self._device.light_color_temperature
-        )
+        self._attr_color_temp_kelvin = self._device.light_color_temperature
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        if (color_temp := kwargs.get(ATTR_COLOR_TEMP)) is not None:
-            self._device.light_color_temperature = color_temperature_mired_to_kelvin(
-                color_temp
-            )
+        if (color_temp := kwargs.get(ATTR_COLOR_TEMP_KELVIN)) is not None:
+            self._device.light_color_temperature = color_temp
         await super().async_turn_on(**kwargs)

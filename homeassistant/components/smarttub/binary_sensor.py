@@ -12,7 +12,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
 from .const import ATTR_ERRORS, ATTR_REMINDERS, DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity, SmartTubSensorBase
@@ -29,12 +30,12 @@ ATTR_UPDATED_AT = "updated_at"
 
 # how many days to snooze the reminder for
 ATTR_REMINDER_DAYS = "days"
-RESET_REMINDER_SCHEMA = {
+RESET_REMINDER_SCHEMA: VolDictType = {
     vol.Required(ATTR_REMINDER_DAYS): vol.All(
         vol.Coerce(int), vol.Range(min=30, max=365)
     )
 }
-SNOOZE_REMINDER_SCHEMA = {
+SNOOZE_REMINDER_SCHEMA: VolDictType = {
     vol.Required(ATTR_REMINDER_DAYS): vol.All(
         vol.Coerce(int), vol.Range(min=10, max=120)
     )
@@ -42,7 +43,9 @@ SNOOZE_REMINDER_SCHEMA = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary sensor entities for the binary sensors in the tub."""
 

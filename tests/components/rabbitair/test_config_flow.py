@@ -4,18 +4,18 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from ipaddress import ip_address
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from rabbitair import Mode, Model, Speed
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.rabbitair.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 TEST_HOST = "1.1.1.1"
 TEST_NAME = "abcdef1234_123456789012345678"
@@ -26,7 +26,7 @@ TEST_HARDWARE = "1.0.0.4"
 TEST_UNIQUE_ID = format_mac(TEST_MAC)
 TEST_TITLE = "Rabbit Air"
 
-ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
+ZEROCONF_DATA = ZeroconfServiceInfo(
     ip_address=ip_address(TEST_HOST),
     ip_addresses=[ip_address(TEST_HOST)],
     port=9009,
@@ -38,12 +38,12 @@ ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
 
 
 @pytest.fixture(autouse=True)
-def use_mocked_zeroconf(mock_async_zeroconf):
+def use_mocked_zeroconf(mock_async_zeroconf: MagicMock) -> None:
     """Mock zeroconf in all tests."""
 
 
 @pytest.fixture
-def rabbitair_connect() -> Generator[None, None, None]:
+def rabbitair_connect() -> Generator[None]:
     """Mock connection."""
     with (
         patch("rabbitair.UdpClient.get_info", return_value=get_mock_info()),

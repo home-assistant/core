@@ -3,9 +3,9 @@
 from dataclasses import dataclass
 from typing import Any
 
-from py17track import Client as SeventeenTrackClient
-from py17track.errors import SeventeenTrackError
-from py17track.package import Package
+from pyseventeentrack import Client as SeventeenTrackClient
+from pyseventeentrack.errors import SeventeenTrackError
+from pyseventeentrack.package import Package
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -34,11 +34,17 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, client: SeventeenTrackClient) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        client: SeventeenTrackClient,
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=DEFAULT_SCAN_INTERVAL,
         )

@@ -11,11 +11,11 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import async_wemo_dispatcher_connect
+from .coordinator import DeviceCoordinator
 from .entity import WemoBinaryStateEntity
-from .wemo_device import DeviceCoordinator
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
@@ -36,7 +36,7 @@ MAKER_SWITCH_TOGGLE = "toggle"
 async def async_setup_entry(
     hass: HomeAssistant,
     _config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WeMo switches."""
 

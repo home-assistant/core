@@ -5,6 +5,8 @@ import json
 import time
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.flo.const import DOMAIN
 from homeassistant.const import CONTENT_TYPE_JSON
@@ -16,7 +18,8 @@ from .common import TEST_EMAIL_ADDRESS, TEST_PASSWORD, TEST_TOKEN, TEST_USER_ID
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_form(hass: HomeAssistant, aioclient_mock_fixture) -> None:
+@pytest.mark.usefixtures("aioclient_mock_fixture")
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(

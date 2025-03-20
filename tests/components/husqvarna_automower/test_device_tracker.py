@@ -20,7 +20,7 @@ async def test_device_tracker_snapshot(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test device tracker with a snapshot."""
+    """Snapshot test of the device tracker."""
     with patch(
         "homeassistant.components.husqvarna_automower.PLATFORMS",
         [Platform.DEVICE_TRACKER],

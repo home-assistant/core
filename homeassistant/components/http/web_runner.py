@@ -22,12 +22,12 @@ class HomeAssistantTCPSite(web.BaseSite):
     is merged.
     """
 
-    __slots__ = ("_host", "_port", "_reuse_address", "_reuse_port", "_hosturl")
+    __slots__ = ("_host", "_hosturl", "_port", "_reuse_address", "_reuse_port")
 
     def __init__(
         self,
         runner: web.BaseRunner,
-        host: None | str | list[str],
+        host: str | list[str] | None,
         port: int,
         *,
         ssl_context: SSLContext | None = None,

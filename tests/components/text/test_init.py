@@ -20,12 +20,13 @@ from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 
+from .common import MockRestoreText, MockTextEntity
+
 from tests.common import (
     async_mock_restore_state_shutdown_restart,
     mock_restore_cache_with_extra_data,
     setup_test_component_platform,
 )
-from tests.components.text.common import MockRestoreText, MockTextEntity
 
 
 async def test_text_default(hass: HomeAssistant) -> None:
@@ -63,21 +64,22 @@ async def test_text_set_value(hass: HomeAssistant) -> None:
 
     with pytest.raises(ValueError):
         await _async_set_value(
-            text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: ""})
+            text, ServiceCall(hass, DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: ""})
         )
 
     with pytest.raises(ValueError):
         await _async_set_value(
-            text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "hello world!"})
+            text,
+            ServiceCall(hass, DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "hello world!"}),
         )
 
     with pytest.raises(ValueError):
         await _async_set_value(
-            text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "HELLO"})
+            text, ServiceCall(hass, DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "HELLO"})
         )
 
     await _async_set_value(
-        text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "test2"})
+        text, ServiceCall(hass, DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "test2"})
     )
 
     assert text.state == "test2"

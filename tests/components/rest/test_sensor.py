@@ -591,7 +591,7 @@ async def test_update_with_no_template(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
 
     state = hass.states.get("sensor.foo")
-    assert state.state == '{"key": "some_json_value"}'
+    assert state.state == '{"key":"some_json_value"}'
 
 
 @respx.mock
@@ -868,15 +868,25 @@ async def test_update_with_application_xml_convert_json_attrs_with_jsonattr_temp
 
 
 @respx.mock
+@pytest.mark.parametrize(
+    ("content", "error_message"),
+    [
+        ("", "Empty reply"),
+        ("<open></close>", "Erroneous JSON"),
+    ],
+)
 async def test_update_with_xml_convert_bad_xml(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    content: str,
+    error_message: str,
 ) -> None:
     """Test attributes get extracted from a XML result with bad xml."""
 
     respx.get("http://localhost").respond(
         status_code=HTTPStatus.OK,
         headers={"content-type": "text/xml"},
-        content="",
+        content=content,
     )
     assert await async_setup_component(
         hass,
@@ -901,7 +911,7 @@ async def test_update_with_xml_convert_bad_xml(
 
     assert state.state == STATE_UNKNOWN
     assert "REST xml result could not be parsed" in caplog.text
-    assert "Empty reply" in caplog.text
+    assert error_message in caplog.text
 
 
 @respx.mock
@@ -982,7 +992,9 @@ async def test_reload(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_entity_config(hass: HomeAssistant) -> None:
+async def test_entity_config(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test entity configuration."""
 
     config = {
@@ -1006,7 +1018,6 @@ async def test_entity_config(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get("sensor.rest_sensor").unique_id == "very_unique"
 
     state = hass.states.get("sensor.rest_sensor")

@@ -11,6 +11,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'onvif',
       'entry_id': '1',
       'minor_version': 1,
@@ -22,6 +24,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Mock Title',
       'unique_id': 'aa:bb:cc:dd:ee:ff',
       'version': 1,

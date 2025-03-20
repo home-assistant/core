@@ -1,162 +1,169 @@
 """Coordinator for La Marzocco API."""
 
-from collections.abc import Callable, Coroutine
+from __future__ import annotations
+
+from abc import abstractmethod
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
 
-from bleak.backends.device import BLEDevice
-from lmcloud import LMCloud as LaMarzoccoClient
-from lmcloud.const import BT_MODEL_NAMES
-from lmcloud.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.clients.local import LaMarzoccoLocalClient
+from pylamarzocco.devices.machine import LaMarzoccoMachine
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 
-from homeassistant.components.bluetooth import (
-    async_ble_device_from_address,
-    async_discovered_service_info,
-)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_MACHINE, CONF_USE_BLUETOOTH, DOMAIN
+from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=30)
-
+FIRMWARE_UPDATE_INTERVAL = timedelta(hours=1)
+STATISTICS_UPDATE_INTERVAL = timedelta(minutes=5)
 _LOGGER = logging.getLogger(__name__)
 
 
-NAME_PREFIXES = tuple(BT_MODEL_NAMES)
+@dataclass
+class LaMarzoccoRuntimeData:
+    """Runtime data for La Marzocco."""
+
+    config_coordinator: LaMarzoccoConfigUpdateCoordinator
+    firmware_coordinator: LaMarzoccoFirmwareUpdateCoordinator
+    statistics_coordinator: LaMarzoccoStatisticsUpdateCoordinator
+
+
+type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoRuntimeData]
 
 
 class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
-    """Class to handle fetching data from the La Marzocco API centrally."""
+    """Base class for La Marzocco coordinators."""
 
-    config_entry: ConfigEntry
+    _default_update_interval = SCAN_INTERVAL
+    config_entry: LaMarzoccoConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: LaMarzoccoConfigEntry,
+        device: LaMarzoccoMachine,
+        local_client: LaMarzoccoLocalClient | None = None,
+    ) -> None:
         """Initialize coordinator."""
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
-        self.lm = LaMarzoccoClient(
-            callback_websocket_notify=self.async_update_listeners,
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=self._default_update_interval,
         )
-        self.local_connection_configured = (
-            self.config_entry.data.get(CONF_HOST) is not None
-        )
-        self._use_bluetooth = False
+        self.device = device
+        self.local_connection_configured = local_client is not None
+        self._local_client = local_client
+        self.new_device_callback: list[Callable] = []
 
     async def _async_update_data(self) -> None:
-        """Fetch data from API endpoint."""
+        """Do the data update."""
+        try:
+            await self._internal_async_update_data()
+        except AuthFail as ex:
+            _LOGGER.debug("Authentication failed", exc_info=True)
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from ex
+        except RequestNotSuccessful as ex:
+            _LOGGER.debug(ex, exc_info=True)
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from ex
 
-        if not self.lm.initialized:
-            await self._async_init_client()
+    @abstractmethod
+    async def _internal_async_update_data(self) -> None:
+        """Actual data update logic."""
 
-        await self._async_handle_request(
-            self.lm.update_local_machine_status, force_update=True
-        )
 
-        _LOGGER.debug("Current status: %s", str(self.lm.current_status))
+class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
+    """Class to handle fetching data from the La Marzocco API centrally."""
 
-    async def _async_init_client(self) -> None:
-        """Initialize the La Marzocco Client."""
+    _scale_address: str | None = None
 
-        # Initialize cloud API
-        _LOGGER.debug("Initializing Cloud API")
-        await self._async_handle_request(
-            self.lm.init_cloud_api,
-            credentials=self.config_entry.data,
-            machine_serial=self.config_entry.data[CONF_MACHINE],
-        )
-        _LOGGER.debug("Model name: %s", self.lm.model_name)
-
-        # initialize local API
-        if (host := self.config_entry.data.get(CONF_HOST)) is not None:
-            _LOGGER.debug("Initializing local API")
-            await self.lm.init_local_api(
-                host=host,
-                client=get_async_client(self.hass),
-            )
-
-            _LOGGER.debug("Init WebSocket in Background Task")
+    async def _async_connect_websocket(self) -> None:
+        """Set up the coordinator."""
+        if self._local_client is not None and (
+            self._local_client.websocket is None or self._local_client.websocket.closed
+        ):
+            _LOGGER.debug("Init WebSocket in background task")
 
             self.config_entry.async_create_background_task(
                 hass=self.hass,
-                target=self.lm.lm_local_api.websocket_connect(
-                    callback=self.lm.on_websocket_message_received,
-                    use_sigterm_handler=False,
+                target=self.device.websocket_connect(
+                    notify_callback=lambda: self.async_set_updated_data(None)
                 ),
                 name="lm_websocket_task",
             )
 
-        # initialize Bluetooth
-        if self.config_entry.options.get(CONF_USE_BLUETOOTH, True):
+            async def websocket_close(_: Any | None = None) -> None:
+                if (
+                    self._local_client is not None
+                    and self._local_client.websocket is not None
+                    and not self._local_client.websocket.closed
+                ):
+                    await self._local_client.websocket.close()
 
-            def bluetooth_configured() -> bool:
-                return self.config_entry.data.get(
-                    CONF_MAC, ""
-                ) and self.config_entry.data.get(CONF_NAME, "")
-
-            if not bluetooth_configured():
-                machine = self.config_entry.data[CONF_MACHINE]
-                for discovery_info in async_discovered_service_info(self.hass):
-                    if (
-                        (name := discovery_info.name)
-                        and name.startswith(NAME_PREFIXES)
-                        and name.split("_")[1] == machine
-                    ):
-                        _LOGGER.debug(
-                            "Found Bluetooth device, configuring with Bluetooth"
-                        )
-                        # found a device, add MAC address to config entry
-                        self.hass.config_entries.async_update_entry(
-                            self.config_entry,
-                            data={
-                                **self.config_entry.data,
-                                CONF_MAC: discovery_info.address,
-                                CONF_NAME: discovery_info.name,
-                            },
-                        )
-                        break
-
-            if bluetooth_configured():
-                # config entry contains BT config
-                _LOGGER.debug("Initializing with known Bluetooth device")
-                await self.lm.init_bluetooth_with_known_device(
-                    self.config_entry.data[CONF_USERNAME],
-                    self.config_entry.data.get(CONF_MAC, ""),
-                    self.config_entry.data.get(CONF_NAME, ""),
+            self.config_entry.async_on_unload(
+                self.hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STOP, websocket_close
                 )
-                self._use_bluetooth = True
+            )
+            self.config_entry.async_on_unload(websocket_close)
 
-        self.lm.initialized = True
+    async def _internal_async_update_data(self) -> None:
+        """Fetch data from API endpoint."""
+        await self.device.get_config()
+        _LOGGER.debug("Current status: %s", str(self.device.config))
+        await self._async_connect_websocket()
+        self._async_add_remove_scale()
 
-    async def _async_handle_request(
-        self,
-        func: Callable[..., Coroutine[None, None, None]],
-        *args: Any,
-        **kwargs: Any,
-    ) -> None:
-        """Handle a request to the API."""
-        try:
-            await func(*args, **kwargs)
-        except AuthFail as ex:
-            msg = "Authentication failed."
-            _LOGGER.debug(msg, exc_info=True)
-            raise ConfigEntryAuthFailed(msg) from ex
-        except RequestNotSuccessful as ex:
-            _LOGGER.debug(ex, exc_info=True)
-            raise UpdateFailed(f"Querying API failed. Error: {ex}") from ex
+    @callback
+    def _async_add_remove_scale(self) -> None:
+        """Add or remove a scale when added or removed."""
+        if self.device.config.scale and not self._scale_address:
+            self._scale_address = self.device.config.scale.address
+            for scale_callback in self.new_device_callback:
+                scale_callback()
+        elif not self.device.config.scale and self._scale_address:
+            device_registry = dr.async_get(self.hass)
+            if device := device_registry.async_get_device(
+                identifiers={(DOMAIN, self._scale_address)}
+            ):
+                device_registry.async_update_device(
+                    device_id=device.id,
+                    remove_config_entry_id=self.config_entry.entry_id,
+                )
+            self._scale_address = None
 
-    def async_get_ble_device(self) -> BLEDevice | None:
-        """Get a Bleak Client for the machine."""
-        # according to HA best practices, we should not reuse the same client
-        # get a new BLE device from hass and init a new Bleak Client with it
-        if not self._use_bluetooth:
-            return None
 
-        return async_ble_device_from_address(
-            self.hass,
-            self.lm.lm_bluetooth.address,
-        )
+class LaMarzoccoFirmwareUpdateCoordinator(LaMarzoccoUpdateCoordinator):
+    """Coordinator for La Marzocco firmware."""
+
+    _default_update_interval = FIRMWARE_UPDATE_INTERVAL
+
+    async def _internal_async_update_data(self) -> None:
+        """Fetch data from API endpoint."""
+        await self.device.get_firmware()
+        _LOGGER.debug("Current firmware: %s", str(self.device.firmware))
+
+
+class LaMarzoccoStatisticsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
+    """Coordinator for La Marzocco statistics."""
+
+    _default_update_interval = STATISTICS_UPDATE_INTERVAL
+
+    async def _internal_async_update_data(self) -> None:
+        """Fetch data from API endpoint."""
+        await self.device.get_statistics()
+        _LOGGER.debug("Current statistics: %s", str(self.device.statistics))

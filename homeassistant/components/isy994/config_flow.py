@@ -14,7 +14,6 @@ from pyisy.configuration import Configuration
 from pyisy.connection import Connection
 import voluptuous as vol
 
-from homeassistant.components import dhcp, ssdp
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     ConfigEntry,
@@ -27,6 +26,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from .const import (
     CONF_IGNORE_STRING,
@@ -140,7 +145,7 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -157,7 +162,7 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_host"
             except InvalidAuth:
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -209,7 +214,7 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
         raise AbortFlow("already_configured")
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered ISY/IoX device via dhcp."""
         friendly_name = discovery_info.hostname
@@ -232,14 +237,14 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered ISY/IoX Device."""
-        friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        friendly_name = discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]
         url = discovery_info.ssdp_location
         assert isinstance(url, str)
         parsed_url = urlparse(url)
-        mac = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
+        mac = discovery_info.upnp[ATTR_UPNP_UDN]
         mac = mac.removeprefix(UDN_UUID_PREFIX)
         url = url.removesuffix(ISY_URL_POSTFIX)
 
@@ -313,10 +318,6 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for ISY/IoX."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

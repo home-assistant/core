@@ -226,7 +226,7 @@ async def test_can_set_level_from_store(
     _reset_logging()
 
 
-async def _assert_log_levels(hass):
+async def _assert_log_levels(hass: HomeAssistant) -> None:
     assert logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
     assert logging.getLogger(UNCONFIG_NS).isEnabledFor(logging.CRITICAL) is True
     assert (

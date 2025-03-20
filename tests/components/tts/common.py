@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from http import HTTPStatus
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -13,9 +14,11 @@ import voluptuous as vol
 from homeassistant.components import media_source
 from homeassistant.components.tts import (
     CONF_LANG,
+    DATA_TTS_MANAGER,
     DOMAIN as TTS_DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
+    ResultStream,
     TextToSpeechEntity,
     TtsAudioType,
     Voice,
@@ -23,7 +26,7 @@ from homeassistant.components.tts import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 
@@ -41,7 +44,7 @@ SUPPORT_LANGUAGES = ["de_CH", "de_DE", "en_GB", "en_US"]
 TEST_DOMAIN = "test"
 
 
-def mock_tts_get_cache_files_fixture_helper():
+def mock_tts_get_cache_files_fixture_helper() -> Generator[MagicMock]:
     """Mock the list TTS cache function."""
     with patch(
         "homeassistant.components.tts._get_cache_files", return_value={}
@@ -51,7 +54,7 @@ def mock_tts_get_cache_files_fixture_helper():
 
 def mock_tts_init_cache_dir_fixture_helper(
     init_tts_cache_dir_side_effect: Any,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Mock the TTS cache dir in memory."""
     with patch(
         "homeassistant.components.tts._init_tts_cache_dir",
@@ -66,8 +69,11 @@ def init_tts_cache_dir_side_effect_fixture_helper() -> Any:
 
 
 def mock_tts_cache_dir_fixture_helper(
-    tmp_path, mock_tts_init_cache_dir, mock_tts_get_cache_files, request
-):
+    tmp_path: Path,
+    mock_tts_init_cache_dir: MagicMock,
+    mock_tts_get_cache_files: MagicMock,
+    request: pytest.FixtureRequest,
+) -> Generator[Path]:
     """Mock the TTS cache dir with empty dir."""
     mock_tts_init_cache_dir.return_value = str(tmp_path)
 
@@ -88,7 +94,7 @@ def mock_tts_cache_dir_fixture_helper(
     pytest.fail("Test failed, see log for details")
 
 
-def tts_mutagen_mock_fixture_helper():
+def tts_mutagen_mock_fixture_helper() -> Generator[MagicMock]:
     """Mock writing tags."""
     with patch(
         "homeassistant.components.tts.SpeechManager.write_tags",
@@ -126,6 +132,8 @@ class BaseProvider:
     def __init__(self, lang: str) -> None:
         """Initialize test provider."""
         self._lang = lang
+        self._supported_languages = SUPPORT_LANGUAGES
+        self._supported_options = ["voice", "age"]
 
     @property
     def default_language(self) -> str:
@@ -135,7 +143,7 @@ class BaseProvider:
     @property
     def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
-        return SUPPORT_LANGUAGES
+        return self._supported_languages
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[Voice] | None:
@@ -150,7 +158,7 @@ class BaseProvider:
     @property
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotions."""
-        return ["voice", "age"]
+        return self._supported_options
 
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
@@ -159,7 +167,7 @@ class BaseProvider:
         return ("mp3", b"")
 
 
-class MockProvider(BaseProvider, Provider):
+class MockTTSProvider(BaseProvider, Provider):
     """Test speech API provider."""
 
     def __init__(self, lang: str) -> None:
@@ -171,20 +179,17 @@ class MockProvider(BaseProvider, Provider):
 class MockTTSEntity(BaseProvider, TextToSpeechEntity):
     """Test speech API provider."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return "Test"
+    _attr_name = "Test"
 
 
 class MockTTS(MockPlatform):
     """A mock TTS platform."""
 
-    PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
         {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
     )
 
-    def __init__(self, provider: MockProvider, **kwargs: Any) -> None:
+    def __init__(self, provider: MockTTSProvider, **kwargs: Any) -> None:
         """Initialize."""
         super().__init__(**kwargs)
         self._provider = provider
@@ -201,7 +206,7 @@ class MockTTS(MockPlatform):
 
 async def mock_setup(
     hass: HomeAssistant,
-    mock_provider: MockProvider,
+    mock_provider: MockTTSProvider,
 ) -> None:
     """Set up a test provider."""
     mock_integration(hass, MockModule(domain=TEST_DOMAIN))
@@ -214,7 +219,9 @@ async def mock_setup(
 
 
 async def mock_config_entry_setup(
-    hass: HomeAssistant, tts_entity: MockTTSEntity
+    hass: HomeAssistant,
+    tts_entity: MockTTSEntity,
+    test_domain: str = TEST_DOMAIN,
 ) -> MockConfigEntry:
     """Set up a test tts platform via config entry."""
 
@@ -222,7 +229,7 @@ async def mock_config_entry_setup(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, TTS_DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(config_entry, [TTS_DOMAIN])
         return True
 
     async def async_unload_entry_init(
@@ -235,7 +242,7 @@ async def mock_config_entry_setup(
     mock_integration(
         hass,
         MockModule(
-            TEST_DOMAIN,
+            test_domain,
             async_setup_entry=async_setup_entry_init,
             async_unload_entry=async_unload_entry_init,
         ),
@@ -244,17 +251,47 @@ async def mock_config_entry_setup(
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test tts platform via config entry."""
         async_add_entities([tts_entity])
 
     loaded_platform = MockPlatform(async_setup_entry=async_setup_entry_platform)
-    mock_platform(hass, f"{TEST_DOMAIN}.{TTS_DOMAIN}", loaded_platform)
+    mock_platform(hass, f"{test_domain}.{TTS_DOMAIN}", loaded_platform)
 
-    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry = MockConfigEntry(domain=test_domain)
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     return config_entry
+
+
+class MockResultStream(ResultStream):
+    """Mock result stream."""
+
+    test_set_message: str | None = None
+
+    def __init__(self, hass: HomeAssistant, extension: str, data: bytes) -> None:
+        """Initialize the result stream."""
+        super().__init__(
+            token="test-token",
+            extension=extension,
+            content_type=f"audio/mock-{extension}",
+            engine="test-engine",
+            use_file_cache=True,
+            language="en",
+            options={},
+            _manager=hass.data[DATA_TTS_MANAGER],
+        )
+        hass.data[DATA_TTS_MANAGER].token_to_stream[self.token] = self
+        self._mock_data = data
+
+    @callback
+    def async_set_message(self, message: str) -> None:
+        """Set message to be generated."""
+        self.test_set_message = message
+
+    async def async_stream_result(self):
+        """Stream the result."""
+        yield self._mock_data

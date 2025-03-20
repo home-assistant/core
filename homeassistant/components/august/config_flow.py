@@ -3,14 +3,16 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
+from pathlib import Path
 from typing import Any
 
 import aiohttp
 import voluptuous as vol
-from yalexs.authenticator import ValidationResult
-from yalexs.const import BRANDS, DEFAULT_BRAND
+from yalexs.authenticator_common import ValidationResult
+from yalexs.const import BRANDS_WITHOUT_OAUTH, DEFAULT_BRAND, Brand
+from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
@@ -23,9 +25,14 @@ from .const import (
     LOGIN_METHODS,
     VERIFICATION_CODE_KEY,
 )
-from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 from .util import async_create_august_clientsession
+
+# The Yale Home Brand is not supported by the August integration
+# anymore and should migrate to the Yale integration
+AVAILABLE_BRANDS = BRANDS_WITHOUT_OAUTH.copy()
+del AVAILABLE_BRANDS[Brand.YALE_HOME]
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +72,7 @@ async def async_validate_input(
     }
 
 
-@dataclass
+@dataclass(slots=True)
 class ValidateResult:
     """Result from validation."""
 
@@ -86,7 +93,6 @@ class AugustConfigFlow(ConfigFlow, domain=DOMAIN):
         self._aiohttp_session: aiohttp.ClientSession | None = None
         self._user_auth_details: dict[str, Any] = {}
         self._needs_reset = True
-        self._mode: str | None = None
         super().__init__()
 
     async def async_step_user(
@@ -117,7 +123,7 @@ class AugustConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_BRAND,
                         default=self._user_auth_details.get(CONF_BRAND, DEFAULT_BRAND),
-                    ): vol.In(BRANDS),
+                    ): vol.In(AVAILABLE_BRANDS),
                     vol.Required(
                         CONF_LOGIN_METHOD,
                         default=self._user_auth_details.get(
@@ -140,7 +146,7 @@ class AugustConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle validation (2fa) step."""
         if user_input:
-            if self._mode == "reauth":
+            if self.source == SOURCE_REAUTH:
                 return await self.async_step_reauth_validate(user_input)
             return await self.async_step_user_validate(user_input)
 
@@ -164,7 +170,9 @@ class AugustConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._august_gateway is not None:
             return self._august_gateway
         self._aiohttp_session = async_create_august_clientsession(self.hass)
-        self._august_gateway = AugustGateway(self.hass, self._aiohttp_session)
+        self._august_gateway = AugustGateway(
+            Path(self.hass.config.config_dir), self._aiohttp_session
+        )
         return self._august_gateway
 
     @callback
@@ -179,8 +187,6 @@ class AugustConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._user_auth_details = dict(entry_data)
-        self._mode = "reauth"
-        self._needs_reset = True
         return await self.async_step_reauth_validate()
 
     async def async_step_reauth_validate(
@@ -205,7 +211,7 @@ class AugustConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_BRAND,
                         default=self._user_auth_details.get(CONF_BRAND, DEFAULT_BRAND),
-                    ): vol.In(BRANDS),
+                    ): vol.In(BRANDS_WITHOUT_OAUTH),
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
@@ -254,7 +260,7 @@ class AugustConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except RequireValidation:
             validation_required = True
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unhandled"
             description_placeholders = {"error": str(ex)}

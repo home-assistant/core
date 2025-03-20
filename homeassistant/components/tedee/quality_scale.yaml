@@ -1,0 +1,86 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      No custom actions
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      No custom actions
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      No explicit event subscriptions
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      No custom actions
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      Options flow not documented, doesn't have one
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: |
+      Handled by coordinator
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: |
+      No discovery
+  discovery:
+    status: exempt
+    comment: |
+      No discovery supported atm
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: |
+      Currently no repairs/issues
+  stale-devices: done
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

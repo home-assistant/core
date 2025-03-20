@@ -1,5 +1,6 @@
 """Support for departure information for public transport in Munich."""
 
+# mypy: ignore-errors
 from __future__ import annotations
 
 from copy import deepcopy
@@ -9,10 +10,13 @@ import logging
 import MVGLive
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -44,7 +48,7 @@ ATTRIBUTION = "Data provided by MVG-live.de"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_NEXT_DEPARTURE): [
             {

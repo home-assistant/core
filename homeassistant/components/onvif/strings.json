@@ -20,7 +20,7 @@
           "auto": "Search automatically"
         },
         "title": "ONVIF device setup",
-        "description": "By clicking submit, we will search your network for ONVIF devices that support Profile S.\n\nSome manufacturers have started to disable ONVIF by default. Please ensure ONVIF is enabled in your camera's configuration."
+        "description": "By selecting **Submit**, we will search your network for ONVIF devices that support Profile S.\n\nSome manufacturers have started to disable ONVIF by default. Please ensure ONVIF is enabled in your camera's configuration."
       },
       "device": {
         "data": {
@@ -62,12 +62,12 @@
     "step": {
       "onvif_devices": {
         "data": {
-          "extra_arguments": "Extra FFMPEG arguments",
+          "extra_arguments": "Extra FFmpeg arguments",
           "rtsp_transport": "RTSP transport mechanism",
           "use_wallclock_as_timestamps": "Use wall clock as timestamps",
-          "enable_webhooks": "Enable Webhooks"
+          "enable_webhooks": "Enable webhooks"
         },
-        "title": "ONVIF Device Options"
+        "title": "ONVIF device options"
       }
     }
   },
