@@ -16,11 +16,7 @@ from aiopurpleair.errors import (
 from aiopurpleair.models.sensors import GetSensorsResponse, SensorModel
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigSubentryFlow,
-    SubentryFlowResult,
-)
+from homeassistant.config_entries import ConfigSubentryFlow, SubentryFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BASE,
@@ -73,14 +69,6 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
         """Initialize."""
         self._flow_data: dict[str, Any] = {}
         self._errors: dict[str, Any] = {}
-
-    # TODO: Getting the parent seems generally useful and could be in the base sub entry class for general use? # pylint: disable=fixme
-    # Copy pasted this logic from the sub entry proposal thread where others had the same questions and this pattern was recommended.
-    # Could not repro the None error logic so test coverage here is missing.
-    def _get_parent_config_entry(self) -> ConfigEntry:
-        if self.hass is None or self.handler is None:
-            raise ValueError("Parent ConfigEntry not available")
-        return self.hass.config_entries.async_get_known_entry(self.handler[0])
 
     def _get_title(self, sensor: SensorModel) -> str:
         """Get sensor title."""
@@ -185,14 +173,11 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
             self._errors[CONF_SENSOR_INDEX] = CONF_NO_SENSOR_FOUND
             return False
 
-        # TODO: _raise_if_subentry_unique_id_exists() only tests uniqueness for this config entry, but sensors need to be unique globally. # pylint: disable=fixme
-        # Could be useful if the base sub entry class supports an options for globally unique testing not just testing for the current config entry.
-        global_index_list: list[int] = [
+        if sensor_index in (
             int(subentry.data[CONF_SENSOR_INDEX])
             for config_entry in self.hass.config_entries.async_loaded_entries(DOMAIN)
             for subentry in config_entry.subentries.values()
-        ]
-        if sensor_index in global_index_list:
+        ):
             self._errors[CONF_SENSOR_INDEX] = CONF_ALREADY_CONFIGURED
             return False
 
@@ -203,9 +188,10 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Handle user initialization flow."""
-        self._flow_data[CONF_API_KEY] = self._get_parent_config_entry().data[
-            CONF_API_KEY
-        ]
+        # TODO: Replace with self._get_entry() when PR merged ? # pylint: disable=fixme
+        self._flow_data[CONF_API_KEY] = self.hass.config_entries.async_get_known_entry(
+            self.handler[0]
+        ).data[CONF_API_KEY]
         return await self.async_step_add_options()
 
     async def async_step_add_options(

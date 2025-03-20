@@ -24,9 +24,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) ->
     )
     entry.runtime_data = coordinator
 
-    # TODO: Calling refresh before subentries are created still tries to load data in coordinator:_async_update_data()? # pylint: disable=fixme
-    # If not calling async_config_entry_first_refresh() and creating subentries then data is never loaded for new sensors?
-    await coordinator.async_config_entry_first_refresh()
+    if len(entry.subentries) > 0:
+        await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
