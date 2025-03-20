@@ -1095,32 +1095,19 @@ async def test_provision_smart_start_node(
 
     client.async_send_command.return_value = {"success": True}
 
-    # Test provisioning entry
-    await ws_client.send_json(
-        {
-            ID: 2,
-            TYPE: "zwave_js/provision_smart_start_node",
-            ENTRY_ID: entry.entry_id,
-            PLANNED_PROVISIONING_ENTRY: {
-                DSK: "test",
-                SECURITY_CLASSES: [0],
-            },
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-
-    assert len(client.async_send_command.call_args_list) == 1
-    assert client.async_send_command.call_args[0][0] == {
-        "command": "controller.provision_smart_start_node",
-        "entry": ProvisioningEntry(
-            "test", [SecurityClass.S2_UNAUTHENTICATED]
-        ).to_dict(),
+    valid_qr_info = {
+        VERSION: 1,
+        SECURITY_CLASSES: [0],
+        DSK: "test",
+        GENERIC_DEVICE_CLASS: 1,
+        SPECIFIC_DEVICE_CLASS: 1,
+        INSTALLER_ICON_TYPE: 1,
+        MANUFACTURER_ID: 1,
+        PRODUCT_TYPE: 1,
+        PRODUCT_ID: 1,
+        APPLICATION_VERSION: "test",
+        "name": "test",
     }
-
-    client.async_send_command.reset_mock()
-    client.async_send_command.return_value = {"success": True}
 
     # Test QR provisioning information
     await ws_client.send_json(
@@ -1128,19 +1115,7 @@ async def test_provision_smart_start_node(
             ID: 3,
             TYPE: "zwave_js/provision_smart_start_node",
             ENTRY_ID: entry.entry_id,
-            QR_PROVISIONING_INFORMATION: {
-                VERSION: 1,
-                SECURITY_CLASSES: [0],
-                DSK: "test",
-                GENERIC_DEVICE_CLASS: 1,
-                SPECIFIC_DEVICE_CLASS: 1,
-                INSTALLER_ICON_TYPE: 1,
-                MANUFACTURER_ID: 1,
-                PRODUCT_TYPE: 1,
-                PRODUCT_ID: 1,
-                APPLICATION_VERSION: "test",
-                "name": "test",
-            },
+            QR_PROVISIONING_INFORMATION: valid_qr_info,
         }
     )
 
@@ -1166,28 +1141,6 @@ async def test_provision_smart_start_node(
             supported_protocols=None,
             additional_properties={"name": "test"},
         ).to_dict(),
-    }
-
-    client.async_send_command.reset_mock()
-    client.async_send_command.return_value = {"success": True}
-
-    # Test QR code string
-    await ws_client.send_json(
-        {
-            ID: 4,
-            TYPE: "zwave_js/provision_smart_start_node",
-            ENTRY_ID: entry.entry_id,
-            QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-
-    assert len(client.async_send_command.call_args_list) == 1
-    assert client.async_send_command.call_args[0][0] == {
-        "command": "controller.provision_smart_start_node",
-        "entry": "90testtesttesttesttesttesttesttesttesttesttesttesttest",
     }
 
     client.async_send_command.reset_mock()
@@ -1243,9 +1196,7 @@ async def test_provision_smart_start_node(
                 ID: 7,
                 TYPE: "zwave_js/provision_smart_start_node",
                 ENTRY_ID: entry.entry_id,
-                QR_CODE_STRING: (
-                    "90testtesttesttesttesttesttesttesttesttesttesttesttest"
-                ),
+                QR_PROVISIONING_INFORMATION: valid_qr_info,
             }
         )
         msg = await ws_client.receive_json()
@@ -1263,7 +1214,7 @@ async def test_provision_smart_start_node(
             ID: 8,
             TYPE: "zwave_js/provision_smart_start_node",
             ENTRY_ID: entry.entry_id,
-            QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
+            QR_PROVISIONING_INFORMATION: valid_qr_info,
         }
     )
     msg = await ws_client.receive_json()
