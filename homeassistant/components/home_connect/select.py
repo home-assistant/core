@@ -413,6 +413,7 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
     """Select setting class for Home Connect."""
 
     entity_description: HomeConnectSelectEntityDescription
+    _original_option_keys: set[str | None]
 
     def __init__(
         self,
@@ -421,6 +422,7 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
         desc: HomeConnectSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
+        self._original_option_keys = set(desc.values_translation_key)
         super().__init__(
             coordinator,
             appliance,
@@ -471,10 +473,12 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
                 )
 
         if setting and setting.constraints and setting.constraints.allowed_values:
+            self._original_option_keys = set(setting.constraints.allowed_values)
             self._attr_options = [
                 self.entity_description.values_translation_key[option]
-                for option in setting.constraints.allowed_values
-                if option in self.entity_description.values_translation_key
+                for option in self._original_option_keys
+                if option is not None
+                and option in self.entity_description.values_translation_key
             ]
 
 
@@ -491,7 +495,7 @@ class HomeConnectSelectOptionEntity(HomeConnectOptionEntity, SelectEntity):
         desc: HomeConnectSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
-        self._original_option_keys = set(desc.values_translation_key.keys())
+        self._original_option_keys = set(desc.values_translation_key)
         super().__init__(
             coordinator,
             appliance,
@@ -524,5 +528,5 @@ class HomeConnectSelectOptionEntity(HomeConnectOptionEntity, SelectEntity):
                 self.entity_description.values_translation_key[option]
                 for option in self._original_option_keys
                 if option is not None
+                and option in self.entity_description.values_translation_key
             ]
-            self.__dict__.pop("options", None)
