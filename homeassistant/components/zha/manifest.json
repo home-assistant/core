@@ -140,10 +140,6 @@
     {
       "type": "_zigbee-coordinator._tcp.local.",
       "name": "*"
-    },
-    {
-      "type": "_sonoff-dongle._tcp.local.",
-      "name": "dongle-m*"
     }
   ]
 }
