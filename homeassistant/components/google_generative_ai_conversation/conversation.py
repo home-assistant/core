@@ -25,7 +25,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session, device_registry as dr, intent, llm
+from homeassistant.helpers import device_registry as dr, intent, llm
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -188,7 +188,7 @@ def _convert_content(
     | conversation.SystemContent,
 ) -> Content:
     """Convert HA content to Google content."""
-    if content.role != "assistant" or not content.tool_calls:  # type: ignore[union-attr]
+    if content.role != "assistant" or not content.tool_calls:
         role = "model" if content.role == "assistant" else content.role
         return Content(
             role=role,
@@ -264,17 +264,12 @@ class GoogleGenerativeAIConversationEntity(
         conversation.async_unset_agent(self.hass, self.entry)
         await super().async_will_remove_from_hass()
 
-    async def async_process(
-        self, user_input: conversation.ConversationInput
-    ) -> conversation.ConversationResult:
-        """Process a sentence."""
-        with (
-            chat_session.async_get_chat_session(
-                self.hass, user_input.conversation_id
-            ) as session,
-            conversation.async_get_chat_log(self.hass, session, user_input) as chat_log,
-        ):
-            return await self._async_handle_message(user_input, chat_log)
+    def _fix_tool_name(self, tool_name: str) -> str:
+        """Fix tool name if needed."""
+        # The Gemini 2.0+ tokenizer seemingly has a issue with the HassListAddItem tool
+        # name. This makes sure when it incorrectly changes the name, that we change it
+        # back for HA to call.
+        return tool_name if tool_name != "HasListAddItem" else "HassListAddItem"
 
     async def _async_handle_message(
         self,
@@ -326,24 +321,14 @@ class GoogleGenerativeAIConversationEntity(
 
         for chat_content in chat_log.content[1:-1]:
             if chat_content.role == "tool_result":
-                # mypy doesn't like picking a type based on checking shared property 'role'
-                tool_results.append(cast(conversation.ToolResultContent, chat_content))
+                tool_results.append(chat_content)
                 continue
 
             if tool_results:
                 messages.append(_create_google_tool_response_content(tool_results))
                 tool_results.clear()
 
-            messages.append(
-                _convert_content(
-                    cast(
-                        conversation.UserContent
-                        | conversation.SystemContent
-                        | conversation.AssistantContent,
-                        chat_content,
-                    )
-                )
-            )
+            messages.append(_convert_content(chat_content))
 
         if tool_results:
             messages.append(_create_google_tool_response_content(tool_results))
@@ -435,7 +420,10 @@ class GoogleGenerativeAIConversationEntity(
                 tool_name = tool_call.name
                 tool_args = _escape_decode(tool_call.args)
                 tool_calls.append(
-                    llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
+                    llm.ToolInput(
+                        tool_name=self._fix_tool_name(tool_name),
+                        tool_args=tool_args,
+                    )
                 )
 
             chat_request = _create_google_tool_response_content(
@@ -459,7 +447,9 @@ class GoogleGenerativeAIConversationEntity(
             " ".join([part.text.strip() for part in response_parts if part.text])
         )
         return conversation.ConversationResult(
-            response=response, conversation_id=chat_log.conversation_id
+            response=response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
         )
 
     async def _async_entry_update_listener(

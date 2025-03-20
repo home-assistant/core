@@ -146,10 +146,14 @@
       },
       "dustSensor": {
         "dustLevel": {
-          "value": null
+          "value": 46,
+          "unit": "\u03bcg/m^3",
+          "timestamp": "2025-03-06T16:01:49.656000+00:00"
         },
         "fineDustLevel": {
-          "value": null
+          "value": 10,
+          "unit": "\u03bcg/m^3",
+          "timestamp": "2025-03-06T16:01:49.656000+00:00"
         }
       },
       "thermostatCoolingSetpoint": {
