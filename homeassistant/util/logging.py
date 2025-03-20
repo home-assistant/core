@@ -66,7 +66,6 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
             module_name,
             module_count,
         )
-        self._log_counts[module_name] = 0
         self._warned_modules.add(module_name)
 
     def _reset_counters(self, time_sec: float) -> None:
