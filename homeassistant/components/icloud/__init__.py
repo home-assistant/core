@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
+import asyncio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -97,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         gps_accuracy_threshold,
         entry,
     )
-    await hass.async_add_executor_job(account.setup)
+    await asyncio.wait_for(hass.async_add_executor_job(account.setup), timeout=60)
 
     hass.data[DOMAIN][entry.unique_id] = account
 
@@ -181,7 +182,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     return True
-
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""

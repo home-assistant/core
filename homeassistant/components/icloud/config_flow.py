@@ -16,7 +16,8 @@ from pyicloud.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.core import callback
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.storage import Store
 
@@ -161,7 +162,11 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         entry = await self.async_set_unique_id(self.unique_id)
         self.hass.config_entries.async_update_entry(entry, data=data)
-        await self.hass.config_entries.async_reload(entry.entry_id)
+        try:
+            await self.hass.config_entries.async_reload(entry.entry_id)
+        except Exception as ex:
+            _LOGGER.error("Failed to Reload Integration for  %s", ex)
+            
         return self.async_abort(reason="reauth_successful")
 
     async def async_step_user(
@@ -332,4 +337,41 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="verification_code",
             data_schema=vol.Schema({vol.Required(CONF_VERIFICATION_CODE): str}),
             errors=errors,
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        return IcloudOptionsFlowHandler(config_entry)
+
+
+class IcloudOptionsFlowHandler(OptionsFlow):
+    """Handle iCloud options flow."""
+
+    def __init__(self, config_entry):
+        """Initialize options flow."""
+        self.entry_id = config_entry.entry_id  # Store entry_id instead of full config_entry
+        self._description_placeholders: dict[str, str] | None = None
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options for the integration."""
+        if user_input is not None:
+            if user_input.get("re_auth"):
+                self.hass.async_create_task(
+                    self.hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={"source": "reauth", "entry_id": self.entry_id, "unique_id": self.config_entry.unique_id},  # Ensure entry_id is passed
+                        data=self.hass.config_entries.async_get_entry(self.entry_id).data,
+                    )
+                )
+                return self.async_abort(reason="reauth_initiated")
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional("re_auth", default=self.config_entry.options.get("re_auth", False)): bool,
+                }
+            ),
+            description_placeholders=self._description_placeholders,
         )
