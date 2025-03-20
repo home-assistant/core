@@ -49,7 +49,7 @@ async def test_abort_on_multiple_flow_autodiscovery(hass: HomeAssistant) -> None
         data={CONF_AUTO_DISCOVERY: True},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "govee_discovery"
+    assert result["step_id"] == "discovery_confirm"
 
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -70,7 +70,7 @@ async def test_abort_on_multiple_flow_maual(hass: HomeAssistant) -> None:
         data={CONF_AUTO_DISCOVERY: True},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "govee_discovery"
+    assert result["step_id"] == "discovery_confirm"
 
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -302,6 +302,33 @@ async def test_options_flow_add_device(hass: HomeAssistant) -> None:
     assert result["type"] == "create_entry"
     assert result["data"] == expected_options
     assert config_entry.options == expected_options
+
+
+async def test_options_flow_add_device_wrong_ip(hass: HomeAssistant) -> None:
+    """Test adding a manual device through options flow with wrong IP format."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_AUTO_DISCOVERY: False},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": "add_device"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "add_device"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_DEVICE_IP: "foo"},
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "invalid_ip"
 
 
 async def test_options_flow_remove_device_with_devices(

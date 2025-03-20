@@ -108,9 +108,9 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         """Add a device by IP address to discovery queue."""
         return self._controller.add_device_to_discovery_queue(ip)
 
-    def remove_device_from_discovery_queue(self, ip: str) -> bool:
+    def remove_device_from_discovery_queue(self, ip: str) -> None:
         """Remove a device by IP address from manual discovery queue."""
-        return self._controller.remove_device_from_discovery_queue(ip)
+        self._controller.remove_device_from_discovery_queue(ip)
 
     def get_device_by_ip(self, ip: str) -> GoveeDevice | None:
         """Return a device by IP address."""

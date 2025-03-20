@@ -7,7 +7,7 @@
           "auto_discovery": "Auto discovery enabled"
         }
       },
-      "confirm": {
+      "discovery_confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
@@ -30,7 +30,7 @@
       "add_device": {
         "description": "Enter the device's IP address",
         "data": {
-          "device_ip": "Device IP"
+          "device_ip": "[%key:common::config_flow::data::ip%]"
         }
       },
       "remove_device": {
@@ -47,7 +47,8 @@
       }
     },
     "abort": {
-      "no_devices": "No manually added devices were found"
+      "no_devices": "No manually added devices were found",
+      "invalid_ip": "Invalid IP address: {ip}"
     }
   },
   "entity": {

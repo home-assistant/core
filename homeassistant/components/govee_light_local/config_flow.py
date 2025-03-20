@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
+from ipaddress import AddressValueError, IPv4Address
 import logging
 from typing import Any
 
@@ -91,12 +92,15 @@ class GoveeConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
+
+        await self.async_set_unique_id(DOMAIN, raise_on_progress=False)
+
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="already_in_progress")
 
         if user_input is not None:
             if user_input.get(CONF_AUTO_DISCOVERY):
-                return await self.async_step_govee_discovery()
+                return await self.async_step_discovery_confirm()
             return self.async_create_entry(title="", data={CONF_AUTO_DISCOVERY: False})
 
         return self.async_show_form(
@@ -111,18 +115,17 @@ class GoveeConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_govee_discovery(
+    async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm setup."""
-        if user_input is None and onboarding.async_is_onboarded(self.hass):
-            self._set_confirm_only()
-            return self.async_show_form(step_id="govee_discovery")
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
+            if not await _async_has_devices(self.hass):
+                return self.async_abort(reason="no_devices_found")
+            return self.async_create_entry(title="", data={CONF_AUTO_DISCOVERY: True})
 
-        if not await _async_has_devices(self.hass):
-            return self.async_abort(reason="no_devices_found")
-
-        return self.async_create_entry(title="", data={CONF_AUTO_DISCOVERY: True})
+        self._set_confirm_only()
+        return self.async_show_form(step_id="discovery_confirm", last_step=True)
 
     @staticmethod
     @callback
@@ -199,9 +202,15 @@ class GoveeOptionsFlowHandler(OptionsFlow):
         """Manage the options."""
 
         if user_input is not None:
-            self._options.setdefault(CONF_MANUAL_DEVICES, set()).add(
-                user_input[CONF_DEVICE_IP]
-            )
+            user_ip = user_input[CONF_DEVICE_IP]
+            try:
+                IPv4Address(user_ip)
+            except AddressValueError:
+                return self.async_abort(
+                    reason="invalid_ip", description_placeholders={"ip": user_ip}
+                )
+
+            self._options.setdefault(CONF_MANUAL_DEVICES, set()).add(user_ip)
             return self.async_create_entry(
                 title="",
                 data={**self._options, CONF_OPTION_MODE: OptionMode.ADD_DEVICE},
@@ -230,10 +239,14 @@ class GoveeOptionsFlowHandler(OptionsFlow):
 
         coordinator = self.config_entry.runtime_data
 
-        manual_devices = {
-            *(device.ip for device in coordinator.devices if device.is_manual),
-            *coordinator.discovery_queue,
-        }
+        manual_devices = [
+            *(
+                {"label": f"{device.sku} ({device.ip})", "value": device.ip}
+                for device in coordinator.devices
+                if device.is_manual
+            ),
+            *({"label": ip, "value": ip} for ip in coordinator.discovery_queue),
+        ]
 
         if not manual_devices:
             return self.async_abort(reason="no_devices")
@@ -241,7 +254,8 @@ class GoveeOptionsFlowHandler(OptionsFlow):
         option_schema = {
             vol.Required(CONF_IPS_TO_REMOVE): SelectSelector(
                 SelectSelectorConfig(
-                    options=list(manual_devices),
+                    options=manual_devices,
+                    custom_value=False,
                     mode=SelectSelectorMode.DROPDOWN,
                     multiple=True,
                 )
