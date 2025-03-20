@@ -265,8 +265,15 @@ class USBDiscovery:
 
     async def async_setup(self) -> None:
         """Set up USB Discovery."""
-        if self._async_supports_monitoring():
-            await self._async_start_monitor()
+        try:
+            await self._async_start_aiousbwatcher()
+        except InotifyNotAvailableError as ex:
+            _LOGGER.info(
+                "Falling back to periodic filesystem polling for development, "
+                "aiousbwatcher is not available on this system: %s",
+                ex,
+            )
+            self._async_start_monitor_polling()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.async_start)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
@@ -280,22 +287,6 @@ class USBDiscovery:
         """Stop USB Discovery."""
         if self._request_debouncer:
             self._request_debouncer.async_shutdown()
-
-    @hass_callback
-    def _async_supports_monitoring(self) -> bool:
-        return sys.platform in ("linux", "darwin")
-
-    async def _async_start_monitor(self) -> None:
-        """Start monitoring hardware."""
-        try:
-            await self._async_start_aiousbwatcher()
-        except InotifyNotAvailableError as ex:
-            _LOGGER.info(
-                "Falling back to periodic filesystem polling for development, aiousbwatcher "
-                "is not available on this system: %s",
-                ex,
-            )
-            self._async_start_monitor_polling()
 
     @hass_callback
     def _async_start_monitor_polling(self) -> None:
