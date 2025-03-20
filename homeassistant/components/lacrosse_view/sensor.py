@@ -105,6 +105,7 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         native_unit_of_measurement=DEGREE,
         suggested_display_precision=2,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     "WetDry": LaCrosseSensorEntityDescription(
         key="WetDry",

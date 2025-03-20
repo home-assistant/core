@@ -185,6 +185,37 @@
       }
     }
   },
+  "issues": {
+    "missing_backup_setup": {
+      "title": "Backup location not configured for {title}",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "description": "The backup location for {title} is not configured. Do you want to set it up now? Details can be found in the integration documentation under [Backup Location]({docs_url})",
+            "menu_options": {
+              "confirm": "Set up the backup location now",
+              "ignore": "Don't set it up now"
+            }
+          },
+          "confirm": {
+            "title": "[%key:component::synology_dsm::config::step::backup_share::title%]",
+            "data": {
+              "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data::backup_share%]",
+              "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data::backup_path%]"
+            },
+            "data_description": {
+              "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_share%]",
+              "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_path%]"
+            }
+          }
+        },
+        "abort": {
+          "no_shares": "There are no shared folders available for the user.\nPlease check the documentation.",
+          "ignored": "The backup location has not been configured.\nYou can still set it up later via the integration options."
+        }
+      }
+    }
+  },
   "services": {
     "reboot": {
       "name": "Reboot",

@@ -468,8 +468,8 @@ async def test_remove_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
     ) -> None:
         """Mock removing an entry."""
-        # Check that the entry is not yet removed from config entries
-        assert hass.config_entries.async_get_entry(entry.entry_id)
+        # Check that the entry is no longer in the config entries
+        assert not hass.config_entries.async_get_entry(entry.entry_id)
         remove_entry_calls.append(None)
 
     entity = MockEntity(unique_id="1234", name="Test Entity")
@@ -2623,7 +2623,7 @@ async def test_entry_setup_invalid_state(
     ("unload_result", "expected_result", "expected_state", "has_runtime_data"),
     [
         (True, True, config_entries.ConfigEntryState.NOT_LOADED, False),
-        (False, False, config_entries.ConfigEntryState.LOADED, True),
+        (False, False, config_entries.ConfigEntryState.FAILED_UNLOAD, True),
     ],
 )
 async def test_entry_unload(
@@ -2648,7 +2648,7 @@ async def test_entry_unload(
         """Mock unload entry."""
         unload_entry_calls.append(None)
         verify_runtime_data()
-        assert entry.state is config_entries.ConfigEntryState.LOADED
+        assert entry.state is config_entries.ConfigEntryState.UNLOAD_IN_PROGRESS
         return unload_result
 
     entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
@@ -3566,37 +3566,97 @@ async def test_unique_id_not_update_existing_entry(
     assert len(async_reload.mock_calls) == 0
 
 
+ABORT_IN_PROGRESS = {
+    "type": data_entry_flow.FlowResultType.ABORT,
+    "reason": "already_in_progress",
+}
+
+
+@pytest.mark.parametrize(
+    ("existing_flow_source", "expected_result"),
+    # Test all sources except SOURCE_IGNORE
+    [
+        (config_entries.SOURCE_BLUETOOTH, ABORT_IN_PROGRESS),
+        (config_entries.SOURCE_DHCP, ABORT_IN_PROGRESS),
+        (config_entries.SOURCE_DISCOVERY, ABORT_IN_PROGRESS),
+        (config_entries.SOURCE_HARDWARE, ABORT_IN_PROGRESS),
+        (config_entries.SOURCE_HASSIO, ABORT_IN_PROGRESS),
+        (config_entries.SOURCE_HOMEKIT, ABORT_IN_PROGRESS),
+        (config_entries.SOURCE_IMPORT, ABORT_IN_PROGRESS),
+        (config_entries.SOURCE_INTEGRATION_DISCOVERY, ABORT_IN_PROGRESS),
+        (config_entries.SOURCE_MQTT, ABORT_IN_PROGRESS),
+        (config_entries.SOURCE_REAUTH, {"type": data_entry_flow.FlowResultType.FORM}),
+        (config_entries.SOURCE_RECONFIGURE, ABORT_IN_PROGRESS),
+        (config_entries.SOURCE_SSDP, ABORT_IN_PROGRESS),
+        (config_entries.SOURCE_SYSTEM, ABORT_IN_PROGRESS),
+        (config_entries.SOURCE_USB, ABORT_IN_PROGRESS),
+        (config_entries.SOURCE_USER, ABORT_IN_PROGRESS),
+        (config_entries.SOURCE_ZEROCONF, ABORT_IN_PROGRESS),
+    ],
+)
 async def test_unique_id_in_progress(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    existing_flow_source: str,
+    expected_result: dict,
 ) -> None:
     """Test that we abort if there is already a flow in progress with same unique id."""
     mock_integration(hass, MockModule("comp"))
     mock_platform(hass, "comp.config_flow", None)
+    entry = MockConfigEntry(domain="comp")
+    entry.add_to_hass(hass)
 
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
         VERSION = 1
 
+        async def _async_step_discovery_without_unique_id(self):
+            """Handle a flow initialized by discovery."""
+            return await self._async_step()
+
+        async def async_step_hardware(self, user_input=None):
+            """Test hardware step."""
+            return await self._async_step()
+
+        async def async_step_import(self, user_input=None):
+            """Test import step."""
+            return await self._async_step()
+
+        async def async_step_reauth(self, user_input=None):
+            """Test reauth step."""
+            return await self._async_step()
+
+        async def async_step_reconfigure(self, user_input=None):
+            """Test reconfigure step."""
+            return await self._async_step()
+
+        async def async_step_system(self, user_input=None):
+            """Test system step."""
+            return await self._async_step()
+
         async def async_step_user(self, user_input=None):
             """Test user step."""
+            return await self._async_step()
+
+        async def _async_step(self, user_input=None):
+            """Test step."""
             await self.async_set_unique_id("mock-unique-id")
             return self.async_show_form(step_id="discovery")
 
     with mock_config_flow("comp", TestFlow):
         # Create one to be in progress
         result = await manager.flow.async_init(
-            "comp", context={"source": config_entries.SOURCE_USER}
+            "comp", context={"source": existing_flow_source, "entry_id": entry.entry_id}
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
 
-        # Will be canceled
         result2 = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result2["reason"] == "already_in_progress"
+    for k, v in expected_result.items():
+        assert result2[k] == v
 
 
 async def test_finish_flow_aborts_progress(
@@ -4796,6 +4856,136 @@ async def test_entry_reload_calls_on_unload_listeners(
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
+@pytest.mark.parametrize(
+    ("source_state", "target_state", "transition_method_name", "call_count"),
+    [
+        (
+            config_entries.ConfigEntryState.NOT_LOADED,
+            config_entries.ConfigEntryState.LOADED,
+            "async_setup",
+            2,
+        ),
+        (
+            config_entries.ConfigEntryState.LOADED,
+            config_entries.ConfigEntryState.NOT_LOADED,
+            "async_unload",
+            2,
+        ),
+        (
+            config_entries.ConfigEntryState.LOADED,
+            config_entries.ConfigEntryState.LOADED,
+            "async_reload",
+            4,
+        ),
+    ],
+)
+async def test_entry_state_change_calls_listener(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source_state: config_entries.ConfigEntryState,
+    target_state: config_entries.ConfigEntryState,
+    transition_method_name: str,
+    call_count: int,
+) -> None:
+    """Test listeners get called on entry state changes."""
+    entry = MockConfigEntry(domain="comp", state=source_state)
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
+
+    mock_state_change_callback = Mock()
+    entry.async_on_state_change(mock_state_change_callback)
+
+    transition_method = getattr(manager, transition_method_name)
+    await transition_method(entry.entry_id)
+
+    assert len(mock_state_change_callback.mock_calls) == call_count
+    assert entry.state is target_state
+
+
+async def test_entry_state_change_listener_removed(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test state_change listener can be removed."""
+    entry = MockConfigEntry(
+        domain="comp", state=config_entries.ConfigEntryState.NOT_LOADED
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
+
+    mock_state_change_callback = Mock()
+    remove = entry.async_on_state_change(mock_state_change_callback)
+
+    await manager.async_setup(entry.entry_id)
+
+    assert len(mock_state_change_callback.mock_calls) == 2
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+    remove()
+
+    await manager.async_unload(entry.entry_id)
+
+    # the listener should no longer be called
+    assert len(mock_state_change_callback.mock_calls) == 2
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+
+async def test_entry_state_change_error_does_not_block_transition(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test we transition states normally even if the callback throws in on_state_change."""
+    entry = MockConfigEntry(
+        title="test", domain="comp", state=config_entries.ConfigEntryState.NOT_LOADED
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
+
+    mock_state_change_callback = Mock(side_effect=Exception())
+
+    entry.async_on_state_change(mock_state_change_callback)
+
+    await manager.async_setup(entry.entry_id)
+
+    assert len(mock_state_change_callback.mock_calls) == 2
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert "Error calling on_state_change callback for test (comp)" in caplog.text
+
+
 async def test_setup_raise_entry_error(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -5633,7 +5823,6 @@ async def test_reauth_reconfigure_missing_entry(
 
 
 @pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 @pytest.mark.parametrize(
     "source", [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE]
 )
@@ -5865,7 +6054,7 @@ async def test_async_wait_component_startup(hass: HomeAssistant) -> None:
     "integration_frame_path",
     ["homeassistant/components/my_integration", "homeassistant.core"],
 )
-@pytest.mark.usefixtures("mock_integration_frame")
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
 async def test_options_flow_with_config_entry_core() -> None:
     """Test that OptionsFlowWithConfigEntry cannot be used in core."""
     entry = MockConfigEntry(
@@ -5879,8 +6068,7 @@ async def test_options_flow_with_config_entry_core() -> None:
 
 
 @pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
-@pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
 async def test_options_flow_with_config_entry(caplog: pytest.LogCaptureFixture) -> None:
     """Test that OptionsFlowWithConfigEntry doesn't mutate entry options."""
     entry = MockConfigEntry(
@@ -8659,7 +8847,6 @@ async def test_options_flow_config_entry(
 
 @pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
 @pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_options_flow_deprecated_config_entry_setter(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -8719,7 +8906,8 @@ async def test_options_flow_deprecated_config_entry_setter(
         "config_entry explicitly, which is deprecated at "
         "custom_components/my_integration/light.py, line 23: "
         "self.light.is_on. This will stop working in Home Assistant 2025.12, please "
-        "create a bug report at " in caplog.text
+        "report it to the author of the 'my_integration' custom integration"
+        in caplog.text
     )
 
 
@@ -8769,3 +8957,63 @@ async def test_add_description_placeholder_automatically_not_overwrites(
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], None)
     assert result["type"] == FlowResultType.FORM
     assert result["description_placeholders"] == {"name": "Custom title"}
+
+
+@pytest.mark.parametrize(
+    ("domain", "expected_log"),
+    [
+        ("some_integration", True),
+        ("mobile_app", False),
+    ],
+)
+async def test_create_entry_existing_unique_id(
+    hass: HomeAssistant,
+    domain: str,
+    expected_log: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test to highlight unexpected behavior on create_entry."""
+    entry = MockConfigEntry(
+        title="From config flow",
+        domain=domain,
+        entry_id="01J915Q6T9F6G5V0QJX6HBC94T",
+        data={"host": "any", "port": 123},
+        unique_id="mock-unique-id",
+    )
+    entry.add_to_hass(hass)
+
+    assert len(hass.config_entries.async_entries(domain)) == 1
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(hass, MockModule(domain, async_setup_entry=mock_setup_entry))
+    mock_platform(hass, f"{domain}.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            await self.async_set_unique_id("mock-unique-id")
+            return self.async_create_entry(title="mock-title", data={})
+
+    with (
+        mock_config_flow(domain, TestFlow),
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            domain, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    assert len(hass.config_entries.async_entries(domain)) == 1
+
+    log_text = (
+        f"Detected that integration '{domain}' creates a config entry "
+        "when another entry with the same unique ID exists. Please "
+        "create a bug report at https:"
+    )
+    assert (log_text in caplog.text) == expected_log

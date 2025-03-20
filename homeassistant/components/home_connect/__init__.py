@@ -16,11 +16,17 @@ from aiohomeconnect.model import (
     SettingKey,
 )
 from aiohomeconnect.model.error import HomeConnectError
+import aiohttp
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
@@ -187,6 +193,7 @@ SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,
@@ -202,7 +209,13 @@ async def _get_client_and_ha_id(
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(device_id)
     if device_entry is None:
-        raise ServiceValidationError("Device entry not found for device id")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_entry_not_found",
+            translation_placeholders={
+                "device_id": device_id,
+            },
+        )
     entry: HomeConnectConfigEntry | None = None
     for entry_id in device_entry.config_entries:
         _entry = hass.config_entries.async_get_entry(entry_id)
@@ -212,7 +225,11 @@ async def _get_client_and_ha_id(
             break
     if entry is None:
         raise ServiceValidationError(
-            "Home Connect config entry not found for that device id"
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_found",
+            translation_placeholders={
+                "device_id": device_id,
+            },
         )
 
     ha_id = next(
@@ -237,7 +254,7 @@ async def _get_client_and_ha_id(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up Home Connect component."""
 
-    async def _async_service_program(call: ServiceCall, start: bool):
+    async def _async_service_program(call: ServiceCall, start: bool) -> None:
         """Execute calls to services taking a program."""
         program = call.data[ATTR_PROGRAM]
         client, ha_id = await _get_client_and_ha_id(hass, call.data[ATTR_DEVICE_ID])
@@ -323,7 +340,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 },
             ) from err
 
-    async def _async_service_set_program_options(call: ServiceCall, active: bool):
+    async def _async_service_set_program_options(
+        call: ServiceCall, active: bool
+    ) -> None:
         """Execute calls to services taking a program."""
         option_key = call.data[ATTR_KEY]
         value = call.data[ATTR_VALUE]
@@ -396,9 +415,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 },
             ) from err
 
-    async def _async_service_command(call: ServiceCall, command_key: CommandKey):
+    async def _async_service_command(
+        call: ServiceCall, command_key: CommandKey
+    ) -> None:
         """Execute calls to services executing a command."""
         client, ha_id = await _get_client_and_ha_id(hass, call.data[ATTR_DEVICE_ID])
+
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_command_actions",
+            breaks_in_ha_version="2025.9.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_command_actions",
+        )
 
         try:
             await client.put_command(ha_id, command_key=command_key, value=True)
@@ -412,15 +444,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 },
             ) from err
 
-    async def async_service_option_active(call: ServiceCall):
+    async def async_service_option_active(call: ServiceCall) -> None:
         """Service for setting an option for an active program."""
         await _async_service_set_program_options(call, True)
 
-    async def async_service_option_selected(call: ServiceCall):
+    async def async_service_option_selected(call: ServiceCall) -> None:
         """Service for setting an option for a selected program."""
         await _async_service_set_program_options(call, False)
 
-    async def async_service_setting(call: ServiceCall):
+    async def async_service_setting(call: ServiceCall) -> None:
         """Service for changing a setting."""
         key = call.data[ATTR_KEY]
         value = call.data[ATTR_VALUE]
@@ -439,19 +471,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 },
             ) from err
 
-    async def async_service_pause_program(call: ServiceCall):
+    async def async_service_pause_program(call: ServiceCall) -> None:
         """Service for pausing a program."""
         await _async_service_command(call, CommandKey.BSH_COMMON_PAUSE_PROGRAM)
 
-    async def async_service_resume_program(call: ServiceCall):
+    async def async_service_resume_program(call: ServiceCall) -> None:
         """Service for resuming a paused program."""
         await _async_service_command(call, CommandKey.BSH_COMMON_RESUME_PROGRAM)
 
-    async def async_service_select_program(call: ServiceCall):
+    async def async_service_select_program(call: ServiceCall) -> None:
         """Service for selecting a program."""
         await _async_service_program(call, False)
 
-    async def async_service_set_program_and_options(call: ServiceCall):
+    async def async_service_set_program_and_options(call: ServiceCall) -> None:
         """Service for setting a program and options."""
         data = dict(call.data)
         program = data.pop(ATTR_PROGRAM, None)
@@ -521,7 +553,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 },
             ) from err
 
-    async def async_service_start_program(call: ServiceCall):
+    async def async_service_start_program(call: ServiceCall) -> None:
         """Service for starting a program."""
         await _async_service_program(call, True)
 
@@ -585,6 +617,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
     config_entry_auth = AsyncConfigEntryAuth(hass, session)
+    try:
+        await config_entry_auth.async_get_access_token()
+    except aiohttp.ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed from err
+        raise ConfigEntryNotReady from err
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady from err
 
     home_connect_client = HomeConnectClient(config_entry_auth)
 
@@ -605,6 +645,7 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     async_delete_issue(hass, DOMAIN, "deprecated_set_program_and_option_actions")
+    async_delete_issue(hass, DOMAIN, "deprecated_command_actions")
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

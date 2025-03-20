@@ -1,16 +1,26 @@
 """Tests for the init module."""
 
+from collections.abc import Callable
 from typing import cast
 from unittest.mock import Mock
 
-from pyheos import HeosError, HeosOptions, SignalHeosEvent, SignalType
+from pyheos import (
+    HeosError,
+    HeosOptions,
+    HeosPlayer,
+    PlayerUpdateResult,
+    SignalHeosEvent,
+    SignalType,
+    const,
+)
 import pytest
 
 from homeassistant.components.heos.const import DOMAIN
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import MockHeos
@@ -255,3 +265,83 @@ async def test_remove_config_entry_device(
     ws_client = await hass_ws_client(hass)
     response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
     assert response["success"] == expected_result
+
+
+async def test_reconnected_new_entities_created(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    player_factory: Callable[[int, str, str], HeosPlayer],
+) -> None:
+    """Test new entities are created for new players after reconnecting."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # Assert initial entity doesn't exist
+    assert not entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "3")
+
+    # Create player
+    players = controller.players.copy()
+    players[3] = player_factory(3, "Test Player 3", "HEOS Link")
+    controller.mock_set_players(players)
+    update = PlayerUpdateResult([3], [], {})
+
+    # Simulate reconnection
+    await controller.dispatcher.wait_send(
+        SignalType.CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED, update
+    )
+    await hass.async_block_till_done()
+
+    # Assert new entity created
+    assert entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "3")
+
+
+async def test_reconnected_failover_updates_host(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test the config entry host is updated after failover."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.data[CONF_HOST] == "127.0.0.1"
+
+    # Simulate reconnection
+    controller.mock_set_current_host("127.0.0.2")
+    await controller.dispatcher.wait_send(
+        SignalType.HEOS_EVENT, SignalHeosEvent.CONNECTED
+    )
+    await hass.async_block_till_done()
+
+    # Assert config entry host updated
+    assert config_entry.data[CONF_HOST] == "127.0.0.2"
+
+
+async def test_players_changed_new_entities_created(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    player_factory: Callable[[int, str, str], HeosPlayer],
+) -> None:
+    """Test new entities are created for new players on change event."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # Assert initial entity doesn't exist
+    assert not entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "3")
+
+    # Create player
+    players = controller.players.copy()
+    players[3] = player_factory(3, "Test Player 3", "HEOS Link")
+    controller.mock_set_players(players)
+
+    # Simulate players changed event
+    await controller.dispatcher.wait_send(
+        SignalType.CONTROLLER_EVENT,
+        const.EVENT_PLAYERS_CHANGED,
+        PlayerUpdateResult([3], [], {}),
+    )
+    await hass.async_block_till_done()
+
+    # Assert new entity created
+    assert entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "3")

@@ -2,26 +2,36 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine, Sequence
+from contextlib import suppress
 from datetime import datetime
 from functools import reduce, wraps
+import logging
 from operator import ior
-from typing import Any
+from typing import Any, Final
 
 from pyheos import (
     AddCriteriaType,
     ControlType,
     HeosError,
     HeosPlayer,
+    MediaItem,
+    MediaMusicSource,
+    MediaType as HeosMediaType,
     PlayState,
     RepeatType,
     const as heos_const,
 )
+from pyheos.util import mediauri as heos_source
+import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_VOLUME_LEVEL,
+    BrowseError,
     BrowseMedia,
+    MediaClass,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -30,19 +40,31 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
+from homeassistant.components.media_source import BrowseMediaSource
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_platform,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN as HEOS_DOMAIN
+from .const import (
+    DOMAIN as HEOS_DOMAIN,
+    SERVICE_GROUP_VOLUME_DOWN,
+    SERVICE_GROUP_VOLUME_SET,
+    SERVICE_GROUP_VOLUME_UP,
+)
 from .coordinator import HeosConfigEntry, HeosCoordinator
 
 PARALLEL_UPDATES = 0
+
+BROWSE_ROOT: Final = "heos://media"
 
 BASE_SUPPORTED_FEATURES = (
     MediaPlayerEntityFeature.VOLUME_MUTE
@@ -86,6 +108,21 @@ HEOS_HA_REPEAT_TYPE_MAP = {
 }
 HA_HEOS_REPEAT_TYPE_MAP = {v: k for k, v in HEOS_HA_REPEAT_TYPE_MAP.items()}
 
+HEOS_MEDIA_TYPE_TO_MEDIA_CLASS = {
+    HeosMediaType.ALBUM: MediaClass.ALBUM,
+    HeosMediaType.ARTIST: MediaClass.ARTIST,
+    HeosMediaType.CONTAINER: MediaClass.DIRECTORY,
+    HeosMediaType.GENRE: MediaClass.GENRE,
+    HeosMediaType.HEOS_SERVER: MediaClass.DIRECTORY,
+    HeosMediaType.HEOS_SERVICE: MediaClass.DIRECTORY,
+    HeosMediaType.MUSIC_SERVICE: MediaClass.DIRECTORY,
+    HeosMediaType.PLAYLIST: MediaClass.PLAYLIST,
+    HeosMediaType.SONG: MediaClass.TRACK,
+    HeosMediaType.STATION: MediaClass.TRACK,
+}
+
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -93,11 +130,29 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add media players for a config entry."""
-    devices = [
-        HeosMediaPlayer(entry.runtime_data, player)
-        for player in entry.runtime_data.heos.players.values()
-    ]
-    async_add_entities(devices)
+    # Register custom entity services
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_GROUP_VOLUME_SET,
+        {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float},
+        "async_set_group_volume_level",
+    )
+    platform.async_register_entity_service(
+        SERVICE_GROUP_VOLUME_DOWN, None, "async_group_volume_down"
+    )
+    platform.async_register_entity_service(
+        SERVICE_GROUP_VOLUME_UP, None, "async_group_volume_up"
+    )
+
+    def add_entities_callback(players: Sequence[HeosPlayer]) -> None:
+        """Add entities for each player."""
+        async_add_entities(
+            [HeosMediaPlayer(entry.runtime_data, player) for player in players]
+        )
+
+    coordinator = entry.runtime_data
+    coordinator.async_add_platform_callback(add_entities_callback)
+    add_entities_callback(list(coordinator.heos.players.values()))
 
 
 type _FuncType[**_P] = Callable[_P, Awaitable[Any]]
@@ -253,6 +308,16 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
+        if heos_source.is_media_uri(media_id):
+            media, data = heos_source.from_media_uri(media_id)
+            if not isinstance(media, MediaItem):
+                raise ValueError(f"Invalid media id '{media_id}'")
+            await self._player.play_media(
+                media,
+                HA_HEOS_ENQUEUE_MAP[kwargs.get(ATTR_MEDIA_ENQUEUE)],
+            )
+            return
+
         if media_source.is_media_source_id(media_id):
             media_type = MediaType.URL
             play_item = await media_source.async_resolve_media(
@@ -340,6 +405,41 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._player.set_volume(int(volume * 100))
+
+    @catch_action_error("set group volume level")
+    async def async_set_group_volume_level(self, volume_level: float) -> None:
+        """Set group volume level."""
+        if self._player.group_id is None:
+            raise ServiceValidationError(
+                translation_domain=HEOS_DOMAIN,
+                translation_key="entity_not_grouped",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        await self.coordinator.heos.set_group_volume(
+            self._player.group_id, int(volume_level * 100)
+        )
+
+    @catch_action_error("group volume down")
+    async def async_group_volume_down(self) -> None:
+        """Turn group volume down for media player."""
+        if self._player.group_id is None:
+            raise ServiceValidationError(
+                translation_domain=HEOS_DOMAIN,
+                translation_key="entity_not_grouped",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        await self.coordinator.heos.group_volume_down(self._player.group_id)
+
+    @catch_action_error("group volume up")
+    async def async_group_volume_up(self) -> None:
+        """Turn group volume up for media player."""
+        if self._player.group_id is None:
+            raise ServiceValidationError(
+                translation_domain=HEOS_DOMAIN,
+                translation_key="entity_not_grouped",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        await self.coordinator.heos.group_volume_up(self._player.group_id)
 
     @catch_action_error("join players")
     async def async_join_players(self, group_members: list[str]) -> None:
@@ -470,14 +570,101 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         """Volume level of the media player (0..1)."""
         return self._player.volume / 100
 
+    async def _async_browse_media_root(self) -> BrowseMedia:
+        """Return media browsing root."""
+        if not self.coordinator.heos.music_sources:
+            try:
+                await self.coordinator.heos.get_music_sources()
+            except HeosError as error:
+                _LOGGER.debug("Unable to load music sources: %s", error)
+        children: list[BrowseMedia] = [
+            _media_to_browse_media(source)
+            for source in self.coordinator.heos.music_sources.values()
+            if source.available
+        ]
+        root = BrowseMedia(
+            title="Music Sources",
+            media_class=MediaClass.DIRECTORY,
+            children_media_class=MediaClass.DIRECTORY,
+            media_content_type="",
+            media_content_id=BROWSE_ROOT,
+            can_expand=True,
+            can_play=False,
+            children=children,
+        )
+        # Append media source items
+        with suppress(BrowseError):
+            browse = await self._async_browse_media_source()
+            # If domain is None, it's an overview of available sources
+            if browse.domain is None and browse.children:
+                children.extend(browse.children)
+            else:
+                children.append(browse)
+        return root
+
+    async def _async_browse_heos_media(self, media_content_id: str) -> BrowseMedia:
+        """Browse a HEOS media item."""
+        media, data = heos_source.from_media_uri(media_content_id)
+        browse_media = _media_to_browse_media(media)
+        try:
+            browse_result = await self.coordinator.heos.browse_media(media)
+        except HeosError as error:
+            _LOGGER.debug("Unable to browse media %s: %s", media, error)
+        else:
+            browse_media.children = [
+                _media_to_browse_media(item)
+                for item in browse_result.items
+                if item.browsable or item.playable
+            ]
+        return browse_media
+
+    async def _async_browse_media_source(
+        self, media_content_id: str | None = None
+    ) -> BrowseMediaSource:
+        """Browse a media source item."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )
+
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
-        return await media_source.async_browse_media(
-            self.hass,
-            media_content_id,
-            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        if media_content_id in (None, BROWSE_ROOT):
+            return await self._async_browse_media_root()
+        assert media_content_id is not None
+        if heos_source.is_media_uri(media_content_id):
+            return await self._async_browse_heos_media(media_content_id)
+        if media_source.is_media_source_id(media_content_id):
+            return await self._async_browse_media_source(media_content_id)
+        raise ServiceValidationError(
+            translation_domain=HEOS_DOMAIN,
+            translation_key="unsupported_media_content_id",
+            translation_placeholders={"media_content_id": media_content_id},
         )
+
+
+def _media_to_browse_media(media: MediaItem | MediaMusicSource) -> BrowseMedia:
+    """Convert a HEOS media item to a browse media item."""
+    can_expand = False
+    can_play = False
+
+    if isinstance(media, MediaMusicSource):
+        can_expand = media.available
+    else:
+        can_expand = media.browsable
+        can_play = media.playable
+
+    return BrowseMedia(
+        can_expand=can_expand,
+        can_play=can_play,
+        media_content_id=heos_source.to_media_uri(media),
+        media_content_type="",
+        media_class=HEOS_MEDIA_TYPE_TO_MEDIA_CLASS[media.type],
+        title=media.name,
+        thumbnail=media.image_url,
+    )

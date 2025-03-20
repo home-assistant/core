@@ -166,6 +166,8 @@ async def build_playlist_items_listing(
 ) -> BrowseMedia:
     """Build Playlist items browse listing."""
     playlist = await mass.music.get_item_by_uri(identifier)
+    if TYPE_CHECKING:
+        assert playlist.uri is not None
 
     return BrowseMedia(
         media_class=MediaClass.PLAYLIST,
@@ -219,6 +221,9 @@ async def build_artist_items_listing(
     artist = await mass.music.get_item_by_uri(identifier)
     albums = await mass.music.get_artist_albums(artist.item_id, artist.provider)
 
+    if TYPE_CHECKING:
+        assert artist.uri is not None
+
     return BrowseMedia(
         media_class=MediaType.ARTIST,
         media_content_id=artist.uri,
@@ -266,6 +271,9 @@ async def build_album_items_listing(
     """Build Album items browse listing."""
     album = await mass.music.get_item_by_uri(identifier)
     tracks = await mass.music.get_album_tracks(album.item_id, album.provider)
+
+    if TYPE_CHECKING:
+        assert album.uri is not None
 
     return BrowseMedia(
         media_class=MediaType.ALBUM,
@@ -339,6 +347,9 @@ def build_item(
     else:
         title = item.name
     img_url = mass.get_media_item_image_url(item)
+
+    if TYPE_CHECKING:
+        assert item.uri is not None
 
     return BrowseMedia(
         media_class=media_class or item.media_type.value,

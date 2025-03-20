@@ -37,7 +37,7 @@ async def test_diagnostics_with_bluetooth(
     mock_bluetooth_entry_with_raw_adv: MockESPHomeDevice,
 ) -> None:
     """Test diagnostics for config entry with Bluetooth."""
-    scanner = bluetooth.async_scanner_by_source(hass, "11:22:33:44:55:AA")
+    scanner = bluetooth.async_scanner_by_source(hass, "AA:BB:CC:DD:EE:FC")
     assert scanner is not None
     assert scanner.connectable is True
     entry = mock_bluetooth_entry_with_raw_adv.entry
@@ -49,13 +49,15 @@ async def test_diagnostics_with_bluetooth(
             "connections_limit": 0,
             "scanner": {
                 "connectable": True,
+                "current_mode": None,
+                "requested_mode": None,
                 "discovered_device_timestamps": {},
                 "discovered_devices_and_advertisement_data": [],
                 "last_detection": ANY,
                 "monotonic_time": ANY,
-                "name": "test (11:22:33:44:55:AA)",
+                "name": "test (AA:BB:CC:DD:EE:FC)",
                 "scanning": True,
-                "source": "11:22:33:44:55:AA",
+                "source": "AA:BB:CC:DD:EE:FC",
                 "start_time": ANY,
                 "time_since_last_device_detection": {},
                 "type": "ESPHomeScanner",
@@ -64,6 +66,7 @@ async def test_diagnostics_with_bluetooth(
         "config": {
             "created_at": ANY,
             "data": {
+                "bluetooth_mac_address": "**REDACTED**",
                 "device_name": "test",
                 "host": "test.local",
                 "password": "",
@@ -87,6 +90,7 @@ async def test_diagnostics_with_bluetooth(
         "storage_data": {
             "api_version": {"major": 99, "minor": 99},
             "device_info": {
+                "bluetooth_mac_address": "**REDACTED**",
                 "bluetooth_proxy_feature_flags": 63,
                 "compilation_time": "",
                 "esphome_version": "1.0.0",

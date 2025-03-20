@@ -6,7 +6,6 @@ from aiohttp.cookiejar import CookieJar
 import eternalegypt
 from eternalegypt.eternalegypt import SMS
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -117,12 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
-    ]
-    if len(loaded_entries) == 1:
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
         hass.data.pop(DOMAIN, None)
         for service_name in hass.services.async_services()[DOMAIN]:
             hass.services.async_remove(DOMAIN, service_name)
