@@ -140,22 +140,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         device_registry, config_entry_id=entry.entry_id
     )
     for device in device_entries:
-        for identifier in device.identifiers:
-            # Check if home_data did not return this device.
-            if (
-                identifier[0] == DOMAIN
-                and identifier[1].replace("_dock", "") not in device_map
-            ):
-                # The home_data api returns ALL devices on the account
-                # even if they are offline, so we can safely delete.
-                _LOGGER.info(
-                    "Removing device: %s because it is no longer exists in your account",
-                    identifier[1],
-                )
-                device_registry.async_update_device(
-                    device_id=device.id,
-                    remove_config_entry_id=entry.entry_id,
-                )
+        # Remove any devices that are no longer in the account.
+        # The API returns all devices, even if they are offline
+        device_duids = {
+            identifier[1].replace("_dock", "") for identifier in device.identifiers
+        }
+        if any(device_duid in device_map for device_duid in device_duids):
+            continue
+        _LOGGER.info(
+            "Removing device: %s because it is no longer exists in your account",
+            device.name,
+        )
+        device_registry.async_update_device(
+            device_id=device.id,
+            remove_config_entry_id=entry.entry_id,
+        )
 
     return True
 
