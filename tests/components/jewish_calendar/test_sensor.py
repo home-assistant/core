@@ -552,14 +552,12 @@ OMER_PARAMS = [
 ]
 
 
-@pytest.mark.parametrize(("test_time", "result"), OMER_PARAMS)
+@pytest.mark.parametrize(("test_time", "results"), OMER_PARAMS, indirect=True)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_omer_sensor(
-    hass: HomeAssistant, config_entry: MockConfigEntry, test_time, result
+    hass: HomeAssistant, config_entry: MockConfigEntry, test_time: dt, results: str
 ) -> None:
     """Test Omer Count sensor output."""
-    test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
-
     with freeze_time(test_time):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -569,7 +567,7 @@ async def test_omer_sensor(
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.jewish_calendar_day_of_the_omer").state == result
+    assert hass.states.get("sensor.jewish_calendar_day_of_the_omer").state == results
 
 
 DAFYOMI_PARAMS = [
@@ -581,14 +579,12 @@ DAFYOMI_PARAMS = [
 ]
 
 
-@pytest.mark.parametrize(("test_time", "result"), DAFYOMI_PARAMS)
+@pytest.mark.parametrize(("test_time", "results"), DAFYOMI_PARAMS, indirect=True)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_dafyomi_sensor(
-    hass: HomeAssistant, config_entry: MockConfigEntry, test_time, result
+    hass: HomeAssistant, config_entry: MockConfigEntry, test_time: dt, results: str
 ) -> None:
     """Test Daf Yomi sensor output."""
-    test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
-
     with freeze_time(test_time):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -598,7 +594,7 @@ async def test_dafyomi_sensor(
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.jewish_calendar_daf_yomi").state == result
+    assert hass.states.get("sensor.jewish_calendar_daf_yomi").state == results
 
 
 async def test_no_discovery_info(
