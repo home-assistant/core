@@ -142,7 +142,7 @@ def config_entry(
 @pytest.fixture
 async def setup_at_time(
     test_time: dt.datetime, hass: HomeAssistant, config_entry: MockConfigEntry
-) -> HomeAssistant:
+) -> None:
     """Set up the jewish_calendar integration at a specific time."""
     with freeze_time(test_time):
         config_entry.add_to_hass(hass)
@@ -152,4 +152,3 @@ async def setup_at_time(
         future = test_time + dt.timedelta(seconds=30)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
-    return hass
