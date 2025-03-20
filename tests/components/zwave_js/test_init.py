@@ -266,10 +266,13 @@ async def test_listen_done_during_setup_after_forward_entry(
     """Test listen task finishing during setup after forward entry."""
     assert hass.state is CoreState.running
 
+    original_send_command_side_effect = client.async_send_command.side_effect
+
     async def send_command_side_effect(*args: Any, **kwargs: Any) -> None:
         """Mock send command."""
         listen_block.set()
         getattr(listen_result, listen_future_result_method)(listen_future_result)
+        client.async_send_command.side_effect = original_send_command_side_effect
         # Yield to allow the listen task to run
         await asyncio.sleep(0)
 
