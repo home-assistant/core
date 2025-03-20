@@ -1,12 +1,11 @@
 """Provides a sensor for Home Connect."""
 
-import contextlib
 from dataclasses import dataclass
 from datetime import timedelta
+import logging
 from typing import cast
 
 from aiohomeconnect.model import EventKey, StatusKey
-from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -28,7 +27,9 @@ from .const import (
     UNIT_MAP,
 )
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
-from .entity import HomeConnectEntity
+from .entity import HomeConnectEntity, constraint_fetcher
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -335,16 +336,14 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
             else:
                 await self.fetch_unit()
 
+    @constraint_fetcher
     async def fetch_unit(self) -> None:
         """Fetch the unit of measurement."""
-        with contextlib.suppress(HomeConnectError):
-            data = await self.coordinator.client.get_status_value(
-                self.appliance.info.ha_id, status_key=cast(StatusKey, self.bsh_key)
-            )
-            if data.unit:
-                self._attr_native_unit_of_measurement = UNIT_MAP.get(
-                    data.unit, data.unit
-                )
+        data = await self.coordinator.client.get_status_value(
+            self.appliance.info.ha_id, status_key=cast(StatusKey, self.bsh_key)
+        )
+        if data.unit:
+            self._attr_native_unit_of_measurement = UNIT_MAP.get(data.unit, data.unit)
 
 
 class HomeConnectProgramSensor(HomeConnectSensor):
@@ -386,6 +385,13 @@ class HomeConnectProgramSensor(HomeConnectSensor):
 
     def update_native_value(self) -> None:
         """Update the program sensor's status."""
+        self.program_running = (
+            status := self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
+        ) is not None and status.value in [
+            BSH_OPERATION_STATE_RUN,
+            BSH_OPERATION_STATE_PAUSE,
+            BSH_OPERATION_STATE_FINISHED,
+        ]
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
         if event:
             self._update_native_value(event.value)

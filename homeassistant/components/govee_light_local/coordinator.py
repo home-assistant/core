@@ -112,6 +112,10 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         """Remove a device by IP address from manual discovery queue."""
         self._controller.remove_device_from_discovery_queue(ip)
 
+    def remove_device(self, device: GoveeDevice) -> None:
+        """Remove a device from the controller."""
+        self._controller.remove_device(device)
+
     def get_device_by_ip(self, ip: str) -> GoveeDevice | None:
         """Return a device by IP address."""
         return self._controller.get_device_by_ip(ip)

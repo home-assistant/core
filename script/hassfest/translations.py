@@ -40,6 +40,7 @@ ALLOW_NAME_TRANSLATION = {
     "local_ip",
     "local_todo",
     "nmap_tracker",
+    "remote_calendar",
     "rpi_power",
     "swiss_public_transport",
     "waze_travel_time",

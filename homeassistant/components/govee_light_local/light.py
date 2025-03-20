@@ -150,6 +150,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
                         device.id,
                         remove_config_entry_id=self.coordinator.config_entry.entry_id,
                     )
+            self.coordinator.remove_device(self._device)
             await self.async_remove(force_remove=True)
 
     @property
