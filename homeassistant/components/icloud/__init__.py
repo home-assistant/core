@@ -98,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         gps_accuracy_threshold,
         entry,
     )
-    await asyncio.wait_for(hass.async_add_executor_job(account.setup), timeout=60)
+    hass.async_add_executor_job(account.setup)
 
     hass.data[DOMAIN][entry.unique_id] = account
 
