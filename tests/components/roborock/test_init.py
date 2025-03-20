@@ -17,6 +17,7 @@ from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
 from .mock_data import HOME_DATA
@@ -295,3 +296,34 @@ async def test_no_user_agreement(
         await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
         assert mock_roborock_entry.error_reason_translation_key == "no_user_agreement"
+
+
+async def test_stale_device(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    mock_roborock_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
+) -> None:
+    """Test that we remove a device if it no longer is given by home_data."""
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+    existing_devices = device_registry.devices.get_devices_for_config_entry_id(
+        mock_roborock_entry.entry_id
+    )
+    assert len(existing_devices) == 5  # 2 for each robot, 1 for A01
+    hd = deepcopy(HOME_DATA)
+    hd.devices = [hd.devices[0]]
+
+    with patch(
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+        return_value=hd,
+    ):
+        await hass.config_entries.async_reload(mock_roborock_entry.entry_id)
+        await hass.async_block_till_done()
+    new_devices = device_registry.devices.get_devices_for_config_entry_id(
+        mock_roborock_entry.entry_id
+    )
+    assert (
+        len(new_devices) == 3
+    )  # 2 for the one remaining robot. 1 for the A01 which is shared and therefore
+    # not deleted.

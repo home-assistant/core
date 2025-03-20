@@ -148,6 +148,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             ):
                 # The home_data api returns ALL devices on the account
                 # even if they are offline, so we can safely delete.
+                _LOGGER.info(
+                    "Removing device: %s because it is no longer exists in your account",
+                    identifier[1],
+                )
                 device_registry.async_update_device(
                     device_id=device.id,
                     remove_config_entry_id=entry.entry_id,
