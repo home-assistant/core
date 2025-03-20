@@ -98,9 +98,11 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self.data = { **self.data, **user_input }
+            self.data = {**self.data, **user_input}
 
-            errors = await self.check_errors(self.data[CONF_HOST], self.data[CONF_PORT])
+            errors = await self.validate_connection(
+                self.data[CONF_HOST], self.data[CONF_PORT]
+            )
 
         if self.api and not errors:
             self.api.disconnect()
@@ -132,7 +134,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def check_errors(self, host: str, port: int) -> dict[str, str]:
+    async def validate_connection(self, host: str, port: int) -> dict[str, str]:
         """Check for errors with configuration.
 
         1. Check connectivity to configured host and port; and
