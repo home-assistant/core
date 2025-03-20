@@ -6863,6 +6863,12 @@ def test_combine(hass: HomeAssistant) -> None:
         hass,
     ).async_render() == {"a": 1, "b": {"y": 2}, "c": 4}
 
+    # Test that None values are handled correctly in recursive merge
+    assert template.Template(
+        "{{ combine({'a': 1, 'b': none}, {'b': {'y': 2}, 'c': 4}, recursive=True) }}",
+        hass,
+    ).async_render() == {"a": 1, "b": {"y": 2}, "c": 4}
+
     with pytest.raises(
         TemplateError, match="combine expected at least 1 argument, got 0"
     ):
