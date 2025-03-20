@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
@@ -108,7 +108,7 @@ def make_flume_datas(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: FlumeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Flume sensor."""
 

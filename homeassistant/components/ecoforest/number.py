@@ -9,7 +9,7 @@ from pyecoforest.models.device import Device
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import EcoforestConfigEntry
 from .entity import EcoforestEntity
@@ -37,7 +37,7 @@ NUMBER_ENTITIES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EcoforestConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ecoforest number platform."""
     coordinator = config_entry.runtime_data

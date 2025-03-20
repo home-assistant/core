@@ -13,7 +13,7 @@ from asyncsleepiq import (
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, FOOT_WARMER
 from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
@@ -23,7 +23,7 @@ from .entity import SleepIQBedEntity, SleepIQSleeperEntity, sleeper_for_side
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ foundation preset select entities."""
     data: SleepIQData = hass.data[DOMAIN][entry.entry_id]

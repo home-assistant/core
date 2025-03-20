@@ -7,14 +7,16 @@ from datetime import datetime
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import FytaConfigEntry, FytaCoordinator
 from .entity import FytaPlantEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: FytaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FytaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the FYTA plant images."""
     coordinator = entry.runtime_data

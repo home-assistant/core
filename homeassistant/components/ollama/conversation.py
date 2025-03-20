@@ -15,8 +15,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session, intent, llm
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import intent, llm
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_KEEP_ALIVE,
@@ -40,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
     agent = OllamaConversationEntity(config_entry)
@@ -206,18 +206,6 @@ class OllamaConversationEntity(
         """Return a list of supported languages."""
         return MATCH_ALL
 
-    async def async_process(
-        self, user_input: conversation.ConversationInput
-    ) -> conversation.ConversationResult:
-        """Process a sentence."""
-        with (
-            chat_session.async_get_chat_session(
-                self.hass, user_input.conversation_id
-            ) as session,
-            conversation.async_get_chat_log(self.hass, session, user_input) as chat_log,
-        ):
-            return await self._async_handle_message(user_input, chat_log)
-
     async def _async_handle_message(
         self,
         user_input: conversation.ConversationInput,
@@ -292,7 +280,9 @@ class OllamaConversationEntity(
             )
         intent_response.async_set_speech(chat_log.content[-1].content or "")
         return conversation.ConversationResult(
-            response=intent_response, conversation_id=chat_log.conversation_id
+            response=intent_response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
         )
 
     def _trim_history(self, message_history: MessageHistory, max_messages: int) -> None:

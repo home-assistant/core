@@ -107,7 +107,7 @@ def outlet_fixture():
 
 @pytest.fixture(name="humidifier")
 def humidifier_fixture():
-    """Create a mock VeSync humidifier fixture."""
+    """Create a mock VeSync Classic200S humidifier fixture."""
     return Mock(
         VeSyncHumid200300S,
         cid="200s-humidifier",
@@ -135,6 +135,34 @@ def humidifier_fixture():
     )
 
 
+@pytest.fixture(name="humidifier_300s")
+def humidifier_300s_fixture():
+    """Create a mock VeSync Classic300S humidifier fixture."""
+    return Mock(
+        VeSyncHumid200300S,
+        cid="300s-humidifier",
+        config={
+            "auto_target_humidity": 40,
+            "display": "true",
+            "automatic_stop": "true",
+        },
+        details={"humidity": 35, "mode": "manual", "night_light_brightness": 50},
+        device_type="Classic300S",
+        device_name="Humidifier 300s",
+        device_status="on",
+        mist_level=6,
+        mist_modes=["auto", "manual"],
+        mode=None,
+        night_light=True,
+        sub_device_no=0,
+        config_module="configModule",
+        connection_status="online",
+        current_firm_version="1.0.0",
+        water_lacks=False,
+        water_tank_lifted=False,
+    )
+
+
 @pytest.fixture(name="humidifier_config_entry")
 async def humidifier_config_entry(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker, config
@@ -153,6 +181,21 @@ async def humidifier_config_entry(
     await hass.async_block_till_done()
 
     return entry
+
+
+@pytest.fixture
+async def install_humidifier_device(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    manager,
+    request: pytest.FixtureRequest,
+) -> None:
+    """Create a mock VeSync config entry with the specified humidifier device."""
+
+    # Install the defined humidifier
+    manager._dev_list["fans"].append(request.getfixturevalue(request.param))
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture(name="switch_old_id_config_entry")

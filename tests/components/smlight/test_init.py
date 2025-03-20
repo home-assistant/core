@@ -165,6 +165,7 @@ async def test_device_legacy_firmware(
     """Test device setup for old firmware version that dont support required API."""
     LEGACY_VERSION = "v0.9.9"
     mock_smlight_client.get_sensors.side_effect = SmlightError
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info(
         legacy_api=2, sw_version=LEGACY_VERSION, MAC="AA:BB:CC:DD:EE:FF"
     )

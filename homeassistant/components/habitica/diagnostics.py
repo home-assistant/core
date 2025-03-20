@@ -23,5 +23,5 @@ async def async_get_config_entry_diagnostics(
             CONF_URL: config_entry.data[CONF_URL],
             CONF_API_USER: config_entry.data[CONF_API_USER],
         },
-        "habitica_data": habitica_data.to_dict()["data"],
+        "habitica_data": habitica_data.to_dict(omit_none=False)["data"],
     }

@@ -6,7 +6,11 @@ from letpot.exceptions import LetPotConnectionException, LetPotException
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.components.switch import (
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -30,6 +34,44 @@ async def test_all_entities(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("service", "parameter_value"),
+    [
+        (
+            SERVICE_TURN_ON,
+            True,
+        ),
+        (
+            SERVICE_TURN_OFF,
+            False,
+        ),
+        (
+            SERVICE_TOGGLE,
+            False,  # Mock switch is on after setup, toggle will turn off
+        ),
+    ],
+)
+async def test_set_switch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_device_client: MagicMock,
+    service: str,
+    parameter_value: bool,
+) -> None:
+    """Test switch entity turned on/turned off/toggled."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        "switch",
+        service,
+        blocking=True,
+        target={"entity_id": "switch.garden_power"},
+    )
+
+    mock_device_client.set_power.assert_awaited_once_with(parameter_value)
 
 
 @pytest.mark.parametrize(

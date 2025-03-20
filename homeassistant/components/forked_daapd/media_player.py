@@ -7,7 +7,6 @@ from collections import defaultdict
 import logging
 from typing import Any
 
-from pyforked_daapd import ForkedDaapdAPI
 from pylibrespot_java import LibrespotJavaAPI
 
 from homeassistant.components import media_source
@@ -28,15 +27,14 @@ from homeassistant.components.spotify import (
     resolve_spotify_media_type,
     spotify_uri_from_media_browser_url,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .browse_media import (
@@ -55,9 +53,7 @@ from .const import (
     DEFAULT_TTS_PAUSE_TIME,
     DEFAULT_TTS_VOLUME,
     DEFAULT_UNMUTE_VOLUME,
-    DOMAIN,
     FD_NAME,
-    HASS_DATA_UPDATER_KEY,
     KNOWN_PIPES,
     PIPE_FUNCTION_MAP,
     SIGNAL_ADD_ZONES,
@@ -74,29 +70,25 @@ from .const import (
     SUPPORTED_FEATURES_ZONE,
     TTS_TIMEOUT,
 )
-from .coordinator import ForkedDaapdUpdater
+from .coordinator import ForkedDaapdConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ForkedDaapdConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up forked-daapd from a config entry."""
-    host = config_entry.data[CONF_HOST]
-    port = config_entry.data[CONF_PORT]
-    password = config_entry.data[CONF_PASSWORD]
-    forked_daapd_api = ForkedDaapdAPI(
-        async_get_clientsession(hass), host, port, password
-    )
+    forked_daapd_updater = config_entry.runtime_data
+
+    host: str = config_entry.data[CONF_HOST]
+    forked_daapd_api = forked_daapd_updater.api
     forked_daapd_master = ForkedDaapdMaster(
         clientsession=async_get_clientsession(hass),
         api=forked_daapd_api,
         ip_address=host,
-        api_port=port,
-        api_password=password,
         config_entry=config_entry,
     )
 
@@ -113,20 +105,12 @@ async def async_setup_entry(
     )
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
-    if not hass.data.get(DOMAIN):
-        hass.data[DOMAIN] = {config_entry.entry_id: {}}
-
     async_add_entities([forked_daapd_master], False)
-    forked_daapd_updater = ForkedDaapdUpdater(
-        hass, forked_daapd_api, config_entry.entry_id
-    )
-    hass.data[DOMAIN][config_entry.entry_id][HASS_DATA_UPDATER_KEY] = (
-        forked_daapd_updater
-    )
+
     await forked_daapd_updater.async_init()
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: ForkedDaapdConfigEntry) -> None:
     """Handle options update."""
     async_dispatcher_send(
         hass, SIGNAL_CONFIG_OPTIONS_UPDATE.format(entry.entry_id), entry.options
@@ -240,9 +224,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
 
     _attr_should_poll = False
 
-    def __init__(
-        self, clientsession, api, ip_address, api_port, api_password, config_entry
-    ):
+    def __init__(self, clientsession, api, ip_address, config_entry):
         """Initialize the ForkedDaapd Master Device."""
         # Leave the api public so the browse media helpers can use it
         self.api = api
@@ -269,7 +251,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         self._on_remove = None
         self._available = False
         self._clientsession = clientsession
-        self._config_entry = config_entry
+        self._entry_id = config_entry.entry_id
         self.update_options(config_entry.options)
         self._paused_event = asyncio.Event()
         self._pause_requested = False
@@ -282,42 +264,42 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_PLAYER.format(self._config_entry.entry_id),
+                SIGNAL_UPDATE_PLAYER.format(self._entry_id),
                 self._update_player,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_QUEUE.format(self._config_entry.entry_id),
+                SIGNAL_UPDATE_QUEUE.format(self._entry_id),
                 self._update_queue,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_OUTPUTS.format(self._config_entry.entry_id),
+                SIGNAL_UPDATE_OUTPUTS.format(self._entry_id),
                 self._update_outputs,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_MASTER.format(self._config_entry.entry_id),
+                SIGNAL_UPDATE_MASTER.format(self._entry_id),
                 self._update_callback,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_CONFIG_OPTIONS_UPDATE.format(self._config_entry.entry_id),
+                SIGNAL_CONFIG_OPTIONS_UPDATE.format(self._entry_id),
                 self.update_options,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_DATABASE.format(self._config_entry.entry_id),
+                SIGNAL_UPDATE_DATABASE.format(self._entry_id),
                 self._update_database,
             )
         )
@@ -411,9 +393,9 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             self._track_info = defaultdict(str)
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID."""
-        return self._config_entry.entry_id
+        return self._entry_id
 
     @property
     def available(self) -> bool:

@@ -10,11 +10,7 @@ from homeassistant.helpers import config_validation as cv
 
 from .config import Day, ScheduleRecurrence
 from .const import DATA_MANAGER, LOGGER
-from .manager import (
-    DecryptOnDowloadNotSupported,
-    IncorrectPasswordError,
-    ManagerStateEvent,
-)
+from .manager import DecryptOnDowloadNotSupported, IncorrectPasswordError
 from .models import BackupNotFound, Folder
 
 
@@ -34,7 +30,6 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
     websocket_api.async_register_command(hass, handle_create_with_automatic_settings)
     websocket_api.async_register_command(hass, handle_delete)
     websocket_api.async_register_command(hass, handle_restore)
-    websocket_api.async_register_command(hass, handle_subscribe_events)
 
     websocket_api.async_register_command(hass, handle_config_info)
     websocket_api.async_register_command(hass, handle_config_update)
@@ -60,7 +55,7 @@ async def handle_info(
             "backups": list(backups.values()),
             "last_attempted_automatic_backup": manager.config.data.last_attempted_automatic_backup,
             "last_completed_automatic_backup": manager.config.data.last_completed_automatic_backup,
-            "last_non_idle_event": manager.last_non_idle_event,
+            "last_action_event": manager.last_action_event,
             "next_automatic_backup": manager.config.data.schedule.next_automatic_backup,
             "next_automatic_backup_additional": manager.config.data.schedule.next_automatic_backup_additional,
             "state": manager.state,
@@ -346,11 +341,13 @@ async def handle_config_info(
     )
 
 
+@callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "backup/config/update",
         vol.Optional("agents"): vol.Schema({str: {"protected": bool}}),
+        vol.Optional("automatic_backups_configured"): bool,
         vol.Optional("create_backup"): vol.Schema(
             {
                 vol.Optional("agent_ids"): vol.All([str], vol.Unique()),
@@ -368,8 +365,10 @@ async def handle_config_info(
         ),
         vol.Optional("retention"): vol.Schema(
             {
-                vol.Optional("copies"): vol.Any(int, None),
-                vol.Optional("days"): vol.Any(int, None),
+                # Note: We can't use cv.positive_int because it allows 0 even
+                # though 0 is not positive.
+                vol.Optional("copies"): vol.Any(vol.All(int, vol.Range(min=1)), None),
+                vol.Optional("days"): vol.Any(vol.All(int, vol.Range(min=1)), None),
             },
         ),
         vol.Optional("schedule"): vol.Schema(
@@ -385,8 +384,7 @@ async def handle_config_info(
         ),
     }
 )
-@websocket_api.async_response
-async def handle_config_update(
+def handle_config_update(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -396,24 +394,5 @@ async def handle_config_update(
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
-    await manager.config.update(**changes)
-    connection.send_result(msg["id"])
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "backup/subscribe_events"})
-@websocket_api.async_response
-async def handle_subscribe_events(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Subscribe to backup events."""
-
-    def on_event(event: ManagerStateEvent) -> None:
-        connection.send_message(websocket_api.event_message(msg["id"], event))
-
-    manager = hass.data[DATA_MANAGER]
-    on_event(manager.last_event)
-    connection.subscriptions[msg["id"]] = manager.async_subscribe_events(on_event)
+    manager.config.update(**changes)
     connection.send_result(msg["id"])

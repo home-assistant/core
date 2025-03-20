@@ -28,6 +28,13 @@ def mock_repeater_device(mock_device: MockDevice):
 
 
 @pytest.fixture
+def mock_ipv6_device(mock_device: MockDevice):
+    """Mock connecting to a devolo home network device using IPv6."""
+    mock_device.ip = "2001:db8::1"
+    return mock_device
+
+
+@pytest.fixture
 def mock_nonwifi_device(mock_device: MockDevice):
     """Mock connecting to a devolo home network device without wifi."""
     mock_device.device.features = ["reset", "update", "led", "intmtg"]

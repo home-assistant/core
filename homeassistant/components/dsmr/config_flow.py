@@ -59,7 +59,7 @@ class DSMRConnection:
         self._equipment_identifier = obis_ref.EQUIPMENT_IDENTIFIER
         if dsmr_version == "5B":
             self._equipment_identifier = obis_ref.BELGIUM_EQUIPMENT_IDENTIFIER
-        if dsmr_version == "5L":
+        if dsmr_version in ("5L", "5EONHU"):
             self._equipment_identifier = obis_ref.LUXEMBOURG_EQUIPMENT_IDENTIFIER
         if dsmr_version == "Q3D":
             self._equipment_identifier = obis_ref.Q3D_EQUIPMENT_IDENTIFIER
