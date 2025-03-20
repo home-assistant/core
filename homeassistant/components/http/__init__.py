@@ -227,6 +227,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     source_ip_task = create_eager_task(async_get_source_ip(hass))
 
+    codespace_domain = os.getenv("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
+    codespace_name = os.getenv("CODESPACE_NAME")
+    if codespace_domain and codespace_name:
+        _LOGGER.info("Detected GitHub Codespace, enabling X_FORWARDED_FOR from ::1")
+        use_x_forwarded_for = True
+        trusted_proxies += [IPv6Network("::1/128")]
+        if not hass.config.external_url:
+            codespace_url = f"https://{codespace_name}-{server_port}.{codespace_domain}"
+            _LOGGER.info(
+                "Detected GitHub Codespace, setting external_url: %s\n"
+                "Note that GitHub's default visibility 'private' may prevent non-browser access",
+                codespace_url,
+            )
+            hass.config.external_url = codespace_url
+
     server = HomeAssistantHTTP(
         hass,
         server_host=server_host,
