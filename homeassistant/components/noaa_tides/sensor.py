@@ -239,7 +239,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
         return attr
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the state of the device."""
         if self.data is None:
             return None
