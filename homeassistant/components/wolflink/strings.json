@@ -108,15 +108,7 @@
           "cooling": "Cooling",
           "tpw": "TPW",
           "warmwasservorrang": "DHW priority",
-          "mindest_kombizeit": "Minimum combi time",
-          "solarladung_aktiv": "Solar charge active",
-          "keine_aktivitat": "No activity",
-          "solarkreispumpentaktsperre_aktiv": "Solar circuit pump anti-cycle active",
-          "rohrenkollektorfunktion_aktiv": "Pipe collector function active",
-          "frostschutzfunktion_aktiv": "Frost protection function active",
-          "kollektorkuhlfunktion_aktiv": "Collector cooling function active",
-          "ruckkuhlfunktion_aktiv": "Return cooling function active",
-          "unterdruckung_fc_65": "Suppress FC 65"
+          "mindest_kombizeit": "Minimum combi time"
         }
       }
     }
