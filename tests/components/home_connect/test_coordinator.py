@@ -28,6 +28,7 @@ from homeassistant.components.home_connect.const import (
     BSH_DOOR_STATE_OPEN,
     BSH_EVENT_PRESENT_STATE_PRESENT,
     BSH_POWER_OFF,
+    DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntries, ConfigEntryState
 from homeassistant.const import EVENT_STATE_REPORTED, Platform
@@ -37,7 +38,7 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -489,3 +490,44 @@ async def test_event_listener_resilience(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == after_event_expected_state
+
+
+async def test_devices_updated_on_refresh(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test handling of devices added or deleted while event stream is down."""
+    appliances: list[HomeAppliance] = (
+        client.get_home_appliances.return_value.homeappliances
+    )
+    assert len(appliances) >= 3
+    client.get_home_appliances = AsyncMock(
+        return_value=ArrayOfHomeAppliances(appliances[:2]),
+    )
+
+    await async_setup_component(hass, "homeassistant", {})
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    for appliance in appliances[:2]:
+        assert device_registry.async_get_device({(DOMAIN, appliance.ha_id)})
+    assert not device_registry.async_get_device({(DOMAIN, appliances[2].ha_id)})
+
+    client.get_home_appliances = AsyncMock(
+        return_value=ArrayOfHomeAppliances(appliances[1:3]),
+    )
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": "switch.dishwasher_power"},
+        blocking=True,
+    )
+
+    assert not device_registry.async_get_device({(DOMAIN, appliances[0].ha_id)})
+    for appliance in appliances[2:3]:
+        assert device_registry.async_get_device({(DOMAIN, appliance.ha_id)})
