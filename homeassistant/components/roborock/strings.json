@@ -454,6 +454,18 @@
     "map_failure": {
       "message": "Something went wrong creating the map"
     },
+    "map_data_update": {
+      "message": "Failed to get map data: {error}"
+    },
+    "current_pos_map_data": {
+      "message": "Failed to retrieve map data."
+    },
+    "position_not_found": {
+      "message": "Robot position not found"
+    },
+    "update_data_fail": {
+      "message": "Failed to update data"
+    },
     "no_coordinators": {
       "message": "No devices were able to successfully setup"
     },

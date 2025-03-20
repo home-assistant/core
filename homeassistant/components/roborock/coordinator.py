@@ -190,7 +190,11 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         try:
             maps = await self.api.get_multi_maps_list()
         except RoborockException as err:
-            raise UpdateFailed("Failed to get map data: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="map_data_update",
+                translation_placeholders={"error": str(err)},
+            ) from err
         # Rooms names populated later with calls to `set_current_map_rooms` for each map
         roborock_maps = maps.map_info if (maps and maps.map_info) else ()
         stored_images = await asyncio.gather(
@@ -305,7 +309,10 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             await self.set_current_map_rooms()
         except RoborockException as ex:
             _LOGGER.debug("Failed to update data: %s", ex)
-            raise UpdateFailed(ex) from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_data_fail",
+            ) from ex
         if self.roborock_device_info.props.status.in_cleaning:
             if self._is_cloud_api:
                 self.update_interval = V1_CLOUD_IN_CLEANING_INTERVAL
