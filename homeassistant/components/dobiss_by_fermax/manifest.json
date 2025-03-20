@@ -1,0 +1,20 @@
+{
+  "domain": "dobiss",
+  "name": "dobiss",
+  "codeowners": [
+    "@koen-fermax",
+    "@kobedemetser"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/koen-fermax/hass-dobiss-plugin#",
+  "homekit": {},
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/koen-fermax/hass-dobiss-plugin/issues",
+  "requirements": [
+    "pydobiss==0.1.54"
+  ],
+  "ssdp": [],
+  "version": "1.0.0",
+  "zeroconf": []
+}
