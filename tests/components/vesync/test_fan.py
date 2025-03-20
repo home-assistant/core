@@ -59,31 +59,29 @@ async def test_fan_state(
 
 
 @pytest.mark.parametrize(
-    ("api_response", "expectation"),
-    [(False, pytest.raises(HomeAssistantError)), (True, NoException)],
+    ("action", "command"),
+    [
+        (SERVICE_TURN_ON, "pyvesync.vesyncfan.VeSyncTowerFan.turn_on"),
+        (SERVICE_TURN_OFF, "pyvesync.vesyncfan.VeSyncTowerFan.turn_off"),
+    ],
 )
-async def test_turn_on(
+async def test_turn_on_off_success(
     hass: HomeAssistant,
     fan_config_entry: MockConfigEntry,
-    api_response: bool,
-    expectation,
+    action: str,
+    command: str,
 ) -> None:
-    """Test turn_on method."""
+    """Test turn_on and turn_off method."""
 
-    # turn_on returns False indicating failure in which case fan.turn_on
-    # raises HomeAssistantError.
     with (
-        expectation,
-        patch(
-            "pyvesync.vesyncfan.VeSyncTowerFan.turn_on", return_value=api_response
-        ) as method_mock,
+        patch(command, return_value=True) as method_mock,
     ):
         with patch(
             "homeassistant.components.vesync.fan.VeSyncFanHA.schedule_update_ha_state"
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
-                SERVICE_TURN_ON,
+                action,
                 {ATTR_ENTITY_ID: ENTITY_FAN},
                 blocking=True,
             )
@@ -94,38 +92,34 @@ async def test_turn_on(
 
 
 @pytest.mark.parametrize(
-    ("api_response", "expectation"),
-    [(False, pytest.raises(HomeAssistantError)), (True, NoException)],
+    ("action", "command"),
+    [
+        (SERVICE_TURN_ON, "pyvesync.vesyncfan.VeSyncTowerFan.turn_on"),
+        (SERVICE_TURN_OFF, "pyvesync.vesyncfan.VeSyncTowerFan.turn_off"),
+    ],
 )
-async def test_turn_off(
+async def test_turn_on_off_raises_error(
     hass: HomeAssistant,
     fan_config_entry: MockConfigEntry,
-    api_response: bool,
-    expectation,
+    action: str,
+    command: str,
 ) -> None:
-    """Test turn_off method."""
+    """Test turn_on and turn_off raises errors when fails."""
 
-    # turn_off returns False indicating failure in which case fan.turn_off
-    # raises HomeAssistantError.
+    # returns False indicating failure in which case raises HomeAssistantError.
     with (
-        expectation,
-        patch(
-            "pyvesync.vesyncfan.VeSyncTowerFan.turn_off", return_value=api_response
-        ) as method_mock,
+        patch(command, return_value=False) as method_mock,
     ):
-        with patch(
-            "homeassistant.components.vesync.fan.VeSyncFanHA.schedule_update_ha_state"
-        ) as update_mock:
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 FAN_DOMAIN,
-                SERVICE_TURN_OFF,
+                action,
                 {ATTR_ENTITY_ID: ENTITY_FAN},
                 blocking=True,
             )
 
         await hass.async_block_till_done()
         method_mock.assert_called_once()
-        update_mock.assert_called_once()
 
 
 @pytest.mark.parametrize(
