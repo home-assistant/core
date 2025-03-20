@@ -131,6 +131,17 @@
         "name": "Ventilate"
       }
     },
+    "climate": {
+      "homee": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "Manual"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "light_instance": {
         "name": "Light {instance}"
