@@ -8,7 +8,15 @@ from unittest.mock import AsyncMock, MagicMock
 
 from music_assistant_models.api import MassEvent
 from music_assistant_models.enums import EventType
-from music_assistant_models.media_items import Album, Artist, Playlist, Radio, Track
+from music_assistant_models.media_items import (
+    Album,
+    Artist,
+    Audiobook,
+    Playlist,
+    Podcast,
+    Radio,
+    Track,
+)
 from music_assistant_models.player import Player
 from music_assistant_models.player_queue import PlayerQueue
 from syrupy import SnapshotAssertion
@@ -62,6 +70,10 @@ async def setup_integration_from_fixtures(
     music.get_playlist_tracks = AsyncMock(return_value=library_playlist_tracks)
     library_radios = create_library_radios_from_fixture()
     music.get_library_radios = AsyncMock(return_value=library_radios)
+    library_audiobooks = create_library_audiobooks_from_fixture()
+    music.get_library_audiobooks = AsyncMock(return_value=library_audiobooks)
+    library_podcasts = create_library_podcasts_from_fixture()
+    music.get_library_podcasts = AsyncMock(return_value=library_podcasts)
     music.get_item_by_uri = AsyncMock()
 
     config_entry.add_to_hass(hass)
@@ -130,6 +142,18 @@ def create_library_radios_from_fixture() -> list[Radio]:
     """Create MA Radios from fixture."""
     fixture_data = load_and_parse_fixture("library_radios")
     return [Radio.from_dict(radio_data) for radio_data in fixture_data]
+
+
+def create_library_audiobooks_from_fixture() -> list[Audiobook]:
+    """Create MA Audiobooks from fixture."""
+    fixture_data = load_and_parse_fixture("library_audiobooks")
+    return [Audiobook.from_dict(radio_data) for radio_data in fixture_data]
+
+
+def create_library_podcasts_from_fixture() -> list[Podcast]:
+    """Create MA Podcasts from fixture."""
+    fixture_data = load_and_parse_fixture("library_podcasts")
+    return [Podcast.from_dict(radio_data) for radio_data in fixture_data]
 
 
 async def trigger_subscription_callback(

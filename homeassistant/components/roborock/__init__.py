@@ -65,6 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_key="no_user_agreement",
         ) from err
     except RoborockException as err:
+        _LOGGER.debug("Failed to get Roborock home data: %s", err)
         raise ConfigEntryNotReady(
             "Failed to get Roborock home data",
             translation_domain=DOMAIN,
@@ -110,6 +111,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_key="no_coordinators",
         )
     valid_coordinators = RoborockCoordinators(v1_coords, a01_coords)
+    await asyncio.gather(
+        *(coord.refresh_coordinator_map() for coord in valid_coordinators.v1)
+    )
 
     async def on_stop(_: Any) -> None:
         _LOGGER.debug("Shutting down roborock")

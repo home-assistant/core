@@ -48,8 +48,6 @@ _LOGGER = logging.getLogger(__name__)
 
 type HomeConnectConfigEntry = ConfigEntry[HomeConnectCoordinator]
 
-EVENT_STREAM_RECONNECT_DELAY = 30
-
 
 @dataclass(frozen=True, kw_only=True)
 class HomeConnectApplianceData:
@@ -159,10 +157,20 @@ class HomeConnectCoordinator(
 
     async def _event_listener(self) -> None:  # noqa: C901
         """Match event with listener for event type."""
+        retry_time = 10
         while True:
             try:
                 async for event_message in self.client.stream_all_events():
+                    retry_time = 10
                     event_message_ha_id = event_message.ha_id
+                    if (
+                        event_message_ha_id in self.data
+                        and not self.data[event_message_ha_id].info.connected
+                    ):
+                        self.data[event_message_ha_id].info.connected = True
+                        self._call_all_event_listeners_for_appliance(
+                            event_message_ha_id
+                        )
                     match event_message.type:
                         case EventType.STATUS:
                             statuses = self.data[event_message_ha_id].status
@@ -224,15 +232,15 @@ class HomeConnectCoordinator(
                                 self.data[event_message_ha_id].update(appliance_data)
                             else:
                                 self.data[event_message_ha_id] = appliance_data
-                            for listener, context in list(
-                                self._special_listeners.values()
-                            ) + list(self._listeners.values()):
-                                assert isinstance(context, tuple)
+                            for listener, context in self._special_listeners.values():
                                 if (
                                     EventKey.BSH_COMMON_APPLIANCE_DEPAIRED
                                     not in context
                                 ):
                                     listener()
+                            self._call_all_event_listeners_for_appliance(
+                                event_message_ha_id
+                            )
 
                         case EventType.DISCONNECTED:
                             self.data[event_message_ha_id].info.connected = False
@@ -258,21 +266,18 @@ class HomeConnectCoordinator(
             except (EventStreamInterruptedError, HomeConnectRequestError) as error:
                 _LOGGER.debug(
                     "Non-breaking error (%s) while listening for events,"
-                    " continuing in 30 seconds",
-                    type(error).__name__,
+                    " continuing in %s seconds",
+                    error,
+                    retry_time,
                 )
-                await asyncio_sleep(EVENT_STREAM_RECONNECT_DELAY)
+                await asyncio_sleep(retry_time)
+                retry_time = min(retry_time * 2, 3600)
             except HomeConnectApiError as error:
                 _LOGGER.error("Error while listening for events: %s", error)
                 self.hass.config_entries.async_schedule_reload(
                     self.config_entry.entry_id
                 )
                 break
-            # if there was a non-breaking error, we continue listening
-            # but we need to refresh the data to get the possible changes
-            # that happened while the event stream was interrupted
-            await self._async_setup()
-            await self.async_refresh()
 
             # Trigger to delete the possible depaired device entities
             # from known_entities variable at common.py
@@ -298,6 +303,8 @@ class HomeConnectCoordinator(
 
     async def _async_update_data(self) -> dict[str, HomeConnectApplianceData]:
         """Fetch data from Home Connect."""
+        await self._async_setup()
+
         for appliance_data in self.data.values():
             appliance = appliance_data.info
             ha_id = appliance.ha_id
@@ -341,6 +348,8 @@ class HomeConnectCoordinator(
                 translation_placeholders=get_dict_from_home_connect_error(error),
             ) from error
         except HomeConnectError as error:
+            for appliance_data in self.data.values():
+                appliance_data.info.connected = False
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="fetch_api_error",
@@ -406,9 +415,7 @@ class HomeConnectCoordinator(
             _LOGGER.debug(
                 "Error fetching settings for %s: %s",
                 appliance.ha_id,
-                error
-                if isinstance(error, HomeConnectApiError)
-                else type(error).__name__,
+                error,
             )
             settings = {}
         try:
@@ -422,9 +429,7 @@ class HomeConnectCoordinator(
             _LOGGER.debug(
                 "Error fetching status for %s: %s",
                 appliance.ha_id,
-                error
-                if isinstance(error, HomeConnectApiError)
-                else type(error).__name__,
+                error,
             )
             status = {}
 
@@ -440,9 +445,7 @@ class HomeConnectCoordinator(
                 _LOGGER.debug(
                     "Error fetching programs for %s: %s",
                     appliance.ha_id,
-                    error
-                    if isinstance(error, HomeConnectApiError)
-                    else type(error).__name__,
+                    error,
                 )
             else:
                 programs.extend(all_programs.programs)
@@ -536,9 +539,7 @@ class HomeConnectCoordinator(
             _LOGGER.debug(
                 "Error fetching options for %s: %s",
                 ha_id,
-                error
-                if isinstance(error, HomeConnectApiError)
-                else type(error).__name__,
+                error,
             )
             return {}
 
