@@ -458,7 +458,7 @@
       "message": "Failed to get map data: {error}"
     },
     "current_pos_map_data": {
-      "message": "Failed to retrieve map data."
+      "message": "Failed to retrieve map data"
     },
     "position_not_found": {
       "message": "Robot position not found"
