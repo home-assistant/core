@@ -68,7 +68,7 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.4.0
 urllib3>=1.26.5,<2
-uv==0.6.1
+uv==0.6.8
 voluptuous-openapi==0.0.6
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
