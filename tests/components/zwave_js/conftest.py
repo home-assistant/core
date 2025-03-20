@@ -13,7 +13,9 @@ from zwave_js_server.model.node import Node
 from zwave_js_server.model.node.data_model import NodeDataType
 from zwave_js_server.version import VersionInfo
 
+from homeassistant.components.zwave_js import PLATFORMS
 from homeassistant.components.zwave_js.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonArrayType
 
@@ -828,16 +830,24 @@ def nortek_thermostat_removed_event_fixture(client) -> Node:
 async def integration_fixture(
     hass: HomeAssistant,
     client: MagicMock,
+    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the zwave_js integration."""
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.zwave_js.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     client.async_send_command.reset_mock()
 
     return entry
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return PLATFORMS
 
 
 @pytest.fixture(name="chain_actuator_zws12")
