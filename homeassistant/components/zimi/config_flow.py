@@ -66,9 +66,6 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
         api_description: ControlPointDescription | None = None
 
         self.data: dict[str, str] = {}
-        self.data[CONF_HOST] = ""
-        self.data[CONF_PORT] = DEFAULT_PORT
-        self.data[CONF_MAC] = ""
 
         try:
             api_description = await ControlPointDiscoveryService().discover()
