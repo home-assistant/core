@@ -1,7 +1,7 @@
 """Test the Home Assistant Yellow config flow."""
 
 from collections.abc import Generator
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -18,7 +18,10 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     get_flasher_addon_manager,
     get_multiprotocol_addon_manager,
 )
-from homeassistant.components.homeassistant_hardware.util import ApplicationType
+from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
+    FirmwareInfo,
+)
 from homeassistant.components.homeassistant_yellow.const import DOMAIN, RADIO_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -32,6 +35,16 @@ def config_flow_handler(hass: HomeAssistant) -> Generator[None]:
     """Fixture for a test config flow."""
     with patch(
         "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.WaitingAddonManager.async_wait_until_addon_state"
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_get_supervisor_client(supervisor_client: AsyncMock) -> Generator[None]:
+    """Mock get_supervisor_client method."""
+    with patch(
+        "homeassistant.components.homeassistant_yellow.config_flow.get_supervisor_client",
+        return_value=supervisor_client,
     ):
         yield
 
@@ -56,12 +69,9 @@ def mock_set_yellow_settings():
 
 
 @pytest.fixture(name="reboot_host")
-def mock_reboot_host():
+def mock_reboot_host(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock rebooting host."""
-    with patch(
-        "homeassistant.components.homeassistant_yellow.config_flow.async_reboot_host",
-    ) as reboot_host:
-        yield reboot_host
+    return supervisor_client.host.reboot
 
 
 async def test_config_flow(hass: HomeAssistant) -> None:
@@ -75,8 +85,14 @@ async def test_config_flow(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
         patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_type",
-            return_value=ApplicationType.EZSP,
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
+            return_value=FirmwareInfo(
+                device=RADIO_DEVICE,
+                firmware_type=ApplicationType.EZSP,
+                firmware_version=None,
+                owners=[],
+                source="probe",
+            ),
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -130,11 +146,11 @@ async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
 )
 async def test_option_flow_led_settings(
     hass: HomeAssistant,
-    get_yellow_settings,
-    set_yellow_settings,
-    reboot_host,
-    reboot_menu_choice,
-    reboot_calls,
+    get_yellow_settings: AsyncMock,
+    set_yellow_settings: AsyncMock,
+    reboot_host: AsyncMock,
+    reboot_menu_choice: str,
+    reboot_calls: int,
 ) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
@@ -176,7 +192,7 @@ async def test_option_flow_led_settings(
         {"next_step_id": reboot_menu_choice},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert len(reboot_host.mock_calls) == reboot_calls
+    assert reboot_host.call_count == reboot_calls
 
 
 async def test_option_flow_led_settings_unchanged(
@@ -323,10 +339,22 @@ async def test_firmware_options_flow(hass: HomeAssistant) -> None:
     async def mock_async_step_pick_firmware_zigbee(self, data):
         return await self.async_step_confirm_zigbee(user_input={})
 
-    with patch(
-        "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareOptionsFlow.async_step_pick_firmware_zigbee",
-        autospec=True,
-        side_effect=mock_async_step_pick_firmware_zigbee,
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareOptionsFlow.async_step_pick_firmware_zigbee",
+            autospec=True,
+            side_effect=mock_async_step_pick_firmware_zigbee,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
+            return_value=FirmwareInfo(
+                device=RADIO_DEVICE,
+                firmware_type=ApplicationType.EZSP,
+                firmware_version="7.4.4.0 build 0",
+                owners=[],
+                source="probe",
+            ),
+        ),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -338,6 +366,7 @@ async def test_firmware_options_flow(hass: HomeAssistant) -> None:
 
     assert config_entry.data == {
         "firmware": "ezsp",
+        "firmware_version": "7.4.4.0 build 0",
     }
 
 

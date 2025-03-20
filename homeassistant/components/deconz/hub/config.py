@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 
 from ..const import (
@@ -17,12 +16,15 @@ from ..const import (
     DEFAULT_ALLOW_NEW_DEVICES,
 )
 
+if TYPE_CHECKING:
+    from .. import DeconzConfigEntry
+
 
 @dataclass
 class DeconzConfig:
     """Represent a deCONZ config entry."""
 
-    entry: ConfigEntry
+    entry: DeconzConfigEntry
 
     host: str
     port: int
@@ -33,7 +35,7 @@ class DeconzConfig:
     allow_new_devices: bool
 
     @classmethod
-    def from_config_entry(cls, config_entry: ConfigEntry) -> Self:
+    def from_config_entry(cls, config_entry: DeconzConfigEntry) -> Self:
         """Create object from config entry."""
         config = config_entry.data
         options = config_entry.options

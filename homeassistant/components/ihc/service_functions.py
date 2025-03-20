@@ -3,7 +3,7 @@
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     ATTR_CONTROLLER_ID,

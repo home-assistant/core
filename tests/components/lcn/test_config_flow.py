@@ -2,7 +2,12 @@
 
 from unittest.mock import patch
 
-from pypck.connection import PchkAuthenticationError, PchkLicenseError
+from pypck.connection import (
+    PchkAuthenticationError,
+    PchkConnectionFailedError,
+    PchkConnectionRefusedError,
+    PchkLicenseError,
+)
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -98,7 +103,8 @@ async def test_step_user_existing_host(
     [
         (PchkAuthenticationError, {CONF_BASE: "authentication_error"}),
         (PchkLicenseError, {CONF_BASE: "license_error"}),
-        (TimeoutError, {CONF_BASE: "connection_refused"}),
+        (PchkConnectionFailedError, {CONF_BASE: "connection_refused"}),
+        (PchkConnectionRefusedError, {CONF_BASE: "connection_refused"}),
     ],
 )
 async def test_step_user_error(
@@ -149,7 +155,8 @@ async def test_step_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> 
     [
         (PchkAuthenticationError, {CONF_BASE: "authentication_error"}),
         (PchkLicenseError, {CONF_BASE: "license_error"}),
-        (TimeoutError, {CONF_BASE: "connection_refused"}),
+        (PchkConnectionFailedError, {CONF_BASE: "connection_refused"}),
+        (PchkConnectionRefusedError, {CONF_BASE: "connection_refused"}),
     ],
 )
 async def test_step_reconfigure_error(

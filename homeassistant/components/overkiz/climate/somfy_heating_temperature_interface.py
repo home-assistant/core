@@ -82,7 +82,6 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     # Both min and max temp values have been retrieved from the Somfy Application.
     _attr_min_temp = 15.0
     _attr_max_temp = 26.0
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator

@@ -10,7 +10,6 @@ from fritzconnection.core.exceptions import (
 )
 import pytest
 
-from homeassistant.components import ssdp
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
@@ -33,6 +32,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from .const import (
     MOCK_FIRMWARE_INFO,
@@ -644,7 +648,7 @@ async def test_ssdp_already_in_progress_host(
 
         MOCK_NO_UNIQUE_ID = dataclasses.replace(MOCK_SSDP_DATA)
         MOCK_NO_UNIQUE_ID.upnp = MOCK_NO_UNIQUE_ID.upnp.copy()
-        del MOCK_NO_UNIQUE_ID.upnp[ssdp.ATTR_UPNP_UDN]
+        del MOCK_NO_UNIQUE_ID.upnp[ATTR_UPNP_UDN]
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_NO_UNIQUE_ID
         )
@@ -745,13 +749,13 @@ async def test_ssdp_ipv6_link_local(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="https://[fe80::1ff:fe23:4567:890a]:12345/test",
             upnp={
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "fake_name",
-                ssdp.ATTR_UPNP_UDN: "uuid:only-a-test",
+                ATTR_UPNP_FRIENDLY_NAME: "fake_name",
+                ATTR_UPNP_UDN: "uuid:only-a-test",
             },
         ),
     )

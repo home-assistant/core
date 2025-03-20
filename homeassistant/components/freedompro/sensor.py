@@ -7,15 +7,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import FreedomproDataUpdateCoordinator
+from .coordinator import FreedomproConfigEntry, FreedomproDataUpdateCoordinator
 
 DEVICE_CLASS_MAP = {
     "temperatureSensor": SensorDeviceClass.TEMPERATURE,
@@ -41,10 +40,12 @@ SUPPORTED_SENSORS = {"temperatureSensor", "humiditySensor", "lightSensor"}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FreedomproConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Freedompro sensor."""
-    coordinator: FreedomproDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         Device(device, coordinator)
         for device in coordinator.data

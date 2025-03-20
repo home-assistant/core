@@ -45,7 +45,7 @@ from .common import (
     convert_pending_states_to_meta,
 )
 
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
 
 TEST_EVENT_TYPES = (
     "EVENT_TEST_AUTOPURGE",
@@ -59,7 +59,7 @@ TEST_EVENT_TYPES = (
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -1930,8 +1930,6 @@ async def test_purge_old_events_purges_the_event_type_ids(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
     """Test deleting old events purges event type ids."""
-    assert recorder_mock.event_type_manager.active is True
-
     utcnow = dt_util.utcnow()
     five_days_ago = utcnow - timedelta(days=5)
     eleven_days_ago = utcnow - timedelta(days=11)

@@ -1,1 +1,1 @@
-"""webOS Smart TV triggers."""
+"""LG webOS TV triggers."""

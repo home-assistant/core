@@ -55,6 +55,24 @@
       "apiVersion": 1,
       "commands": {},
       "deviceId": "zigbee-d87a3bfffe5d844a",
+      "feature": "device.power.battery",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "level": {
+          "type": "number",
+          "unit": "percent",
+          "value": 89
+        }
+      },
+      "timestamp": "2025-02-03T02:30:52.279Z",
+      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/zigbee-d87a3bfffe5d844a/features/device.power.battery"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "zigbee-d87a3bfffe5d844a",
       "feature": "device.sensors.humidity",
       "gatewayId": "################",
       "isEnabled": true,

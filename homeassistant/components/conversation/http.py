@@ -24,7 +24,7 @@ from .agent_manager import (
     get_agent_manager,
 )
 from .const import DATA_COMPONENT, DATA_DEFAULT_ENTITY
-from .default_agent import METADATA_CUSTOM_FILE, METADATA_CUSTOM_SENTENCE, DefaultAgent
+from .default_agent import METADATA_CUSTOM_FILE, METADATA_CUSTOM_SENTENCE
 from .entity import ConversationEntity
 from .models import ConversationInput
 
@@ -36,6 +36,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_process)
     websocket_api.async_register_command(hass, websocket_prepare)
     websocket_api.async_register_command(hass, websocket_list_agents)
+    websocket_api.async_register_command(hass, websocket_list_sentences)
     websocket_api.async_register_command(hass, websocket_hass_agent_debug)
 
 
@@ -152,6 +153,26 @@ async def websocket_list_agents(
 
 @websocket_api.websocket_command(
     {
+        vol.Required("type"): "conversation/sentences/list",
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_list_sentences(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """List custom registered sentences."""
+    agent = hass.data[DATA_DEFAULT_ENTITY]
+
+    sentences = []
+    for trigger_data in agent.trigger_sentences:
+        sentences.extend(trigger_data.sentences)
+
+    connection.send_result(msg["id"], {"trigger_sentences": sentences})
+
+
+@websocket_api.websocket_command(
+    {
         vol.Required("type"): "conversation/agent/homeassistant/debug",
         vol.Required("sentences"): [str],
         vol.Optional("language"): str,
@@ -163,8 +184,7 @@ async def websocket_hass_agent_debug(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Return intents that would be matched by the default agent for a list of sentences."""
-    agent = hass.data.get(DATA_DEFAULT_ENTITY)
-    assert isinstance(agent, DefaultAgent)
+    agent = hass.data[DATA_DEFAULT_ENTITY]
 
     # Return results for each sentence in the same order as the input.
     result_dicts: list[dict[str, Any] | None] = []
@@ -175,7 +195,7 @@ async def websocket_hass_agent_debug(
             conversation_id=None,
             device_id=msg.get("device_id"),
             language=msg.get("language", hass.config.language),
-            agent_id=None,
+            agent_id=agent.entity_id,
         )
         result_dict: dict[str, Any] | None = None
 

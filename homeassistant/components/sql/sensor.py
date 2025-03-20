@@ -36,7 +36,10 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
@@ -101,7 +104,9 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SQL sensor from config entry."""
 
@@ -178,7 +183,7 @@ async def async_setup_sensor(
     unique_id: str | None,
     db_url: str,
     yaml: bool,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SQL sensor."""
     try:
@@ -331,8 +336,15 @@ class SQLSensor(ManualTriggerSensorEntity):
                 entry_type=DeviceEntryType.SERVICE,
                 identifiers={(DOMAIN, unique_id)},
                 manufacturer="SQL",
-                name=self.name,
+                name=self._rendered.get(CONF_NAME),
             )
+
+    @property
+    def name(self) -> str | None:
+        """Name of the entity."""
+        if self.has_entity_name:
+            return self._attr_name
+        return self._rendered.get(CONF_NAME)
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""

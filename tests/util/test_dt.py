@@ -6,7 +6,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 DEFAULT_TIME_ZONE = dt_util.get_default_time_zone()
 TEST_TIME_ZONE = "America/Los_Angeles"

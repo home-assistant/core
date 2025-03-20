@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components import siren
 from homeassistant.components.siren import (
     SirenEntity,
     SirenEntityDescription,
@@ -106,20 +105,3 @@ async def test_missing_tones_dict(hass: HomeAssistant) -> None:
     siren.hass = hass
     with pytest.raises(ValueError):
         process_turn_on_params(siren, {"tone": 3})
-
-
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecated supported features ints."""
-
-    class MockSirenEntity(siren.SirenEntity):
-        _attr_supported_features = 1
-
-    entity = MockSirenEntity()
-    assert entity.supported_features is siren.SirenEntityFeature(1)
-    assert "MockSirenEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "SirenEntityFeature.TURN_ON" in caplog.text
-    caplog.clear()
-    assert entity.supported_features is siren.SirenEntityFeature(1)
-    assert "is using deprecated supported features values" not in caplog.text

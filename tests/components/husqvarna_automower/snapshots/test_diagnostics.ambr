@@ -71,9 +71,7 @@
       'activity': 'parked_in_cs',
       'error_code': 0,
       'error_datetime': None,
-      'error_datetime_naive': None,
       'error_key': None,
-      'error_timestamp': 0,
       'inactive_reason': 'none',
       'is_error_confirmable': False,
       'mode': 'main_area',
@@ -82,9 +80,7 @@
       'work_area_name': 'Front lawn',
     }),
     'planner': dict({
-      'next_start': 1685991600000,
       'next_start_datetime': '2023-06-05T19:00:00+02:00',
-      'next_start_datetime_naive': '2023-06-05T19:00:00',
       'override': dict({
         'action': 'not_active',
       }),
@@ -99,6 +95,7 @@
     }),
     'statistics': dict({
       'cutting_blade_usage_time': 123,
+      'downtime': 123,
       'number_of_charging_cycles': 1380,
       'number_of_collisions': 11396,
       'total_charging_time': 4334400,
@@ -106,6 +103,7 @@
       'total_drive_distance': 1780272,
       'total_running_time': 4564800,
       'total_searching_time': 370800,
+      'uptime': 456,
     }),
     'stay_out_zones': dict({
       'dirty': False,
@@ -141,7 +139,6 @@
         'cutting_height': 50,
         'enabled': False,
         'last_time_completed': '2024-08-12T05:07:49+02:00',
-        'last_time_completed_naive': '2024-08-12T05:07:49',
         'name': 'my_lawn',
         'progress': 20,
       }),
@@ -149,7 +146,6 @@
         'cutting_height': 50,
         'enabled': True,
         'last_time_completed': '2024-08-12T07:54:29+02:00',
-        'last_time_completed_naive': '2024-08-12T07:54:29',
         'name': 'Front lawn',
         'progress': 40,
       }),
@@ -157,7 +153,6 @@
         'cutting_height': 25,
         'enabled': True,
         'last_time_completed': None,
-        'last_time_completed_naive': None,
         'name': 'Back lawn',
         'progress': None,
       }),
@@ -190,6 +185,8 @@
     'pref_disable_new_entities': False,
     'pref_disable_polling': False,
     'source': 'user',
+    'subentries': list([
+    ]),
     'title': 'Husqvarna Automower of Erika Mustermann',
     'unique_id': '123',
     'version': 1,

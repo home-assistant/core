@@ -101,6 +101,7 @@ async def test_config_flow_single_account(
     assert result["data"][CONF_PASSWORD] == "test"
     assert result["data"][CONF_KAMEREON_ACCOUNT_ID] == "account_id_1"
     assert result["data"][CONF_LOCALE] == "fr_FR"
+    assert result["context"]["unique_id"] == "account_id_1"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -189,6 +190,7 @@ async def test_config_flow_multiple_accounts(
     assert result["data"][CONF_PASSWORD] == "test"
     assert result["data"][CONF_KAMEREON_ACCOUNT_ID] == "account_id_2"
     assert result["data"][CONF_LOCALE] == "fr_FR"
+    assert result["context"]["unique_id"] == "account_id_2"
 
     assert len(mock_setup_entry.mock_calls) == 1
 

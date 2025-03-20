@@ -30,10 +30,14 @@ class Config:
     root: pathlib.Path
     action: Literal["validate", "generate"]
     requirements: bool
-    core_integrations_path: pathlib.Path
+    core_integrations_path: pathlib.Path = field(init=False)
     errors: list[Error] = field(default_factory=list)
     cache: dict[str, Any] = field(default_factory=dict)
     plugins: set[str] = field(default_factory=set)
+
+    def __post_init__(self) -> None:
+        """Post init."""
+        self.core_integrations_path = self.root / "homeassistant/components"
 
     def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""
@@ -153,8 +157,10 @@ class Integration:
     @property
     def core(self) -> bool:
         """Core integration."""
-        return self.path.as_posix().startswith(
-            self._config.core_integrations_path.as_posix()
+        return (
+            self.path.absolute()
+            .as_posix()
+            .startswith(self._config.core_integrations_path.as_posix())
         )
 
     @property

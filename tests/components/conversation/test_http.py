@@ -501,6 +501,19 @@ async def test_ws_hass_agent_debug_sentence_trigger(
 
     client = await hass_ws_client(hass)
 
+    # List sentence
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/sentences/list",
+        }
+    )
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
     # Use trigger sentence
     await client.send_json_auto_id(
         {

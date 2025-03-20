@@ -8,7 +8,6 @@ from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import LaMarzoccoDeviceInfo
 import pytest
 
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import CONF_USE_BLUETOOTH, DOMAIN
 from homeassistant.config_entries import (
@@ -28,6 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import USER_INPUT, async_init_integration, get_bluetooth_service_info
 
@@ -381,6 +381,26 @@ async def test_bluetooth_discovery(
     }
 
 
+async def test_bluetooth_discovery_already_configured(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_cloud_client: MagicMock,
+    mock_setup_entry: Generator[AsyncMock],
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test bluetooth discovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    service_info = get_bluetooth_service_info(
+        mock_lamarzocco.model, mock_lamarzocco.serial_number
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=service_info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_bluetooth_discovery_errors(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
@@ -491,6 +511,27 @@ async def test_dhcp_discovery(
             CONF_NAME: mock_device_info.name,
             CONF_TOKEN: mock_device_info.communication_key,
         }
+
+
+async def test_dhcp_discovery_abort_on_hostname_changed(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_cloud_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test dhcp discovery aborts when hostname was changed manually."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.42",
+            hostname="custom_name",
+            macaddress="00:00:00:00:00:00",
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_dhcp_already_configured_and_update(

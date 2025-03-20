@@ -12,7 +12,7 @@ import logging
 from math import ceil, floor, isfinite, log10
 from typing import Any, Final, Self, cast, final, override
 
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
@@ -67,8 +67,8 @@ __all__ = [
     "CONF_STATE_CLASS",
     "DEVICE_CLASS_STATE_CLASSES",
     "DOMAIN",
-    "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
     "RestoreSensor",
     "SensorDeviceClass",
     "SensorEntity",
@@ -467,17 +467,6 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return self.entity_description.suggested_unit_of_measurement
         return None
 
-    @cached_property
-    def _unit_of_measurement_translation_key(self) -> str | None:
-        """Return translation key for unit of measurement."""
-        if self.translation_key is None:
-            return None
-        platform = self.platform
-        return (
-            f"component.{platform.platform_name}.entity.{platform.domain}"
-            f".{self.translation_key}.unit_of_measurement"
-        )
-
     @final
     @property
     @override
@@ -686,22 +675,13 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ):
                 # Deduce the precision by finding the decimal point, if any
                 value_s = str(value)
-                precision = (
-                    len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
-                )
-
                 # Scale the precision when converting to a larger unit
                 # For example 1.1 Wh should be rendered as 0.0011 kWh, not 0.0 kWh
-                ratio_log = max(
-                    0,
-                    log10(
-                        converter.get_unit_ratio(
-                            native_unit_of_measurement, unit_of_measurement
-                        )
-                    ),
+                precision = (
+                    len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
+                ) + converter.get_unit_floored_log_ratio(
+                    native_unit_of_measurement, unit_of_measurement
                 )
-                precision = precision + floor(ratio_log)
-
                 value = f"{converted_numerical_value:z.{precision}f}"
             else:
                 value = converted_numerical_value

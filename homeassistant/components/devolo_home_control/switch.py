@@ -9,7 +9,7 @@ from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DevoloHomeControlConfigEntry
 from .entity import DevoloDeviceEntity
@@ -18,7 +18,7 @@ from .entity import DevoloDeviceEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DevoloHomeControlConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Get all devices and setup the switch devices via config entry."""
 

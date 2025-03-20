@@ -7,7 +7,7 @@ from enum import StrEnum
 import logging
 from typing import Any, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -170,7 +170,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
             ATTR_MAX_HUMIDITY: self.max_humidity,
         }
 
-        if HumidifierEntityFeature.MODES in self.supported_features_compat:
+        if HumidifierEntityFeature.MODES in self.supported_features:
             data[ATTR_AVAILABLE_MODES] = self.available_modes
 
         return data
@@ -199,7 +199,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
         if self.target_humidity is not None:
             data[ATTR_HUMIDITY] = self.target_humidity
 
-        if HumidifierEntityFeature.MODES in self.supported_features_compat:
+        if HumidifierEntityFeature.MODES in self.supported_features:
             data[ATTR_MODE] = self.mode
 
         return data
@@ -265,19 +265,6 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
     def supported_features(self) -> HumidifierEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
-
-    @property
-    def supported_features_compat(self) -> HumidifierEntityFeature:
-        """Return the supported features as HumidifierEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = HumidifierEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
 
 
 async def async_service_humidity_set(

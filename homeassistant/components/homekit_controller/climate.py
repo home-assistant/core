@@ -17,7 +17,7 @@ from aiohomekit.model.characteristics import (
 )
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -41,7 +41,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -111,7 +111,7 @@ HASS_FAN_MODE_TO_HOMEKIT_ROTATION = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Homekit climate."""
     hkid: str = config_entry.data["AccessoryPairingID"]
@@ -136,7 +136,6 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
     """The base HomeKit Controller climate entity."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     @callback
     def _async_reconfigure(self) -> None:

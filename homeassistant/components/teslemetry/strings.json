@@ -51,7 +51,7 @@
         "name": "Trip charging"
       },
       "climate_state_cabin_overheat_protection_actively_cooling": {
-        "name": "Cabin overheat protection actively cooling"
+        "name": "Cabin overheat protection active"
       },
       "climate_state_is_preconditioning": {
         "name": "Preconditioning"
@@ -67,6 +67,27 @@
       },
       "storm_mode_active": {
         "name": "Storm watch active"
+      },
+      "automatic_blind_spot_camera": {
+        "name": "Automatic blind spot camera"
+      },
+      "automatic_emergency_braking_off": {
+        "name": "Automatic emergency braking off"
+      },
+      "blind_spot_collision_warning_chime": {
+        "name": "Blind spot collision warning chime"
+      },
+      "bms_full_charge_complete": {
+        "name": "BMS full charge"
+      },
+      "brake_pedal": {
+        "name": "Brake pedal"
+      },
+      "charge_port_cold_weather_mode": {
+        "name": "Charge port cold weather mode"
+      },
+      "service_mode": {
+        "name": "Service mode"
       },
       "vehicle_state_dashcam_state": {
         "name": "Dashcam"
@@ -109,6 +130,66 @@
       },
       "vehicle_state_tpms_soft_warning_rr": {
         "name": "Tire pressure warning rear right"
+      },
+      "pin_to_drive_enabled": {
+        "name": "PIN to Drive enabled"
+      },
+      "drive_rail": {
+        "name": "Drive rail"
+      },
+      "driver_seat_belt": {
+        "name": "Driver seat belt"
+      },
+      "driver_seat_occupied": {
+        "name": "Driver seat occupied"
+      },
+      "passenger_seat_belt": {
+        "name": "Passenger seat belt"
+      },
+      "fast_charger_present": {
+        "name": "Fast charger present"
+      },
+      "gps_state": {
+        "name": "GPS state"
+      },
+      "guest_mode_enabled": {
+        "name": "Guest mode enabled"
+      },
+      "dc_dc_enable": {
+        "name": "DC to DC converter"
+      },
+      "emergency_lane_departure_avoidance": {
+        "name": "Emergency lane departure avoidance"
+      },
+      "supercharger_session_trip_planner": {
+        "name": "Supercharger session trip planner"
+      },
+      "wiper_heat_enabled": {
+        "name": "Wiper heat"
+      },
+      "rear_display_hvac_enabled": {
+        "name": "Rear display HVAC"
+      },
+      "offroad_lightbar_present": {
+        "name": "Offroad lightbar"
+      },
+      "homelink_nearby": {
+        "name": "Homelink nearby"
+      },
+      "europe_vehicle": {
+        "name": "European vehicle"
+      },
+      "right_hand_drive": {
+        "name": "Right hand drive"
+      },
+      "located_at_home": {
+        "name": "Located at home"
+      },
+      "located_at_work": {
+        "name": "Located at work"
+      },
+      "located_at_favorite": {
+        "name": "Located at favorite"
       }
     },
     "button": {
@@ -155,6 +236,9 @@
       },
       "route": {
         "name": "Route"
+      },
+      "origin": {
+        "name": "Origin"
       }
     },
     "lock": {
@@ -331,7 +415,7 @@
         "name": "Charging",
         "state": {
           "starting": "Starting",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "disconnected": "Disconnected",
           "stopped": "Stopped",
           "complete": "Complete",
@@ -524,7 +608,7 @@
       }
     },
     "switch": {
-      "charge_state_user_charge_enable_request": {
+      "charge_state_charging_state": {
         "name": "Charge"
       },
       "climate_state_auto_seat_climate_left": {
@@ -610,7 +694,7 @@
   },
   "services": {
     "navigation_gps_request": {
-      "description": "Set vehicle navigation to the provided latitude/longitude coordinates.",
+      "description": "Sets vehicle navigation to the provided latitude/longitude coordinates.",
       "fields": {
         "device_id": {
           "description": "Vehicle to share to.",
@@ -628,7 +712,7 @@
       "name": "Navigate to coordinates"
     },
     "set_scheduled_charging": {
-      "description": "Sets a time at which charging should be completed.",
+      "description": "Sets a time at which charging should be started.",
       "fields": {
         "device_id": {
           "description": "Vehicle to schedule.",
@@ -646,7 +730,7 @@
       "name": "Set scheduled charging"
     },
     "set_scheduled_departure": {
-      "description": "Sets a time at which departure should be completed.",
+      "description": "Sets the departure time for a vehicle to schedule charging and preconditioning.",
       "fields": {
         "departure_time": {
           "description": "Time to be preconditioned by.",
@@ -684,7 +768,7 @@
       "name": "Set scheduled departure"
     },
     "speed_limit": {
-      "description": "Activate the speed limit of the vehicle.",
+      "description": "Activates the speed limit of a vehicle.",
       "fields": {
         "device_id": {
           "description": "Vehicle to limit.",
@@ -702,7 +786,7 @@
       "name": "Set speed limit"
     },
     "time_of_use": {
-      "description": "Update the time of use settings for the energy site.",
+      "description": "Updates the time of use settings for an energy site.",
       "fields": {
         "device_id": {
           "description": "Energy Site to configure.",
@@ -716,7 +800,7 @@
       "name": "Time of use settings"
     },
     "valet_mode": {
-      "description": "Activate the valet mode of the vehicle.",
+      "description": "Activates the valet mode of a vehicle.",
       "fields": {
         "device_id": {
           "description": "Vehicle to limit.",

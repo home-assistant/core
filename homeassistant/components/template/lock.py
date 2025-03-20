@@ -18,13 +18,11 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
@@ -89,15 +87,20 @@ class TemplateLock(TemplateEntity, LockEntity):
         super().__init__(
             hass, config=config, fallback_name=DEFAULT_NAME, unique_id=unique_id
         )
-        self._state: str | bool | LockState | None = None
+        self._state: LockState | None = None
         name = self._attr_name
-        assert name
+        if TYPE_CHECKING:
+            assert name is not None
+
         self._state_template = config.get(CONF_VALUE_TEMPLATE)
-        self._command_lock = Script(hass, config[CONF_LOCK], name, DOMAIN)
-        self._command_unlock = Script(hass, config[CONF_UNLOCK], name, DOMAIN)
-        if CONF_OPEN in config:
-            self._command_open = Script(hass, config[CONF_OPEN], name, DOMAIN)
-            self._attr_supported_features |= LockEntityFeature.OPEN
+        for action_id, supported_feature in (
+            (CONF_LOCK, 0),
+            (CONF_UNLOCK, 0),
+            (CONF_OPEN, LockEntityFeature.OPEN),
+        ):
+            if action_config := config.get(action_id):
+                self.add_script(action_id, action_config, name, DOMAIN)
+                self._attr_supported_features |= supported_feature
         self._code_format_template = config.get(CONF_CODE_FORMAT_TEMPLATE)
         self._code_format: str | None = None
         self._code_format_template_error: TemplateError | None = None
@@ -107,7 +110,7 @@ class TemplateLock(TemplateEntity, LockEntity):
     @property
     def is_locked(self) -> bool:
         """Return true if lock is locked."""
-        return self._state in ("true", STATE_ON, LockState.LOCKED)
+        return self._state == LockState.LOCKED
 
     @property
     def is_jammed(self) -> bool:
@@ -130,7 +133,7 @@ class TemplateLock(TemplateEntity, LockEntity):
         return self._state == LockState.OPEN
 
     @callback
-    def _update_state(self, result):
+    def _update_state(self, result: str | TemplateError) -> None:
         """Update the state from the template."""
         super()._update_state(result)
         if isinstance(result, TemplateError):
@@ -142,7 +145,23 @@ class TemplateLock(TemplateEntity, LockEntity):
             return
 
         if isinstance(result, str):
-            self._state = result.lower()
+            if result.lower() in (
+                "true",
+                "on",
+                "locked",
+            ):
+                self._state = LockState.LOCKED
+            elif result.lower() in (
+                "false",
+                "off",
+                "unlocked",
+            ):
+                self._state = LockState.UNLOCKED
+            else:
+                try:
+                    self._state = LockState(result.lower())
+                except ValueError:
+                    self._state = None
             return
 
         self._state = None
@@ -189,13 +208,15 @@ class TemplateLock(TemplateEntity, LockEntity):
         self._raise_template_error_if_available()
 
         if self._optimistic:
-            self._state = True
+            self._state = LockState.LOCKED
             self.async_write_ha_state()
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
         await self.async_run_script(
-            self._command_lock, run_variables=tpl_vars, context=self._context
+            self._action_scripts[CONF_LOCK],
+            run_variables=tpl_vars,
+            context=self._context,
         )
 
     async def async_unlock(self, **kwargs: Any) -> None:
@@ -205,13 +226,15 @@ class TemplateLock(TemplateEntity, LockEntity):
         self._raise_template_error_if_available()
 
         if self._optimistic:
-            self._state = False
+            self._state = LockState.UNLOCKED
             self.async_write_ha_state()
 
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
         await self.async_run_script(
-            self._command_unlock, run_variables=tpl_vars, context=self._context
+            self._action_scripts[CONF_UNLOCK],
+            run_variables=tpl_vars,
+            context=self._context,
         )
 
     async def async_open(self, **kwargs: Any) -> None:
@@ -227,7 +250,9 @@ class TemplateLock(TemplateEntity, LockEntity):
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
         await self.async_run_script(
-            self._command_open, run_variables=tpl_vars, context=self._context
+            self._action_scripts[CONF_OPEN],
+            run_variables=tpl_vars,
+            context=self._context,
         )
 
     def _raise_template_error_if_available(self):

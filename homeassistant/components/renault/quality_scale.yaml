@@ -4,9 +4,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: Tests are not asserting the unique id
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions: done
@@ -30,7 +28,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
   # Gold

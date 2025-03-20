@@ -8,14 +8,13 @@ import logging
 from typing import Any, final
 
 import aiohttp
-from universal_silabs_flasher.const import ApplicationType
 import voluptuous as vol
 
 from homeassistant.components.hassio import (
     HassioAPIError,
     async_get_yellow_settings,
-    async_reboot_host,
     async_set_yellow_settings,
+    get_supervisor_client,
 )
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     BaseFirmwareConfigFlow,
@@ -25,16 +24,27 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     OptionsFlowHandler as MultiprotocolOptionsFlowHandler,
     SerialPortSettings as MultiprotocolSerialPortSettings,
 )
+from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
+    FirmwareInfo,
+)
 from homeassistant.config_entries import (
     SOURCE_HARDWARE,
     ConfigEntry,
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import discovery_flow, selector
 
-from .const import DOMAIN, FIRMWARE, RADIO_DEVICE, ZHA_DOMAIN, ZHA_HW_DISCOVERY_DATA
+from .const import (
+    DOMAIN,
+    FIRMWARE,
+    FIRMWARE_VERSION,
+    RADIO_DEVICE,
+    ZHA_DOMAIN,
+    ZHA_HW_DISCOVERY_DATA,
+)
 from .hardware import BOARD_NAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +62,7 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
     """Handle a config flow for Home Assistant Yellow."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Instantiate config flow."""
@@ -67,21 +77,25 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
     ) -> OptionsFlow:
         """Return the options flow."""
         firmware_type = ApplicationType(config_entry.data[FIRMWARE])
+        hass = async_get_hass()
 
         if firmware_type is ApplicationType.CPC:
-            return HomeAssistantYellowMultiPanOptionsFlowHandler(config_entry)
+            return HomeAssistantYellowMultiPanOptionsFlowHandler(hass, config_entry)
 
-        return HomeAssistantYellowOptionsFlowHandler(config_entry)
+        return HomeAssistantYellowOptionsFlowHandler(hass, config_entry)
 
     async def async_step_system(
         self, data: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         # We do not actually use any portion of `BaseFirmwareConfigFlow` beyond this
-        await self._probe_firmware_type()
+        await self._probe_firmware_info()
 
         # Kick off ZHA hardware discovery automatically if Zigbee firmware is running
-        if self._probed_firmware_type is ApplicationType.EZSP:
+        if (
+            self._probed_firmware_info is not None
+            and self._probed_firmware_info.firmware_type is ApplicationType.EZSP
+        ):
             discovery_flow.async_create_flow(
                 self.hass,
                 ZHA_DOMAIN,
@@ -97,7 +111,11 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
             title=BOARD_NAME,
             data={
                 # Assume the firmware type is EZSP if we cannot probe it
-                FIRMWARE: (self._probed_firmware_type or ApplicationType.EZSP).value,
+                FIRMWARE: (
+                    self._probed_firmware_info.firmware_type
+                    if self._probed_firmware_info is not None
+                    else ApplicationType.EZSP
+                ).value,
             },
         )
 
@@ -106,6 +124,11 @@ class BaseHomeAssistantYellowOptionsFlow(OptionsFlow, ABC):
     """Base Home Assistant Yellow options flow shared between firmware and multi-PAN."""
 
     _hw_settings: dict[str, bool] | None = None
+
+    def __init__(self, hass: HomeAssistant, *args: Any, **kwargs: Any) -> None:
+        """Instantiate options flow."""
+        super().__init__(*args, **kwargs)
+        self._supervisor_client = get_supervisor_client(hass)
 
     @abstractmethod
     async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
@@ -172,7 +195,7 @@ class BaseHomeAssistantYellowOptionsFlow(OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Reboot now."""
-        await async_reboot_host(self.hass)
+        await self._supervisor_client.host.reboot()
         return self.async_create_entry(data={})
 
     async def async_step_reboot_later(
@@ -251,12 +274,20 @@ class HomeAssistantYellowOptionsFlowHandler(
 ):
     """Handle a firmware options flow for Home Assistant Yellow."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, hass: HomeAssistant, *args: Any, **kwargs: Any) -> None:
         """Instantiate options flow."""
-        super().__init__(*args, **kwargs)
+        super().__init__(hass, *args, **kwargs)
 
         self._hardware_name = BOARD_NAME
         self._device = RADIO_DEVICE
+
+        self._probed_firmware_info = FirmwareInfo(
+            device=self._device,
+            firmware_type=ApplicationType(self.config_entry.data["firmware"]),
+            firmware_version=None,
+            source="guess",
+            owners=[],
+        )
 
         # Regenerate the translation placeholders
         self._get_translation_placeholders()
@@ -279,13 +310,14 @@ class HomeAssistantYellowOptionsFlowHandler(
 
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
-        assert self._probed_firmware_type is not None
+        assert self._probed_firmware_info is not None
 
         self.hass.config_entries.async_update_entry(
             entry=self.config_entry,
             data={
                 **self.config_entry.data,
-                FIRMWARE: self._probed_firmware_type.value,
+                FIRMWARE: self._probed_firmware_info.firmware_type.value,
+                FIRMWARE_VERSION: self._probed_firmware_info.firmware_version,
             },
         )
 

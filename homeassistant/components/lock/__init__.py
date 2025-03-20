@@ -9,7 +9,7 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -29,7 +29,7 @@ from homeassistant.const import (  # noqa: F401
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
     all_with_deprecated_constants,
     check_if_deprecated_constant,
@@ -285,12 +285,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @cached_property
     def supported_features(self) -> LockEntityFeature:
         """Return the list of supported features."""
-        features = self._attr_supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = LockEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
+        return self._attr_supported_features
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
