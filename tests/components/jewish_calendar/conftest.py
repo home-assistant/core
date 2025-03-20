@@ -1,9 +1,8 @@
 """Common fixtures for the jewish_calendar tests."""
 
-from collections.abc import Generator
-from dataclasses import dataclass
+from collections.abc import Generator, Iterable
 import datetime as dt
-from typing import Any, NamedTuple
+from typing import NamedTuple
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -22,27 +21,17 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry
 
 
-class _LatLng(NamedTuple):
+class _LocationData(NamedTuple):
+    timezone: str
+    diaspora: bool
     lat: float
     lng: float
-
-
-@dataclass
-class JewishCalendarTestParameters:
-    """Test parameters for a Jewish calendar test."""
-
-    test_time: dt.datetime
-    results: dict[str, Any] | dt.datetime
-    time_zone: str
-    diaspora: bool
-    location: _LatLng
-    candle_light_minutes: int
-    havdalah_offset_minutes: int
+    candle_lighting: int
 
 
 LOCATIONS = {
-    "Jerusalem": ("Asia/Jerusalem", _LatLng(31.7683, 35.2137), 40),
-    "New York": ("America/New_York", _LatLng(40.7128, -74.006), 18),
+    "Jerusalem": _LocationData("Asia/Jerusalem", False, 31.7683, 35.2137, 40),
+    "New York": _LocationData("America/New_York", True, 40.7128, -74.006, 18),
 }
 
 
@@ -56,38 +45,49 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def jcal_params(request: pytest.FixtureRequest) -> JewishCalendarTestParameters | None:
-    """Return test parameters."""
+def location_data(request: pytest.FixtureRequest) -> _LocationData | None:
+    """Return data based on location name."""
+    if not hasattr(request, "param"):
+        return None
+    return LOCATIONS[request.param]
+
+
+@pytest.fixture(name="test_time")
+def _test_time(
+    request: pytest.FixtureRequest, location_data: _LocationData
+) -> dt.datetime | None:
+    """Return localized test time based."""
     if not hasattr(request, "param"):
         return None
 
-    if len(request.param) == 3:
-        location_name, test_time, results = request.param
-        havdalah_offset = 0
+    tz_info = dt_util.get_time_zone(location_data.timezone)
+    return request.param.replace(tzinfo=tz_info)
 
-    if len(request.param) == 4:
-        location_name, test_time, results, havdalah_offset = request.param
 
-    time_zone, latlng, candle_light = LOCATIONS[location_name]
-    tz_info = dt_util.get_time_zone(time_zone)
-    test_time = test_time.replace(tzinfo=tz_info)
-    if isinstance(results, dict):
-        results = {
+@pytest.fixture
+def results(request: pytest.FixtureRequest, location_data: _LocationData) -> Iterable:
+    """Return localized results."""
+    if not hasattr(request, "param"):
+        return None
+
+    tz_info = dt_util.get_time_zone(location_data.timezone)
+    if isinstance(request.param, dict):
+        return {
             key: value.replace(tzinfo=tz_info)
             if isinstance(value, dt.datetime)
             else value
-            for key, value in results.items()
+            for key, value in request.param.items()
         }
+    return request.param
 
-    return JewishCalendarTestParameters(
-        test_time,
-        results,
-        time_zone,
-        location_name not in ("Jerusalem",),
-        latlng,
-        candle_light,
-        havdalah_offset,
-    )
+
+@pytest.fixture
+def havdalah_offset(request: pytest.FixtureRequest) -> int | None:
+    """Return a default havdalah offset of 0 if not specified."""
+    if not hasattr(request, "param"):
+        return None
+
+    return request.param
 
 
 @pytest.fixture
@@ -97,34 +97,34 @@ def language(request: pytest.FixtureRequest) -> str:
 
 
 @pytest.fixture(autouse=True)
-async def setup_hass(
-    hass: HomeAssistant, jcal_params: JewishCalendarTestParameters | None
-) -> None:
+async def setup_hass(hass: HomeAssistant, location_data: _LocationData | None) -> None:
     """Set up Home Assistant for testing the jewish_calendar integration."""
 
-    if jcal_params:
-        await hass.config.async_set_time_zone(jcal_params.time_zone)
-        hass.config.latitude = jcal_params.location.lat
-        hass.config.longitude = jcal_params.location.lng
+    if location_data:
+        await hass.config.async_set_time_zone(location_data.timezone)
+        hass.config.latitude = location_data.lat
+        hass.config.longitude = location_data.lng
 
 
 @pytest.fixture
 def config_entry(
-    jcal_params: JewishCalendarTestParameters | None, language: str
+    location_data: _LocationData | None,
+    language: str,
+    havdalah_offset: int | None,
 ) -> MockConfigEntry:
     """Set up the jewish_calendar integration for testing."""
     param_data = {}
     param_options = {}
 
-    if jcal_params:
+    if location_data:
         param_data = {
-            CONF_DIASPORA: jcal_params.diaspora,
-            CONF_TIME_ZONE: jcal_params.time_zone,
+            CONF_DIASPORA: location_data.diaspora,
+            CONF_TIME_ZONE: location_data.timezone,
         }
-        param_options = {
-            CONF_CANDLE_LIGHT_MINUTES: jcal_params.candle_light_minutes,
-            CONF_HAVDALAH_OFFSET_MINUTES: jcal_params.havdalah_offset_minutes,
-        }
+        param_options[CONF_CANDLE_LIGHT_MINUTES] = location_data.candle_lighting
+
+    if havdalah_offset:
+        param_options[CONF_HAVDALAH_OFFSET_MINUTES] = havdalah_offset
 
     return MockConfigEntry(
         title=DEFAULT_NAME,
