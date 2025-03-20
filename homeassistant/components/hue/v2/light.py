@@ -107,7 +107,9 @@ class HueLight(HueBaseEntity, LightEntity):
         self._attr_effect_list = []
         if effects := resource.effects:
             self._attr_effect_list = [
-                x.value for x in effects.status_values if x != EffectStatus.NO_EFFECT
+                x.value
+                for x in effects.status_values
+                if x not in (EffectStatus.NO_EFFECT, EffectStatus.UNKNOWN)
             ]
         if timed_effects := resource.timed_effects:
             self._attr_effect_list += [

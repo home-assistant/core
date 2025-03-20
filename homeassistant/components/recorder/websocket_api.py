@@ -316,13 +316,13 @@ async def ws_list_statistic_ids(
 async def ws_validate_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Fetch a list of available statistic_id."""
+    """Validate statistics and return issues found."""
     instance = get_instance(hass)
-    statistic_ids = await instance.async_add_executor_job(
+    validation_issues = await instance.async_add_executor_job(
         validate_statistics,
         hass,
     )
-    connection.send_result(msg["id"], statistic_ids)
+    connection.send_result(msg["id"], validation_issues)
 
 
 @websocket_api.websocket_command(

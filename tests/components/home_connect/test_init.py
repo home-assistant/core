@@ -3,14 +3,17 @@
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.const import OAUTH2_TOKEN
 from aiohomeconnect.model import OptionKey, ProgramKey, SettingKey, StatusKey
-from aiohomeconnect.model.error import HomeConnectError, UnauthorizedError
+from aiohomeconnect.model.error import (
+    HomeConnectError,
+    TooManyRequestsError,
+    UnauthorizedError,
+)
+import aiohttp
 import pytest
-import requests_mock
-import respx
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -221,14 +224,12 @@ async def test_exception_handling(
 
 
 @pytest.mark.parametrize("token_expiration_time", [12345])
-@respx.mock
 async def test_token_refresh_success(
     hass: HomeAssistant,
     platforms: list[Platform],
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
-    requests_mock: requests_mock.Mocker,
     setup_credentials: None,
     client: MagicMock,
 ) -> None:
@@ -236,7 +237,6 @@ async def test_token_refresh_success(
 
     assert config_entry.data["token"]["access_token"] == FAKE_ACCESS_TOKEN
 
-    requests_mock.post(OAUTH2_TOKEN, json=SERVER_ACCESS_TOKEN)
     aioclient_mock.post(
         OAUTH2_TOKEN,
         json=SERVER_ACCESS_TOKEN,
@@ -280,6 +280,61 @@ async def test_token_refresh_success(
     )
 
 
+@pytest.mark.parametrize("token_expiration_time", [12345])
+@pytest.mark.parametrize(
+    ("aioclient_mock_args", "expected_config_entry_state"),
+    [
+        (
+            {
+                "status": 400,
+                "json": {"error": "invalid_grant"},
+            },
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            {
+                "status": 500,
+            },
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            {
+                "exc": aiohttp.ClientError,
+            },
+            ConfigEntryState.SETUP_RETRY,
+        ),
+    ],
+)
+async def test_token_refresh_error(
+    aioclient_mock_args: dict[str, Any],
+    expected_config_entry_state: ConfigEntryState,
+    hass: HomeAssistant,
+    platforms: list[Platform],
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test where token is expired and the refresh attempt fails."""
+
+    config_entry.data["token"]["access_token"] = FAKE_ACCESS_TOKEN
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        **aioclient_mock_args,
+    )
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    with patch(
+        "homeassistant.components.home_connect.HomeConnectClient", return_value=client
+    ):
+        assert not await integration_setup(client)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == expected_config_entry_state
+
+
 @pytest.mark.parametrize(
     ("exception", "expected_state"),
     [
@@ -302,6 +357,48 @@ async def test_client_error(
     assert not await integration_setup(client_with_exception)
     assert config_entry.state == expected_state
     assert client_with_exception.get_home_appliances.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "raising_exception_method",
+    [
+        "get_settings",
+        "get_status",
+        "get_all_programs",
+        "get_available_commands",
+        "get_available_program",
+    ],
+)
+async def test_client_rate_limit_error(
+    raising_exception_method: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test client errors during setup integration."""
+    retry_after = 42
+
+    original_mock = getattr(client, raising_exception_method)
+    mock = AsyncMock()
+
+    async def side_effect(*args, **kwargs):
+        if mock.call_count <= 1:
+            raise TooManyRequestsError("error.key", retry_after=retry_after)
+        return await original_mock(*args, **kwargs)
+
+    mock.side_effect = side_effect
+    setattr(client, raising_exception_method, mock)
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    with patch(
+        "homeassistant.components.home_connect.coordinator.asyncio_sleep",
+    ) as asyncio_sleep_mock:
+        assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+    assert mock.call_count >= 2
+    asyncio_sleep_mock.assert_called_once_with(retry_after)
 
 
 @pytest.mark.parametrize(
@@ -338,11 +435,27 @@ async def test_key_value_services(
 
 
 @pytest.mark.parametrize(
-    "service_call",
-    DEPRECATED_SERVICE_KV_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
+    ("service_call", "issue_id"),
+    [
+        *zip(
+            DEPRECATED_SERVICE_KV_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
+            ["deprecated_set_program_and_option_actions"]
+            * (
+                len(DEPRECATED_SERVICE_KV_CALL_PARAMS)
+                + len(SERVICE_PROGRAM_CALL_PARAMS)
+            ),
+            strict=True,
+        ),
+        *zip(
+            SERVICE_COMMAND_CALL_PARAMS,
+            ["deprecated_command_actions"] * len(SERVICE_COMMAND_CALL_PARAMS),
+            strict=True,
+        ),
+    ],
 )
 async def test_programs_and_options_actions_deprecation(
     service_call: dict[str, Any],
+    issue_id: str,
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
@@ -354,7 +467,6 @@ async def test_programs_and_options_actions_deprecation(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test deprecated service keys."""
-    issue_id = "deprecated_set_program_and_option_actions"
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
@@ -574,9 +686,7 @@ async def test_services_appliance_not_found(
     )
     service_call["service_data"]["device_id"] = device_entry.id
 
-    with pytest.raises(
-        ServiceValidationError, match=r"Home Connect config entry.*not found"
-    ):
+    with pytest.raises(ServiceValidationError, match=r"Config entry.*not found"):
         await hass.services.async_call(**service_call)
 
     device_entry = device_registry.async_get_or_create(

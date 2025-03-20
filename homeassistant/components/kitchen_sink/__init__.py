@@ -300,7 +300,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": RECORDER_DOMAIN,
         "name": None,
-        "statistic_id": "sensor.statistics_issue_1",
+        "statistic_id": "sensor.statistics_issues_issue_1",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "mean_type": StatisticMeanType.ARIMETHIC,
         "has_sum": False,
@@ -312,7 +312,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": RECORDER_DOMAIN,
         "name": None,
-        "statistic_id": "sensor.statistics_issue_2",
+        "statistic_id": "sensor.statistics_issues_issue_2",
         "unit_of_measurement": "cats",
         "mean_type": StatisticMeanType.ARIMETHIC,
         "has_sum": False,
@@ -324,7 +324,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": RECORDER_DOMAIN,
         "name": None,
-        "statistic_id": "sensor.statistics_issue_3",
+        "statistic_id": "sensor.statistics_issues_issue_3",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "mean_type": StatisticMeanType.ARIMETHIC,
         "has_sum": False,
@@ -336,7 +336,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": RECORDER_DOMAIN,
         "name": None,
-        "statistic_id": "sensor.statistics_issue_4",
+        "statistic_id": "sensor.statistics_issues_issue_4",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "mean_type": StatisticMeanType.ARIMETHIC,
         "has_sum": False,

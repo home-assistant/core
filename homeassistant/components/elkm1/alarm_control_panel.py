@@ -105,6 +105,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_NIGHT
+        | AlarmControlPanelEntityFeature.ARM_VACATION
     )
     _element: Area
 
@@ -204,7 +205,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
             ArmedStatus.ARMED_STAY_INSTANT: AlarmControlPanelState.ARMED_HOME,
             ArmedStatus.ARMED_TO_NIGHT: AlarmControlPanelState.ARMED_NIGHT,
             ArmedStatus.ARMED_TO_NIGHT_INSTANT: AlarmControlPanelState.ARMED_NIGHT,
-            ArmedStatus.ARMED_TO_VACATION: AlarmControlPanelState.ARMED_AWAY,
+            ArmedStatus.ARMED_TO_VACATION: AlarmControlPanelState.ARMED_VACATION,
         }
 
         if self._element.alarm_state is None:

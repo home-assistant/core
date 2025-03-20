@@ -16,11 +16,17 @@ from aiohomeconnect.model import (
     SettingKey,
 )
 from aiohomeconnect.model.error import HomeConnectError
+import aiohttp
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
@@ -187,6 +193,7 @@ SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,
@@ -202,7 +209,13 @@ async def _get_client_and_ha_id(
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(device_id)
     if device_entry is None:
-        raise ServiceValidationError("Device entry not found for device id")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_entry_not_found",
+            translation_placeholders={
+                "device_id": device_id,
+            },
+        )
     entry: HomeConnectConfigEntry | None = None
     for entry_id in device_entry.config_entries:
         _entry = hass.config_entries.async_get_entry(entry_id)
@@ -212,7 +225,11 @@ async def _get_client_and_ha_id(
             break
     if entry is None:
         raise ServiceValidationError(
-            "Home Connect config entry not found for that device id"
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_found",
+            translation_placeholders={
+                "device_id": device_id,
+            },
         )
 
     ha_id = next(
@@ -404,6 +421,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         """Execute calls to services executing a command."""
         client, ha_id = await _get_client_and_ha_id(hass, call.data[ATTR_DEVICE_ID])
 
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_command_actions",
+            breaks_in_ha_version="2025.9.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_command_actions",
+        )
+
         try:
             await client.put_command(ha_id, command_key=command_key, value=True)
         except HomeConnectError as err:
@@ -589,17 +617,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
     config_entry_auth = AsyncConfigEntryAuth(hass, session)
+    try:
+        await config_entry_auth.async_get_access_token()
+    except aiohttp.ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed from err
+        raise ConfigEntryNotReady from err
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady from err
 
     home_connect_client = HomeConnectClient(config_entry_auth)
 
     coordinator = HomeConnectCoordinator(hass, entry, home_connect_client)
-    await coordinator.async_config_entry_first_refresh()
-
+    await coordinator.async_setup()
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.runtime_data.start_event_listener()
+
+    entry.async_create_background_task(
+        hass,
+        coordinator.async_refresh(),
+        f"home_connect-initial-full-refresh-{entry.entry_id}",
+    )
 
     return True
 
@@ -609,6 +650,7 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     async_delete_issue(hass, DOMAIN, "deprecated_set_program_and_option_actions")
+    async_delete_issue(hass, DOMAIN, "deprecated_command_actions")
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

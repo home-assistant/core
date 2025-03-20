@@ -1,9 +1,8 @@
 """Test homee sensors."""
 
-from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homee.const import (
@@ -12,13 +11,18 @@ from homeassistant.components.homee.const import (
     WINDOW_MAP,
     WINDOW_MAP_REVERSED,
 )
-from homeassistant.const import LIGHT_LUX
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import async_update_attribute_value, build_mock_node, setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
+    """Make sure all entities are enabled."""
 
 
 async def test_up_down_values(
@@ -33,7 +37,7 @@ async def test_up_down_values(
 
     assert hass.states.get("sensor.test_multisensor_state").state == OPEN_CLOSE_MAP[0]
 
-    attribute = mock_homee.nodes[0].attributes[27]
+    attribute = mock_homee.nodes[0].attributes[28]
     for i in range(1, 5):
         await async_update_attribute_value(hass, attribute, i)
         assert (
@@ -65,7 +69,7 @@ async def test_window_position(
         == WINDOW_MAP[0]
     )
 
-    attribute = mock_homee.nodes[0].attributes[32]
+    attribute = mock_homee.nodes[0].attributes[33]
     for i in range(1, 3):
         await async_update_attribute_value(hass, attribute, i)
         assert (
@@ -83,46 +87,17 @@ async def test_window_position(
         )
 
 
-async def test_brightness_sensor(
-    hass: HomeAssistant,
-    mock_homee: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test brightness sensor's lx & klx units and naming of multi-instance sensors."""
-    mock_homee.nodes = [build_mock_node("sensors.json")]
-    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
-    await setup_integration(hass, mock_config_entry)
-
-    sensor_state = hass.states.get("sensor.test_multisensor_illuminance_1")
-    assert sensor_state.state == "175.0"
-    assert sensor_state.attributes["unit_of_measurement"] == LIGHT_LUX
-    assert sensor_state.attributes["friendly_name"] == "Test MultiSensor Illuminance 1"
-
-    # Sensor with Homee unit klx
-    sensor_state = hass.states.get("sensor.test_multisensor_illuminance_2")
-    assert sensor_state.state == "7000.0"
-    assert sensor_state.attributes["unit_of_measurement"] == LIGHT_LUX
-    assert sensor_state.attributes["friendly_name"] == "Test MultiSensor Illuminance 2"
-
-
 async def test_sensor_snapshot(
     hass: HomeAssistant,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the multisensor snapshot."""
     mock_homee.nodes = [build_mock_node("sensors.json")]
     mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
-    await setup_integration(hass, mock_config_entry)
-    entity_registry.async_update_entity(
-        "sensor.test_multisensor_node_state", disabled_by=None
-    )
-    await hass.async_block_till_done()
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.homee.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

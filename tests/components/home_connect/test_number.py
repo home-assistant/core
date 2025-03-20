@@ -2,22 +2,40 @@
 
 from collections.abc import Awaitable, Callable
 import random
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
     ArrayOfSettings,
+    Event,
+    EventKey,
     EventMessage,
     EventType,
     GetSetting,
+    OptionKey,
+    ProgramDefinition,
+    ProgramKey,
     SettingKey,
 )
-from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
+from aiohomeconnect.model.error import (
+    ActiveProgramNotSetError,
+    HomeConnectApiError,
+    HomeConnectError,
+    SelectedProgramNotSetError,
+    TooManyRequestsError,
+)
+from aiohomeconnect.model.program import (
+    ProgramDefinitionConstraints,
+    ProgramDefinitionOption,
+)
 from aiohomeconnect.model.setting import SettingConstraints
 import pytest
 
 from homeassistant.components.home_connect.const import DOMAIN
 from homeassistant.components.number import (
+    ATTR_MAX,
+    ATTR_MIN,
+    ATTR_STEP,
     ATTR_VALUE as SERVICE_ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
@@ -30,7 +48,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -51,7 +69,6 @@ async def test_number(
     assert config_entry.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.parametrize("appliance_ha_id", ["FridgeFreezer"], indirect=True)
 async def test_paired_depaired_devices_flow(
     appliance_ha_id: str,
     hass: HomeAssistant,
@@ -63,6 +80,17 @@ async def test_paired_depaired_devices_flow(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that removed devices are correctly removed from and added to hass on API events."""
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.BSH_COMMON_FINISH_IN_RELATIVE,
+                    "Integer",
+                )
+            ],
+        )
+    )
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
@@ -313,6 +341,98 @@ async def test_number_entity_functionality(
     assert hass.states.is_state(entity_id, str(float(value)))
 
 
+@pytest.mark.parametrize("appliance_ha_id", ["FridgeFreezer"], indirect=True)
+@pytest.mark.parametrize("retry_after", [0, None])
+@pytest.mark.parametrize(
+    (
+        "entity_id",
+        "setting_key",
+        "type",
+        "min_value",
+        "max_value",
+        "step_size",
+        "unit_of_measurement",
+    ),
+    [
+        (
+            f"{NUMBER_DOMAIN.lower()}.fridgefreezer_refrigerator_temperature",
+            SettingKey.REFRIGERATION_FRIDGE_FREEZER_SETPOINT_TEMPERATURE_REFRIGERATOR,
+            "Double",
+            7,
+            15,
+            5,
+            "°C",
+        ),
+    ],
+)
+@patch("homeassistant.components.home_connect.entity.API_DEFAULT_RETRY_AFTER", new=0)
+async def test_fetch_constraints_after_rate_limit_error(
+    retry_after: int | None,
+    appliance_ha_id: str,
+    entity_id: str,
+    setting_key: SettingKey,
+    type: str,
+    min_value: int,
+    max_value: int,
+    step_size: int,
+    unit_of_measurement: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test that, if a API rate limit error is raised, the constraints are fetched later."""
+
+    def get_settings_side_effect(ha_id: str):
+        if ha_id != appliance_ha_id:
+            return ArrayOfSettings([])
+        return ArrayOfSettings(
+            [
+                GetSetting(
+                    key=setting_key,
+                    raw_key=setting_key.value,
+                    value=random.randint(min_value, max_value),
+                )
+            ]
+        )
+
+    client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
+    client.get_setting = AsyncMock(
+        side_effect=[
+            TooManyRequestsError("error.key", retry_after=retry_after),
+            GetSetting(
+                key=setting_key,
+                raw_key=setting_key.value,
+                value=random.randint(min_value, max_value),
+                unit=unit_of_measurement,
+                type=type,
+                constraints=SettingConstraints(
+                    min=min_value,
+                    max=max_value,
+                    step_size=step_size,
+                ),
+            ),
+        ]
+    )
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert client.get_setting.call_count == 2
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    attributes = entity_state.attributes
+    assert attributes["min"] == min_value
+    assert attributes["max"] == max_value
+    assert attributes["step"] == step_size
+    assert attributes["unit_of_measurement"] == unit_of_measurement
+
+
 @pytest.mark.parametrize(
     ("entity_id", "setting_key", "mock_attr"),
     [
@@ -369,3 +489,135 @@ async def test_number_entity_error(
             blocking=True,
         )
     assert getattr(client_with_exception, mock_attr).call_count == 2
+
+
+@pytest.mark.parametrize(
+    (
+        "set_active_program_options_side_effect",
+        "set_selected_program_options_side_effect",
+        "called_mock_method",
+    ),
+    [
+        (
+            None,
+            SelectedProgramNotSetError("error.key"),
+            "set_active_program_option",
+        ),
+        (
+            ActiveProgramNotSetError("error.key"),
+            None,
+            "set_selected_program_option",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("appliance_ha_id", "entity_id", "option_key", "min", "max", "step_size", "unit"),
+    [
+        (
+            "Oven",
+            "number.oven_setpoint_temperature",
+            OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE,
+            50,
+            260,
+            1,
+            "°C",
+        ),
+    ],
+    indirect=["appliance_ha_id"],
+)
+async def test_options_functionality(
+    entity_id: str,
+    option_key: OptionKey,
+    appliance_ha_id: str,
+    min: int,
+    max: int,
+    step_size: int,
+    unit: str,
+    set_active_program_options_side_effect: ActiveProgramNotSetError | None,
+    set_selected_program_options_side_effect: SelectedProgramNotSetError | None,
+    called_mock_method: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test options functionality."""
+
+    async def set_program_option_side_effect(ha_id: str, *_, **kwargs) -> None:
+        event_key = EventKey(kwargs["option_key"])
+        await client.add_events(
+            [
+                EventMessage(
+                    ha_id,
+                    EventType.NOTIFY,
+                    ArrayOfEvents(
+                        [
+                            Event(
+                                key=event_key,
+                                raw_key=event_key.value,
+                                timestamp=0,
+                                level="",
+                                handling="",
+                                value=kwargs["value"],
+                                unit=unit,
+                            )
+                        ]
+                    ),
+                ),
+            ]
+        )
+
+    called_mock = AsyncMock(side_effect=set_program_option_side_effect)
+    if set_active_program_options_side_effect:
+        client.set_active_program_option.side_effect = (
+            set_active_program_options_side_effect
+        )
+    else:
+        assert set_selected_program_options_side_effect
+        client.set_selected_program_option.side_effect = (
+            set_selected_program_options_side_effect
+        )
+    setattr(client, called_mock_method, called_mock)
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    option_key,
+                    "Double",
+                    unit=unit,
+                    constraints=ProgramDefinitionConstraints(
+                        min=min,
+                        max=max,
+                        step_size=step_size,
+                    ),
+                )
+            ],
+        )
+    )
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.attributes["unit_of_measurement"] == unit
+    assert entity_state.attributes[ATTR_MIN] == min
+    assert entity_state.attributes[ATTR_MAX] == max
+    assert entity_state.attributes[ATTR_STEP] == step_size
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, SERVICE_ATTR_VALUE: 80},
+    )
+    await hass.async_block_till_done()
+
+    assert called_mock.called
+    assert called_mock.call_args.args == (appliance_ha_id,)
+    assert called_mock.call_args.kwargs == {
+        "option_key": option_key,
+        "value": 80,
+    }
+    assert hass.states.is_state(entity_id, "80.0")

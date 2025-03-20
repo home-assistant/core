@@ -5,11 +5,17 @@ import logging
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
-from pyheos import CommandAuthenticationError, Heos, HeosError, HeosOptions
+from pyheos import (
+    CommandAuthenticationError,
+    ConnectionState,
+    Heos,
+    HeosError,
+    HeosOptions,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntryState,
+    SOURCE_IGNORE,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -48,13 +54,19 @@ async def _validate_host(host: str, errors: dict[str, str]) -> bool:
 
 
 async def _validate_auth(
-    user_input: dict[str, str], heos: Heos, errors: dict[str, str]
+    user_input: dict[str, str], entry: HeosConfigEntry, errors: dict[str, str]
 ) -> bool:
     """Validate authentication by signing in or out, otherwise populate errors if needed."""
+    can_validate = (
+        hasattr(entry, "runtime_data")
+        and entry.runtime_data.heos.connection_state is ConnectionState.CONNECTED
+    )
     if not user_input:
         # Log out (neither username nor password provided)
+        if not can_validate:
+            return True
         try:
-            await heos.sign_out()
+            await entry.runtime_data.heos.sign_out()
         except HeosError:
             errors["base"] = "unknown"
             _LOGGER.exception("Unexpected error occurred during sign-out")
@@ -73,8 +85,12 @@ async def _validate_auth(
         return False
 
     # Attempt to login (both username and password provided)
+    if not can_validate:
+        return True
     try:
-        await heos.sign_in(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+        await entry.runtime_data.heos.sign_in(
+            user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+        )
     except CommandAuthenticationError as err:
         errors["base"] = "invalid_auth"
         _LOGGER.warning("Failed to sign-in to HEOS Account: %s", err)
@@ -86,9 +102,21 @@ async def _validate_auth(
     else:
         _LOGGER.debug(
             "Successfully signed-in to HEOS Account: %s",
-            heos.signed_in_username,
+            entry.runtime_data.heos.signed_in_username,
         )
         return True
+
+
+def _get_current_hosts(entry: HeosConfigEntry) -> set[str]:
+    """Get a set of current hosts from the entry."""
+    hosts = set(entry.data[CONF_HOST])
+    if hasattr(entry, "runtime_data"):
+        hosts.update(
+            player.ip_address
+            for player in entry.runtime_data.heos.players.values()
+            if player.ip_address is not None
+        )
+    return hosts
 
 
 class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -114,10 +142,17 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert discovery_info.ssdp_location
 
-        await self.async_set_unique_id(DOMAIN)
-        # Connect to discovered host and get system information
+        entry: HeosConfigEntry | None = await self.async_set_unique_id(DOMAIN)
         hostname = urlparse(discovery_info.ssdp_location).hostname
         assert hostname is not None
+
+        # Abort early when discovery is ignored or host is part of the current system
+        if entry and (
+            entry.source == SOURCE_IGNORE or hostname in _get_current_hosts(entry)
+        ):
+            return self.async_abort(reason="single_instance_allowed")
+
+        # Connect to discovered host and get system information
         heos = Heos(HeosOptions(hostname, events=False, heart_beat=False))
         try:
             await heos.connect()
@@ -135,8 +170,23 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         # Select the preferred host, if available
         if system_info.preferred_hosts:
             hostname = system_info.preferred_hosts[0].ip_address
-        self._discovered_host = hostname
-        return await self.async_step_confirm_discovery()
+
+        # Move to confirmation when not configured
+        if entry is None:
+            self._discovered_host = hostname
+            return await self.async_step_confirm_discovery()
+
+        # Only update if the configured host isn't part of the discovered hosts to ensure new players that come online don't trigger a reload
+        if entry.data[CONF_HOST] not in [host.ip_address for host in system_info.hosts]:
+            _LOGGER.debug(
+                "Updated host %s to discovered host %s", entry.data[CONF_HOST], hostname
+            )
+            return self.async_update_reload_and_abort(
+                entry,
+                data_updates={CONF_HOST: hostname},
+                reason="reconfigure_successful",
+            )
+        return self.async_abort(reason="single_instance_allowed")
 
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
@@ -155,7 +205,8 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Obtain host and validate connection."""
-        await self.async_set_unique_id(DOMAIN)
+        await self.async_set_unique_id(DOMAIN, raise_on_progress=False)
+        self._abort_if_unique_id_configured(error="single_instance_allowed")
         # Try connecting to host if provided
         errors: dict[str, str] = {}
         host = None
@@ -205,8 +256,7 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         entry: HeosConfigEntry = self._get_reauth_entry()
         if user_input is not None:
-            assert entry.state is ConfigEntryState.LOADED
-            if await _validate_auth(user_input, entry.runtime_data.heos, errors):
+            if await _validate_auth(user_input, entry, errors):
                 return self.async_update_reload_and_abort(entry, options=user_input)
 
         return self.async_show_form(
@@ -227,8 +277,7 @@ class HeosOptionsFlowHandler(OptionsFlow):
         """Manage the options."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            entry: HeosConfigEntry = self.config_entry
-            if await _validate_auth(user_input, entry.runtime_data.heos, errors):
+            if await _validate_auth(user_input, self.config_entry, errors):
                 return self.async_create_entry(data=user_input)
 
         return self.async_show_form(

@@ -23,7 +23,12 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.components.fritzbox.climate import PRESET_HOLIDAY, PRESET_SUMMER
+from homeassistant.components.fritzbox.climate import (
+    OFF_API_TEMPERATURE,
+    ON_API_TEMPERATURE,
+    PRESET_HOLIDAY,
+    PRESET_SUMMER,
+)
 from homeassistant.components.fritzbox.const import (
     ATTR_STATE_BATTERY_LOW,
     ATTR_STATE_HOLIDAY_MODE,
@@ -367,9 +372,23 @@ async def test_set_hvac_mode(
     assert device.set_target_temperature.call_args_list == expected_call_args
 
 
-async def test_set_preset_mode_comfort(hass: HomeAssistant, fritz: Mock) -> None:
+@pytest.mark.parametrize(
+    ("comfort_temperature", "expected_call_args"),
+    [
+        (20, [call(20, True)]),
+        (28, [call(28, True)]),
+        (ON_API_TEMPERATURE, [call(30, True)]),
+    ],
+)
+async def test_set_preset_mode_comfort(
+    hass: HomeAssistant,
+    fritz: Mock,
+    comfort_temperature: int,
+    expected_call_args: list[_Call],
+) -> None:
     """Test setting preset mode."""
     device = FritzDeviceClimateMock()
+    device.comfort_temperature = comfort_temperature
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
@@ -380,12 +399,27 @@ async def test_set_preset_mode_comfort(hass: HomeAssistant, fritz: Mock) -> None
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_COMFORT},
         True,
     )
-    assert device.set_target_temperature.call_args_list == [call(22, True)]
+    assert device.set_target_temperature.call_count == len(expected_call_args)
+    assert device.set_target_temperature.call_args_list == expected_call_args
 
 
-async def test_set_preset_mode_eco(hass: HomeAssistant, fritz: Mock) -> None:
+@pytest.mark.parametrize(
+    ("eco_temperature", "expected_call_args"),
+    [
+        (20, [call(20, True)]),
+        (16, [call(16, True)]),
+        (OFF_API_TEMPERATURE, [call(0, True)]),
+    ],
+)
+async def test_set_preset_mode_eco(
+    hass: HomeAssistant,
+    fritz: Mock,
+    eco_temperature: int,
+    expected_call_args: list[_Call],
+) -> None:
     """Test setting preset mode."""
     device = FritzDeviceClimateMock()
+    device.eco_temperature = eco_temperature
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
@@ -396,7 +430,8 @@ async def test_set_preset_mode_eco(hass: HomeAssistant, fritz: Mock) -> None:
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_ECO},
         True,
     )
-    assert device.set_target_temperature.call_args_list == [call(16, True)]
+    assert device.set_target_temperature.call_count == len(expected_call_args)
+    assert device.set_target_temperature.call_args_list == expected_call_args
 
 
 async def test_preset_mode_update(hass: HomeAssistant, fritz: Mock) -> None:
@@ -493,7 +528,7 @@ async def test_holidy_summer_mode(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change hvac mode while holiday or summer mode is active on the device",
+        match="Can't change HVAC mode while holiday or summer mode is active on the device",
     ):
         await hass.services.async_call(
             "climate",
@@ -529,7 +564,7 @@ async def test_holidy_summer_mode(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Can't change hvac mode while holiday or summer mode is active on the device",
+        match="Can't change HVAC mode while holiday or summer mode is active on the device",
     ):
         await hass.services.async_call(
             "climate",

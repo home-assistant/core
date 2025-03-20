@@ -148,16 +148,7 @@ def _time_weighted_average(
         duration = end - old_start_time
         accumulated += old_fstate * duration.total_seconds()
 
-    period_seconds = (end - start).total_seconds()
-    if period_seconds == 0:
-        # If the only state changed that happened was at the exact moment
-        # at the end of the period, we can't calculate a meaningful average
-        # so we return 0.0 since it represents a time duration smaller than
-        # we can measure. This probably means the precision of statistics
-        # column schema in the database is incorrect but it is actually possible
-        # to happen if the state change event fired at the exact microsecond
-        return 0.0
-    return accumulated / period_seconds
+    return accumulated / (end - start).total_seconds()
 
 
 def _time_weighted_circular_mean(
@@ -510,7 +501,11 @@ def compile_statistics(  # noqa: C901
         entity_id = _state.entity_id
         # If there are no recent state changes, the sensor's state may already be pruned
         # from the recorder. Get the state from the state machine instead.
-        if not (entity_history := history_list.get(entity_id, [_state])):
+        try:
+            entity_history = history_list[entity_id]
+        except KeyError:
+            entity_history = [_state] if _state.last_changed < end else []
+        if not entity_history:
             continue
         if not (float_states := _entity_history_to_float_and_state(entity_history)):
             continue
