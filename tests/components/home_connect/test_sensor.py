@@ -13,7 +13,7 @@ from aiohomeconnect.model import (
     Status,
     StatusKey,
 )
-from aiohomeconnect.model.error import HomeConnectApiError
+from aiohomeconnect.model.error import HomeConnectApiError, TooManyRequestsError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -26,12 +26,13 @@ from homeassistant.components.home_connect.const import (
     BSH_EVENT_PRESENT_STATE_PRESENT,
     DOMAIN,
 )
+from homeassistant.components.home_connect.coordinator import HomeConnectError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEST_HC_APP = "Dishwasher"
 
@@ -724,3 +725,122 @@ async def test_sensor_unit_fetching(
     )
 
     assert client.get_status_value.call_count == get_status_value_call_count
+
+
+@pytest.mark.parametrize(
+    (
+        "appliance_ha_id",
+        "entity_id",
+        "status_key",
+    ),
+    [
+        (
+            "Oven",
+            "sensor.oven_current_oven_cavity_temperature",
+            StatusKey.COOKING_OVEN_CURRENT_CAVITY_TEMPERATURE,
+        ),
+    ],
+    indirect=["appliance_ha_id"],
+)
+async def test_sensor_unit_fetching_error(
+    appliance_ha_id: str,
+    entity_id: str,
+    status_key: StatusKey,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test that the sensor entities are capable of fetching units."""
+
+    async def get_status_mock(ha_id: str) -> ArrayOfStatus:
+        if ha_id != appliance_ha_id:
+            return ArrayOfStatus([])
+        return ArrayOfStatus(
+            [
+                Status(
+                    key=status_key,
+                    raw_key=status_key.value,
+                    value=0,
+                )
+            ]
+        )
+
+    client.get_status = AsyncMock(side_effect=get_status_mock)
+    client.get_status_value = AsyncMock(side_effect=HomeConnectError())
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    assert hass.states.get(entity_id)
+
+
+@pytest.mark.parametrize(
+    (
+        "appliance_ha_id",
+        "entity_id",
+        "status_key",
+        "unit",
+    ),
+    [
+        (
+            "Oven",
+            "sensor.oven_current_oven_cavity_temperature",
+            StatusKey.COOKING_OVEN_CURRENT_CAVITY_TEMPERATURE,
+            "°C",
+        ),
+    ],
+    indirect=["appliance_ha_id"],
+)
+async def test_sensor_unit_fetching_after_rate_limit_error(
+    appliance_ha_id: str,
+    entity_id: str,
+    status_key: StatusKey,
+    unit: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test that the sensor entities are capable of fetching units."""
+
+    async def get_status_mock(ha_id: str) -> ArrayOfStatus:
+        if ha_id != appliance_ha_id:
+            return ArrayOfStatus([])
+        return ArrayOfStatus(
+            [
+                Status(
+                    key=status_key,
+                    raw_key=status_key.value,
+                    value=0,
+                )
+            ]
+        )
+
+    client.get_status = AsyncMock(side_effect=get_status_mock)
+    client.get_status_value = AsyncMock(
+        side_effect=[
+            TooManyRequestsError("error.key", retry_after=0),
+            Status(
+                key=status_key,
+                raw_key=status_key.value,
+                value=0,
+                unit=unit,
+            ),
+        ]
+    )
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    assert client.get_status_value.call_count == 2
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.attributes["unit_of_measurement"] == unit

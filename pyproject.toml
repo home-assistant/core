@@ -1,11 +1,12 @@
 [build-system]
-requires = ["setuptools==75.1.0"]
+requires = ["setuptools==77.0.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
 version     = "2025.4.0.dev0"
-license     = {text = "Apache-2.0"}
+license     = "Apache-2.0"
+license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
 authors     = [
@@ -16,7 +17,6 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: End Users/Desktop",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.13",
     "Topic :: Home Automation",
@@ -33,7 +33,7 @@ dependencies    = [
     "aiohttp-fast-zlib==0.2.3",
     "aiohttp-asyncmdnsresolver==0.1.1",
     "aiozoneinfo==0.2.3",
-    "annotatedyaml==0.2.0",
+    "annotatedyaml==0.4.4",
     "astral==2.2",
     "async-interrupt==1.2.2",
     "attrs==25.1.0",
