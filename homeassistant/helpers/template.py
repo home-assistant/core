@@ -2785,6 +2785,32 @@ def flatten(value: Iterable[Any], levels: int | None = None) -> list[Any]:
     return flattened
 
 
+def combine(*args: Any, recursive: bool = False) -> dict[Any, Any]:
+    """Combine multiple dictionaries into one."""
+    if not args:
+        raise TypeError("combine expected at least 1 argument, got 0")
+
+    result: dict[Any, Any] = {}
+    for arg in args:
+        if not isinstance(arg, dict):
+            raise TypeError(f"combine expected a dict, got {type(arg).__name__}")
+
+        if recursive:
+            for key, value in arg.items():
+                if (
+                    key in result
+                    and isinstance(result[key], dict)
+                    and isinstance(value, dict)
+                ):
+                    result[key] = combine(result[key], value, recursive=True)
+                else:
+                    result[key] = value
+        else:
+            result |= arg
+
+    return result
+
+
 def md5(value: str) -> str:
     """Generate md5 hash from a string."""
     return hashlib.md5(value.encode()).hexdigest()
@@ -3012,6 +3038,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["sha1"] = sha1
         self.filters["sha256"] = sha256
         self.filters["sha512"] = sha512
+        self.filters["combine"] = combine
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -3056,6 +3083,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["sha1"] = sha1
         self.globals["sha256"] = sha256
         self.globals["sha512"] = sha512
+        self.globals["combine"] = combine
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
         self.tests["set"] = _is_set
