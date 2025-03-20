@@ -20,14 +20,19 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import (
+    CONF_ACTIONS,
     CONF_BINARY_SENSORS,
+    CONF_CONDITIONS,
     CONF_NAME,
     CONF_SENSORS,
+    CONF_TRIGGER,
+    CONF_TRIGGERS,
     CONF_UNIQUE_ID,
     CONF_VARIABLES,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.automation import backward_compatibility_schema
 from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.helpers.typing import ConfigType
@@ -43,14 +48,7 @@ from . import (
     sensor as sensor_platform,
     weather as weather_platform,
 )
-from .const import (
-    CONF_ACTION,
-    CONF_CONDITION,
-    CONF_TRIGGER,
-    DOMAIN,
-    PLATFORMS,
-    TemplateConfig,
-)
+from .const import DOMAIN, PLATFORMS, TemplateConfig
 from .helpers import async_get_blueprints
 
 PACKAGE_MERGE_HINT = "list"
@@ -63,7 +61,7 @@ def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict],
     def validate(obj: dict):
         options = set(obj.keys())
         if found_domains := domains.intersection(options):
-            invalid = {CONF_TRIGGER, CONF_ACTION}
+            invalid = {CONF_TRIGGERS, CONF_ACTIONS}
             if found_invalid := invalid.intersection(set(obj.keys())):
                 raise vol.Invalid(
                     f"Unsupported option(s) found for domain {found_domains.pop()}, please remove ({', '.join(found_invalid)}) from your configuration",
@@ -74,13 +72,14 @@ def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict],
     return validate
 
 
-CONFIG_SECTION_SCHEMA = vol.Schema(
-    vol.All(
+CONFIG_SECTION_SCHEMA = vol.All(
+    backward_compatibility_schema,
+    vol.Schema(
         {
             vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
-            vol.Optional(CONF_CONDITION): cv.CONDITIONS_SCHEMA,
-            vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_TRIGGERS): cv.TRIGGER_SCHEMA,
+            vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
+            vol.Optional(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             vol.Optional(NUMBER_DOMAIN): vol.All(
                 cv.ensure_list, [number_platform.NUMBER_SCHEMA]
@@ -112,9 +111,9 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
             vol.Optional(WEATHER_DOMAIN): vol.All(
                 cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
             ),
-        },
-        ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN, LIGHT_DOMAIN),
-    )
+        }
+    ),
+    ensure_domains_do_not_have_trigger_or_action(BUTTON_DOMAIN, LIGHT_DOMAIN),
 )
 
 TEMPLATE_BLUEPRINT_INSTANCE_SCHEMA = vol.Schema(
@@ -157,7 +156,10 @@ async def _async_resolve_blueprints(
             # house input results for template entities.  For Trigger based template entities
             # CONF_VARIABLES should not be removed because the variables are always
             # executed between the trigger and action.
-            if CONF_TRIGGER not in config and CONF_VARIABLES in config:
+            if (
+                not _is_trigger_based_template_entity(config)
+                and CONF_VARIABLES in config
+            ):
                 config[platform][CONF_VARIABLES] = config.pop(CONF_VARIABLES)
         raw_config = dict(config)
 
@@ -175,14 +177,14 @@ async def async_validate_config_section(
 
     validated_config = await _async_resolve_blueprints(hass, config)
 
-    if CONF_TRIGGER in validated_config:
-        validated_config[CONF_TRIGGER] = await async_validate_trigger_config(
-            hass, validated_config[CONF_TRIGGER]
+    if CONF_TRIGGERS in validated_config:
+        validated_config[CONF_TRIGGERS] = await async_validate_trigger_config(
+            hass, validated_config[CONF_TRIGGERS]
         )
 
-    if CONF_CONDITION in validated_config:
-        validated_config[CONF_CONDITION] = await async_validate_conditions_config(
-            hass, validated_config[CONF_CONDITION]
+    if CONF_CONDITIONS in validated_config:
+        validated_config[CONF_CONDITIONS] = await async_validate_conditions_config(
+            hass, validated_config[CONF_CONDITIONS]
         )
 
     return validated_config
@@ -245,3 +247,11 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
     config[DOMAIN] = config_sections
 
     return config
+
+
+def _is_trigger_based_template_entity(config):
+    """Check if this is a trigger based template entity.
+
+    Takes into account backwards compatible definition.
+    """
+    return CONF_TRIGGERS in config or CONF_TRIGGER in config
