@@ -19,6 +19,8 @@ from .const import (
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
+    CONF_SEND_ACTUALS,
+    CONF_TODAY_ENERGY_GENERATION_ENTITY_ID,
     DOMAIN,
     LOGGER,
 )
@@ -72,7 +74,25 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
 
     async def _async_update_data(self) -> Estimate:
         """Fetch Forecast.Solar estimates."""
+
         try:
-            return await self.forecast.estimate()
+            actual_value = 0.0
+
+            # Check if CONF_SEND_ACTUALS is True and API key is set
+            if (
+                self.config_entry.options.get(CONF_SEND_ACTUALS, False)
+                and self.forecast.api_key
+            ):
+                entity_id = self.config_entry.options.get(
+                    CONF_TODAY_ENERGY_GENERATION_ENTITY_ID
+                )
+                if entity_id:
+                    # Get the state of the entity
+                    state = self.hass.states.get(entity_id)
+                    if state and state.state not in (None, "unknown", "unavailable"):
+                        actual_value = float(state.state)
+
+            # Pass the actual value to the estimate function if available
+            return await self.forecast.estimate(actual=actual_value)
         except ForecastSolarConnectionError as error:
             raise UpdateFailed(error) from error

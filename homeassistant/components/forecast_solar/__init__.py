@@ -10,6 +10,8 @@ from .const import (
     CONF_DAMPING_EVENING,
     CONF_DAMPING_MORNING,
     CONF_MODULES_POWER,
+    CONF_SEND_ACTUALS,
+    CONF_TODAY_ENERGY_GENERATION_ENTITY_ID,
 )
 from .coordinator import ForecastSolarConfigEntry, ForecastSolarDataUpdateCoordinator
 
@@ -27,6 +29,8 @@ async def async_migrate_entry(
             CONF_MODULES_POWER: new_options.pop("modules power"),
             CONF_DAMPING_MORNING: new_options.get(CONF_DAMPING, 0.0),
             CONF_DAMPING_EVENING: new_options.pop(CONF_DAMPING, 0.0),
+            CONF_SEND_ACTUALS: False,
+            CONF_TODAY_ENERGY_GENERATION_ENTITY_ID: None,
         }
 
         hass.config_entries.async_update_entry(
