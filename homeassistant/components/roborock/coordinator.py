@@ -190,9 +190,10 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         try:
             maps = await self.api.get_multi_maps_list()
         except RoborockException as err:
+            _LOGGER.debug("Failed to get maps: %s", err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="map_data_update",
+                translation_key="map_failure",
                 translation_placeholders={"error": str(err)},
             ) from err
         # Rooms names populated later with calls to `set_current_map_rooms` for each map

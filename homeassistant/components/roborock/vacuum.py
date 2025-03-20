@@ -223,7 +223,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         if not isinstance(map_data, bytes):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="current_pos_map_data",
+                translation_key="map_failure",
             )
         parser = RoborockMapDataParser(ColorsPalette(), Sizes(), [], ImageConfig(), [])
         parsed_map = parser.parse(map_data)
