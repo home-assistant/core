@@ -12,6 +12,7 @@ from homeassistant.components.squeezebox.browse_media import (
     SQUEEZEBOX_ID_BY_TYPE,
 )
 from homeassistant.components.squeezebox.const import (
+    SIGNAL_PLAYER_DISCOVERED,
     STATUS_QUERY_LIBRARYNAME,
     STATUS_QUERY_MAC,
     STATUS_QUERY_UUID,
@@ -26,9 +27,13 @@ from homeassistant.components.squeezebox.const import (
     STATUS_SENSOR_PLAYER_COUNT,
     STATUS_SENSOR_RESCAN,
 )
+from homeassistant.components.squeezebox.coordinator import (
+    SqueezeBoxPlayerUpdateCoordinator,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 # from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
@@ -46,6 +51,7 @@ SERVER_UUIDS = [
 TEST_MAC = ["aa:bb:cc:dd:ee:ff", "ff:ee:dd:cc:bb:aa"]
 TEST_PLAYER_NAME = "Test Player"
 TEST_SERVER_NAME = "Test Server"
+TEST_ALARM_ID = "1"
 FAKE_VALID_ITEM_ID = "1234"
 FAKE_INVALID_ITEM_ID = "4321"
 
@@ -270,6 +276,7 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         mock_player.image_url = None
         mock_player.model = "SqueezeLite"
         mock_player.creator = "Ralph Irving & Adrian Smith"
+        mock_player.alarms_enabled = True
 
         return mock_player
 
@@ -335,6 +342,59 @@ async def configure_squeezebox_media_player_button_platform(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def configure_squeezebox_switch_platform(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lms: MagicMock,
+) -> None:
+    """Configure a squeezebox config entry with appropriate mocks for switch."""
+    with (
+        patch(
+            "homeassistant.components.squeezebox.PLATFORMS",
+            [Platform.SWITCH],
+        ),
+        patch("homeassistant.components.squeezebox.Server", return_value=lms),
+    ):
+        # Find the coordinator for the player to manually refresh it.
+        # This is necessary because we are not configuring the media_player platform.
+        coordinator: SqueezeBoxPlayerUpdateCoordinator | None = None
+
+        def discovery_callback(player: SqueezeBoxPlayerUpdateCoordinator):
+            """Find the coordinator for the discovered player so we can manually refresh it."""
+            nonlocal coordinator
+            coordinator = player
+
+        async_dispatcher_connect(hass, SIGNAL_PLAYER_DISCOVERED, discovery_callback)
+
+        # Set up the switch platform and refresh the player coordinator.
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        await coordinator.async_refresh()
+
+
+@pytest.fixture
+async def mock_alarms_player(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lms: MagicMock,
+) -> MagicMock:
+    """Mock the alarms of a configured player."""
+    players = await lms.async_get_players()
+    players[0].alarms = [
+        {
+            "id": TEST_ALARM_ID,
+            "enabled": True,
+            "time": "07:00",
+            "dow": [0, 1, 2, 3, 4, 5, 6],
+            "repeat": False,
+            "url": "CURRENT_PLAYLIST",
+            "volume": 50,
+        },
+    ]
+    await configure_squeezebox_switch_platform(hass, config_entry, lms)
+    return players[0]
 
 
 @pytest.fixture

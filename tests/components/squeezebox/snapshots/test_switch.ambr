@@ -1,0 +1,104 @@
+# serializer version: 1
+# name: test_entity_registry[switch.test_player_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_player_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alarm',
+    'original_name': 'Alarm',
+    'platform': 'squeezebox',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm',
+    'unique_id': 'aa:bb:cc:dd:ee:ff-alarm-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[switch.test_player_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'alarm_id': '1',
+      'dow': '[0, 1, 2, 3, 4, 5, 6]',
+      'friendly_name': 'Test Player Alarm',
+      'icon': 'mdi:alarm',
+      'repeat': 'False',
+      'scheduled_today': True,
+      'time': '07:00',
+      'url': 'CURRENT_PLAYLIST',
+      'volume': 0.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_player_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entity_registry[switch.test_player_alarms_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_player_alarms_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:alarm',
+    'original_name': 'Alarms Enabled',
+    'platform': 'squeezebox',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarms_enabled',
+    'unique_id': 'aa:bb:cc:dd:ee:ff-alarms-enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[switch.test_player_alarms_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Player Alarms Enabled',
+      'icon': 'mdi:alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_player_alarms_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

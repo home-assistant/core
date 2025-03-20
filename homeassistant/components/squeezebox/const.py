@@ -33,6 +33,7 @@ SQUEEZEBOX_SOURCE_STRINGS = (
     "spotify:",
     "loop:",
 )
+SIGNAL_ALARM_DISCOVERED = "squeezebox_alarm_discovered"
 SIGNAL_PLAYER_DISCOVERED = "squeezebox_player_discovered"
 SIGNAL_PLAYER_REDISCOVERED = "squeezebox_player_rediscovered"
 DISCOVERY_INTERVAL = 60
@@ -44,3 +45,11 @@ DEFAULT_VOLUME_STEP = 5
 ATTR_ANNOUNCE_VOLUME = "announce_volume"
 ATTR_ANNOUNCE_TIMEOUT = "announce_timeout"
 UNPLAYABLE_TYPES = ("text", "actions")
+ATTR_ALARM_ID = "alarm_id"
+ATTR_DAYS_OF_WEEK = "dow"
+ATTR_ENABLED = "enabled"
+ATTR_REPEAT = "repeat"
+ATTR_SCHEDULED_TODAY = "scheduled_today"
+ATTR_TIME = "time"
+ATTR_VOLUME = "volume"
+ATTR_URL = "url"
