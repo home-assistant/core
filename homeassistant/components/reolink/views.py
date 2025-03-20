@@ -88,7 +88,11 @@ class PlaybackProxyView(HomeAssistantView):
         headers.pop("Referer", None)
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("Requested Playback Proxy Method %s, Headers: %s", request.method, headers)
+            _LOGGER.debug(
+                "Requested Playback Proxy Method %s, Headers: %s",
+                request.method,
+                headers,
+            )
             _LOGGER.debug(
                 "Opening VOD stream from %s: %s",
                 host.api.camera_name(ch),
@@ -123,17 +127,19 @@ class PlaybackProxyView(HomeAssistantView):
             "apolication/octet-stream",
         ]:
             err_str = f"Reolink playback expected video/mp4 but got {reolink_response.content_type}"
-            if reolink_response.content_type == "text/html":
-                try:
-                    text = await reolink_response.text()
-                    err_str = f"{err_str}:\n{text}"
-                except BaseException:
-                    pass
             _LOGGER.error(err_str)
+            if reolink_response.content_type == "text/html":
+                text = await reolink_response.text()
+                _LOGGER.debug(text)
             return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
 
         response_headers = dict(reolink_response.headers)
-        _LOGGER.debug("Response Playback Proxy Status %s:%s, Headers: %s", reolink_response.status, reolink_response.reason, response_headers)
+        _LOGGER.debug(
+            "Response Playback Proxy Status %s:%s, Headers: %s",
+            reolink_response.status,
+            reolink_response.reason,
+            response_headers,
+        )
         response_headers["Content-Type"] = "video/mp4"
 
         response = web.StreamResponse(
