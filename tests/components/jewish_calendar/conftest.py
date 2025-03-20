@@ -53,25 +53,31 @@ def location_data(request: pytest.FixtureRequest) -> _LocationData | None:
     return LOCATIONS[request.param]
 
 
+@pytest.fixture
+def tz_info(hass: HomeAssistant, location_data: _LocationData | None) -> dt.tzinfo:
+    """Return time zone info."""
+    if location_data is None:
+        return dt_util.get_time_zone(hass.config.time_zone)
+    return dt_util.get_time_zone(location_data.timezone)
+
+
 @pytest.fixture(name="test_time")
 def _test_time(
-    request: pytest.FixtureRequest, location_data: _LocationData
+    request: pytest.FixtureRequest, tz_info: dt.tzinfo
 ) -> dt.datetime | None:
     """Return localized test time based."""
     if not hasattr(request, "param"):
         return None
 
-    tz_info = dt_util.get_time_zone(location_data.timezone)
     return request.param.replace(tzinfo=tz_info)
 
 
 @pytest.fixture
-def results(request: pytest.FixtureRequest, location_data: _LocationData) -> Iterable:
+def results(request: pytest.FixtureRequest, tz_info: dt.tzinfo) -> Iterable:
     """Return localized results."""
     if not hasattr(request, "param"):
         return None
 
-    tz_info = dt_util.get_time_zone(location_data.timezone)
     if isinstance(request.param, dict):
         return {
             key: value.replace(tzinfo=tz_info)
@@ -84,7 +90,7 @@ def results(request: pytest.FixtureRequest, location_data: _LocationData) -> Ite
 
 @pytest.fixture
 def havdalah_offset(request: pytest.FixtureRequest) -> int | None:
-    """Return a None if default havdalah offset is not specified."""
+    """Return None if default havdalah offset is not specified."""
     return getattr(request, "param", None)
 
 
