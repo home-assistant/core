@@ -103,6 +103,12 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 CONTROLLER_PATCH_PREFIX = "zwave_js_server.model.controller.Controller"
 
 
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return []
+
+
 def get_device(hass: HomeAssistant, node):
     """Get device ID for a node."""
     dev_reg = dr.async_get(hass)
