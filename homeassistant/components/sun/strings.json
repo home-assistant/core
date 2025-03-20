@@ -29,7 +29,13 @@
       "solar_rising": { "name": "Solar rising" }
     },
     "binary_sensor": {
-      "solar_rising": { "name": "Solar rising" }
+      "solar_rising": {
+        "name": "Solar rising",
+        "state": {
+          "on": "Rising",
+          "off": "Falling"
+        }
+      }
     }
   }
 }
