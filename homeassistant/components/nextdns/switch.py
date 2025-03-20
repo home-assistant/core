@@ -593,6 +593,7 @@ class NextDnsSwitch(
             ) from err
         except InvalidApiKeyError:
             self.coordinator.config_entry.async_start_reauth(self.hass)
+            return
 
         if result:
             self._attr_is_on = new_state
