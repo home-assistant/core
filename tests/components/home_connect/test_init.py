@@ -3,11 +3,15 @@
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.const import OAUTH2_TOKEN
 from aiohomeconnect.model import OptionKey, ProgramKey, SettingKey, StatusKey
-from aiohomeconnect.model.error import HomeConnectError, UnauthorizedError
+from aiohomeconnect.model.error import (
+    HomeConnectError,
+    TooManyRequestsError,
+    UnauthorizedError,
+)
 import aiohttp
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -353,6 +357,48 @@ async def test_client_error(
     assert not await integration_setup(client_with_exception)
     assert config_entry.state == expected_state
     assert client_with_exception.get_home_appliances.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "raising_exception_method",
+    [
+        "get_settings",
+        "get_status",
+        "get_all_programs",
+        "get_available_commands",
+        "get_available_program",
+    ],
+)
+async def test_client_rate_limit_error(
+    raising_exception_method: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test client errors during setup integration."""
+    retry_after = 42
+
+    original_mock = getattr(client, raising_exception_method)
+    mock = AsyncMock()
+
+    async def side_effect(*args, **kwargs):
+        if mock.call_count <= 1:
+            raise TooManyRequestsError("error.key", retry_after=retry_after)
+        return await original_mock(*args, **kwargs)
+
+    mock.side_effect = side_effect
+    setattr(client, raising_exception_method, mock)
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    with patch(
+        "homeassistant.components.home_connect.coordinator.asyncio_sleep",
+    ) as asyncio_sleep_mock:
+        assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+    assert mock.call_count >= 2
+    asyncio_sleep_mock.assert_called_once_with(retry_after)
 
 
 @pytest.mark.parametrize(
