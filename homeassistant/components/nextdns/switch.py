@@ -13,7 +13,7 @@ from nextdns import ApiError, InvalidApiKeyError, Settings
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -591,11 +591,8 @@ class NextDnsSwitch(
                     "error": repr(err),
                 },
             ) from err
-        except InvalidApiKeyError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="auth_error",
-            ) from err
+        except InvalidApiKeyError:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
 
         if result:
             self._attr_is_on = new_state
