@@ -23,6 +23,7 @@ from roborock.web_api import RoborockApiClient
 from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
 from .coordinator import (
@@ -133,6 +134,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     entry.runtime_data = valid_coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry_id=entry.entry_id
+    )
+    for device in device_entries:
+        for identifier in device.identifiers:
+            # Check if home_data did not return this device.
+            if (
+                identifier[0] == DOMAIN
+                and identifier[1].replace("_dock", "") not in device_map
+            ):
+                # The home_data api returns ALL devices on the account
+                # even if they are offline, so we can safely delete.
+                device_registry.async_update_device(
+                    device_id=device.id,
+                    remove_config_entry_id=entry.entry_id,
+                )
 
     return True
 
