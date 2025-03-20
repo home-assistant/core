@@ -83,7 +83,12 @@ class PlaybackProxyView(HomeAssistantView):
             _LOGGER.warning("Reolink playback proxy error: %s", str(err))
             return web.Response(body=str(err), status=HTTPStatus.BAD_REQUEST)
 
+        headers = dict(request.headers)
+        headers.pop("Host", None)
+        headers.pop("Referer", None)
+
         if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Requested Playback Proxy Method %s, Headers: %s", request.method, headers)
             _LOGGER.debug(
                 "Opening VOD stream from %s: %s",
                 host.api.camera_name(ch),
@@ -93,6 +98,7 @@ class PlaybackProxyView(HomeAssistantView):
         try:
             reolink_response = await self.session.get(
                 reolink_url,
+                headers=headers,
                 timeout=ClientTimeout(
                     connect=15, sock_connect=15, sock_read=5, total=None
                 ),
@@ -117,19 +123,24 @@ class PlaybackProxyView(HomeAssistantView):
             "apolication/octet-stream",
         ]:
             err_str = f"Reolink playback expected video/mp4 but got {reolink_response.content_type}"
+            if reolink_response.content_type == "text/html":
+                try:
+                    text = await reolink_response.text()
+                    err_str = f"{err_str}:\n{text}"
+                except BaseException:
+                    pass
             _LOGGER.error(err_str)
             return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
 
-        response = web.StreamResponse(
-            status=200,
-            reason="OK",
-            headers={
-                "Content-Type": "video/mp4",
-            },
-        )
+        response_headers = dict(reolink_response.headers)
+        _LOGGER.debug("Response Playback Proxy Status %s:%s, Headers: %s", reolink_response.status, reolink_response.reason, response_headers)
+        response_headers["Content-Type"] = "video/mp4"
 
-        if reolink_response.content_length is not None:
-            response.content_length = reolink_response.content_length
+        response = web.StreamResponse(
+            status=reolink_response.status,
+            reason=reolink_response.reason,
+            headers=response_headers,
+        )
 
         await response.prepare(request)
 
@@ -141,7 +152,8 @@ class PlaybackProxyView(HomeAssistantView):
                 "Timeout while reading Reolink playback from %s, writing EOF",
                 host.api.nvr_name,
             )
+        finally:
+            reolink_response.release()
 
-        reolink_response.release()
         await response.write_eof()
         return response
