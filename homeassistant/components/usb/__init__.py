@@ -283,7 +283,7 @@ class USBDiscovery:
 
     @hass_callback
     def _async_supports_monitoring(self) -> bool:
-        return sys.platform == "linux"
+        return sys.platform in ("linux", "darwin")
 
     async def _async_start_monitor(self) -> None:
         """Start monitoring hardware."""
