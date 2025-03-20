@@ -60,7 +60,13 @@ SIGNAL_UPDATE_ENTITY = "nsw_rural_fire_service_feed_update_{}"
 
 SOURCE = "nsw_rural_fire_service_feed"
 
-VALID_CATEGORIES = ["Advice", "Emergency Warning", "Not Applicable", "Watch and Act"]
+VALID_CATEGORIES = [
+    "Advice",
+    "Emergency Warning",
+    "Not Applicable",
+    "Planned Burn",
+    "Watch and Act",
+]
 
 PLATFORM_SCHEMA = GEO_LOCATION_PLATFORM_SCHEMA.extend(
     {
