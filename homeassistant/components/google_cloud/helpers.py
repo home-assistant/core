@@ -30,11 +30,13 @@ from .const import (
     CONF_PROFILES,
     CONF_SPEED,
     CONF_TEXT_TYPE,
+    CONF_TIMEOUT,
     CONF_VOICE,
     DEFAULT_GAIN,
     DEFAULT_LANG,
     DEFAULT_PITCH,
     DEFAULT_SPEED,
+    DEFAULT_TIMEOUT,
 )
 
 DEFAULT_VOICE = ""
@@ -150,6 +152,10 @@ def tts_options_schema(
                     )
                 ),
             ),
+            vol.Optional(
+                CONF_TIMEOUT,
+                default=defaults.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+            ): NumberSelector(NumberSelectorConfig(min=1, max=60, step=1)),
         }
     )
 
