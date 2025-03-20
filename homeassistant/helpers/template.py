@@ -2785,6 +2785,32 @@ def flatten(value: Iterable[Any], levels: int | None = None) -> list[Any]:
     return flattened
 
 
+def combine(*args: Any, recursive: bool = False) -> dict[Any, Any]:
+    """Combine multiple dictionaries into one."""
+    if not args:
+        raise TypeError("combine expected at least 1 argument, got 0")
+
+    result: dict[Any, Any] = {}
+    for arg in args:
+        if not isinstance(arg, dict):
+            raise TypeError(f"combine expected a dict, got {type(arg).__name__}")
+
+        if recursive:
+            for key, value in arg.items():
+                if (
+                    key in result
+                    and isinstance(result[key], dict)
+                    and isinstance(value, dict)
+                ):
+                    result[key] = combine(result[key], value, recursive=True)
+                else:
+                    result[key] = value
+        else:
+            result |= arg
+
+    return result
+
+
 def md5(value: str) -> str:
     """Generate md5 hash from a string."""
     return hashlib.md5(value.encode()).hexdigest()
@@ -2957,114 +2983,119 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             str | jinja2.nodes.Template, CodeType | None
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.loopcontrols")
-        self.filters["round"] = forgiving_round
-        self.filters["multiply"] = multiply
-        self.filters["add"] = add
-        self.filters["log"] = logarithm
-        self.filters["sin"] = sine
-        self.filters["cos"] = cosine
-        self.filters["tan"] = tangent
-        self.filters["asin"] = arc_sine
-        self.filters["acos"] = arc_cosine
-        self.filters["atan"] = arc_tangent
-        self.filters["atan2"] = arc_tangent2
-        self.filters["sqrt"] = square_root
-        self.filters["as_datetime"] = as_datetime
-        self.filters["as_timedelta"] = as_timedelta
-        self.filters["as_timestamp"] = forgiving_as_timestamp
-        self.filters["as_local"] = dt_util.as_local
-        self.filters["timestamp_custom"] = timestamp_custom
-        self.filters["timestamp_local"] = timestamp_local
-        self.filters["timestamp_utc"] = timestamp_utc
-        self.filters["to_json"] = to_json
-        self.filters["from_json"] = from_json
-        self.filters["is_defined"] = fail_when_undefined
-        self.filters["average"] = average
-        self.filters["median"] = median
-        self.filters["statistical_mode"] = statistical_mode
-        self.filters["random"] = random_every_time
-        self.filters["base64_encode"] = base64_encode
-        self.filters["base64_decode"] = base64_decode
-        self.filters["ordinal"] = ordinal
-        self.filters["regex_match"] = regex_match
-        self.filters["regex_replace"] = regex_replace
-        self.filters["regex_search"] = regex_search
-        self.filters["regex_findall"] = regex_findall
-        self.filters["regex_findall_index"] = regex_findall_index
-        self.filters["bitwise_and"] = bitwise_and
-        self.filters["bitwise_or"] = bitwise_or
-        self.filters["bitwise_xor"] = bitwise_xor
-        self.filters["pack"] = struct_pack
-        self.filters["unpack"] = struct_unpack
-        self.filters["ord"] = ord
-        self.filters["is_number"] = is_number
-        self.filters["float"] = forgiving_float_filter
-        self.filters["int"] = forgiving_int_filter
-        self.filters["slugify"] = slugify
-        self.filters["iif"] = iif
-        self.filters["bool"] = forgiving_boolean
-        self.filters["version"] = version
-        self.filters["contains"] = contains
-        self.filters["shuffle"] = shuffle
-        self.filters["typeof"] = typeof
-        self.filters["flatten"] = flatten
-        self.filters["md5"] = md5
-        self.filters["sha1"] = sha1
-        self.filters["sha256"] = sha256
-        self.filters["sha512"] = sha512
-        self.globals["log"] = logarithm
-        self.globals["sin"] = sine
-        self.globals["cos"] = cosine
-        self.globals["tan"] = tangent
-        self.globals["sqrt"] = square_root
-        self.globals["pi"] = math.pi
-        self.globals["tau"] = math.pi * 2
-        self.globals["e"] = math.e
-        self.globals["asin"] = arc_sine
+
         self.globals["acos"] = arc_cosine
-        self.globals["atan"] = arc_tangent
-        self.globals["atan2"] = arc_tangent2
-        self.globals["float"] = forgiving_float
         self.globals["as_datetime"] = as_datetime
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timedelta"] = as_timedelta
         self.globals["as_timestamp"] = forgiving_as_timestamp
-        self.globals["timedelta"] = timedelta
-        self.globals["merge_response"] = merge_response
-        self.globals["strptime"] = strptime
-        self.globals["urlencode"] = urlencode
+        self.globals["asin"] = arc_sine
+        self.globals["atan"] = arc_tangent
+        self.globals["atan2"] = arc_tangent2
         self.globals["average"] = average
-        self.globals["median"] = median
-        self.globals["statistical_mode"] = statistical_mode
-        self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
-        self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
-        self.globals["is_number"] = is_number
-        self.globals["set"] = _to_set
-        self.globals["tuple"] = _to_tuple
-        self.globals["int"] = forgiving_int
-        self.globals["pack"] = struct_pack
-        self.globals["unpack"] = struct_unpack
-        self.globals["slugify"] = slugify
-        self.globals["iif"] = iif
         self.globals["bool"] = forgiving_boolean
-        self.globals["version"] = version
-        self.globals["zip"] = zip
-        self.globals["shuffle"] = shuffle
-        self.globals["typeof"] = typeof
+        self.globals["combine"] = combine
+        self.globals["cos"] = cosine
+        self.globals["e"] = math.e
         self.globals["flatten"] = flatten
+        self.globals["float"] = forgiving_float
+        self.globals["iif"] = iif
+        self.globals["int"] = forgiving_int
+        self.globals["is_number"] = is_number
+        self.globals["log"] = logarithm
+        self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
         self.globals["md5"] = md5
+        self.globals["median"] = median
+        self.globals["merge_response"] = merge_response
+        self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
+        self.globals["pack"] = struct_pack
+        self.globals["pi"] = math.pi
+        self.globals["set"] = _to_set
         self.globals["sha1"] = sha1
         self.globals["sha256"] = sha256
         self.globals["sha512"] = sha512
+        self.globals["shuffle"] = shuffle
+        self.globals["sin"] = sine
+        self.globals["slugify"] = slugify
+        self.globals["sqrt"] = square_root
+        self.globals["statistical_mode"] = statistical_mode
+        self.globals["strptime"] = strptime
+        self.globals["tan"] = tangent
+        self.globals["tau"] = math.pi * 2
+        self.globals["timedelta"] = timedelta
+        self.globals["tuple"] = _to_tuple
+        self.globals["typeof"] = typeof
+        self.globals["unpack"] = struct_unpack
+        self.globals["urlencode"] = urlencode
+        self.globals["version"] = version
+        self.globals["zip"] = zip
+
+        self.filters["acos"] = arc_cosine
+        self.filters["add"] = add
+        self.filters["as_datetime"] = as_datetime
+        self.filters["as_local"] = dt_util.as_local
+        self.filters["as_timedelta"] = as_timedelta
+        self.filters["as_timestamp"] = forgiving_as_timestamp
+        self.filters["asin"] = arc_sine
+        self.filters["atan"] = arc_tangent
+        self.filters["atan2"] = arc_tangent2
+        self.filters["average"] = average
+        self.filters["base64_decode"] = base64_decode
+        self.filters["base64_encode"] = base64_encode
+        self.filters["bitwise_and"] = bitwise_and
+        self.filters["bitwise_or"] = bitwise_or
+        self.filters["bitwise_xor"] = bitwise_xor
+        self.filters["bool"] = forgiving_boolean
+        self.filters["combine"] = combine
+        self.filters["contains"] = contains
+        self.filters["cos"] = cosine
+        self.filters["flatten"] = flatten
+        self.filters["float"] = forgiving_float_filter
+        self.filters["from_json"] = from_json
+        self.filters["iif"] = iif
+        self.filters["int"] = forgiving_int_filter
+        self.filters["is_defined"] = fail_when_undefined
+        self.filters["is_number"] = is_number
+        self.filters["log"] = logarithm
+        self.filters["md5"] = md5
+        self.filters["median"] = median
+        self.filters["multiply"] = multiply
+        self.filters["ord"] = ord
+        self.filters["ordinal"] = ordinal
+        self.filters["pack"] = struct_pack
+        self.filters["random"] = random_every_time
+        self.filters["regex_findall_index"] = regex_findall_index
+        self.filters["regex_findall"] = regex_findall
+        self.filters["regex_match"] = regex_match
+        self.filters["regex_replace"] = regex_replace
+        self.filters["regex_search"] = regex_search
+        self.filters["round"] = forgiving_round
+        self.filters["sha1"] = sha1
+        self.filters["sha256"] = sha256
+        self.filters["sha512"] = sha512
+        self.filters["shuffle"] = shuffle
+        self.filters["sin"] = sine
+        self.filters["slugify"] = slugify
+        self.filters["sqrt"] = square_root
+        self.filters["statistical_mode"] = statistical_mode
+        self.filters["tan"] = tangent
+        self.filters["timestamp_custom"] = timestamp_custom
+        self.filters["timestamp_local"] = timestamp_local
+        self.filters["timestamp_utc"] = timestamp_utc
+        self.filters["to_json"] = to_json
+        self.filters["typeof"] = typeof
+        self.filters["unpack"] = struct_unpack
+        self.filters["version"] = version
+
+        self.tests["contains"] = contains
+        self.tests["datetime"] = _is_datetime
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
-        self.tests["set"] = _is_set
-        self.tests["tuple"] = _is_tuple
-        self.tests["datetime"] = _is_datetime
-        self.tests["string_like"] = _is_string_like
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
-        self.tests["contains"] = contains
+        self.tests["set"] = _is_set
+        self.tests["string_like"] = _is_string_like
+        self.tests["tuple"] = _is_tuple
 
         if hass is None:
             return
@@ -3091,28 +3122,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
             return jinja_context(wrapper)
 
-        self.globals["device_entities"] = hassfunction(device_entities)
-        self.filters["device_entities"] = self.globals["device_entities"]
-
-        self.globals["device_attr"] = hassfunction(device_attr)
-        self.filters["device_attr"] = self.globals["device_attr"]
-
-        self.globals["config_entry_attr"] = hassfunction(config_entry_attr)
-        self.filters["config_entry_attr"] = self.globals["config_entry_attr"]
-
-        self.globals["is_device_attr"] = hassfunction(is_device_attr)
-        self.tests["is_device_attr"] = hassfunction(is_device_attr, pass_eval_context)
-
-        self.globals["config_entry_id"] = hassfunction(config_entry_id)
-        self.filters["config_entry_id"] = self.globals["config_entry_id"]
-
-        self.globals["device_id"] = hassfunction(device_id)
-        self.filters["device_id"] = self.globals["device_id"]
-
-        self.globals["issues"] = hassfunction(issues)
-
-        self.globals["issue"] = hassfunction(issue)
-        self.filters["issue"] = self.globals["issue"]
+        # Area extensions
 
         self.globals["areas"] = hassfunction(areas)
 
@@ -3127,6 +3137,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["area_devices"] = hassfunction(area_devices)
         self.filters["area_devices"] = self.globals["area_devices"]
+
+        # Floor extensions
 
         self.globals["floors"] = hassfunction(floors)
         self.filters["floors"] = self.globals["floors"]
@@ -3143,8 +3155,34 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["floor_entities"] = hassfunction(floor_entities)
         self.filters["floor_entities"] = self.globals["floor_entities"]
 
+        # Integration extensions
+
         self.globals["integration_entities"] = hassfunction(integration_entities)
         self.filters["integration_entities"] = self.globals["integration_entities"]
+
+        # Config entry extensions
+
+        self.globals["config_entry_attr"] = hassfunction(config_entry_attr)
+        self.filters["config_entry_attr"] = self.globals["config_entry_attr"]
+
+        self.globals["config_entry_id"] = hassfunction(config_entry_id)
+        self.filters["config_entry_id"] = self.globals["config_entry_id"]
+
+        # Device extensions
+
+        self.globals["device_attr"] = hassfunction(device_attr)
+        self.filters["device_attr"] = self.globals["device_attr"]
+
+        self.globals["device_entities"] = hassfunction(device_entities)
+        self.filters["device_entities"] = self.globals["device_entities"]
+
+        self.globals["is_device_attr"] = hassfunction(is_device_attr)
+        self.tests["is_device_attr"] = hassfunction(is_device_attr, pass_eval_context)
+
+        self.globals["device_id"] = hassfunction(device_id)
+        self.filters["device_id"] = self.globals["device_id"]
+
+        # Label extensions
 
         self.globals["labels"] = hassfunction(labels)
         self.filters["labels"] = self.globals["labels"]
@@ -3164,6 +3202,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["label_entities"] = hassfunction(label_entities)
         self.filters["label_entities"] = self.globals["label_entities"]
 
+        # Issue extensions
+
+        self.globals["issues"] = hassfunction(issues)
+        self.globals["issue"] = hassfunction(issue)
+        self.filters["issue"] = self.globals["issue"]
+
         if limited:
             # Only device_entities is available to limited templates, mark other
             # functions and filters as unsupported.
@@ -3176,38 +3220,38 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 return warn_unsupported
 
             hass_globals = [
-                "closest",
-                "distance",
-                "expand",
-                "is_hidden_entity",
-                "is_state",
-                "is_state_attr",
-                "state_attr",
-                "states",
-                "state_translated",
-                "has_value",
-                "utcnow",
-                "now",
-                "device_attr",
-                "is_device_attr",
-                "device_id",
                 "area_id",
                 "area_name",
+                "closest",
+                "device_attr",
+                "device_id",
+                "distance",
+                "expand",
                 "floor_id",
                 "floor_name",
+                "has_value",
+                "is_device_attr",
+                "is_hidden_entity",
+                "is_state_attr",
+                "is_state",
+                "label_id",
+                "label_name",
+                "now",
                 "relative_time",
+                "state_attr",
+                "state_translated",
+                "states",
                 "time_since",
                 "time_until",
                 "today_at",
-                "label_id",
-                "label_name",
+                "utcnow",
             ]
             hass_filters = [
-                "closest",
-                "expand",
-                "device_id",
                 "area_id",
                 "area_name",
+                "closest",
+                "device_id",
+                "expand",
                 "floor_id",
                 "floor_name",
                 "has_value",
@@ -3217,8 +3261,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             hass_tests = [
                 "has_value",
                 "is_hidden_entity",
-                "is_state",
                 "is_state_attr",
+                "is_state",
             ]
             for glob in hass_globals:
                 self.globals[glob] = unsupported(glob)
@@ -3228,38 +3272,46 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 self.filters[test] = unsupported(test)
             return
 
-        self.globals["expand"] = hassfunction(expand)
-        self.filters["expand"] = self.globals["expand"]
         self.globals["closest"] = hassfunction(closest)
-        self.filters["closest"] = hassfunction(closest_filter)
         self.globals["distance"] = hassfunction(distance)
+        self.globals["expand"] = hassfunction(expand)
+        self.globals["has_value"] = hassfunction(has_value)
+        self.globals["now"] = hassfunction(now)
+        self.globals["relative_time"] = hassfunction(relative_time)
+        self.globals["time_since"] = hassfunction(time_since)
+        self.globals["time_until"] = hassfunction(time_until)
+        self.globals["today_at"] = hassfunction(today_at)
+        self.globals["utcnow"] = hassfunction(utcnow)
+
+        self.filters["closest"] = hassfunction(closest_filter)
+        self.filters["expand"] = self.globals["expand"]
+        self.filters["has_value"] = self.globals["has_value"]
+        self.filters["relative_time"] = self.globals["relative_time"]
+        self.filters["time_since"] = self.globals["time_since"]
+        self.filters["time_until"] = self.globals["time_until"]
+        self.filters["today_at"] = self.globals["today_at"]
+
+        self.tests["has_value"] = hassfunction(has_value, pass_eval_context)
+
+        # Entity extensions
+
         self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
         self.tests["is_hidden_entity"] = hassfunction(
             is_hidden_entity, pass_eval_context
         )
-        self.globals["is_state"] = hassfunction(is_state)
-        self.tests["is_state"] = hassfunction(is_state, pass_eval_context)
+
+        # State extensions
+
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
-        self.tests["is_state_attr"] = hassfunction(is_state_attr, pass_eval_context)
+        self.globals["is_state"] = hassfunction(is_state)
         self.globals["state_attr"] = hassfunction(state_attr)
-        self.filters["state_attr"] = self.globals["state_attr"]
-        self.globals["states"] = AllStates(hass)
-        self.filters["states"] = self.globals["states"]
         self.globals["state_translated"] = StateTranslated(hass)
+        self.globals["states"] = AllStates(hass)
+        self.filters["state_attr"] = self.globals["state_attr"]
         self.filters["state_translated"] = self.globals["state_translated"]
-        self.globals["has_value"] = hassfunction(has_value)
-        self.filters["has_value"] = self.globals["has_value"]
-        self.tests["has_value"] = hassfunction(has_value, pass_eval_context)
-        self.globals["utcnow"] = hassfunction(utcnow)
-        self.globals["now"] = hassfunction(now)
-        self.globals["relative_time"] = hassfunction(relative_time)
-        self.filters["relative_time"] = self.globals["relative_time"]
-        self.globals["time_since"] = hassfunction(time_since)
-        self.filters["time_since"] = self.globals["time_since"]
-        self.globals["time_until"] = hassfunction(time_until)
-        self.filters["time_until"] = self.globals["time_until"]
-        self.globals["today_at"] = hassfunction(today_at)
-        self.filters["today_at"] = self.globals["today_at"]
+        self.filters["states"] = self.globals["states"]
+        self.tests["is_state_attr"] = hassfunction(is_state_attr, pass_eval_context)
+        self.tests["is_state"] = hassfunction(is_state, pass_eval_context)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
