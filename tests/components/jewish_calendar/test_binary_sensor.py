@@ -11,6 +11,8 @@ from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .conftest import JewishCalendarTestParameters
+
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 MELACHA_PARAMS = [
@@ -187,12 +189,14 @@ MELACHA_PARAMS = [
 
 @pytest.mark.parametrize("jcal_params", MELACHA_PARAMS, indirect=True)
 async def test_issur_melacha_sensor(
-    hass: HomeAssistant, jcal_params: dict, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    jcal_params: JewishCalendarTestParameters,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test Issur Melacha sensor output."""
     sensor_id = "binary_sensor.jewish_calendar_issur_melacha_in_effect"
-    result = jcal_params["results"]
-    with freeze_time(jcal_params["test_time"]):
+    result = jcal_params.results
+    with freeze_time(jcal_params.test_time):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -214,21 +218,23 @@ async def test_issur_melacha_sensor(
     indirect=True,
 )
 async def test_issur_melacha_sensor_update(
-    hass: HomeAssistant, jcal_params: dict, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    jcal_params: JewishCalendarTestParameters,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test Issur Melacha sensor output."""
     sensor_id = "binary_sensor.jewish_calendar_issur_melacha_in_effect"
-    with freeze_time(test_time := jcal_params["test_time"]):
+    with freeze_time(test_time := jcal_params.test_time):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert hass.states.get(sensor_id).state == jcal_params["results"][0]
+        assert hass.states.get(sensor_id).state == jcal_params.results[0]
 
     test_time += timedelta(microseconds=1)
     with freeze_time(test_time):
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
-        assert hass.states.get(sensor_id).state == jcal_params["results"][1]
+        assert hass.states.get(sensor_id).state == jcal_params.results[1]
 
 
 async def test_no_discovery_info(
