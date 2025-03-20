@@ -80,7 +80,7 @@ from .db_schema import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
-from .models import process_timestamp
+from .models import StatisticMeanType, process_timestamp
 from .models.time import datetime_to_timestamp_or_none
 from .queries import (
     batch_cleanup_entity_ids,
@@ -143,28 +143,28 @@ class _ColumnTypesForDialect:
     big_int_type: str
     timestamp_type: str
     context_bin_type: str
-    double_type: str
+    small_int_type: str
 
 
 _MYSQL_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER(20)",
     timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type=f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})",
-    double_type=DOUBLE_PRECISION_TYPE_SQL,
+    small_int_type="SMALLINT",
 )
 
 _POSTGRESQL_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER",
     timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type="BYTEA",
-    double_type=DOUBLE_PRECISION_TYPE_SQL,
+    small_int_type="SMALLINT",
 )
 
 _SQLITE_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER",
     timestamp_type="FLOAT",
     context_bin_type="BLOB",
-    double_type="FLOAT",
+    small_int_type="INTEGER",
 )
 
 _COLUMN_TYPES_FOR_DIALECT: dict[SupportedDialect | None, _ColumnTypesForDialect] = {
@@ -1994,18 +1994,21 @@ class _SchemaVersion48Migrator(_SchemaVersionMigrator, target_version=48):
 class _SchemaVersion49Migrator(_SchemaVersionMigrator, target_version=49):
     def _apply_update(self) -> None:
         """Version specific update method."""
-        for table in ("statistics", "statistics_short_term"):
-            _add_columns(
-                self.session_maker,
-                table,
-                [f"circular_mean {self.column_types.double_type}"],
-            )
-
         _add_columns(
             self.session_maker,
             "statistics_meta",
-            ["has_circular_mean BOOLEAN DEFAULT FALSE NOT NULL"],
+            [f"mean_type {self.column_types.small_int_type}"],
         )
+
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
+            connection.execute(
+                text(
+                    "UPDATE statistics_meta SET mean_type=:mean_type WHERE has_mean=true"
+                ),
+                {"mean_type": StatisticMeanType.ARIMETHIC.value},
+            )
+            connection.execute(text("UPDATE statistics_meta SET has_mean=NULL"))
 
 
 def _migrate_statistics_columns_to_timestamp_removing_duplicates(

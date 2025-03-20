@@ -305,7 +305,6 @@ def mock_sensor_statistics():
                 "name": None,
                 "statistic_id": entity_id,
                 "unit_of_measurement": "dogs",
-                "has_circular_mean": False,
             },
             "stat": {"start": start},
         }
@@ -372,7 +371,6 @@ async def test_compile_periodic_statistics_exception(
         "last_reset": None,
         "state": None,
         "sum": None,
-        "circular_mean": None,
     }
     expected_2 = {
         "start": process_timestamp(now + timedelta(minutes=5)).timestamp(),
@@ -383,7 +381,6 @@ async def test_compile_periodic_statistics_exception(
         "last_reset": None,
         "state": None,
         "sum": None,
-        "circular_mean": None,
     }
     expected_stats1 = [expected_1, expected_2]
     expected_stats2 = [expected_2]
@@ -439,7 +436,6 @@ async def test_rename_entity(
         "last_reset": None,
         "state": None,
         "sum": None,
-        "circular_mean": None,
     }
     expected_stats1 = [expected_1]
     expected_stats2 = [expected_1]
@@ -525,7 +521,6 @@ async def test_rename_entity_collision(
         "last_reset": None,
         "state": None,
         "sum": None,
-        "circular_mean": None,
     }
     expected_stats1 = [expected_1]
     expected_stats2 = [expected_1]
@@ -613,7 +608,6 @@ async def test_rename_entity_collision_states_meta_check_disabled(
         "last_reset": None,
         "state": None,
         "sum": None,
-        "circular_mean": None,
     }
     expected_stats1 = [expected_1]
     expected_stats2 = [expected_1]
@@ -772,13 +766,13 @@ async def test_import_statistics(
         {
             "display_unit_of_measurement": "kWh",
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
             "source": source,
             "statistics_unit_of_measurement": "kWh",
             "unit_class": "energy",
-            "has_circular_mean": False,
         }
     ]
     metadata = get_metadata(hass, statistic_ids={statistic_id})
@@ -787,12 +781,12 @@ async def test_import_statistics(
             1,
             {
                 "has_mean": False,
+                "mean_type": None,
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
-                "has_circular_mean": False,
             },
         )
     }
@@ -864,13 +858,13 @@ async def test_import_statistics(
         {
             "display_unit_of_measurement": "kWh",
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy renamed",
             "source": source,
             "statistics_unit_of_measurement": "kWh",
             "unit_class": "energy",
-            "has_circular_mean": False,
         }
     ]
     metadata = get_metadata(hass, statistic_ids={statistic_id})
@@ -879,12 +873,12 @@ async def test_import_statistics(
             1,
             {
                 "has_mean": False,
+                "mean_type": None,
                 "has_sum": True,
                 "name": "Total imported energy renamed",
                 "source": source,
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
-                "has_circular_mean": False,
             },
         )
     }

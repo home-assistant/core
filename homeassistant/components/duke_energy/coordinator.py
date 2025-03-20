@@ -137,7 +137,7 @@ class DukeEnergyCoordinator(DataUpdateCoordinator[None]):
                 f"Duke Energy {meter['serviceType'].capitalize()} {serial_number}"
             )
             consumption_metadata = StatisticMetaData(
-                has_mean=False,
+                mean_type=None,
                 has_sum=True,
                 name=f"{name_prefix} Consumption",
                 source=DOMAIN,
@@ -145,7 +145,6 @@ class DukeEnergyCoordinator(DataUpdateCoordinator[None]):
                 unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR
                 if meter["serviceType"] == "ELECTRIC"
                 else UnitOfVolume.CENTUM_CUBIC_FEET,
-                has_circular_mean=False,
             )
 
             _LOGGER.debug(

@@ -12,7 +12,11 @@ from random import random
 import voluptuous as vol
 
 from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN, get_instance
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     async_import_statistics,
@@ -233,9 +237,8 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": "Outdoor temperature",
         "statistic_id": f"{DOMAIN}:temperature_outdoor",
         "unit_of_measurement": UnitOfTemperature.CELSIUS,
-        "has_mean": True,
+        "mean_type": StatisticMeanType.ARIMETHIC,
         "has_sum": False,
-        "has_circular_mean": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
     async_add_external_statistics(hass, metadata, statistics)
@@ -247,9 +250,8 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": "Energy consumption 1",
         "statistic_id": f"{DOMAIN}:energy_consumption_kwh",
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
-        "has_mean": False,
+        "mean_type": None,
         "has_sum": True,
-        "has_circular_mean": False,
     }
     await _insert_sum_statistics(hass, metadata, yesterday_midnight, today_midnight, 1)
 
@@ -260,9 +262,8 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": "Energy consumption 2",
         "statistic_id": f"{DOMAIN}:energy_consumption_mwh",
         "unit_of_measurement": UnitOfEnergy.MEGA_WATT_HOUR,
-        "has_mean": False,
+        "mean_type": None,
         "has_sum": True,
-        "has_circular_mean": False,
     }
     await _insert_sum_statistics(
         hass, metadata, yesterday_midnight, today_midnight, 0.001
@@ -275,9 +276,8 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": "Gas consumption 1",
         "statistic_id": f"{DOMAIN}:gas_consumption_m3",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
-        "has_mean": False,
+        "mean_type": None,
         "has_sum": True,
-        "has_circular_mean": False,
     }
     await _insert_sum_statistics(
         hass, metadata, yesterday_midnight, today_midnight, 0.5
@@ -290,9 +290,8 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": "Gas consumption 2",
         "statistic_id": f"{DOMAIN}:gas_consumption_ft3",
         "unit_of_measurement": UnitOfVolume.CUBIC_FEET,
-        "has_mean": False,
+        "mean_type": None,
         "has_sum": True,
-        "has_circular_mean": False,
     }
     await _insert_sum_statistics(hass, metadata, yesterday_midnight, today_midnight, 15)
 
@@ -303,9 +302,8 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": None,
         "statistic_id": "sensor.statistics_issue_1",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
-        "has_mean": True,
+        "mean_type": StatisticMeanType.ARIMETHIC,
         "has_sum": False,
-        "has_circular_mean": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
     async_import_statistics(hass, metadata, statistics)
@@ -316,9 +314,8 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": None,
         "statistic_id": "sensor.statistics_issue_2",
         "unit_of_measurement": "cats",
-        "has_mean": True,
+        "mean_type": StatisticMeanType.ARIMETHIC,
         "has_sum": False,
-        "has_circular_mean": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
     async_import_statistics(hass, metadata, statistics)
@@ -329,9 +326,8 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": None,
         "statistic_id": "sensor.statistics_issue_3",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
-        "has_mean": True,
+        "mean_type": StatisticMeanType.ARIMETHIC,
         "has_sum": False,
-        "has_circular_mean": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
     async_import_statistics(hass, metadata, statistics)
@@ -342,9 +338,8 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "name": None,
         "statistic_id": "sensor.statistics_issue_4",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
-        "has_mean": True,
+        "mean_type": StatisticMeanType.ARIMETHIC,
         "has_sum": False,
-        "has_circular_mean": False,
     }
     statistics = _generate_mean_statistics(yesterday_midnight, today_midnight, 15, 1)
     async_import_statistics(hass, metadata, statistics)

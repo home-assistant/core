@@ -4,16 +4,19 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import TYPE_CHECKING, Final, Literal
+from typing import TYPE_CHECKING, Any, Final, Literal
 
 from lru import LRU
 from sqlalchemy import lambda_stmt, select
+from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import true
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
+from homeassistant.util.enum import try_parse_enum
+
 from ..db_schema import StatisticsMeta
-from ..models import StatisticMetaData
+from ..models import StatisticMeanType, StatisticMetaData
 from ..util import execute_stmt_lambda_element
 
 if TYPE_CHECKING:
@@ -28,7 +31,6 @@ QUERY_STATISTIC_META = (
     StatisticsMeta.statistic_id,
     StatisticsMeta.source,
     StatisticsMeta.unit_of_measurement,
-    StatisticsMeta.has_mean,
     StatisticsMeta.has_sum,
     StatisticsMeta.name,
 )
@@ -37,33 +39,35 @@ INDEX_ID: Final = 0
 INDEX_STATISTIC_ID: Final = 1
 INDEX_SOURCE: Final = 2
 INDEX_UNIT_OF_MEASUREMENT: Final = 3
-INDEX_HAS_MEAN: Final = 4
-INDEX_HAS_SUM: Final = 5
-INDEX_NAME: Final = 6
-INDEX_HAS_CIRCULAR_MEAN: Final = 7
+INDEX_HAS_SUM: Final = 4
+INDEX_NAME: Final = 5
+INDEX_MEAN_TYPE: Final = 6
 
 
 def _generate_get_metadata_stmt(
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean", "sum", "circular_mean"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
     statistic_source: str | None = None,
     schema_version: int = 0,
 ) -> StatementLambdaElement:
     """Generate a statement to fetch metadata."""
-    columns = list(QUERY_STATISTIC_META)
+    columns: list[InstrumentedAttribute[Any]] = list(QUERY_STATISTIC_META)
     if schema_version >= 49:
-        columns.append(StatisticsMeta.has_circular_mean)
+        columns.append(StatisticsMeta.mean_type)
+    else:
+        columns.append(StatisticsMeta.has_mean)
     stmt = lambda_stmt(lambda: select(*columns))
     if statistic_ids:
         stmt += lambda q: q.where(StatisticsMeta.statistic_id.in_(statistic_ids))
     if statistic_source is not None:
         stmt += lambda q: q.where(StatisticsMeta.source == statistic_source)
     if statistic_type == "mean":
-        stmt += lambda q: q.where(StatisticsMeta.has_mean == true())
+        if schema_version >= 49:
+            stmt += lambda q: q.where(StatisticsMeta.mean_type.isnot(None))
+        else:
+            stmt += lambda q: q.where(StatisticsMeta.has_mean == true())
     elif statistic_type == "sum":
         stmt += lambda q: q.where(StatisticsMeta.has_sum == true())
-    elif schema_version >= 49 and statistic_type == "circular_mean":
-        stmt += lambda q: q.where(StatisticsMeta.has_circular_mean == true())
     return stmt
 
 
@@ -116,16 +120,20 @@ class StatisticsMetaManager:
             ):
                 statistic_id = row[INDEX_STATISTIC_ID]
                 row_id = row[INDEX_ID]
+                if self.recorder.schema_version >= 49:
+                    mean_type = try_parse_enum(StatisticMeanType, row[INDEX_MEAN_TYPE])
+                else:
+                    mean_type = (
+                        StatisticMeanType.ARIMETHIC if row[INDEX_MEAN_TYPE] else None
+                    )
                 meta = {
-                    "has_mean": row[INDEX_HAS_MEAN],
+                    "has_mean": mean_type is StatisticMeanType.ARIMETHIC,
+                    "mean_type": mean_type,
                     "has_sum": row[INDEX_HAS_SUM],
                     "name": row[INDEX_NAME],
                     "source": row[INDEX_SOURCE],
                     "statistic_id": statistic_id,
                     "unit_of_measurement": row[INDEX_UNIT_OF_MEASUREMENT],
-                    "has_circular_mean": row[INDEX_HAS_CIRCULAR_MEAN]
-                    if self.recorder.schema_version >= 49
-                    else False,
                 }
                 id_meta = (row_id, meta)
                 results[statistic_id] = id_meta
@@ -170,30 +178,30 @@ class StatisticsMetaManager:
         This call is not thread-safe and must be called from the
         recorder thread.
         """
-        if "has_circular_mean" not in new_metadata:
-            # To avoid breaking change as we added has_circular_mean in schema version 49
+        if "mean_type" not in new_metadata:
+            # To avoid breaking change as we added mean_type in schema version 49
             # Even when typing suggests it is always present, we need to check it and guard
             # against it as custom integrations might not set it.
-            new_metadata["has_circular_mean"] = False  # type: ignore[unreachable]
+            new_metadata["mean_type"] = (  # type: ignore[unreachable]
+                StatisticMeanType.ARIMETHIC if new_metadata["has_mean"] else None
+            )
         metadata_id, old_metadata = old_metadata_dict[statistic_id]
         if not (
-            old_metadata["has_mean"] != new_metadata["has_mean"]
+            old_metadata["mean_type"] != new_metadata["mean_type"]
             or old_metadata["has_sum"] != new_metadata["has_sum"]
             or old_metadata["name"] != new_metadata["name"]
             or old_metadata["unit_of_measurement"]
             != new_metadata["unit_of_measurement"]
-            or old_metadata["has_circular_mean"] != new_metadata["has_circular_mean"]
         ):
             return None, metadata_id
 
         self._assert_in_recorder_thread()
         session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
             {
-                StatisticsMeta.has_mean: new_metadata["has_mean"],
+                StatisticsMeta.mean_type: new_metadata["mean_type"],
                 StatisticsMeta.has_sum: new_metadata["has_sum"],
                 StatisticsMeta.name: new_metadata["name"],
                 StatisticsMeta.unit_of_measurement: new_metadata["unit_of_measurement"],
-                StatisticsMeta.has_circular_mean: new_metadata["has_circular_mean"],
             },
             synchronize_session=False,
         )

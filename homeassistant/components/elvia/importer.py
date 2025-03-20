@@ -144,13 +144,12 @@ class ElviaImporter:
         async_add_external_statistics(
             hass=self.hass,
             metadata=StatisticMetaData(
-                has_mean=False,
+                mean_type=None,
                 has_sum=True,
                 name=f"{self.metering_point_id} Consumption",
                 source=DOMAIN,
                 statistic_id=statistic_id,
                 unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                has_circular_mean=False,
             ),
             statistics=statistics,
         )

@@ -159,12 +159,11 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                     )
 
                 metadata = StatisticMetaData(
-                    has_mean=False,
+                    mean_type=None,
                     has_sum=True,
                     name=f"{home.name} {sensor_type}",
                     source=TIBBER_DOMAIN,
                     statistic_id=statistic_id,
                     unit_of_measurement=unit,
-                    has_circular_mean=False,
                 )
                 async_add_external_statistics(self.hass, metadata, statistics)

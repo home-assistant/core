@@ -270,13 +270,12 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
             ]
 
             metadata: StatisticMetaData = {
-                "has_mean": False,
+                "mean_type": None,
                 "has_sum": True,
                 "name": f"{self.device_entry.name} {self.name}",
                 "source": DOMAIN,
                 "statistic_id": statistic_id,
                 "unit_of_measurement": self.entity_description.native_unit_of_measurement,
-                "has_circular_mean": False,
             }
             if statistics:
                 _LOGGER.debug("Insert statistics: %s %s", metadata, statistics)

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Literal, TypedDict
+from enum import IntEnum
+from typing import Literal, NotRequired, TypedDict
 
 
 class StatisticResult(TypedDict):
@@ -36,7 +37,6 @@ class StatisticMixIn(TypedDict, total=False):
     min: float
     max: float
     mean: float
-    circular_mean: float
 
 
 class StatisticData(StatisticDataBase, StatisticMixIn, total=False):
@@ -51,16 +51,25 @@ class StatisticDataTimestamp(StatisticDataTimestampBase, StatisticMixIn, total=F
     last_reset_ts: float | None
 
 
+class StatisticMeanType(IntEnum):
+    """Statistic mean type."""
+
+    ARIMETHIC = 1
+    CIRCULAR = 2
+
+
 class StatisticMetaData(TypedDict):
     """Statistic meta data class."""
 
-    has_mean: bool
+    has_mean: NotRequired[
+        bool
+    ]  # Deprecated, use mean_type instead. Will be removed in 2026.4
+    mean_type: StatisticMeanType | None
     has_sum: bool
     name: str | None
     source: str
     statistic_id: str
     unit_of_measurement: str | None
-    has_circular_mean: bool
 
 
 class CalendarStatisticPeriod(TypedDict, total=False):

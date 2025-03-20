@@ -201,16 +201,15 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 f"{account.meter_type.name.lower()} {account.utility_account_id}"
             )
             cost_metadata = StatisticMetaData(
-                has_mean=False,
+                mean_type=None,
                 has_sum=True,
                 name=f"{name_prefix} cost",
                 source=DOMAIN,
                 statistic_id=cost_statistic_id,
                 unit_of_measurement=None,
-                has_circular_mean=False,
             )
             consumption_metadata = StatisticMetaData(
-                has_mean=False,
+                mean_type=None,
                 has_sum=True,
                 name=f"{name_prefix} consumption",
                 source=DOMAIN,
@@ -218,7 +217,6 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR
                 if account.meter_type == MeterType.ELEC
                 else UnitOfVolume.CENTUM_CUBIC_FEET,
-                has_circular_mean=False,
             )
 
             _LOGGER.debug(

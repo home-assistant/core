@@ -58,6 +58,7 @@ from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
 from .models import (
     StatisticData,
     StatisticDataTimestamp,
+    StatisticMeanType,
     StatisticMetaData,
     bytes_to_ulid_or_none,
     bytes_to_uuid_hex_or_none,
@@ -719,7 +720,6 @@ class StatisticsBase:
     start: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     start_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, index=True)
     mean: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
-    circular_mean: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     min: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     max: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     last_reset: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
@@ -741,7 +741,6 @@ class StatisticsBase:
             start=None,
             start_ts=stats["start"].timestamp(),
             mean=stats.get("mean"),
-            circular_mean=stats.get("circular_mean"),
             min=stats.get("min"),
             max=stats.get("max"),
             last_reset=None,
@@ -765,7 +764,6 @@ class StatisticsBase:
             start=None,
             start_ts=stats["start_ts"],
             mean=stats.get("mean"),
-            circular_mean=stats.get("circular_mean"),
             min=stats.get("min"),
             max=stats.get("max"),
             last_reset=None,
@@ -851,14 +849,17 @@ class _StatisticsMeta:
     has_mean: Mapped[bool | None] = mapped_column(Boolean)
     has_sum: Mapped[bool | None] = mapped_column(Boolean)
     name: Mapped[str | None] = mapped_column(String(255))
-    has_circular_mean: Mapped[bool] = mapped_column(
-        Boolean, default=False, nullable=False
-    )
+    mean_type: Mapped[StatisticMeanType | None] = mapped_column(
+        SmallInteger
+    )  # See StatisticMeanType
 
     @staticmethod
     def from_meta(meta: StatisticMetaData) -> StatisticsMeta:
         """Create object from meta data."""
-        return StatisticsMeta(**meta)
+        # has_mean is not used anymore
+        meta_dict = dict(meta.copy())
+        meta_dict["has_mean"] = None
+        return StatisticsMeta(**meta_dict)
 
 
 class StatisticsMeta(Base, _StatisticsMeta):

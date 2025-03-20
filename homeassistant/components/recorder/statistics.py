@@ -21,6 +21,7 @@ from sqlalchemy import (
     Select,
     and_,
     bindparam,
+    case,
     func,
     lambda_stmt,
     select,
@@ -39,6 +40,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.unit_conversion import (
     AreaConverter,
     BaseUnitConverter,
@@ -83,6 +85,7 @@ from .db_schema import (
 from .models import (
     StatisticData,
     StatisticDataTimestamp,
+    StatisticMeanType,
     StatisticMetaData,
     StatisticResult,
     datetime_to_timestamp_or_none,
@@ -109,7 +112,6 @@ QUERY_STATISTICS = (
     Statistics.last_reset_ts,
     Statistics.state,
     Statistics.sum,
-    Statistics.circular_mean,
 )
 
 QUERY_STATISTICS_SHORT_TERM = (
@@ -121,7 +123,6 @@ QUERY_STATISTICS_SHORT_TERM = (
     StatisticsShortTerm.last_reset_ts,
     StatisticsShortTerm.state,
     StatisticsShortTerm.sum,
-    StatisticsShortTerm.circular_mean,
 )
 
 
@@ -145,7 +146,6 @@ def query_circular_mean(
 
 QUERY_STATISTICS_SUMMARY_MEAN = (
     StatisticsShortTerm.metadata_id,
-    func.avg(StatisticsShortTerm.mean),
     func.min(StatisticsShortTerm.min),
     func.max(StatisticsShortTerm.max),
 )
@@ -270,7 +270,6 @@ class StatisticsRow(BaseStatisticsRow, total=False):
     min: float | None
     max: float | None
     mean: float | None
-    circular_mean: float | None
     change: float | None
 
 
@@ -419,13 +418,27 @@ def _compile_hourly_statistics_summary_mean_stmt(
     """Generate the summary mean statement for hourly statistics."""
     columns = (
         *QUERY_STATISTICS_SUMMARY_MEAN,
-        query_circular_mean(StatisticsShortTerm.circular_mean, engine),
+        case(
+            (
+                StatisticsMeta.mean_type == StatisticMeanType.ARIMETHIC,
+                func.avg(StatisticsShortTerm.mean),
+            ),
+            (
+                StatisticsMeta.mean_type == StatisticMeanType.CIRCULAR,
+                query_circular_mean(StatisticsShortTerm.mean, engine),
+            ),
+            else_=None,
+        ),
+        StatisticsMeta.mean_type,
     )
 
     return lambda_stmt(
         lambda: select(*columns)
         .filter(StatisticsShortTerm.start_ts >= start_time_ts)
         .filter(StatisticsShortTerm.start_ts < end_time_ts)
+        .join(
+            StatisticsMeta, and_(StatisticsShortTerm.metadata_id == StatisticsMeta.id)
+        )
         .group_by(StatisticsShortTerm.metadata_id)
         .order_by(StatisticsShortTerm.metadata_id)
     )
@@ -472,20 +485,20 @@ def _compile_hourly_statistics(
 
     if stats:
         for stat in stats:
-            metadata_id, _mean, _min, _max, _circular_mean = stat
+            metadata_id, _min, _max, _mean, _mean_type = stat
             if (
                 engine.dialect.name == SupportedDialect.POSTGRESQL
-                and _circular_mean is not None
+                and try_parse_enum(StatisticMeanType, _mean_type)
+                is StatisticMeanType.CIRCULAR
             ):
                 # Postgres doesn't support modulo on double precision
                 # so we have to do it in Python
-                _circular_mean = _circular_mean % 360
+                _mean = _mean % 360
             summary[metadata_id] = {
                 "start_ts": start_time_ts,
                 "mean": _mean,
                 "min": _min,
                 "max": _max,
-                "circular_mean": _circular_mean,
             }
 
     stmt = _compile_hourly_statistics_last_sum_stmt(start_time_ts, end_time_ts)
@@ -766,7 +779,6 @@ def _update_statistics(
                 ),
                 table.state: statistic.get("state"),
                 table.sum: statistic.get("sum"),
-                table.circular_mean: statistic.get("circular_mean"),
             },
             synchronize_session=False,
         )
@@ -889,13 +901,12 @@ def _statistic_by_id_from_metadata(
             "display_unit_of_measurement": get_display_unit(
                 hass, meta["statistic_id"], meta["unit_of_measurement"]
             ),
-            "has_mean": meta["has_mean"],
+            "mean_type": meta["mean_type"],
             "has_sum": meta["has_sum"],
             "name": meta["name"],
             "source": meta["source"],
             "unit_class": UNIT_CLASSES.get(meta["unit_of_measurement"]),
             "unit_of_measurement": meta["unit_of_measurement"],
-            "has_circular_mean": meta["has_circular_mean"],
         }
         for _, meta in metadata.values()
     }
@@ -909,13 +920,14 @@ def _flatten_list_statistic_ids_metadata_result(
         {
             "statistic_id": _id,
             "display_unit_of_measurement": info["display_unit_of_measurement"],
-            "has_mean": info["has_mean"],
+            "has_mean": info["mean_type"]
+            == StatisticMeanType.ARIMETHIC,  # Can be removed with 2026.4
+            "mean_type": info["mean_type"],
             "has_sum": info["has_sum"],
             "name": info.get("name"),
             "source": info["source"],
             "statistics_unit_of_measurement": info["unit_of_measurement"],
             "unit_class": info["unit_class"],
-            "has_circular_mean": info["has_circular_mean"],
         }
         for _id, info in result.items()
     ]
@@ -965,13 +977,12 @@ def list_statistic_ids(
                     continue
                 result[key] = {
                     "display_unit_of_measurement": meta["unit_of_measurement"],
-                    "has_mean": meta["has_mean"],
+                    "mean_type": meta["mean_type"],
                     "has_sum": meta["has_sum"],
                     "name": meta["name"],
                     "source": meta["source"],
                     "unit_class": UNIT_CLASSES.get(meta["unit_of_measurement"]),
                     "unit_of_measurement": meta["unit_of_measurement"],
-                    "has_circular_mean": meta["has_circular_mean"],
                 }
 
     # Return a list of statistic_id + metadata
@@ -983,15 +994,13 @@ def _reduce_statistics(
     same_period: Callable[[float, float], bool],
     period_start_end: Callable[[float], tuple[float, float]],
     period: timedelta,
-    types: set[
-        Literal["last_reset", "max", "mean", "min", "state", "sum", "circular_mean"]
-    ],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to daily or monthly statistics."""
     result: dict[str, list[StatisticsRow]] = defaultdict(list)
     period_seconds = period.total_seconds()
     _want_mean = "mean" in types
-    _want_circular_mean = "circular_mean" in types
     _want_min = "min" in types
     _want_max = "max" in types
     _want_last_reset = "last_reset" in types
@@ -1000,7 +1009,6 @@ def _reduce_statistics(
     for statistic_id, stat_list in stats.items():
         max_values: list[float] = []
         mean_values: list[float] = []
-        circular_mean_values: list[float] = []
         min_values: list[float] = []
         prev_stat: StatisticsRow = stat_list[0]
         fake_entry: StatisticsRow = {"start": stat_list[-1]["start"] + period_seconds}
@@ -1015,15 +1023,15 @@ def _reduce_statistics(
                     "end": end,
                 }
                 if _want_mean:
-                    row["mean"] = mean(mean_values) if mean_values else None
+                    if mean_values:
+                        match metadata[statistic_id][1]["mean_type"]:
+                            case StatisticMeanType.ARIMETHIC:
+                                row["mean"] = mean(mean_values)
+                            case StatisticMeanType.CIRCULAR:
+                                row["mean"] = circular_mean(mean_values)
+                    else:
+                        row["mean"] = None
                     mean_values.clear()
-                if _want_circular_mean:
-                    row["circular_mean"] = (
-                        circular_mean(circular_mean_values)
-                        if circular_mean_values
-                        else None
-                    )
-                    circular_mean_values.clear()
                 if _want_min:
                     row["min"] = min(min_values) if min_values else None
                     min_values.clear()
@@ -1039,13 +1047,9 @@ def _reduce_statistics(
                 result[statistic_id].append(row)
             if _want_max and (_max := statistic.get("max")) is not None:
                 max_values.append(_max)
-            if _want_mean and (_mean := statistic.get("mean")) is not None:
-                mean_values.append(_mean)
-            if (
-                _want_circular_mean
-                and (_circular_mean := statistic.get("circular_mean")) is not None
-            ):
-                circular_mean_values.append(_circular_mean)
+            if _want_mean:
+                if (_mean := statistic.get("mean")) is not None:
+                    mean_values.append(_mean)
             if _want_min and (_min := statistic.get("min")) is not None:
                 min_values.append(_min)
             prev_stat = statistic
@@ -1091,14 +1095,13 @@ def reduce_day_ts_factory() -> tuple[
 
 def _reduce_statistics_per_day(
     stats: dict[str, list[StatisticsRow]],
-    types: set[
-        Literal["last_reset", "max", "mean", "min", "state", "sum", "circular_mean"]
-    ],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to daily statistics."""
     _same_day_ts, _day_start_end_ts = reduce_day_ts_factory()
     return _reduce_statistics(
-        stats, _same_day_ts, _day_start_end_ts, timedelta(days=1), types
+        stats, _same_day_ts, _day_start_end_ts, timedelta(days=1), types, metadata
     )
 
 
@@ -1141,14 +1144,13 @@ def reduce_week_ts_factory() -> tuple[
 
 def _reduce_statistics_per_week(
     stats: dict[str, list[StatisticsRow]],
-    types: set[
-        Literal["last_reset", "max", "mean", "min", "state", "sum", "circular_mean"]
-    ],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to weekly statistics."""
     _same_week_ts, _week_start_end_ts = reduce_week_ts_factory()
     return _reduce_statistics(
-        stats, _same_week_ts, _week_start_end_ts, timedelta(days=7), types
+        stats, _same_week_ts, _week_start_end_ts, timedelta(days=7), types, metadata
     )
 
 
@@ -1196,14 +1198,13 @@ def reduce_month_ts_factory() -> tuple[
 
 def _reduce_statistics_per_month(
     stats: dict[str, list[StatisticsRow]],
-    types: set[
-        Literal["last_reset", "max", "mean", "min", "state", "sum", "circular_mean"]
-    ],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to monthly statistics."""
     _same_month_ts, _month_start_end_ts = reduce_month_ts_factory()
     return _reduce_statistics(
-        stats, _same_month_ts, _month_start_end_ts, timedelta(days=31), types
+        stats, _same_month_ts, _month_start_end_ts, timedelta(days=31), types, metadata
     )
 
 
@@ -1212,9 +1213,7 @@ def _generate_statistics_during_period_stmt(
     end_time: datetime | None,
     metadata_ids: list[int] | None,
     table: type[StatisticsBase],
-    types: set[
-        Literal["last_reset", "max", "mean", "min", "state", "sum", "circular_mean"]
-    ],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> StatementLambdaElement:
     """Prepare a database query for statistics during a given period.
 
@@ -1255,27 +1254,30 @@ def _get_max_mean_min_statistic_in_sub_period(
     start_time: datetime | None,
     end_time: datetime | None,
     table: type[StatisticsBase],
-    types: set[Literal["max", "mean", "min", "change", "circular_mean"]],
-    metadata_id: int,
+    types: set[Literal["max", "mean", "min", "change"]],
+    metadata: tuple[int, StatisticMetaData],
     engine: Engine,
 ) -> None:
     """Return max, mean and min during the period."""
     # Calculate max, mean, min
+    mean_type = metadata[1]["mean_type"]
     columns = select()
     if "max" in types:
         columns = columns.add_columns(func.max(table.max))
     if "mean" in types:
-        columns = columns.add_columns(func.avg(table.mean))
-        columns = columns.add_columns(func.count(table.mean))
+        match mean_type:
+            case StatisticMeanType.ARIMETHIC:
+                columns = columns.add_columns(func.avg(table.mean))
+                columns = columns.add_columns(func.count(table.mean))
+            case StatisticMeanType.CIRCULAR:
+                columns = columns.add_columns(
+                    query_circular_mean(table.mean, engine).label("mean")
+                )
     if "min" in types:
         columns = columns.add_columns(func.min(table.min))
-    if "circular_mean" in types:
-        columns = columns.add_columns(
-            query_circular_mean(table.circular_mean, engine).label("circular_mean")
-        )
 
     stmt = _generate_max_mean_min_statistic_in_sub_period_stmt(
-        columns, start_time, end_time, table, metadata_id
+        columns, start_time, end_time, table, metadata[0]
     )
     stats = cast(Sequence[Row[Any]], execute_stmt_lambda_element(session, stmt))
     if not stats:
@@ -1283,23 +1285,24 @@ def _get_max_mean_min_statistic_in_sub_period(
     if "max" in types and (new_max := stats[0].max) is not None:
         old_max = result.get("max")
         result["max"] = max(new_max, old_max) if old_max is not None else new_max
-    if "mean" in types and stats[0].avg is not None:
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9127
-        duration = stats[0].count * table.duration.total_seconds()  # type: ignore[operator]
-        result["duration"] = result.get("duration", 0.0) + duration
-        result["mean_acc"] = result.get("mean_acc", 0.0) + stats[0].avg * duration
-    if (
-        "circular_mean" in types
-        and (new_circular_mean := stats[0].circular_mean) is not None
-    ):
-        if engine.dialect.name == SupportedDialect.POSTGRESQL:
-            # Postgres doesn't support modulo on double precision
-            # so we have to do it in Python
-            new_circular_mean = new_circular_mean % 360
-        values = [new_circular_mean]
-        if (old_circular_mean := result.get("circular_mean")) is not None:
-            values.append(old_circular_mean)
-        result["circular_mean"] = circular_mean(values)
+    if "mean" in types:
+        match mean_type:
+            case StatisticMeanType.ARIMETHIC:
+                if stats[0].avg is not None:
+                    # https://github.com/sqlalchemy/sqlalchemy/issues/9127
+                    duration = stats[0].count * table.duration.total_seconds()  # type: ignore[operator]
+                    result["duration"] = result.get("duration", 0.0) + duration
+                    result["mean"] = result.get("mean", 0.0) + stats[0].avg * duration
+            case StatisticMeanType.CIRCULAR:
+                if (new_circular_mean := stats[0].mean) is not None:
+                    if engine.dialect.name == SupportedDialect.POSTGRESQL:
+                        # Postgres doesn't support modulo on double precision
+                        # so we have to do it in Python
+                        new_circular_mean = new_circular_mean % 360
+                    values = [new_circular_mean]
+                    if (old_circular_mean := result.get("mean")) is not None:
+                        values.append(old_circular_mean)
+                    result["mean"] = circular_mean(values)
     if "min" in types and (new_min := stats[0].min) is not None:
         old_min = result.get("min")
         result["min"] = min(new_min, old_min) if old_min is not None else new_min
@@ -1314,8 +1317,8 @@ def _get_max_mean_min_statistic(
     tail_start_time: datetime | None,
     tail_end_time: datetime | None,
     tail_only: bool,
-    metadata_id: int,
-    types: set[Literal["max", "mean", "min", "change", "circular_mean"]],
+    metadata: tuple[int, StatisticMetaData],
+    types: set[Literal["max", "mean", "min", "change"]],
     engine: Engine,
 ) -> dict[str, float | None]:
     """Return max, mean and min during the period.
@@ -1335,7 +1338,7 @@ def _get_max_mean_min_statistic(
             tail_end_time,
             StatisticsShortTerm,
             types,
-            metadata_id,
+            metadata,
             engine,
         )
 
@@ -1347,7 +1350,7 @@ def _get_max_mean_min_statistic(
             main_end_time,
             Statistics,
             types,
-            metadata_id,
+            metadata,
             engine,
         )
 
@@ -1359,21 +1362,22 @@ def _get_max_mean_min_statistic(
             head_end_time,
             StatisticsShortTerm,
             types,
-            metadata_id,
+            metadata,
             engine,
         )
 
     if "max" in types:
         result["max"] = max_mean_min.get("max")
     if "mean" in types:
-        if "mean_acc" not in max_mean_min:
-            result["mean"] = None
-        else:
-            result["mean"] = max_mean_min["mean_acc"] / max_mean_min["duration"]
+        mean_value = max_mean_min.get("mean")
+        if (
+            metadata[1]["mean_type"] == StatisticMeanType.ARIMETHIC
+            and mean_value is not None
+        ):
+            mean_value = mean_value / max_mean_min["duration"]
+        result["mean"] = mean_value
     if "min" in types:
         result["min"] = max_mean_min.get("min")
-    if "circular_mean" in types:
-        result["circular_mean"] = max_mean_min.get("circular_mean")
     return result
 
 
@@ -1571,14 +1575,14 @@ def statistic_during_period(
     start_time: datetime | None,
     end_time: datetime | None,
     statistic_id: str,
-    types: set[Literal["max", "mean", "min", "change", "circular_mean"]] | None,
+    types: set[Literal["max", "mean", "min", "change"]] | None,
     units: dict[str, str] | None,
 ) -> dict[str, Any]:
     """Return a statistic data point for the UTC period start_time - end_time."""
     metadata = None
 
     if not types:
-        types = {"max", "mean", "min", "change", "circular_mean"}
+        types = {"max", "mean", "min", "change"}
 
     result: dict[str, Any] = {}
 
@@ -1661,7 +1665,7 @@ def statistic_during_period(
             main_start_time = start_time if head_end_time is None else head_end_time
             main_end_time = end_time if tail_start_time is None else tail_start_time
 
-        if not types.isdisjoint({"max", "mean", "min", "circular_mean"}):
+        if not types.isdisjoint({"max", "mean", "min"}):
             assert instance.engine is not None
             result = _get_max_mean_min_statistic(
                 session,
@@ -1672,7 +1676,7 @@ def statistic_during_period(
                 tail_start_time,
                 tail_end_time,
                 tail_only,
-                metadata_id,
+                metadata,
                 types,
                 instance.engine,
             )
@@ -1726,15 +1730,12 @@ _type_column_mapping = {
     "min": "min",
     "state": "state",
     "sum": "sum",
-    "circular_mean": "circular_mean",
 }
 
 
 def _generate_select_columns_for_types_stmt(
     table: type[StatisticsBase],
-    types: set[
-        Literal["last_reset", "max", "mean", "min", "state", "sum", "circular_mean"]
-    ],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> StatementLambdaElement:
     columns = select(table.metadata_id, table.start_ts)
     track_on: list[str | None] = [
@@ -1751,26 +1752,20 @@ def _generate_select_columns_for_types_stmt(
 
 def _extract_metadata_and_discard_impossible_columns(
     metadata: dict[str, tuple[int, StatisticMetaData]],
-    types: set[
-        Literal["last_reset", "max", "mean", "min", "state", "sum", "circular_mean"]
-    ],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> list[int]:
     """Extract metadata ids from metadata and discard impossible columns."""
     metadata_ids = []
     has_mean = False
     has_sum = False
-    has_circular_mean = False
     for metadata_id, stats_metadata in metadata.values():
         metadata_ids.append(metadata_id)
-        has_mean |= stats_metadata["has_mean"]
+        has_mean |= stats_metadata["mean_type"] is not None
         has_sum |= stats_metadata["has_sum"]
-        has_circular_mean |= stats_metadata["has_circular_mean"]
     if not has_mean:
         types.discard("mean")
         types.discard("min")
         types.discard("max")
-    if not has_circular_mean:
-        types.discard("circular_mean")
     if not has_sum:
         types.discard("sum")
         types.discard("state")
@@ -1782,18 +1777,7 @@ def _augment_result_with_change(
     session: Session,
     start_time: datetime,
     units: dict[str, str] | None,
-    _types: set[
-        Literal[
-            "change",
-            "last_reset",
-            "max",
-            "mean",
-            "min",
-            "state",
-            "sum",
-            "circular_mean",
-        ]
-    ],
+    _types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
     table: type[Statistics | StatisticsShortTerm],
     metadata: dict[str, tuple[int, StatisticMetaData]],
     result: dict[str, list[StatisticsRow]],
@@ -1847,18 +1831,7 @@ def _statistics_during_period_with_session(
     statistic_ids: set[str] | None,
     period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str] | None,
-    _types: set[
-        Literal[
-            "change",
-            "last_reset",
-            "max",
-            "mean",
-            "min",
-            "state",
-            "sum",
-            "circular_mean",
-        ]
-    ],
+    _types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
     """Return statistic data points during UTC period start_time - end_time.
 
@@ -1876,9 +1849,7 @@ def _statistics_during_period_with_session(
     if not metadata:
         return {}
 
-    types: set[
-        Literal["last_reset", "max", "mean", "min", "state", "sum", "circular_mean"]
-    ] = set()
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]] = set()
     for stat_type in _types:
         if stat_type == "change":
             types.add("sum")
@@ -1944,13 +1915,13 @@ def _statistics_during_period_with_session(
     )
 
     if period == "day":
-        result = _reduce_statistics_per_day(result, types)
+        result = _reduce_statistics_per_day(result, types, metadata)
 
     if period == "week":
-        result = _reduce_statistics_per_week(result, types)
+        result = _reduce_statistics_per_week(result, types, metadata)
 
     if period == "month":
-        result = _reduce_statistics_per_month(result, types)
+        result = _reduce_statistics_per_month(result, types, metadata)
 
     if "change" in _types:
         _augment_result_with_change(
@@ -1968,18 +1939,7 @@ def statistics_during_period(
     statistic_ids: set[str] | None,
     period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str] | None,
-    types: set[
-        Literal[
-            "change",
-            "last_reset",
-            "max",
-            "mean",
-            "min",
-            "state",
-            "sum",
-            "circular_mean",
-        ]
-    ],
+    types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
     """Return statistic data points during UTC period start_time - end_time.
 
@@ -2034,9 +1994,7 @@ def _get_last_statistics(
     statistic_id: str,
     convert_units: bool,
     table: type[StatisticsBase],
-    types: set[
-        Literal["last_reset", "max", "mean", "min", "state", "sum", "circular_mean"]
-    ],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
     """Return the last number_of_stats statistics for a given statistic_id."""
     statistic_ids = {statistic_id}
@@ -2078,9 +2036,7 @@ def get_last_statistics(
     number_of_stats: int,
     statistic_id: str,
     convert_units: bool,
-    types: set[
-        Literal["last_reset", "max", "mean", "min", "state", "sum", "circular_mean"]
-    ],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
     """Return the last number_of_stats statistics for a statistic_id."""
     return _get_last_statistics(
@@ -2093,9 +2049,7 @@ def get_last_short_term_statistics(
     number_of_stats: int,
     statistic_id: str,
     convert_units: bool,
-    types: set[
-        Literal["last_reset", "max", "mean", "min", "state", "sum", "circular_mean"]
-    ],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
     """Return the last number_of_stats short term statistics for a statistic_id."""
     return _get_last_statistics(
@@ -2131,9 +2085,7 @@ def get_latest_short_term_statistics_with_session(
     hass: HomeAssistant,
     session: Session,
     statistic_ids: set[str],
-    types: set[
-        Literal["last_reset", "max", "mean", "min", "state", "sum", "circular_mean"]
-    ],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     metadata: dict[str, tuple[int, StatisticMetaData]] | None = None,
 ) -> dict[str, list[StatisticsRow]]:
     """Return the latest short term statistics for a list of statistic_ids with a session."""
@@ -2196,9 +2148,7 @@ def _generate_statistics_at_time_stmt(
     table: type[StatisticsBase],
     metadata_ids: set[int],
     start_time_ts: float,
-    types: set[
-        Literal["last_reset", "max", "mean", "min", "state", "sum", "circular_mean"]
-    ],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> StatementLambdaElement:
     """Create the statement for finding the statistics for a given time."""
     # This query is the result of significant research in
@@ -2239,9 +2189,7 @@ def _statistics_at_time(
     metadata_ids: set[int],
     table: type[StatisticsBase],
     start_time: datetime,
-    types: set[
-        Literal["last_reset", "max", "mean", "min", "state", "sum", "circular_mean"]
-    ],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> Sequence[Row] | None:
     """Return last known statistics, earlier than start_time, for the metadata_ids."""
     start_time_ts = start_time.timestamp()
@@ -2330,9 +2278,7 @@ def _sorted_statistics_to_dict(
     convert_units: bool,
     table: type[StatisticsBase],
     units: dict[str, str] | None,
-    types: set[
-        Literal["last_reset", "max", "mean", "min", "state", "sum", "circular_mean"]
-    ],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
     """Convert SQL results into JSON friendly data structure."""
     assert stats, "stats must not be empty"  # Guard against implementation error

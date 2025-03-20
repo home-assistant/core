@@ -26,6 +26,7 @@ from homeassistant.components.recorder.db_schema import (
 )
 from homeassistant.components.recorder.models import (
     StatisticData,
+    StatisticMeanType,
     StatisticMetaData,
     process_timestamp,
 )
@@ -293,12 +294,12 @@ async def test_compile_hourly_statistics(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": display_unit,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -313,7 +314,6 @@ async def test_compile_hourly_statistics(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ]
     }
@@ -352,12 +352,12 @@ async def test_compile_hourly_statistics_angle(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": DEGREE,
             "has_mean": False,
+            "mean_type": StatisticMeanType.CIRCULAR,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": DEGREE,
             "unit_class": None,
-            "has_circular_mean": True,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -366,13 +366,12 @@ async def test_compile_hourly_statistics_angle(
             {
                 "start": process_timestamp(zero).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
-                "mean": None,
+                "mean": pytest.approx(0.5802544),
                 "min": None,
                 "max": None,
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": pytest.approx(0.5802544),
             }
         ]
     }
@@ -468,12 +467,12 @@ async def test_compile_hourly_statistics_with_some_same_last_updated(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": display_unit,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -488,7 +487,6 @@ async def test_compile_hourly_statistics_with_some_same_last_updated(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ]
     }
@@ -562,12 +560,12 @@ async def test_compile_hourly_statistics_with_some_same_last_updated_angle(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": DEGREE,
             "has_mean": False,
+            "mean_type": StatisticMeanType.CIRCULAR,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": DEGREE,
             "unit_class": None,
-            "has_circular_mean": True,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -576,13 +574,12 @@ async def test_compile_hourly_statistics_with_some_same_last_updated_angle(
             {
                 "start": process_timestamp(zero).timestamp(),
                 "end": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
-                "mean": None,
+                "mean": pytest.approx(6.274605),
                 "min": None,
                 "max": None,
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": pytest.approx(6.274605),
             }
         ]
     }
@@ -598,7 +595,7 @@ async def test_compile_hourly_statistics_with_some_same_last_updated_angle(
         "mean",
         "min",
         "max",
-        "circular_mean",
+        "mean_type",
         "seq",
     ),
     [
@@ -614,7 +611,7 @@ async def test_compile_hourly_statistics_with_some_same_last_updated_angle(
             60,
             -10,
             60,
-            None,
+            StatisticMeanType.ARIMETHIC,
             TEMP_STATES_SEQ,
         ),
         (
@@ -629,7 +626,7 @@ async def test_compile_hourly_statistics_with_some_same_last_updated_angle(
             60,
             -10,
             60,
-            None,
+            StatisticMeanType.ARIMETHIC,
             TEMP_STATES_SEQ,
         ),
         (
@@ -637,10 +634,10 @@ async def test_compile_hourly_statistics_with_some_same_last_updated_angle(
             DEGREE,
             DEGREE,
             None,
-            None,
-            None,
-            None,
             15,
+            None,
+            None,
+            StatisticMeanType.CIRCULAR,
             [350, 0, 355, 15],
         ),
     ],
@@ -655,7 +652,7 @@ async def test_compile_hourly_statistics_with_all_same_last_updated(
     mean: float | None,
     min: float | None,
     max: float | None,
-    circular_mean: float | None,
+    mean_type: StatisticMeanType,
     seq: list[float],
 ) -> None:
     """Test compiling hourly statistics with the all of the same last updated value.
@@ -706,13 +703,13 @@ async def test_compile_hourly_statistics_with_all_same_last_updated(
         {
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": display_unit,
-            "has_mean": mean is not None,
+            "has_mean": mean_type is StatisticMeanType.ARIMETHIC,
+            "mean_type": mean_type,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
-            "has_circular_mean": circular_mean is not None,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -727,7 +724,6 @@ async def test_compile_hourly_statistics_with_all_same_last_updated(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": pytest.approx(circular_mean),
             }
         ]
     }
@@ -743,7 +739,7 @@ async def test_compile_hourly_statistics_with_all_same_last_updated(
         "mean",
         "min",
         "max",
-        "circular_mean",
+        "mean_type",
         "seq",
     ),
     [
@@ -759,7 +755,7 @@ async def test_compile_hourly_statistics_with_all_same_last_updated(
             0,
             60,
             60,
-            None,
+            StatisticMeanType.ARIMETHIC,
             TEMP_STATES_SEQ,
         ),
         (
@@ -774,7 +770,7 @@ async def test_compile_hourly_statistics_with_all_same_last_updated(
             0,
             60,
             60,
-            None,
+            StatisticMeanType.ARIMETHIC,
             TEMP_STATES_SEQ,
         ),
         (
@@ -782,10 +778,10 @@ async def test_compile_hourly_statistics_with_all_same_last_updated(
             DEGREE,
             DEGREE,
             None,
-            None,
-            None,
-            None,
             0,
+            None,
+            None,
+            StatisticMeanType.CIRCULAR,
             [350, 0, 355, 15],
         ),  # todo check
     ],
@@ -800,7 +796,7 @@ async def test_compile_hourly_statistics_only_state_is_and_end_of_period(
     mean: float | None,
     min: float | None,
     max: float | None,
-    circular_mean: float | None,
+    mean_type: StatisticMeanType,
     seq: list[float],
 ) -> None:
     """Test compiling hourly statistics when the only state at end of period."""
@@ -849,13 +845,13 @@ async def test_compile_hourly_statistics_only_state_is_and_end_of_period(
         {
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": display_unit,
-            "has_mean": mean is not None,
+            "has_mean": mean_type is StatisticMeanType.ARIMETHIC,
+            "mean_type": mean_type,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
-            "has_circular_mean": circular_mean is not None,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -870,7 +866,6 @@ async def test_compile_hourly_statistics_only_state_is_and_end_of_period(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": pytest.approx(circular_mean),
             }
         ]
     }
@@ -932,12 +927,12 @@ async def test_compile_hourly_statistics_purged_state_changes(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": display_unit,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -952,7 +947,6 @@ async def test_compile_hourly_statistics_purged_state_changes(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ]
     }
@@ -1025,56 +1019,56 @@ async def test_compile_hourly_statistics_wrong_unit(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": "°C",
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "°C",
             "unit_class": "temperature",
-            "has_circular_mean": False,
         },
         {
             "display_unit_of_measurement": "invalid",
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistic_id": "sensor.test2",
             "statistics_unit_of_measurement": "invalid",
             "unit_class": None,
-            "has_circular_mean": False,
         },
         {
             "display_unit_of_measurement": None,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistic_id": "sensor.test3",
             "statistics_unit_of_measurement": None,
             "unit_class": "unitless",
-            "has_circular_mean": False,
         },
         {
             "statistic_id": "sensor.test6",
             "display_unit_of_measurement": "°C",
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "°C",
             "unit_class": "temperature",
-            "has_circular_mean": False,
         },
         {
             "statistic_id": "sensor.test7",
             "display_unit_of_measurement": "°C",
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "°C",
             "unit_class": "temperature",
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -1089,7 +1083,6 @@ async def test_compile_hourly_statistics_wrong_unit(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ],
         "sensor.test2": [
@@ -1102,7 +1095,6 @@ async def test_compile_hourly_statistics_wrong_unit(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ],
         "sensor.test3": [
@@ -1115,7 +1107,6 @@ async def test_compile_hourly_statistics_wrong_unit(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ],
         "sensor.test6": [
@@ -1128,7 +1119,6 @@ async def test_compile_hourly_statistics_wrong_unit(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ],
         "sensor.test7": [
@@ -1141,7 +1131,6 @@ async def test_compile_hourly_statistics_wrong_unit(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ],
     }
@@ -1246,12 +1235,12 @@ async def test_compile_hourly_sum_statistics_amount(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": statistics_unit,
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -1266,7 +1255,6 @@ async def test_compile_hourly_sum_statistics_amount(
                 "last_reset": process_timestamp(period0).timestamp(),
                 "state": pytest.approx(factor * seq[2]),
                 "sum": pytest.approx(factor * 10.0),
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(period1).timestamp(),
@@ -1277,7 +1265,6 @@ async def test_compile_hourly_sum_statistics_amount(
                 "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(factor * seq[5]),
                 "sum": pytest.approx(factor * 40.0),
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(period2).timestamp(),
@@ -1288,7 +1275,6 @@ async def test_compile_hourly_sum_statistics_amount(
                 "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(factor * seq[8]),
                 "sum": pytest.approx(factor * 70.0),
-                "circular_mean": None,
             },
         ]
     }
@@ -1454,12 +1440,12 @@ async def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": display_unit,
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -1474,7 +1460,6 @@ async def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
                 "last_reset": process_timestamp(dt_util.as_local(one)).timestamp(),
                 "state": pytest.approx(factor * seq[7]),
                 "sum": pytest.approx(factor * (sum(seq) - seq[0])),
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(zero + timedelta(minutes=5)).timestamp(),
@@ -1485,7 +1470,6 @@ async def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
                 "last_reset": process_timestamp(dt_util.as_local(two)).timestamp(),
                 "state": pytest.approx(factor * seq[7]),
                 "sum": pytest.approx(factor * (2 * sum(seq) - seq[0])),
-                "circular_mean": None,
             },
         ]
     }
@@ -1566,12 +1550,12 @@ async def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": display_unit,
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -1586,7 +1570,6 @@ async def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
                 "last_reset": process_timestamp(dt_util.as_local(one)).timestamp(),
                 "state": pytest.approx(factor * seq[7]),
                 "sum": pytest.approx(factor * (sum(seq) - seq[0] - seq[3])),
-                "circular_mean": None,
             },
         ]
     }
@@ -1664,12 +1647,12 @@ async def test_compile_hourly_sum_statistics_nan_inf_state(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": display_unit,
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -1686,7 +1669,6 @@ async def test_compile_hourly_sum_statistics_nan_inf_state(
                 "sum": pytest.approx(
                     factor * (seq[2] + seq[3] + seq[4] + seq[6] + seq[7])
                 ),
-                "circular_mean": None,
             },
         ]
     }
@@ -1809,13 +1791,13 @@ async def test_compile_hourly_sum_statistics_negative_state(
     assert {
         "display_unit_of_measurement": display_unit,
         "has_mean": False,
+        "mean_type": None,
         "has_sum": True,
         "name": None,
         "source": "recorder",
         "statistic_id": entity_id,
         "statistics_unit_of_measurement": statistics_unit,
         "unit_class": unit_class,
-        "has_circular_mean": False,
     } in statistic_ids
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats[entity_id] == [
@@ -1828,7 +1810,6 @@ async def test_compile_hourly_sum_statistics_negative_state(
             "last_reset": None,
             "state": pytest.approx(seq[7]),
             "sum": pytest.approx(offset + 15),  # (20 - 15) + (10 - 0)
-            "circular_mean": None,
         },
     ]
     assert "Error while processing event StatisticsTask" not in caplog.text
@@ -1912,12 +1893,12 @@ async def test_compile_hourly_sum_statistics_total_no_reset(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": display_unit,
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -1932,7 +1913,6 @@ async def test_compile_hourly_sum_statistics_total_no_reset(
                 "last_reset": None,
                 "state": pytest.approx(factor * seq[2]),
                 "sum": pytest.approx(factor * 10.0),
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(period1).timestamp(),
@@ -1943,7 +1923,6 @@ async def test_compile_hourly_sum_statistics_total_no_reset(
                 "last_reset": None,
                 "state": pytest.approx(factor * seq[5]),
                 "sum": pytest.approx(factor * 30.0),
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(period2).timestamp(),
@@ -1954,7 +1933,6 @@ async def test_compile_hourly_sum_statistics_total_no_reset(
                 "last_reset": None,
                 "state": pytest.approx(factor * seq[8]),
                 "sum": pytest.approx(factor * 60.0),
-                "circular_mean": None,
             },
         ]
     }
@@ -2029,12 +2007,12 @@ async def test_compile_hourly_sum_statistics_total_increasing(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": display_unit,
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -2049,7 +2027,6 @@ async def test_compile_hourly_sum_statistics_total_increasing(
                 "last_reset": None,
                 "state": pytest.approx(factor * seq[2]),
                 "sum": pytest.approx(factor * 10.0),
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(period1).timestamp(),
@@ -2060,7 +2037,6 @@ async def test_compile_hourly_sum_statistics_total_increasing(
                 "last_reset": None,
                 "state": pytest.approx(factor * seq[5]),
                 "sum": pytest.approx(factor * 50.0),
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(period2).timestamp(),
@@ -2071,7 +2047,6 @@ async def test_compile_hourly_sum_statistics_total_increasing(
                 "last_reset": None,
                 "state": pytest.approx(factor * seq[8]),
                 "sum": pytest.approx(factor * 80.0),
-                "circular_mean": None,
             },
         ]
     }
@@ -2159,12 +2134,12 @@ async def test_compile_hourly_sum_statistics_total_increasing_small_dip(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": display_unit,
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -2179,7 +2154,6 @@ async def test_compile_hourly_sum_statistics_total_increasing_small_dip(
                 "min": None,
                 "state": pytest.approx(factor * seq[2]),
                 "sum": pytest.approx(factor * 10.0),
-                "circular_mean": None,
             },
             {
                 "last_reset": None,
@@ -2190,7 +2164,6 @@ async def test_compile_hourly_sum_statistics_total_increasing_small_dip(
                 "min": None,
                 "state": pytest.approx(factor * seq[5]),
                 "sum": pytest.approx(factor * 30.0),
-                "circular_mean": None,
             },
             {
                 "last_reset": None,
@@ -2201,7 +2174,6 @@ async def test_compile_hourly_sum_statistics_total_increasing_small_dip(
                 "min": None,
                 "state": pytest.approx(factor * seq[8]),
                 "sum": pytest.approx(factor * 60.0),
-                "circular_mean": None,
             },
         ]
     }
@@ -2267,12 +2239,12 @@ async def test_compile_hourly_energy_statistics_unsupported(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": "kWh",
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "kWh",
             "unit_class": "energy",
-            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -2287,7 +2259,6 @@ async def test_compile_hourly_energy_statistics_unsupported(
                 "last_reset": process_timestamp(period0).timestamp(),
                 "state": pytest.approx(20.0),
                 "sum": pytest.approx(10.0),
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(period1).timestamp(),
@@ -2298,7 +2269,6 @@ async def test_compile_hourly_energy_statistics_unsupported(
                 "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(40.0),
                 "sum": pytest.approx(40.0),
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(period2).timestamp(),
@@ -2309,7 +2279,6 @@ async def test_compile_hourly_energy_statistics_unsupported(
                 "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(70.0),
                 "sum": pytest.approx(70.0),
-                "circular_mean": None,
             },
         ]
     }
@@ -2373,34 +2342,34 @@ async def test_compile_hourly_energy_statistics_multiple(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": "kWh",
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "kWh",
             "unit_class": "energy",
-            "has_circular_mean": False,
         },
         {
             "statistic_id": "sensor.test2",
             "display_unit_of_measurement": "kWh",
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "kWh",
             "unit_class": "energy",
-            "has_circular_mean": False,
         },
         {
             "statistic_id": "sensor.test3",
             "display_unit_of_measurement": "Wh",
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "Wh",
             "unit_class": "energy",
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -2415,7 +2384,6 @@ async def test_compile_hourly_energy_statistics_multiple(
                 "last_reset": process_timestamp(period0).timestamp(),
                 "state": pytest.approx(20.0),
                 "sum": pytest.approx(10.0),
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(period1).timestamp(),
@@ -2426,7 +2394,6 @@ async def test_compile_hourly_energy_statistics_multiple(
                 "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(40.0),
                 "sum": pytest.approx(40.0),
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(period2).timestamp(),
@@ -2437,7 +2404,6 @@ async def test_compile_hourly_energy_statistics_multiple(
                 "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(70.0),
                 "sum": pytest.approx(70.0),
-                "circular_mean": None,
             },
         ],
         "sensor.test2": [
@@ -2450,7 +2416,6 @@ async def test_compile_hourly_energy_statistics_multiple(
                 "last_reset": process_timestamp(period0).timestamp(),
                 "state": pytest.approx(130.0),
                 "sum": pytest.approx(20.0),
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(period1).timestamp(),
@@ -2461,7 +2426,6 @@ async def test_compile_hourly_energy_statistics_multiple(
                 "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(45.0),
                 "sum": pytest.approx(-65.0),
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(period2).timestamp(),
@@ -2472,7 +2436,6 @@ async def test_compile_hourly_energy_statistics_multiple(
                 "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(75.0),
                 "sum": pytest.approx(-35.0),
-                "circular_mean": None,
             },
         ],
         "sensor.test3": [
@@ -2485,7 +2448,6 @@ async def test_compile_hourly_energy_statistics_multiple(
                 "last_reset": process_timestamp(period0).timestamp(),
                 "state": pytest.approx(5.0),
                 "sum": pytest.approx(5.0),
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(period1).timestamp(),
@@ -2496,7 +2458,6 @@ async def test_compile_hourly_energy_statistics_multiple(
                 "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(50.0),
                 "sum": pytest.approx(60.0),
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(period2).timestamp(),
@@ -2507,7 +2468,6 @@ async def test_compile_hourly_energy_statistics_multiple(
                 "last_reset": process_timestamp(four).timestamp(),
                 "state": pytest.approx(90.0),
                 "sum": pytest.approx(100.0),
-                "circular_mean": None,
             },
         ],
     }
@@ -2581,7 +2541,6 @@ async def test_compile_hourly_statistics_unchanged(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ]
     }
@@ -2620,19 +2579,19 @@ async def test_compile_hourly_statistics_unchanged_angle(
             {
                 "start": process_timestamp(four).timestamp(),
                 "end": process_timestamp(four + timedelta(minutes=5)).timestamp(),
-                "mean": None,
+                "mean": pytest.approx(15),
                 "min": None,
                 "max": None,
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": pytest.approx(15),
             }
         ]
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
+# todo angle
 async def test_compile_hourly_statistics_partially_unavailable(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -2664,7 +2623,6 @@ async def test_compile_hourly_statistics_partially_unavailable(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ]
     }
@@ -2746,7 +2704,6 @@ async def test_compile_hourly_statistics_unavailable(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ]
     }
@@ -2793,13 +2750,12 @@ async def test_compile_hourly_statistics_unavailable_angle(
             {
                 "start": process_timestamp(four).timestamp(),
                 "end": process_timestamp(four + timedelta(minutes=5)).timestamp(),
-                "mean": None,
+                "mean": pytest.approx(15),
                 "min": None,
                 "max": None,
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": pytest.approx(15),
             }
         ]
     }
@@ -2834,45 +2790,237 @@ async def test_compile_hourly_statistics_fails(
         "statistic_type",
     ),
     [
-        ("measurement", "area", "m²", "m²", "m²", "area", "mean"),
-        ("measurement", "area", "mi²", "mi²", "mi²", "area", "mean"),
+        ("measurement", "area", "m²", "m²", "m²", "area", StatisticMeanType.ARIMETHIC),
+        (
+            "measurement",
+            "area",
+            "mi²",
+            "mi²",
+            "mi²",
+            "area",
+            StatisticMeanType.ARIMETHIC,
+        ),
         ("total", "area", "m²", "m²", "m²", "area", "sum"),
         ("total", "area", "mi²", "mi²", "mi²", "area", "sum"),
-        ("measurement", "battery", "%", "%", "%", "unitless", "mean"),
-        ("measurement", "battery", None, None, None, "unitless", "mean"),
-        ("measurement", "distance", "m", "m", "m", "distance", "mean"),
-        ("measurement", "distance", "mi", "mi", "mi", "distance", "mean"),
+        (
+            "measurement",
+            "battery",
+            "%",
+            "%",
+            "%",
+            "unitless",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "battery",
+            None,
+            None,
+            None,
+            "unitless",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "distance",
+            "m",
+            "m",
+            "m",
+            "distance",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "distance",
+            "mi",
+            "mi",
+            "mi",
+            "distance",
+            StatisticMeanType.ARIMETHIC,
+        ),
         ("total", "distance", "m", "m", "m", "distance", "sum"),
         ("total", "distance", "mi", "mi", "mi", "distance", "sum"),
         ("total", "energy", "Wh", "Wh", "Wh", "energy", "sum"),
         ("total", "energy", "kWh", "kWh", "kWh", "energy", "sum"),
-        ("measurement", "energy", "Wh", "Wh", "Wh", "energy", "mean"),
-        ("measurement", "energy", "kWh", "kWh", "kWh", "energy", "mean"),
-        ("measurement", "humidity", "%", "%", "%", "unitless", "mean"),
-        ("measurement", "humidity", None, None, None, "unitless", "mean"),
+        (
+            "measurement",
+            "energy",
+            "Wh",
+            "Wh",
+            "Wh",
+            "energy",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "energy",
+            "kWh",
+            "kWh",
+            "kWh",
+            "energy",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "humidity",
+            "%",
+            "%",
+            "%",
+            "unitless",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "humidity",
+            None,
+            None,
+            None,
+            "unitless",
+            StatisticMeanType.ARIMETHIC,
+        ),
         ("total", "monetary", "USD", "USD", "USD", None, "sum"),
         ("total", "monetary", "None", "None", "None", None, "sum"),
         ("total", "gas", "m³", "m³", "m³", "volume", "sum"),
         ("total", "gas", "ft³", "ft³", "ft³", "volume", "sum"),
-        ("measurement", "monetary", "USD", "USD", "USD", None, "mean"),
-        ("measurement", "monetary", "None", "None", "None", None, "mean"),
-        ("measurement", "gas", "m³", "m³", "m³", "volume", "mean"),
-        ("measurement", "gas", "ft³", "ft³", "ft³", "volume", "mean"),
-        ("measurement", "pressure", "Pa", "Pa", "Pa", "pressure", "mean"),
-        ("measurement", "pressure", "hPa", "hPa", "hPa", "pressure", "mean"),
-        ("measurement", "pressure", "mbar", "mbar", "mbar", "pressure", "mean"),
-        ("measurement", "pressure", "inHg", "inHg", "inHg", "pressure", "mean"),
-        ("measurement", "pressure", "psi", "psi", "psi", "pressure", "mean"),
-        ("measurement", "speed", "m/s", "m/s", "m/s", "speed", "mean"),
-        ("measurement", "speed", "mph", "mph", "mph", "speed", "mean"),
-        ("measurement", "temperature", "°C", "°C", "°C", "temperature", "mean"),
-        ("measurement", "temperature", "°F", "°F", "°F", "temperature", "mean"),
-        ("measurement", "volume", "m³", "m³", "m³", "volume", "mean"),
-        ("measurement", "volume", "ft³", "ft³", "ft³", "volume", "mean"),
+        (
+            "measurement",
+            "monetary",
+            "USD",
+            "USD",
+            "USD",
+            None,
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "monetary",
+            "None",
+            "None",
+            "None",
+            None,
+            StatisticMeanType.ARIMETHIC,
+        ),
+        ("measurement", "gas", "m³", "m³", "m³", "volume", StatisticMeanType.ARIMETHIC),
+        (
+            "measurement",
+            "gas",
+            "ft³",
+            "ft³",
+            "ft³",
+            "volume",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "pressure",
+            "Pa",
+            "Pa",
+            "Pa",
+            "pressure",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "pressure",
+            "hPa",
+            "hPa",
+            "hPa",
+            "pressure",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "pressure",
+            "mbar",
+            "mbar",
+            "mbar",
+            "pressure",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "pressure",
+            "inHg",
+            "inHg",
+            "inHg",
+            "pressure",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "pressure",
+            "psi",
+            "psi",
+            "psi",
+            "pressure",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "speed",
+            "m/s",
+            "m/s",
+            "m/s",
+            "speed",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "speed",
+            "mph",
+            "mph",
+            "mph",
+            "speed",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "temperature",
+            "°C",
+            "°C",
+            "°C",
+            "temperature",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "temperature",
+            "°F",
+            "°F",
+            "°F",
+            "temperature",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "volume",
+            "m³",
+            "m³",
+            "m³",
+            "volume",
+            StatisticMeanType.ARIMETHIC,
+        ),
+        (
+            "measurement",
+            "volume",
+            "ft³",
+            "ft³",
+            "ft³",
+            "volume",
+            StatisticMeanType.ARIMETHIC,
+        ),
         ("total", "volume", "m³", "m³", "m³", "volume", "sum"),
         ("total", "volume", "ft³", "ft³", "ft³", "volume", "sum"),
-        ("measurement", "weight", "g", "g", "g", "mass", "mean"),
-        ("measurement", "weight", "oz", "oz", "oz", "mass", "mean"),
+        ("measurement", "weight", "g", "g", "g", "mass", StatisticMeanType.ARIMETHIC),
+        (
+            "measurement",
+            "weight",
+            "oz",
+            "oz",
+            "oz",
+            "mass",
+            StatisticMeanType.ARIMETHIC,
+        ),
         ("total", "weight", "g", "g", "g", "mass", "sum"),
         ("total", "weight", "oz", "oz", "oz", "mass", "sum"),
         (
@@ -2882,7 +3030,7 @@ async def test_compile_hourly_statistics_fails(
             DEGREE,
             DEGREE,
             None,
-            "circular_mean",
+            StatisticMeanType.CIRCULAR,
         ),
     ],
 )
@@ -2894,7 +3042,7 @@ async def test_list_statistic_ids(
     display_unit: str,
     statistics_unit: str,
     unit_class: str | None,
-    statistic_type: str,
+    statistic_type: str | StatisticMeanType,
 ) -> None:
     """Test listing future statistic ids."""
     await async_setup_component(hass, "sensor", {})
@@ -2908,33 +3056,40 @@ async def test_list_statistic_ids(
     }
     hass.states.async_set("sensor.test1", 0, attributes=attributes)
     statistic_ids = await async_list_statistic_ids(hass)
+    mean_type = (
+        statistic_type if isinstance(statistic_type, StatisticMeanType) else None
+    )
+    statistic_type = (
+        statistic_type if not isinstance(statistic_type, StatisticMeanType) else "mean"
+    )
     assert statistic_ids == [
         {
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": display_unit,
-            "has_mean": statistic_type == "mean",
+            "has_mean": mean_type is StatisticMeanType.ARIMETHIC,
+            "mean_type": mean_type,
             "has_sum": statistic_type == "sum",
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
-            "has_circular_mean": statistic_type == "circular_mean",
         },
     ]
-    for stat_type in ("mean", "sum", "dogs", "circular_mean"):
+
+    for stat_type in ("mean", "sum", "dogs"):
         statistic_ids = await async_list_statistic_ids(hass, statistic_type=stat_type)
         if statistic_type == stat_type:
             assert statistic_ids == [
                 {
                     "statistic_id": "sensor.test1",
                     "display_unit_of_measurement": display_unit,
-                    "has_mean": statistic_type == "mean",
+                    "has_mean": mean_type is StatisticMeanType.ARIMETHIC,
+                    "mean_type": mean_type,
                     "has_sum": statistic_type == "sum",
                     "name": None,
                     "source": "recorder",
                     "statistics_unit_of_measurement": statistics_unit,
                     "unit_class": unit_class,
-                    "has_circular_mean": statistic_type == "circular_mean",
                 },
             ]
         else:
@@ -3037,12 +3192,12 @@ async def test_compile_hourly_statistics_changing_units_1(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": state_unit,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3057,7 +3212,6 @@ async def test_compile_hourly_statistics_changing_units_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ]
     }
@@ -3074,12 +3228,12 @@ async def test_compile_hourly_statistics_changing_units_1(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": state_unit,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3094,7 +3248,6 @@ async def test_compile_hourly_statistics_changing_units_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ]
     }
@@ -3167,12 +3320,12 @@ async def test_compile_hourly_statistics_changing_units_2(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": "cats",
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "cats",
             "unit_class": unit_class,
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3250,12 +3403,12 @@ async def test_compile_hourly_statistics_changing_units_3(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": display_unit,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3270,7 +3423,6 @@ async def test_compile_hourly_statistics_changing_units_3(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ]
     }
@@ -3287,12 +3439,12 @@ async def test_compile_hourly_statistics_changing_units_3(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": display_unit,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3307,7 +3459,6 @@ async def test_compile_hourly_statistics_changing_units_3(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ]
     }
@@ -3371,12 +3522,12 @@ async def test_compile_hourly_statistics_convert_units_1(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": state_unit_1,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit_1,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3391,7 +3542,6 @@ async def test_compile_hourly_statistics_convert_units_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ]
     }
@@ -3420,12 +3570,12 @@ async def test_compile_hourly_statistics_convert_units_1(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": state_unit_2,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit_1,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3440,7 +3590,6 @@ async def test_compile_hourly_statistics_convert_units_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
@@ -3451,7 +3600,6 @@ async def test_compile_hourly_statistics_convert_units_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             },
         ]
     }
@@ -3539,12 +3687,12 @@ async def test_compile_hourly_statistics_equivalent_units_1(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": state_unit,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3559,7 +3707,6 @@ async def test_compile_hourly_statistics_equivalent_units_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ]
     }
@@ -3572,12 +3719,12 @@ async def test_compile_hourly_statistics_equivalent_units_1(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": state_unit2,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit2,
             "unit_class": unit_class2,
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3592,7 +3739,6 @@ async def test_compile_hourly_statistics_equivalent_units_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
@@ -3603,7 +3749,6 @@ async def test_compile_hourly_statistics_equivalent_units_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             },
         ]
     }
@@ -3666,12 +3811,12 @@ async def test_compile_hourly_statistics_equivalent_units_2(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": state_unit,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3688,7 +3833,6 @@ async def test_compile_hourly_statistics_equivalent_units_2(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             },
         ]
     }
@@ -3752,12 +3896,12 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": state_unit,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3772,7 +3916,6 @@ async def test_compile_hourly_statistics_changing_device_class_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ]
     }
@@ -3803,12 +3946,12 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": state_unit,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3823,7 +3966,6 @@ async def test_compile_hourly_statistics_changing_device_class_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
@@ -3834,7 +3976,6 @@ async def test_compile_hourly_statistics_changing_device_class_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             },
         ]
     }
@@ -3865,12 +4006,12 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": state_unit,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3885,7 +4026,6 @@ async def test_compile_hourly_statistics_changing_device_class_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
@@ -3896,7 +4036,6 @@ async def test_compile_hourly_statistics_changing_device_class_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(zero + timedelta(minutes=20)).timestamp(),
@@ -3907,7 +4046,6 @@ async def test_compile_hourly_statistics_changing_device_class_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             },
         ]
     }
@@ -3973,12 +4111,12 @@ async def test_compile_hourly_statistics_changing_device_class_2(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": display_unit,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistic_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3993,7 +4131,6 @@ async def test_compile_hourly_statistics_changing_device_class_2(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             }
         ]
     }
@@ -4024,12 +4161,12 @@ async def test_compile_hourly_statistics_changing_device_class_2(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": display_unit,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": statistic_unit,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -4044,7 +4181,6 @@ async def test_compile_hourly_statistics_changing_device_class_2(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(zero + timedelta(minutes=10)).timestamp(),
@@ -4055,13 +4191,13 @@ async def test_compile_hourly_statistics_changing_device_class_2(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             },
         ]
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
+# todo angle
 @pytest.mark.parametrize(
     (
         "device_class",
@@ -4119,12 +4255,12 @@ async def test_compile_hourly_statistics_changing_state_class(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": None,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": None,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         },
     ]
     metadata = get_metadata(hass, statistic_ids={"sensor.test1"})
@@ -4133,12 +4269,12 @@ async def test_compile_hourly_statistics_changing_state_class(
             1,
             {
                 "has_mean": True,
+                "mean_type": StatisticMeanType.ARIMETHIC,
                 "has_sum": False,
                 "name": None,
                 "source": "recorder",
                 "statistic_id": "sensor.test1",
                 "unit_of_measurement": None,
-                "has_circular_mean": False,
             },
         )
     }
@@ -4163,12 +4299,12 @@ async def test_compile_hourly_statistics_changing_state_class(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": None,
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": None,
             "unit_class": unit_class,
-            "has_circular_mean": False,
         },
     ]
     metadata = get_metadata(hass, statistic_ids={"sensor.test1"})
@@ -4177,12 +4313,12 @@ async def test_compile_hourly_statistics_changing_state_class(
             1,
             {
                 "has_mean": False,
+                "mean_type": None,
                 "has_sum": True,
                 "name": None,
                 "source": "recorder",
                 "statistic_id": "sensor.test1",
                 "unit_of_measurement": None,
-                "has_circular_mean": False,
             },
         )
     }
@@ -4198,7 +4334,6 @@ async def test_compile_hourly_statistics_changing_state_class(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "circular_mean": None,
             },
             {
                 "start": process_timestamp(period1).timestamp(),
@@ -4209,7 +4344,6 @@ async def test_compile_hourly_statistics_changing_state_class(
                 "last_reset": None,
                 "state": pytest.approx(30.0),
                 "sum": pytest.approx(30.0),
-                "circular_mean": None,
             },
         ]
     }
@@ -4217,6 +4351,7 @@ async def test_compile_hourly_statistics_changing_state_class(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
+# todo angle
 @pytest.mark.timeout(25)
 @pytest.mark.parametrize("recorder_config", [{CONF_COMMIT_INTERVAL: 3600 * 4}])
 @pytest.mark.freeze_time("2021-09-01 05:00")  # August 31st, 23:00 local time
@@ -4371,45 +4506,45 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
             "statistic_id": "sensor.test1",
             "display_unit_of_measurement": "%",
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "%",
             "unit_class": "unitless",
-            "has_circular_mean": False,
         },
         {
             "statistic_id": "sensor.test2",
             "display_unit_of_measurement": "%",
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "%",
             "unit_class": "unitless",
-            "has_circular_mean": False,
         },
         {
             "statistic_id": "sensor.test3",
             "display_unit_of_measurement": "%",
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "%",
             "unit_class": "unitless",
-            "has_circular_mean": False,
         },
         {
             "statistic_id": "sensor.test4",
             "display_unit_of_measurement": "EUR",
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "EUR",
             "unit_class": None,
-            "has_circular_mean": False,
         },
     ]
 
@@ -4466,7 +4601,6 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
                     "last_reset": None,
                     "state": expected_state,
                     "sum": expected_sum,
-                    "circular_mean": None,
                 }
             )
         start += timedelta(minutes=5)
@@ -4524,7 +4658,6 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
                     "last_reset": None,
                     "state": expected_state,
                     "sum": expected_sum,
-                    "circular_mean": None,
                 }
             )
         start += timedelta(hours=1)
@@ -4582,7 +4715,6 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
                     "last_reset": None,
                     "state": expected_state,
                     "sum": expected_sum,
-                    "circular_mean": None,
                 }
             )
         start += timedelta(days=1)
@@ -4640,7 +4772,6 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
                     "last_reset": None,
                     "state": expected_state,
                     "sum": expected_sum,
-                    "circular_mean": None,
                 }
             )
         start = (start + timedelta(days=31)).replace(day=1)
