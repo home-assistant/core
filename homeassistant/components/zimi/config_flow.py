@@ -98,8 +98,7 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self.data[CONF_HOST] = user_input[CONF_HOST]
-            self.data[CONF_PORT] = user_input[CONF_PORT]
+            self.data = { **self.data, **user_input }
 
             errors = await self.check_errors(self.data[CONF_HOST], self.data[CONF_PORT])
 
