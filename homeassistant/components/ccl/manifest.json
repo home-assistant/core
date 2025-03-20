@@ -3,12 +3,10 @@
   "name": "CCL Electronics",
   "codeowners": ["@fkiscd"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/ccl",
-  "homekit": {},
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["aioccl==2025.1"],
-  "ssdp": [],
-  "zeroconf": []
+  "loggers": ["aioccl"],
+  "quality_scale": "silver",
+  "requirements": ["aioccl==2025.1"]
 }
