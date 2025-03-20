@@ -4,11 +4,13 @@ from unittest.mock import Mock, patch
 
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
-from nextdns import ApiError
+from nextdns import ApiError, InvalidApiKeyError
 import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.nextdns.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -80,3 +82,32 @@ async def test_button_failure(hass: HomeAssistant, exc: Exception) -> None:
             {ATTR_ENTITY_ID: "button.fake_profile_clear_logs"},
             blocking=True,
         )
+
+
+async def test_button_auth_error(hass: HomeAssistant) -> None:
+    """Tests that the press action starts re-auth flow."""
+    entry = await init_integration(hass)
+
+    with patch(
+        "homeassistant.components.nextdns.NextDns.clear_logs",
+        side_effect=InvalidApiKeyError,
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.fake_profile_clear_logs"},
+            blocking=True,
+        )
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id
