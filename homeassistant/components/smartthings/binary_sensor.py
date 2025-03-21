@@ -61,6 +61,13 @@ CAPABILITY_TO_SENSORS: dict[
             is_on_key="replace",
         )
     },
+    Capability.SAMSUNG_CE_KIDS_LOCK: {
+        Attribute.LOCK_STATE: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.LOCK_STATE,
+            translation_key="child_lock",
+            is_on_key="locked",
+        )
+    },
     Capability.MOTION_SENSOR: {
         Attribute.MOTION: SmartThingsBinarySensorEntityDescription(
             key=Attribute.MOTION,
