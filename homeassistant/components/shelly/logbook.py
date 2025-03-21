@@ -33,7 +33,7 @@ def async_describe_events(
 
     @callback
     def async_describe_shelly_click_event(event: Event) -> dict[str, str]:
-        """Describe shelly.click logbook event (block device)."""
+        """Describe shelly.click logbook event."""
         device_id = event.data[ATTR_DEVICE_ID]
         click_type = event.data[ATTR_CLICK_TYPE]
         channel = event.data[ATTR_CHANNEL]
