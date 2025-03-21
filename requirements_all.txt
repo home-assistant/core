@@ -1112,7 +1112,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.32.0
+habluetooth==3.36.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.94.0
@@ -2471,7 +2471,7 @@ python-roborock==2.14.0
 python-smarttub==0.0.39
 
 # homeassistant.components.snoo
-python-snoo==0.6.3
+python-snoo==0.6.4
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -3153,7 +3153,7 @@ zeroconf==0.146.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.52
+zha==0.0.53
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
