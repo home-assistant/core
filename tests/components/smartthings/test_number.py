@@ -1,4 +1,4 @@
-"""Test for the SmartThings select platform."""
+"""Test for the SmartThings number platform."""
 
 from unittest.mock import AsyncMock
 
@@ -6,10 +6,10 @@ from pysmartthings import Capability, Command
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.select import (
-    ATTR_OPTION,
-    DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
 )
 from homeassistant.components.smartthings import MAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
@@ -31,22 +31,22 @@ async def test_all_entities(
     """Test all entities."""
     await setup_integration(hass, mock_config_entry)
 
-    snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.SELECT)
+    snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.NUMBER)
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_wm_000001"])
-async def test_select_option(
+async def test_set_value(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test select option."""
+    """Test setting a value."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.washer_rinse_cycles", ATTR_OPTION: "3"},
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.washer_rinse_cycles", ATTR_VALUE: 3},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(

@@ -46,9 +46,10 @@
         "name": "Valve"
       }
     },
-    "select": {
+    "number": {
       "washer_rinse_cycles": {
-        "name": "Rinse cycles"
+        "name": "Rinse cycles",
+        "unit_of_measurement": "cycles"
       }
     },
     "sensor": {
