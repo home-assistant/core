@@ -11,7 +11,6 @@ import uuid
 import pytest
 from roborock import RoborockCategory, RoomMapping
 from roborock.code_mappings import DyadError, RoborockDyadStateCode, ZeoError, ZeoState
-from roborock.containers import NetworkInfo
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 from roborock.version_a01_apis import RoborockMqttClientA01
 
@@ -30,7 +29,6 @@ from .mock_data import (
     MAP_DATA,
     MULTI_MAP_LIST,
     NETWORK_INFO,
-    NETWORK_INFO_2,
     PROP,
     SCENES,
     USER_DATA,
@@ -89,13 +87,6 @@ def bypass_api_client_fixture() -> None:
         yield
 
 
-def cycle_network_info() -> Generator[NetworkInfo]:
-    """Return the appropriate network info for the corresponding device."""
-    while True:
-        yield NETWORK_INFO
-        yield NETWORK_INFO_2
-
-
 @pytest.fixture(name="bypass_api_fixture")
 def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
     """Skip calls to the API."""
@@ -107,7 +98,7 @@ def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
         ),
         patch(
             "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
-            side_effect=cycle_network_info(),
+            return_value=NETWORK_INFO,
         ),
         patch(
             "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
