@@ -8199,12 +8199,14 @@ async def test_subentry_get_reconfigure_entry(
                 """Confirm input."""
                 try:
                     entry = self._get_reconfigure_entry()
+                    assert entry == self._get_entry()
                 except ValueError as err:
                     reason = str(err)
                 else:
                     reason = f"Found entry {entry.title}"
                 try:
                     entry_id = self._reconfigure_entry_id
+                    assert entry_id == self._entry_id
                 except ValueError:
                     reason = f"{reason}: -"
                 else:
