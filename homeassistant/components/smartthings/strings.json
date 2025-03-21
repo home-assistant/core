@@ -427,6 +427,11 @@
           "freeze_protection": "Freeze protection"
         }
       }
+    },
+    "switch": {
+      "sabbath_mode": {
+        "name": "Sabbath mode"
+      }
     }
   },
   "issues": {
