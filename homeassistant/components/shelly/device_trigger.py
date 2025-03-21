@@ -105,7 +105,11 @@ async def async_validate_trigger_config(
                 return config
 
     raise InvalidDeviceAutomationConfig(
-        f"Invalid ({CONF_TYPE},{CONF_SUBTYPE}): {trigger}"
+        translation_domain=DOMAIN,
+        translation_key="invalid_trigger",
+        translation_placeholders={
+            "trigger": f"({CONF_TYPE},{CONF_SUBTYPE}): {trigger}"
+        },
     )
 
 
@@ -137,7 +141,11 @@ async def async_get_triggers(
 
         return triggers
 
-    raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
+    raise InvalidDeviceAutomationConfig(
+        translation_domain=DOMAIN,
+        translation_key="device_not_found",
+        translation_placeholders={"device_id": device_id},
+    )
 
 
 async def async_attach_trigger(

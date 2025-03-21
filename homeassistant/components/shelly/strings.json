@@ -204,11 +204,38 @@
     }
   },
   "exceptions": {
+    "auth_error": {
+      "message": "Authentication failed for {device} device, please update your credentials"
+    },
+    "device_communication_error": {
+      "message": "Device communication error occurred for {device} device: {error}"
+    },
     "device_communication_action_error": {
       "message": "Device communication error occurred while calling the entity {entity} action for {device} device: {error}"
     },
+    "device_not_found": {
+      "message": "Device {device} not found while configuring device automation triggers"
+    },
+    "firmware_unsupported": {
+      "message": "{device} device is running an unsupported firmware, please update the firmware"
+    },
+    "invalid_trigger": {
+      "message": "Invalid device automation trigger: {trigger}"
+    },
     "rpc_call_action_error": {
       "message": "RPC call error occurred while calling the entity {entity} action for {device} device: {error}"
+    },
+    "update_error": {
+      "message": "An error occurred while retrieving data from {device} device: {error}"
+    },
+    "update_error_device_disconnected": {
+      "message": "An error occurred while retrieving data from {device} device: device disconnected"
+    },
+    "update_error_reconnect_error": {
+      "message": "An error occurred while retrieving data from {device} device: device reconnect error"
+    },
+    "update_error_sleeping_device": {
+      "message": "Sleeping {device} device did not update within {period} seconds interval"
     }
   },
   "issues": {

@@ -25,7 +25,14 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_SLEEP_PERIOD, OTA_BEGIN, OTA_ERROR, OTA_PROGRESS, OTA_SUCCESS
+from .const import (
+    CONF_SLEEP_PERIOD,
+    DOMAIN,
+    OTA_BEGIN,
+    OTA_ERROR,
+    OTA_PROGRESS,
+    OTA_SUCCESS,
+)
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RestEntityDescription,
@@ -198,7 +205,15 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         try:
             result = await self.coordinator.device.trigger_ota_update(beta=beta)
         except DeviceConnectionError as err:
-            raise HomeAssistantError(f"Error starting OTA update: {err!r}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_communication_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                    "error": repr(err),
+                },
+            ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
         else:
@@ -310,9 +325,25 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         try:
             await self.coordinator.device.trigger_ota_update(beta=beta)
         except DeviceConnectionError as err:
-            raise HomeAssistantError(f"OTA update connection error: {err!r}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_communication_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                    "error": repr(err),
+                },
+            ) from err
         except RpcCallError as err:
-            raise HomeAssistantError(f"OTA update request error: {err!r}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="rpc_call_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                    "error": repr(err),
+                },
+            ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
         else:
