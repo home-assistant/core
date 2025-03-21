@@ -108,7 +108,7 @@ async def async_setup_entry(
         script_instances = get_rpc_key_instances(
             coordinator.device.status, SCRIPT_EVENT.key
         )
-        script_events = config_entry.runtime_data.script_events
+        script_events = config_entry.runtime_data.rpc_script_events
         for script in script_instances:
             script_name = get_rpc_entity_name(coordinator.device, script)
             if script_name == BLE_SCRIPT_NAME:

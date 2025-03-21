@@ -273,7 +273,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                 async_create_issue_unsupported_firmware(hass, entry)
                 await device.shutdown()
                 raise ConfigEntryNotReady
-            runtime_data.script_events = await get_rpc_scripts_event_types(
+            runtime_data.rpc_script_events = await get_rpc_scripts_event_types(
                 device, ignore_scripts=[BLE_SCRIPT_NAME]
             )
         except (DeviceConnectionError, MacAddressMismatchError, RpcCallError) as err:
