@@ -21,7 +21,7 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -121,7 +121,8 @@ class VodafoneStationSensorEntity(
         try:
             await self.entity_description.press_action(self.coordinator)
         except CannotAuthenticate as err:
-            raise ConfigEntryAuthFailed(
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_authenticate",
                 translation_placeholders={"error": repr(err)},
