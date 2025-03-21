@@ -27,8 +27,8 @@ from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.dt import utcnow
 
+from .common import help_all_subscribe_calls
 from .conftest import ENTRY_DEFAULT_BIRTH_MESSAGE
-from .test_common import help_all_subscribe_calls
 
 from tests.common import (
     MockConfigEntry,
@@ -1271,7 +1271,7 @@ async def test_publish_error(
     with patch(
         "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
     ) as mock_client:
-        mock_client().connect = lambda *args: 1
+        mock_client().connect = lambda **kwargs: 1
         mock_client().publish().rc = 1
         assert await hass.config_entries.async_setup(entry.entry_id)
         with pytest.raises(HomeAssistantError):
@@ -1330,7 +1330,7 @@ async def test_handle_message_callback(
 
 
 @pytest.mark.parametrize(
-    ("mqtt_config_entry_data", "protocol"),
+    ("mqtt_config_entry_data", "protocol", "clean_session"),
     [
         (
             {
@@ -1338,6 +1338,7 @@ async def test_handle_message_callback(
                 CONF_PROTOCOL: "3.1",
             },
             3,
+            True,
         ),
         (
             {
@@ -1345,6 +1346,7 @@ async def test_handle_message_callback(
                 CONF_PROTOCOL: "3.1.1",
             },
             4,
+            True,
         ),
         (
             {
@@ -1352,20 +1354,70 @@ async def test_handle_message_callback(
                 CONF_PROTOCOL: "5",
             },
             5,
+            None,
         ),
     ],
+    ids=["v3.1", "v3.1.1", "v5"],
 )
-async def test_setup_mqtt_client_protocol(
-    mqtt_mock_entry: MqttMockHAClientGenerator, protocol: int
+async def test_setup_mqtt_client_clean_session_and_protocol(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_client_mock: MqttMockPahoClient,
+    protocol: int,
+    clean_session: bool | None,
 ) -> None:
-    """Test MQTT client protocol setup."""
+    """Test MQTT client clean_session and protocol setup."""
     with patch(
         "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
     ) as mock_client:
         await mqtt_mock_entry()
 
+    # check if clean_session was correctly
+    assert mock_client.call_args[1]["clean_session"] == clean_session
+
     # check if protocol setup was correctly
     assert mock_client.call_args[1]["protocol"] == protocol
+
+
+@pytest.mark.parametrize(
+    ("mqtt_config_entry_data", "connect_args"),
+    [
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "3.1",
+            },
+            call(host="mock-broker", port=1883, keepalive=60, clean_start=3),
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "3.1.1",
+            },
+            call(host="mock-broker", port=1883, keepalive=60, clean_start=3),
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "5",
+            },
+            call(host="mock-broker", port=1883, keepalive=60, clean_start=True),
+        ),
+    ],
+    ids=["v3.1", "v3.1.1", "v5"],
+)
+async def test_setup_mqtt_client_clean_start(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    mqtt_client_mock: MqttMockPahoClient,
+    connect_args: tuple[Any],
+) -> None:
+    """Test MQTT client protocol connects with `clean_start` set correctly."""
+    await mqtt_mock_entry()
+
+    # check if clean_start was set correctly
+    assert len(mqtt_client_mock.connect.mock_calls) == 1
+    assert mqtt_client_mock.connect.mock_calls[0] == connect_args
 
 
 @patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.2)
@@ -1502,6 +1554,42 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
 
     # test if insecure is set
     assert insecure_check["insecure"] == insecure_param
+
+
+@pytest.mark.parametrize(
+    ("mqtt_config_entry_data", "client_id"),
+    [
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                "client_id": "random01234random0124",
+            },
+            "random01234random0124",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+            },
+            None,
+        ),
+    ],
+)
+async def test_client_id_is_set(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    client_id: str | None,
+) -> None:
+    """Test setup defaults for tls."""
+    with patch(
+        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
+    ) as async_client_mock:
+        await mqtt_mock_entry()
+        await hass.async_block_till_done()
+    assert async_client_mock.call_count == 1
+    call_params: dict[str, Any] = async_client_mock.call_args[1]
+    assert "client_id" in call_params
+    assert client_id is None or client_id == call_params["client_id"]
+    assert call_params["client_id"] is not None
 
 
 @pytest.mark.parametrize(

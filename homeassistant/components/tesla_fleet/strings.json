@@ -329,7 +329,7 @@
         "name": "Charging",
         "state": {
           "starting": "Starting",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "disconnected": "Disconnected",
           "stopped": "Stopped",
           "complete": "Complete",

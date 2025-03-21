@@ -29,6 +29,7 @@ from typing import Any, Literal, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
+from annotatedyaml import load_yaml_dict, loader as yaml_loader
 import pytest
 from syrupy import SnapshotAssertion
 import voluptuous as vol
@@ -109,7 +110,6 @@ from homeassistant.util.json import (
 )
 from homeassistant.util.signal_type import SignalType
 from homeassistant.util.unit_system import METRIC_SYSTEM
-from homeassistant.util.yaml import load_yaml_dict, loader as yaml_loader
 
 from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
@@ -1865,23 +1865,6 @@ async def snapshot_platform(
         state = hass.states.get(entity_entry.entity_id)
         assert state, f"State not found for {entity_entry.entity_id}"
         assert state == snapshot(name=f"{entity_entry.entity_id}-state")
-
-
-def reset_translation_cache(hass: HomeAssistant, components: list[str]) -> None:
-    """Reset translation cache for specified components.
-
-    Use this if you are mocking a core component (for example via
-    mock_integration), to ensure that the mocked translations are not
-    persisted in the shared session cache.
-    """
-    translations_cache = translation._async_get_translations_cache(hass)
-    for loaded_components in translations_cache.cache_data.loaded.values():
-        for component_to_unload in components:
-            loaded_components.discard(component_to_unload)
-    for loaded_categories in translations_cache.cache_data.cache.values():
-        for loaded_components in loaded_categories.values():
-            for component_to_unload in components:
-                loaded_components.pop(component_to_unload, None)
 
 
 @lru_cache

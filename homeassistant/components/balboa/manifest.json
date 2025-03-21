@@ -14,5 +14,5 @@
   "documentation": "https://www.home-assistant.io/integrations/balboa",
   "iot_class": "local_push",
   "loggers": ["pybalboa"],
-  "requirements": ["pybalboa==1.1.2"]
+  "requirements": ["pybalboa==1.1.3"]
 }

@@ -2,18 +2,19 @@
 
 from abc import abstractmethod
 from datetime import timedelta
-from typing import Any
+from typing import TypeVar
 
-from aiocomelit import (
+from aiocomelit.api import (
+    AlarmDataObject,
+    ComelitCommonApi,
     ComeliteSerialBridgeApi,
     ComelitSerialBridgeObject,
     ComelitVedoApi,
     ComelitVedoAreaObject,
     ComelitVedoZoneObject,
-    exceptions,
 )
-from aiocomelit.api import ComelitCommonApi
 from aiocomelit.const import BRIDGE, VEDO
+from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,7 +27,13 @@ from .const import _LOGGER, DOMAIN
 type ComelitConfigEntry = ConfigEntry[ComelitBaseCoordinator]
 
 
-class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+T = TypeVar(
+    "T",
+    bound=dict[str, dict[int, ComelitSerialBridgeObject]] | AlarmDataObject,
+)
+
+
+class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
     """Base coordinator for Comelit Devices."""
 
     _hw_version: str
@@ -81,23 +88,25 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hw_version=self._hw_version,
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> T:
         """Update device data."""
         _LOGGER.debug("Polling Comelit %s host: %s", self._device, self._host)
         try:
             await self.api.login()
             return await self._async_update_system_data()
-        except (exceptions.CannotConnect, exceptions.CannotRetrieveData) as err:
+        except (CannotConnect, CannotRetrieveData) as err:
             raise UpdateFailed(repr(err)) from err
-        except exceptions.CannotAuthenticate as err:
+        except CannotAuthenticate as err:
             raise ConfigEntryAuthFailed from err
 
     @abstractmethod
-    async def _async_update_system_data(self) -> dict[str, Any]:
+    async def _async_update_system_data(self) -> T:
         """Class method for updating data."""
 
 
-class ComelitSerialBridge(ComelitBaseCoordinator):
+class ComelitSerialBridge(
+    ComelitBaseCoordinator[dict[str, dict[int, ComelitSerialBridgeObject]]]
+):
     """Queries Comelit Serial Bridge."""
 
     _hw_version = "20003101"
@@ -115,12 +124,14 @@ class ComelitSerialBridge(ComelitBaseCoordinator):
         self.api = ComeliteSerialBridgeApi(host, port, pin)
         super().__init__(hass, entry, BRIDGE, host)
 
-    async def _async_update_system_data(self) -> dict[str, Any]:
+    async def _async_update_system_data(
+        self,
+    ) -> dict[str, dict[int, ComelitSerialBridgeObject]]:
         """Specific method for updating data."""
         return await self.api.get_all_devices()
 
 
-class ComelitVedoSystem(ComelitBaseCoordinator):
+class ComelitVedoSystem(ComelitBaseCoordinator[AlarmDataObject]):
     """Queries Comelit VEDO system."""
 
     _hw_version = "VEDO IP"
@@ -138,6 +149,8 @@ class ComelitVedoSystem(ComelitBaseCoordinator):
         self.api = ComelitVedoApi(host, port, pin)
         super().__init__(hass, entry, VEDO, host)
 
-    async def _async_update_system_data(self) -> dict[str, Any]:
+    async def _async_update_system_data(
+        self,
+    ) -> AlarmDataObject:
         """Specific method for updating data."""
         return await self.api.get_all_areas_and_zones()

@@ -1,6 +1,6 @@
 """Tests for the climate module."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from eheimdigital.types import (
     EheimDeviceType,
@@ -31,6 +31,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import init_integration
+
 from tests.common import MockConfigEntry, snapshot_platform
 
 
@@ -45,7 +47,13 @@ async def test_setup_heater(
     """Test climate platform setup for heater."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.CLIMATE]):
+    with (
+        patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.CLIMATE]),
+        patch(
+            "homeassistant.components.eheimdigital.coordinator.asyncio.Event",
+            new=AsyncMock,
+        ),
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
@@ -69,7 +77,13 @@ async def test_dynamic_new_devices(
 
     eheimdigital_hub_mock.return_value.devices = {}
 
-    with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.CLIMATE]):
+    with (
+        patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.CLIMATE]),
+        patch(
+            "homeassistant.components.eheimdigital.coordinator.asyncio.Event",
+            new=AsyncMock,
+        ),
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert (
@@ -108,9 +122,7 @@ async def test_set_preset_mode(
     heater_mode: HeaterMode,
 ) -> None:
     """Test setting a preset mode."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await init_integration(hass, mock_config_entry)
 
     await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
         "00:00:00:00:00:02", EheimDeviceType.VERSION_EHEIM_EXT_HEATER
@@ -146,9 +158,7 @@ async def test_set_temperature(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting a preset mode."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await init_integration(hass, mock_config_entry)
 
     await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
         "00:00:00:00:00:02", EheimDeviceType.VERSION_EHEIM_EXT_HEATER
@@ -189,9 +199,7 @@ async def test_set_hvac_mode(
     active: bool,
 ) -> None:
     """Test setting a preset mode."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await init_integration(hass, mock_config_entry)
 
     await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
         "00:00:00:00:00:02", EheimDeviceType.VERSION_EHEIM_EXT_HEATER
@@ -231,9 +239,8 @@ async def test_state_update(
     heater_mock.is_heating = False
     heater_mock.operation_mode = HeaterMode.BIO
 
-    mock_config_entry.add_to_hass(hass)
+    await init_integration(hass, mock_config_entry)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
         "00:00:00:00:00:02", EheimDeviceType.VERSION_EHEIM_EXT_HEATER
     )

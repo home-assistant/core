@@ -36,6 +36,7 @@ from .const import (
     ATTR_SETTINGS,
     ATTR_STATUS,
     CONF_PROFILE_ID,
+    DOMAIN,
     UPDATE_INTERVAL_ANALYTICS,
     UPDATE_INTERVAL_CONNECTION,
     UPDATE_INTERVAL_SETTINGS,
@@ -88,9 +89,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: NextDnsConfigEntry) -> b
     try:
         nextdns = await NextDns.create(websession, api_key)
     except (ApiError, ClientConnectorError, RetryError, TimeoutError) as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={
+                "entry": entry.title,
+                "error": repr(err),
+            },
+        ) from err
     except InvalidApiKeyError as err:
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_error",
+            translation_placeholders={"entry": entry.title},
+        ) from err
 
     tasks = []
     coordinators = {}

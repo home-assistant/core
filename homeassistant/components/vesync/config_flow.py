@@ -1,5 +1,6 @@
 """Config flow utilities."""
 
+from collections.abc import Mapping
 from typing import Any
 
 from pyvesync import VeSync
@@ -56,4 +57,37 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=username,
             data={CONF_USERNAME: username, CONF_PASSWORD: password},
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication with vesync."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication with vesync."""
+
+        if user_input:
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
+
+            manager = VeSync(username, password)
+            login = await self.hass.async_add_executor_job(manager.login)
+            if login:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={
+                        CONF_USERNAME: username,
+                        CONF_PASSWORD: password,
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=DATA_SCHEMA,
+            description_placeholders={"name": "VeSync"},
+            errors={"base": "invalid_auth"},
         )
