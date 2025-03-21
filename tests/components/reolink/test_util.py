@@ -41,6 +41,14 @@ from tests.common import MockConfigEntry
             HomeAssistantError,
         ),
         (
+            ApiError("Test error", translation_key="firmware_rate_limit"),
+            HomeAssistantError,
+        ),
+        (
+            ApiError("Test error", translation_key="not_in_json.strings"),
+            HomeAssistantError,
+        ),
+        (
             CredentialsInvalidError("Test error"),
             HomeAssistantError,
         ),
