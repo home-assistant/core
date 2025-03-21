@@ -8,5 +8,5 @@
   "iot_class": "local_push",
   "loggers": ["aioccl"],
   "quality_scale": "silver",
-  "requirements": ["aioccl==2025.1"]
+  "requirements": ["aioccl==2025.3"]
 }
