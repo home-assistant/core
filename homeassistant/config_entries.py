@@ -2905,8 +2905,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
             [
                 entry
                 for entry in self._async_current_entries(include_ignore=False)
-                if entry
-                not in (self._get_reconfigure_entry(), self._get_reauth_entry())
+                if entry.entry_id != self.context.get("entry_id")
             ],
             match_dict,
         )
