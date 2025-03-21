@@ -455,6 +455,8 @@ class AssistAPI(API):
                 ScriptTool(self.hass, script_entity_id)
                 for script_entity_id in exposed_entities[SCRIPT_DOMAIN]
             )
+
+        if exposed_domains:
             tools.append(GetHomeStateTool())
 
         return tools

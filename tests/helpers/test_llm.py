@@ -1278,8 +1278,8 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     }
 
 
-async def test_get_home_state_no_entities(hass: HomeAssistant) -> None:
-    """Test the get home state tool when no entities are exposed."""
+async def test_no_tools_exposed(hass: HomeAssistant) -> None:
+    """Test that tools are not exposed when no entities are exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
     context = Context()
     llm_context = llm.LLMContext(
@@ -1291,11 +1291,4 @@ async def test_get_home_state_no_entities(hass: HomeAssistant) -> None:
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
-
-    result = await api.async_call_tool(
-        llm.ToolInput(tool_name="get_home_state", tool_args={})
-    )
-    assert result == {
-        "success": False,
-        "error": "Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.",
-    }
+    assert api.tools == []
