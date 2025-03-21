@@ -6,17 +6,25 @@ from dataclasses import dataclass
 
 from pysmartthings import Attribute, Capability, SmartThings
 
+from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN
+from .const import DOMAIN, MAIN
 from .entity import SmartThingsEntity
 
 
@@ -53,6 +61,13 @@ CAPABILITY_TO_SENSORS: dict[
             is_on_key="replace",
         )
     },
+    Capability.SAMSUNG_CE_KIDS_LOCK: {
+        Attribute.LOCK_STATE: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.LOCK_STATE,
+            translation_key="child_lock",
+            is_on_key="locked",
+        )
+    },
     Capability.MOTION_SENSOR: {
         Attribute.MOTION: SmartThingsBinarySensorEntityDescription(
             key=Attribute.MOTION,
@@ -65,6 +80,13 @@ CAPABILITY_TO_SENSORS: dict[
             key=Attribute.PRESENCE,
             device_class=BinarySensorDeviceClass.PRESENCE,
             is_on_key="present",
+        )
+    },
+    Capability.REMOTE_CONTROL_STATUS: {
+        Attribute.REMOTE_CONTROL_ENABLED: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.REMOTE_CONTROL_ENABLED,
+            translation_key="remote_control",
+            is_on_key="true",
         )
     },
     Capability.SOUND_SENSOR: {
@@ -150,4 +172,56 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
         return (
             self.get_attribute_value(self.capability, self._attribute)
             == self.entity_description.is_on_key
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        if self.capability is not Capability.VALVE:
+            return
+        automations = automations_with_entity(self.hass, self.entity_id)
+        scripts = scripts_with_entity(self.hass, self.entity_id)
+        items = automations + scripts
+        if not items:
+            return
+
+        entity_reg: er.EntityRegistry = er.async_get(self.hass)
+        entity_automations = [
+            automation_entity
+            for automation_id in automations
+            if (automation_entity := entity_reg.async_get(automation_id))
+        ]
+        entity_scripts = [
+            script_entity
+            for script_id in scripts
+            if (script_entity := entity_reg.async_get(script_id))
+        ]
+
+        items_list = [
+            f"- [{item.original_name}](/config/automation/edit/{item.unique_id})"
+            for item in entity_automations
+        ] + [
+            f"- [{item.original_name}](/config/script/edit/{item.unique_id})"
+            for item in entity_scripts
+        ]
+
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_binary_valve_{self.entity_id}",
+            breaks_in_ha_version="2025.10.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_binary_valve",
+            translation_placeholders={
+                "entity": self.entity_id,
+                "items": "\n".join(items_list),
+            },
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Call when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+        async_delete_issue(
+            self.hass, DOMAIN, f"deprecated_binary_valve_{self.entity_id}"
         )

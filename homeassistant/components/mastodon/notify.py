@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from mastodon import Mastodon
-from mastodon.Mastodon import MastodonAPIError
+from mastodon.Mastodon import MastodonAPIError, MediaAttachment
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -114,7 +114,7 @@ class MastodonNotificationService(BaseNotificationService):
                     message,
                     visibility=target,
                     spoiler_text=content_warning,
-                    media_ids=mediadata["id"],
+                    media_ids=mediadata.id,
                     sensitive=sensitive,
                 )
             except MastodonAPIError as err:
@@ -134,12 +134,14 @@ class MastodonNotificationService(BaseNotificationService):
                     translation_key="unable_to_send_message",
                 ) from err
 
-    def _upload_media(self, media_path: Any = None) -> Any:
+    def _upload_media(self, media_path: Any = None) -> MediaAttachment:
         """Upload media."""
         with open(media_path, "rb"):
             media_type = get_media_type(media_path)
         try:
-            mediadata = self.client.media_post(media_path, mime_type=media_type)
+            mediadata: MediaAttachment = self.client.media_post(
+                media_path, mime_type=media_type
+            )
         except MastodonAPIError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

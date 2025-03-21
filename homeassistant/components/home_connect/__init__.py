@@ -16,11 +16,17 @@ from aiohomeconnect.model import (
     SettingKey,
 )
 from aiohomeconnect.model.error import HomeConnectError
+import aiohttp
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
@@ -611,17 +617,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
     config_entry_auth = AsyncConfigEntryAuth(hass, session)
+    try:
+        await config_entry_auth.async_get_access_token()
+    except aiohttp.ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed from err
+        raise ConfigEntryNotReady from err
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady from err
 
     home_connect_client = HomeConnectClient(config_entry_auth)
 
     coordinator = HomeConnectCoordinator(hass, entry, home_connect_client)
-    await coordinator.async_config_entry_first_refresh()
-
+    await coordinator.async_setup()
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.runtime_data.start_event_listener()
+
+    entry.async_create_background_task(
+        hass,
+        coordinator.async_refresh(),
+        f"home_connect-initial-full-refresh-{entry.entry_id}",
+    )
 
     return True
 
