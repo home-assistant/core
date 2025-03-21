@@ -77,6 +77,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.LOCK,
     Platform.SCENE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.VALVE,

@@ -46,6 +46,11 @@
         "name": "Valve"
       }
     },
+    "select": {
+      "washer_rinse_cycles": {
+        "name": "Rinse cycles"
+      }
+    },
     "sensor": {
       "lighting_mode": {
         "name": "Activity lighting mode"
