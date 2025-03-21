@@ -10,6 +10,7 @@ from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
     MacAddressMismatchError,
+    RpcCallError,
 )
 from aioshelly.rpc_device.utils import bluetooth_mac_from_primary_mac
 import pytest
@@ -555,3 +556,17 @@ async def test_bluetooth_cleanup_on_remove_entry(
     remove_mock.assert_called_once_with(
         hass, format_mac(bluetooth_mac_from_primary_mac(entry.unique_id)).upper()
     )
+
+
+async def test_device_script_getcode_error(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test device script get code error."""
+    monkeypatch.setattr(
+        mock_rpc_device, "script_getcode", AsyncMock(side_effect=RpcCallError(0))
+    )
+
+    entry = await init_integration(hass, 2)
+    assert entry.state is ConfigEntryState.SETUP_RETRY

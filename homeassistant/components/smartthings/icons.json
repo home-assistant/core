@@ -1,6 +1,12 @@
 {
   "entity": {
     "binary_sensor": {
+      "remote_control": {
+        "default": "mdi:remote-off",
+        "state": {
+          "on": "mdi:remote"
+        }
+      },
       "child_lock": {
         "default": "mdi:lock-open",
         "state": {

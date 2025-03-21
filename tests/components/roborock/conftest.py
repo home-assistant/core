@@ -11,6 +11,7 @@ import uuid
 import pytest
 from roborock import RoborockCategory, RoomMapping
 from roborock.code_mappings import DyadError, RoborockDyadStateCode, ZeoError, ZeoState
+from roborock.containers import NetworkInfo
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 from roborock.version_a01_apis import RoborockMqttClientA01
 
@@ -29,6 +30,7 @@ from .mock_data import (
     MAP_DATA,
     MULTI_MAP_LIST,
     NETWORK_INFO,
+    NETWORK_INFO_2,
     PROP,
     SCENES,
     USER_DATA,
@@ -80,8 +82,18 @@ def bypass_api_client_fixture() -> None:
             "homeassistant.components.roborock.RoborockApiClient.get_scenes",
             return_value=SCENES,
         ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.load_multi_map"
+        ),
     ):
         yield
+
+
+def cycle_network_info() -> Generator[NetworkInfo]:
+    """Return the appropriate network info for the corresponding device."""
+    while True:
+        yield NETWORK_INFO
+        yield NETWORK_INFO_2
 
 
 @pytest.fixture(name="bypass_api_fixture")
@@ -95,7 +107,7 @@ def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
         ),
         patch(
             "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
-            return_value=NETWORK_INFO,
+            side_effect=cycle_network_info(),
         ),
         patch(
             "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
@@ -110,7 +122,7 @@ def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
             return_value=MULTI_MAP_LIST,
         ),
         patch(
-            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
             return_value=MAP_DATA,
         ),
         patch(
@@ -127,7 +139,7 @@ def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
             "roborock.version_1_apis.AttributeCache.value",
         ),
         patch(
-            "homeassistant.components.roborock.image.MAP_SLEEP",
+            "homeassistant.components.roborock.coordinator.MAP_SLEEP",
             0,
         ),
         patch(
@@ -225,7 +237,7 @@ async def setup_entry(
         yield mock_roborock_entry
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 async def cleanup_map_storage(
     hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
 ) -> Generator[pathlib.Path]:

@@ -405,6 +405,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(
         hass, websocket_try_parse_dsk_from_qr_code_string
     )
+    websocket_api.async_register_command(hass, websocket_lookup_device)
     websocket_api.async_register_command(hass, websocket_supports_feature)
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
@@ -975,13 +976,7 @@ async def websocket_validate_dsk_and_enter_pin(
     {
         vol.Required(TYPE): "zwave_js/provision_smart_start_node",
         vol.Required(ENTRY_ID): str,
-        vol.Exclusive(
-            PLANNED_PROVISIONING_ENTRY, "options"
-        ): PLANNED_PROVISIONING_ENTRY_SCHEMA,
-        vol.Exclusive(
-            QR_PROVISIONING_INFORMATION, "options"
-        ): QR_PROVISIONING_INFORMATION_SCHEMA,
-        vol.Exclusive(QR_CODE_STRING, "options"): QR_CODE_STRING_SCHEMA,
+        vol.Required(QR_PROVISIONING_INFORMATION): QR_PROVISIONING_INFORMATION_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -996,28 +991,10 @@ async def websocket_provision_smart_start_node(
     driver: Driver,
 ) -> None:
     """Pre-provision a smart start node."""
-    try:
-        cv.has_at_least_one_key(
-            PLANNED_PROVISIONING_ENTRY, QR_PROVISIONING_INFORMATION, QR_CODE_STRING
-        )(msg)
-    except vol.Invalid as err:
-        connection.send_error(
-            msg[ID],
-            ERR_INVALID_FORMAT,
-            err.args[0],
-        )
-        return
 
-    provisioning_info = (
-        msg.get(PLANNED_PROVISIONING_ENTRY)
-        or msg.get(QR_PROVISIONING_INFORMATION)
-        or msg[QR_CODE_STRING]
-    )
+    provisioning_info = msg[QR_PROVISIONING_INFORMATION]
 
-    if (
-        QR_PROVISIONING_INFORMATION in msg
-        and provisioning_info.version == QRCodeVersion.S2
-    ):
+    if provisioning_info.version == QRCodeVersion.S2:
         connection.send_error(
             msg[ID],
             ERR_INVALID_FORMAT,
@@ -1136,6 +1113,41 @@ async def websocket_try_parse_dsk_from_qr_code_string(
         msg[ID],
         await async_try_parse_dsk_from_qr_code_string(client, msg[QR_CODE_STRING]),
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/lookup_device",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(MANUFACTURER_ID): int,
+        vol.Required(PRODUCT_TYPE): int,
+        vol.Required(PRODUCT_ID): int,
+        vol.Optional(APPLICATION_VERSION): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_lookup_device(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Look up the definition of a given device in the configuration DB."""
+    device = await driver.config_manager.lookup_device(
+        msg[MANUFACTURER_ID],
+        msg[PRODUCT_TYPE],
+        msg[PRODUCT_ID],
+        msg.get(APPLICATION_VERSION),
+    )
+    if device is None:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, "Device not found")
+    else:
+        connection.send_result(msg[ID], device.to_dict())
 
 
 @websocket_api.require_admin

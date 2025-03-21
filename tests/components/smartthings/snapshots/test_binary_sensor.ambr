@@ -143,7 +143,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_child_lock-entry]
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -156,7 +156,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.microwave_child_lock',
+    'entity_id': 'binary_sensor.microwave_remote_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -168,29 +168,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Child lock',
+    'original_name': 'Remote control',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'child_lock',
-    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a.lockState',
+    'translation_key': 'remote_control',
+    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a.remoteControlEnabled',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_child_lock-state]
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Microwave Child lock',
+      'friendly_name': 'Microwave Remote control',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.microwave_child_lock',
+    'entity_id': 'binary_sensor.microwave_remote_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ks_oven_01061][binary_sensor.oven_child_lock-entry]
+# name: test_all_entities[da_ks_oven_01061][binary_sensor.oven_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -203,7 +203,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.oven_child_lock',
+    'entity_id': 'binary_sensor.oven_remote_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -215,29 +215,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Child lock',
+    'original_name': 'Remote control',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'child_lock',
-    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f.lockState',
+    'translation_key': 'remote_control',
+    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f.remoteControlEnabled',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ks_oven_01061][binary_sensor.oven_child_lock-state]
+# name: test_all_entities[da_ks_oven_01061][binary_sensor.oven_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Oven Child lock',
+      'friendly_name': 'Oven Remote control',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.oven_child_lock',
+    'entity_id': 'binary_sensor.oven_remote_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
-# name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_child_lock-entry]
+# name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -250,7 +250,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.vulcan_child_lock',
+    'entity_id': 'binary_sensor.vulcan_remote_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -262,26 +262,26 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Child lock',
+    'original_name': 'Remote control',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'child_lock',
-    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18.lockState',
+    'translation_key': 'remote_control',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18.remoteControlEnabled',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_child_lock-state]
+# name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Vulcan Child lock',
+      'friendly_name': 'Vulcan Remote control',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.vulcan_child_lock',
+    'entity_id': 'binary_sensor.vulcan_remote_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_door-entry]
@@ -332,7 +332,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_child_lock-entry]
+# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -345,7 +345,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.dishwasher_child_lock',
+    'entity_id': 'binary_sensor.dishwasher_remote_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -357,29 +357,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Child lock',
+    'original_name': 'Remote control',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'child_lock',
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676.lockState',
+    'translation_key': 'remote_control',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676.remoteControlEnabled',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_child_lock-state]
+# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Child lock',
+      'friendly_name': 'Dishwasher Remote control',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dishwasher_child_lock',
+    'entity_id': 'binary_sensor.dishwasher_remote_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_child_lock-entry]
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -392,7 +392,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.dryer_child_lock',
+    'entity_id': 'binary_sensor.dryer_remote_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -404,29 +404,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Child lock',
+    'original_name': 'Remote control',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'child_lock',
-    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.lockState',
+    'translation_key': 'remote_control',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.remoteControlEnabled',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_child_lock-state]
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dryer Child lock',
+      'friendly_name': 'Dryer Remote control',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dryer_child_lock',
+    'entity_id': 'binary_sensor.dryer_remote_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_child_lock-entry]
+# name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -439,7 +439,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.seca_roupa_child_lock',
+    'entity_id': 'binary_sensor.seca_roupa_remote_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -451,29 +451,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Child lock',
+    'original_name': 'Remote control',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'child_lock',
-    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.lockState',
+    'translation_key': 'remote_control',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.remoteControlEnabled',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_child_lock-state]
+# name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Seca-Roupa Child lock',
+      'friendly_name': 'Seca-Roupa Remote control',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.seca_roupa_child_lock',
+    'entity_id': 'binary_sensor.seca_roupa_remote_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_child_lock-entry]
+# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -486,7 +486,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.washer_child_lock',
+    'entity_id': 'binary_sensor.washer_remote_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -498,29 +498,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Child lock',
+    'original_name': 'Remote control',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'child_lock',
-    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.lockState',
+    'translation_key': 'remote_control',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.remoteControlEnabled',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_child_lock-state]
+# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer Child lock',
+      'friendly_name': 'Washer Remote control',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.washer_child_lock',
+    'entity_id': 'binary_sensor.washer_remote_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_child_lock-entry]
+# name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -533,7 +533,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.washing_machine_child_lock',
+    'entity_id': 'binary_sensor.washing_machine_remote_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -545,26 +545,26 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Child lock',
+    'original_name': 'Remote control',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'child_lock',
-    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.lockState',
+    'translation_key': 'remote_control',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.remoteControlEnabled',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_child_lock-state]
+# name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing Machine Child lock',
+      'friendly_name': 'Washing Machine Remote control',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.washing_machine_child_lock',
+    'entity_id': 'binary_sensor.washing_machine_remote_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[ecobee_sensor][binary_sensor.child_bedroom_motion-entry]
