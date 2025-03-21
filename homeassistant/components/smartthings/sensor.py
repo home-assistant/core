@@ -225,7 +225,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # Haven't seen at devices yet
     Capability.CARBON_DIOXIDE_MEASUREMENT: {
         Attribute.CARBON_DIOXIDE: [
             SmartThingsSensorEntityDescription(
