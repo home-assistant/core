@@ -23,7 +23,7 @@ class AxionDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name="Axion Light",
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=1),
         )
 
     async def _async_update_data(self) -> dict[str, Any]:

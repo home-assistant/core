@@ -1,5 +1,6 @@
 """Test the Axion DMX light."""
 
+import asyncio
 from unittest.mock import patch
 
 from homeassistant.components.axion_dmx.const import (
@@ -165,6 +166,9 @@ async def test_brightness(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+        # Wait for coordinator to update the state
+        await asyncio.sleep(1)
+
         # Verify the state of the entity
         entity_state = hass.states.get(ENTITY_ID)
         assert entity_state is not None
@@ -257,6 +261,9 @@ async def test_hs_color(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
+        # Wait for coordinator to update the state
+        await asyncio.sleep(1)
+
         # Verify the state of the entity
         entity_state = hass.states.get(ENTITY_ID)
         assert entity_state is not None
@@ -316,6 +323,9 @@ async def test_color_temp(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
+        # Wait for coordinator to update the state
+        await asyncio.sleep(1)
+
         # Verify the state of the entity
         entity_state = hass.states.get(ENTITY_ID)
         assert entity_state is not None
@@ -370,6 +380,9 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
+        # Wait for coordinator to update the state
+        await asyncio.sleep(1)
+
         # Verify the state of the entity
         entity_state = hass.states.get(ENTITY_ID)
         assert entity_state is not None
@@ -423,6 +436,9 @@ async def test_rgbww_light(hass: HomeAssistant) -> None:
             },
             blocking=True,
         )
+
+        # Wait for coordinator to update the state
+        await asyncio.sleep(1)
 
         # Verify the state of the entity
         entity_state = hass.states.get(ENTITY_ID)

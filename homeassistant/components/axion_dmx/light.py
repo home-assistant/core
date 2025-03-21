@@ -273,7 +273,6 @@ class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
         await asyncio.sleep(0.5)
 
         await self.coordinator.async_request_refresh()
-        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
@@ -305,4 +304,3 @@ class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
 
         # Manually refresh the coordinator to get the latest state
         await self.coordinator.async_request_refresh()
-        self.async_write_ha_state()
