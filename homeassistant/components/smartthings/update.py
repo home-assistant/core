@@ -28,9 +28,7 @@ async def async_setup_entry(
     """Add update entities for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsUpdateEntity(
-            entry_data.client, device, entry_data.rooms, {Capability.FIRMWARE_UPDATE}
-        )
+        SmartThingsUpdateEntity(entry_data.client, device, {Capability.FIRMWARE_UPDATE})
         for device in entry_data.devices.values()
         if Capability.FIRMWARE_UPDATE in device.status[MAIN]
     )

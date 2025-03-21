@@ -997,7 +997,6 @@ async def async_setup_entry(
             entry_data.client,
             device,
             description,
-            entry_data.rooms,
             capability,
             attribute,
         )
@@ -1030,7 +1029,6 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         client: SmartThings,
         device: FullDevice,
         entity_description: SmartThingsSensorEntityDescription,
-        rooms: dict[str, str],
         capability: Capability,
         attribute: Attribute,
     ) -> None:
@@ -1038,7 +1036,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         capabilities_to_subscribe = {capability}
         if entity_description.use_temperature_unit:
             capabilities_to_subscribe.add(Capability.TEMPERATURE_MEASUREMENT)
-        super().__init__(client, device, rooms, capabilities_to_subscribe)
+        super().__init__(client, device, capabilities_to_subscribe)
         self._attr_unique_id = f"{device.device.device_id}{entity_description.unique_id_separator}{entity_description.key}"
         self._attribute = attribute
         self.capability = capability
