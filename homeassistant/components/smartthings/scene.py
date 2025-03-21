@@ -2,8 +2,7 @@
 
 from typing import Any
 
-from pysmartthings import SmartThings
-from pysmartthings.models import Scene as STScene
+from pysmartthings import Scene as STScene, SmartThings
 
 from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from aranet4.client import Aranet4Advertisement
+from aranet4.client import Aranet4Advertisement, Color
 from bleak.backends.device import BLEDevice
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -73,6 +73,13 @@ SENSOR_DESCRIPTIONS = {
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "status": AranetSensorEntityDescription(
+        key="threshold",
+        translation_key="threshold",
+        name="Threshold",
+        device_class=SensorDeviceClass.ENUM,
+        options=[status.name.lower() for status in Color],
     ),
     "co2": AranetSensorEntityDescription(
         key="co2",
@@ -161,7 +168,10 @@ def sensor_update_to_bluetooth_data_update(
         val = getattr(adv.readings, key)
         if val == -1:
             continue
-        val *= desc.scale
+        if key == "status":
+            val = val.name.lower()
+        else:
+            val *= desc.scale
         data[tag] = val
         names[tag] = desc.name
         descs[tag] = desc

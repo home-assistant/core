@@ -148,6 +148,7 @@
         "state": {
           "disabled": "Disabled",
           "prebrew": "Prebrew",
+          "prebrew_enabled": "Prebrew",
           "preinfusion": "Preinfusion"
         }
       },

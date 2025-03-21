@@ -28,7 +28,7 @@ async def test_all_entities(
     snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.SENSOR)
 
 
-@pytest.mark.parametrize("fixture", ["aeotec_home_energy_meter_gen5"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_state_update(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -37,20 +37,15 @@ async def test_state_update(
     """Test state update."""
     await setup_integration(hass, mock_config_entry)
 
-    assert (
-        hass.states.get("sensor.aeotec_energy_monitor_energy_meter").state
-        == "19978.536"
-    )
+    assert hass.states.get("sensor.ac_office_granit_temperature").state == "25"
 
     await trigger_update(
         hass,
         devices,
-        "f0af21a2-d5a1-437c-b10a-b34a87394b71",
-        Capability.ENERGY_METER,
-        Attribute.ENERGY,
-        20000.0,
+        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+        Capability.TEMPERATURE_MEASUREMENT,
+        Attribute.TEMPERATURE,
+        20,
     )
 
-    assert (
-        hass.states.get("sensor.aeotec_energy_monitor_energy_meter").state == "20000.0"
-    )
+    assert hass.states.get("sensor.ac_office_granit_temperature").state == "20"

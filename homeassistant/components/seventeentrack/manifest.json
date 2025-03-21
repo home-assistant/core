@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pyseventeentrack"],
-  "requirements": ["pyseventeentrack==1.0.1"]
+  "requirements": ["pyseventeentrack==1.0.2"]
 }

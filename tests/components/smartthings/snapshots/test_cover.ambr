@@ -13,7 +13,7 @@
     'domain': 'cover',
     'entity_category': None,
     'entity_id': 'cover.curtain_1a',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
     'original_icon': None,
-    'original_name': 'Curtain 1A',
+    'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 7>,
@@ -49,7 +49,7 @@
     'state': 'open',
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][cover.microwave-entry]
+# name: test_all_entities[ikea_kadrilj][cover.kitchen_ikea_kadrilj_window_blind-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -62,8 +62,8 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.microwave',
-    'has_entity_name': False,
+    'entity_id': 'cover.kitchen_ikea_kadrilj_window_blind',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -72,29 +72,31 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
+    'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
     'original_icon': None,
-    'original_name': 'Microwave',
+    'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
-    'supported_features': <CoverEntityFeature: 3>,
+    'supported_features': <CoverEntityFeature: 7>,
     'translation_key': None,
-    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a',
+    'unique_id': '71afed1c-006d-4e48-b16e-e7f88f9fd638',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][cover.microwave-state]
+# name: test_all_entities[ikea_kadrilj][cover.kitchen_ikea_kadrilj_window_blind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Microwave',
-      'supported_features': <CoverEntityFeature: 3>,
+      'battery_level': 37,
+      'current_position': 32,
+      'device_class': 'shade',
+      'friendly_name': 'Kitchen IKEA KADRILJ Window blind',
+      'supported_features': <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.microwave',
+    'entity_id': 'cover.kitchen_ikea_kadrilj_window_blind',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'open',
   })
 # ---

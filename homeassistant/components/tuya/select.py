@@ -326,6 +326,10 @@ SELECTS["cz"] = SELECTS["kg"]
 # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
 SELECTS["pc"] = SELECTS["kg"]
 
+# Smart Camera - Low power consumption camera (duplicate of `sp`)
+# Undocumented, see https://github.com/home-assistant/core/issues/132844
+SELECTS["dghsxj"] = SELECTS["sp"]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

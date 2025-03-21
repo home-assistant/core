@@ -8,7 +8,9 @@ from pysmartthings.models import (
     DeviceResponse,
     DeviceStatus,
     LocationResponse,
+    RoomResponse,
     SceneResponse,
+    Subscription,
 )
 import pytest
 
@@ -17,7 +19,13 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.smartthings import CONF_INSTALLED_APP_ID
-from homeassistant.components.smartthings.const import CONF_LOCATION_ID, DOMAIN, SCOPES
+from homeassistant.components.smartthings.const import (
+    CONF_LOCATION_ID,
+    CONF_REFRESH_TOKEN,
+    DOMAIN,
+    SCOPES,
+)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -72,12 +80,19 @@ def mock_smartthings() -> Generator[AsyncMock]:
         client.get_locations.return_value = LocationResponse.from_json(
             load_fixture("locations.json", DOMAIN)
         ).items
+        client.get_rooms.return_value = RoomResponse.from_json(
+            load_fixture("rooms.json", DOMAIN)
+        ).items
+        client.create_subscription.return_value = Subscription.from_json(
+            load_fixture("subscription.json", DOMAIN)
+        )
         yield client
 
 
 @pytest.fixture(
     params=[
         "da_ac_rac_000001",
+        "da_ac_rac_100001",
         "da_ac_rac_01001",
         "multipurpose_sensor",
         "contact_sensor",
@@ -91,11 +106,16 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "da_ref_normal_000001",
         "vd_network_audio_002s",
         "iphone",
+        "da_sac_ehs_000001_sub",
         "da_wm_dw_000001",
         "da_wm_wd_000001",
+        "da_wm_wd_000001_1",
         "da_wm_wm_000001",
+        "da_wm_wm_000001_1",
         "da_rvc_normal_000001",
         "da_ks_microwave_0101x",
+        "da_ks_range_0101x",
+        "da_ks_oven_01061",
         "hue_color_temperature_bulb",
         "hue_rgbw_color_bulb",
         "c2c_shade",
@@ -107,9 +127,21 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "sensibo_airconditioner_1",
         "ecobee_sensor",
         "ecobee_thermostat",
+        "ecobee_thermostat_offline",
+        "fake_fan",
+        "generic_fan_3_speed",
+        "heatit_ztrm3_thermostat",
+        "heatit_zpushwall",
+        "generic_ef00_v1",
+        "bosch_radiator_thermostat_ii",
+        "im_speaker_ai_0001",
+        "abl_light_b_001",
+        "tplink_p110",
+        "ikea_kadrilj",
+        "aux_ac",
     ]
 )
-def fixture(
+def device_fixture(
     mock_smartthings: AsyncMock, request: pytest.FixtureRequest
 ) -> Generator[str]:
     """Return every device."""
@@ -117,13 +149,13 @@ def fixture(
 
 
 @pytest.fixture
-def devices(mock_smartthings: AsyncMock, fixture: str) -> Generator[AsyncMock]:
+def devices(mock_smartthings: AsyncMock, device_fixture: str) -> Generator[AsyncMock]:
     """Return a specific device."""
     mock_smartthings.get_devices.return_value = DeviceResponse.from_json(
-        load_fixture(f"devices/{fixture}.json", DOMAIN)
+        load_fixture(f"devices/{device_fixture}.json", DOMAIN)
     ).items
     mock_smartthings.get_device_status.return_value = DeviceStatus.from_json(
-        load_fixture(f"device_status/{fixture}.json", DOMAIN)
+        load_fixture(f"device_status/{device_fixture}.json", DOMAIN)
     ).components
     return mock_smartthings
 
@@ -134,7 +166,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="My home",
-        unique_id="5aaaa925-2be1-4e40-b257-e4ef59083324",
+        unique_id="397678e5-9995-4a39-9d9f-ae6ba310236c",
         data={
             "auth_implementation": DOMAIN,
             "token": {
@@ -149,4 +181,23 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
             CONF_INSTALLED_APP_ID: "123",
         },
         version=3,
+    )
+
+
+@pytest.fixture
+def mock_old_config_entry() -> MockConfigEntry:
+    """Mock the old config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="My home",
+        unique_id="appid123-2be1-4e40-b257-e4ef59083324_397678e5-9995-4a39-9d9f-ae6ba310236c",
+        data={
+            CONF_ACCESS_TOKEN: "mock-access-token",
+            CONF_REFRESH_TOKEN: "mock-refresh-token",
+            CONF_CLIENT_ID: "CLIENT_ID",
+            CONF_CLIENT_SECRET: "CLIENT_SECRET",
+            CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
+            CONF_INSTALLED_APP_ID: "123aa123-2be1-4e40-b257-e4ef59083324",
+        },
+        version=2,
     )

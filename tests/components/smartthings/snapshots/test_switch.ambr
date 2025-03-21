@@ -13,7 +13,7 @@
     'domain': 'switch',
     'entity_category': None,
     'entity_id': 'switch.2nd_floor_hallway',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': '2nd Floor Hallway',
+    'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -60,7 +60,7 @@
     'domain': 'switch',
     'entity_category': None,
     'entity_id': 'switch.microwave',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -71,7 +71,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Microwave',
+    'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -107,7 +107,7 @@
     'domain': 'switch',
     'entity_category': None,
     'entity_id': 'switch.robot_vacuum',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -118,7 +118,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Robot vacuum',
+    'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -140,6 +140,53 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_sac_ehs_000001_sub][switch.eco_heating_system-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.eco_heating_system',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub][switch.eco_heating_system-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eco Heating System',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.eco_heating_system',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_wm_dw_000001][switch.dishwasher-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -154,7 +201,7 @@
     'domain': 'switch',
     'entity_category': None,
     'entity_id': 'switch.dishwasher',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -165,7 +212,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Dishwasher',
+    'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -201,7 +248,7 @@
     'domain': 'switch',
     'entity_category': None,
     'entity_id': 'switch.dryer',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -212,7 +259,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Dryer',
+    'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -234,6 +281,53 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_wm_wd_000001_1][switch.seca_roupa-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.seca_roupa',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][switch.seca_roupa-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Seca-Roupa',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.seca_roupa',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_wm_wm_000001][switch.washer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -248,7 +342,7 @@
     'domain': 'switch',
     'entity_category': None,
     'entity_id': 'switch.washer',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -259,7 +353,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Washer',
+    'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -281,6 +375,100 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_wm_wm_000001_1][switch.washing_machine-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.washing_machine',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][switch.washing_machine-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washing Machine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.washing_machine',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[generic_ef00_v1][switch.thermostat_kuche-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.thermostat_kuche',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[generic_ef00_v1][switch.thermostat_kuche-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Thermostat Küche',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.thermostat_kuche',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[sensibo_airconditioner_1][switch.office-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -295,7 +483,7 @@
     'domain': 'switch',
     'entity_category': None,
     'entity_id': 'switch.office',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -306,7 +494,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Office',
+    'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -342,7 +530,7 @@
     'domain': 'switch',
     'entity_category': None,
     'entity_id': 'switch.arlo_beta_basestation',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -353,7 +541,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Arlo Beta Basestation',
+    'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -375,6 +563,53 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[tplink_p110][switch.spulmaschine-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.spulmaschine',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '6602696a-1e48-49e4-919f-69406f5b5da1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[tplink_p110][switch.spulmaschine-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Spülmaschine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.spulmaschine',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[vd_network_audio_002s][switch.soundbar_living-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -389,7 +624,7 @@
     'domain': 'switch',
     'entity_category': None,
     'entity_id': 'switch.soundbar_living',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -400,7 +635,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Soundbar Living',
+    'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -436,7 +671,7 @@
     'domain': 'switch',
     'entity_category': None,
     'entity_id': 'switch.tv_samsung_8_series_49',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -447,7 +682,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': '[TV] Samsung 8 Series (49)',
+    'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from ohme import ApiException, OhmeApiClient
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -36,6 +36,18 @@ NUMBER_DESCRIPTION = [
         native_max_value=100,
         native_step=1,
         native_unit_of_measurement=PERCENTAGE,
+    ),
+    OhmeNumberDescription(
+        key="preconditioning_duration",
+        translation_key="preconditioning_duration",
+        value_fn=lambda client: client.preconditioning,
+        set_fn=lambda client, value: client.async_set_target(
+            pre_condition_length=value
+        ),
+        native_min_value=0,
+        native_max_value=60,
+        native_step=5,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
 ]
 

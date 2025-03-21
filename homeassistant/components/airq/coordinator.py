@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from aioairq import AirQ
+from aioairq.core import AirQ, identify_warming_up_sensors
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
@@ -55,6 +55,9 @@ class AirQCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch the data from the device."""
         if "name" not in self.device_info:
+            _LOGGER.debug(
+                "'name' not found in AirQCoordinator.device_info, fetching from the device"
+            )
             info = await self.airq.fetch_device_info()
             self.device_info.update(
                 DeviceInfo(
@@ -64,7 +67,16 @@ class AirQCoordinator(DataUpdateCoordinator):
                     hw_version=info["hw_version"],
                 )
             )
-        return await self.airq.get_latest_data(  # type: ignore[no-any-return]
+            _LOGGER.debug(
+                "Updated AirQCoordinator.device_info for 'name' %s",
+                self.device_info.get("name"),
+            )
+        data: dict = await self.airq.get_latest_data(
             return_average=self.return_average,
             clip_negative_values=self.clip_negative,
         )
+        if warming_up_sensors := identify_warming_up_sensors(data):
+            _LOGGER.debug(
+                "Following sensors are still warming up: %s", warming_up_sensors
+            )
+        return data

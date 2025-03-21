@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, call
 
-from pysmartthings.models import Attribute, Capability, Command, Status
+from pysmartthings import Attribute, Capability, Command, Status
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -30,6 +30,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.smartthings.const import MAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -63,7 +64,7 @@ async def test_all_entities(
     snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.CLIMATE)
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_fan_mode(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -82,12 +83,12 @@ async def test_ac_set_fan_mode(
         "96a5ef74-5832-a84b-f1f7-ca799957065d",
         Capability.AIR_CONDITIONER_FAN_MODE,
         Command.SET_FAN_MODE,
-        "main",
+        MAIN,
         argument="auto",
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_hvac_mode_off(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -106,11 +107,11 @@ async def test_ac_set_hvac_mode_off(
         "96a5ef74-5832-a84b-f1f7-ca799957065d",
         Capability.SWITCH,
         Command.OFF,
-        "main",
+        MAIN,
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 @pytest.mark.parametrize(
     ("hvac_mode", "argument"),
     [
@@ -149,12 +150,12 @@ async def test_ac_set_hvac_mode(
         "96a5ef74-5832-a84b-f1f7-ca799957065d",
         Capability.AIR_CONDITIONER_MODE,
         Command.SET_AIR_CONDITIONER_MODE,
-        "main",
+        MAIN,
         argument=argument,
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_hvac_mode_turns_on(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -178,19 +179,19 @@ async def test_ac_set_hvac_mode_turns_on(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.SWITCH,
             Command.ON,
-            "main",
+            MAIN,
         ),
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.AIR_CONDITIONER_MODE,
             Command.SET_AIR_CONDITIONER_MODE,
-            "main",
+            MAIN,
             argument="auto",
         ),
     ]
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_hvac_mode_wind(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -217,12 +218,12 @@ async def test_ac_set_hvac_mode_wind(
         "96a5ef74-5832-a84b-f1f7-ca799957065d",
         Capability.AIR_CONDITIONER_MODE,
         Command.SET_AIR_CONDITIONER_MODE,
-        "main",
+        MAIN,
         argument="wind",
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_temperature(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -241,12 +242,12 @@ async def test_ac_set_temperature(
         "96a5ef74-5832-a84b-f1f7-ca799957065d",
         Capability.THERMOSTAT_COOLING_SETPOINT,
         Command.SET_COOLING_SETPOINT,
-        "main",
+        MAIN,
         argument=23,
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_temperature_and_hvac_mode_while_off(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -270,32 +271,32 @@ async def test_ac_set_temperature_and_hvac_mode_while_off(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.SWITCH,
             Command.ON,
-            "main",
+            MAIN,
         ),
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.THERMOSTAT_COOLING_SETPOINT,
             Command.SET_COOLING_SETPOINT,
-            "main",
+            MAIN,
             argument=23.0,
         ),
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.SWITCH,
             Command.ON,
-            "main",
+            MAIN,
         ),
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.AIR_CONDITIONER_MODE,
             Command.SET_AIR_CONDITIONER_MODE,
-            "main",
+            MAIN,
             argument="auto",
         ),
     ]
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_temperature_and_hvac_mode(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -320,20 +321,20 @@ async def test_ac_set_temperature_and_hvac_mode(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.THERMOSTAT_COOLING_SETPOINT,
             Command.SET_COOLING_SETPOINT,
-            "main",
+            MAIN,
             argument=23.0,
         ),
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.AIR_CONDITIONER_MODE,
             Command.SET_AIR_CONDITIONER_MODE,
-            "main",
+            MAIN,
             argument="auto",
         ),
     ]
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_temperature_and_hvac_mode_off(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -358,19 +359,19 @@ async def test_ac_set_temperature_and_hvac_mode_off(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.SWITCH,
             Command.OFF,
-            "main",
+            MAIN,
         ),
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.THERMOSTAT_COOLING_SETPOINT,
             Command.SET_COOLING_SETPOINT,
-            "main",
+            MAIN,
             argument=23.0,
         ),
     ]
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 @pytest.mark.parametrize(
     ("service", "command"),
     [
@@ -398,11 +399,11 @@ async def test_ac_toggle_power(
         "96a5ef74-5832-a84b-f1f7-ca799957065d",
         Capability.SWITCH,
         command,
-        "main",
+        MAIN,
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_swing_mode(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -427,12 +428,12 @@ async def test_ac_set_swing_mode(
         "96a5ef74-5832-a84b-f1f7-ca799957065d",
         Capability.FAN_OSCILLATION_MODE,
         Command.SET_FAN_OSCILLATION_MODE,
-        "main",
+        MAIN,
         argument="fixed",
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_preset_mode(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -451,12 +452,12 @@ async def test_ac_set_preset_mode(
         "96a5ef74-5832-a84b-f1f7-ca799957065d",
         Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
         Command.SET_AC_OPTIONAL_MODE,
-        "main",
+        MAIN,
         argument="windFree",
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_state_update(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -479,7 +480,7 @@ async def test_ac_state_update(
     assert hass.states.get("climate.ac_office_granit").state == HVACMode.HEAT
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 @pytest.mark.parametrize(
     (
         "capability",
@@ -582,7 +583,7 @@ async def test_ac_state_attributes_update(
     )
 
 
-@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+@pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
 async def test_thermostat_set_fan_mode(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -601,12 +602,12 @@ async def test_thermostat_set_fan_mode(
         "2894dc93-0f11-49cc-8a81-3a684cebebf6",
         Capability.THERMOSTAT_FAN_MODE,
         Command.SET_THERMOSTAT_FAN_MODE,
-        "main",
+        MAIN,
         argument="on",
     )
 
 
-@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+@pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
 async def test_thermostat_set_hvac_mode(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -625,12 +626,12 @@ async def test_thermostat_set_hvac_mode(
         "2894dc93-0f11-49cc-8a81-3a684cebebf6",
         Capability.THERMOSTAT_MODE,
         Command.SET_THERMOSTAT_MODE,
-        "main",
+        MAIN,
         argument="auto",
     )
 
 
-@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+@pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
 @pytest.mark.parametrize(
     ("state", "data", "calls"),
     [
@@ -642,14 +643,14 @@ async def test_thermostat_set_hvac_mode(
                     "2894dc93-0f11-49cc-8a81-3a684cebebf6",
                     Capability.THERMOSTAT_HEATING_SETPOINT,
                     Command.SET_HEATING_SETPOINT,
-                    "main",
+                    MAIN,
                     argument=59.0,
                 ),
                 call(
                     "2894dc93-0f11-49cc-8a81-3a684cebebf6",
                     Capability.THERMOSTAT_COOLING_SETPOINT,
                     Command.SET_COOLING_SETPOINT,
-                    "main",
+                    MAIN,
                     argument=73.4,
                 ),
             ],
@@ -662,7 +663,7 @@ async def test_thermostat_set_hvac_mode(
                     "2894dc93-0f11-49cc-8a81-3a684cebebf6",
                     Capability.THERMOSTAT_COOLING_SETPOINT,
                     Command.SET_COOLING_SETPOINT,
-                    "main",
+                    MAIN,
                     argument=59.0,
                 )
             ],
@@ -675,7 +676,7 @@ async def test_thermostat_set_hvac_mode(
                     "2894dc93-0f11-49cc-8a81-3a684cebebf6",
                     Capability.THERMOSTAT_HEATING_SETPOINT,
                     Command.SET_HEATING_SETPOINT,
-                    "main",
+                    MAIN,
                     argument=73.4,
                 )
             ],
@@ -688,14 +689,14 @@ async def test_thermostat_set_hvac_mode(
                     "2894dc93-0f11-49cc-8a81-3a684cebebf6",
                     Capability.THERMOSTAT_MODE,
                     Command.SET_THERMOSTAT_MODE,
-                    "main",
+                    MAIN,
                     argument="cool",
                 ),
                 call(
                     "2894dc93-0f11-49cc-8a81-3a684cebebf6",
                     Capability.THERMOSTAT_COOLING_SETPOINT,
                     Command.SET_COOLING_SETPOINT,
-                    "main",
+                    MAIN,
                     argument=73.4,
                 ),
             ],
@@ -725,14 +726,14 @@ async def test_thermostat_set_temperature(
     assert devices.execute_device_command.mock_calls == calls
 
 
-@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+@pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
 async def test_humidity(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test humidity extra state attribute."""
-    devices.get_device_status.return_value["main"][
+    devices.get_device_status.return_value[MAIN][
         Capability.RELATIVE_HUMIDITY_MEASUREMENT
     ] = {Attribute.HUMIDITY: Status(50)}
     await setup_integration(hass, mock_config_entry)
@@ -742,14 +743,14 @@ async def test_humidity(
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 50
 
 
-@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+@pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
 async def test_updating_humidity(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test updating humidity extra state attribute."""
-    devices.get_device_status.return_value["main"][
+    devices.get_device_status.return_value[MAIN][
         Capability.RELATIVE_HUMIDITY_MEASUREMENT
     ] = {Attribute.HUMIDITY: Status(50)}
     await setup_integration(hass, mock_config_entry)
@@ -770,7 +771,7 @@ async def test_updating_humidity(
     assert hass.states.get("climate.asd").attributes[ATTR_CURRENT_HUMIDITY] == 40
 
 
-@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+@pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
 @pytest.mark.parametrize(
     (
         "capability",

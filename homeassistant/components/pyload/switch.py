@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from pyloadapi.api import CannotConnect, InvalidAuth, PyLoadAPI
+from pyloadapi import CannotConnect, InvalidAuth, PyLoadAPI
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -21,6 +21,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import PyLoadConfigEntry, PyLoadData
 from .entity import BasePyLoadEntity
+
+PARALLEL_UPDATES = 1
 
 
 class PyLoadSwitch(StrEnum):

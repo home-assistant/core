@@ -2,11 +2,12 @@
 
 from unittest.mock import AsyncMock
 
-from pysmartthings.models import Attribute, Capability, Command
+from pysmartthings import Attribute, Capability, Command
 import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
+from homeassistant.components.smartthings.const import MAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -29,7 +30,7 @@ async def test_all_entities(
     snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.LOCK)
 
 
-@pytest.mark.parametrize("fixture", ["yale_push_button_deadbolt_lock"])
+@pytest.mark.parametrize("device_fixture", ["yale_push_button_deadbolt_lock"])
 @pytest.mark.parametrize(
     ("action", "command"),
     [
@@ -57,11 +58,11 @@ async def test_lock_unlock(
         "a9f587c5-5d8b-4273-8907-e7f609af5158",
         Capability.LOCK,
         command,
-        "main",
+        MAIN,
     )
 
 
-@pytest.mark.parametrize("fixture", ["yale_push_button_deadbolt_lock"])
+@pytest.mark.parametrize("device_fixture", ["yale_push_button_deadbolt_lock"])
 async def test_state_update(
     hass: HomeAssistant,
     devices: AsyncMock,

@@ -165,3 +165,25 @@ TEST_UNITS_OVERRIDE_SENSOR = Sensor(
     permissions={"read": True},
     model="Test",
 )
+TEST_NO_READINGS_SENSOR = Sensor(
+    name="Test",
+    device_id="1",
+    type="Test",
+    sensor_id="2",
+    sensor_field_names=["Temperature"],
+    location=Location(id="1", name="Test"),
+    data={"error": "no_readings"},
+    permissions={"read": True},
+    model="Test",
+)
+TEST_OTHER_ERROR_SENSOR = Sensor(
+    name="Test",
+    device_id="1",
+    type="Test",
+    sensor_id="2",
+    sensor_field_names=["Temperature"],
+    location=Location(id="1", name="Test"),
+    data={"error": "some_other_error"},
+    permissions={"read": True},
+    model="Test",
+)

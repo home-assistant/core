@@ -1,7 +1,7 @@
 {
   "domain": "smartthings",
   "name": "SmartThings",
-  "codeowners": [],
+  "codeowners": ["@joostlek"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "dhcp": [
@@ -29,5 +29,5 @@
   "documentation": "https://www.home-assistant.io/integrations/smartthings",
   "iot_class": "cloud_push",
   "loggers": ["pysmartthings"],
-  "requirements": ["pysmartthings==1.0.0"]
+  "requirements": ["pysmartthings==2.7.4"]
 }
