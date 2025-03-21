@@ -163,7 +163,7 @@
       'friendly_name': '.Front Door Open/Closed Sensor Firmware',
       'in_progress': False,
       'installed_version': '00000103',
-      'latest_version': '00000103',
+      'latest_version': '00000104',
       'release_summary': None,
       'release_url': None,
       'skipped_version': None,
@@ -176,7 +176,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[ikea_kadrilj][update.kitchen_ikea_kadrilj_window_blind_firmware-entry]
