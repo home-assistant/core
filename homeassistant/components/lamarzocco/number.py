@@ -144,9 +144,12 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
         set_value_fn=lambda machine, value, key: machine.set_prebrew_time(
             prebrew_off_time=value, key=key
         ),
-        native_value_fn=lambda config, key: config.prebrew_configuration[key].off_time,
+        native_value_fn=lambda config, key: config.prebrew_configuration[key][
+            0
+        ].off_time,
         available_fn=lambda device: len(device.config.prebrew_configuration) > 0
-        and device.config.prebrew_mode == PrebrewMode.PREBREW,
+        and device.config.prebrew_mode
+        in (PrebrewMode.PREBREW, PrebrewMode.PREBREW_ENABLED),
         supported_fn=lambda coordinator: coordinator.device.model
         != MachineModel.GS3_MP,
     ),
@@ -162,9 +165,12 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
         set_value_fn=lambda machine, value, key: machine.set_prebrew_time(
             prebrew_on_time=value, key=key
         ),
-        native_value_fn=lambda config, key: config.prebrew_configuration[key].off_time,
+        native_value_fn=lambda config, key: config.prebrew_configuration[key][
+            0
+        ].off_time,
         available_fn=lambda device: len(device.config.prebrew_configuration) > 0
-        and device.config.prebrew_mode == PrebrewMode.PREBREW,
+        and device.config.prebrew_mode
+        in (PrebrewMode.PREBREW, PrebrewMode.PREBREW_ENABLED),
         supported_fn=lambda coordinator: coordinator.device.model
         != MachineModel.GS3_MP,
     ),
@@ -180,8 +186,8 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
         set_value_fn=lambda machine, value, key: machine.set_preinfusion_time(
             preinfusion_time=value, key=key
         ),
-        native_value_fn=lambda config, key: config.prebrew_configuration[
-            key
+        native_value_fn=lambda config, key: config.prebrew_configuration[key][
+            1
         ].preinfusion_time,
         available_fn=lambda device: len(device.config.prebrew_configuration) > 0
         and device.config.prebrew_mode == PrebrewMode.PREINFUSION,

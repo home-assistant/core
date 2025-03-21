@@ -1,6 +1,7 @@
 """Fixtures for Stookwijzer integration tests."""
 
 from collections.abc import Generator
+from typing import Required, TypedDict
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -11,6 +12,14 @@ from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+
+class Forecast(TypedDict):
+    """Typed Stookwijzer forecast dict."""
+
+    datetime: Required[str]
+    advice: str | None
+    final: bool | None
 
 
 @pytest.fixture

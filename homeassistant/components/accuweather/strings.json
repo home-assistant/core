@@ -106,6 +106,15 @@
           "steady": "Steady",
           "rising": "Rising",
           "falling": "Falling"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "falling": "[%key:component::accuweather::entity::sensor::pressure_tendency::state::falling%]",
+              "rising": "[%key:component::accuweather::entity::sensor::pressure_tendency::state::rising%]",
+              "steady": "[%key:component::accuweather::entity::sensor::pressure_tendency::state::steady%]"
+            }
+          }
         }
       },
       "ragweed_pollen": {
@@ -218,6 +227,14 @@
       "wind_speed_night": {
         "name": "Wind speed night {forecast_day}"
       }
+    }
+  },
+  "exceptions": {
+    "current_conditions_update_error": {
+      "message": "An error occurred while retrieving weather current conditions data from the AccuWeather API: {error}"
+    },
+    "forecast_update_error": {
+      "message": "An error occurred while retrieving weather forecast data from the AccuWeather API: {error}"
     }
   },
   "system_health": {
