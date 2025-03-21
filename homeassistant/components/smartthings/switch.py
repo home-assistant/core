@@ -64,9 +64,7 @@ async def async_setup_entry(
     """Add switches for a config entry."""
     entry_data = entry.runtime_data
     entities: list[SmartThingsEntity] = [
-        SmartThingsSwitch(
-            entry_data.client, device, SWITCH, entry_data.rooms, Capability.SWITCH
-        )
+        SmartThingsSwitch(entry_data.client, device, SWITCH, Capability.SWITCH)
         for device in entry_data.devices.values()
         if Capability.SWITCH in device.status[MAIN]
         and not any(capability in device.status[MAIN] for capability in CAPABILITIES)
@@ -77,7 +75,6 @@ async def async_setup_entry(
             entry_data.client,
             device,
             description,
-            entry_data.rooms,
             Capability(capability),
         )
         for device in entry_data.devices.values()
@@ -98,11 +95,10 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         client: SmartThings,
         device: FullDevice,
         entity_description: SmartThingsSwitchEntityDescription,
-        rooms: dict[str, str],
         capability: Capability,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(client, device, rooms, {capability})
+        super().__init__(client, device, {capability})
         self.entity_description = entity_description
         self.switch_capability = capability
         self._attr_unique_id = device.device.device_id
