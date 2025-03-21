@@ -194,7 +194,6 @@ class ShellyBaseButton(
                 translation_placeholders={
                     "entity": self.entity_id,
                     "device": self.coordinator.name,
-                    "error": repr(err),
                 },
             ) from err
         except RpcCallError as err:
@@ -204,7 +203,6 @@ class ShellyBaseButton(
                 translation_placeholders={
                     "entity": self.entity_id,
                     "device": self.coordinator.name,
-                    "error": repr(err),
                 },
             ) from err
         except InvalidAuthError:

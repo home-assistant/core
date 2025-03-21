@@ -393,10 +393,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
-                translation_placeholders={
-                    "device": self.name,
-                    "error": repr(err),
-                },
+                translation_placeholders={"device": self.name},
             ) from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
@@ -485,10 +482,7 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
-                translation_placeholders={
-                    "device": self.name,
-                    "error": repr(err),
-                },
+                translation_placeholders={"device": self.name},
             ) from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
@@ -861,10 +855,7 @@ class ShellyRpcPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
-                translation_placeholders={
-                    "device": self.name,
-                    "error": repr(err),
-                },
+                translation_placeholders={"device": self.name},
             ) from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()

@@ -350,7 +350,6 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
                 translation_placeholders={
                     "entity": self.entity_id,
                     "device": self.coordinator.name,
-                    "error": repr(err),
                 },
             ) from err
         except InvalidAuthError:
@@ -416,7 +415,6 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
                 translation_placeholders={
                     "entity": self.entity_id,
                     "device": self.coordinator.name,
-                    "error": repr(err),
                 },
             ) from err
         except RpcCallError as err:
@@ -426,7 +424,6 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
                 translation_placeholders={
                     "entity": self.entity_id,
                     "device": self.coordinator.name,
-                    "error": repr(err),
                 },
             ) from err
         except InvalidAuthError:

@@ -208,10 +208,7 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="ota_update_connection_error",
-                translation_placeholders={
-                    "device": self.coordinator.name,
-                    "error": repr(err),
-                },
+                translation_placeholders={"device": self.coordinator.name},
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
@@ -327,10 +324,7 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="ota_update_connection_error",
-                translation_placeholders={
-                    "device": self.coordinator.name,
-                    "error": repr(err),
-                },
+                translation_placeholders={"device": self.coordinator.name},
             ) from err
         except RpcCallError as err:
             raise HomeAssistantError(
@@ -339,7 +333,6 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
                 translation_placeholders={
                     "entity": self.entity_id,
                     "device": self.coordinator.name,
-                    "error": repr(err),
                 },
             ) from err
         except InvalidAuthError:

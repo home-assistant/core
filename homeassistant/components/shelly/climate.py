@@ -331,7 +331,6 @@ class BlockSleepingClimate(
                 translation_placeholders={
                     "entity": self.entity_id,
                     "device": self.coordinator.name,
-                    "error": repr(err),
                 },
             ) from err
         except InvalidAuthError:

@@ -211,7 +211,7 @@
       "message": "Device communication error occurred for {device} device"
     },
     "device_communication_action_error": {
-      "message": "Device communication error occurred while calling the entity {entity} action for {device} device: {error}"
+      "message": "Device communication error occurred while calling the entity {entity} action for {device} device"
     },
     "device_not_found": {
       "message": "Device {device} not found while configuring device automation triggers"
@@ -223,16 +223,16 @@
       "message": "Invalid device automation trigger (type, subtype): {trigger}"
     },
     "ota_update_connection_error": {
-      "message": "Device communication error occurred while triggering OTA update for {device} device: {error}"
+      "message": "Device communication error occurred while triggering OTA update for {device} device"
     },
     "ota_update_rpc_error": {
-      "message": "RPC call error occurred while triggering OTA update for {device} device: {error}"
+      "message": "RPC call error occurred while triggering OTA update for {device} device"
     },
     "rpc_call_action_error": {
-      "message": "RPC call error occurred while calling the entity {entity} action for {device} device: {error}"
+      "message": "RPC call error occurred while calling the entity {entity} action for {device} device"
     },
     "update_error": {
-      "message": "An error occurred while retrieving data from {device} device: {error}"
+      "message": "An error occurred while retrieving data from {device} device"
     },
     "update_error_device_disconnected": {
       "message": "An error occurred while retrieving data from {device} device: device disconnected"
