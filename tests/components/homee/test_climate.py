@@ -4,7 +4,20 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.climate import ClimateEntityFeature, HVACMode
+from homeassistant.components.climate import (
+    PRESET_BOOST,
+    PRESET_ECO,
+    PRESET_NONE,
+    SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    ClimateEntityFeature,
+    HVACMode,
+)
+from homeassistant.components.homee.const import PRESET_MANUAL
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from . import build_mock_node, setup_integration
@@ -87,3 +100,76 @@ async def test_climate_preset_modes(
 
     attributes = hass.states.get("climate.test_thermostat_4").attributes
     assert attributes["preset_modes"] == ["boost", "eco", "manual", "none"]
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "expected"),
+    [
+        (
+            SERVICE_TURN_ON,
+            {},
+            (4, 3, 1),
+        ),
+        (
+            SERVICE_TURN_OFF,
+            {},
+            (4, 3, 0),
+        ),
+        (
+            SERVICE_SET_HVAC_MODE,
+            {"hvac_mode": "heat"},
+            (4, 3, 1),
+        ),
+        (
+            SERVICE_SET_HVAC_MODE,
+            {"hvac_mode": "off"},
+            (4, 3, 0),
+        ),
+        (
+            SERVICE_SET_TEMPERATURE,
+            {"temperature": 20},
+            (4, 1, 20),
+        ),
+        (
+            SERVICE_SET_PRESET_MODE,
+            {"preset_mode": PRESET_NONE},
+            (4, 3, 1),
+        ),
+        (
+            SERVICE_SET_PRESET_MODE,
+            {"preset_mode": PRESET_ECO},
+            (4, 3, 2),
+        ),
+        (
+            SERVICE_SET_PRESET_MODE,
+            {"preset_mode": PRESET_BOOST},
+            (4, 3, 3),
+        ),
+        (
+            SERVICE_SET_PRESET_MODE,
+            {"preset_mode": PRESET_MANUAL},
+            (4, 3, 4),
+        ),
+    ],
+)
+async def test_climate_services(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: MagicMock,
+    service: str,
+    service_data: dict,
+    expected: tuple[int, int, int],
+) -> None:
+    """Test available services of climate entities."""
+    await setup_mock_climate(
+        hass, mock_config_entry, mock_homee, "thermostat_with_preset.json"
+    )
+
+    await hass.services.async_call(
+        "climate",
+        service,
+        {ATTR_ENTITY_ID: "climate.test_thermostat_4", **service_data},
+        blocking=True,
+    )
+
+    mock_homee.set_value.assert_called_once_with(*expected)
