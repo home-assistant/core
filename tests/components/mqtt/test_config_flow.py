@@ -2690,6 +2690,7 @@ async def test_migrate_of_incompatible_config_entry(
             {
                 "state_topic": "test-topic",
                 "value_template": "{{ value_json.value }}",
+                "advanced_settings": {"expire_after": 30},
                 "qos": 1,
             },
             (

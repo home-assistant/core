@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
-from copy import deepcopy
+from copy import copy, deepcopy
 from dataclasses import dataclass
 from enum import IntEnum
 import logging
@@ -65,7 +65,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, SectionConfig, section
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.json import json_dumps
@@ -233,7 +233,6 @@ KEY_UPLOAD_SELECTOR = FileSelector(
 )
 
 # Subentry selectors
-RESET_IF_EMPTY = {CONF_OPTIONS}
 SUBENTRY_PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 SUBENTRY_PLATFORM_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -242,6 +241,7 @@ SUBENTRY_PLATFORM_SELECTOR = SelectSelector(
         translation_key=CONF_PLATFORM,
     )
 )
+RESET_IF_EMPTY = {CONF_OPTIONS}
 
 TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
 
@@ -301,6 +301,7 @@ class PlatformField:
     exclude_from_reconfig: bool = False
     conditions: tuple[dict[str, Any], ...] | None = None
     custom_filtering: bool = False
+    section: str | None = None
 
 
 @callback
@@ -340,7 +341,10 @@ PLATFORM_ENTITY_FIELDS = {
             unit_of_measurement_selector, False, str, custom_filtering=True
         ),
         CONF_SUGGESTED_DISPLAY_PRECISION: PlatformField(
-            SUGGESTED_DISPLAY_PRECISION_SELECTOR, False, cv.positive_int
+            SUGGESTED_DISPLAY_PRECISION_SELECTOR,
+            False,
+            cv.positive_int,
+            section="advanced_settings",
         ),
         CONF_OPTIONS: PlatformField(OPTIONS_SELECTOR, False, cv.ensure_list),
     },
@@ -369,7 +373,9 @@ PLATFORM_MQTT_FIELDS = {
             "invalid_template",
             conditions=({CONF_STATE_CLASS: "total"},),
         ),
-        CONF_EXPIRE_AFTER: PlatformField(EXIRE_AFTER_SELECTOR, False, cv.positive_int),
+        CONF_EXPIRE_AFTER: PlatformField(
+            EXIRE_AFTER_SELECTOR, False, cv.positive_int, section="advanced_settings"
+        ),
     },
 }
 ENTITY_CONFIG_VALIDATOR: dict[
@@ -447,9 +453,20 @@ def validate_user_input(
     config_validator: Callable[[dict[str, Any], dict[str, str]], dict[str, str]]
     | None = None,
     component_data: dict[str, Any] | None = None,
-) -> None:
+) -> dict[str, Any]:
     """Validate user input."""
-    for field, value in user_input.items():
+    # Merge sections
+    merged_user_input: dict[str, Any] = {}
+    for key, value in user_input.items():
+        # Omit empty lists that are not allowed to be empty
+        if key in RESET_IF_EMPTY and not value:
+            continue
+        if isinstance(value, dict):
+            merged_user_input.update(value)
+        else:
+            merged_user_input[key] = value
+
+    for field, value in merged_user_input.items():
         validator = data_schema_fields[field].validator
         try:
             validator(value)
@@ -457,10 +474,12 @@ def validate_user_input(
             errors[field] = data_schema_fields[field].error or "invalid_input"
 
     if config_validator is not None:
-        config = user_input
+        config = merged_user_input
         if component_data is not None:
             config |= component_data
         config_validator(config, errors)
+
+    return merged_user_input
 
 
 @callback
@@ -473,21 +492,25 @@ def data_schema_from_fields(
     """Generate custom data schema from platform fields."""
 
     def _check_conditions(
-        conditions: tuple[dict[str, Any], ...] | None,
+        platform_field: PlatformField,
     ) -> bool:
         """Only include field if one of conditions match, or no conditions are set."""
-        if conditions is None or component is None:
+        if platform_field.conditions is None or component is None:
             return True
         return any(
             all(component.get(key) == value for key, value in condition.items())
-            for condition in conditions
+            for condition in platform_field.conditions
         )
 
     user_data = component
     if user_data is not None and user_input is not None:
         user_data |= user_input
-    data_schema = vol.Schema(
-        {
+    sections: dict[str | None, None] = {
+        field_details.section: None for field_details in data_schema_fields.values()
+    }
+    data_schema: dict[Any, Any] = {}
+    for schema_section in sections:
+        data_schema_element = {
             vol.Required(field_name, default=field_details.default)
             if field_details.required
             else vol.Optional(
@@ -496,17 +519,29 @@ def data_schema_from_fields(
             if field_details.custom_filtering
             else field_details.selector
             for field_name, field_details in data_schema_fields.items()
-            if (not field_details.exclude_from_reconfig or not reconfig)
-            and _check_conditions(field_details.conditions)
+            if field_details.section == schema_section
+            and (not field_details.exclude_from_reconfig or not reconfig)
+            and _check_conditions(field_details)
         }
-    )
+        collapsed = (
+            bool(set(data_schema_element) - set(user_data))  # type: ignore[arg-type]
+            if user_data is not None
+            else True
+        )
+        if schema_section is None:
+            data_schema.update(data_schema_element)
+            continue
+        data_schema[vol.Optional(schema_section)] = section(
+            vol.Schema(data_schema_element), SectionConfig({"collapsed": collapsed})
+        )
+
     # Reset all fields from the component not in the schema
     if component:
-        filtered_fields = set(data_schema_fields) - set(data_schema.schema)
+        filtered_fields = set(data_schema_fields) - set(data_schema)
         for field in filtered_fields:
             if field in component:
                 del component[field]
-    return data_schema
+    return vol.Schema(data_schema)
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -1047,20 +1082,6 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         component_data.update(user_input)
 
     @callback
-    def reset_if_empty(self, user_input: dict[str, Any]) -> None:
-        """Reset fields in componment config that are not in the user_input."""
-        if TYPE_CHECKING:
-            assert self._component_id is not None
-        for field in [
-            form_field
-            for form_field in user_input
-            if form_field in RESET_IF_EMPTY
-            and form_field in RESET_IF_EMPTY
-            and not user_input[form_field]
-        ]:
-            user_input.pop(field)
-
-    @callback
     def generate_names(self) -> tuple[str, str]:
         """Generate the device and full entity name."""
         if TYPE_CHECKING:
@@ -1073,6 +1094,45 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         else:
             full_entity_name = device_name
         return device_name, full_entity_name
+
+    @callback
+    def add_suggested_values_from_component_data_to_schema(
+        self, data_schema: vol.Schema, data_schema_fields: dict[str, PlatformField]
+    ) -> vol.Schema:
+        """Add suggestions from component data to data schema."""
+        if TYPE_CHECKING:
+            assert self._component_id is not None
+
+        def _apply_suggested_value(
+            field: vol.Marker, suggested_value: Any
+        ) -> vol.Marker:
+            new_marker = copy(field)
+            new_marker.description = {"suggested_value": suggested_value}
+            return new_marker
+
+        component = self._subentry_data["components"][self._component_id]
+        # Copy schema and apply normal user input
+        schema: dict[vol.Marker, Any] = {
+            _apply_suggested_value(field, component.get(field))
+            if not isinstance(value, section)
+            else field: value
+            for field, value in data_schema.schema.items()
+        }
+        # Apply section user input
+        for value in schema.values():
+            if not isinstance(value, section):
+                continue
+            data_section_schema = value.schema.schema
+            value.schema = vol.Schema(
+                {
+                    _apply_suggested_value(
+                        section_field, component.get(section_field)
+                    ): section_field_selector
+                    for section_field, section_field_selector in data_section_schema.items()
+                }
+            )
+
+        return vol.Schema(schema)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -1130,17 +1190,19 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             entity_name_label = f" ({name})" if name is not None else ""
         data_schema = data_schema_from_fields(data_schema_fields, reconfig=reconfig)
         if user_input is not None:
-            validate_user_input(user_input, data_schema_fields, errors)
+            merged_user_input = validate_user_input(
+                user_input, data_schema_fields, errors
+            )
             if not errors:
                 if self._component_id is None:
                     self._component_id = uuid4().hex
                 self._subentry_data["components"].setdefault(self._component_id, {})
-                self.update_component_fields(data_schema, user_input)
+                self.update_component_fields(data_schema, merged_user_input)
                 return await self.async_step_entity_platform_config()
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
         elif self.source == SOURCE_RECONFIGURE and self._component_id is not None:
-            data_schema = self.add_suggested_values_to_schema(
-                data_schema, self._subentry_data["components"][self._component_id]
+            data_schema = self.add_suggested_values_from_component_data_to_schema(
+                data_schema, data_schema_fields
             )
         device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
         return self.async_show_form(
@@ -1225,21 +1287,20 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             return await self.async_step_mqtt_platform_config()
         if user_input is not None:
             # Test entity fields against the validator
-            self.reset_if_empty(user_input)
-            validate_user_input(
+            merged_user_input = validate_user_input(
                 user_input,
                 data_schema_fields,
                 errors,
                 ENTITY_CONFIG_VALIDATOR[platform],
             )
             if not errors:
-                self.update_component_fields(data_schema, user_input)
+                self.update_component_fields(data_schema, merged_user_input)
                 return await self.async_step_mqtt_platform_config()
 
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
         else:
-            data_schema = self.add_suggested_values_to_schema(
-                data_schema, self._subentry_data["components"][self._component_id]
+            data_schema = self.add_suggested_values_from_component_data_to_schema(
+                data_schema, data_schema_fields
             )
 
         device_name, full_entity_name = self.generate_names()
@@ -1275,8 +1336,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         )
         if user_input is not None:
             # Test entity fields against the validator
-            self.reset_if_empty(user_input)
-            validate_user_input(
+            merged_user_input = validate_user_input(
                 user_input,
                 data_schema_fields,
                 errors,
@@ -1284,7 +1344,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 self._subentry_data["components"][self._component_id],
             )
             if not errors:
-                self.update_component_fields(data_schema, user_input)
+                self.update_component_fields(data_schema, merged_user_input)
                 self._component_id = None
                 if self.source == SOURCE_RECONFIGURE:
                     return await self.async_step_summary_menu()
@@ -1292,8 +1352,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
 
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
         else:
-            data_schema = self.add_suggested_values_to_schema(
-                data_schema, self._subentry_data["components"][self._component_id]
+            data_schema = self.add_suggested_values_from_component_data_to_schema(
+                data_schema, data_schema_fields
             )
         device_name, full_entity_name = self.generate_names()
         return self.async_show_form(

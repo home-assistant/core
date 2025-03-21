@@ -105,6 +105,7 @@ MOCK_SUBENTRY_SENSOR_COMPONENT = {
         "qos": 1,
         "state_topic": "test-topic",
         "options": ["low", "medium", "high"],
+        "expire_after": 30,
         "value_template": "{{ value_json.value }}",
         "entity_picture": "https://example.com/e9261f6feed443e7b7d5f3fbe2a47412",
     },
