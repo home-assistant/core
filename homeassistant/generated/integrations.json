@@ -4426,6 +4426,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "ogemray": {
+      "name": "Ogemray",
+      "integration_type": "virtual",
+      "supported_by": "shelly"
+    },
     "ohmconnect": {
       "name": "OhmConnect",
       "integration_type": "hub",
@@ -5259,6 +5264,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "remote_calendar": {
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "renault": {
       "name": "Renault",
@@ -7685,6 +7695,7 @@
     "plant",
     "proximity",
     "random",
+    "remote_calendar",
     "rpi_power",
     "schedule",
     "season",

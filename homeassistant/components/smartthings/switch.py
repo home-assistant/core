@@ -37,9 +37,7 @@ async def async_setup_entry(
     """Add switches for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsSwitch(
-            entry_data.client, device, entry_data.rooms, {Capability.SWITCH}
-        )
+        SmartThingsSwitch(entry_data.client, device, {Capability.SWITCH})
         for device in entry_data.devices.values()
         if Capability.SWITCH in device.status[MAIN]
         and not any(capability in device.status[MAIN] for capability in CAPABILITIES)

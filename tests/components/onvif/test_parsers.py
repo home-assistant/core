@@ -5,6 +5,7 @@ import os
 
 import onvif
 import onvif.settings
+import pytest
 from zeep import Client
 from zeep.transports import Transport
 
@@ -732,25 +733,24 @@ async def test_tapo_intrusion(hass: HomeAssistant) -> None:
 
 async def test_tapo_missing_attributes(hass: HomeAssistant) -> None:
     """Tests async_parse_tplink_detector with missing fields."""
-    event = await get_event(
-        {
-            "Message": {
-                "_value_1": {
-                    "Data": {
-                        "ElementItem": [],
-                        "Extension": None,
-                        "SimpleItem": [{"Name": "IsPeople", "Value": "true"}],
-                        "_attr_1": None,
-                    },
-                }
-            },
-            "Topic": {
-                "_value_1": "tns1:RuleEngine/PeopleDetector/People",
-            },
-        }
-    )
-
-    assert event is None
+    with pytest.raises(AttributeError, match="SimpleItem"):
+        await get_event(
+            {
+                "Message": {
+                    "_value_1": {
+                        "Data": {
+                            "ElementItem": [],
+                            "Extension": None,
+                            "SimpleItem": [{"Name": "IsPeople", "Value": "true"}],
+                            "_attr_1": None,
+                        },
+                    }
+                },
+                "Topic": {
+                    "_value_1": "tns1:RuleEngine/PeopleDetector/People",
+                },
+            }
+        )
 
 
 async def test_tapo_unknown_type(hass: HomeAssistant) -> None:
@@ -789,3 +789,93 @@ async def test_tapo_unknown_type(hass: HomeAssistant) -> None:
     )
 
     assert event is None
+
+
+async def test_reolink_package(hass: HomeAssistant) -> None:
+    """Tests reolink package event."""
+    event = await get_event(
+        {
+            "SubscriptionReference": None,
+            "Topic": {
+                "_value_1": "tns1:RuleEngine/MyRuleDetector/Package",
+                "Dialect": "http://www.onvif.org/ver10/tev/topicExpression/ConcreteSet",
+                "_attr_1": {},
+            },
+            "ProducerReference": None,
+            "Message": {
+                "_value_1": {
+                    "Source": {
+                        "SimpleItem": [{"Name": "Source", "Value": "000"}],
+                        "ElementItem": [],
+                        "Extension": None,
+                        "_attr_1": None,
+                    },
+                    "Key": None,
+                    "Data": {
+                        "SimpleItem": [{"Name": "State", "Value": "true"}],
+                        "ElementItem": [],
+                        "Extension": None,
+                        "_attr_1": None,
+                    },
+                    "Extension": None,
+                    "UtcTime": datetime.datetime(
+                        2025, 3, 12, 9, 54, 27, tzinfo=datetime.UTC
+                    ),
+                    "PropertyOperation": "Initialized",
+                    "_attr_1": {},
+                }
+            },
+        }
+    )
+
+    assert event is not None
+    assert event.name == "Package Detection"
+    assert event.platform == "binary_sensor"
+    assert event.device_class == "occupancy"
+    assert event.value
+    assert event.uid == (f"{TEST_UID}_tns1:RuleEngine/MyRuleDetector/Package_000")
+
+
+async def test_hikvision_alarm(hass: HomeAssistant) -> None:
+    """Tests hikvision camera alarm event."""
+    event = await get_event(
+        {
+            "SubscriptionReference": None,
+            "Topic": {
+                "_value_1": "tns1:Device/Trigger/tnshik:AlarmIn",
+                "Dialect": "http://www.onvif.org/ver10/tev/topicExpression/ConcreteSet",
+                "_attr_1": {},
+            },
+            "ProducerReference": None,
+            "Message": {
+                "_value_1": {
+                    "Source": {
+                        "SimpleItem": [{"Name": "AlarmInToken", "Value": "AlarmIn_1"}],
+                        "ElementItem": [],
+                        "Extension": None,
+                        "_attr_1": None,
+                    },
+                    "Key": None,
+                    "Data": {
+                        "SimpleItem": [{"Name": "State", "Value": "true"}],
+                        "ElementItem": [],
+                        "Extension": None,
+                        "_attr_1": None,
+                    },
+                    "Extension": None,
+                    "UtcTime": datetime.datetime(
+                        2025, 3, 13, 22, 57, 26, tzinfo=datetime.UTC
+                    ),
+                    "PropertyOperation": "Initialized",
+                    "_attr_1": {},
+                }
+            },
+        }
+    )
+
+    assert event is not None
+    assert event.name == "Motion Alarm"
+    assert event.platform == "binary_sensor"
+    assert event.device_class == "motion"
+    assert event.value
+    assert event.uid == (f"{TEST_UID}_tns1:Device/Trigger/tnshik:AlarmIn_AlarmIn_1")
