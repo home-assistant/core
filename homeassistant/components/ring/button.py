@@ -6,7 +6,7 @@ from ring_doorbell import RingOther
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
@@ -24,7 +24,7 @@ BUTTON_DESCRIPTION = ButtonEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RingConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the buttons for the Ring devices."""
     ring_data = entry.runtime_data

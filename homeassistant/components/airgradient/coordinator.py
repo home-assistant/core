@@ -4,18 +4,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import TYPE_CHECKING
 
 from airgradient import AirGradientClient, AirGradientError, Config, Measures
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
 
-if TYPE_CHECKING:
-    from . import AirGradientConfigEntry
+type AirGradientConfigEntry = ConfigEntry[AirGradientCoordinator]
 
 
 @dataclass
@@ -32,11 +31,17 @@ class AirGradientCoordinator(DataUpdateCoordinator[AirGradientData]):
     config_entry: AirGradientConfigEntry
     _current_version: str
 
-    def __init__(self, hass: HomeAssistant, client: AirGradientClient) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: AirGradientConfigEntry,
+        client: AirGradientClient,
+    ) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=f"AirGradient {client.host}",
             update_interval=timedelta(minutes=1),
         )

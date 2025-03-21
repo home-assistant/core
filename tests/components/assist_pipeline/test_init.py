@@ -1,11 +1,12 @@
 """Test Voice Assistant init."""
 
 import asyncio
+from collections.abc import Generator
 from dataclasses import asdict
 import itertools as it
 from pathlib import Path
 import tempfile
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, Mock, patch
 import wave
 
 import hass_nabucasa
@@ -26,7 +27,7 @@ from homeassistant.components.assist_pipeline.const import (
 )
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import intent
+from homeassistant.helpers import chat_session, intent
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -39,6 +40,22 @@ from .conftest import (
 )
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
+
+
+@pytest.fixture(autouse=True)
+def mock_chat_session_id() -> Generator[Mock]:
+    """Mock the conversation ID of chat sessions."""
+    with patch(
+        "homeassistant.helpers.chat_session.ulid_now", return_value="mock-ulid"
+    ) as mock_ulid_now:
+        yield mock_ulid_now
+
+
+@pytest.fixture(autouse=True)
+def mock_tts_token() -> Generator[None]:
+    """Mock the TTS token for URLs."""
+    with patch("secrets.token_urlsafe", return_value="mocked-token"):
+        yield
 
 
 def process_events(events: list[assist_pipeline.PipelineEvent]) -> list[dict]:
@@ -666,6 +683,7 @@ async def test_wake_word_detection_aborted(
     mock_wake_word_provider_entity: MockWakeWordEntity,
     init_components,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
+    mock_chat_session: chat_session.ChatSession,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test creating a pipeline from an audio stream with wake word."""
@@ -684,7 +702,7 @@ async def test_wake_word_detection_aborted(
     pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
-        conversation_id=None,
+        session=mock_chat_session,
         device_id=None,
         stt_metadata=stt.SpeechMetadata(
             language="",
@@ -757,6 +775,7 @@ async def test_tts_audio_output(
     mock_tts_provider: MockTTSProvider,
     init_components,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
+    mock_chat_session: chat_session.ChatSession,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test using tts_audio_output with wav sets options correctly."""
@@ -771,7 +790,7 @@ async def test_tts_audio_output(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         tts_input="This is a test.",
-        conversation_id=None,
+        session=mock_chat_session,
         device_id=None,
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
@@ -786,10 +805,16 @@ async def test_tts_audio_output(
     await pipeline_input.validate()
 
     # Verify TTS audio settings
-    assert pipeline_input.run.tts_options is not None
-    assert pipeline_input.run.tts_options.get(tts.ATTR_PREFERRED_FORMAT) == "wav"
-    assert pipeline_input.run.tts_options.get(tts.ATTR_PREFERRED_SAMPLE_RATE) == 16000
-    assert pipeline_input.run.tts_options.get(tts.ATTR_PREFERRED_SAMPLE_CHANNELS) == 1
+    assert pipeline_input.run.tts_stream.options is not None
+    assert pipeline_input.run.tts_stream.options.get(tts.ATTR_PREFERRED_FORMAT) == "wav"
+    assert (
+        pipeline_input.run.tts_stream.options.get(tts.ATTR_PREFERRED_SAMPLE_RATE)
+        == 16000
+    )
+    assert (
+        pipeline_input.run.tts_stream.options.get(tts.ATTR_PREFERRED_SAMPLE_CHANNELS)
+        == 1
+    )
 
     with patch.object(mock_tts_provider, "get_tts_audio") as mock_get_tts_audio:
         await pipeline_input.execute()
@@ -798,9 +823,7 @@ async def test_tts_audio_output(
             if event.type == assist_pipeline.PipelineEventType.TTS_END:
                 # We must fetch the media URL to trigger the TTS
                 assert event.data
-                media_id = event.data["tts_output"]["media_id"]
-                resolved = await media_source.async_resolve_media(hass, media_id, None)
-                await client.get(resolved.url)
+                await client.get(event.data["tts_output"]["url"])
 
         # Ensure that no unsupported options were passed in
         assert mock_get_tts_audio.called
@@ -814,6 +837,7 @@ async def test_tts_wav_preferred_format(
     hass_client: ClientSessionGenerator,
     mock_tts_provider: MockTTSProvider,
     init_components,
+    mock_chat_session: chat_session.ChatSession,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
 ) -> None:
     """Test that preferred format options are given to the TTS system if supported."""
@@ -828,7 +852,7 @@ async def test_tts_wav_preferred_format(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         tts_input="This is a test.",
-        conversation_id=None,
+        session=mock_chat_session,
         device_id=None,
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
@@ -863,9 +887,7 @@ async def test_tts_wav_preferred_format(
             if event.type == assist_pipeline.PipelineEventType.TTS_END:
                 # We must fetch the media URL to trigger the TTS
                 assert event.data
-                media_id = event.data["tts_output"]["media_id"]
-                resolved = await media_source.async_resolve_media(hass, media_id, None)
-                await client.get(resolved.url)
+                await client.get(event.data["tts_output"]["url"])
 
         assert mock_get_tts_audio.called
         options = mock_get_tts_audio.call_args_list[0].kwargs["options"]
@@ -882,6 +904,7 @@ async def test_tts_dict_preferred_format(
     hass_client: ClientSessionGenerator,
     mock_tts_provider: MockTTSProvider,
     init_components,
+    mock_chat_session: chat_session.ChatSession,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
 ) -> None:
     """Test that preferred format options are given to the TTS system if supported."""
@@ -896,7 +919,7 @@ async def test_tts_dict_preferred_format(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         tts_input="This is a test.",
-        conversation_id=None,
+        session=mock_chat_session,
         device_id=None,
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
@@ -936,9 +959,7 @@ async def test_tts_dict_preferred_format(
             if event.type == assist_pipeline.PipelineEventType.TTS_END:
                 # We must fetch the media URL to trigger the TTS
                 assert event.data
-                media_id = event.data["tts_output"]["media_id"]
-                resolved = await media_source.async_resolve_media(hass, media_id, None)
-                await client.get(resolved.url)
+                await client.get(event.data["tts_output"]["url"])
 
         assert mock_get_tts_audio.called
         options = mock_get_tts_audio.call_args_list[0].kwargs["options"]
@@ -953,6 +974,7 @@ async def test_tts_dict_preferred_format(
 async def test_sentence_trigger_overrides_conversation_agent(
     hass: HomeAssistant,
     init_components,
+    mock_chat_session: chat_session.ChatSession,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
 ) -> None:
     """Test that sentence triggers are checked before a non-default conversation agent."""
@@ -982,6 +1004,7 @@ async def test_sentence_trigger_overrides_conversation_agent(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         intent_input="test trigger sentence",
+        session=mock_chat_session,
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
             context=Context(),
@@ -1029,6 +1052,7 @@ async def test_sentence_trigger_overrides_conversation_agent(
 async def test_prefer_local_intents(
     hass: HomeAssistant,
     init_components,
+    mock_chat_session: chat_session.ChatSession,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
 ) -> None:
     """Test that the default agent is checked first when local intents are preferred."""
@@ -1059,6 +1083,7 @@ async def test_prefer_local_intents(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         intent_input="I'd like to order a stout please",
+        session=mock_chat_session,
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
             context=Context(),
@@ -1102,10 +1127,150 @@ async def test_prefer_local_intents(
         )
 
 
+async def test_intent_continue_conversation(
+    hass: HomeAssistant,
+    init_components,
+    mock_chat_session: chat_session.ChatSession,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+) -> None:
+    """Test that a conversation agent flagging continue conversation gets response."""
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    # Fake a test agent and prefer local intents
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+    await assist_pipeline.pipeline.async_update_pipeline(
+        hass, pipeline, conversation_engine="test-agent"
+    )
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        intent_input="Set a timer",
+        session=mock_chat_session,
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.INTENT,
+            end_stage=assist_pipeline.PipelineStage.INTENT,
+            event_callback=events.append,
+        ),
+    )
+
+    # Ensure prepare succeeds
+    with patch(
+        "homeassistant.components.assist_pipeline.pipeline.conversation.async_get_agent_info",
+        return_value=conversation.AgentInfo(id="test-agent", name="Test Agent"),
+    ):
+        await pipeline_input.validate()
+
+    response = intent.IntentResponse("en")
+    response.async_set_speech("For how long?")
+
+    with patch(
+        "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse",
+        return_value=conversation.ConversationResult(
+            response=response,
+            conversation_id=mock_chat_session.conversation_id,
+            continue_conversation=True,
+        ),
+    ) as mock_async_converse:
+        await pipeline_input.execute()
+
+        mock_async_converse.assert_called()
+
+    results = [
+        event.data
+        for event in events
+        if event.type
+        in (
+            assist_pipeline.PipelineEventType.INTENT_START,
+            assist_pipeline.PipelineEventType.INTENT_END,
+        )
+    ]
+    assert results[1]["intent_output"]["continue_conversation"] is True
+
+    # Change conversation agent to default one and register sentence trigger that should not be called
+    await assist_pipeline.pipeline.async_update_pipeline(
+        hass, pipeline, conversation_engine=None
+    )
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["Hello"],
+                },
+                "action": {
+                    "set_conversation_response": "test trigger response",
+                },
+            }
+        },
+    )
+
+    # Because we did continue conversation, it should respond to the test agent again.
+    events.clear()
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        intent_input="Hello",
+        session=mock_chat_session,
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.INTENT,
+            end_stage=assist_pipeline.PipelineStage.INTENT,
+            event_callback=events.append,
+        ),
+    )
+
+    # Ensure prepare succeeds
+    with patch(
+        "homeassistant.components.assist_pipeline.pipeline.conversation.async_get_agent_info",
+        return_value=conversation.AgentInfo(id="test-agent", name="Test Agent"),
+    ) as mock_prepare:
+        await pipeline_input.validate()
+
+    # It requested test agent even if that was not default agent.
+    assert mock_prepare.mock_calls[0][1][1] == "test-agent"
+
+    response = intent.IntentResponse("en")
+    response.async_set_speech("Timer set for 20 minutes")
+
+    with patch(
+        "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse",
+        return_value=conversation.ConversationResult(
+            response=response,
+            conversation_id=mock_chat_session.conversation_id,
+        ),
+    ) as mock_async_converse:
+        await pipeline_input.execute()
+
+        mock_async_converse.assert_called()
+
+    # Snapshot will show it was still handled by the test agent and not default agent
+    results = [
+        event.data
+        for event in events
+        if event.type
+        in (
+            assist_pipeline.PipelineEventType.INTENT_START,
+            assist_pipeline.PipelineEventType.INTENT_END,
+        )
+    ]
+    assert results[0]["engine"] == "test-agent"
+    assert results[1]["intent_output"]["continue_conversation"] is False
+
+
 async def test_stt_language_used_instead_of_conversation_language(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     init_components,
+    mock_chat_session: chat_session.ChatSession,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that the STT language is used first when the conversation language is '*' (all languages)."""
@@ -1136,6 +1301,7 @@ async def test_stt_language_used_instead_of_conversation_language(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         intent_input="test input",
+        session=mock_chat_session,
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
             context=Context(),
@@ -1180,6 +1346,7 @@ async def test_tts_language_used_instead_of_conversation_language(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     init_components,
+    mock_chat_session: chat_session.ChatSession,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that the TTS language is used after STT when the conversation language is '*' (all languages)."""
@@ -1210,6 +1377,7 @@ async def test_tts_language_used_instead_of_conversation_language(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         intent_input="test input",
+        session=mock_chat_session,
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
             context=Context(),
@@ -1254,6 +1422,7 @@ async def test_pipeline_language_used_instead_of_conversation_language(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     init_components,
+    mock_chat_session: chat_session.ChatSession,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that the pipeline language is used last when the conversation language is '*' (all languages)."""
@@ -1284,6 +1453,7 @@ async def test_pipeline_language_used_instead_of_conversation_language(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         intent_input="test input",
+        session=mock_chat_session,
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
             context=Context(),

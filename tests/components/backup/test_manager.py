@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from dataclasses import replace
 from io import StringIO
 import json
 from pathlib import Path
+import re
 import tarfile
 from typing import Any
 from unittest.mock import (
@@ -21,21 +22,21 @@ from unittest.mock import (
     patch,
 )
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.backup import (
     DOMAIN,
     AgentBackup,
-    BackupAgentPlatformProtocol,
     BackupReaderWriterError,
     Folder,
     LocalBackupAgent,
-    backup as local_backup_platform,
 )
 from homeassistant.components.backup.agent import BackupAgentError
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import (
     BackupManagerError,
+    BackupManagerExceptionGroup,
     BackupManagerState,
     CreateBackupStage,
     CreateBackupState,
@@ -45,16 +46,20 @@ from homeassistant.components.backup.manager import (
     RestoreBackupState,
     WrittenBackup,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.components.backup.util import password_to_key
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.setup import async_setup_component
 
 from .common import (
     LOCAL_AGENT_ID,
     TEST_BACKUP_ABC123,
     TEST_BACKUP_DEF456,
-    BackupAgentTest,
+    TEST_BACKUP_PATH_ABC123,
+    TEST_BACKUP_PATH_DEF456,
+    mock_backup_agent,
+    setup_backup_integration,
     setup_backup_platform,
 )
 
@@ -89,6 +94,15 @@ def generate_backup_id_fixture() -> Generator[MagicMock]:
         yield mock
 
 
+def mock_read_backup(backup_path: Path) -> AgentBackup:
+    """Mock read backup."""
+    mock_backups = {
+        "abc123": TEST_BACKUP_ABC123,
+        "custom_def456": TEST_BACKUP_DEF456,
+    }
+    return mock_backups[backup_path.stem]
+
+
 @pytest.mark.usefixtures("mock_backup_generation")
 async def test_create_backup_service(
     hass: HomeAssistant,
@@ -97,8 +111,7 @@ async def test_create_backup_service(
     mocked_tarfile: Mock,
 ) -> None:
     """Test create backup service."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
 
     new_backup = NewBackup(backup_job_id="time-123")
     backup_task = AsyncMock(
@@ -124,7 +137,7 @@ async def test_create_backup_service(
         agent_ids=["backup.local"],
         backup_name="Custom backup 2025.1.0",
         extra_metadata={
-            "instance_id": hass.data["core.uuid"],
+            "instance_id": "our_uuid",
             "with_automatic_settings": False,
         },
         include_addons=None,
@@ -225,6 +238,64 @@ async def test_create_backup_service(
                 "password": None,
             },
         ),
+        (
+            {
+                "agent_ids": ["backup.local"],
+                "extra_metadata": {"custom": "data"},
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "name": "user defined name",
+                "password": None,
+            },
+            {
+                "agent_ids": ["backup.local"],
+                "backup_name": "user defined name",
+                "extra_metadata": {
+                    "custom": "data",
+                    "instance_id": ANY,
+                    "with_automatic_settings": False,
+                },
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "on_progress": ANY,
+                "password": None,
+            },
+        ),
+        (
+            {
+                "agent_ids": ["backup.local"],
+                "extra_metadata": {"custom": "data"},
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "name": "  ",  # Name which is just whitespace
+                "password": None,
+            },
+            {
+                "agent_ids": ["backup.local"],
+                "backup_name": "Custom backup 2025.1.0",
+                "extra_metadata": {
+                    "custom": "data",
+                    "instance_id": ANY,
+                    "with_automatic_settings": False,
+                },
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "on_progress": ANY,
+                "password": None,
+            },
+        ),
     ],
 )
 async def test_async_create_backup(
@@ -236,8 +307,7 @@ async def test_async_create_backup(
     expected_writer_kwargs: dict[str, Any],
 ) -> None:
     """Test create backup."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
     manager = hass.data[DATA_MANAGER]
 
     new_backup = NewBackup(backup_job_id="time-123")
@@ -265,8 +335,7 @@ async def test_create_backup_when_busy(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test generate backup with busy manager."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json_auto_id(
@@ -289,8 +358,14 @@ async def test_create_backup_when_busy(
 @pytest.mark.parametrize(
     ("parameters", "expected_error"),
     [
-        ({"agent_ids": []}, "At least one agent must be selected"),
-        ({"agent_ids": ["non_existing"]}, "Invalid agents selected: ['non_existing']"),
+        (
+            {"agent_ids": []},
+            "At least one available backup agent must be selected, got []",
+        ),
+        (
+            {"agent_ids": ["non_existing"]},
+            "At least one available backup agent must be selected, got ['non_existing']",
+        ),
         (
             {"include_addons": ["ssl"], "include_all_addons": True},
             "Cannot include all addons and specify specific addons",
@@ -308,8 +383,7 @@ async def test_create_backup_wrong_parameters(
     expected_error: str,
 ) -> None:
     """Test create backup with wrong parameters."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
 
     ws_client = await hass_ws_client(hass)
 
@@ -334,18 +408,95 @@ async def test_create_backup_wrong_parameters(
 
 @pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
-    ("agent_ids", "backup_directory", "temp_file_unlink_call_count"),
+    (
+        "agent_ids",
+        "backup_directory",
+        "name",
+        "expected_name",
+        "expected_filename",
+        "expected_agent_ids",
+        "expected_failed_agent_ids",
+        "temp_file_unlink_call_count",
+    ),
     [
-        ([LOCAL_AGENT_ID], "backups", 0),
-        (["test.remote"], "tmp_backups", 1),
-        ([LOCAL_AGENT_ID, "test.remote"], "backups", 0),
+        (
+            [LOCAL_AGENT_ID],
+            "backups",
+            None,
+            "Custom backup 2025.1.0",
+            "Custom_backup_2025.1.0_2025-01-30_05.42_12345678.tar",
+            [LOCAL_AGENT_ID],
+            [],
+            0,
+        ),
+        (
+            ["test.remote"],
+            "tmp_backups",
+            None,
+            "Custom backup 2025.1.0",
+            "abc123.tar",  # We don't use friendly name for temporary backups
+            ["test.remote"],
+            [],
+            1,
+        ),
+        (
+            [LOCAL_AGENT_ID, "test.remote"],
+            "backups",
+            None,
+            "Custom backup 2025.1.0",
+            "Custom_backup_2025.1.0_2025-01-30_05.42_12345678.tar",
+            [LOCAL_AGENT_ID, "test.remote"],
+            [],
+            0,
+        ),
+        (
+            [LOCAL_AGENT_ID],
+            "backups",
+            "custom_name",
+            "custom_name",
+            "custom_name_2025-01-30_05.42_12345678.tar",
+            [LOCAL_AGENT_ID],
+            [],
+            0,
+        ),
+        (
+            ["test.remote"],
+            "tmp_backups",
+            "custom_name",
+            "custom_name",
+            "abc123.tar",  # We don't use friendly name for temporary backups
+            ["test.remote"],
+            [],
+            1,
+        ),
+        (
+            [LOCAL_AGENT_ID, "test.remote"],
+            "backups",
+            "custom_name",
+            "custom_name",
+            "custom_name_2025-01-30_05.42_12345678.tar",
+            [LOCAL_AGENT_ID, "test.remote"],
+            [],
+            0,
+        ),
+        (
+            # Test we create a backup when at least one agent is available
+            [LOCAL_AGENT_ID, "test.unavailable"],
+            "backups",
+            "custom_name",
+            "custom_name",
+            "custom_name_2025-01-30_05.42_12345678.tar",
+            [LOCAL_AGENT_ID],
+            ["test.unavailable"],
+            0,
+        ),
     ],
 )
 @pytest.mark.parametrize(
     "params",
     [
         {},
-        {"include_database": True, "name": "abc123"},
+        {"include_database": True},
         {"include_database": False},
         {"password": "pass123"},
     ],
@@ -353,6 +504,7 @@ async def test_create_backup_wrong_parameters(
 async def test_initiate_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
     mocked_json_bytes: Mock,
     mocked_tarfile: Mock,
     generate_backup_id: MagicMock,
@@ -360,31 +512,20 @@ async def test_initiate_backup(
     params: dict[str, Any],
     agent_ids: list[str],
     backup_directory: str,
+    name: str | None,
+    expected_name: str,
+    expected_filename: str,
+    expected_agent_ids: list[str],
+    expected_failed_agent_ids: list[str],
     temp_file_unlink_call_count: int,
 ) -> None:
     """Test generate backup."""
-    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
-    remote_agent = BackupAgentTest("remote", backups=[])
-
-    with patch(
-        "homeassistant.components.backup.backup.async_get_backup_agents"
-    ) as core_get_backup_agents:
-        core_get_backup_agents.return_value = [local_agent]
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        await setup_backup_platform(
-            hass,
-            domain="test",
-            platform=Mock(
-                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-                spec_set=BackupAgentPlatformProtocol,
-            ),
-        )
+    await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     ws_client = await hass_ws_client(hass)
+    freezer.move_to("2025-01-30 13:42:12.345678")
 
     include_database = params.get("include_database", True)
-    name = params.get("name", "Custom backup 2025.1.0")
     password = params.get("password")
     path_glob.return_value = []
 
@@ -397,7 +538,7 @@ async def test_initiate_backup(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -416,7 +557,7 @@ async def test_initiate_backup(
         patch("pathlib.Path.unlink") as unlink_mock,
     ):
         await ws_client.send_json_auto_id(
-            {"type": "backup/generate", "agent_ids": agent_ids} | params
+            {"type": "backup/generate", "agent_ids": agent_ids, "name": name} | params
         )
         result = await ws_client.receive_json()
         assert result["event"] == {
@@ -469,14 +610,14 @@ async def test_initiate_backup(
         "compressed": True,
         "date": ANY,
         "extra": {
-            "instance_id": hass.data["core.uuid"],
+            "instance_id": "our_uuid",
             "with_automatic_settings": False,
         },
         "homeassistant": {
             "exclude_database": not include_database,
             "version": "2025.1.0",
         },
-        "name": name,
+        "name": expected_name,
         "protected": bool(password),
         "slug": backup_id,
         "type": "partial",
@@ -494,16 +635,17 @@ async def test_initiate_backup(
         "addons": [],
         "agents": {
             agent_id: {"protected": bool(password), "size": ANY}
-            for agent_id in agent_ids
+            for agent_id in expected_agent_ids
         },
         "backup_id": backup_id,
         "database_included": include_database,
         "date": ANY,
-        "failed_agent_ids": [],
+        "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
+        "failed_agent_ids": expected_failed_agent_ids,
         "folders": [],
         "homeassistant_included": True,
         "homeassistant_version": "2025.1.0",
-        "name": name,
+        "name": expected_name,
         "with_automatic_settings": False,
     }
 
@@ -517,7 +659,7 @@ async def test_initiate_backup(
 
     tar_file_path = str(mocked_tarfile.call_args_list[0][0][0])
     backup_directory = hass.config.path(backup_directory)
-    assert tar_file_path == f"{backup_directory}/{backup_id}.tar"
+    assert tar_file_path == f"{backup_directory}/{expected_filename}"
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
@@ -532,7 +674,6 @@ async def test_initiate_backup_with_agent_error(
 ) -> None:
     """Test agent upload error during backup generation."""
     agent_ids = [LOCAL_AGENT_ID, "test.remote"]
-    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
     backup_1 = replace(TEST_BACKUP_ABC123, backup_id="backup1")  # matching instance id
     backup_2 = replace(TEST_BACKUP_DEF456, backup_id="backup2")  # other instance id
     backup_3 = replace(TEST_BACKUP_ABC123, backup_id="backup3")  # matching instance id
@@ -549,6 +690,10 @@ async def test_initiate_backup_with_agent_error(
             "backup_id": "backup1",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "our_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -565,6 +710,10 @@ async def test_initiate_backup_with_agent_error(
             "backup_id": "backup2",
             "database_included": False,
             "date": "1980-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "unknown_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -587,6 +736,10 @@ async def test_initiate_backup_with_agent_error(
             "backup_id": "backup3",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "our_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -598,22 +751,12 @@ async def test_initiate_backup_with_agent_error(
             "with_automatic_settings": True,
         },
     ]
-    remote_agent = BackupAgentTest("remote", backups=[backup_1, backup_2, backup_3])
 
-    with patch(
-        "homeassistant.components.backup.backup.async_get_backup_agents"
-    ) as core_get_backup_agents:
-        core_get_backup_agents.return_value = [local_agent]
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        await setup_backup_platform(
-            hass,
-            domain="test",
-            platform=Mock(
-                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-                spec_set=BackupAgentPlatformProtocol,
-            ),
-        )
+    mock_agents = await setup_backup_integration(
+        hass,
+        remote_agents=["test.remote"],
+        backups={"test.remote": [backup_1, backup_2, backup_3]},
+    )
 
     ws_client = await hass_ws_client(hass)
 
@@ -628,7 +771,7 @@ async def test_initiate_backup_with_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -648,17 +791,8 @@ async def test_initiate_backup_with_agent_error(
     result = await ws_client.receive_json()
     assert result["success"] is True
 
-    delete_backup = AsyncMock()
-
-    with (
-        patch("pathlib.Path.open", mock_open(read_data=b"test")),
-        patch.object(
-            remote_agent,
-            "async_upload_backup",
-            side_effect=exception,
-        ),
-        patch.object(remote_agent, "async_delete_backup", delete_backup),
-    ):
+    mock_agents["test.remote"].async_upload_backup.side_effect = exception
+    with patch("pathlib.Path.open", mock_open(read_data=b"test")):
         await ws_client.send_json_auto_id(
             {"type": "backup/generate", "agent_ids": agent_ids}
         )
@@ -710,6 +844,7 @@ async def test_initiate_backup_with_agent_error(
         "backup_id": "abc123",
         "database_included": True,
         "date": ANY,
+        "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
         "failed_agent_ids": ["test.remote"],
         "folders": [],
         "homeassistant_included": True,
@@ -728,7 +863,7 @@ async def test_initiate_backup_with_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": {
+        "last_action_event": {
             "manager_state": "create_backup",
             "reason": "upload_failed",
             "stage": None,
@@ -748,7 +883,7 @@ async def test_initiate_backup_with_agent_error(
     ]
 
     # one of the two matching backups with the remote agent should have been deleted
-    assert delete_backup.call_count == 1
+    assert mock_agents["test.remote"].async_delete_backup.call_count == 1
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
@@ -772,8 +907,7 @@ async def test_create_backup_success_clears_issue(
     issues_after_create_backup: set[tuple[str, str]],
 ) -> None:
     """Test backup issue is cleared after backup is created."""
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
 
     # Create a backup issue
     ir.async_create_issue(
@@ -819,15 +953,17 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
 
 @pytest.mark.parametrize(
     (
+        "automatic_agents",
         "create_backup_command",
         "create_backup_side_effect",
-        "agent_upload_side_effect",
+        "upload_side_effect",
         "create_backup_result",
         "issues_after_create_backup",
     ),
     [
         # No error
         (
+            ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
             None,
             None,
@@ -835,14 +971,53 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {},
         ),
         (
+            ["test.remote"],
             {"type": "backup/generate_with_automatic_settings"},
             None,
             None,
             True,
             {},
         ),
+        # One agent unavailable
+        (
+            ["test.remote", "test.unknown"],
+            {"type": "backup/generate", "agent_ids": ["test.remote", "test.unknown"]},
+            None,
+            None,
+            True,
+            {
+                (DOMAIN, "automatic_backup_agents_unavailable_test.unknown"): {
+                    "translation_key": "automatic_backup_agents_unavailable",
+                    "translation_placeholders": {
+                        "agent_id": "test.unknown",
+                        "backup_settings": "/config/backup/settings",
+                    },
+                },
+            },
+        ),
+        (
+            ["test.remote", "test.unknown"],
+            {"type": "backup/generate_with_automatic_settings"},
+            None,
+            None,
+            True,
+            {
+                (DOMAIN, "automatic_backup_failed"): {
+                    "translation_key": "automatic_backup_failed_upload_agents",
+                    "translation_placeholders": {"failed_agents": "test.unknown"},
+                },
+                (DOMAIN, "automatic_backup_agents_unavailable_test.unknown"): {
+                    "translation_key": "automatic_backup_agents_unavailable",
+                    "translation_placeholders": {
+                        "agent_id": "test.unknown",
+                        "backup_settings": "/config/backup/settings",
+                    },
+                },
+            },
+        ),
         # Error raised in async_initiate_backup
         (
+            ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
             Exception("Boom!"),
             None,
@@ -850,6 +1025,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {},
         ),
         (
+            ["test.remote"],
             {"type": "backup/generate_with_automatic_settings"},
             Exception("Boom!"),
             None,
@@ -863,6 +1039,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         ),
         # Error raised when awaiting the backup task
         (
+            ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
             delayed_boom,
             None,
@@ -870,6 +1047,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {},
         ),
         (
+            ["test.remote"],
             {"type": "backup/generate_with_automatic_settings"},
             delayed_boom,
             None,
@@ -883,6 +1061,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
         ),
         # Error raised in async_upload_backup
         (
+            ["test.remote"],
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
             None,
             Exception("Boom!"),
@@ -890,6 +1069,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {},
         ),
         (
+            ["test.remote"],
             {"type": "backup/generate_with_automatic_settings"},
             None,
             Exception("Boom!"),
@@ -897,7 +1077,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {
                 (DOMAIN, "automatic_backup_failed"): {
                     "translation_key": "automatic_backup_failed_upload_agents",
-                    "translation_placeholders": {"failed_agents": "test.remote"},
+                    "translation_placeholders": {"failed_agents": "remote"},
                 }
             },
         ),
@@ -907,28 +1087,15 @@ async def test_create_backup_failure_raises_issue(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     create_backup: AsyncMock,
+    automatic_agents: list[str],
     create_backup_command: dict[str, Any],
     create_backup_side_effect: Exception | None,
-    agent_upload_side_effect: Exception | None,
+    upload_side_effect: Exception | None,
     create_backup_result: bool,
     issues_after_create_backup: dict[tuple[str, str], dict[str, Any]],
 ) -> None:
     """Test backup issue is cleared after backup is created."""
-    remote_agent = BackupAgentTest("remote", backups=[])
-
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    await setup_backup_platform(
-        hass,
-        domain="test",
-        platform=Mock(
-            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-            spec_set=BackupAgentPlatformProtocol,
-        ),
-    )
-
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     ws_client = await hass_ws_client(hass)
 
@@ -937,19 +1104,17 @@ async def test_create_backup_failure_raises_issue(
     await ws_client.send_json_auto_id(
         {
             "type": "backup/config/update",
-            "create_backup": {"agent_ids": ["test.remote"]},
+            "create_backup": {"agent_ids": automatic_agents},
         }
     )
     result = await ws_client.receive_json()
     assert result["success"] is True
 
-    with patch.object(
-        remote_agent, "async_upload_backup", side_effect=agent_upload_side_effect
-    ):
-        await ws_client.send_json_auto_id(create_backup_command)
-        result = await ws_client.receive_json()
-        assert result["success"] == create_backup_result
-        await hass.async_block_till_done()
+    mock_agents["test.remote"].async_upload_backup.side_effect = upload_side_effect
+    await ws_client.send_json_auto_id(create_backup_command)
+    result = await ws_client.receive_json()
+    assert result["success"] == create_backup_result
+    await hass.async_block_till_done()
 
     issue_registry = ir.async_get(hass)
     assert set(issue_registry.issues) == set(issues_after_create_backup)
@@ -973,23 +1138,7 @@ async def test_initiate_backup_non_agent_upload_error(
 ) -> None:
     """Test an unknown or writer upload error during backup generation."""
     agent_ids = [LOCAL_AGENT_ID, "test.remote"]
-    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
-    remote_agent = BackupAgentTest("remote", backups=[])
-
-    with patch(
-        "homeassistant.components.backup.backup.async_get_backup_agents"
-    ) as core_get_backup_agents:
-        core_get_backup_agents.return_value = [local_agent]
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        await setup_backup_platform(
-            hass,
-            domain="test",
-            platform=Mock(
-                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-                spec_set=BackupAgentPlatformProtocol,
-            ),
-        )
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     ws_client = await hass_ws_client(hass)
 
@@ -1004,7 +1153,7 @@ async def test_initiate_backup_non_agent_upload_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -1018,14 +1167,8 @@ async def test_initiate_backup_non_agent_upload_error(
     result = await ws_client.receive_json()
     assert result["success"] is True
 
-    with (
-        patch("pathlib.Path.open", mock_open(read_data=b"test")),
-        patch.object(
-            remote_agent,
-            "async_upload_backup",
-            side_effect=exception,
-        ),
-    ):
+    mock_agents["test.remote"].async_upload_backup.side_effect = exception
+    with patch("pathlib.Path.open", mock_open(read_data=b"test")):
         await ws_client.send_json_auto_id(
             {"type": "backup/generate", "agent_ids": agent_ids}
         )
@@ -1091,23 +1234,8 @@ async def test_initiate_backup_with_task_error(
     backup_task.set_exception(exception)
     create_backup.return_value = (NewBackup(backup_job_id="abc123"), backup_task)
     agent_ids = [LOCAL_AGENT_ID, "test.remote"]
-    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
-    remote_agent = BackupAgentTest("remote", backups=[])
 
-    with patch(
-        "homeassistant.components.backup.backup.async_get_backup_agents"
-    ) as core_get_backup_agents:
-        core_get_backup_agents.return_value = [local_agent]
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        await setup_backup_platform(
-            hass,
-            domain="test",
-            platform=Mock(
-                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-                spec_set=BackupAgentPlatformProtocol,
-            ),
-        )
+    await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     ws_client = await hass_ws_client(hass)
 
@@ -1122,7 +1250,7 @@ async def test_initiate_backup_with_task_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -1186,7 +1314,7 @@ async def test_initiate_backup_with_task_error(
         (1, None, 1, None, 1, None, 1, OSError("Boom!")),
     ],
 )
-async def test_initiate_backup_file_error(
+async def test_initiate_backup_file_error_upload_to_agents(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
@@ -1200,24 +1328,10 @@ async def test_initiate_backup_file_error(
     unlink_call_count: int,
     unlink_exception: Exception | None,
 ) -> None:
-    """Test file error during generate backup."""
+    """Test file error during generate backup, while uploading to agents."""
     agent_ids = ["test.remote"]
-    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
-    remote_agent = BackupAgentTest("remote", backups=[])
-    with patch(
-        "homeassistant.components.backup.backup.async_get_backup_agents"
-    ) as core_get_backup_agents:
-        core_get_backup_agents.return_value = [local_agent]
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        await setup_backup_platform(
-            hass,
-            domain="test",
-            platform=Mock(
-                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-                spec_set=BackupAgentPlatformProtocol,
-            ),
-        )
+
+    await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     ws_client = await hass_ws_client(hass)
 
@@ -1232,7 +1346,7 @@ async def test_initiate_backup_file_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -1307,30 +1421,145 @@ async def test_initiate_backup_file_error(
     assert unlink_mock.call_count == unlink_call_count
 
 
-class LocalBackupAgentTest(BackupAgentTest, LocalBackupAgent):
-    """Local backup agent."""
+@pytest.mark.usefixtures("mock_backup_generation")
+@pytest.mark.parametrize(
+    (
+        "mkdir_call_count",
+        "mkdir_exception",
+        "atomic_contents_add_call_count",
+        "atomic_contents_add_exception",
+        "stat_call_count",
+        "stat_exception",
+        "error_message",
+    ),
+    [
+        (1, OSError("Boom!"), 0, None, 0, None, "Failed to create dir"),
+        (1, None, 1, OSError("Boom!"), 0, None, "Boom!"),
+        (1, None, 1, None, 1, OSError("Boom!"), "Error getting size"),
+    ],
+)
+async def test_initiate_backup_file_error_create_backup(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    generate_backup_id: MagicMock,
+    path_glob: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    mkdir_call_count: int,
+    mkdir_exception: Exception | None,
+    atomic_contents_add_call_count: int,
+    atomic_contents_add_exception: Exception | None,
+    stat_call_count: int,
+    stat_exception: Exception | None,
+    error_message: str,
+) -> None:
+    """Test file error during generate backup, while creating backup."""
+    agent_ids = ["test.remote"]
 
-    def get_backup_path(self, backup_id: str) -> Path:
-        """Return the local path to a backup."""
-        return Path("test.tar")
+    await setup_backup_integration(hass, remote_agents=["test.remote"])
+
+    ws_client = await hass_ws_client(hass)
+
+    path_glob.return_value = []
+
+    await ws_client.send_json_auto_id({"type": "backup/info"})
+    result = await ws_client.receive_json()
+
+    assert result["success"] is True
+    assert result["result"] == {
+        "backups": [],
+        "agent_errors": {},
+        "last_attempted_automatic_backup": None,
+        "last_completed_automatic_backup": None,
+        "last_action_event": None,
+        "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
+        "state": "idle",
+    }
+
+    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.atomic_contents_add",
+            side_effect=atomic_contents_add_exception,
+        ) as atomic_contents_add_mock,
+        patch("pathlib.Path.mkdir", side_effect=mkdir_exception) as mkdir_mock,
+        patch("pathlib.Path.stat", side_effect=stat_exception) as stat_mock,
+    ):
+        await ws_client.send_json_auto_id(
+            {"type": "backup/generate", "agent_ids": agent_ids}
+        )
+
+        result = await ws_client.receive_json()
+        assert result["event"] == {
+            "manager_state": BackupManagerState.CREATE_BACKUP,
+            "reason": None,
+            "stage": None,
+            "state": CreateBackupState.IN_PROGRESS,
+        }
+        result = await ws_client.receive_json()
+        assert result["success"] is True
+
+        backup_id = result["result"]["backup_job_id"]
+        assert backup_id == generate_backup_id.return_value
+
+        await hass.async_block_till_done()
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
+        "stage": CreateBackupStage.HOME_ASSISTANT,
+        "state": CreateBackupState.IN_PROGRESS,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": "upload_failed",
+        "stage": None,
+        "state": CreateBackupState.FAILED,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    assert atomic_contents_add_mock.call_count == atomic_contents_add_call_count
+    assert mkdir_mock.call_count == mkdir_call_count
+    assert stat_mock.call_count == stat_call_count
+
+    assert error_message in caplog.text
+
+
+def _mock_local_backup_agent(name: str) -> Mock:
+    local_agent = mock_backup_agent(name)
+    # This makes the local_agent pass isinstance checks for LocalBackupAgent
+    local_agent.mock_add_spec(LocalBackupAgent)
+    return local_agent
 
 
 @pytest.mark.parametrize(
-    ("agent_class", "num_local_agents"),
-    [(LocalBackupAgentTest, 2), (BackupAgentTest, 1)],
+    ("agent_creator", "num_local_agents"),
+    [(_mock_local_backup_agent, 2), (mock_backup_agent, 1)],
 )
 async def test_loading_platform_with_listener(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    agent_class: type[BackupAgentTest],
+    agent_creator: Callable[[str], Mock],
     num_local_agents: int,
 ) -> None:
     """Test loading a backup agent platform which can be listened to."""
     ws_client = await hass_ws_client(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    await setup_backup_integration(hass)
     manager = hass.data[DATA_MANAGER]
 
-    get_agents_mock = AsyncMock(return_value=[agent_class("remote1", backups=[])])
+    get_agents_mock = AsyncMock(return_value=[agent_creator("remote1")])
     register_listener_mock = Mock()
 
     await setup_backup_platform(
@@ -1355,7 +1584,7 @@ async def test_loading_platform_with_listener(
     register_listener_mock.assert_called_once_with(hass, listener=ANY)
 
     get_agents_mock.reset_mock()
-    get_agents_mock.return_value = [agent_class("remote2", backups=[])]
+    get_agents_mock.return_value = [agent_creator("remote2")]
     listener = register_listener_mock.call_args[1]["listener"]
     listener()
 
@@ -1387,8 +1616,7 @@ async def test_not_loading_bad_platforms(
         domain="test",
         platform=platform_mock,
     )
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
 
     assert platform_mock.mock_calls == []
 
@@ -1399,7 +1627,7 @@ async def test_exception_platform_pre(hass: HomeAssistant) -> None:
     async def _mock_step(hass: HomeAssistant) -> None:
         raise HomeAssistantError("Test exception")
 
-    remote_agent = BackupAgentTest("remote", backups=[])
+    remote_agent = mock_backup_agent("remote")
     await setup_backup_platform(
         hass,
         domain="test",
@@ -1409,8 +1637,7 @@ async def test_exception_platform_pre(hass: HomeAssistant) -> None:
             async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
         ),
     )
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
 
     with pytest.raises(BackupManagerError) as err:
         await hass.services.async_call(
@@ -1422,34 +1649,59 @@ async def test_exception_platform_pre(hass: HomeAssistant) -> None:
     assert str(err.value) == "Error during pre-backup: Test exception"
 
 
+@pytest.mark.parametrize(
+    ("unhandled_error", "expected_exception", "expected_msg"),
+    [
+        (None, BackupManagerError, "Error during post-backup: Test exception"),
+        (
+            HomeAssistantError("Boom"),
+            BackupManagerExceptionGroup,
+            (
+                "Multiple errors when creating backup: Error during pre-backup: Boom, "
+                "Error during post-backup: Test exception (2 sub-exceptions)"
+            ),
+        ),
+        (
+            Exception("Boom"),
+            BackupManagerExceptionGroup,
+            (
+                "Multiple errors when creating backup: Error during pre-backup: Boom, "
+                "Error during post-backup: Test exception (2 sub-exceptions)"
+            ),
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_backup_generation")
-async def test_exception_platform_post(hass: HomeAssistant) -> None:
+async def test_exception_platform_post(
+    hass: HomeAssistant,
+    unhandled_error: Exception | None,
+    expected_exception: type[Exception],
+    expected_msg: str,
+) -> None:
     """Test exception in post step."""
 
-    async def _mock_step(hass: HomeAssistant) -> None:
-        raise HomeAssistantError("Test exception")
-
-    remote_agent = BackupAgentTest("remote", backups=[])
+    remote_agent = mock_backup_agent("remote")
     await setup_backup_platform(
         hass,
         domain="test",
         platform=Mock(
-            async_pre_backup=AsyncMock(),
-            async_post_backup=_mock_step,
+            # We let the pre_backup fail to test that unhandled errors are not discarded
+            # when post backup fails
+            async_pre_backup=AsyncMock(side_effect=unhandled_error),
+            async_post_backup=AsyncMock(
+                side_effect=HomeAssistantError("Test exception")
+            ),
             async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
         ),
     )
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
 
-    with pytest.raises(BackupManagerError) as err:
+    with pytest.raises(expected_exception, match=re.escape(expected_msg)):
         await hass.services.async_call(
             DOMAIN,
             "create",
             blocking=True,
         )
-
-    assert str(err.value) == "Error during post-backup: Test exception"
 
 
 @pytest.mark.parametrize(
@@ -1467,8 +1719,8 @@ async def test_exception_platform_post(hass: HomeAssistant) -> None:
             "agent_id=backup.local&agent_id=test.remote",
             2,
             1,
-            ["abc123.tar"],
-            {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123},
+            ["Test_1970-01-01_00.00_00000000.tar"],
+            {TEST_BACKUP_ABC123.backup_id: (TEST_BACKUP_ABC123, b"test")},
             b"test",
             0,
         ),
@@ -1476,7 +1728,7 @@ async def test_exception_platform_post(hass: HomeAssistant) -> None:
             "agent_id=backup.local",
             1,
             1,
-            ["abc123.tar"],
+            ["Test_1970-01-01_00.00_00000000.tar"],
             {},
             None,
             0,
@@ -1486,7 +1738,7 @@ async def test_exception_platform_post(hass: HomeAssistant) -> None:
             2,
             0,
             [],
-            {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123},
+            {TEST_BACKUP_ABC123.backup_id: (TEST_BACKUP_ABC123, b"test")},
             b"test",
             1,
         ),
@@ -1504,17 +1756,7 @@ async def test_receive_backup(
     temp_file_unlink_call_count: int,
 ) -> None:
     """Test receive backup and upload to the local and a remote agent."""
-    remote_agent = BackupAgentTest("remote", backups=[])
-    await setup_backup_platform(
-        hass,
-        domain="test",
-        platform=Mock(
-            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-            spec_set=BackupAgentPlatformProtocol,
-        ),
-    )
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
     client = await hass_client()
 
     upload_data = "test"
@@ -1544,8 +1786,13 @@ async def test_receive_backup(
     assert move_mock.call_count == move_call_count
     for index, name in enumerate(move_path_names):
         assert move_mock.call_args_list[index].args[1].name == name
-    assert remote_agent._backups == remote_agent_backups
-    assert remote_agent._backup_data == remote_agent_backup_data
+    remote_agent = mock_agents["test.remote"]
+    for backup_id, (backup, expected_backup_data) in remote_agent_backups.items():
+        assert await remote_agent.async_get_backup(backup_id) == backup
+        backup_data = bytearray()
+        async for chunk in await remote_agent.async_download_backup(backup_id):
+            backup_data += chunk
+        assert backup_data == expected_backup_data
     assert unlink_mock.call_count == temp_file_unlink_call_count
 
 
@@ -1560,8 +1807,7 @@ async def test_receive_backup_busy_manager(
     new_backup = NewBackup(backup_job_id="time-123")
     backup_task: asyncio.Future[WrittenBackup] = asyncio.Future()
     create_backup.return_value = (new_backup, backup_task)
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
     client = await hass_client()
     ws_client = await hass_ws_client(hass)
 
@@ -1623,7 +1869,6 @@ async def test_receive_backup_agent_error(
     exception: Exception,
 ) -> None:
     """Test upload error during backup receive."""
-    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
     backup_1 = replace(TEST_BACKUP_ABC123, backup_id="backup1")  # matching instance id
     backup_2 = replace(TEST_BACKUP_DEF456, backup_id="backup2")  # other instance id
     backup_3 = replace(TEST_BACKUP_ABC123, backup_id="backup3")  # matching instance id
@@ -1640,6 +1885,10 @@ async def test_receive_backup_agent_error(
             "backup_id": "backup1",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "our_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -1656,6 +1905,10 @@ async def test_receive_backup_agent_error(
             "backup_id": "backup2",
             "database_included": False,
             "date": "1980-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "unknown_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -1678,6 +1931,10 @@ async def test_receive_backup_agent_error(
             "backup_id": "backup3",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "our_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -1689,22 +1946,12 @@ async def test_receive_backup_agent_error(
             "with_automatic_settings": True,
         },
     ]
-    remote_agent = BackupAgentTest("remote", backups=[backup_1, backup_2, backup_3])
 
-    with patch(
-        "homeassistant.components.backup.backup.async_get_backup_agents"
-    ) as core_get_backup_agents:
-        core_get_backup_agents.return_value = [local_agent]
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        await setup_backup_platform(
-            hass,
-            domain="test",
-            platform=Mock(
-                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-                spec_set=BackupAgentPlatformProtocol,
-            ),
-        )
+    mock_agents = await setup_backup_integration(
+        hass,
+        remote_agents=["test.remote"],
+        backups={"test.remote": [backup_1, backup_2, backup_3]},
+    )
 
     client = await hass_client()
     ws_client = await hass_ws_client(hass)
@@ -1720,7 +1967,7 @@ async def test_receive_backup_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -1740,13 +1987,11 @@ async def test_receive_backup_agent_error(
     result = await ws_client.receive_json()
     assert result["success"] is True
 
-    delete_backup = AsyncMock()
     upload_data = "test"
     open_mock = mock_open(read_data=upload_data.encode(encoding="utf-8"))
 
+    mock_agents["test.remote"].async_upload_backup.side_effect = exception
     with (
-        patch.object(remote_agent, "async_delete_backup", delete_backup),
-        patch.object(remote_agent, "async_upload_backup", side_effect=exception),
         patch("pathlib.Path.open", open_mock),
         patch("shutil.move") as move_mock,
         patch(
@@ -1805,7 +2050,7 @@ async def test_receive_backup_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": {
+        "last_action_event": {
             "manager_state": "receive_backup",
             "reason": None,
             "stage": None,
@@ -1828,7 +2073,7 @@ async def test_receive_backup_agent_error(
     assert open_mock.call_count == 1
     assert move_mock.call_count == 0
     assert unlink_mock.call_count == 1
-    assert delete_backup.call_count == 0
+    assert mock_agents["test.remote"].async_delete_backup.call_count == 0
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
@@ -1842,23 +2087,7 @@ async def test_receive_backup_non_agent_upload_error(
     exception: Exception,
 ) -> None:
     """Test non agent upload error during backup receive."""
-    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
-    remote_agent = BackupAgentTest("remote", backups=[])
-
-    with patch(
-        "homeassistant.components.backup.backup.async_get_backup_agents"
-    ) as core_get_backup_agents:
-        core_get_backup_agents.return_value = [local_agent]
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        await setup_backup_platform(
-            hass,
-            domain="test",
-            platform=Mock(
-                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-                spec_set=BackupAgentPlatformProtocol,
-            ),
-        )
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     client = await hass_client()
     ws_client = await hass_ws_client(hass)
@@ -1874,7 +2103,7 @@ async def test_receive_backup_non_agent_upload_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -1891,8 +2120,8 @@ async def test_receive_backup_non_agent_upload_error(
     upload_data = "test"
     open_mock = mock_open(read_data=upload_data.encode(encoding="utf-8"))
 
+    mock_agents["test.remote"].async_upload_backup.side_effect = exception
     with (
-        patch.object(remote_agent, "async_upload_backup", side_effect=exception),
         patch("pathlib.Path.open", open_mock),
         patch("shutil.move") as move_mock,
         patch(
@@ -1970,22 +2199,7 @@ async def test_receive_backup_file_write_error(
     close_exception: Exception | None,
 ) -> None:
     """Test file write error during backup receive."""
-    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
-    remote_agent = BackupAgentTest("remote", backups=[])
-    with patch(
-        "homeassistant.components.backup.backup.async_get_backup_agents"
-    ) as core_get_backup_agents:
-        core_get_backup_agents.return_value = [local_agent]
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        await setup_backup_platform(
-            hass,
-            domain="test",
-            platform=Mock(
-                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-                spec_set=BackupAgentPlatformProtocol,
-            ),
-        )
+    await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     client = await hass_client()
     ws_client = await hass_ws_client(hass)
@@ -2001,7 +2215,7 @@ async def test_receive_backup_file_write_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -2023,10 +2237,6 @@ async def test_receive_backup_file_write_error(
 
     with (
         patch("pathlib.Path.open", open_mock),
-        patch(
-            "homeassistant.components.backup.manager.read_backup",
-            return_value=TEST_BACKUP_ABC123,
-        ),
     ):
         resp = await client.post(
             "/api/backup/upload?agent_id=test.remote",
@@ -2085,22 +2295,7 @@ async def test_receive_backup_read_tar_error(
     exception: Exception,
 ) -> None:
     """Test read tar error during backup receive."""
-    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
-    remote_agent = BackupAgentTest("remote", backups=[])
-    with patch(
-        "homeassistant.components.backup.backup.async_get_backup_agents"
-    ) as core_get_backup_agents:
-        core_get_backup_agents.return_value = [local_agent]
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        await setup_backup_platform(
-            hass,
-            domain="test",
-            platform=Mock(
-                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-                spec_set=BackupAgentPlatformProtocol,
-            ),
-        )
+    await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     client = await hass_client()
     ws_client = await hass_ws_client(hass)
@@ -2116,7 +2311,7 @@ async def test_receive_backup_read_tar_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -2265,22 +2460,7 @@ async def test_receive_backup_file_read_error(
     response_status: int,
 ) -> None:
     """Test file read error during backup receive."""
-    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
-    remote_agent = BackupAgentTest("remote", backups=[])
-    with patch(
-        "homeassistant.components.backup.backup.async_get_backup_agents"
-    ) as core_get_backup_agents:
-        core_get_backup_agents.return_value = [local_agent]
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        await setup_backup_platform(
-            hass,
-            domain="test",
-            platform=Mock(
-                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-                spec_set=BackupAgentPlatformProtocol,
-            ),
-        )
+    await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     client = await hass_client()
     ws_client = await hass_ws_client(hass)
@@ -2296,7 +2476,7 @@ async def test_receive_backup_file_read_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -2375,34 +2555,71 @@ async def test_receive_backup_file_read_error(
 
 @pytest.mark.usefixtures("path_glob")
 @pytest.mark.parametrize(
-    ("agent_id", "password_param", "restore_database", "restore_homeassistant", "dir"),
+    (
+        "agent_id",
+        "backup_id",
+        "password_param",
+        "backup_path",
+        "restore_database",
+        "restore_homeassistant",
+        "dir",
+    ),
     [
-        (LOCAL_AGENT_ID, {}, True, False, "backups"),
-        (LOCAL_AGENT_ID, {"password": "abc123"}, False, True, "backups"),
-        ("test.remote", {}, True, True, "tmp_backups"),
+        (
+            LOCAL_AGENT_ID,
+            TEST_BACKUP_ABC123.backup_id,
+            {},
+            TEST_BACKUP_PATH_ABC123,
+            True,
+            False,
+            "backups",
+        ),
+        (
+            LOCAL_AGENT_ID,
+            TEST_BACKUP_DEF456.backup_id,
+            {},
+            TEST_BACKUP_PATH_DEF456,
+            True,
+            False,
+            "backups",
+        ),
+        (
+            LOCAL_AGENT_ID,
+            TEST_BACKUP_ABC123.backup_id,
+            {"password": "abc123"},
+            TEST_BACKUP_PATH_ABC123,
+            False,
+            True,
+            "backups",
+        ),
+        (
+            "test.remote",
+            TEST_BACKUP_ABC123.backup_id,
+            {},
+            TEST_BACKUP_PATH_ABC123,
+            True,
+            True,
+            "tmp_backups",
+        ),
     ],
 )
 async def test_restore_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     agent_id: str,
+    backup_id: str,
     password_param: dict[str, str],
+    backup_path: Path,
     restore_database: bool,
     restore_homeassistant: bool,
     dir: str,
 ) -> None:
     """Test restore backup."""
     password = password_param.get("password")
-    remote_agent = BackupAgentTest("remote", backups=[TEST_BACKUP_ABC123])
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    await setup_backup_platform(
+    await setup_backup_integration(
         hass,
-        domain="test",
-        platform=Mock(
-            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-            spec_set=BackupAgentPlatformProtocol,
-        ),
+        remote_agents=["test.remote"],
+        backups={"test.remote": [TEST_BACKUP_ABC123]},
     )
 
     ws_client = await hass_ws_client(hass)
@@ -2423,17 +2640,15 @@ async def test_restore_backup(
         patch(
             "homeassistant.components.backup.manager.validate_password"
         ) as validate_password_mock,
-        patch.object(remote_agent, "async_download_backup") as download_mock,
         patch(
             "homeassistant.components.backup.backup.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
     ):
-        download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
         await ws_client.send_json_auto_id(
             {
                 "type": "backup/restore",
-                "backup_id": TEST_BACKUP_ABC123.backup_id,
+                "backup_id": backup_id,
                 "agent_id": agent_id,
                 "restore_database": restore_database,
                 "restore_homeassistant": restore_homeassistant,
@@ -2473,17 +2688,17 @@ async def test_restore_backup(
         result = await ws_client.receive_json()
         assert result["success"] is True
 
-    backup_path = f"{hass.config.path()}/{dir}/abc123.tar"
+    full_backup_path = f"{hass.config.path()}/{dir}/{backup_path.name}"
     expected_restore_file = json.dumps(
         {
-            "path": backup_path,
+            "path": full_backup_path,
             "password": password,
             "remove_after_restore": agent_id != LOCAL_AGENT_ID,
             "restore_database": restore_database,
             "restore_homeassistant": restore_homeassistant,
         }
     )
-    validate_password_mock.assert_called_once_with(Path(backup_path), password)
+    validate_password_mock.assert_called_once_with(Path(full_backup_path), password)
     assert mocked_write_text.call_args[0][0] == expected_restore_file
     assert mocked_service_call.called
 
@@ -2500,16 +2715,10 @@ async def test_restore_backup_wrong_password(
 ) -> None:
     """Test restore backup wrong password."""
     password = "hunter2"
-    remote_agent = BackupAgentTest("remote", backups=[TEST_BACKUP_ABC123])
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    await setup_backup_platform(
+    await setup_backup_integration(
         hass,
-        domain="test",
-        platform=Mock(
-            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-            spec_set=BackupAgentPlatformProtocol,
-        ),
+        remote_agents=["test.remote"],
+        backups={"test.remote": [TEST_BACKUP_ABC123]},
     )
 
     ws_client = await hass_ws_client(hass)
@@ -2530,13 +2739,11 @@ async def test_restore_backup_wrong_password(
         patch(
             "homeassistant.components.backup.manager.validate_password"
         ) as validate_password_mock,
-        patch.object(remote_agent, "async_download_backup") as download_mock,
         patch(
             "homeassistant.components.backup.backup.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
     ):
-        download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
         validate_password_mock.return_value = False
         await ws_client.send_json_auto_id(
             {
@@ -2581,8 +2788,8 @@ async def test_restore_backup_wrong_password(
     ("parameters", "expected_error", "expected_reason"),
     [
         (
-            {"backup_id": TEST_BACKUP_DEF456.backup_id},
-            f"Backup def456 not found in agent {LOCAL_AGENT_ID}",
+            {"backup_id": "no_such_backup"},
+            f"Backup no_such_backup not found in agent {LOCAL_AGENT_ID}",
             "backup_manager_error",
         ),
         (
@@ -2610,8 +2817,7 @@ async def test_restore_backup_wrong_parameters(
     expected_reason: str,
 ) -> None:
     """Test restore backup wrong parameters."""
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
 
     ws_client = await hass_ws_client(hass)
 
@@ -2629,7 +2835,7 @@ async def test_restore_backup_wrong_parameters(
         patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
         patch(
             "homeassistant.components.backup.backup.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
     ):
         await ws_client.send_json_auto_id(
@@ -2675,8 +2881,7 @@ async def test_restore_backup_when_busy(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test restore backup with busy manager."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json_auto_id(
@@ -2727,16 +2932,10 @@ async def test_restore_backup_agent_error(
     expected_reason: str,
 ) -> None:
     """Test restore backup with agent error."""
-    remote_agent = BackupAgentTest("remote", backups=[TEST_BACKUP_ABC123])
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    await setup_backup_platform(
+    mock_agents = await setup_backup_integration(
         hass,
-        domain="test",
-        platform=Mock(
-            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-            spec_set=BackupAgentPlatformProtocol,
-        ),
+        remote_agents=["test.remote"],
+        backups={"test.remote": [TEST_BACKUP_ABC123]},
     )
     ws_client = await hass_ws_client(hass)
 
@@ -2748,19 +2947,17 @@ async def test_restore_backup_agent_error(
     result = await ws_client.receive_json()
     assert result["success"] is True
 
+    mock_agents["test.remote"].async_download_backup.side_effect = exception
     with (
         patch("pathlib.Path.open"),
         patch("pathlib.Path.write_text") as mocked_write_text,
         patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
-        patch.object(
-            remote_agent, "async_download_backup", side_effect=exception
-        ) as download_mock,
     ):
         await ws_client.send_json_auto_id(
             {
                 "type": "backup/restore",
                 "backup_id": TEST_BACKUP_ABC123.backup_id,
-                "agent_id": remote_agent.agent_id,
+                "agent_id": "test.remote",
             }
         )
 
@@ -2788,7 +2985,7 @@ async def test_restore_backup_agent_error(
         assert result["error"]["code"] == error_code
         assert result["error"]["message"] == error_message
 
-    assert download_mock.call_count == 1
+    assert mock_agents["test.remote"].async_download_backup.call_count == 1
     assert mocked_write_text.call_count == 0
     assert mocked_service_call.call_count == 0
 
@@ -2867,16 +3064,10 @@ async def test_restore_backup_file_error(
     validate_password_call_count: int,
 ) -> None:
     """Test restore backup with file error."""
-    remote_agent = BackupAgentTest("remote", backups=[TEST_BACKUP_ABC123])
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    await setup_backup_platform(
+    mock_agents = await setup_backup_integration(
         hass,
-        domain="test",
-        platform=Mock(
-            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-            spec_set=BackupAgentPlatformProtocol,
-        ),
+        remote_agents=["test.remote"],
+        backups={"test.remote": [TEST_BACKUP_ABC123]},
     )
     ws_client = await hass_ws_client(hass)
 
@@ -2902,14 +3093,12 @@ async def test_restore_backup_file_error(
         patch(
             "homeassistant.components.backup.manager.validate_password"
         ) as validate_password_mock,
-        patch.object(remote_agent, "async_download_backup") as download_mock,
     ):
-        download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
         await ws_client.send_json_auto_id(
             {
                 "type": "backup/restore",
                 "backup_id": TEST_BACKUP_ABC123.backup_id,
-                "agent_id": remote_agent.agent_id,
+                "agent_id": "test.remote",
             }
         )
 
@@ -2937,7 +3126,7 @@ async def test_restore_backup_file_error(
         assert result["error"]["code"] == "unknown_error"
         assert result["error"]["message"] == "Unknown error"
 
-    assert download_mock.call_count == 1
+    assert mock_agents["test.remote"].async_download_backup.call_count == 1
     assert validate_password_mock.call_count == validate_password_call_count
     assert open_mock.call_count == open_call_count
     assert open_mock.return_value.write.call_count == write_call_count
@@ -2947,17 +3136,21 @@ async def test_restore_backup_file_error(
 
 
 @pytest.mark.parametrize(
-    ("commands", "password", "protected_backup"),
+    ("commands", "agent_ids", "password", "protected_backup", "inner_tar_key"),
     [
         (
             [],
+            ["backup.local", "test.remote"],
             None,
             {"backup.local": False, "test.remote": False},
+            None,
         ),
         (
             [],
+            ["backup.local", "test.remote"],
             "hunter2",
             {"backup.local": True, "test.remote": True},
+            password_to_key("hunter2"),
         ),
         (
             [
@@ -2969,8 +3162,10 @@ async def test_restore_backup_file_error(
                     },
                 }
             ],
+            ["backup.local", "test.remote"],
             "hunter2",
             {"backup.local": False, "test.remote": False},
+            None,  # None of the agents are protected
         ),
         (
             [
@@ -2982,8 +3177,10 @@ async def test_restore_backup_file_error(
                     },
                 }
             ],
+            ["backup.local", "test.remote"],
             "hunter2",
             {"backup.local": False, "test.remote": True},
+            None,  # Local agent is not protected
         ),
         (
             [
@@ -2995,8 +3192,10 @@ async def test_restore_backup_file_error(
                     },
                 }
             ],
+            ["backup.local", "test.remote"],
             "hunter2",
             {"backup.local": True, "test.remote": False},
+            password_to_key("hunter2"),  # Local agent is protected
         ),
         (
             [
@@ -3008,8 +3207,10 @@ async def test_restore_backup_file_error(
                     },
                 }
             ],
+            ["backup.local", "test.remote"],
             "hunter2",
             {"backup.local": True, "test.remote": True},
+            password_to_key("hunter2"),
         ),
         (
             [
@@ -3021,8 +3222,40 @@ async def test_restore_backup_file_error(
                     },
                 }
             ],
+            ["backup.local", "test.remote"],
             None,
             {"backup.local": False, "test.remote": False},
+            None,  # No password supplied
+        ),
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "backup.local": {"protected": False},
+                        "test.remote": {"protected": True},
+                    },
+                }
+            ],
+            ["test.remote"],
+            "hunter2",
+            {"test.remote": True},
+            password_to_key("hunter2"),
+        ),
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "backup.local": {"protected": False},
+                        "test.remote": {"protected": False},
+                    },
+                }
+            ],
+            ["test.remote"],
+            "hunter2",
+            {"test.remote": False},
+            password_to_key("hunter2"),  # Temporary backup protected when password set
         ),
     ],
 )
@@ -3031,30 +3264,16 @@ async def test_initiate_backup_per_agent_encryption(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
+    mocked_tarfile: Mock,
     path_glob: MagicMock,
     commands: dict[str, Any],
+    agent_ids: list[str],
     password: str | None,
     protected_backup: dict[str, bool],
+    inner_tar_key: bytes | None,
 ) -> None:
     """Test generate backup where encryption is selectively set on agents."""
-    agent_ids = ["backup.local", "test.remote"]
-    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
-    remote_agent = BackupAgentTest("remote", backups=[])
-
-    with patch(
-        "homeassistant.components.backup.backup.async_get_backup_agents"
-    ) as core_get_backup_agents:
-        core_get_backup_agents.return_value = [local_agent]
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        await setup_backup_platform(
-            hass,
-            domain="test",
-            platform=Mock(
-                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-                spec_set=BackupAgentPlatformProtocol,
-            ),
-        )
+    await setup_backup_integration(hass, remote_agents=["test.remote"])
 
     ws_client = await hass_ws_client(hass)
 
@@ -3068,7 +3287,7 @@ async def test_initiate_backup_per_agent_encryption(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -3113,6 +3332,10 @@ async def test_initiate_backup_per_agent_encryption(
 
         await hass.async_block_till_done()
 
+    mocked_tarfile.return_value.create_inner_tar.assert_called_once_with(
+        ANY, gzip=True, key=inner_tar_key
+    )
+
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
@@ -3156,6 +3379,7 @@ async def test_initiate_backup_per_agent_encryption(
         "backup_id": backup_id,
         "database_included": True,
         "date": ANY,
+        "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
         "failed_agent_ids": [],
         "folders": [],
         "homeassistant_included": True,
@@ -3166,7 +3390,7 @@ async def test_initiate_backup_per_agent_encryption(
 
 
 @pytest.mark.parametrize(
-    ("restore_result", "last_non_idle_event"),
+    ("restore_result", "last_action_event"),
     [
         (
             {"error": None, "error_type": None, "success": True},
@@ -3192,15 +3416,14 @@ async def test_restore_progress_after_restart(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     restore_result: dict[str, Any],
-    last_non_idle_event: dict[str, Any],
+    last_action_event: dict[str, Any],
 ) -> None:
     """Test restore backup progress after restart."""
 
     with patch(
         "pathlib.Path.read_bytes", return_value=json.dumps(restore_result).encode()
     ):
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+        await setup_backup_integration(hass)
 
     ws_client = await hass_ws_client(hass)
     await ws_client.send_json_auto_id({"type": "backup/info"})
@@ -3211,7 +3434,7 @@ async def test_restore_progress_after_restart(
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": last_non_idle_event,
+        "last_action_event": last_action_event,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -3226,8 +3449,7 @@ async def test_restore_progress_after_restart_fail_to_remove(
     """Test restore backup progress after restart when failing to remove result file."""
 
     with patch("pathlib.Path.unlink", side_effect=OSError("Boom!")):
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+        await setup_backup_integration(hass)
 
     ws_client = await hass_ws_client(hass)
     await ws_client.send_json_auto_id({"type": "backup/info"})
@@ -3238,7 +3460,7 @@ async def test_restore_progress_after_restart_fail_to_remove(
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",
@@ -3248,3 +3470,66 @@ async def test_restore_progress_after_restart_fail_to_remove(
         "Unexpected error deleting backup restore result file: <class 'OSError'> Boom!"
         in caplog.text
     )
+
+
+async def test_manager_blocked_until_home_assistant_started(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test backup manager's state is blocked until Home Assistant has started."""
+
+    hass.set_state(CoreState.not_running)
+
+    await setup_backup_integration(hass)
+    manager = hass.data[DATA_MANAGER]
+
+    assert manager.state == BackupManagerState.BLOCKED
+    assert manager.last_action_event is None
+
+    # Fired when Home Assistant changes to starting state
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert manager.state == BackupManagerState.BLOCKED
+    assert manager.last_action_event is None
+
+    # Fired when Home Assistant changes to running state
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    assert manager.state == BackupManagerState.IDLE
+    assert manager.last_action_event is None
+
+
+async def test_manager_not_blocked_after_restore(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test restore backup progress after restart."""
+    restore_result = {"error": None, "error_type": None, "success": True}
+
+    hass.set_state(CoreState.not_running)
+    with patch(
+        "pathlib.Path.read_bytes", return_value=json.dumps(restore_result).encode()
+    ):
+        await setup_backup_integration(hass)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id({"type": "backup/info"})
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+    assert result["result"] == {
+        "agent_errors": {},
+        "backups": [],
+        "last_attempted_automatic_backup": None,
+        "last_completed_automatic_backup": None,
+        "last_action_event": {
+            "manager_state": "restore_backup",
+            "reason": None,
+            "stage": None,
+            "state": "completed",
+        },
+        "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
+        "state": "idle",
+    }

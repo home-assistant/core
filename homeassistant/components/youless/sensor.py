@@ -23,7 +23,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import DOMAIN
@@ -36,7 +36,7 @@ class YouLessSensorEntityDescription(SensorEntityDescription):
     """Describes a YouLess sensor entity."""
 
     device_group: str
-    value_func: Callable[[YoulessAPI], float | None]
+    value_func: Callable[[YoulessAPI], float | None | str]
 
 
 SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
@@ -213,6 +213,38 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         ),
     ),
     YouLessSensorEntityDescription(
+        key="tariff",
+        device_group="power",
+        translation_key="active_tariff",
+        device_class=SensorDeviceClass.ENUM,
+        options=["1", "2"],
+        value_func=(
+            lambda device: str(device.current_tariff) if device.current_tariff else None
+        ),
+    ),
+    YouLessSensorEntityDescription(
+        key="average_peak",
+        device_group="power",
+        translation_key="average_peak",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_func=(
+            lambda device: device.average_power.value if device.average_power else None
+        ),
+    ),
+    YouLessSensorEntityDescription(
+        key="month_peak",
+        device_group="power",
+        translation_key="month_peak",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_func=(
+            lambda device: device.peak_power.value if device.peak_power else None
+        ),
+    ),
+    YouLessSensorEntityDescription(
         key="delivery_low",
         device_group="delivery",
         translation_key="total_energy_export_tariff_kwh",
@@ -270,7 +302,9 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize the integration."""
     coordinator: YouLessCoordinator = hass.data[DOMAIN][entry.entry_id]

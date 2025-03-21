@@ -34,10 +34,7 @@ async def test_relay_switch(
 
     mock_get_status.return_value = {"switchStatus": 0}
 
-    entry = configure_integration(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
+    entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
     entity_id = "switch.relay_switch_1"
@@ -71,10 +68,7 @@ async def test_switchmode_bot(
 
     mock_get_status.return_value = {"deviceMode": "switchMode", "power": "off"}
 
-    entry = configure_integration(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
+    entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
     entity_id = "switch.bot_1"
@@ -108,9 +102,6 @@ async def test_pressmode_bot_no_switch_entity(
 
     mock_get_status.return_value = {"deviceMode": "pressMode"}
 
-    entry = configure_integration(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
+    entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
     assert not hass.states.async_entity_ids(SWITCH_DOMAIN)

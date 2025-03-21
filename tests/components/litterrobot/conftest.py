@@ -5,13 +5,20 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pylitterbot import Account, FeederRobot, LitterRobot3, LitterRobot4, Robot
+from pylitterbot import Account, FeederRobot, LitterRobot3, LitterRobot4, Pet, Robot
 from pylitterbot.exceptions import InvalidCommandException
 import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import CONFIG, DOMAIN, FEEDER_ROBOT_DATA, ROBOT_4_DATA, ROBOT_DATA
+from .common import (
+    CONFIG,
+    DOMAIN,
+    FEEDER_ROBOT_DATA,
+    PET_DATA,
+    ROBOT_4_DATA,
+    ROBOT_DATA,
+)
 
 from tests.common import MockConfigEntry
 
@@ -50,6 +57,7 @@ def create_mock_account(
     skip_robots: bool = False,
     v4: bool = False,
     feeder: bool = False,
+    pet: bool = False,
 ) -> MagicMock:
     """Create a mock Litter-Robot account."""
     account = MagicMock(spec=Account)
@@ -60,6 +68,7 @@ def create_mock_account(
         if skip_robots
         else [create_mock_robot(robot_data, account, v4, feeder, side_effect)]
     )
+    account.pets = [Pet(PET_DATA, account.session)] if pet else []
     return account
 
 
@@ -79,6 +88,12 @@ def mock_account_with_litterrobot_4() -> MagicMock:
 def mock_account_with_feederrobot() -> MagicMock:
     """Mock account with Feeder-Robot."""
     return create_mock_account(feeder=True)
+
+
+@pytest.fixture
+def mock_account_with_pet() -> MagicMock:
+    """Mock account with Feeder-Robot."""
+    return create_mock_account(pet=True)
 
 
 @pytest.fixture

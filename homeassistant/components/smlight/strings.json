@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Set up SMLIGHT Zigbee Integration",
+        "description": "Set up SMLIGHT Zigbee integration",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
@@ -111,7 +111,7 @@
         "name": "Zigbee flash mode"
       },
       "reconnect_zigbee_router": {
-        "name": "Reconnect zigbee router"
+        "name": "Reconnect Zigbee router"
       }
     },
     "switch": {

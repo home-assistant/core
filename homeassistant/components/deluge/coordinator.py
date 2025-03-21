@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from datetime import timedelta
 from ssl import SSLError
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from deluge_client.client import DelugeRPCClient, FailedToReconnectException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -15,8 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import LOGGER, DelugeGetSessionStatusKeys
 
-if TYPE_CHECKING:
-    from . import DelugeConfigEntry
+type DelugeConfigEntry = ConfigEntry[DelugeDataUpdateCoordinator]
 
 
 class DelugeDataUpdateCoordinator(
@@ -33,11 +33,11 @@ class DelugeDataUpdateCoordinator(
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=entry,
             name=entry.title,
             update_interval=timedelta(seconds=30),
         )
         self.api = api
-        self.config_entry = entry
 
     async def _async_update_data(self) -> dict[Platform, dict[str, Any]]:
         """Get the latest data from Deluge and updates the state."""

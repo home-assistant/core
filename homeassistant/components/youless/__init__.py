@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except URLError as exception:
         raise ConfigEntryNotReady from exception
 
-    youless_coordinator = YouLessCoordinator(hass, api)
+    youless_coordinator = YouLessCoordinator(hass, entry, api)
     await youless_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})

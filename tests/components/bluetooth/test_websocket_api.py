@@ -161,10 +161,28 @@ async def test_subscribe_connection_allocations(
     assert response["event"] == [
         {
             "allocated": [],
+            "free": 5,
+            "slots": 5,
+            "source": "00:00:00:00:00:01",
+        },
+        {
+            "allocated": [],
+            "free": 5,
+            "slots": 5,
+            "source": HCI0_SOURCE_ADDRESS,
+        },
+        {
+            "allocated": [],
+            "free": 5,
+            "slots": 5,
+            "source": HCI1_SOURCE_ADDRESS,
+        },
+        {
+            "allocated": [],
             "free": 0,
             "slots": 0,
             "source": NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS,
-        }
+        },
     ]
 
     manager = _get_manager()
@@ -184,7 +202,7 @@ async def test_subscribe_connection_allocations(
             "free": 4,
             "slots": 5,
             "source": "AA:BB:CC:DD:EE:11",
-        }
+        },
     ]
     manager.async_on_allocation_changed(
         Allocations(

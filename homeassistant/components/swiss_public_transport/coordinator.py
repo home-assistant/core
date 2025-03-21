@@ -61,6 +61,7 @@ class SwissPublicTransportDataUpdateCoordinator(
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: SwissPublicTransportConfigEntry,
         opendata: OpendataTransport,
         time_offset: dict[str, int] | None,
     ) -> None:
@@ -68,6 +69,7 @@ class SwissPublicTransportDataUpdateCoordinator(
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_UPDATE_TIME),
         )

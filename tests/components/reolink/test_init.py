@@ -19,10 +19,14 @@ from homeassistant.components.reolink import (
     FIRMWARE_UPDATE_INTERVAL,
     NUM_CRED_ERRORS,
 )
-from homeassistant.components.reolink.const import DOMAIN
+from homeassistant.components.reolink.const import CONF_BC_PORT, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
     CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -35,16 +39,25 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
+    CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_USE_HTTPS,
+    DEFAULT_PROTOCOL,
+    TEST_BC_PORT,
     TEST_CAM_MODEL,
+    TEST_HOST,
     TEST_HOST_MODEL,
     TEST_MAC,
     TEST_NVR_NAME,
     TEST_PORT,
+    TEST_PRIVACY,
     TEST_UID,
     TEST_UID_CAM,
+    TEST_USE_HTTPS,
+    TEST_USERNAME,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -722,6 +735,41 @@ async def test_firmware_repair_issue(
     await hass.async_block_till_done()
 
     assert (DOMAIN, "firmware_update_host") in issue_registry.issues
+    reolink_connect.camera_sw_version_update_required.return_value = False
+
+
+async def test_password_too_long_repair_issue(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test password too long issue is raised."""
+    reolink_connect.valid_password.return_value = False
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: "too_longgggggggggggggggggggggggggggggggggggggggggggggggggg",
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        DOMAIN,
+        f"password_too_long_{config_entry.entry_id}",
+    ) in issue_registry.issues
+    reolink_connect.valid_password.return_value = True
 
 
 async def test_new_device_discovered(
@@ -760,6 +808,21 @@ async def test_port_changed(
     await hass.async_block_till_done()
 
     assert config_entry.data[CONF_PORT] == 4567
+
+
+async def test_baichuan_port_changed(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test config_entry baichuan port update when it has changed during initial login."""
+    assert config_entry.data[CONF_BC_PORT] == TEST_BC_PORT
+    reolink_connect.baichuan.port = 8901
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_BC_PORT] == 8901
 
 
 async def test_privacy_mode_on(
@@ -859,3 +922,30 @@ async def test_privacy_mode_change_callback(
 
     assert reolink_connect.get_states.call_count >= 1
     assert hass.states.get(entity_id).state == STATE_ON
+
+    # test cleanup during unloading, first reset to privacy mode ON
+    reolink_connect.baichuan.privacy_mode.return_value = True
+    callback_mock.callback_func()
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    # now fire the callback again, but unload before refresh took place
+    reolink_connect.baichuan.privacy_mode.return_value = False
+    callback_mock.callback_func()
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_remove(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test removing of the reolink integration."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_remove(config_entry.entry_id)

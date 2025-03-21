@@ -181,19 +181,19 @@ async def test_assist_api(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 0
+    assert [tool.name for tool in api.tools] == ["get_home_state"]
 
     # Match all
     intent_handler.platforms = None
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 1
+    assert [tool.name for tool in api.tools] == ["test_intent", "get_home_state"]
 
     # Match specific domain
     intent_handler.platforms = {"light"}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 1
+    assert len(api.tools) == 2
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
@@ -642,6 +642,15 @@ async def test_assist_api_prompt(
 {no_timer_prompt}
 {exposed_entities_prompt}"""
     )
+
+    # Verify that the get_home_state tool returns the same results as the exposed_entities_prompt
+    result = await api.async_call_tool(
+        llm.ToolInput(tool_name="get_home_state", tool_args={})
+    )
+    assert result == {
+        "success": True,
+        "result": exposed_entities_prompt,
+    }
 
     # Fake that request is made from a specific device ID with an area
     llm_context.device_id = device.id
@@ -1170,7 +1179,9 @@ async def test_selector_serializer(
 async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     """Test the calendar get events tool."""
     assert await async_setup_component(hass, "homeassistant", {})
-    hass.states.async_set("calendar.test_calendar", "on", {"friendly_name": "Test"})
+    hass.states.async_set(
+        "calendar.test_calendar", "on", {"friendly_name": "Mock Calendar Name"}
+    )
     async_expose_entity(hass, "conversation", "calendar.test_calendar", True)
     context = Context()
     llm_context = llm.LLMContext(
@@ -1182,7 +1193,11 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool for tool in api.tools if tool.name == "calendar_get_events"]
+    tool = next(
+        (tool for tool in api.tools if tool.name == "calendar_get_events"), None
+    )
+    assert tool is not None
+    assert tool.parameters.schema["calendar"].container == ["Mock Calendar Name"]
 
     calls = async_mock_service(
         hass,
@@ -1212,7 +1227,10 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
 
     tool_input = llm.ToolInput(
         tool_name="calendar_get_events",
-        tool_args={"calendar": "calendar.test_calendar", "range": "today"},
+        tool_args={
+            "calendar": "Mock Calendar Name",
+            "range": "today",
+        },
     )
     now = dt_util.now()
     with patch("homeassistant.util.dt.now", return_value=now):
@@ -1258,3 +1276,19 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
         "start_date_time": now,
         "end_date_time": dt_util.start_of_local_day() + timedelta(days=7),
     }
+
+
+async def test_no_tools_exposed(hass: HomeAssistant) -> None:
+    """Test that tools are not exposed when no entities are exposed."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        user_prompt="test_text",
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert api.tools == []

@@ -160,7 +160,7 @@ def mock_config_entry_v2() -> MockConfigEntry:
             CONF_IP_ADDRESS: "127.0.0.1",
             CONF_TOKEN: "00112233445566778899ABCDEFABCDEF",
         },
-        unique_id="HWE-P1_5c2fafabcdef",
+        unique_id="HWE-BAT_5c2fafabcdef",
     )
 
 

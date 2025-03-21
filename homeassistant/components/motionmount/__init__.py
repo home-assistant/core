@@ -14,6 +14,8 @@ from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN, EMPTY_MAC
 
+type MotionMountConfigEntry = ConfigEntry[motionmount.MotionMount]
+
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.NUMBER,
@@ -22,7 +24,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MotionMountConfigEntry) -> bool:
     """Set up Vogel's MotionMount from a config entry."""
 
     host = entry.data[CONF_HOST]
@@ -65,17 +67,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
     # Store an API object for your platforms to access
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = mm
+    entry.runtime_data = mm
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: MotionMountConfigEntry
+) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        mm: motionmount.MotionMount = hass.data[DOMAIN].pop(entry.entry_id)
+        mm = entry.runtime_data
         await mm.disconnect()
 
     return unload_ok

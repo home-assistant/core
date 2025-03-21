@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
+from concurrent.futures import CancelledError, Future
 import copy
 from dataclasses import dataclass, replace
 from io import BytesIO
@@ -12,6 +13,7 @@ import os
 from pathlib import Path, PurePath
 from queue import SimpleQueue
 import tarfile
+import threading
 from typing import IO, Any, Self, cast
 
 import aiohttp
@@ -20,8 +22,8 @@ from securetar import SecureTarError, SecureTarFile, SecureTarReadError
 from homeassistant.backup_restore import password_to_key
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
-from homeassistant.util.thread import ThreadWithException
 
 from .const import BUF_SIZE, LOGGER
 from .models import AddonInfo, AgentBackup, Folder
@@ -102,12 +104,15 @@ def read_backup(backup_path: Path) -> AgentBackup:
                 bool, homeassistant.get("exclude_database", False)
             )
 
+        extra_metadata = cast(dict[str, bool | str], data.get("extra", {}))
+        date = extra_metadata.get("supervisor.backup_request_date", data["date"])
+
         return AgentBackup(
             addons=addons,
             backup_id=cast(str, data["slug"]),
             database_included=database_included,
-            date=cast(str, data["date"]),
-            extra_metadata=cast(dict[str, bool | str], data.get("extra", {})),
+            date=cast(str, date),
+            extra_metadata=extra_metadata,
             folders=folders,
             homeassistant_included=homeassistant_included,
             homeassistant_version=homeassistant_version,
@@ -115,6 +120,17 @@ def read_backup(backup_path: Path) -> AgentBackup:
             protected=cast(bool, data.get("protected", False)),
             size=backup_path.stat().st_size,
         )
+
+
+def suggested_filename_from_name_date(name: str, date_str: str) -> str:
+    """Suggest a filename for the backup."""
+    date = dt_util.parse_datetime(date_str, raise_on_error=True)
+    return "_".join(f"{name} {date.strftime('%Y-%m-%d %H.%M %S%f')}.tar".split())
+
+
+def suggested_filename(backup: AgentBackup) -> str:
+    """Suggest a filename for the backup."""
+    return suggested_filename_from_name_date(backup.name, backup.date)
 
 
 def validate_password(path: Path, password: str | None) -> bool:
@@ -155,23 +171,38 @@ class AsyncIteratorReader:
 
     def __init__(self, hass: HomeAssistant, stream: AsyncIterator[bytes]) -> None:
         """Initialize the wrapper."""
+        self._aborted = False
         self._hass = hass
         self._stream = stream
         self._buffer: bytes | None = None
+        self._next_future: Future[bytes | None] | None = None
         self._pos: int = 0
 
     async def _next(self) -> bytes | None:
         """Get the next chunk from the iterator."""
         return await anext(self._stream, None)
 
+    def abort(self) -> None:
+        """Abort the reader."""
+        self._aborted = True
+        if self._next_future is not None:
+            self._next_future.cancel()
+
     def read(self, n: int = -1, /) -> bytes:
         """Read data from the iterator."""
         result = bytearray()
         while n < 0 or len(result) < n:
             if not self._buffer:
-                self._buffer = asyncio.run_coroutine_threadsafe(
+                self._next_future = asyncio.run_coroutine_threadsafe(
                     self._next(), self._hass.loop
-                ).result()
+                )
+                if self._aborted:
+                    self._next_future.cancel()
+                    raise AbortCipher
+                try:
+                    self._buffer = self._next_future.result()
+                except CancelledError as err:
+                    raise AbortCipher from err
                 self._pos = 0
             if not self._buffer:
                 # The stream is exhausted
@@ -193,9 +224,11 @@ class AsyncIteratorWriter:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the wrapper."""
+        self._aborted = False
         self._hass = hass
         self._pos: int = 0
         self._queue: asyncio.Queue[bytes | None] = asyncio.Queue(maxsize=1)
+        self._write_future: Future[bytes | None] | None = None
 
     def __aiter__(self) -> Self:
         """Return the iterator."""
@@ -207,13 +240,28 @@ class AsyncIteratorWriter:
             return data
         raise StopAsyncIteration
 
+    def abort(self) -> None:
+        """Abort the writer."""
+        self._aborted = True
+        if self._write_future is not None:
+            self._write_future.cancel()
+
     def tell(self) -> int:
         """Return the current position in the iterator."""
         return self._pos
 
     def write(self, s: bytes, /) -> int:
         """Write data to the iterator."""
-        asyncio.run_coroutine_threadsafe(self._queue.put(s), self._hass.loop).result()
+        self._write_future = asyncio.run_coroutine_threadsafe(
+            self._queue.put(s), self._hass.loop
+        )
+        if self._aborted:
+            self._write_future.cancel()
+            raise AbortCipher
+        try:
+            self._write_future.result()
+        except CancelledError as err:
+            raise AbortCipher from err
         self._pos += len(s)
         return len(s)
 
@@ -403,7 +451,9 @@ def _encrypt_backup(
 class _CipherWorkerStatus:
     done: asyncio.Event
     error: Exception | None = None
-    thread: ThreadWithException
+    reader: AsyncIteratorReader
+    thread: threading.Thread
+    writer: AsyncIteratorWriter
 
 
 class _CipherBackupStreamer:
@@ -456,11 +506,13 @@ class _CipherBackupStreamer:
         stream = await self._open_stream()
         reader = AsyncIteratorReader(self._hass, stream)
         writer = AsyncIteratorWriter(self._hass)
-        worker = ThreadWithException(
+        worker = threading.Thread(
             target=self._cipher_func,
             args=[reader, writer, self._password, on_done, self.size(), self._nonces],
         )
-        worker_status = _CipherWorkerStatus(done=asyncio.Event(), thread=worker)
+        worker_status = _CipherWorkerStatus(
+            done=asyncio.Event(), reader=reader, thread=worker, writer=writer
+        )
         self._workers.append(worker_status)
         worker.start()
         return writer
@@ -468,9 +520,8 @@ class _CipherBackupStreamer:
     async def wait(self) -> None:
         """Wait for the worker threads to finish."""
         for worker in self._workers:
-            if not worker.thread.is_alive():
-                continue
-            worker.thread.raise_exc(AbortCipher)
+            worker.reader.abort()
+            worker.writer.abort()
         await asyncio.gather(*(worker.done.wait() for worker in self._workers))
 
 
