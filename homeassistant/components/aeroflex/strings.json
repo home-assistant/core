@@ -3,7 +3,7 @@
     "flow_title": "{name}",
     "step": {
       "bluetooth_confirm": {
-        "title": "Confirm Aeroflex Bed",
+        "title": "Aeroflex Bed Discovered",
         "description": "Do you want to set up the Aeroflex bed {name}?",
         "data": {
           "name": "[%key:common::config_flow::data::name%]"
@@ -21,7 +21,7 @@
   "entity": {
     "number": {
       "head_angle": {
-        "name": "Head Angle",
+        "name": "Head angle",
         "state_attributes": {
           "value": {
             "name": "Angle"
@@ -29,7 +29,7 @@
         }
       },
       "feet_angle": {
-        "name": "Feet Angle",
+        "name": "Feet angle",
         "state_attributes": {
           "value": {
             "name": "Angle"
