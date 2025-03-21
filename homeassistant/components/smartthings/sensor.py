@@ -225,7 +225,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # Haven't seen at devices yet
     Capability.CARBON_DIOXIDE_MEASUREMENT: {
         Attribute.CARBON_DIOXIDE: [
             SmartThingsSensorEntityDescription(
@@ -467,7 +466,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # part of the proposed spec, Haven't seen at devices yet
     Capability.MEDIA_PLAYBACK_REPEAT: {
         Attribute.PLAYBACK_REPEAT_MODE: [
             SmartThingsSensorEntityDescription(
@@ -476,7 +474,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # part of the proposed spec, Haven't seen at devices yet
     Capability.MEDIA_PLAYBACK_SHUFFLE: {
         Attribute.PLAYBACK_SHUFFLE: [
             SmartThingsSensorEntityDescription(
@@ -899,6 +896,16 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.ULTRAVIOLET_INDEX,
                 translation_key="uv_index",
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    Capability.VERY_FINE_DUST_SENSOR: {
+        Attribute.VERY_FINE_DUST_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.VERY_FINE_DUST_LEVEL,
+                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                device_class=SensorDeviceClass.PM1,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ]
