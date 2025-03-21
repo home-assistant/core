@@ -1,7 +1,7 @@
 """Tests for the sensors of the Backup integration."""
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -55,8 +55,12 @@ async def test_sensor_updates(
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     hass_storage: dict[str, Any],
+    create_backup: AsyncMock,
 ) -> None:
     """Test update of backup sensors."""
+    created_backup: MagicMock = create_backup.return_value[1].result().backup
+    created_backup.protected = True
+
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-12T12:00:00+01:00")
     storage_data = {
