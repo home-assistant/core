@@ -1122,6 +1122,9 @@ PROP = DeviceProp(
 NETWORK_INFO = NetworkInfo(
     ip="123.232.12.1", ssid="wifi", mac="ac:cc:cc:cc:cc", bssid="bssid", rssi=90
 )
+NETWORK_INFO_2 = NetworkInfo(
+    ip="123.232.12.2", ssid="wifi", mac="ac:cc:cc:cc:cd", bssid="bssid", rssi=90
+)
 
 MULTI_MAP_LIST = MultiMapsList.from_dict(
     {
