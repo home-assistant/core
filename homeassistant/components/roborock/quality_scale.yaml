@@ -77,7 +77,5 @@ rules:
       support deleting devices and this is a gap #132590
   # Platinum
   async-dependency: todo
-  inject-websession:
-    status: todo
-    comment: Web API uses aiohttp but does not yet inject web session.
+  inject-websession: done
   strict-typing: todo
