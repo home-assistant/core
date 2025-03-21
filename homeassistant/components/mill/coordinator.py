@@ -88,7 +88,6 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
             last_stats = await recoder_instance.async_add_executor_job(
                 get_last_statistics, self.hass, 1, statistic_id, True, set()
             )
-
             if not last_stats or not last_stats.get(statistic_id):
                 hourly_data = (
                     await self.mill_data_connection.fetch_historic_energy_usage(
@@ -115,7 +114,6 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
                     continue
                 hourly_data = dict(sorted(hourly_data.items(), key=lambda x: x[0]))
                 start_time = next(iter(hourly_data))
-
                 stats = await recoder_instance.async_add_executor_job(
                     statistics_during_period,
                     self.hass,
@@ -128,7 +126,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
                 )
                 stat = stats[statistic_id][0]
 
-                _sum = cast(float, stat["sum"])
+                _sum = cast(float, stat["sum"]) - cast(float, stat["state"])
                 last_stats_time = dt_util.utc_from_timestamp(stat["start"])
 
             statistics = []

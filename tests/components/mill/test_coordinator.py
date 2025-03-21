@@ -14,8 +14,8 @@ from homeassistant.util import dt as dt_util
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_async_setup_entry(recorder_mock: Recorder, hass: HomeAssistant) -> None:
-    """Test setup Mill."""
+async def test_mill_historic_data(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Test historic data from Mill."""
 
     data = {
         dt_util.parse_datetime("2024-12-03T00:00:00+01:00"): 2,
@@ -56,4 +56,36 @@ async def test_async_setup_entry(recorder_mock: Recorder, hass: HomeAssistant) -
         assert stat["last_reset"] is None
 
         _sum += data[start]
+        assert stat["sum"] == _sum
+
+    data2 = {
+        dt_util.parse_datetime("2024-12-03T02:00:00+01:00"): 4.5,
+        dt_util.parse_datetime("2024-12-03T03:00:00+01:00"): 5,
+        dt_util.parse_datetime("2024-12-03T04:00:00+01:00"): 6,
+        dt_util.parse_datetime("2024-12-03T05:00:00+01:00"): 7,
+    }
+    mill_data_connection.fetch_historic_energy_usage = AsyncMock(return_value=data2)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        next(iter(data)),
+        None,
+        {statistic_id},
+        "hour",
+        None,
+        {"start", "state", "mean", "min", "max", "last_reset", "sum"},
+    )
+    assert len(stats) == 1
+    assert len(stats[statistic_id]) == 6
+    _sum = 0
+    for stat in stats[statistic_id]:
+        start = dt_util.utc_from_timestamp(stat["start"])
+        val = data2.get(start) if start in data2 else data.get(start)
+        assert val is not None
+        assert stat["state"] == val
+        assert stat["last_reset"] is None
+
+        _sum += val
         assert stat["sum"] == _sum
