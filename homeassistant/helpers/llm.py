@@ -901,7 +901,7 @@ class GetHomeStateTool(Tool):
     """
 
     name = "get_home_state"
-    description = "Get the current state of devices in the home. "
+    description = "Get the current state of all devices in the home. "
 
     async def async_call(
         self,
