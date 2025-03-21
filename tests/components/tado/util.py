@@ -3,7 +3,6 @@
 import requests_mock
 
 from homeassistant.components.tado import CONF_REFRESH_TOKEN, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -186,8 +185,6 @@ async def async_init_integration(
             domain=DOMAIN,
             version=2,
             data={
-                CONF_USERNAME: "mock",
-                CONF_PASSWORD: "mock",
                 CONF_REFRESH_TOKEN: "mock-token",
             },
             options={"fallback": "NEXT_TIME_BLOCK"},

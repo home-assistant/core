@@ -46,4 +46,5 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_REFRESH_TOKEN: "refresh",
         },
         unique_id="1",
+        version=2,
     )
