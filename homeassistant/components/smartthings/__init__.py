@@ -207,6 +207,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         rooms=rooms,
     )
 
+    # Events are deprecated and will be removed in 2025.10
     def handle_button_press(event: DeviceEvent) -> None:
         """Handle a button press."""
         if (
