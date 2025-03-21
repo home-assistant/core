@@ -1001,13 +1001,6 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         options=AMBIENT_THRESHOLD_STATUS_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "watts": SensorEntityDescription(
-        key="watts",
-        translation_key="watts",
-        native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
 }
 
 
