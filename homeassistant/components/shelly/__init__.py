@@ -199,10 +199,7 @@ async def _async_setup_block_entry(
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="device_communication_error",
-                translation_placeholders={
-                    "device": entry.title,
-                    "error": repr(err),
-                },
+                translation_placeholders={"device": entry.title},
             ) from err
         except InvalidAuthError as err:
             await device.shutdown()
@@ -300,10 +297,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="device_communication_error",
-                translation_placeholders={
-                    "device": entry.title,
-                    "error": repr(err),
-                },
+                translation_placeholders={"device": entry.title},
             ) from err
         except InvalidAuthError as err:
             await device.shutdown()
