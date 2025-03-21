@@ -1624,7 +1624,7 @@
     'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
-    'configuration_url': None,
+    'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
         'mac',
