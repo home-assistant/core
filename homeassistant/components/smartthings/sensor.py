@@ -466,7 +466,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # part of the proposed spec, Haven't seen at devices yet
     Capability.MEDIA_PLAYBACK_REPEAT: {
         Attribute.PLAYBACK_REPEAT_MODE: [
             SmartThingsSensorEntityDescription(
@@ -475,7 +474,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # part of the proposed spec, Haven't seen at devices yet
     Capability.MEDIA_PLAYBACK_SHUFFLE: {
         Attribute.PLAYBACK_SHUFFLE: [
             SmartThingsSensorEntityDescription(
