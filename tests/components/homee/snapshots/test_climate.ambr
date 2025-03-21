@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_light_snapshot[climate.test_thermostat_1-entry]
+# name: test_climate_snapshot[climate.test_thermostat_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -40,7 +40,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_light_snapshot[climate.test_thermostat_1-state]
+# name: test_climate_snapshot[climate.test_thermostat_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': None,
@@ -63,7 +63,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_light_snapshot[climate.test_thermostat_2-entry]
+# name: test_climate_snapshot[climate.test_thermostat_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -104,7 +104,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_light_snapshot[climate.test_thermostat_2-state]
+# name: test_climate_snapshot[climate.test_thermostat_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.6,
@@ -127,7 +127,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_light_snapshot[climate.test_thermostat_3-entry]
+# name: test_climate_snapshot[climate.test_thermostat_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -169,7 +169,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_light_snapshot[climate.test_thermostat_3-state]
+# name: test_climate_snapshot[climate.test_thermostat_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.6,
@@ -193,7 +193,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_light_snapshot[climate.test_thermostat_4-entry]
+# name: test_climate_snapshot[climate.test_thermostat_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -241,7 +241,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_light_snapshot[climate.test_thermostat_4-state]
+# name: test_climate_snapshot[climate.test_thermostat_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.6,

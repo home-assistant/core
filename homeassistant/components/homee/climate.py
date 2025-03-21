@@ -119,12 +119,8 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
             )
             is not None
         ):
-            if attribute.current_value == 2:
-                return PRESET_ECO
-            if attribute.current_value == 3:
-                return PRESET_BOOST
-            if attribute.current_value == 4:
-                return PRESET_MANUAL
+            assert self._attr_preset_modes is not None
+            return self._attr_preset_modes[int(attribute.current_value) - 1]
 
         return PRESET_NONE
 
@@ -146,57 +142,34 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the lowest settable target temperature."""
-        if (
-            attribute := self._node.get_attribute_by_type(
-                AttributeType.TARGET_TEMPERATURE_LOW
-            )
-        ) is not None:
-            return attribute.current_value
-
         assert self._traget_temp is not None
         return self._traget_temp.minimum
 
     @property
     def max_temp(self) -> float:
         """Return the lowest settable target temperature."""
-        if (
-            attribute := self._node.get_attribute_by_type(
-                AttributeType.TARGET_TEMPERATURE_HIGH
-            )
-        ) is not None:
-            return attribute.current_value
-
         assert self._traget_temp is not None
         return self._traget_temp.maximum
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         # Currently only HEAT and OFF are supported.
-        mode = 0
-        if hvac_mode == HVACMode.HEAT:
-            mode = 1
-
         if (
             attribute := self._node.get_attribute_by_type(AttributeType.HEATING_MODE)
         ) is not None:
-            await self.async_set_homee_value(attribute, mode)
+            await self.async_set_homee_value(
+                attribute, float(hvac_mode == HVACMode.HEAT)
+            )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
-        preset = 0
-        if preset_mode == PRESET_NONE:
-            preset = 1
-        if preset_mode == PRESET_ECO:
-            preset = 2
-        elif preset_mode == PRESET_BOOST:
-            preset = 3
-        elif preset_mode == PRESET_MANUAL:
-            preset = 4
-
         if (
             attribute := self._node.get_attribute_by_type(AttributeType.HEATING_MODE)
         ) is not None:
-            await self.async_set_homee_value(attribute, preset)
+            assert self._attr_preset_modes is not None
+            await self.async_set_homee_value(
+                attribute, self._attr_preset_modes.index(preset_mode) + 1
+            )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

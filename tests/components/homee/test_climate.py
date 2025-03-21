@@ -7,6 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODES,
+    ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_BOOST,
@@ -113,6 +114,36 @@ async def test_climate_preset_modes(
 
 
 @pytest.mark.parametrize(
+    ("preset_mode_int", "expected"),
+    [
+        (1, PRESET_NONE),
+        (2, PRESET_ECO),
+        (3, PRESET_BOOST),
+        (4, PRESET_MANUAL),
+    ],
+)
+async def test_current_preset_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: MagicMock,
+    preset_mode_int: int,
+    expected: str,
+) -> None:
+    """Test current preset mode of climate entities."""
+    await setup_mock_climate(
+        hass, mock_config_entry, mock_homee, "thermostat_with_preset.json"
+    )
+
+    node = mock_homee.nodes[0]
+    node.attributes[2].current_value = preset_mode_int
+    node.add_on_changed_listener.call_args_list[0][0][0](node)
+    await hass.async_block_till_done()
+
+    attributes = hass.states.get("climate.test_thermostat_4").attributes
+    assert attributes[ATTR_PRESET_MODE] == expected
+
+
+@pytest.mark.parametrize(
     ("service", "service_data", "expected"),
     [
         (
@@ -185,7 +216,7 @@ async def test_climate_services(
     mock_homee.set_value.assert_called_once_with(*expected)
 
 
-async def test_light_snapshot(
+async def test_climate_snapshot(
     hass: HomeAssistant,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
