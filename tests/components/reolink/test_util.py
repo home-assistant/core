@@ -45,7 +45,7 @@ from tests.common import MockConfigEntry
             HomeAssistantError,
         ),
         (
-            ApiError("Test error", translation_key="not_in_json.strings"),
+            ApiError("Test error", translation_key="not_in_strings.json"),
             HomeAssistantError,
         ),
         (
