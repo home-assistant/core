@@ -113,6 +113,26 @@
         }
       }
     },
+    "button": {
+      "operation_mode_start": {
+        "name": "Start"
+      },
+      "operation_mode_start_for_location": {
+        "name": "{location} start"
+      },
+      "operation_mode_stop": {
+        "name": "Pause"
+      },
+      "operation_mode_stop_for_location": {
+        "name": "{location} pause"
+      },
+      "operation_mode_wake_up": {
+        "name": "Sleep mode off"
+      },
+      "operation_mode_wake_up_for_location": {
+        "name": "{location} sleep mode off"
+      }
+    },
     "climate": {
       "climate_air_conditioner": {
         "state_attributes": {
