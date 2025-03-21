@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from aiohttp import ClientError
+from aiohttp import ClientResponseError
 from pysmartthings import (
     Attribute,
     Capability,
@@ -102,7 +103,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     try:
         await session.async_ensure_token_valid()
-    except ClientError as err:
+    except ClientResponseError as err:
+        if err.status == HTTPStatus.BAD_REQUEST:
+            raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from err
         raise ConfigEntryNotReady from err
 
     client = SmartThings(session=async_get_clientsession(hass))
