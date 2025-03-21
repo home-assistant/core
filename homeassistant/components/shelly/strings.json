@@ -203,6 +203,14 @@
       }
     }
   },
+  "exceptions": {
+    "device_communication_action_error": {
+      "message": "Device communication error occurred while calling the entity {entity} action for {device} device: {error}"
+    },
+    "rpc_call_action_error": {
+      "message": "RPC call error occurred while calling the entity {entity} action for {device} device: {error}"
+    }
+  },
   "issues": {
     "device_not_calibrated": {
       "title": "Shelly device {device_name} is not calibrated",

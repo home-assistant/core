@@ -61,6 +61,13 @@ CAPABILITY_TO_SENSORS: dict[
             is_on_key="replace",
         )
     },
+    Capability.SAMSUNG_CE_KIDS_LOCK: {
+        Attribute.LOCK_STATE: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.LOCK_STATE,
+            translation_key="child_lock",
+            is_on_key="locked",
+        )
+    },
     Capability.MOTION_SENSOR: {
         Attribute.MOTION: SmartThingsBinarySensorEntityDescription(
             key=Attribute.MOTION,
@@ -73,6 +80,13 @@ CAPABILITY_TO_SENSORS: dict[
             key=Attribute.PRESENCE,
             device_class=BinarySensorDeviceClass.PRESENCE,
             is_on_key="present",
+        )
+    },
+    Capability.REMOTE_CONTROL_STATUS: {
+        Attribute.REMOTE_CONTROL_ENABLED: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.REMOTE_CONTROL_ENABLED,
+            translation_key="remote_control",
+            is_on_key="true",
         )
     },
     Capability.SOUND_SENSOR: {

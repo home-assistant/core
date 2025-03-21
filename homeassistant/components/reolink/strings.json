@@ -31,7 +31,7 @@
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "not_admin": "User needs to be admin, user \"{username}\" has authorisation level \"{userlevel}\"",
-      "password_incompatible": "Password contains incompatible special character, only these characters are allowed: a-z, A-Z, 0-9 or {special_chars}",
+      "password_incompatible": "Password contains incompatible special character or is too long, maximum 31 characters and only these characters are allowed: a-z, A-Z, 0-9 or {special_chars}",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "update_needed": "Failed to login because of outdated firmware, please update the firmware to version {needed_firmware} using the Reolink Download Center: {download_center_url}, currently version {current_firmware} is installed",
       "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
@@ -129,6 +129,10 @@
     "hub_switch_deprecated": {
       "title": "Reolink Home Hub switches deprecated",
       "description": "The redundant 'Record', 'Email on event', 'FTP upload', 'Push notifications', and 'Buzzer on event' switches on the Reolink Home Hub are deprecated since the new firmware no longer supports these. Please use the equally named switches under each of the camera devices connected to the Home Hub instead. To remove this issue, please adjust automations accordingly and disable the switch entities mentioned."
+    },
+    "password_too_long": {
+      "title": "Reolink password too long",
+      "description": "The password for \"{name}\" is more than 31 characters long, this is no longer compatible with the Reolink API. Please change the password using the Reolink app/client to a password with is shorter than 32 characters. After changing the password, fill in the new password in the Reolink Re-authentication flow to continue using this integration. The latest version of the Reolink app/client also has a password limit of 31 characters."
     }
   },
   "services": {
@@ -799,6 +803,15 @@
       },
       "sub_bit_rate": {
         "name": "Fluent bit rate"
+      },
+      "scene_mode": {
+        "name": "Scene mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "disarm": "Disarmed",
+          "home": "Home",
+          "away": "Away"
+        }
       }
     },
     "sensor": {
