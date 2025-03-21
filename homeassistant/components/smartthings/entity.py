@@ -32,6 +32,7 @@ class SmartThingsEntity(Entity):
         device: FullDevice,
         rooms: dict[str, str],
         capabilities: set[Capability],
+        *,
         component: str = MAIN,
     ) -> None:
         """Initialize the instance."""

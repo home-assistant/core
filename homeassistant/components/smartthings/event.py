@@ -43,7 +43,9 @@ class SmartThingsButtonEvent(SmartThingsEntity, EventEntity):
         component: Component,
     ) -> None:
         """Init the class."""
-        super().__init__(client, device, rooms, {Capability.BUTTON}, component.id)
+        super().__init__(
+            client, device, rooms, {Capability.BUTTON}, component=component.id
+        )
         self._attr_name = component.label
         self._attr_unique_id = (
             f"{device.device.device_id}_{component.id}_{Capability.BUTTON}"
