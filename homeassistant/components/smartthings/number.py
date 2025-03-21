@@ -33,11 +33,7 @@ class SmartThingsNumberEntity(SmartThingsEntity, NumberEntity):
     _attr_translation_key = "washer_rinse_cycles"
     _attr_native_step = 1.0
 
-    def __init__(
-        self,
-        client: SmartThings,
-        device: FullDevice,
-    ) -> None:
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Initialize the instance."""
         super().__init__(client, device, {Capability.CUSTOM_WASHER_RINSE_CYCLES})
         self._attr_unique_id = (
