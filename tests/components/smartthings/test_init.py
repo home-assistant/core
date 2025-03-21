@@ -9,10 +9,11 @@ from pysmartthings import (
     DeviceStatus,
     SmartThingsSinkError,
 )
-from pysmartthings.models import Subscription
+from pysmartthings.models import Lifecycle, Subscription
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.smartthings import EVENT_BUTTON
 from homeassistant.components.smartthings.const import CONF_SUBSCRIPTION_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -293,3 +294,23 @@ async def test_hub_via_device(
         ).via_device_id
         == hub_device.id
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_deleted_device_runtime(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test devices that are deleted in runtime."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("climate.ac_office_granit").state == HVACMode.OFF
+
+    for call in devices.add_device_lifecycle_event_listener.call_args_list:
+        if call[0][0] == Lifecycle.DELETE:
+            call[0][1]("96a5ef74-5832-a84b-f1f7-ca799957065d")
+    await hass.async_block_till_done()
+
+    assert hass.states.get("climate.ac_office_granit") is None
