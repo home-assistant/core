@@ -903,6 +903,16 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.VERY_FINE_DUST_SENSOR: {
+        Attribute.VERY_FINE_DUST_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.VERY_FINE_DUST_LEVEL,
+                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                device_class=SensorDeviceClass.PM1,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
     Capability.VOLTAGE_MEASUREMENT: {
         Attribute.VOLTAGE: [
             SmartThingsSensorEntityDescription(
