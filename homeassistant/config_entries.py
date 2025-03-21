@@ -2905,7 +2905,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
             [
                 entry
                 for entry in self._async_current_entries(include_ignore=False)
-                if entry.source != SOURCE_RECONFIGURE
+                if entry
+                not in (self._get_reconfigure_entry(), self._get_reauth_entry())
             ],
             match_dict,
         )
