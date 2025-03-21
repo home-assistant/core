@@ -205,15 +205,24 @@
             "device_class": "Device class",
             "state_class": "State class",
             "unit_of_measurement": "Unit of measurement",
-            "suggested_display_precision": "Suggested display precision",
             "options": "Options"
           },
           "data_description": {
             "device_class": "The device class of the {platform} entity. [Learn more..]({url}#device_class)",
             "state_class": "The [state_class](https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes) of the sensor. [Learn more..]({url}#state_class)",
             "unit_of_measurement": "Defines the unit of measurement of the sensor, if any.",
-            "suggested_display_precision": "The number of decimals which should be used in the {platform} entity state after rounding. [Learn more..]({url}#suggested_display_precision)",
             "options": "List of allowed sensor state value. The sensor’s device_class must be set to Enumeration. The options option cannot be used together with State Class or Unit of measurement."
+          },
+          "sections": {
+            "advanced_settings": {
+              "name": "Advanced options",
+              "data": {
+                "suggested_display_precision": "Suggested display precision"
+              },
+              "data_description": {
+                "suggested_display_precision": "The number of decimals which should be used in the {platform} entity state after rounding. [Learn more..]({url}#suggested_display_precision)"
+              }
+            }
           }
         },
         "mqtt_platform_config": {
