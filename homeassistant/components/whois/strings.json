@@ -45,6 +45,9 @@
       },
       "reseller": {
         "name": "Reseller"
+      },
+      "status": {
+        "name": "Status"
       }
     }
   }
