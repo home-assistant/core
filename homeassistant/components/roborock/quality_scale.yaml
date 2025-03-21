@@ -70,11 +70,7 @@ rules:
   repair-issues:
     status: todo
     comment: The Cloud vs Local API warning should probably be a repair issue.
-  stale-devices:
-    status: todo
-    comment: |
-      The integration does not yet handle stale devices. The roborock app does
-      support deleting devices and this is a gap #132590
+  stale-devices: done
   # Platinum
   async-dependency: todo
   inject-websession:
