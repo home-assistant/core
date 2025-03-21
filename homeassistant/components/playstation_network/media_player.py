@@ -57,14 +57,14 @@ async def async_setup_entry(
         if (platform := coordinator.data.platform["platform"]) and (
             platform_type := PlatformType(platform)
         ) not in devices_added:
-            async_add_entities([MediaPlayer(coordinator, platform_type)])
+            async_add_entities([PsnMediaPlayerEntity(coordinator, platform_type)])
             devices_added.add(platform_type)
 
     for platform in supported_devices:
         if device_reg.async_get_device(
             identifiers={(DOMAIN, f"{coordinator.config_entry.unique_id}_{platform}")}
         ):
-            entities.append(MediaPlayer(coordinator, platform))
+            entities.append(PsnMediaPlayerEntity(coordinator, platform))
             devices_added.add(platform)
     if entities:
         async_add_entities(entities)
@@ -73,7 +73,9 @@ async def async_setup_entry(
     add_entities()
 
 
-class MediaPlayer(CoordinatorEntity[PlaystationNetworkCoordinator], MediaPlayerEntity):
+class PsnMediaPlayerEntity(
+    CoordinatorEntity[PlaystationNetworkCoordinator], MediaPlayerEntity
+):
     """Media player entity representing currently playing game."""
 
     _attr_media_image_remotely_accessible = True
