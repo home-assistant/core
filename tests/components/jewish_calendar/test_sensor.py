@@ -160,8 +160,7 @@ TEST_PARAMS = [
     TEST_PARAMS,
     indirect=["location_data", "test_time", "results", "language"],
 )
-@pytest.mark.usefixtures("location_data", "test_time", "setup_at_time")
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_at_time")
 async def test_jewish_calendar_sensor(
     hass: HomeAssistant, results: dict[str, Any], sensor: str
 ) -> None:
@@ -493,13 +492,7 @@ SHABBAT_PARAMS = [
     SHABBAT_PARAMS,
     indirect=True,
 )
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default",
-    "location_data",
-    "test_time",
-    "havdalah_offset",
-    "setup_at_time",
-)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_at_time")
 async def test_shabbat_times_sensor(
     hass: HomeAssistant, results: dict[str, Any], language: str
 ) -> None:
@@ -530,9 +523,7 @@ async def test_shabbat_times_sensor(
     ],
     indirect=True,
 )
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "setup_at_time", "test_time"
-)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_at_time")
 async def test_omer_sensor(hass: HomeAssistant, results: str) -> None:
     """Test Omer Count sensor output."""
     assert hass.states.get("sensor.jewish_calendar_day_of_the_omer").state == results
@@ -549,9 +540,7 @@ async def test_omer_sensor(hass: HomeAssistant, results: str) -> None:
     ],
     indirect=True,
 )
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "setup_at_time", "test_time"
-)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_at_time")
 async def test_dafyomi_sensor(hass: HomeAssistant, results: str) -> None:
     """Test Daf Yomi sensor output."""
     assert hass.states.get("sensor.jewish_calendar_daf_yomi").state == results
