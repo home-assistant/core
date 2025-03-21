@@ -821,7 +821,7 @@ freebox-api==1.2.2
 fritzconnection[qr]==1.14.0
 
 # homeassistant.components.fyta
-fyta_cli==0.7.1
+fyta_cli==0.7.2
 
 # homeassistant.components.google_translate
 gTTS==2.5.3
@@ -1886,7 +1886,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.7.2
+pysmartthings==2.7.4
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2125,7 +2125,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.12.3b1
+reolink-aio==0.12.3
 
 # homeassistant.components.rflink
 rflink==0.0.66

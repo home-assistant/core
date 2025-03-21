@@ -57,4 +57,11 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
             async with asyncio.timeout(API_TIMEOUT):
                 return await self.gios.async_update()
         except (GiosError, ClientConnectorError) as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={
+                    "entry": self.config_entry.title,
+                    "error": repr(error),
+                },
+            ) from error

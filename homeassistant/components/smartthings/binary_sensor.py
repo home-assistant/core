@@ -75,6 +75,13 @@ CAPABILITY_TO_SENSORS: dict[
             is_on_key="present",
         )
     },
+    Capability.REMOTE_CONTROL_STATUS: {
+        Attribute.REMOTE_CONTROL_ENABLED: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.REMOTE_CONTROL_ENABLED,
+            translation_key="remote_control",
+            is_on_key="true",
+        )
+    },
     Capability.SOUND_SENSOR: {
         Attribute.SOUND: SmartThingsBinarySensorEntityDescription(
             key=Attribute.SOUND,
