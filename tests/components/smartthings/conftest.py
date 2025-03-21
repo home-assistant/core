@@ -131,6 +131,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "fake_fan",
         "generic_fan_3_speed",
         "heatit_ztrm3_thermostat",
+        "heatit_zpushwall",
         "generic_ef00_v1",
         "bosch_radiator_thermostat_ii",
         "im_speaker_ai_0001",
