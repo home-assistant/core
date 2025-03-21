@@ -21,6 +21,16 @@
         "data_description": {
           "password": "Enter the password for your Ohme account"
         }
+      },
+      "reconfigure": {
+        "description": "Update your password for {email}",
+        "title": "Reconfigure Ohme Account",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Enter the password for your Ohme account"
+        }
       }
     },
     "error": {
@@ -29,7 +39,8 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "services": {

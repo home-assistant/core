@@ -526,7 +526,7 @@
     'state': 'off',
   })
 # ---
-# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_maximumn_level-entry]
+# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_maximum_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -539,7 +539,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_binary_sensor_maximumn_level',
+    'entity_id': 'binary_sensor.test_binary_sensor_maximum_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -551,7 +551,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Maximumn level',
+    'original_name': 'Maximum level',
     'platform': 'homee',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -560,21 +560,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_maximumn_level-state]
+# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_maximum_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Maximumn level',
+      'friendly_name': 'Test Binary Sensor Maximum level',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_binary_sensor_maximumn_level',
+    'entity_id': 'binary_sensor.test_binary_sensor_maximum_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_minumum_level-entry]
+# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_minimum_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -587,7 +587,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_binary_sensor_minumum_level',
+    'entity_id': 'binary_sensor.test_binary_sensor_minimum_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -599,7 +599,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Minumum level',
+    'original_name': 'Minimum level',
     'platform': 'homee',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -608,14 +608,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_minumum_level-state]
+# name: test_sensor_snapshot[binary_sensor.test_binary_sensor_minimum_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Test Binary Sensor Minumum level',
+      'friendly_name': 'Test Binary Sensor Minimum level',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_binary_sensor_minumum_level',
+    'entity_id': 'binary_sensor.test_binary_sensor_minimum_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

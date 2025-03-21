@@ -56,10 +56,10 @@
         "name": "Malfunction"
       },
       "maximum": {
-        "name": "Maximumn level"
+        "name": "Maximum level"
       },
       "minimum": {
-        "name": "Minumum level"
+        "name": "Minimum level"
       },
       "motor_blocked": {
         "name": "Motor blocked"

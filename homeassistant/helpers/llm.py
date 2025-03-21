@@ -66,6 +66,11 @@ Answer questions about the world truthfully.
 Answer in plain text. Keep it simple and to the point.
 """
 
+NO_ENTITIES_PROMPT = (
+    "Only if the user wants to control a device, tell them to expose entities "
+    "to their voice assistant in Home Assistant."
+)
+
 
 @callback
 def async_render_no_api_prompt(hass: HomeAssistant) -> str:
@@ -329,10 +334,7 @@ class AssistAPI(API):
         self, llm_context: LLMContext, exposed_entities: dict | None
     ) -> str:
         if not exposed_entities or not exposed_entities["entities"]:
-            return (
-                "Only if the user wants to control a device, tell them to expose entities "
-                "to their voice assistant in Home Assistant."
-            )
+            return NO_ENTITIES_PROMPT
         return "\n".join(
             [
                 *self._async_get_preable(llm_context),
@@ -453,6 +455,9 @@ class AssistAPI(API):
                 ScriptTool(self.hass, script_entity_id)
                 for script_entity_id in exposed_entities[SCRIPT_DOMAIN]
             )
+
+        if exposed_domains:
+            tools.append(GetHomeStateTool())
 
         return tools
 
@@ -885,3 +890,39 @@ class CalendarGetEventsTool(Tool):
         ]
 
         return {"success": True, "result": events}
+
+
+class GetHomeStateTool(Tool):
+    """Tool for getting the current state of exposed entities.
+
+    This returns state for all entities that have been exposed to
+    the assistant. This is different than the GetState intent, which
+    returns state for entities based on intent parameters.
+    """
+
+    name = "get_home_state"
+    description = "Get the current state of all devices in the home. "
+
+    async def async_call(
+        self,
+        hass: HomeAssistant,
+        tool_input: ToolInput,
+        llm_context: LLMContext,
+    ) -> JsonObjectType:
+        """Get the current state of exposed entities."""
+        if llm_context.assistant is None:
+            # Note this doesn't happen in practice since this tool won't be
+            # exposed if no assistant is configured.
+            return {"success": False, "error": "No assistant configured"}
+
+        exposed_entities = _get_exposed_entities(hass, llm_context.assistant)
+        if not exposed_entities["entities"]:
+            return {"success": False, "error": NO_ENTITIES_PROMPT}
+        prompt = [
+            "An overview of the areas and the devices in this smart home:",
+            yaml_util.dump(list(exposed_entities["entities"].values())),
+        ]
+        return {
+            "success": True,
+            "result": "\n".join(prompt),
+        }

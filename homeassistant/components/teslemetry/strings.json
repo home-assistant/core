@@ -132,7 +132,7 @@
         "name": "Tire pressure warning rear right"
       },
       "pin_to_drive_enabled": {
-        "name": "Pin to drive enabled"
+        "name": "PIN to Drive enabled"
       },
       "drive_rail": {
         "name": "Drive rail"

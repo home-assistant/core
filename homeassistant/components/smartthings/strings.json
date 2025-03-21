@@ -36,6 +36,12 @@
       "filter_status": {
         "name": "Filter status"
       },
+      "remote_control": {
+        "name": "Remote control"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
       "valve": {
         "name": "Valve"
       }
@@ -389,6 +395,12 @@
           "freeze_protection": "Freeze protection"
         }
       }
+    }
+  },
+  "issues": {
+    "deprecated_binary_valve": {
+      "title": "Deprecated valve binary sensor detected in some automations or scripts",
+      "description": "The valve binary sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nA valve entity with controls is available and should be used going forward; Please use it on the above automations or scripts to fix this issue."
     }
   }
 }

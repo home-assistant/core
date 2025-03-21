@@ -25,6 +25,12 @@ from .mock_data import MOCK_CONFIG, USER_DATA, USER_EMAIL
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture
+def cleanup_map_storage():
+    """Override the map storage fixture as it is not relevant here."""
+    return
+
+
 async def test_config_flow_success(
     hass: HomeAssistant,
     bypass_api_fixture,
@@ -189,25 +195,31 @@ async def test_config_flow_failures_code_login(
 
 
 async def test_options_flow_drawables(
-    hass: HomeAssistant, setup_entry: MockConfigEntry
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
 ) -> None:
     """Test that the options flow works."""
-    result = await hass.config_entries.options.async_init(setup_entry.entry_id)
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == DRAWABLES
-    with patch(
-        "homeassistant.components.roborock.async_setup_entry", return_value=True
-    ) as mock_setup:
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={Drawable.PREDICTED_PATH: True},
-        )
+    with patch("homeassistant.components.roborock.roborock_storage"):
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert setup_entry.options[DRAWABLES][Drawable.PREDICTED_PATH] is True
-    assert len(mock_setup.mock_calls) == 1
+        result = await hass.config_entries.options.async_init(
+            mock_roborock_entry.entry_id
+        )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == DRAWABLES
+        with patch(
+            "homeassistant.components.roborock.async_setup_entry", return_value=True
+        ) as mock_setup:
+            result = await hass.config_entries.options.async_configure(
+                result["flow_id"],
+                user_input={Drawable.PREDICTED_PATH: True},
+            )
+            await hass.async_block_till_done()
+
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert mock_roborock_entry.options[DRAWABLES][Drawable.PREDICTED_PATH] is True
+        assert len(mock_setup.mock_calls) == 1
 
 
 async def test_reauth_flow(

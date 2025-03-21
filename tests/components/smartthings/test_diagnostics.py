@@ -30,9 +30,9 @@ async def test_config_entry_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test generating diagnostics for a device entry."""
-    mock_smartthings.get_raw_devices.return_value = load_json_object_fixture(
-        "devices/da_ac_rac_000001.json", DOMAIN
-    )
+    mock_smartthings.get_raw_devices.return_value = [
+        load_json_object_fixture("devices/da_ac_rac_000001.json", DOMAIN)
+    ]
     await setup_integration(hass, mock_config_entry)
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)

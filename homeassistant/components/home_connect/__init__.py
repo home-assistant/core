@@ -629,13 +629,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) 
     home_connect_client = HomeConnectClient(config_entry_auth)
 
     coordinator = HomeConnectCoordinator(hass, entry, home_connect_client)
-    await coordinator.async_config_entry_first_refresh()
-
+    await coordinator.async_setup()
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.runtime_data.start_event_listener()
+
+    entry.async_create_background_task(
+        hass,
+        coordinator.async_refresh(),
+        f"home_connect-initial-full-refresh-{entry.entry_id}",
+    )
 
     return True
 

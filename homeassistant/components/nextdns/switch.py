@@ -8,7 +8,7 @@ from typing import Any
 
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
-from nextdns import ApiError, Settings
+from nextdns import ApiError, InvalidApiKeyError, Settings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NextDnsConfigEntry
+from .const import DOMAIN
 from .coordinator import NextDnsUpdateCoordinator
 
 PARALLEL_UPDATES = 1
@@ -582,9 +583,16 @@ class NextDnsSwitch(
             ClientError,
         ) as err:
             raise HomeAssistantError(
-                "NextDNS API returned an error calling set_setting for"
-                f" {self.entity_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="method_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "error": repr(err),
+                },
             ) from err
+        except InvalidApiKeyError:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            return
 
         if result:
             self._attr_is_on = new_state

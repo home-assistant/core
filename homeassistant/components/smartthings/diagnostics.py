@@ -23,7 +23,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     client = entry.runtime_data.client
-    return await client.get_raw_devices()
+    return {"devices": await client.get_raw_devices()}
 
 
 async def async_get_device_diagnostics(
