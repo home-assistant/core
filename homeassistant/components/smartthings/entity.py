@@ -30,7 +30,6 @@ class SmartThingsEntity(Entity):
         self,
         client: SmartThings,
         device: FullDevice,
-        rooms: dict[str, str],
         capabilities: set[Capability],
         *,
         component: str = MAIN,
@@ -47,38 +46,8 @@ class SmartThingsEntity(Entity):
         self.device = device
         self._attr_unique_id = device.device.device_id
         self._attr_device_info = DeviceInfo(
-            configuration_url="https://account.smartthings.com",
             identifiers={(DOMAIN, device.device.device_id)},
-            name=device.device.label,
-            suggested_area=(
-                rooms.get(device.device.room_id) if device.device.room_id else None
-            ),
         )
-        if device.device.parent_device_id:
-            self._attr_device_info["via_device"] = (
-                DOMAIN,
-                device.device.parent_device_id,
-            )
-        if (ocf := device.device.ocf) is not None:
-            self._attr_device_info.update(
-                {
-                    "manufacturer": ocf.manufacturer_name,
-                    "model": (
-                        (ocf.model_number.split("|")[0]) if ocf.model_number else None
-                    ),
-                    "hw_version": ocf.hardware_version,
-                    "sw_version": ocf.firmware_version,
-                }
-            )
-        if (viper := device.device.viper) is not None:
-            self._attr_device_info.update(
-                {
-                    "manufacturer": viper.manufacturer_name,
-                    "model": viper.model_name,
-                    "hw_version": viper.hardware_version,
-                    "sw_version": viper.software_version,
-                }
-            )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
