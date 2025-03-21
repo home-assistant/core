@@ -21,7 +21,7 @@ async def async_setup_entry(
     """Add number entities for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsNumberEntity(entry_data.client, device, entry_data.rooms)
+        SmartThingsNumberEntity(entry_data.client, device)
         for device in entry_data.devices.values()
         if Capability.CUSTOM_WASHER_RINSE_CYCLES in device.status[MAIN]
     )
@@ -37,10 +37,9 @@ class SmartThingsNumberEntity(SmartThingsEntity, NumberEntity):
         self,
         client: SmartThings,
         device: FullDevice,
-        rooms: dict[str, str],
     ) -> None:
         """Initialize the instance."""
-        super().__init__(client, device, rooms, {Capability.CUSTOM_WASHER_RINSE_CYCLES})
+        super().__init__(client, device, {Capability.CUSTOM_WASHER_RINSE_CYCLES})
         self._attr_unique_id = (
             f"{device.device.device_id}_{MAIN}_{Capability.CUSTOM_WASHER_RINSE_CYCLES}"
         )
