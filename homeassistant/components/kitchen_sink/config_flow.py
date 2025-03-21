@@ -113,7 +113,6 @@ class SubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """User flow to create a sensor subentry."""
-        assert self._get_entry() is not None
         return await self.async_step_add_sensor()
 
     async def async_step_add_sensor(
@@ -147,7 +146,7 @@ class SubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             title = user_input.pop("name")
             return self.async_update_and_abort(
-                self._get_reconfigure_entry(),
+                self._get_entry(),
                 self._get_reconfigure_subentry(),
                 data=user_input,
                 title=title,
