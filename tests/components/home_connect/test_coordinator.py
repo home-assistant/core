@@ -1,19 +1,20 @@
 """Test for Home Connect coordinator."""
 
 from collections.abc import Awaitable, Callable
-import copy
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
+    ArrayOfHomeAppliances,
     ArrayOfSettings,
     ArrayOfStatus,
     Event,
     EventKey,
     EventMessage,
     EventType,
+    HomeAppliance,
 )
 from aiohomeconnect.model.error import (
     EventStreamInterruptedError,
@@ -28,6 +29,7 @@ from homeassistant.components.home_connect.const import (
     BSH_DOOR_STATE_OPEN,
     BSH_EVENT_PRESENT_STATE_PRESENT,
     BSH_POWER_OFF,
+    DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntries, ConfigEntryState
 from homeassistant.const import EVENT_STATE_REPORTED, Platform
@@ -37,11 +39,9 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from . import MOCK_APPLIANCES
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -81,16 +81,21 @@ async def test_coordinator_update_failing_get_appliances(
 
 @pytest.mark.usefixtures("setup_credentials")
 @pytest.mark.parametrize("platforms", [("binary_sensor",)])
-@pytest.mark.parametrize("appliance_ha_id", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_coordinator_failure_refresh_and_stream(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     client: MagicMock,
     freezer: FrozenDateTimeFactory,
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
 ) -> None:
     """Test entity available state via coordinator refresh and event stream."""
+    appliance_data = (
+        cast(str, appliance.to_json())
+        .replace("ha_id", "haId")
+        .replace("e_number", "enumber")
+    )
     entity_id_1 = "binary_sensor.washer_remote_control"
     entity_id_2 = "binary_sensor.washer_remote_start"
     await async_setup_component(hass, "homeassistant", {})
@@ -121,7 +126,9 @@ async def test_coordinator_failure_refresh_and_stream(
     # Test that the entity becomes available again after a successful update.
 
     client.get_home_appliances.side_effect = None
-    client.get_home_appliances.return_value = copy.deepcopy(MOCK_APPLIANCES)
+    client.get_home_appliances.return_value = ArrayOfHomeAppliances(
+        [HomeAppliance.from_json(appliance_data)]
+    )
 
     # Move time forward to pass the debounce time.
     freezer.tick(timedelta(hours=1))
@@ -166,11 +173,13 @@ async def test_coordinator_failure_refresh_and_stream(
 
     # Now make the entity available again.
     client.get_home_appliances.side_effect = None
-    client.get_home_appliances.return_value = copy.deepcopy(MOCK_APPLIANCES)
+    client.get_home_appliances.return_value = ArrayOfHomeAppliances(
+        [HomeAppliance.from_json(appliance_data)]
+    )
 
     # One event should make all entities for this appliance available again.
     event_message = EventMessage(
-        appliance_ha_id,
+        appliance.ha_id,
         EventType.STATUS,
         ArrayOfEvents(
             [
@@ -399,6 +408,9 @@ async def test_event_listener_error(
     assert not config_entry._background_tasks
 
 
+@pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.parametrize("platforms", [("sensor",)])
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 @pytest.mark.parametrize(
     "exception",
     [HomeConnectRequestError(), EventStreamInterruptedError()],
@@ -429,11 +441,10 @@ async def test_event_listener_resilience(
     after_event_expected_state: str,
     exception: HomeConnectError,
     hass: HomeAssistant,
+    appliance: HomeAppliance,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-    appliance_ha_id: str,
 ) -> None:
     """Test that the event listener is resilient to interruptions."""
     future = hass.loop.create_future()
@@ -467,7 +478,7 @@ async def test_event_listener_resilience(
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.STATUS,
                 ArrayOfEvents(
                     [
@@ -489,3 +500,44 @@ async def test_event_listener_resilience(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == after_event_expected_state
+
+
+async def test_devices_updated_on_refresh(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test handling of devices added or deleted while event stream is down."""
+    appliances: list[HomeAppliance] = (
+        client.get_home_appliances.return_value.homeappliances
+    )
+    assert len(appliances) >= 3
+    client.get_home_appliances = AsyncMock(
+        return_value=ArrayOfHomeAppliances(appliances[:2]),
+    )
+
+    await async_setup_component(hass, "homeassistant", {})
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    for appliance in appliances[:2]:
+        assert device_registry.async_get_device({(DOMAIN, appliance.ha_id)})
+    assert not device_registry.async_get_device({(DOMAIN, appliances[2].ha_id)})
+
+    client.get_home_appliances = AsyncMock(
+        return_value=ArrayOfHomeAppliances(appliances[1:3]),
+    )
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": "switch.dishwasher_power"},
+        blocking=True,
+    )
+
+    assert not device_registry.async_get_device({(DOMAIN, appliances[0].ha_id)})
+    for appliance in appliances[2:3]:
+        assert device_registry.async_get_device({(DOMAIN, appliance.ha_id)})

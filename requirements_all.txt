@@ -84,7 +84,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.56.1
+PySwitchbot==0.57.1
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -2077,7 +2077,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.4.7
+pylamarzocco==1.4.9
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2310,7 +2310,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.7.2
+pysmartthings==2.7.4
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2467,7 +2467,7 @@ python-roborock==2.12.2
 python-smarttub==0.0.39
 
 # homeassistant.components.snoo
-python-snoo==0.6.1
+python-snoo==0.6.4
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -3149,7 +3149,7 @@ zeroconf==0.145.1
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.52
+zha==0.0.53
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
