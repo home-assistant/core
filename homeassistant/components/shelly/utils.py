@@ -664,3 +664,20 @@ def get_shelly_air_lamp_life(lamp_seconds: int) -> float:
     if lamp_hours >= SHAIR_MAX_WORK_HOURS:
         return 0.0
     return 100 * (1 - lamp_hours / SHAIR_MAX_WORK_HOURS)
+
+
+async def get_rpc_scripts_event_types(
+    device: RpcDevice, ignore_scripts: list[str]
+) -> dict[int, list[str]]:
+    """Return a dict of all scripts and their event types."""
+    script_instances = get_rpc_key_instances(device.status, "script")
+    script_events = {}
+    for script in script_instances:
+        script_name = get_rpc_entity_name(device, script)
+        if script_name in ignore_scripts:
+            continue
+
+        script_id = int(script.split(":")[-1])
+        script_events[script_id] = await get_rpc_script_event_types(device, script_id)
+
+    return script_events
