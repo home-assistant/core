@@ -81,6 +81,7 @@ PLATFORMS = [
     Platform.SCENE,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
     Platform.VALVE,
 ]
 
