@@ -580,7 +580,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         children: list[BrowseMedia] = [
             _media_to_browse_media(source)
             for source in self.coordinator.heos.music_sources.values()
-            if source.available
+            if source.available or source.source_id == heos_const.MUSIC_SOURCE_TUNEIN
         ]
         root = BrowseMedia(
             title="Music Sources",
@@ -654,7 +654,10 @@ def _media_to_browse_media(media: MediaItem | MediaMusicSource) -> BrowseMedia:
     can_play = False
 
     if isinstance(media, MediaMusicSource):
-        can_expand = media.available
+        if media.source_id == heos_const.MUSIC_SOURCE_TUNEIN:
+            can_expand = True
+        else:
+            can_expand = media.available
     else:
         can_expand = media.browsable
         can_play = media.playable
