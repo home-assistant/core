@@ -7,7 +7,7 @@
           "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
-          "pin": "The PIN for your Comelit device {host}"
+          "pin": "The PIN of your Comelit device."
         }
       },
       "user": {
@@ -20,7 +20,7 @@
         "data_description": {
           "host": "The hostname or IP address of your Comelit device.",
           "port": "The port of your Comelit device.",
-          "pin": "The pin of your Comelit device.",
+          "pin": "The PIN of your Comelit device.",
           "type": "The type of your Comelit device."
         }
       }
