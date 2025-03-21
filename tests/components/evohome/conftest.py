@@ -8,15 +8,27 @@ from http import HTTPMethod
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import evohomeasync2 as ec2
 from evohomeasync2 import EvohomeClient
 from evohomeasync2.auth import AbstractTokenManager, Auth
-from evohomeasync2.control_system import ControlSystem
-from evohomeasync2.zone import Zone
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.evohome.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.components.evohome import CONFIG_SCHEMA
+from homeassistant.components.evohome.config_flow import EvoConfigFileDictT
+from homeassistant.components.evohome.const import (
+    CONF_HIGH_PRECISION,
+    CONF_LOCATION_IDX,
+    DEFAULT_LOCATION_IDX,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, slugify
@@ -24,7 +36,13 @@ from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import ACCESS_TOKEN, REFRESH_TOKEN, SESSION_ID, USERNAME
 
-from tests.common import load_json_array_fixture, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
+
+_DEFAULT_INSTALL = "default"
 
 
 def user_account_config_fixture(install: str) -> JsonObjectType:
@@ -65,12 +83,15 @@ def zone_schedule_fixture(install: str, zon_id: str | None = None) -> JsonObject
 
 
 def mock_post_request(install: str) -> Callable:
-    """Obtain an access token via a POST to the vendor's web API."""
+    """Return a HTTP POST method that acts for a specified installation.
+
+    Used to validate user credentials and return the access token / session ID.
+    """
 
     async def post_request(
         self: AbstractTokenManager, url: str, /, **kwargs: Any
     ) -> JsonArrayType | JsonObjectType:
-        """Obtain an access token via a POST to the vendor's web API."""
+        """Validate user credentials and return the access token / session ID."""
 
         if "Token" in url:
             return {
@@ -90,39 +111,42 @@ def mock_post_request(install: str) -> Callable:
 
 
 def mock_make_request(install: str) -> Callable:
-    """Return a get method for a specified installation."""
+    """Return a HTTP request method that acts for a specified installation.
+
+    Used to process a given request to return the corresponding JSON.
+    """
 
     async def make_request(
         self: Auth, method: HTTPMethod, url: str, **kwargs: Any
     ) -> JsonArrayType | JsonObjectType:
-        """Return the JSON for a HTTP get of a given URL."""
+        """Process a given request to return the corresponding JSON."""
 
         if method != HTTPMethod.GET:
             pytest.fail(f"Unmocked method: {method} {url}")
 
         await self._headers()
 
-        # assume a valid GET, and return the JSON for that web API
-        if url == "accountInfo":  # /v0/accountInfo
+        # assume GET is valid, and return the JSON for that web API
+        if url == "accountInfo":  # v0, accountInfo
             return {}  # will throw a KeyError -> BadApiResponseError
 
-        if url.startswith("locations/"):  # /v0/locations?userId={id}&allData=True
+        if url.startswith("locations/"):  # v0, locations?userId={id}&allData=True
             return []  # user has no locations
 
-        if url == "userAccount":  # /v2/userAccount
+        if url == "userAccount":  # v2, userAccount
             return user_account_config_fixture(install)
 
         if url.startswith("location/"):
-            if "installationInfo" in url:  # /v2/location/installationInfo?userId={id}
+            if "installationInfo" in url:  # v2, location/installationInfo?userId={id}
                 return user_locations_config_fixture(install)
-            if "status" in url:  # /v2/location/{id}/status
+            if "status" in url:  # v2, location/{id}/status
                 return location_status_fixture(install)
 
         elif "schedule" in url:
-            if url.startswith("domesticHotWater"):  # /v2/domesticHotWater/{id}/schedule
-                return dhw_schedule_fixture(install, url[16:23])
-            if url.startswith("temperatureZone"):  # /v2/temperatureZone/{id}/schedule
-                return zone_schedule_fixture(install, url[16:23])
+            if url.startswith("domesticHotWater"):  # v2, domesticHotWater/{id}/schedule
+                return dhw_schedule_fixture(install, url.split("/")[1])
+            if url.startswith("temperatureZone"):  # v2, temperatureZone/{id}/schedule
+                return zone_schedule_fixture(install, url.split("/")[1])
 
         pytest.fail(f"Unexpected request: {HTTPMethod.GET} {url}")
 
@@ -130,18 +154,41 @@ def mock_make_request(install: str) -> Callable:
 
 
 @pytest.fixture
-def config() -> dict[str, str]:
+def config() -> EvoConfigFileDictT:
     "Return a default/minimal configuration."
-    return {
+    config = {
         CONF_USERNAME: USERNAME,
-        CONF_PASSWORD: "password",
+        CONF_PASSWORD: "P@ssw0rd",
+        CONF_LOCATION_IDX: DEFAULT_LOCATION_IDX,
+        CONF_SCAN_INTERVAL: timedelta(seconds=DEFAULT_SCAN_INTERVAL),
     }
+    return CONFIG_SCHEMA({DOMAIN: config})[DOMAIN]
+
+
+@pytest.fixture(name="config_entry")
+def config_entry_fixture(config: EvoConfigFileDictT) -> MockConfigEntry:
+    """Define a config entry fixture."""
+
+    data = {k: v for k, v in config.items() if k != CONF_SCAN_INTERVAL}
+
+    options = {
+        CONF_HIGH_PRECISION: True,
+        CONF_SCAN_INTERVAL: config[CONF_SCAN_INTERVAL].seconds,
+    }
+
+    return MockConfigEntry(
+        title="Evohome",
+        domain=DOMAIN,
+        unique_id=config[CONF_USERNAME].lower(),
+        data=data,
+        options=options,
+    )
 
 
 async def setup_evohome(
     hass: HomeAssistant,
     config: dict[str, str],
-    install: str = "default",
+    install: str = _DEFAULT_INSTALL,
 ) -> AsyncGenerator[MagicMock]:
     """Set up the evohome integration and return its client.
 
@@ -163,18 +210,20 @@ async def setup_evohome(
 
     with (
         # patch("homeassistant.components.evohome.ec1.EvohomeClient", return_value=None),
-        patch("homeassistant.components.evohome.ec2.EvohomeClient") as mock_client,
+        patch(
+            "homeassistant.components.evohome.coordinator.ec2.EvohomeClient"
+        ) as mock_client,
         patch(
             "evohomeasync2.auth.CredentialsManagerBase._post_request",
             mock_post_request(install),
         ),
         patch("evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
     ):
-        evo: EvohomeClient | None = None
+        evo: ec2.EvohomeClient | None = None
 
-        def evohome_client(*args, **kwargs) -> EvohomeClient:
+        def evohome_client(*args, **kwargs) -> ec2.EvohomeClient:
             nonlocal evo
-            evo = EvohomeClient(*args, **kwargs)
+            evo = EvohomeClient(*args, **kwargs)  # NOTE: don't use ec2.EvohomeClient
             return evo
 
         mock_client.side_effect = evohome_client
@@ -182,7 +231,7 @@ async def setup_evohome(
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
         await hass.async_block_till_done()
 
-        mock_client.assert_called_once()
+        mock_client.assert_called()  # called twice
 
         assert isinstance(evo, EvohomeClient)
         assert evo._token_manager.client_id == config[CONF_USERNAME]
@@ -192,6 +241,12 @@ async def setup_evohome(
 
         mock_client.return_value = evo
         yield mock_client
+
+
+@pytest.fixture  # can instead: @pytest.mark.parametrize("install", ["default"])
+def install() -> str:
+    "Return a default/minimal installation."
+    return _DEFAULT_INSTALL
 
 
 @pytest.fixture
@@ -213,8 +268,8 @@ async def evohome(
 def ctl_id(evohome: MagicMock) -> str:
     """Return the entity_id of the evohome integration's controller."""
 
-    evo: EvohomeClient = evohome.return_value
-    ctl: ControlSystem = evo.tcs
+    evo: ec2.EvohomeClient = evohome.return_value
+    ctl: ec2.ControlSystem = evo.tcs
 
     return f"{Platform.CLIMATE}.{slugify(ctl.location.name)}"
 
@@ -223,7 +278,33 @@ def ctl_id(evohome: MagicMock) -> str:
 def zone_id(evohome: MagicMock) -> str:
     """Return the entity_id of the evohome integration's first zone."""
 
-    evo: EvohomeClient = evohome.return_value
-    zone: Zone = evo.tcs.zones[0]
+    evo: ec2.EvohomeClient = evohome.return_value
+    zone: ec2.Zone = evo.tcs.zones[0]
 
     return f"{Platform.CLIMATE}.{slugify(zone.name)}"
+
+
+async def load_config_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    install: str = _DEFAULT_INSTALL,
+) -> bool:
+    """Load the config entry into the hass instance."""
+
+    config_entry.add_to_hass(hass)
+
+    # need to set up the entry first, as runtime_data attr is required
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request(install),
+        ),
+        patch(
+            "evohome.auth.AbstractAuth._make_request",
+            mock_make_request(install),
+        ),
+    ):
+        result = await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return result
