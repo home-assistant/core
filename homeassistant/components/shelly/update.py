@@ -207,9 +207,8 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         except DeviceConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="device_communication_action_error",
+                translation_key="ota_update_connection_error",
                 translation_placeholders={
-                    "entity": self.entity_id,
                     "device": self.coordinator.name,
                     "error": repr(err),
                 },
@@ -327,9 +326,8 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         except DeviceConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="device_communication_action_error",
+                translation_key="ota_update_connection_error",
                 translation_placeholders={
-                    "entity": self.entity_id,
                     "device": self.coordinator.name,
                     "error": repr(err),
                 },
@@ -337,7 +335,7 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         except RpcCallError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="rpc_call_action_error",
+                translation_key="ota_update_rpc_error",
                 translation_placeholders={
                     "entity": self.entity_id,
                     "device": self.coordinator.name,

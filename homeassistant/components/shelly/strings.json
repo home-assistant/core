@@ -222,6 +222,12 @@
     "invalid_trigger": {
       "message": "Invalid device automation trigger: {trigger}"
     },
+    "ota_update_connection_error": {
+      "message": "Device communication error occurred while triggering OTA update for {device} device: {error}"
+    },
+    "ota_update_rpc_error": {
+      "message": "RPC call error occurred while triggering OTA update for {device} device: {error}"
+    },
     "rpc_call_action_error": {
       "message": "RPC call error occurred while calling the entity {entity} action for {device} device: {error}"
     },
