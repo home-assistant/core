@@ -39,6 +39,9 @@
       "remote_control": {
         "name": "Remote control"
       },
+      "child_lock": {
+        "name": "Child lock"
+      },
       "valve": {
         "name": "Valve"
       }
