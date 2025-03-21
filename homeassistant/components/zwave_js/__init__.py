@@ -363,11 +363,17 @@ class DriverEvents:
             self.dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
             for node in controller.nodes.values()
         ]
+        provisioned_devices = [
+            self.dev_reg.async_get(entry.additional_properties["device_id"])
+            for entry in await controller.async_get_provisioning_entries()
+            if entry.additional_properties
+            and "device_id" in entry.additional_properties
+        ]
 
         # Devices that are in the device registry that are not known by the controller
         # can be removed
         for device in stored_devices:
-            if device not in known_devices:
+            if device not in known_devices and device not in provisioned_devices:
                 self.dev_reg.async_remove_device(device.id)
 
         # run discovery on controller node
@@ -637,10 +643,12 @@ class ControllerEvents:
                 dsk = provisioning_entry.dsk
                 dsk_identifier = (DOMAIN, f"provision_{dsk}")
 
-                # If the pre-provisioned device has the DSK identifier, update it
+                # If the pre-provisioned device has the DSK identifier, remove it
                 if dsk_identifier in preprovisioned_device.identifiers:
+                    new_identifiers = preprovisioned_device.identifiers.copy()
+                    new_identifiers.remove(dsk_identifier)
                     self.dev_reg.async_update_device(
-                        preprovisioned_device.id, new_identifiers=ids
+                        preprovisioned_device.id, new_identifiers=new_identifiers
                     )
 
         device = self.dev_reg.async_get_or_create(

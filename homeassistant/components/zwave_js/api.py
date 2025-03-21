@@ -1038,7 +1038,9 @@ async def websocket_provision_smart_start_node(
             suggested_area=msg.get(AREA_NAME),
         )
 
-        provisioning_info.device_id = device.id
+        if provisioning_info.additional_properties is None:
+            provisioning_info.additional_properties = {}
+        provisioning_info.additional_properties["device_id"] = device.id
 
         # Dispatch event that device was added to registry
         async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
@@ -1078,6 +1080,22 @@ async def websocket_unprovision_smart_start_node(
         )
         return
     dsk_or_node_id = msg.get(DSK) or msg[NODE_ID]
+    provisioning_entry = await driver.controller.async_get_provisioning_entry(
+        dsk_or_node_id
+    )
+    if (
+        provisioning_entry
+        and provisioning_entry.additional_properties
+        and "device_id" in provisioning_entry.additional_properties
+    ):
+        device_identifier = (DOMAIN, f"provision_{provisioning_entry.dsk}")
+        device_id = provisioning_entry.additional_properties["device_id"]
+        dev_reg = dr.async_get(hass)
+        device = dev_reg.async_get(device_id)
+        if device and device.identifiers == {device_identifier}:
+            # Only remove the device if nothing else has claimed it
+            dev_reg.async_remove_device(device_id)
+
     await driver.controller.async_unprovision_smart_start_node(dsk_or_node_id)
     connection.send_result(msg[ID])
 
