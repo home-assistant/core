@@ -1,11 +1,11 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "single_instance_allowed": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "step": {
       "user": {
-        "description": "Press submit for initial setup. On the created config entry, press configure to add sensors for selected processes"
+        "description": "Select **Submit** for initial setup. On the created config entry, select configure to add sensors for selected processes"
       }
     }
   },

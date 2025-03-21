@@ -18,10 +18,11 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AqualinkEntity, refresh_system
+from . import refresh_system
 from .const import DOMAIN as AQUALINK_DOMAIN
+from .entity import AqualinkEntity
 from .utils import await_or_reraise
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up discovered switches."""
     async_add_entities(
@@ -53,7 +54,6 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, dev: AqualinkThermostat) -> None:
         """Initialize AquaLink thermostat."""

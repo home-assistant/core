@@ -6,13 +6,14 @@ from typing import Any
 
 from iaqualink.device import AqualinkSwitch
 
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AqualinkEntity, refresh_system
+from . import refresh_system
 from .const import DOMAIN as AQUALINK_DOMAIN
+from .entity import AqualinkEntity
 from .utils import await_or_reraise
 
 PARALLEL_UPDATES = 0
@@ -21,11 +22,12 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up discovered switches."""
     async_add_entities(
-        (HassAqualinkSwitch(dev) for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]), True
+        (HassAqualinkSwitch(dev) for dev in hass.data[AQUALINK_DOMAIN][SWITCH_DOMAIN]),
+        True,
     )
 
 

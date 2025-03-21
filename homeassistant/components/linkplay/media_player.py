@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 import logging
-from typing import Any, Concatenate
+from typing import Any
 
 from linkplay.bridge import LinkPlayBridge
 from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
-from linkplay.exceptions import LinkPlayException, LinkPlayRequestException
+from linkplay.controller import LinkPlayController, LinkPlayMultiroom
+from linkplay.exceptions import LinkPlayRequestException
+import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -19,16 +20,22 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
     RepeatMode,
+    async_process_play_media_url,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_platform,
+    entity_registry as er,
+)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import LinkPlayConfigEntry
-from .const import DOMAIN
-from .utils import get_info_from_project
+from . import LinkPlayConfigEntry, LinkPlayData
+from .const import CONTROLLER_KEY, DOMAIN
+from .entity import LinkPlayBaseEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
 STATE_MAP: dict[PlayingStatus, MediaPlayerState] = {
@@ -39,6 +46,7 @@ STATE_MAP: dict[PlayingStatus, MediaPlayerState] = {
 }
 
 SOURCE_MAP: dict[PlayingMode, str] = {
+    PlayingMode.NETWORK: "Wifi",
     PlayingMode.LINE_IN: "Line In",
     PlayingMode.BLUETOOTH: "Bluetooth",
     PlayingMode.OPTICAL: "Optical",
@@ -48,6 +56,20 @@ SOURCE_MAP: dict[PlayingMode, str] = {
     PlayingMode.XLR: "XLR",
     PlayingMode.HDMI: "HDMI",
     PlayingMode.OPTICAL_2: "Optical 2",
+    PlayingMode.EXTERN_BLUETOOTH: "External Bluetooth",
+    PlayingMode.PHONO: "Phono",
+    PlayingMode.ARC: "ARC",
+    PlayingMode.COAXIAL_2: "Coaxial 2",
+    PlayingMode.TF_CARD_1: "SD Card 1",
+    PlayingMode.TF_CARD_2: "SD Card 2",
+    PlayingMode.CD: "CD",
+    PlayingMode.DAB: "DAB Radio",
+    PlayingMode.FM: "FM Radio",
+    PlayingMode.RCA: "RCA",
+    PlayingMode.UDISK: "USB",
+    PlayingMode.SPOTIFY: "Spotify",
+    PlayingMode.TIDAL: "Tidal",
+    PlayingMode.FOLLOWER: "Follower",
 }
 
 SOURCE_MAP_INV: dict[str, PlayingMode] = {v: k for k, v in SOURCE_MAP.items()}
@@ -94,73 +116,65 @@ SEEKABLE_FEATURES: MediaPlayerEntityFeature = (
     | MediaPlayerEntityFeature.SEEK
 )
 
+SERVICE_PLAY_PRESET = "play_preset"
+ATTR_PRESET_NUMBER = "preset_number"
+
+SERVICE_PLAY_PRESET_SCHEMA = cv.make_entity_service_schema(
+    {
+        vol.Required(ATTR_PRESET_NUMBER): cv.positive_int,
+    }
+)
+
+RETRY_POLL_MAXIMUM = 3
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LinkPlayConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a media player from a config entry."""
 
+    # register services
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_PLAY_PRESET, SERVICE_PLAY_PRESET_SCHEMA, "async_play_preset"
+    )
+
+    # add entities
     async_add_entities([LinkPlayMediaPlayerEntity(entry.runtime_data.bridge)])
 
 
-def exception_wrap[_LinkPlayEntityT: LinkPlayMediaPlayerEntity, **_P, _R](
-    func: Callable[Concatenate[_LinkPlayEntityT, _P], Coroutine[Any, Any, _R]],
-) -> Callable[Concatenate[_LinkPlayEntityT, _P], Coroutine[Any, Any, _R]]:
-    """Define a wrapper to catch exceptions and raise HomeAssistant errors."""
-
-    async def _wrap(self: _LinkPlayEntityT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
-        try:
-            return await func(self, *args, **kwargs)
-        except LinkPlayRequestException as err:
-            raise HomeAssistantError(
-                f"Exception occurred when communicating with API {func}: {err}"
-            ) from err
-
-    return _wrap
-
-
-class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
+class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     """Representation of a LinkPlay media player."""
 
     _attr_sound_mode_list = list(EQUALIZER_MAP.values())
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_media_content_type = MediaType.MUSIC
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(self, bridge: LinkPlayBridge) -> None:
         """Initialize the LinkPlay media player."""
 
-        self._bridge = bridge
+        super().__init__(bridge)
         self._attr_unique_id = bridge.device.uuid
+        self._retry_count = 0
 
         self._attr_source_list = [
             SOURCE_MAP[playing_mode] for playing_mode in bridge.device.playmode_support
         ]
-
-        manufacturer, model = get_info_from_project(bridge.device.properties["project"])
-        self._attr_device_info = dr.DeviceInfo(
-            configuration_url=bridge.endpoint,
-            connections={(dr.CONNECTION_NETWORK_MAC, bridge.device.properties["MAC"])},
-            hw_version=bridge.device.properties["hardware"],
-            identifiers={(DOMAIN, bridge.device.uuid)},
-            manufacturer=manufacturer,
-            model=model,
-            name=bridge.device.name,
-            sw_version=bridge.device.properties["firmware"],
-        )
 
     @exception_wrap
     async def async_update(self) -> None:
         """Update the state of the media player."""
         try:
             await self._bridge.player.update_status()
+            self._retry_count = 0
             self._update_properties()
-        except LinkPlayException:
-            self._attr_available = False
-            raise
+        except LinkPlayRequestException:
+            self._retry_count += 1
+            if self._retry_count >= RETRY_POLL_MAXIMUM:
+                self._attr_available = False
 
     @exception_wrap
     async def async_select_source(self, source: str) -> None:
@@ -196,6 +210,21 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         await self._bridge.player.resume()
 
     @exception_wrap
+    async def async_media_stop(self) -> None:
+        """Send stop command."""
+        await self._bridge.player.stop()
+
+    @exception_wrap
+    async def async_media_next_track(self) -> None:
+        """Send next command."""
+        await self._bridge.player.next()
+
+    @exception_wrap
+    async def async_media_previous_track(self) -> None:
+        """Send previous command."""
+        await self._bridge.player.previous()
+
+    @exception_wrap
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         await self._bridge.player.set_loop_mode(REPEAT_MAP_INV[repeat])
@@ -222,10 +251,94 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
-        media = await media_source.async_resolve_media(
-            self.hass, media_id, self.entity_id
+        if media_source.is_media_source_id(media_id):
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = play_item.url
+
+        url = async_process_play_media_url(self.hass, media_id)
+        await self._bridge.player.play(url)
+
+    @exception_wrap
+    async def async_play_preset(self, preset_number: int) -> None:
+        """Play preset number."""
+        try:
+            await self._bridge.player.play_preset(preset_number)
+        except ValueError as err:
+            raise HomeAssistantError(err) from err
+
+    @exception_wrap
+    async def async_media_seek(self, position: float) -> None:
+        """Seek to a position."""
+        await self._bridge.player.seek(round(position))
+
+    @exception_wrap
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Join `group_members` as a player group with the current player."""
+
+        controller: LinkPlayController = self.hass.data[DOMAIN][CONTROLLER_KEY]
+        multiroom = self._bridge.multiroom
+        if multiroom is None:
+            multiroom = LinkPlayMultiroom(self._bridge)
+
+        for group_member in group_members:
+            bridge = self._get_linkplay_bridge(group_member)
+            if bridge:
+                await multiroom.add_follower(bridge)
+
+        await controller.discover_multirooms()
+
+    def _get_linkplay_bridge(self, entity_id: str) -> LinkPlayBridge:
+        """Get linkplay bridge from entity_id."""
+
+        entity_registry = er.async_get(self.hass)
+
+        # Check for valid linkplay media_player entity
+        entity_entry = entity_registry.async_get(entity_id)
+
+        if (
+            entity_entry is None
+            or entity_entry.domain != Platform.MEDIA_PLAYER
+            or entity_entry.platform != DOMAIN
+            or entity_entry.config_entry_id is None
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_grouping_entity",
+                translation_placeholders={"entity_id": entity_id},
+            )
+
+        config_entry = self.hass.config_entries.async_get_entry(
+            entity_entry.config_entry_id
         )
-        await self._bridge.player.play(media.url)
+        assert config_entry
+
+        # Return bridge
+        data: LinkPlayData = config_entry.runtime_data
+        return data.bridge
+
+    @property
+    def group_members(self) -> list[str]:
+        """List of players which are grouped together."""
+        multiroom = self._bridge.multiroom
+        if multiroom is not None:
+            return [multiroom.leader.device.uuid] + [
+                follower.device.uuid for follower in multiroom.followers
+            ]
+
+        return []
+
+    @exception_wrap
+    async def async_unjoin_player(self) -> None:
+        """Remove this player from any group."""
+        controller: LinkPlayController = self.hass.data[DOMAIN][CONTROLLER_KEY]
+
+        multiroom = self._bridge.multiroom
+        if multiroom is not None:
+            await multiroom.remove_follower(self._bridge)
+
+        await controller.discover_multirooms()
 
     def _update_properties(self) -> None:
         """Update the properties of the media player."""
@@ -245,9 +358,9 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
                 )
 
             self._attr_source = SOURCE_MAP.get(self._bridge.player.play_mode, "other")
-            self._attr_media_position = self._bridge.player.current_position / 1000
+            self._attr_media_position = self._bridge.player.current_position_in_seconds
             self._attr_media_position_updated_at = utcnow()
-            self._attr_media_duration = self._bridge.player.total_length / 1000
+            self._attr_media_duration = self._bridge.player.total_length_in_seconds
             self._attr_media_artist = self._bridge.player.artist
             self._attr_media_title = self._bridge.player.title
             self._attr_media_album_name = self._bridge.player.album

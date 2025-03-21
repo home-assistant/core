@@ -20,7 +20,7 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .coordinator import GoveeBLEPassiveBluetoothDataProcessor
@@ -39,12 +39,16 @@ BINARY_SENSOR_DESCRIPTIONS = {
         key=GoveeBLEBinarySensorDeviceClass.OCCUPANCY,
         device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
+    GoveeBLEBinarySensorDeviceClass.PRESENCE: BinarySensorEntityDescription(
+        key=GoveeBLEBinarySensorDeviceClass.PRESENCE,
+        device_class=BinarySensorDeviceClass.PRESENCE,
+    ),
 }
 
 
 def sensor_update_to_bluetooth_data_update(
     sensor_update: SensorUpdate,
-) -> PassiveBluetoothDataUpdate:
+) -> PassiveBluetoothDataUpdate[bool | None]:
     """Convert a sensor update to a bluetooth data update."""
     return PassiveBluetoothDataUpdate(
         devices={
@@ -72,7 +76,7 @@ def sensor_update_to_bluetooth_data_update(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the govee-ble BLE sensors."""
     coordinator = entry.runtime_data
@@ -95,13 +99,13 @@ class GoveeBluetoothBinarySensorEntity(
 ):
     """Representation of a govee-ble binary sensor."""
 
-    processor: GoveeBLEPassiveBluetoothDataProcessor
+    processor: GoveeBLEPassiveBluetoothDataProcessor[bool | None]
 
     @property
     def available(self) -> bool:
         """Return False if sensor is in error."""
         coordinator = self.processor.coordinator
-        return self.processor.entity_data.get(self.entity_key) != ERROR and (
+        return self.processor.entity_data.get(self.entity_key) != ERROR and (  # type: ignore[comparison-overlap]
             ((model_info := coordinator.model_info) and model_info.sleepy)
             or super().available
         )

@@ -39,6 +39,18 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowMenuStep,
 )
 
+from .alarm_control_panel import (
+    CONF_ARM_AWAY_ACTION,
+    CONF_ARM_CUSTOM_BYPASS_ACTION,
+    CONF_ARM_HOME_ACTION,
+    CONF_ARM_NIGHT_ACTION,
+    CONF_ARM_VACATION_ACTION,
+    CONF_CODE_ARM_REQUIRED,
+    CONF_CODE_FORMAT,
+    CONF_DISARM_ACTION,
+    CONF_TRIGGER_ACTION,
+    TemplateCodeFormat,
+)
 from .binary_sensor import async_create_preview_binary_sensor
 from .const import CONF_PRESS, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
 from .number import (
@@ -67,6 +79,30 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 
     if flow_type == "config":
         schema = {vol.Required(CONF_NAME): selector.TextSelector()}
+
+    if domain == Platform.ALARM_CONTROL_PANEL:
+        schema |= {
+            vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(CONF_DISARM_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_ARM_AWAY_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_ARM_HOME_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_ARM_NIGHT_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_ARM_VACATION_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_TRIGGER_ACTION): selector.ActionSelector(),
+            vol.Optional(
+                CONF_CODE_ARM_REQUIRED, default=True
+            ): selector.BooleanSelector(),
+            vol.Optional(
+                CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[e.name for e in TemplateCodeFormat],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key="alarm_control_panel_code_format",
+                )
+            ),
+        }
 
     if domain == Platform.BINARY_SENSOR:
         schema |= _SCHEMA_STATE
@@ -107,16 +143,21 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
     if domain == Platform.NUMBER:
         schema |= {
             vol.Required(CONF_STATE): selector.TemplateSelector(),
-            vol.Required(
-                CONF_MIN, default=f"{{{{{DEFAULT_MIN_VALUE}}}}}"
-            ): selector.TemplateSelector(),
-            vol.Required(
-                CONF_MAX, default=f"{{{{{DEFAULT_MAX_VALUE}}}}}"
-            ): selector.TemplateSelector(),
-            vol.Required(
-                CONF_STEP, default=f"{{{{{DEFAULT_STEP}}}}}"
-            ): selector.TemplateSelector(),
-            vol.Optional(CONF_SET_VALUE): selector.ActionSelector(),
+            vol.Required(CONF_MIN, default=DEFAULT_MIN_VALUE): selector.NumberSelector(
+                selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
+            ),
+            vol.Required(CONF_MAX, default=DEFAULT_MAX_VALUE): selector.NumberSelector(
+                selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
+            ),
+            vol.Required(CONF_STEP, default=DEFAULT_STEP): selector.NumberSelector(
+                selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
+            ),
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.TextSelector(
+                selector.TextSelectorConfig(
+                    type=selector.TextSelectorType.TEXT, multiline=False
+                )
+            ),
+            vol.Required(CONF_SET_VALUE): selector.ActionSelector(),
         }
 
     if domain == Platform.SELECT:
@@ -194,8 +235,12 @@ def _validate_unit(options: dict[str, Any]) -> None:
         and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
         and (unit := options.get(CONF_UNIT_OF_MEASUREMENT)) not in units
     ):
+        # Sort twice to make sure strings with same case-insensitive order of
+        # letters are sorted consistently still.
         sorted_units = sorted(
-            [f"'{unit!s}'" if unit else "no unit of measurement" for unit in units],
+            sorted(
+                [f"'{unit!s}'" if unit else "no unit of measurement" for unit in units],
+            ),
             key=str.casefold,
         )
         if len(sorted_units) == 1:
@@ -260,6 +305,7 @@ def validate_user_input(
 
 
 TEMPLATE_TYPES = [
+    "alarm_control_panel",
     "binary_sensor",
     "button",
     "image",
@@ -271,6 +317,10 @@ TEMPLATE_TYPES = [
 
 CONFIG_FLOW = {
     "user": SchemaFlowMenuStep(TEMPLATE_TYPES),
+    Platform.ALARM_CONTROL_PANEL: SchemaFlowFormStep(
+        config_schema(Platform.ALARM_CONTROL_PANEL),
+        validate_user_input=validate_user_input(Platform.ALARM_CONTROL_PANEL),
+    ),
     Platform.BINARY_SENSOR: SchemaFlowFormStep(
         config_schema(Platform.BINARY_SENSOR),
         preview="template",
@@ -308,6 +358,10 @@ CONFIG_FLOW = {
 
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(next_step=choose_options_step),
+    Platform.ALARM_CONTROL_PANEL: SchemaFlowFormStep(
+        options_schema(Platform.ALARM_CONTROL_PANEL),
+        validate_user_input=validate_user_input(Platform.ALARM_CONTROL_PANEL),
+    ),
     Platform.BINARY_SENSOR: SchemaFlowFormStep(
         options_schema(Platform.BINARY_SENSOR),
         preview="template",

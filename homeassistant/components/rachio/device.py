@@ -164,7 +164,7 @@ class RachioPerson:
             # rachio hands us back a dict
             if isinstance(webhooks, dict):
                 if webhooks.get("code") == PERMISSION_ERROR:
-                    _LOGGER.info(
+                    _LOGGER.warning(
                         (
                             "Not adding controller '%s', only controllers owned by '%s'"
                             " may be added"
@@ -189,13 +189,15 @@ class RachioPerson:
             RachioBaseStation(
                 rachio,
                 base,
-                RachioUpdateCoordinator(hass, rachio, base, base_count),
-                RachioScheduleUpdateCoordinator(hass, rachio, base),
+                RachioUpdateCoordinator(
+                    hass, rachio, self.config_entry, base, base_count
+                ),
+                RachioScheduleUpdateCoordinator(hass, rachio, self.config_entry, base),
             )
             for base in base_stations
         )
 
-        _LOGGER.info('Using Rachio API as user "%s"', self.username)
+        _LOGGER.debug('Using Rachio API as user "%s"', self.username)
 
     @property
     def user_id(self) -> str | None:
@@ -334,7 +336,7 @@ class RachioIro:
     def stop_watering(self) -> None:
         """Stop watering all zones connected to this controller."""
         self.rachio.device.stop_water(self.controller_id)
-        _LOGGER.info("Stopped watering of all zones on %s", self)
+        _LOGGER.debug("Stopped watering of all zones on %s", self)
 
     def pause_watering(self, duration) -> None:
         """Pause watering on this controller."""

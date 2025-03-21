@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
@@ -29,6 +29,7 @@ async def test_button(
 @pytest.mark.parametrize(
     ("name", "func"),
     [
+        ("wake", "wake_up"),
         ("flash_lights", "flash_lights"),
         ("honk_horn", "honk_horn"),
         ("keyless_driving", "remote_start_drive"),

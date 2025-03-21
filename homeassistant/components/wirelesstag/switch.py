@@ -13,15 +13,13 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    DOMAIN as WIRELESSTAG_DOMAIN,
-    WirelessTagBaseSensor,
-    async_migrate_unique_id,
-)
+from .const import DOMAIN
+from .entity import WirelessTagBaseSensor
+from .util import async_migrate_unique_id
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
@@ -64,7 +62,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up switches for a Wireless Sensor Tags."""
-    platform = hass.data[WIRELESSTAG_DOMAIN]
+    platform = hass.data[DOMAIN]
 
     tags = platform.load_tags()
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]

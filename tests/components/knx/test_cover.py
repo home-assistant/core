@@ -1,7 +1,8 @@
 """Test KNX cover."""
 
+from homeassistant.components.cover import CoverState
 from homeassistant.components.knx.schema import CoverSchema
-from homeassistant.const import CONF_NAME, STATE_CLOSING
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
@@ -72,7 +73,7 @@ async def test_cover_basic(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     knx.assert_state(
         "cover.test",
-        STATE_CLOSING,
+        CoverState.CLOSING,
     )
 
     assert len(events) == 1

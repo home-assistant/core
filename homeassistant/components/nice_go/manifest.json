@@ -4,7 +4,8 @@
   "codeowners": ["@IceBotYT"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nice_go",
+  "integration_type": "hub",
   "iot_class": "cloud_push",
-  "loggers": ["nice-go"],
-  "requirements": ["nice-go==0.3.8"]
+  "loggers": ["nice_go"],
+  "requirements": ["nice-go==1.0.1"]
 }

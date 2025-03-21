@@ -20,7 +20,9 @@
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account."
     },
     "create_entry": {
       "default": "Successfully authenticated with Withings."
@@ -307,6 +309,14 @@
       },
       "workout_duration": {
         "name": "Last workout duration"
+      },
+      "battery": {
+        "name": "[%key:component::sensor::entity_component::battery::name%]",
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
       }
     }
   }

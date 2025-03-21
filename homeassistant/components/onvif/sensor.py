@@ -9,19 +9,19 @@ from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.enum import try_parse_enum
 
-from .base import ONVIFBaseEntity
 from .const import DOMAIN
 from .device import ONVIFDevice
+from .entity import ONVIFBaseEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a ONVIF binary sensor."""
     device: ONVIFDevice = hass.data[DOMAIN][config_entry.unique_id]

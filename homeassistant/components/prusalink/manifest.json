@@ -1,7 +1,7 @@
 {
   "domain": "prusalink",
   "name": "PrusaLink",
-  "codeowners": ["@balloob", "@Skaronator"],
+  "codeowners": ["@balloob"],
   "config_flow": true,
   "dhcp": [
     {

@@ -3,7 +3,8 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
-    'configuration_url': 'http://slzb-06.local',
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://192.168.1.161',
     'connections': set({
       tuple(
         'mac',
@@ -27,7 +28,7 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': 'core: v2.3.1.dev / zigbee: -1',
+    'sw_version': 'core: v2.3.6 / zigbee: 20240314',
     'via_device_id': None,
   })
 # ---

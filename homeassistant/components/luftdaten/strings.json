@@ -8,6 +8,9 @@
         }
       }
     },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "invalid_sensor": "Sensor not available or invalid",

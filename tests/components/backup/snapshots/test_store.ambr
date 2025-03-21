@@ -1,0 +1,474 @@
+# serializer version: 1
+# name: test_store_migration[store_data0]
+  dict({
+    'data': dict({
+      'backups': list([
+        dict({
+          'backup_id': 'abc123',
+          'failed_agent_ids': list([
+            'test.remote',
+          ]),
+        }),
+      ]),
+      'config': dict({
+        'agents': dict({
+        }),
+        'automatic_backups_configured': False,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'state': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 5,
+    'version': 1,
+  })
+# ---
+# name: test_store_migration[store_data0].1
+  dict({
+    'data': dict({
+      'backups': list([
+        dict({
+          'backup_id': 'abc123',
+          'failed_agent_ids': list([
+            'test.remote',
+          ]),
+        }),
+      ]),
+      'config': dict({
+        'agents': dict({
+        }),
+        'automatic_backups_configured': False,
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'state': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 5,
+    'version': 1,
+  })
+# ---
+# name: test_store_migration[store_data1]
+  dict({
+    'data': dict({
+      'backups': list([
+        dict({
+          'backup_id': 'abc123',
+          'failed_agent_ids': list([
+            'test.remote',
+          ]),
+        }),
+      ]),
+      'config': dict({
+        'agents': dict({
+        }),
+        'automatic_backups_configured': False,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'state': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 5,
+    'version': 1,
+  })
+# ---
+# name: test_store_migration[store_data1].1
+  dict({
+    'data': dict({
+      'backups': list([
+        dict({
+          'backup_id': 'abc123',
+          'failed_agent_ids': list([
+            'test.remote',
+          ]),
+        }),
+      ]),
+      'config': dict({
+        'agents': dict({
+        }),
+        'automatic_backups_configured': False,
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'state': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 5,
+    'version': 1,
+  })
+# ---
+# name: test_store_migration[store_data2]
+  dict({
+    'data': dict({
+      'backups': list([
+        dict({
+          'backup_id': 'abc123',
+          'failed_agent_ids': list([
+            'test.remote',
+          ]),
+        }),
+      ]),
+      'config': dict({
+        'agents': dict({
+          'test.remote': dict({
+            'protected': True,
+          }),
+        }),
+        'automatic_backups_configured': False,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+        'something_from_the_future': 'value',
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 5,
+    'version': 1,
+  })
+# ---
+# name: test_store_migration[store_data2].1
+  dict({
+    'data': dict({
+      'backups': list([
+        dict({
+          'backup_id': 'abc123',
+          'failed_agent_ids': list([
+            'test.remote',
+          ]),
+        }),
+      ]),
+      'config': dict({
+        'agents': dict({
+          'test.remote': dict({
+            'protected': True,
+          }),
+        }),
+        'automatic_backups_configured': False,
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'state': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 5,
+    'version': 1,
+  })
+# ---
+# name: test_store_migration[store_data3]
+  dict({
+    'data': dict({
+      'backups': list([
+        dict({
+          'backup_id': 'abc123',
+          'failed_agent_ids': list([
+            'test.remote',
+          ]),
+        }),
+      ]),
+      'config': dict({
+        'agents': dict({
+          'test.remote': dict({
+            'protected': True,
+          }),
+        }),
+        'automatic_backups_configured': False,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'state': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 5,
+    'version': 1,
+  })
+# ---
+# name: test_store_migration[store_data3].1
+  dict({
+    'data': dict({
+      'backups': list([
+        dict({
+          'backup_id': 'abc123',
+          'failed_agent_ids': list([
+            'test.remote',
+          ]),
+        }),
+      ]),
+      'config': dict({
+        'agents': dict({
+          'test.remote': dict({
+            'protected': True,
+          }),
+        }),
+        'automatic_backups_configured': False,
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'state': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 5,
+    'version': 1,
+  })
+# ---
+# name: test_store_migration[store_data4]
+  dict({
+    'data': dict({
+      'backups': list([
+        dict({
+          'backup_id': 'abc123',
+          'failed_agent_ids': list([
+            'test.remote',
+          ]),
+        }),
+      ]),
+      'config': dict({
+        'agents': dict({
+          'test.remote': dict({
+            'protected': True,
+          }),
+        }),
+        'automatic_backups_configured': True,
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': 'hunter2',
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'state': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 5,
+    'version': 1,
+  })
+# ---
+# name: test_store_migration[store_data4].1
+  dict({
+    'data': dict({
+      'backups': list([
+        dict({
+          'backup_id': 'abc123',
+          'failed_agent_ids': list([
+            'test.remote',
+          ]),
+        }),
+      ]),
+      'config': dict({
+        'agents': dict({
+          'test.remote': dict({
+            'protected': True,
+          }),
+        }),
+        'automatic_backups_configured': True,
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': 'hunter2',
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'state': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 5,
+    'version': 1,
+  })
+# ---

@@ -5,17 +5,24 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from chip.clusters import Objects as clusters
-from matter_server.common.helpers.util import create_attribute_path_from_attribute
+from matter_server.common import custom_clusters
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform, UnitOfTime
+from homeassistant.const import (
+    EntityCategory,
+    Platform,
+    UnitOfLength,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
@@ -25,7 +32,7 @@ from .models import MatterDiscoverySchema
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter Number Input from Config Entry."""
     matter = get_matter(hass)
@@ -44,16 +51,10 @@ class MatterNumber(MatterEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        matter_attribute = self._entity_info.primary_attribute
         sendvalue = int(value)
         if value_convert := self.entity_description.ha_to_native_value:
             sendvalue = value_convert(value)
-        await self.matter_client.write_attribute(
-            node_id=self._endpoint.node.node_id,
-            attribute_path=create_attribute_path_from_attribute(
-                self._endpoint.endpoint_id,
-                matter_attribute,
-            ),
+        await self.write_attribute(
             value=sendvalue,
         )
 
@@ -85,6 +86,8 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnLevel,),
+        # allow None value to account for 'default' value
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
@@ -102,6 +105,8 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnTransitionTime,),
+        # allow None value to account for 'default' value
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
@@ -119,6 +124,8 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OffTransitionTime,),
+        # allow None value to account for 'default' value
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
@@ -136,5 +143,44 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnOffTransitionTime,),
+        # allow None value to account for 'default' value
+        allow_none_value=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="EveWeatherAltitude",
+            device_class=NumberDeviceClass.DISTANCE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="altitude",
+            native_max_value=9000,
+            native_min_value=0,
+            native_unit_of_measurement=UnitOfLength.METERS,
+            native_step=1,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(custom_clusters.EveCluster.Attributes.Altitude,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="EveTemperatureOffset",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="temperature_offset",
+            native_max_value=25,
+            native_min_value=-25,
+            native_step=0.5,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            measurement_to_ha=lambda x: None if x is None else x / 10,
+            ha_to_native_value=lambda x: round(x * 10),
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            clusters.Thermostat.Attributes.LocalTemperatureCalibration,
+        ),
+        vendor_id=(4874,),
     ),
 ]

@@ -1,5 +1,6 @@
 """Tests for the diagnostics data provided by the Internet Printing Protocol (IPP) integration."""
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -9,6 +10,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.freeze_time("2019-11-11 09:10:32+00:00")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

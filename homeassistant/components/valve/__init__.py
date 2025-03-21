@@ -11,7 +11,7 @@ from typing import Any, final
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
     SERVICE_SET_VALVE_POSITION,
@@ -27,10 +27,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
+
+from .const import DOMAIN, ValveState
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "valve"
+DATA_COMPONENT: HassKey[EntityComponent[ValveEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -64,7 +67,7 @@ ATTR_POSITION = "position"
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for valves."""
-    component = hass.data[DOMAIN] = EntityComponent[ValveEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[ValveEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -108,14 +111,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[ValveEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[ValveEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -173,18 +174,18 @@ class ValveEntity(Entity):
         reports_position = self.reports_position
         if self.is_opening:
             self.__is_last_toggle_direction_open = True
-            return STATE_OPENING
+            return ValveState.OPENING
         if self.is_closing:
             self.__is_last_toggle_direction_open = False
-            return STATE_CLOSING
+            return ValveState.CLOSING
         if reports_position is True:
             if (current_valve_position := self.current_valve_position) is None:
                 return None
             position_zero = current_valve_position == 0
-            return STATE_CLOSED if position_zero else STATE_OPEN
+            return ValveState.CLOSED if position_zero else ValveState.OPEN
         if (closed := self.is_closed) is None:
             return None
-        return STATE_CLOSED if closed else STATE_OPEN
+        return ValveState.CLOSED if closed else ValveState.OPEN
 
     @final
     @property

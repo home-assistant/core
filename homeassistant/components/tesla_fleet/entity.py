@@ -4,16 +4,20 @@ from abc import abstractmethod
 from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
+from tesla_fleet_api.const import Scope
 
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import (
+    TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
     TeslaFleetVehicleDataCoordinator,
 )
+from .helpers import wake_up_vehicle
 from .models import TeslaFleetEnergyData, TeslaFleetVehicleData
 
 
@@ -21,17 +25,21 @@ class TeslaFleetEntity(
     CoordinatorEntity[
         TeslaFleetVehicleDataCoordinator
         | TeslaFleetEnergySiteLiveCoordinator
+        | TeslaFleetEnergySiteHistoryCoordinator
         | TeslaFleetEnergySiteInfoCoordinator
     ]
 ):
     """Parent class for all TeslaFleet entities."""
 
     _attr_has_entity_name = True
+    read_only: bool
+    scoped: bool
 
     def __init__(
         self,
         coordinator: TeslaFleetVehicleDataCoordinator
         | TeslaFleetEnergySiteLiveCoordinator
+        | TeslaFleetEnergySiteHistoryCoordinator
         | TeslaFleetEnergySiteInfoCoordinator,
         api: VehicleSpecific | EnergySpecific,
         key: str,
@@ -57,6 +65,12 @@ class TeslaFleetEntity(
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(key, default)
 
+    def get_number(self, key: str, default: float) -> float:
+        """Return a specific number from coordinator data."""
+        if isinstance(value := self.coordinator.data.get(key), (int, float)):
+            return value
+        return default
+
     @property
     def is_none(self) -> bool:
         """Return if the value is a literal None."""
@@ -75,6 +89,14 @@ class TeslaFleetEntity(
     @abstractmethod
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
+
+    def raise_for_read_only(self, scope: Scope) -> None:
+        """Raise an error if a scope is not available."""
+        if not self.scoped:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=f"missing_scope_{scope.name.lower()}",
+            )
 
 
 class TeslaFleetVehicleEntity(TeslaFleetEntity):
@@ -100,6 +122,10 @@ class TeslaFleetVehicleEntity(TeslaFleetEntity):
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(self.key)
 
+    async def wake_up_if_asleep(self) -> None:
+        """Wake up the vehicle if its asleep."""
+        await wake_up_vehicle(self.vehicle)
+
 
 class TeslaFleetEnergyLiveEntity(TeslaFleetEntity):
     """Parent class for TeslaFleet Energy Site Live entities."""
@@ -114,6 +140,21 @@ class TeslaFleetEnergyLiveEntity(TeslaFleetEntity):
         self._attr_device_info = data.device
 
         super().__init__(data.live_coordinator, data.api, key)
+
+
+class TeslaFleetEnergyHistoryEntity(TeslaFleetEntity):
+    """Parent class for TeslaFleet Energy Site History entities."""
+
+    def __init__(
+        self,
+        data: TeslaFleetEnergyData,
+        key: str,
+    ) -> None:
+        """Initialize common aspects of a Tesla Fleet Energy Site History entity."""
+        self._attr_unique_id = f"{data.id}-{key}"
+        self._attr_device_info = data.device
+
+        super().__init__(data.history_coordinator, data.api, key)
 
 
 class TeslaFleetEnergyInfoEntity(TeslaFleetEntity):

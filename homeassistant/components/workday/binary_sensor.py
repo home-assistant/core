@@ -23,10 +23,10 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -90,11 +90,15 @@ def _get_obj_holidays(
     obj_holidays: HolidayBase = country_holidays(
         country,
         subdiv=province,
-        years=year,
+        years=[year, year + 1],
         language=language,
         categories=set_categories,
     )
-    if (supported_languages := obj_holidays.supported_languages) and language == "en":
+    if (
+        (supported_languages := obj_holidays.supported_languages)
+        and language
+        and language.startswith("en")
+    ):
         for lang in supported_languages:
             if lang.startswith("en"):
                 obj_holidays = country_holidays(
@@ -109,7 +113,9 @@ def _get_obj_holidays(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Workday sensor."""
     add_holidays: list[str] = entry.options[CONF_ADD_HOLIDAYS]
@@ -129,6 +135,7 @@ async def async_setup_entry(
     )
     calc_add_holidays: list[str] = validate_dates(add_holidays)
     calc_remove_holidays: list[str] = validate_dates(remove_holidays)
+    next_year = dt_util.now().year + 1
 
     # Add custom holidays
     try:
@@ -152,26 +159,28 @@ async def async_setup_entry(
                     LOGGER.debug("Removed %s by name '%s'", holiday, remove_holiday)
         except KeyError as unmatched:
             LOGGER.warning("No holiday found matching %s", unmatched)
-            if dt_util.parse_date(remove_holiday):
-                async_create_issue(
-                    hass,
-                    DOMAIN,
-                    f"bad_date_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
-                    is_fixable=True,
-                    is_persistent=False,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="bad_date_holiday",
-                    translation_placeholders={
-                        CONF_COUNTRY: country if country else "-",
-                        "title": entry.title,
-                        CONF_REMOVE_HOLIDAYS: remove_holiday,
-                    },
-                    data={
-                        "entry_id": entry.entry_id,
-                        "country": country,
-                        "named_holiday": remove_holiday,
-                    },
-                )
+            if _date := dt_util.parse_date(remove_holiday):
+                if _date.year <= next_year:
+                    # Only check and raise issues for current and next year
+                    async_create_issue(
+                        hass,
+                        DOMAIN,
+                        f"bad_date_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
+                        is_fixable=True,
+                        is_persistent=False,
+                        severity=IssueSeverity.WARNING,
+                        translation_key="bad_date_holiday",
+                        translation_placeholders={
+                            CONF_COUNTRY: country if country else "-",
+                            "title": entry.title,
+                            CONF_REMOVE_HOLIDAYS: remove_holiday,
+                        },
+                        data={
+                            "entry_id": entry.entry_id,
+                            "country": country,
+                            "named_holiday": remove_holiday,
+                        },
+                    )
             else:
                 async_create_issue(
                     hass,

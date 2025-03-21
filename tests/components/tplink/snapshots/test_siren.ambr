@@ -1,0 +1,95 @@
+# serializer version: 1
+# name: test_states[hub-entry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '1.0.0',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tplink',
+        '123456789ABCDEFGH',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'TP-Link',
+    'model': 'HS100',
+    'model_id': None,
+    'name': 'hub',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '1.0.0',
+    'via_device_id': None,
+  })
+# ---
+# name: test_states[siren.hub-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'available_tones': tuple(
+        'Foo',
+        'Bar',
+      ),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'siren',
+    'entity_category': None,
+    'entity_id': 'siren.hub',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': <SirenEntityFeature: 31>,
+    'translation_key': None,
+    'unique_id': '123456789ABCDEFGH',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[siren.hub-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'available_tones': tuple(
+        'Foo',
+        'Bar',
+      ),
+      'friendly_name': 'hub',
+      'supported_features': <SirenEntityFeature: 31>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'siren.hub',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

@@ -5,21 +5,20 @@ from __future__ import annotations
 import asyncio
 
 from homeassistant.components.media_player import BrowseError, MediaClass
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
+    Unresolvable,
 )
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_component import EntityComponent
 
 from . import Camera, _async_stream_endpoint_url
-from .const import DOMAIN, StreamType
+from .const import DATA_COMPONENT, DOMAIN, StreamType
 
 
 async def async_get_media_source(hass: HomeAssistant) -> CameraMediaSource:
@@ -59,13 +58,13 @@ class CameraMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        component: EntityComponent[Camera] = self.hass.data[DOMAIN]
+        component = self.hass.data[DATA_COMPONENT]
         camera = component.get_entity(item.identifier)
 
         if not camera:
             raise Unresolvable(f"Could not resolve media item: {item.identifier}")
 
-        if (stream_type := camera.frontend_stream_type) is None:
+        if not (stream_types := camera.camera_capabilities.frontend_stream_types):
             return PlayMedia(
                 f"/api/camera_proxy_stream/{camera.entity_id}", camera.content_type
             )
@@ -77,7 +76,7 @@ class CameraMediaSource(MediaSource):
             url = await _async_stream_endpoint_url(self.hass, camera, HLS_PROVIDER)
         except HomeAssistantError as err:
             # Handle known error
-            if stream_type != StreamType.HLS:
+            if StreamType.HLS not in stream_types:
                 raise Unresolvable(
                     "Camera does not support MJPEG or HLS streaming."
                 ) from err
@@ -96,19 +95,21 @@ class CameraMediaSource(MediaSource):
         can_stream_hls = "stream" in self.hass.config.components
 
         async def _filter_browsable_camera(camera: Camera) -> BrowseMediaSource | None:
-            stream_type = camera.frontend_stream_type
-            if stream_type is None:
+            stream_types = camera.camera_capabilities.frontend_stream_types
+            if not stream_types:
                 return _media_source_for_camera(self.hass, camera, camera.content_type)
             if not can_stream_hls:
                 return None
 
             content_type = FORMAT_CONTENT_TYPE[HLS_PROVIDER]
-            if stream_type != StreamType.HLS and not (await camera.stream_source()):
+            if StreamType.HLS not in stream_types and not (
+                await camera.stream_source()
+            ):
                 return None
 
             return _media_source_for_camera(self.hass, camera, content_type)
 
-        component: EntityComponent[Camera] = self.hass.data[DOMAIN]
+        component = self.hass.data[DATA_COMPONENT]
         results = await asyncio.gather(
             *(_filter_browsable_camera(camera) for camera in component.entities),
             return_exceptions=True,

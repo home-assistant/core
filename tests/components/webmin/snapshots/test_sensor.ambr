@@ -1,688 +1,4 @@
 # serializer version: 1
-# name: test_sensor[sensor.192_168_1_1_data_size-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_data_size',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'Data size',
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_total',
-    'unique_id': '12:34:56:78:9a:bc_disk_total',
-    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '192.168.1.1 Data size',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_data_size',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '16861.5074996948',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_10-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_data_size_10',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'Data size',
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_total',
-    'unique_id': '12:34:56:78:9a:bc_/media/disk1_total',
-    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_10-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '192.168.1.1 Data size',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_data_size_10',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '5543.82404708862',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_11-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_data_size_11',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'Data size',
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_used',
-    'unique_id': '12:34:56:78:9a:bc_/media/disk1_used',
-    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_11-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '192.168.1.1 Data size',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_data_size_11',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4638.98014068604',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_12-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_data_size_12',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'Data size',
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_free',
-    'unique_id': '12:34:56:78:9a:bc_/media/disk1_free',
-    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_12-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '192.168.1.1 Data size',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_data_size_12',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '625.379589080811',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_data_size_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'Data size',
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_free',
-    'unique_id': '12:34:56:78:9a:bc_disk_free',
-    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '192.168.1.1 Data size',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_data_size_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '7217.11803817749',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_data_size_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'Data size',
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_used',
-    'unique_id': '12:34:56:78:9a:bc_disk_used',
-    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '192.168.1.1 Data size',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_data_size_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '8794.3125',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_data_size_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'Data size',
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_total',
-    'unique_id': '12:34:56:78:9a:bc_/_total',
-    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '192.168.1.1 Data size',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_data_size_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '231.369548797607',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_data_size_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'Data size',
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_used',
-    'unique_id': '12:34:56:78:9a:bc_/_used',
-    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '192.168.1.1 Data size',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_data_size_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '173.85604095459',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_data_size_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'Data size',
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_free',
-    'unique_id': '12:34:56:78:9a:bc_/_free',
-    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '192.168.1.1 Data size',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_data_size_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '45.6910972595215',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_7-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_data_size_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'Data size',
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_total',
-    'unique_id': '12:34:56:78:9a:bc_/media/disk2_total',
-    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_7-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '192.168.1.1 Data size',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_data_size_7',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '11086.3139038086',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_8-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_data_size_8',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'Data size',
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_used',
-    'unique_id': '12:34:56:78:9a:bc_/media/disk2_used',
-    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_8-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '192.168.1.1 Data size',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_data_size_8',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '3981.47631835938',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_9-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_data_size_9',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'Data size',
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_free',
-    'unique_id': '12:34:56:78:9a:bc_/media/disk2_free',
-    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_data_size_9-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '192.168.1.1 Data size',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_data_size_9',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '6546.04735183716',
-  })
-# ---
 # name: test_sensor[sensor.192_168_1_1_disk_free_inodes-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -692,6 +8,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -741,6 +58,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -790,6 +108,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -839,6 +158,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -896,6 +216,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -953,6 +274,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1010,6 +332,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1060,6 +383,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1110,6 +434,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1160,6 +485,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1209,6 +535,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1258,6 +585,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1307,6 +635,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1364,6 +693,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1421,6 +751,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1478,6 +809,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1528,6 +860,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1578,6 +911,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1628,6 +962,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1677,6 +1012,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1726,6 +1062,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1775,6 +1112,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1832,6 +1170,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1889,6 +1228,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1946,6 +1286,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2003,6 +1344,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2060,6 +1402,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2108,7 +1451,7 @@
     'state': '8794.3125',
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_15m-entry]
+# name: test_sensor[sensor.192_168_1_1_load_15_min-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2117,12 +1460,13 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_load_15m',
+    'entity_id': 'sensor.192_168_1_1_load_15_min',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2134,7 +1478,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Load (15m)',
+    'original_name': 'Load (15 min)',
     'platform': 'webmin',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2143,21 +1487,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_15m-state]
+# name: test_sensor[sensor.192_168_1_1_load_15_min-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 Load (15m)',
+      'friendly_name': '192.168.1.1 Load (15 min)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_load_15m',
+    'entity_id': 'sensor.192_168_1_1_load_15_min',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.37',
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_1m-entry]
+# name: test_sensor[sensor.192_168_1_1_load_1_min-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2166,12 +1510,13 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_load_1m',
+    'entity_id': 'sensor.192_168_1_1_load_1_min',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2183,7 +1528,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Load (1m)',
+    'original_name': 'Load (1 min)',
     'platform': 'webmin',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2192,21 +1537,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_1m-state]
+# name: test_sensor[sensor.192_168_1_1_load_1_min-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 Load (1m)',
+      'friendly_name': '192.168.1.1 Load (1 min)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_load_1m',
+    'entity_id': 'sensor.192_168_1_1_load_1_min',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.29',
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_5m-entry]
+# name: test_sensor[sensor.192_168_1_1_load_5_min-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2215,12 +1560,13 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_load_5m',
+    'entity_id': 'sensor.192_168_1_1_load_5_min',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2232,7 +1578,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Load (5m)',
+    'original_name': 'Load (5 min)',
     'platform': 'webmin',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -2241,14 +1587,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_5m-state]
+# name: test_sensor[sensor.192_168_1_1_load_5_min-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 Load (5m)',
+      'friendly_name': '192.168.1.1 Load (5 min)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_load_5m',
+    'entity_id': 'sensor.192_168_1_1_load_5_min',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2264,6 +1610,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2321,6 +1668,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2369,747 +1717,6 @@
     'state': '31.248420715332',
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_itotal',
-    'unique_id': '12:34:56:78:9a:bc_/_itotal',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '15482880',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_10-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_none_10',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_iused_percent',
-    'unique_id': '12:34:56:78:9a:bc_/media/disk2_iused_percent',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_10-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_none_10',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_11-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_none_11',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_itotal',
-    'unique_id': '12:34:56:78:9a:bc_/media/disk1_itotal',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_11-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_none_11',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '183140352',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_12-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_none_12',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_iused',
-    'unique_id': '12:34:56:78:9a:bc_/media/disk1_iused',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_12-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_none_12',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '9595',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_13-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_none_13',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_ifree',
-    'unique_id': '12:34:56:78:9a:bc_/media/disk1_ifree',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_13-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_none_13',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '183130757',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_14-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_none_14',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_used_percent',
-    'unique_id': '12:34:56:78:9a:bc_/media/disk1_used_percent',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_14-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_none_14',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '89',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_15-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_none_15',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_iused_percent',
-    'unique_id': '12:34:56:78:9a:bc_/media/disk1_iused_percent',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_15-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_none_15',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_none_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_iused',
-    'unique_id': '12:34:56:78:9a:bc_/_iused',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_none_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '555674',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_none_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_ifree',
-    'unique_id': '12:34:56:78:9a:bc_/_ifree',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_none_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '14927206',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_none_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_used_percent',
-    'unique_id': '12:34:56:78:9a:bc_/_used_percent',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_none_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '80',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_none_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_iused_percent',
-    'unique_id': '12:34:56:78:9a:bc_/_iused_percent',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_none_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_none_6',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_itotal',
-    'unique_id': '12:34:56:78:9a:bc_/media/disk2_itotal',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_6-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_none_6',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '366198784',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_7-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_none_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_iused',
-    'unique_id': '12:34:56:78:9a:bc_/media/disk2_iused',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_7-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_none_7',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '3542318',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_8-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_none_8',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_ifree',
-    'unique_id': '12:34:56:78:9a:bc_/media/disk2_ifree',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_8-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_none_8',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '362656466',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_9-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_none_9',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'webmin',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'disk_fs_used_percent',
-    'unique_id': '12:34:56:78:9a:bc_/media/disk2_used_percent',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor[sensor.192_168_1_1_none_9-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 None',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_none_9',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '38',
-  })
-# ---
 # name: test_sensor[sensor.192_168_1_1_swap_free-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3119,6 +1726,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -3176,6 +1784,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,

@@ -22,8 +22,8 @@ from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import VlcConfigEntry
 from .const import DEFAULT_NAME, DOMAIN, LOGGER
@@ -39,7 +39,9 @@ def _get_str(data: dict, key: str) -> str | None:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: VlcConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: VlcConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the vlc platform."""
     # CONF_NAME is only present in imported YAML.
@@ -131,7 +133,7 @@ class VlcDevice(MediaPlayerEntity):
 
             self._attr_state = MediaPlayerState.IDLE
             self._attr_available = True
-            LOGGER.info("Connected to vlc host: %s", self._vlc.host)
+            LOGGER.debug("Connected to vlc host: %s", self._vlc.host)
 
         status = await self._vlc.status()
         LOGGER.debug("Status: %s", status)
@@ -175,13 +177,13 @@ class VlcDevice(MediaPlayerEntity):
 
         # Fall back to filename.
         if data_info := data.get("data"):
-            self._attr_media_title = _get_str(data_info, "filename")
+            media_title = _get_str(data_info, "filename")
 
             # Strip out auth signatures if streaming local media
-            if (media_title := self.media_title) and (
-                pos := media_title.find("?authSig=")
-            ) != -1:
+            if media_title and (pos := media_title.find("?authSig=")) != -1:
                 self._attr_media_title = media_title[:pos]
+            else:
+                self._attr_media_title = media_title
 
     @catch_vlc_errors
     async def async_media_seek(self, position: float) -> None:

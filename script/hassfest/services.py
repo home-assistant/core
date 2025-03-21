@@ -75,6 +75,16 @@ CUSTOM_INTEGRATION_FIELD_SCHEMA = CORE_INTEGRATION_FIELD_SCHEMA.extend(
     }
 )
 
+CUSTOM_INTEGRATION_SECTION_SCHEMA = vol.Schema(
+    {
+        vol.Optional("description"): str,
+        vol.Optional("name"): str,
+        vol.Optional("collapsed"): bool,
+        vol.Required("fields"): vol.Schema({str: CUSTOM_INTEGRATION_FIELD_SCHEMA}),
+    }
+)
+
+
 CORE_INTEGRATION_SERVICE_SCHEMA = vol.Any(
     vol.Schema(
         {
@@ -105,7 +115,17 @@ CUSTOM_INTEGRATION_SERVICE_SCHEMA = vol.Any(
             vol.Optional("target"): vol.Any(
                 selector.TargetSelector.CONFIG_SCHEMA, None
             ),
-            vol.Optional("fields"): vol.Schema({str: CUSTOM_INTEGRATION_FIELD_SCHEMA}),
+            vol.Optional("fields"): vol.All(
+                vol.Schema(
+                    {
+                        str: vol.Any(
+                            CUSTOM_INTEGRATION_FIELD_SCHEMA,
+                            CUSTOM_INTEGRATION_SECTION_SCHEMA,
+                        )
+                    }
+                ),
+                unique_field_validator,
+            ),
         }
     ),
     None,

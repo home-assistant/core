@@ -3,23 +3,30 @@
 import asyncio
 from copy import deepcopy
 import logging
-from unittest.mock import AsyncMock, call, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import AddonsOptions
 import pytest
 from zwave_js_server.client import Client
 from zwave_js_server.event import Event
-from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
+from zwave_js_server.exceptions import (
+    BaseZwaveJSServerError,
+    InvalidServerVersion,
+    NotConnected,
+)
 from zwave_js_server.model.node import Node
 from zwave_js_server.model.version import VersionInfo
 
-from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.hassio import HassioAPIError
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN, SERVICE_SET_LEVEL
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -30,7 +37,11 @@ from homeassistant.setup import async_setup_component
 
 from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
 
-from tests.common import MockConfigEntry, async_get_persistent_notifications
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_get_persistent_notifications,
+)
 from tests.typing import WebSocketGenerator
 
 
@@ -125,24 +136,215 @@ async def test_noop_statistics(hass: HomeAssistant, client) -> None:
         assert not mock_cmd2.called
 
 
-@pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
-async def test_listen_failure(hass: HomeAssistant, client, error) -> None:
-    """Test we handle errors during client listen."""
+async def test_driver_ready_timeout_during_setup(
+    hass: HomeAssistant,
+    client: MagicMock,
+    listen_block: asyncio.Event,
+) -> None:
+    """Test we handle driver ready timeout during setup."""
 
-    async def listen(driver_ready):
-        """Mock the client listen method."""
-        # Set the connect side effect to stop an endless loop on reload.
-        client.connect.side_effect = BaseZwaveJSServerError("Boom")
-        raise error
+    async def listen(driver_ready: asyncio.Event) -> None:
+        """Mock listen."""
+        await listen_block.wait()
 
     client.listen.side_effect = listen
+
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": True},
+    )
+    entry.add_to_hass(hass)
+    assert client.disconnect.call_count == 0
+
+    with patch("homeassistant.components.zwave_js.DRIVER_READY_TIMEOUT", new=0):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert client.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize("core_state", [CoreState.running, CoreState.stopping])
+@pytest.mark.parametrize(
+    ("listen_future_result_method", "listen_future_result"),
+    [
+        ("set_exception", BaseZwaveJSServerError("Boom")),
+        ("set_exception", Exception("Boom")),
+        ("set_result", None),
+    ],
+)
+async def test_listen_done_during_setup_before_forward_entry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
+    core_state: CoreState,
+    listen_future_result_method: str,
+    listen_future_result: Exception | None,
+) -> None:
+    """Test listen task finishing during setup before forward entry."""
+    assert hass.state is CoreState.running
+
+    async def listen(driver_ready: asyncio.Event) -> None:
+        await listen_block.wait()
+        await listen_result
+        async_fire_time_changed(hass, fire_all=True)
+
+    client.listen.side_effect = listen
+    hass.set_state(core_state)
+    listen_block.set()
+    getattr(listen_result, listen_future_result_method)(listen_future_result)
+
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
+    assert client.disconnect.call_count == 0
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert client.disconnect.call_count == 1
+
+
+async def test_not_connected_during_setup_after_forward_entry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
+) -> None:
+    """Test we handle not connected client during setup after forward entry."""
+
+    async def send_command_side_effect(*args: Any, **kwargs: Any) -> None:
+        """Mock send command."""
+        listen_block.set()
+        listen_result.set_result(None)
+        # Yield to allow the listen task to run
+        await asyncio.sleep(0)
+        raise NotConnected("Boom")
+
+    async def listen(driver_ready: asyncio.Event) -> None:
+        """Mock listen."""
+        driver_ready.set()
+        client.async_send_command.side_effect = send_command_side_effect
+        await listen_block.wait()
+        await listen_result
+
+    client.listen.side_effect = listen
+
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": True},
+    )
+    entry.add_to_hass(hass)
+    assert client.disconnect.call_count == 0
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert client.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize("core_state", [CoreState.running, CoreState.stopping])
+@pytest.mark.parametrize(
+    ("listen_future_result_method", "listen_future_result"),
+    [
+        ("set_exception", BaseZwaveJSServerError("Boom")),
+        ("set_exception", Exception("Boom")),
+        ("set_result", None),
+    ],
+)
+async def test_listen_done_during_setup_after_forward_entry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
+    core_state: CoreState,
+    listen_future_result_method: str,
+    listen_future_result: Exception | None,
+) -> None:
+    """Test listen task finishing during setup after forward entry."""
+    assert hass.state is CoreState.running
+
+    async def send_command_side_effect(*args: Any, **kwargs: Any) -> None:
+        """Mock send command."""
+        listen_block.set()
+        getattr(listen_result, listen_future_result_method)(listen_future_result)
+        # Yield to allow the listen task to run
+        await asyncio.sleep(0)
+
+    async def listen(driver_ready: asyncio.Event) -> None:
+        """Mock listen."""
+        driver_ready.set()
+        client.async_send_command.side_effect = send_command_side_effect
+        await listen_block.wait()
+        await listen_result
+
+    client.listen.side_effect = listen
+    hass.set_state(core_state)
+
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": True},
+    )
+    entry.add_to_hass(hass)
+    assert client.disconnect.call_count == 0
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert client.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("core_state", "final_config_entry_state", "disconnect_call_count"),
+    [
+        (
+            CoreState.running,
+            ConfigEntryState.SETUP_RETRY,
+            2,
+        ),  # the reload will cause a disconnect call too
+        (
+            CoreState.stopping,
+            ConfigEntryState.LOADED,
+            0,
+        ),  # the home assistant stop event will handle the disconnect
+    ],
+)
+@pytest.mark.parametrize(
+    ("listen_future_result_method", "listen_future_result"),
+    [
+        ("set_exception", BaseZwaveJSServerError("Boom")),
+        ("set_exception", Exception("Boom")),
+        ("set_result", None),
+    ],
+)
+async def test_listen_done_after_setup(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    listen_block: asyncio.Event,
+    listen_result: asyncio.Future[None],
+    core_state: CoreState,
+    listen_future_result_method: str,
+    listen_future_result: Exception | None,
+    final_config_entry_state: ConfigEntryState,
+    disconnect_call_count: int,
+) -> None:
+    """Test listen task finishing after setup."""
+    config_entry = integration
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.state is CoreState.running
+    assert client.disconnect.call_count == 0
+
+    hass.set_state(core_state)
+    listen_block.set()
+    getattr(listen_result, listen_future_result_method)(listen_future_result)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is final_config_entry_state
+    assert client.disconnect.call_count == disconnect_call_count
 
 
 async def test_new_entity_on_value_added(
@@ -553,10 +755,10 @@ async def test_start_addon(
     assert install_addon.call_count == 0
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
-        hass, "core_zwave_js", {"options": addon_options}
+        "core_zwave_js", AddonsOptions(config=addon_options)
     )
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
 
 async def test_install_addon(
@@ -599,16 +801,16 @@ async def test_install_addon(
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert install_addon.call_count == 1
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
-        hass, "core_zwave_js", {"options": addon_options}
+        "core_zwave_js", AddonsOptions(config=addon_options)
     )
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
 
-@pytest.mark.parametrize("addon_info_side_effect", [HassioAPIError("Boom")])
+@pytest.mark.parametrize("addon_info_side_effect", [SupervisorError("Boom")])
 async def test_addon_info_failure(
     hass: HomeAssistant,
     addon_installed,
@@ -746,7 +948,7 @@ async def test_addon_options_changed(
     [
         ("1.0.0", True, 1, 1, None, None),
         ("1.0.0", False, 0, 0, None, None),
-        ("1.0.0", True, 1, 1, HassioAPIError("Boom"), None),
+        ("1.0.0", True, 1, 1, SupervisorError("Boom"), None),
         ("1.0.0", True, 0, 1, None, HassioAPIError("Boom")),
     ],
 )
@@ -772,8 +974,8 @@ async def test_update_addon(
     network_key = "abc123"
     addon_options["device"] = device
     addon_options["network_key"] = network_key
-    addon_info.return_value["version"] = addon_version
-    addon_info.return_value["update_available"] = update_available
+    addon_info.return_value.version = addon_version
+    addon_info.return_value.update_available = update_available
     create_backup.side_effect = create_backup_side_effect
     update_addon.side_effect = update_addon_side_effect
     client.connect.side_effect = InvalidServerVersion(
@@ -845,7 +1047,7 @@ async def test_issue_registry(
     ("stop_addon_side_effect", "entry_state"),
     [
         (None, ConfigEntryState.NOT_LOADED),
-        (HassioAPIError("Boom"), ConfigEntryState.LOADED),
+        (SupervisorError("Boom"), ConfigEntryState.FAILED_UNLOAD),
     ],
 )
 async def test_stop_addon(
@@ -888,7 +1090,7 @@ async def test_stop_addon(
 
     assert entry.state == entry_state
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
 
 
 async def test_remove_entry(
@@ -927,7 +1129,7 @@ async def test_remove_entry(
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
@@ -935,7 +1137,7 @@ async def test_remove_entry(
         partial=True,
     )
     assert uninstall_addon.call_count == 1
-    assert uninstall_addon.call_args == call(hass, "core_zwave_js")
+    assert uninstall_addon.call_args == call("core_zwave_js")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     stop_addon.reset_mock()
@@ -945,12 +1147,12 @@ async def test_remove_entry(
     # test add-on stop failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    stop_addon.side_effect = HassioAPIError()
+    stop_addon.side_effect = SupervisorError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 0
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
@@ -969,7 +1171,7 @@ async def test_remove_entry(
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
@@ -988,12 +1190,12 @@ async def test_remove_entry(
     # test add-on uninstall failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    uninstall_addon.side_effect = HassioAPIError()
+    uninstall_addon.side_effect = SupervisorError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
@@ -1001,7 +1203,7 @@ async def test_remove_entry(
         partial=True,
     )
     assert uninstall_addon.call_count == 1
-    assert uninstall_addon.call_args == call(hass, "core_zwave_js")
+    assert uninstall_addon.call_args == call("core_zwave_js")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to uninstall the Z-Wave JS add-on" in caplog.text
@@ -1573,13 +1775,9 @@ async def test_disabled_entity_on_value_removed(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, zp3111, client, integration
 ) -> None:
     """Test that when entity primary values are removed the entity is removed."""
-    # re-enable this default-disabled entity
-    sensor_cover_entity = "sensor.4_in_1_sensor_home_security_cover_status"
     idle_cover_status_button_entity = (
         "button.4_in_1_sensor_idle_home_security_cover_status"
     )
-    entity_registry.async_update_entity(entity_id=sensor_cover_entity, disabled_by=None)
-    await hass.async_block_till_done()
 
     # must reload the integration when enabling an entity
     await hass.config_entries.async_unload(integration.entry_id)
@@ -1589,10 +1787,6 @@ async def test_disabled_entity_on_value_removed(
     await hass.config_entries.async_setup(integration.entry_id)
     await hass.async_block_till_done()
     assert integration.state is ConfigEntryState.LOADED
-
-    state = hass.states.get(sensor_cover_entity)
-    assert state
-    assert state.state != STATE_UNAVAILABLE
 
     state = hass.states.get(idle_cover_status_button_entity)
     assert state
@@ -1687,10 +1881,6 @@ async def test_disabled_entity_on_value_removed(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    state = hass.states.get(sensor_cover_entity)
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
     state = hass.states.get(idle_cover_status_button_entity)
     assert state
     assert state.state == STATE_UNAVAILABLE
@@ -1706,7 +1896,6 @@ async def test_disabled_entity_on_value_removed(
         | {
             battery_level_entity,
             binary_cover_entity,
-            sensor_cover_entity,
             idle_cover_status_button_entity,
         }
         == new_unavailable_entities

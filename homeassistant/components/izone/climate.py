@@ -33,7 +33,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
@@ -73,7 +73,9 @@ IZONE_SERVICE_AIRFLOW_SCHEMA: VolDictType = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    config: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize an IZone Controller."""
     disco = hass.data[DATA_DISCOVERY_SERVICE]
@@ -85,9 +87,9 @@ async def async_setup_entry(
 
         # Filter out any entities excluded in the config file
         if conf and ctrl.device_uid in conf[CONF_EXCLUDE]:
-            _LOGGER.info("Controller UID=%s ignored as excluded", ctrl.device_uid)
+            _LOGGER.debug("Controller UID=%s ignored as excluded", ctrl.device_uid)
             return
-        _LOGGER.info("Controller UID=%s discovered", ctrl.device_uid)
+        _LOGGER.debug("Controller UID=%s discovered", ctrl.device_uid)
 
         device = ControllerDevice(ctrl)
         async_add_entities([device])
@@ -141,7 +143,6 @@ class ControllerDevice(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_target_temperature_step = 0.5
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, controller: Controller) -> None:
         """Initialise ControllerDevice."""
@@ -245,9 +246,9 @@ class ControllerDevice(ClimateEntity):
             return
 
         if available:
-            _LOGGER.info("Reconnected controller %s ", self._controller.device_uid)
+            _LOGGER.warning("Reconnected controller %s ", self._controller.device_uid)
         else:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Controller %s disconnected due to exception: %s",
                 self._controller.device_uid,
                 ex,

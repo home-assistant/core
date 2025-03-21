@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from gotailwind import (
+    TailwindDoorAlreadyInStateError,
     TailwindDoorDisabledError,
     TailwindDoorLockedOutError,
     TailwindDoorOperationCommand,
@@ -19,17 +20,17 @@ from homeassistant.components.cover import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
+from .coordinator import TailwindConfigEntry
 from .entity import TailwindDoorEntity
-from .typing import TailwindConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TailwindConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tailwind cover based on a config entry."""
     async_add_entities(
@@ -77,6 +78,8 @@ class TailwindDoorCoverEntity(TailwindDoorEntity, CoverEntity):
                 translation_domain=DOMAIN,
                 translation_key="door_locked_out",
             ) from exc
+        except TailwindDoorAlreadyInStateError:
+            LOGGER.debug("Already in the requested state: %s", self.entity_id)
         except TailwindError as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -109,6 +112,8 @@ class TailwindDoorCoverEntity(TailwindDoorEntity, CoverEntity):
                 translation_domain=DOMAIN,
                 translation_key="door_locked_out",
             ) from exc
+        except TailwindDoorAlreadyInStateError:
+            LOGGER.debug("Already in the requested state: %s", self.entity_id)
         except TailwindError as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

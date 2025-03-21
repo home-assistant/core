@@ -18,11 +18,14 @@ class GoalZeroDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     config_entry: GoalZeroConfigEntry
 
-    def __init__(self, hass: HomeAssistant, api: Yeti) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: GoalZeroConfigEntry, api: Yeti
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )

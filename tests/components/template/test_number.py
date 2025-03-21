@@ -17,7 +17,12 @@ from homeassistant.components.number import (
     SERVICE_SET_VALUE as NUMBER_SERVICE_SET_VALUE,
 )
 from homeassistant.components.template import DOMAIN
-from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ICON,
+    CONF_ENTITY_ID,
+    CONF_UNIT_OF_MEASUREMENT,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -58,9 +63,14 @@ async def test_setup_config_entry(
             "name": "My template",
             "template_type": "number",
             "state": "{{ 10 }}",
-            "min": "{{ 0 }}",
-            "max": "{{ 100 }}",
-            "step": "{{ 0.1 }}",
+            "min": 0,
+            "max": 100,
+            "step": 0.1,
+            "set_value": {
+                "action": "input_number.set_value",
+                "target": {"entity_id": "input_number.test"},
+                "data": {"value": "{{ value }}"},
+            },
         },
         title="My template",
     )
@@ -95,7 +105,7 @@ async def test_missing_optional_config(hass: HomeAssistant) -> None:
     await hass.async_start()
     await hass.async_block_till_done()
 
-    _verify(hass, 4, 1, 0.0, 100.0)
+    _verify(hass, 4, 1, 0.0, 100.0, None)
 
 
 async def test_missing_required_keys(hass: HomeAssistant) -> None:
@@ -147,6 +157,7 @@ async def test_all_optional_config(hass: HomeAssistant) -> None:
                         "min": "{{ 3 }}",
                         "max": "{{ 5 }}",
                         "step": "{{ 1 }}",
+                        "unit_of_measurement": "beer",
                     }
                 }
             },
@@ -156,7 +167,7 @@ async def test_all_optional_config(hass: HomeAssistant) -> None:
     await hass.async_start()
     await hass.async_block_till_done()
 
-    _verify(hass, 4, 1, 3, 5)
+    _verify(hass, 4, 1, 3, 5, "beer")
 
 
 async def test_templates_with_entities(
@@ -244,7 +255,7 @@ async def test_templates_with_entities(
     assert entry
     assert entry.unique_id == "b-a"
 
-    _verify(hass, 4, 1, 3, 5)
+    _verify(hass, 4, 1, 3, 5, None)
 
     await hass.services.async_call(
         INPUT_NUMBER_DOMAIN,
@@ -253,7 +264,7 @@ async def test_templates_with_entities(
         blocking=True,
     )
     await hass.async_block_till_done()
-    _verify(hass, 5, 1, 3, 5)
+    _verify(hass, 5, 1, 3, 5, None)
 
     await hass.services.async_call(
         INPUT_NUMBER_DOMAIN,
@@ -262,7 +273,7 @@ async def test_templates_with_entities(
         blocking=True,
     )
     await hass.async_block_till_done()
-    _verify(hass, 5, 2, 3, 5)
+    _verify(hass, 5, 2, 3, 5, None)
 
     await hass.services.async_call(
         INPUT_NUMBER_DOMAIN,
@@ -271,7 +282,7 @@ async def test_templates_with_entities(
         blocking=True,
     )
     await hass.async_block_till_done()
-    _verify(hass, 5, 2, 2, 5)
+    _verify(hass, 5, 2, 2, 5, None)
 
     await hass.services.async_call(
         INPUT_NUMBER_DOMAIN,
@@ -280,7 +291,7 @@ async def test_templates_with_entities(
         blocking=True,
     )
     await hass.async_block_till_done()
-    _verify(hass, 5, 2, 2, 6)
+    _verify(hass, 5, 2, 2, 6, None)
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
@@ -288,7 +299,7 @@ async def test_templates_with_entities(
         {CONF_ENTITY_ID: _TEST_NUMBER, NUMBER_ATTR_VALUE: 2},
         blocking=True,
     )
-    _verify(hass, 2, 2, 2, 6)
+    _verify(hass, 2, 2, 2, 6, None)
 
     # Check this variable can be used in set_value script
     assert len(calls) == 1
@@ -318,7 +329,11 @@ async def test_trigger_number(hass: HomeAssistant) -> None:
                             "min": "{{ trigger.event.data.min_beers }}",
                             "max": "{{ trigger.event.data.max_beers }}",
                             "step": "{{ trigger.event.data.step }}",
-                            "set_value": {"event": "test_number_event"},
+                            "unit_of_measurement": "beer",
+                            "set_value": {
+                                "event": "test_number_event",
+                                "event_data": {"entity_id": "{{ this.entity_id }}"},
+                            },
                             "optimistic": True,
                         },
                     ],
@@ -337,11 +352,17 @@ async def test_trigger_number(hass: HomeAssistant) -> None:
     assert state.attributes["min"] == 0.0
     assert state.attributes["max"] == 100.0
     assert state.attributes["step"] == 1.0
+    assert state.attributes["unit_of_measurement"] == "beer"
 
     context = Context()
     hass.bus.async_fire(
         "test_event",
-        {"beers_drank": 3, "min_beers": 1.0, "max_beers": 5.0, "step": 0.5},
+        {
+            "beers_drank": 3,
+            "min_beers": 1.0,
+            "max_beers": 5.0,
+            "step": 0.5,
+        },
         context=context,
     )
     await hass.async_block_till_done()
@@ -361,6 +382,9 @@ async def test_trigger_number(hass: HomeAssistant) -> None:
     )
     assert len(events) == 1
     assert events[0].event_type == "test_number_event"
+    entity_id = events[0].data.get("entity_id")
+    assert entity_id is not None
+    assert entity_id == "number.hello_name"
 
 
 def _verify(
@@ -369,6 +393,7 @@ def _verify(
     expected_step: int,
     expected_minimum: int,
     expected_maximum: int,
+    expected_unit_of_measurement: str | None,
 ) -> None:
     """Verify number's state."""
     state = hass.states.get(_TEST_NUMBER)
@@ -377,6 +402,7 @@ def _verify(
     assert attributes.get(ATTR_STEP) == float(expected_step)
     assert attributes.get(ATTR_MAX) == float(expected_maximum)
     assert attributes.get(ATTR_MIN) == float(expected_minimum)
+    assert attributes.get(CONF_UNIT_OF_MEASUREMENT) == expected_unit_of_measurement
 
 
 async def test_icon_template(hass: HomeAssistant) -> None:
@@ -519,9 +545,14 @@ async def test_device_id(
             "name": "My template",
             "template_type": "number",
             "state": "{{ 10 }}",
-            "min": "{{ 0 }}",
-            "max": "{{ 100 }}",
-            "step": "{{ 0.1 }}",
+            "min": 0,
+            "max": 100,
+            "step": 0.1,
+            "set_value": {
+                "action": "input_number.set_value",
+                "target": {"entity_id": "input_number.test"},
+                "data": {"value": "{{ value }}"},
+            },
             "device_id": device_entry.id,
         },
         title="My template",

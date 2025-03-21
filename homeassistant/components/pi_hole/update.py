@@ -10,10 +10,11 @@ from hole import Hole
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
 from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleConfigEntry, PiHoleEntity
+from . import PiHoleConfigEntry
+from .entity import PiHoleEntity
 
 
 @dataclass(frozen=True)
@@ -64,7 +65,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PiHoleConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole update entities."""
     name = entry.data[CONF_NAME]

@@ -9,6 +9,8 @@
         'name': 'Home',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'airly',
       'entry_id': '3bd2acb0e4f0476d40865546d0d91921',
       'minor_version': 1,
@@ -17,6 +19,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Home',
       'unique_id': '**REDACTED**',
       'version': 1,

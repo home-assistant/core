@@ -8,10 +8,13 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.schedule import STORAGE_VERSION, STORAGE_VERSION_MINOR
 from homeassistant.components.schedule.const import (
     ATTR_NEXT_EVENT,
+    CONF_ALL_DAYS,
+    CONF_DATA,
     CONF_FRIDAY,
     CONF_FROM,
     CONF_MONDAY,
@@ -22,12 +25,14 @@ from homeassistant.components.schedule.const import (
     CONF_TUESDAY,
     CONF_WEDNESDAY,
     DOMAIN,
+    SERVICE_GET,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_NAME,
+    CONF_ENTITY_ID,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
@@ -66,13 +71,21 @@ def schedule_setup(
                             CONF_NAME: "from storage",
                             CONF_ICON: "mdi:party-popper",
                             CONF_FRIDAY: [
-                                {CONF_FROM: "17:00:00", CONF_TO: "23:59:59"},
+                                {
+                                    CONF_FROM: "17:00:00",
+                                    CONF_TO: "23:59:59",
+                                    CONF_DATA: {"party_level": "epic"},
+                                },
                             ],
                             CONF_SATURDAY: [
                                 {CONF_FROM: "00:00:00", CONF_TO: "23:59:59"},
                             ],
                             CONF_SUNDAY: [
-                                {CONF_FROM: "00:00:00", CONF_TO: "24:00:00"},
+                                {
+                                    CONF_FROM: "00:00:00",
+                                    CONF_TO: "24:00:00",
+                                    CONF_DATA: {"entry": "VIPs only"},
+                                },
                             ],
                         }
                     ]
@@ -95,9 +108,21 @@ def schedule_setup(
                         CONF_TUESDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
                         CONF_WEDNESDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
                         CONF_THURSDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
-                        CONF_FRIDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
+                        CONF_FRIDAY: [
+                            {
+                                CONF_FROM: "00:00:00",
+                                CONF_TO: "23:59:59",
+                                CONF_DATA: {"party_level": "epic"},
+                            }
+                        ],
                         CONF_SATURDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
-                        CONF_SUNDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
+                        CONF_SUNDAY: [
+                            {
+                                CONF_FROM: "00:00:00",
+                                CONF_TO: "23:59:59",
+                                CONF_DATA: {"entry": "VIPs only"},
+                            }
+                        ],
                     }
                 }
             }
@@ -557,13 +582,13 @@ async def test_ws_list(
     assert len(result) == 1
     assert result["from_storage"][ATTR_NAME] == "from storage"
     assert result["from_storage"][CONF_FRIDAY] == [
-        {CONF_FROM: "17:00:00", CONF_TO: "23:59:59"}
+        {CONF_FROM: "17:00:00", CONF_TO: "23:59:59", CONF_DATA: {"party_level": "epic"}}
     ]
     assert result["from_storage"][CONF_SATURDAY] == [
         {CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}
     ]
     assert result["from_storage"][CONF_SUNDAY] == [
-        {CONF_FROM: "00:00:00", CONF_TO: "24:00:00"}
+        {CONF_FROM: "00:00:00", CONF_TO: "24:00:00", CONF_DATA: {"entry": "VIPs only"}}
     ]
     assert "from_yaml" not in result
 
@@ -733,3 +758,66 @@ async def test_ws_create(
     assert result["party_mode"][CONF_MONDAY] == [
         {CONF_FROM: "12:00:00", CONF_TO: saved_to}
     ]
+
+
+async def test_service_get(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
+) -> None:
+    """Test getting a single schedule via service."""
+    assert await schedule_setup()
+
+    entity_id = "schedule.from_storage"
+
+    # Test retrieving a single schedule via service call
+    service_result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET,
+        {
+            CONF_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    result = service_result.get(entity_id)
+
+    assert set(result) == CONF_ALL_DAYS
+    assert result == snapshot(name=f"{entity_id}-get")
+
+    # Now we update the schedule via WS
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": entity_id.rsplit(".", maxsplit=1)[-1],
+            CONF_NAME: "Party pooper",
+            CONF_ICON: "mdi:party-pooper",
+            CONF_MONDAY: [],
+            CONF_TUESDAY: [],
+            CONF_WEDNESDAY: [{CONF_FROM: "17:00:00", CONF_TO: "19:00:00"}],
+            CONF_THURSDAY: [],
+            CONF_FRIDAY: [],
+            CONF_SATURDAY: [],
+            CONF_SUNDAY: [],
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    # Test retrieving the schedule via service call after WS update
+    service_result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET,
+        {
+            CONF_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    result = service_result.get(entity_id)
+
+    assert set(result) == CONF_ALL_DAYS
+    assert result == snapshot(name=f"{entity_id}-get-after-update")

@@ -14,7 +14,7 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     DOMAIN,
@@ -24,7 +24,7 @@ from .const import (
     MODEL_AIRFRESH_T2017,
     MODELS_VACUUM,
 )
-from .device import XiaomiCoordinatedMiioEntity
+from .entity import XiaomiCoordinatedMiioEntity
 
 # Fans
 ATTR_RESET_DUST_FILTER = "reset_dust_filter"
@@ -51,7 +51,7 @@ BUTTON_TYPES = (
     # Fans
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_DUST_FILTER,
-        name="Reset dust filter",
+        translation_key=ATTR_RESET_DUST_FILTER,
         icon="mdi:air-filter",
         method_press="reset_dust_filter",
         method_press_error_message="Resetting the dust filter lifetime failed",
@@ -59,7 +59,7 @@ BUTTON_TYPES = (
     ),
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_UPPER_FILTER,
-        name="Reset upper filter",
+        translation_key=ATTR_RESET_UPPER_FILTER,
         icon="mdi:air-filter",
         method_press="reset_upper_filter",
         method_press_error_message="Resetting the upper filter lifetime failed.",
@@ -68,7 +68,7 @@ BUTTON_TYPES = (
     # Vacuums
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_VACUUM_MAIN_BRUSH,
-        name="Reset main brush",
+        translation_key=ATTR_RESET_VACUUM_MAIN_BRUSH,
         icon="mdi:brush",
         method_press=METHOD_VACUUM_RESET_CONSUMABLE,
         method_press_params=Consumable.MainBrush,
@@ -77,7 +77,7 @@ BUTTON_TYPES = (
     ),
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_VACUUM_SIDE_BRUSH,
-        name="Reset side brush",
+        translation_key=ATTR_RESET_VACUUM_SIDE_BRUSH,
         icon="mdi:brush",
         method_press=METHOD_VACUUM_RESET_CONSUMABLE,
         method_press_params=Consumable.SideBrush,
@@ -86,7 +86,7 @@ BUTTON_TYPES = (
     ),
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_VACUUM_FILTER,
-        name="Reset filter",
+        translation_key=ATTR_RESET_VACUUM_FILTER,
         icon="mdi:air-filter",
         method_press=METHOD_VACUUM_RESET_CONSUMABLE,
         method_press_params=Consumable.Filter,
@@ -95,7 +95,7 @@ BUTTON_TYPES = (
     ),
     XiaomiMiioButtonDescription(
         key=ATTR_RESET_VACUUM_SENSOR_DIRTY,
-        name="Reset sensor dirty",
+        translation_key=ATTR_RESET_VACUUM_SENSOR_DIRTY,
         icon="mdi:eye-outline",
         method_press=METHOD_VACUUM_RESET_CONSUMABLE,
         method_press_params=Consumable.SensorDirty,
@@ -117,14 +117,14 @@ MODEL_TO_BUTTON_MAP: dict[str, tuple[str, ...]] = {
         ATTR_RESET_DUST_FILTER,
         ATTR_RESET_UPPER_FILTER,
     ),
-    **{model: BUTTONS_FOR_VACUUM for model in MODELS_VACUUM},
+    **dict.fromkeys(MODELS_VACUUM, BUTTONS_FOR_VACUUM),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the button from a config entry."""
     model = config_entry.data[CONF_MODEL]

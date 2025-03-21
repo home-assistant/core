@@ -1,12 +1,15 @@
 """Test util methods."""
 
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import UTC, datetime, timedelta
 import os
 from pathlib import Path
 import sqlite3
 import threading
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from sqlalchemy import lambda_stmt, text
 from sqlalchemy.engine.result import ChunkedIteratorResult
@@ -16,7 +19,11 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder, util
-from homeassistant.components.recorder.const import DOMAIN, SQLITE_URL_PREFIX
+from homeassistant.components.recorder.const import (
+    DOMAIN,
+    SQLITE_URL_PREFIX,
+    SupportedDialect,
+)
 from homeassistant.components.recorder.db_schema import RecorderRuns
 from homeassistant.components.recorder.history.modern import (
     _get_single_entity_start_time_stmt,
@@ -27,10 +34,13 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.util import (
     MIN_VERSION_SQLITE,
-    UPCOMING_MIN_VERSION_SQLITE,
+    RETRYABLE_MYSQL_ERRORS,
+    database_job_retry_wrapper,
     end_incomplete_runs,
     is_second_sunday,
     resolve_period,
+    retryable_database_job,
+    retryable_database_job_method,
     session_scope,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -45,12 +55,12 @@ from .common import (
 )
 
 from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -225,7 +235,7 @@ def test_setup_connection_for_dialect_mysql(mysql_version) -> None:
 
 @pytest.mark.parametrize(
     "sqlite_version",
-    [str(UPCOMING_MIN_VERSION_SQLITE)],
+    [str(MIN_VERSION_SQLITE)],
 )
 def test_setup_connection_for_dialect_sqlite(sqlite_version: str) -> None:
     """Test setting up the connection for a sqlite dialect."""
@@ -278,7 +288,7 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version: str) -> None:
 
 @pytest.mark.parametrize(
     "sqlite_version",
-    [str(UPCOMING_MIN_VERSION_SQLITE)],
+    [str(MIN_VERSION_SQLITE)],
 )
 def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
     sqlite_version: str,
@@ -407,7 +417,12 @@ def test_supported_mysql(caplog: pytest.LogCaptureFixture, mysql_version) -> Non
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    util.setup_connection_for_dialect(instance_mock, "mysql", dbapi_connection, True)
+    database_engine = util.setup_connection_for_dialect(
+        instance_mock, "mysql", dbapi_connection, True
+    )
+    assert database_engine is not None
+    assert database_engine.optimizer.slow_range_in_select is False
+    assert database_engine.optimizer.slow_dependent_subquery is True
 
     assert "minimum supported version" not in caplog.text
 
@@ -491,7 +506,8 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
 
     assert "minimum supported version" not in caplog.text
     assert database_engine is not None
-    assert database_engine.optimizer.slow_range_in_select is False
+    assert database_engine.optimizer.slow_range_in_select is True
+    assert database_engine.optimizer.slow_dependent_subquery is False
 
 
 @pytest.mark.parametrize(
@@ -499,11 +515,11 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
     [
         (
             "3.30.0",
-            "Version 3.30.0 of SQLite is not supported; minimum supported version is 3.31.0.",
+            "Version 3.30.0 of SQLite is not supported; minimum supported version is 3.40.1.",
         ),
         (
             "2.0.0",
-            "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.31.0.",
+            "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.40.1.",
         ),
     ],
 )
@@ -541,8 +557,8 @@ def test_fail_outdated_sqlite(
 @pytest.mark.parametrize(
     "sqlite_version",
     [
-        ("3.31.0"),
-        ("3.33.0"),
+        ("3.40.1"),
+        ("3.41.0"),
     ],
 )
 def test_supported_sqlite(caplog: pytest.LogCaptureFixture, sqlite_version) -> None:
@@ -573,6 +589,7 @@ def test_supported_sqlite(caplog: pytest.LogCaptureFixture, sqlite_version) -> N
     assert "minimum supported version" not in caplog.text
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is False
+    assert database_engine.optimizer.slow_dependent_subquery is False
 
 
 @pytest.mark.parametrize(
@@ -665,6 +682,7 @@ async def test_issue_for_mariadb_with_MDEV_25020(
 
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is True
+    assert database_engine.optimizer.slow_dependent_subquery is False
 
 
 @pytest.mark.parametrize(
@@ -721,63 +739,7 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
 
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is False
-
-
-async def test_issue_for_old_sqlite(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test we create and delete an issue for old sqlite versions."""
-    instance_mock = MagicMock()
-    instance_mock.hass = hass
-    execute_args = []
-    close_mock = MagicMock()
-    min_version = str(MIN_VERSION_SQLITE)
-
-    def execute_mock(statement):
-        nonlocal execute_args
-        execute_args.append(statement)
-
-    def fetchall_mock():
-        nonlocal execute_args
-        if execute_args[-1] == "SELECT sqlite_version()":
-            return [[min_version]]
-        return None
-
-    def _make_cursor_mock(*_):
-        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
-
-    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
-
-    database_engine = await hass.async_add_executor_job(
-        util.setup_connection_for_dialect,
-        instance_mock,
-        "sqlite",
-        dbapi_connection,
-        True,
-    )
-    await hass.async_block_till_done()
-
-    issue = issue_registry.async_get_issue(DOMAIN, "sqlite_too_old")
-    assert issue is not None
-    assert issue.translation_placeholders == {
-        "min_version": str(UPCOMING_MIN_VERSION_SQLITE),
-        "server_version": min_version,
-    }
-
-    min_version = str(UPCOMING_MIN_VERSION_SQLITE)
-    database_engine = await hass.async_add_executor_job(
-        util.setup_connection_for_dialect,
-        instance_mock,
-        "sqlite",
-        dbapi_connection,
-        True,
-    )
-    await hass.async_block_till_done()
-
-    issue = issue_registry.async_get_issue(DOMAIN, "sqlite_too_old")
-    assert issue is None
-    assert database_engine is not None
+    assert database_engine.optimizer.slow_dependent_subquery is False
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
@@ -1042,55 +1004,82 @@ async def test_execute_stmt_lambda_element(
             assert rows == ["mock_row"]
 
 
-@pytest.mark.freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=UTC))
-async def test_resolve_period(hass: HomeAssistant) -> None:
-    """Test statistic_during_period."""
+@pytest.mark.parametrize(
+    ("start_time", "periods"),
+    [
+        (
+            # Test 00:25 local time, during DST
+            datetime(2022, 10, 21, 7, 25, 50, 123, tzinfo=UTC),
+            {
+                ("hour", 0): ("2022-10-21T07:00:00", "2022-10-21T08:00:00"),
+                ("hour", -1): ("2022-10-21T06:00:00", "2022-10-21T07:00:00"),
+                ("hour", 1): ("2022-10-21T08:00:00", "2022-10-21T09:00:00"),
+                ("day", 0): ("2022-10-21T07:00:00", "2022-10-22T07:00:00"),
+                ("day", -1): ("2022-10-20T07:00:00", "2022-10-21T07:00:00"),
+                ("day", 1): ("2022-10-22T07:00:00", "2022-10-23T07:00:00"),
+                ("week", 0): ("2022-10-17T07:00:00", "2022-10-24T07:00:00"),
+                ("week", -1): ("2022-10-10T07:00:00", "2022-10-17T07:00:00"),
+                ("week", 1): ("2022-10-24T07:00:00", "2022-10-31T07:00:00"),
+                ("month", 0): ("2022-10-01T07:00:00", "2022-11-01T07:00:00"),
+                ("month", -1): ("2022-09-01T07:00:00", "2022-10-01T07:00:00"),
+                ("month", -12): ("2021-10-01T07:00:00", "2021-11-01T07:00:00"),
+                ("month", 1): ("2022-11-01T07:00:00", "2022-12-01T08:00:00"),
+                ("month", 2): ("2022-12-01T08:00:00", "2023-01-01T08:00:00"),
+                ("month", 3): ("2023-01-01T08:00:00", "2023-02-01T08:00:00"),
+                ("month", 12): ("2023-10-01T07:00:00", "2023-11-01T07:00:00"),
+                ("month", 13): ("2023-11-01T07:00:00", "2023-12-01T08:00:00"),
+                ("month", 14): ("2023-12-01T08:00:00", "2024-01-01T08:00:00"),
+                ("year", 0): ("2022-01-01T08:00:00", "2023-01-01T08:00:00"),
+                ("year", -1): ("2021-01-01T08:00:00", "2022-01-01T08:00:00"),
+                ("year", 1): ("2023-01-01T08:00:00", "2024-01-01T08:00:00"),
+            },
+        ),
+        (
+            # Test 00:25 local time, standard time, February 28th a leap year
+            datetime(2024, 2, 28, 8, 25, 50, 123, tzinfo=UTC),
+            {
+                ("hour", 0): ("2024-02-28T08:00:00", "2024-02-28T09:00:00"),
+                ("hour", -1): ("2024-02-28T07:00:00", "2024-02-28T08:00:00"),
+                ("hour", 1): ("2024-02-28T09:00:00", "2024-02-28T10:00:00"),
+                ("day", 0): ("2024-02-28T08:00:00", "2024-02-29T08:00:00"),
+                ("day", -1): ("2024-02-27T08:00:00", "2024-02-28T08:00:00"),
+                ("day", 1): ("2024-02-29T08:00:00", "2024-03-01T08:00:00"),
+                ("week", 0): ("2024-02-26T08:00:00", "2024-03-04T08:00:00"),
+                ("week", -1): ("2024-02-19T08:00:00", "2024-02-26T08:00:00"),
+                ("week", 1): ("2024-03-04T08:00:00", "2024-03-11T07:00:00"),
+                ("month", 0): ("2024-02-01T08:00:00", "2024-03-01T08:00:00"),
+                ("month", -1): ("2024-01-01T08:00:00", "2024-02-01T08:00:00"),
+                ("month", -2): ("2023-12-01T08:00:00", "2024-01-01T08:00:00"),
+                ("month", -3): ("2023-11-01T07:00:00", "2023-12-01T08:00:00"),
+                ("month", -12): ("2023-02-01T08:00:00", "2023-03-01T08:00:00"),
+                ("month", -13): ("2023-01-01T08:00:00", "2023-02-01T08:00:00"),
+                ("month", -14): ("2022-12-01T08:00:00", "2023-01-01T08:00:00"),
+                ("month", 1): ("2024-03-01T08:00:00", "2024-04-01T07:00:00"),
+                ("year", 0): ("2024-01-01T08:00:00", "2025-01-01T08:00:00"),
+                ("year", -1): ("2023-01-01T08:00:00", "2024-01-01T08:00:00"),
+                ("year", 1): ("2025-01-01T08:00:00", "2026-01-01T08:00:00"),
+            },
+        ),
+    ],
+)
+async def test_resolve_period(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    start_time: datetime,
+    periods: dict[tuple[str, int], tuple[str, str]],
+) -> None:
+    """Test resolve_period."""
+    assert hass.config.time_zone == "US/Pacific"
+    freezer.move_to(start_time)
 
     now = dt_util.utcnow()
 
-    start_t, end_t = resolve_period({"calendar": {"period": "hour"}})
-    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-21T08:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "hour"}})
-    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-21T08:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "hour", "offset": -1}})
-    assert start_t.isoformat() == "2022-10-21T06:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-21T07:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "day"}})
-    assert start_t.isoformat() == "2022-10-21T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-22T07:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "day", "offset": -1}})
-    assert start_t.isoformat() == "2022-10-20T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-21T07:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "week"}})
-    assert start_t.isoformat() == "2022-10-17T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-24T07:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "week", "offset": -1}})
-    assert start_t.isoformat() == "2022-10-10T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-17T07:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "month"}})
-    assert start_t.isoformat() == "2022-10-01T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-11-01T07:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "month", "offset": -1}})
-    assert start_t.isoformat() == "2022-09-01T07:00:00+00:00"
-    assert end_t.isoformat() == "2022-10-01T07:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "year"}})
-    assert start_t.isoformat() == "2022-01-01T08:00:00+00:00"
-    assert end_t.isoformat() == "2023-01-01T08:00:00+00:00"
-
-    start_t, end_t = resolve_period({"calendar": {"period": "year", "offset": -1}})
-    assert start_t.isoformat() == "2021-01-01T08:00:00+00:00"
-    assert end_t.isoformat() == "2022-01-01T08:00:00+00:00"
+    for period_def, expected_period in periods.items():
+        start_t, end_t = resolve_period(
+            {"calendar": {"period": period_def[0], "offset": period_def[1]}}
+        )
+        assert start_t.isoformat() == f"{expected_period[0]}+00:00"
+        assert end_t.isoformat() == f"{expected_period[1]}+00:00"
 
     # Fixed period
     assert resolve_period({}) == (None, None)
@@ -1117,3 +1106,129 @@ async def test_resolve_period(hass: HomeAssistant) -> None:
             }
         }
     ) == (now - timedelta(hours=1, minutes=25), now - timedelta(minutes=25))
+
+
+NonRetryable = OperationalError(None, None, BaseException())
+Retryable = OperationalError(None, None, BaseException(RETRYABLE_MYSQL_ERRORS[0], ""))
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "dialect", "retval", "expected_result", "num_calls"),
+    [
+        (None, SupportedDialect.MYSQL, None, does_not_raise(), 1),
+        (ValueError, SupportedDialect.MYSQL, None, pytest.raises(ValueError), 1),
+        (
+            NonRetryable,
+            SupportedDialect.MYSQL,
+            None,
+            pytest.raises(OperationalError),
+            1,
+        ),
+        (Retryable, SupportedDialect.MYSQL, None, pytest.raises(OperationalError), 5),
+        (
+            NonRetryable,
+            SupportedDialect.SQLITE,
+            None,
+            pytest.raises(OperationalError),
+            1,
+        ),
+        (Retryable, SupportedDialect.SQLITE, None, pytest.raises(OperationalError), 1),
+    ],
+)
+def test_database_job_retry_wrapper(
+    side_effect: Any,
+    dialect: str,
+    retval: Any,
+    expected_result: AbstractContextManager,
+    num_calls: int,
+) -> None:
+    """Test database_job_retry_wrapper."""
+
+    instance = Mock()
+    instance.db_retry_wait = 0
+    instance.engine.dialect.name = dialect
+    mock_job = Mock(side_effect=side_effect)
+
+    @database_job_retry_wrapper("test", 5)
+    def job(instance, *args, **kwargs) -> None:
+        mock_job()
+        return retval
+
+    with expected_result:
+        assert job(instance) == retval
+
+    assert len(mock_job.mock_calls) == num_calls
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "dialect", "retval", "expected_result"),
+    [
+        (None, SupportedDialect.MYSQL, False, does_not_raise()),
+        (None, SupportedDialect.MYSQL, True, does_not_raise()),
+        (ValueError, SupportedDialect.MYSQL, False, pytest.raises(ValueError)),
+        (NonRetryable, SupportedDialect.MYSQL, True, does_not_raise()),
+        (Retryable, SupportedDialect.MYSQL, False, does_not_raise()),
+        (NonRetryable, SupportedDialect.SQLITE, True, does_not_raise()),
+        (Retryable, SupportedDialect.SQLITE, True, does_not_raise()),
+    ],
+)
+def test_retryable_database_job(
+    side_effect: Any,
+    retval: bool,
+    expected_result: AbstractContextManager,
+    dialect: str,
+) -> None:
+    """Test retryable_database_job."""
+
+    instance = Mock()
+    instance.db_retry_wait = 0
+    instance.engine.dialect.name = dialect
+    mock_job = Mock(side_effect=side_effect)
+
+    @retryable_database_job(description="test")
+    def job(instance, *args, **kwargs) -> bool:
+        mock_job()
+        return retval
+
+    with expected_result:
+        assert job(instance) == retval
+
+    assert len(mock_job.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "dialect", "retval", "expected_result"),
+    [
+        (None, SupportedDialect.MYSQL, False, does_not_raise()),
+        (None, SupportedDialect.MYSQL, True, does_not_raise()),
+        (ValueError, SupportedDialect.MYSQL, False, pytest.raises(ValueError)),
+        (NonRetryable, SupportedDialect.MYSQL, True, does_not_raise()),
+        (Retryable, SupportedDialect.MYSQL, False, does_not_raise()),
+        (NonRetryable, SupportedDialect.SQLITE, True, does_not_raise()),
+        (Retryable, SupportedDialect.SQLITE, True, does_not_raise()),
+    ],
+)
+def test_retryable_database_job_method(
+    side_effect: Any,
+    retval: bool,
+    expected_result: AbstractContextManager,
+    dialect: str,
+) -> None:
+    """Test retryable_database_job_method."""
+
+    instance = Mock()
+    instance.db_retry_wait = 0
+    instance.engine.dialect.name = dialect
+    mock_job = Mock(side_effect=side_effect)
+
+    class Test:
+        @retryable_database_job_method(description="test")
+        def job(self, instance, *args, **kwargs) -> bool:
+            mock_job()
+            return retval
+
+    test = Test()
+    with expected_result:
+        assert test.job(instance) == retval
+
+    assert len(mock_job.mock_calls) == 1

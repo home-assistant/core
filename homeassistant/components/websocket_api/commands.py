@@ -275,10 +275,10 @@ async def handle_call_service(
                 translation_domain=const.DOMAIN,
                 translation_key="child_service_not_found",
                 translation_placeholders={
-                    "domain": err.domain,
-                    "service": err.service,
-                    "child_domain": msg["domain"],
-                    "child_service": msg["service"],
+                    "domain": msg["domain"],
+                    "service": msg["service"],
+                    "child_domain": err.domain,
+                    "child_service": err.service,
                 },
             )
     except vol.Invalid as err:
@@ -859,9 +859,9 @@ def handle_fire_event(
 @decorators.websocket_command(
     {
         vol.Required("type"): "validate_config",
-        vol.Optional("trigger"): cv.match_all,
-        vol.Optional("condition"): cv.match_all,
-        vol.Optional("action"): cv.match_all,
+        vol.Optional("triggers"): cv.match_all,
+        vol.Optional("conditions"): cv.match_all,
+        vol.Optional("actions"): cv.match_all,
     }
 )
 @decorators.async_response
@@ -876,9 +876,13 @@ async def handle_validate_config(
     result = {}
 
     for key, schema, validator in (
-        ("trigger", cv.TRIGGER_SCHEMA, trigger.async_validate_trigger_config),
-        ("condition", cv.CONDITIONS_SCHEMA, condition.async_validate_conditions_config),
-        ("action", cv.SCRIPT_SCHEMA, script.async_validate_actions_config),
+        ("triggers", cv.TRIGGER_SCHEMA, trigger.async_validate_trigger_config),
+        (
+            "conditions",
+            cv.CONDITIONS_SCHEMA,
+            condition.async_validate_conditions_config,
+        ),
+        ("actions", cv.SCRIPT_SCHEMA, script.async_validate_actions_config),
     ):
         if key not in msg:
             continue

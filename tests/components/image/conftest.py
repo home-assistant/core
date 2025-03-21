@@ -7,7 +7,10 @@ import pytest
 from homeassistant.components import image
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -52,6 +55,21 @@ class MockImageEntityInvalidContentType(image.ImageEntity):
         return b"Test"
 
 
+class MockImageEntityCapitalContentType(image.ImageEntity):
+    """Mock image entity with correct content type, but capitalized."""
+
+    _attr_name = "Test"
+
+    async def async_added_to_hass(self):
+        """Set the update time and assign and incorrect content type."""
+        self._attr_content_type = "Image/jpeg"
+        self._attr_image_last_updated = dt_util.utcnow()
+
+    async def async_image(self) -> bytes | None:
+        """Return bytes of image."""
+        return b"Test"
+
+
 class MockURLImageEntity(image.ImageEntity):
     """Mock image entity."""
 
@@ -71,6 +89,16 @@ class MockImageNoStateEntity(image.ImageEntity):
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
         return b"Test"
+
+
+class MockImageNoDataEntity(image.ImageEntity):
+    """Mock image entity."""
+
+    _attr_name = "Test"
+
+    async def async_image(self) -> bytes | None:
+        """Return bytes of image."""
+        return None
 
 
 class MockImageSyncEntity(image.ImageEntity):
@@ -98,7 +126,7 @@ class MockImageConfigEntry:
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test image platform via config entry."""
         async_add_entities([self._entities])

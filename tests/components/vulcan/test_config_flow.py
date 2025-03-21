@@ -310,7 +310,7 @@ async def test_multiple_config_entries(
         unique_id="123456",
         data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan")),
     ).add_to_hass(hass)
-    await register.register(hass, "token", "region", "000000")
+    await register.register("token", "region", "000000")
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -703,7 +703,7 @@ async def test_student_already_exists(
         | {"student_id": "0"},
     ).add_to_hass(hass)
 
-    await register.register(hass, "token", "region", "000000")
+    await register.register("token", "region", "000000")
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}

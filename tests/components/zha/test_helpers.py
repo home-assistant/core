@@ -5,16 +5,23 @@ from typing import Any
 
 import pytest
 import voluptuous_serialize
+from zigpy.application import ControllerApplication
 from zigpy.types.basic import uint16_t
 from zigpy.zcl.clusters import lighting
 
+from homeassistant.components.zha import const as zha_const
 from homeassistant.components.zha.helpers import (
     cluster_command_schema_to_vol_schema,
     convert_to_zcl_values,
+    create_zha_config,
     exclude_none_values,
+    get_zha_data,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -175,5 +182,37 @@ def test_exclude_none_values(
     result = exclude_none_values(obj)
     assert result == expected_output
 
-    for key in expected_output:
-        assert expected_output[key] == obj[key]
+    for key, value in expected_output.items():
+        assert value == obj[key]
+
+
+async def test_create_zha_config_remove_unused(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test creating ZHA config data with unused keys."""
+    config_entry.add_to_hass(hass)
+
+    options = config_entry.options.copy()
+    options["custom_configuration"]["zha_options"]["some_random_key"] = "a value"
+
+    hass.config_entries.async_update_entry(config_entry, options=options)
+
+    assert (
+        config_entry.options["custom_configuration"]["zha_options"]["some_random_key"]
+        == "a value"
+    )
+
+    status = await async_setup_component(
+        hass,
+        zha_const.DOMAIN,
+        {zha_const.DOMAIN: {zha_const.CONF_ENABLE_QUIRKS: False}},
+    )
+    assert status is True
+    await hass.async_block_till_done()
+
+    ha_zha_data = get_zha_data(hass)
+
+    # Does not error out
+    create_zha_config(hass, ha_zha_data)

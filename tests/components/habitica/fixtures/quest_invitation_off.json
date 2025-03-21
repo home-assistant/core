@@ -1,0 +1,66 @@
+{
+  "success": true,
+  "data": {
+    "api_user": "test-api-user",
+    "profile": { "name": "test-user" },
+    "stats": {
+      "buffs": {
+        "str": 0,
+        "int": 0,
+        "per": 0,
+        "con": 0,
+        "stealth": 0,
+        "streaks": false,
+        "seafoam": false,
+        "shinySeed": false,
+        "snowball": false,
+        "spookySparkles": false
+      },
+      "hp": 0,
+      "mp": 50.89999999999998,
+      "exp": 737,
+      "gp": 137.62587214609795,
+      "lvl": 38,
+      "class": "wizard",
+      "maxHealth": 50,
+      "maxMP": 166,
+      "toNextLevel": 880,
+      "points": 5
+    },
+    "preferences": {
+      "sleep": false,
+      "automaticAllocation": true,
+      "disableClasses": false,
+      "language": "en"
+    },
+    "flags": {
+      "classSelected": true
+    },
+    "tasksOrder": {
+      "rewards": ["5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"],
+      "todos": [
+        "88de7cd9-af2b-49ce-9afd-bf941d87336b",
+        "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+        "1aa3137e-ef72-4d1f-91ee-41933602f438",
+        "86ea2475-d1b5-4020-bdcc-c188c7996afa"
+      ],
+      "dailys": [
+        "f21fa608-cfc6-4413-9fc7-0eb1b48ca43a",
+        "bc1d1855-b2b8-4663-98ff-62e7b763dfc4",
+        "e97659e0-2c42-4599-a7bb-00282adc410d",
+        "564b9ac9-c53d-4638-9e7f-1cd96fe19baa",
+        "f2c85972-1a19-4426-bc6d-ce3337b9d99f",
+        "2c6d136c-a1c3-4bef-b7c4-fa980784b1e1"
+      ],
+      "habits": ["1d147de6-5c02-4740-8e2f-71d3015a37f4"]
+    },
+    "party": {
+      "quest": {
+        "RSVPNeeded": false,
+        "key": null
+      }
+    },
+    "needsCron": true,
+    "lastCron": "2024-09-21T22:01:55.586Z"
+  }
+}

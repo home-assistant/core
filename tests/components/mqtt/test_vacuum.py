@@ -21,21 +21,19 @@ from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
-    DOMAIN,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
     SERVICE_RETURN_TO_BASE,
     SERVICE_START,
     SERVICE_STOP,
-    STATE_CLEANING,
-    STATE_DOCKED,
+    VacuumActivity,
 )
 from homeassistant.const import CONF_NAME, ENTITY_MATCH_ALL, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -122,31 +120,34 @@ async def test_all_commands(
     mqtt_mock = await mqtt_mock_entry()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN, SERVICE_START, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
     mqtt_mock.async_publish.assert_called_once_with(COMMAND_TOPIC, "start", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_STOP, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN, SERVICE_STOP, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
     mqtt_mock.async_publish.assert_called_once_with(COMMAND_TOPIC, "stop", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_PAUSE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN, SERVICE_PAUSE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
     mqtt_mock.async_publish.assert_called_once_with(COMMAND_TOPIC, "pause", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_LOCATE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN, SERVICE_LOCATE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
     mqtt_mock.async_publish.assert_called_once_with(COMMAND_TOPIC, "locate", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_CLEAN_SPOT, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN,
+        SERVICE_CLEAN_SPOT,
+        {"entity_id": ENTITY_MATCH_ALL},
+        blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
         COMMAND_TOPIC, "clean_spot", 0, False
@@ -154,7 +155,10 @@ async def test_all_commands(
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_RETURN_TO_BASE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN,
+        SERVICE_RETURN_TO_BASE,
+        {"entity_id": ENTITY_MATCH_ALL},
+        blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
         COMMAND_TOPIC, "return_to_base", 0, False
@@ -205,37 +209,43 @@ async def test_commands_without_supported_features(
     mqtt_mock = await mqtt_mock_entry()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN, SERVICE_START, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_PAUSE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN, SERVICE_PAUSE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_STOP, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN, SERVICE_STOP, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_RETURN_TO_BASE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN,
+        SERVICE_RETURN_TO_BASE,
+        {"entity_id": ENTITY_MATCH_ALL},
+        blocking=True,
     )
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_LOCATE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN, SERVICE_LOCATE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_CLEAN_SPOT, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN,
+        SERVICE_CLEAN_SPOT,
+        {"entity_id": ENTITY_MATCH_ALL},
+        blocking=True,
     )
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
@@ -281,7 +291,7 @@ async def test_command_without_command_topic(
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_send_command(hass, "some command", "vacuum.test")
+    await common.async_send_command(hass, "some command", entity_id="vacuum.test")
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
@@ -302,7 +312,7 @@ async def test_status(
     }"""
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
-    assert state.state == STATE_CLEANING
+    assert state.state == VacuumActivity.CLEANING
     assert state.attributes.get(ATTR_BATTERY_LEVEL) == 54
     assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-50"
     assert state.attributes.get(ATTR_FAN_SPEED) == "max"
@@ -315,7 +325,7 @@ async def test_status(
 
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
-    assert state.state == STATE_DOCKED
+    assert state.state == VacuumActivity.DOCKED
     assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-charging-60"
     assert state.attributes.get(ATTR_BATTERY_LEVEL) == 61
     assert state.attributes.get(ATTR_FAN_SPEED) == "min"
@@ -355,7 +365,7 @@ async def test_no_fan_vacuum(
     }"""
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
-    assert state.state == STATE_CLEANING
+    assert state.state == VacuumActivity.CLEANING
     assert state.attributes.get(ATTR_FAN_SPEED) is None
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
     assert state.attributes.get(ATTR_BATTERY_LEVEL) == 54
@@ -369,7 +379,7 @@ async def test_no_fan_vacuum(
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
 
-    assert state.state == STATE_CLEANING
+    assert state.state == VacuumActivity.CLEANING
     assert state.attributes.get(ATTR_FAN_SPEED) is None
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
 
@@ -383,7 +393,7 @@ async def test_no_fan_vacuum(
 
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
-    assert state.state == STATE_DOCKED
+    assert state.state == VacuumActivity.DOCKED
     assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-charging-60"
     assert state.attributes.get(ATTR_BATTERY_LEVEL) == 61
 

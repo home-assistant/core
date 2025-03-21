@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import overload
 
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,17 +50,6 @@ def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
     if ts.tzinfo is None:
         return f"{ts.isoformat()}{DB_TIMEZONE}"
     return ts.astimezone(dt_util.UTC).isoformat()
-
-
-def process_datetime_to_timestamp(ts: datetime) -> float:
-    """Process a datebase datetime to epoch.
-
-    Mirrors the behavior of process_timestamp_to_utc_isoformat
-    except it returns the epoch time.
-    """
-    if ts.tzinfo is None or ts.tzinfo == dt_util.UTC:
-        return dt_util.utc_to_timestamp(ts)
-    return ts.timestamp()
 
 
 def datetime_to_timestamp_or_none(dt: datetime | None) -> float | None:

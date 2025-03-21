@@ -113,7 +113,8 @@
       "not_hassio_thread": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::not_hassio_thread%]",
       "otbr_addon_already_running": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::otbr_addon_already_running%]",
       "zha_still_using_stick": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::zha_still_using_stick%]",
-      "otbr_still_using_stick": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::otbr_still_using_stick%]"
+      "otbr_still_using_stick": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::otbr_still_using_stick%]",
+      "unsupported_firmware": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::unsupported_firmware%]"
     },
     "progress": {
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
@@ -181,7 +182,10 @@
       "zha_migration_failed": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::zha_migration_failed%]",
       "not_hassio": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::abort::not_hassio%]",
       "not_hassio_thread": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::not_hassio_thread%]",
-      "otbr_addon_already_running": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::otbr_addon_already_running%]"
+      "otbr_addon_already_running": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::otbr_addon_already_running%]",
+      "zha_still_using_stick": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::zha_still_using_stick%]",
+      "otbr_still_using_stick": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::otbr_still_using_stick%]",
+      "unsupported_firmware": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::unsupported_firmware%]"
     },
     "progress": {
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",

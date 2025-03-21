@@ -17,8 +17,10 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN: Final = "scene"
+DATA_COMPONENT: HassKey[EntityComponent[Scene]] = HassKey(DOMAIN)
 STATES: Final = "states"
 
 
@@ -60,7 +62,7 @@ PLATFORM_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the scenes."""
-    component = hass.data[DOMAIN] = EntityComponent[Scene](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[Scene](
         logging.getLogger(__name__), DOMAIN, hass
     )
 
@@ -83,14 +85,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[Scene] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[Scene] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class Scene(RestoreEntity):

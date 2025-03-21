@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import Mock
 
-from homeassistant.components.climate import PRESET_COMFORT, PRESET_ECO
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -110,9 +109,7 @@ class FritzDeviceClimateMock(FritzEntityBaseMock):
     target_temperature = 19.5
     window_open = "fake_window"
     nextchange_temperature = 22.0
-    nextchange_endperiod = 0
-    nextchange_preset = PRESET_COMFORT
-    scheduled_preset = PRESET_ECO
+    nextchange_endperiod = 1726855200
 
 
 class FritzDeviceClimateWithoutTempSensorMock(FritzDeviceClimateMock):

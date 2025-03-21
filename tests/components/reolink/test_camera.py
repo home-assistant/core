@@ -5,9 +5,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from reolink_aio.exceptions import ReolinkError
 
-from homeassistant.components.camera import async_get_image, async_get_stream_source
+from homeassistant.components.camera import (
+    CameraState,
+    async_get_image,
+    async_get_stream_source,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_IDLE, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -30,7 +34,7 @@ async def test_camera(
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.CAMERA}.{TEST_NVR_NAME}_fluent"
-    assert hass.states.get(entity_id).state == STATE_IDLE
+    assert hass.states.get(entity_id).state == CameraState.IDLE
 
     # check getting a image from the camera
     reolink_connect.get_snapshot.return_value = b"image"
@@ -42,6 +46,8 @@ async def test_camera(
 
     # check getting the stream source
     assert await async_get_stream_source(hass, entity_id) is not None
+
+    reolink_connect.get_snapshot.reset_mock(side_effect=True)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -60,4 +66,4 @@ async def test_camera_no_stream_source(
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.CAMERA}.{TEST_NVR_NAME}_snapshots_fluent_lens_0"
-    assert hass.states.get(entity_id).state == STATE_IDLE
+    assert hass.states.get(entity_id).state == CameraState.IDLE

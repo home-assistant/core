@@ -7,8 +7,9 @@ from systembridgemodels.media_files import MediaFile, MediaFiles
 from systembridgemodels.media_get_files import MediaGetFiles
 
 from homeassistant.components.media_player import MediaClass
-from homeassistant.components.media_source import MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
+    MEDIA_CLASS_MAP,
+    MEDIA_MIME_TYPES,
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,

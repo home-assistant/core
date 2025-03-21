@@ -11,11 +11,11 @@ import logging
 import threading
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.helpers.recorder import DATA_RECORDER
 from homeassistant.helpers.typing import UndefinedType
 from homeassistant.util.event_type import EventType
 
 from . import entity_registry, purge, statistics
-from .const import DOMAIN
 from .db_schema import Statistics, StatisticsShortTerm
 from .models import StatisticData, StatisticMetaData
 from .util import periodic_db_cleanups, session_scope
@@ -60,17 +60,21 @@ class ChangeStatisticsUnitTask(RecorderTask):
 class ClearStatisticsTask(RecorderTask):
     """Object to store statistics_ids which for which to remove statistics."""
 
+    on_done: Callable[[], None] | None
     statistic_ids: list[str]
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         statistics.clear_statistics(instance, self.statistic_ids)
+        if self.on_done:
+            self.on_done()
 
 
 @dataclass(slots=True)
 class UpdateStatisticsMetadataTask(RecorderTask):
     """Object to store statistics_id and unit for update of statistics metadata."""
 
+    on_done: Callable[[], None] | None
     statistic_id: str
     new_statistic_id: str | None | UndefinedType
     new_unit_of_measurement: str | None | UndefinedType
@@ -83,6 +87,8 @@ class UpdateStatisticsMetadataTask(RecorderTask):
             self.new_statistic_id,
             self.new_unit_of_measurement,
         )
+        if self.on_done:
+            self.on_done()
 
 
 @dataclass(slots=True)
@@ -114,8 +120,6 @@ class PurgeTask(RecorderTask):
         if purge.purge_old_data(
             instance, self.purge_before, self.repack, self.apply_filter
         ):
-            with instance.get_session() as session:
-                instance.recorder_runs_manager.load_from_db(session)
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.
@@ -304,7 +308,7 @@ class AddRecorderPlatformTask(RecorderTask):
         hass = instance.hass
         domain = self.domain
         platform = self.platform
-        platforms: dict[str, Any] = hass.data[DOMAIN].recorder_platforms
+        platforms: dict[str, Any] = hass.data[DATA_RECORDER].recorder_platforms
         platforms[domain] = platform
 
 
@@ -323,31 +327,6 @@ class SynchronizeTask(RecorderTask):
 
 
 @dataclass(slots=True)
-class PostSchemaMigrationTask(RecorderTask):
-    """Post migration task to update schema."""
-
-    old_version: int
-    new_version: int
-
-    def run(self, instance: Recorder) -> None:
-        """Handle the task."""
-        instance._post_schema_migration(  # noqa: SLF001
-            self.old_version, self.new_version
-        )
-
-
-@dataclass(slots=True)
-class StatisticsTimestampMigrationCleanupTask(RecorderTask):
-    """An object to insert into the recorder queue to run a statistics migration cleanup task."""
-
-    def run(self, instance: Recorder) -> None:
-        """Run statistics timestamp cleanup task."""
-        if not statistics.cleanup_statistics_timestamp_migration(instance):
-            # Schedule a new statistics migration task if this one didn't finish
-            instance.queue_task(StatisticsTimestampMigrationCleanupTask())
-
-
-@dataclass(slots=True)
 class AdjustLRUSizeTask(RecorderTask):
     """An object to insert into the recorder queue to adjust the LRU size."""
 
@@ -356,19 +335,6 @@ class AdjustLRUSizeTask(RecorderTask):
     def run(self, instance: Recorder) -> None:
         """Handle the task to adjust the size."""
         instance._adjust_lru_size()  # noqa: SLF001
-
-
-@dataclass(slots=True)
-class EntityIDPostMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to cleanup after entity_ids migration."""
-
-    def run(self, instance: Recorder) -> None:
-        """Run entity_id post migration task."""
-        if (
-            not instance._post_migrate_entity_ids()  # noqa: SLF001
-        ):
-            # Schedule a new migration task if this one didn't finish
-            instance.queue_task(EntityIDPostMigrationTask())
 
 
 @dataclass(slots=True)

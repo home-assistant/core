@@ -9,7 +9,7 @@ from contextlib import suppress
 import datetime as dt
 from enum import StrEnum
 import functools as ft
-from functools import cached_property, lru_cache
+from functools import lru_cache
 import hashlib
 from http import HTTPStatus
 import logging
@@ -21,6 +21,7 @@ import aiohttp
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
+from propcache.api import cached_property
 import voluptuous as vol
 from yarl import URL
 
@@ -51,17 +52,44 @@ from homeassistant.const import (  # noqa: F401
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.hass_dict import HassKey
 
 from .browse_media import BrowseMedia, async_process_play_media_url  # noqa: F401
 from .const import (  # noqa: F401
+    _DEPRECATED_MEDIA_CLASS_DIRECTORY,
+    _DEPRECATED_SUPPORT_BROWSE_MEDIA,
+    _DEPRECATED_SUPPORT_CLEAR_PLAYLIST,
+    _DEPRECATED_SUPPORT_GROUPING,
+    _DEPRECATED_SUPPORT_NEXT_TRACK,
+    _DEPRECATED_SUPPORT_PAUSE,
+    _DEPRECATED_SUPPORT_PLAY,
+    _DEPRECATED_SUPPORT_PLAY_MEDIA,
+    _DEPRECATED_SUPPORT_PREVIOUS_TRACK,
+    _DEPRECATED_SUPPORT_REPEAT_SET,
+    _DEPRECATED_SUPPORT_SEEK,
+    _DEPRECATED_SUPPORT_SELECT_SOUND_MODE,
+    _DEPRECATED_SUPPORT_SELECT_SOURCE,
+    _DEPRECATED_SUPPORT_SHUFFLE_SET,
+    _DEPRECATED_SUPPORT_STOP,
+    _DEPRECATED_SUPPORT_TURN_OFF,
+    _DEPRECATED_SUPPORT_TURN_ON,
+    _DEPRECATED_SUPPORT_VOLUME_MUTE,
+    _DEPRECATED_SUPPORT_VOLUME_SET,
+    _DEPRECATED_SUPPORT_VOLUME_STEP,
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_ENTITY_PICTURE_LOCAL,
@@ -95,33 +123,14 @@ from .const import (  # noqa: F401
     ATTR_SOUND_MODE_LIST,
     CONTENT_AUTH_EXPIRY_TIME,
     DOMAIN,
-    MEDIA_CLASS_DIRECTORY,
     REPEAT_MODES,
+    SERVICE_BROWSE_MEDIA,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_JOIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_GROUPING,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_REPEAT_SET,
-    SUPPORT_SEEK,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
     MediaClass,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -132,6 +141,7 @@ from .errors import BrowseError
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_COMPONENT: HassKey[EntityComponent[MediaPlayerEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -170,10 +180,16 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(MediaPlayerDeviceClass))
 
 # DEVICE_CLASS* below are deprecated as of 2021.12
 # use the MediaPlayerDeviceClass enum instead.
+_DEPRECATED_DEVICE_CLASS_TV = DeprecatedConstantEnum(
+    MediaPlayerDeviceClass.TV, "2025.10"
+)
+_DEPRECATED_DEVICE_CLASS_SPEAKER = DeprecatedConstantEnum(
+    MediaPlayerDeviceClass.SPEAKER, "2025.10"
+)
+_DEPRECATED_DEVICE_CLASS_RECEIVER = DeprecatedConstantEnum(
+    MediaPlayerDeviceClass.RECEIVER, "2025.10"
+)
 DEVICE_CLASSES = [cls.value for cls in MediaPlayerDeviceClass]
-DEVICE_CLASS_TV = MediaPlayerDeviceClass.TV.value
-DEVICE_CLASS_SPEAKER = MediaPlayerDeviceClass.SPEAKER.value
-DEVICE_CLASS_RECEIVER = MediaPlayerDeviceClass.RECEIVER.value
 
 
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
@@ -185,6 +201,12 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
     vol.Exclusive(ATTR_MEDIA_ANNOUNCE, "enqueue_announce"): cv.boolean,
     vol.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
 }
+
+MEDIA_PLAYER_BROWSE_MEDIA_SCHEMA = {
+    vol.Optional(ATTR_MEDIA_CONTENT_TYPE): cv.string,
+    vol.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
+}
+
 
 ATTR_TO_PROPERTY = [
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -264,7 +286,7 @@ def _rename_keys(**keys: Any) -> Callable[[dict[str, Any]], dict[str, Any]]:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for media_players."""
-    component = hass.data[DOMAIN] = EntityComponent[MediaPlayerEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[MediaPlayerEntity](
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -417,6 +439,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         [MediaPlayerEntityFeature.PLAY_MEDIA],
     )
     component.async_register_entity_service(
+        SERVICE_BROWSE_MEDIA,
+        {
+            vol.Optional(ATTR_MEDIA_CONTENT_TYPE): cv.string,
+            vol.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
+        },
+        "async_browse_media",
+        supports_response=SupportsResponse.ONLY,
+    )
+    component.async_register_entity_service(
         SERVICE_SHUFFLE_SET,
         {vol.Required(ATTR_MEDIA_SHUFFLE): cv.boolean},
         "async_set_shuffle",
@@ -438,14 +469,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[MediaPlayerEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[MediaPlayerEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class MediaPlayerEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -767,7 +796,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Remove this compatibility shim in 2025.1 or later.
         """
         features = self.supported_features
-        if type(features) is int:  # noqa: E721
+        if type(features) is int:
             new_features = MediaPlayerEntityFeature(features)
             self._report_deprecated_supported_features_values(new_features)
             return new_features
@@ -1002,7 +1031,6 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if self.state in {
             MediaPlayerState.OFF,
-            MediaPlayerState.IDLE,
             MediaPlayerState.STANDBY,
         }:
             await self.async_turn_on()
@@ -1282,8 +1310,7 @@ async def websocket_browse_media(
     To use, media_player integrations can implement
     MediaPlayerEntity.async_browse_media()
     """
-    component: EntityComponent[MediaPlayerEntity] = hass.data[DOMAIN]
-    player = component.get_entity(msg["entity_id"])
+    player = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
 
     if player is None:
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
@@ -1359,3 +1386,13 @@ async def async_fetch_image(
         logger.warning("Error retrieving proxied image from %s", url)
 
     return content, content_type
+
+
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

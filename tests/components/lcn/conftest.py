@@ -1,24 +1,25 @@
 """Test configuration and mocks for LCN component."""
 
-from collections.abc import AsyncGenerator
 import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pypck
-from pypck.connection import PchkConnectionManager
 import pypck.module
 from pypck.module import GroupConnection, ModuleConnection
 import pytest
 
+from homeassistant.components.lcn import PchkConnectionManager
+from homeassistant.components.lcn.config_flow import LcnFlowHandler
 from homeassistant.components.lcn.const import DOMAIN
 from homeassistant.components.lcn.helpers import AddressType, generate_unique_id
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_ENTITIES, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
+
+LATEST_CONFIG_ENTRY_VERSION = (LcnFlowHandler.VERSION, LcnFlowHandler.MINOR_VERSION)
 
 
 class MockModuleConnection(ModuleConnection):
@@ -54,17 +55,27 @@ class MockPchkConnectionManager(PchkConnectionManager):
     async def async_close(self) -> None:
         """Mock closing a connection to PCHK."""
 
-    @patch.object(pypck.connection, "ModuleConnection", MockModuleConnection)
-    @patch.object(pypck.connection, "GroupConnection", MockGroupConnection)
     def get_address_conn(self, addr, request_serials=False):
         """Get LCN address connection."""
         return super().get_address_conn(addr, request_serials)
+
+    @patch.object(pypck.connection, "ModuleConnection", MockModuleConnection)
+    def get_module_conn(self, addr, request_serials=False):
+        """Get LCN module connection."""
+        return super().get_module_conn(addr, request_serials)
+
+    @patch.object(pypck.connection, "GroupConnection", MockGroupConnection)
+    def get_group_conn(self, addr):
+        """Get LCN group connection."""
+        return super().get_group_conn(addr)
 
     scan_modules = AsyncMock()
     send_command = AsyncMock()
 
 
-def create_config_entry(name: str) -> MockConfigEntry:
+def create_config_entry(
+    name: str, version: tuple[int, int] = LATEST_CONFIG_ENTRY_VERSION
+) -> MockConfigEntry:
     """Set up config entries with configuration data."""
     fixture_filename = f"lcn/config_entry_{name}.json"
     entry_data = json.loads(load_fixture(fixture_filename))
@@ -76,13 +87,14 @@ def create_config_entry(name: str) -> MockConfigEntry:
     options = {}
 
     title = entry_data[CONF_HOST]
-    unique_id = fixture_filename
     return MockConfigEntry(
+        entry_id=fixture_filename,
         domain=DOMAIN,
         title=title,
-        unique_id=unique_id,
         data=entry_data,
         options=options,
+        version=version[0],
+        minor_version=version[1],
     )
 
 
@@ -98,10 +110,9 @@ def create_config_entry_myhome() -> MockConfigEntry:
     return create_config_entry("myhome")
 
 
-@pytest.fixture(name="lcn_connection")
 async def init_integration(
     hass: HomeAssistant, entry: MockConfigEntry
-) -> AsyncGenerator[MockPchkConnectionManager]:
+) -> MockPchkConnectionManager:
     """Set up the LCN integration in Home Assistant."""
     hass.http = Mock()  # needs to be mocked as hass.http.register_static_path is called when registering the frontend
     lcn_connection = None
@@ -113,21 +124,13 @@ async def init_integration(
 
     entry.add_to_hass(hass)
     with patch(
-        "pypck.connection.PchkConnectionManager",
+        "homeassistant.components.lcn.PchkConnectionManager",
         side_effect=lcn_connection_factory,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        yield lcn_connection
 
-
-async def setup_component(hass: HomeAssistant) -> None:
-    """Set up the LCN component."""
-    fixture_filename = "lcn/config.json"
-    config_data = json.loads(load_fixture(fixture_filename))
-
-    await async_setup_component(hass, DOMAIN, config_data)
-    await hass.async_block_till_done()
+    return lcn_connection
 
 
 def get_device(

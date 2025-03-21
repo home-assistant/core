@@ -12,8 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .common import TCP_PLATFORM_SCHEMA, TcpEntity
+from .common import TCP_PLATFORM_SCHEMA
 from .const import CONF_VALUE_ON
+from .entity import TcpEntity
 
 PLATFORM_SCHEMA: Final = BINARY_SENSOR_PLATFORM_SCHEMA.extend(TCP_PLATFORM_SCHEMA)
 

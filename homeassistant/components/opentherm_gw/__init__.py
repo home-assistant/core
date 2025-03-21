@@ -4,12 +4,12 @@ import asyncio
 from datetime import date, datetime
 import logging
 
-import pyotgw
+from pyotgw import OpenThermGateway
 import pyotgw.vars as gw_vars
 from serial import SerialException
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DATE,
     ATTR_ID,
@@ -20,16 +20,12 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
-    PRECISION_HALVES,
-    PRECISION_TENTHS,
-    PRECISION_WHOLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_CH_OVRD,
@@ -38,11 +34,7 @@ from .const import (
     ATTR_LEVEL,
     ATTR_TRANSP_ARG,
     ATTR_TRANSP_CMD,
-    CONF_CLIMATE,
-    CONF_FLOOR_TEMP,
-    CONF_PRECISION,
-    CONF_READ_PRECISION,
-    CONF_SET_PRECISION,
+    CONF_TEMPORARY_OVRD_MODE,
     CONNECTION_TIMEOUT,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
@@ -59,38 +51,26 @@ from .const import (
     SERVICE_SET_MAX_MOD,
     SERVICE_SET_OAT,
     SERVICE_SET_SB_TEMP,
+    OpenThermDataSource,
+    OpenThermDeviceIdentifier,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-CLIMATE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_PRECISION): vol.In(
-            [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
-        ),
-        vol.Optional(CONF_FLOOR_TEMP, default=False): cv.boolean,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: cv.schema_with_slug_keys(
-            {
-                vol.Required(CONF_DEVICE): cv.string,
-                vol.Optional(CONF_CLIMATE, default={}): CLIMATE_SCHEMA,
-                vol.Optional(CONF_NAME): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     gateway = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][entry.data[CONF_ID]]
+    gateway.options = entry.options
     async_dispatcher_send(hass, gateway.options_update_signal, entry)
 
 
@@ -101,17 +81,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     gateway = OpenThermGatewayHub(hass, config_entry)
     hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]] = gateway
-
-    if config_entry.options.get(CONF_PRECISION):
-        migrate_options = dict(config_entry.options)
-        migrate_options.update(
-            {
-                CONF_READ_PRECISION: config_entry.options[CONF_PRECISION],
-                CONF_SET_PRECISION: config_entry.options[CONF_PRECISION],
-            }
-        )
-        del migrate_options[CONF_PRECISION]
-        hass.config_entries.async_update_entry(config_entry, options=migrate_options)
 
     config_entry.add_update_listener(options_updated)
 
@@ -127,21 +96,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     register_services(hass)
-    return True
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the OpenTherm Gateway component."""
-    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
-        conf = config[DOMAIN]
-        for device_id, device_config in conf.items():
-            device_config[CONF_ID] = device_id
-
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=device_config
-                )
-            )
     return True
 
 
@@ -425,12 +379,11 @@ class OpenThermGatewayHub:
         self.device_path = config_entry.data[CONF_DEVICE]
         self.hub_id = config_entry.data[CONF_ID]
         self.name = config_entry.data[CONF_NAME]
-        self.climate_config = config_entry.options
+        self.options = config_entry.options
         self.config_entry_id = config_entry.entry_id
-        self.status = gw_vars.DEFAULT_STATUS
         self.update_signal = f"{DATA_OPENTHERM_GW}_{self.hub_id}_update"
         self.options_update_signal = f"{DATA_OPENTHERM_GW}_{self.hub_id}_options_update"
-        self.gateway = pyotgw.OpenThermGateway()
+        self.gateway = OpenThermGateway()
         self.gw_version = None
 
     async def cleanup(self, event=None) -> None:
@@ -441,11 +394,11 @@ class OpenThermGatewayHub:
 
     async def connect_and_subscribe(self) -> None:
         """Connect to serial device and subscribe report handler."""
-        self.status = await self.gateway.connect(self.device_path)
-        if not self.status:
+        status = await self.gateway.connect(self.device_path)
+        if not status:
             await self.cleanup()
             raise ConnectionError
-        version_string = self.status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
+        version_string = status[OpenThermDataSource.GATEWAY].get(gw_vars.OTGW_ABOUT)
         self.gw_version = version_string[18:] if version_string else None
         _LOGGER.debug(
             "Connected to OpenTherm Gateway %s at %s", self.gw_version, self.device_path
@@ -453,21 +406,68 @@ class OpenThermGatewayHub:
         dev_reg = dr.async_get(self.hass)
         gw_dev = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry_id,
-            identifiers={(DOMAIN, self.hub_id)},
-            name=self.name,
+            identifiers={
+                (DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.GATEWAY}")
+            },
             manufacturer="Schelte Bron",
             model="OpenTherm Gateway",
+            translation_key="gateway_device",
             sw_version=self.gw_version,
         )
         if gw_dev.sw_version != self.gw_version:
             dev_reg.async_update_device(gw_dev.id, sw_version=self.gw_version)
+
+        boiler_device = dev_reg.async_get_or_create(
+            config_entry_id=self.config_entry_id,
+            identifiers={(DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.BOILER}")},
+            translation_key="boiler_device",
+        )
+        thermostat_device = dev_reg.async_get_or_create(
+            config_entry_id=self.config_entry_id,
+            identifiers={
+                (DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.THERMOSTAT}")
+            },
+            translation_key="thermostat_device",
+        )
+
         self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.cleanup)
 
         async def handle_report(status):
             """Handle reports from the OpenTherm Gateway."""
             _LOGGER.debug("Received report: %s", status)
-            self.status = status
             async_dispatcher_send(self.hass, self.update_signal, status)
+
+            dev_reg.async_update_device(
+                boiler_device.id,
+                manufacturer=status[OpenThermDataSource.BOILER].get(
+                    gw_vars.DATA_SLAVE_MEMBERID
+                ),
+                model_id=status[OpenThermDataSource.BOILER].get(
+                    gw_vars.DATA_SLAVE_PRODUCT_TYPE
+                ),
+                hw_version=status[OpenThermDataSource.BOILER].get(
+                    gw_vars.DATA_SLAVE_PRODUCT_VERSION
+                ),
+                sw_version=status[OpenThermDataSource.BOILER].get(
+                    gw_vars.DATA_SLAVE_OT_VERSION
+                ),
+            )
+
+            dev_reg.async_update_device(
+                thermostat_device.id,
+                manufacturer=status[OpenThermDataSource.THERMOSTAT].get(
+                    gw_vars.DATA_MASTER_MEMBERID
+                ),
+                model_id=status[OpenThermDataSource.THERMOSTAT].get(
+                    gw_vars.DATA_MASTER_PRODUCT_TYPE
+                ),
+                hw_version=status[OpenThermDataSource.THERMOSTAT].get(
+                    gw_vars.DATA_MASTER_PRODUCT_VERSION
+                ),
+                sw_version=status[OpenThermDataSource.THERMOSTAT].get(
+                    gw_vars.DATA_MASTER_OT_VERSION
+                ),
+            )
 
         self.gateway.subscribe(handle_report)
 
@@ -475,3 +475,9 @@ class OpenThermGatewayHub:
     def connected(self):
         """Report whether or not we are connected to the gateway."""
         return self.gateway.connection.connected
+
+    async def set_room_setpoint(self, temp) -> float:
+        """Set the room temperature setpoint on the gateway. Return the new temperature."""
+        return await self.gateway.set_target_temp(
+            temp, self.options.get(CONF_TEMPORARY_OVRD_MODE, True)
+        )

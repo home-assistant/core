@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import partial
+from math import isfinite
 from typing import Any, cast
 
 from aioesphomeapi import (
@@ -129,7 +130,6 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "climate"
-    _enable_turn_on_off_backwards_compatibility = False
 
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
@@ -231,15 +231,21 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @esphome_float_state_property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
+        if not self._static_info.supports_current_temperature:
+            return None
         return self._state.current_temperature
 
     @property
     @esphome_state_property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        if not self._static_info.supports_current_humidity:
+        if (
+            not self._static_info.supports_current_humidity
+            or (val := self._state.current_humidity) is None
+            or not isfinite(val)
+        ):
             return None
-        return round(self._state.current_humidity)
+        return round(val)
 
     @property
     @esphome_float_state_property

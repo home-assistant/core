@@ -21,11 +21,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import VenstarEntity
 from .const import DOMAIN
 from .coordinator import VenstarDataUpdateCoordinator
+from .entity import VenstarEntity
 
 RUNTIME_HEAT1 = "heat1"
 RUNTIME_HEAT2 = "heat2"
@@ -81,7 +81,7 @@ class VenstarSensorEntityDescription(SensorEntityDescription):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Venstar device sensors based on a config entry."""
     coordinator: VenstarDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]

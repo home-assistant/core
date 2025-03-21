@@ -19,10 +19,10 @@ async def test_barrier_obstructed(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test barrier obstructed."""
-    mock_nice_go.event = MagicMock()
+    mock_nice_go.listen = MagicMock()
     await setup_integration(hass, mock_config_entry, [Platform.EVENT])
 
-    await mock_nice_go.event.call_args_list[2][0][0]({"deviceId": "1"})
+    await mock_nice_go.listen.call_args_list[3][0][1]({"deviceId": "1"})
     await hass.async_block_till_done()
 
     event_state = hass.states.get("event.test_garage_1_barrier_obstructed")

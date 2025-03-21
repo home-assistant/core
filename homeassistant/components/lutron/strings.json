@@ -17,9 +17,15 @@
         "description": "Please enter the main repeater login information",
         "title": "Main repeater setup"
       }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "default_dimmer_level": "Default light level when first turning on a light from Home Assistant"
+        }
+      }
     }
   },
   "entity": {

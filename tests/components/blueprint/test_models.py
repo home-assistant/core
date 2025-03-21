@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.blueprint import errors, models
+from homeassistant.components.blueprint import BLUEPRINT_SCHEMA, errors, models
 from homeassistant.core import HomeAssistant
 from homeassistant.util.yaml import Input
 
@@ -22,7 +22,8 @@ def blueprint_1() -> models.Blueprint:
                 "input": {"test-input": {"name": "Name", "description": "Description"}},
             },
             "example": Input("test-input"),
-        }
+        },
+        schema=BLUEPRINT_SCHEMA,
     )
 
 
@@ -57,26 +58,32 @@ def blueprint_2(request: pytest.FixtureRequest) -> models.Blueprint:
                 }
             },
         }
-    return models.Blueprint(blueprint)
+    return models.Blueprint(blueprint, schema=BLUEPRINT_SCHEMA)
 
 
 @pytest.fixture
 def domain_bps(hass: HomeAssistant) -> models.DomainBlueprints:
     """Domain blueprints fixture."""
     return models.DomainBlueprints(
-        hass, "automation", logging.getLogger(__name__), None, AsyncMock()
+        hass,
+        "automation",
+        logging.getLogger(__name__),
+        None,
+        AsyncMock(),
+        BLUEPRINT_SCHEMA,
     )
 
 
 def test_blueprint_model_init() -> None:
     """Test constructor validation."""
     with pytest.raises(errors.InvalidBlueprint):
-        models.Blueprint({})
+        models.Blueprint({}, schema=BLUEPRINT_SCHEMA)
 
     with pytest.raises(errors.InvalidBlueprint):
         models.Blueprint(
             {"blueprint": {"name": "Hello", "domain": "automation"}},
             expected_domain="not-automation",
+            schema=BLUEPRINT_SCHEMA,
         )
 
     with pytest.raises(errors.InvalidBlueprint):
@@ -88,7 +95,8 @@ def test_blueprint_model_init() -> None:
                     "input": {"something": None},
                 },
                 "trigger": {"platform": Input("non-existing")},
-            }
+            },
+            schema=BLUEPRINT_SCHEMA,
         )
 
 
@@ -115,7 +123,8 @@ def test_blueprint_update_metadata() -> None:
                 "name": "Hello",
                 "domain": "automation",
             },
-        }
+        },
+        schema=BLUEPRINT_SCHEMA,
     )
 
     bp.update_metadata(source_url="http://bla.com")
@@ -131,7 +140,8 @@ def test_blueprint_validate() -> None:
                     "name": "Hello",
                     "domain": "automation",
                 },
-            }
+            },
+            schema=BLUEPRINT_SCHEMA,
         ).validate()
         is None
     )
@@ -143,7 +153,8 @@ def test_blueprint_validate() -> None:
                 "domain": "automation",
                 "homeassistant": {"min_version": "100000.0.0"},
             },
-        }
+        },
+        schema=BLUEPRINT_SCHEMA,
     ).validate() == ["Requires at least Home Assistant 100000.0.0"]
 
 

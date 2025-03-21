@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfApparentPower,
@@ -22,11 +21,11 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LAST_S_TEST
-from .coordinator import APCUPSdCoordinator
+from .const import LAST_S_TEST
+from .coordinator import APCUPSdConfigEntry, APCUPSdCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -406,11 +405,11 @@ INFERRED_UNITS = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: APCUPSdConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the APCUPSd sensors from config entries."""
-    coordinator: APCUPSdCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     # The resource keys in the data dict collected in the coordinator is in upper-case
     # by default, but we use lower cases throughout this integration.

@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from fyta_cli.fyta_models import Credentials, Plant
 import pytest
@@ -46,6 +46,7 @@ def mock_fyta_connector():
         tzinfo=UTC
     )
     mock_fyta_connector.client = AsyncMock(autospec=True)
+    mock_fyta_connector.data = MagicMock()
     mock_fyta_connector.update_all_plants.return_value = plants
     mock_fyta_connector.plant_list = {
         0: "Gummibaum",
@@ -80,3 +81,13 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.fyta.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture(autouse=True)
+def mock_getrandbits():
+    """Mock image access token which normally is randomized."""
+    with patch(
+        "homeassistant.components.image.SystemRandom.getrandbits",
+        return_value=1,
+    ):
+        yield

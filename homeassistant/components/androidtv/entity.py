@@ -67,7 +67,7 @@ def adb_decorator[_ADBDeviceT: AndroidTVEntity, **_P, _R](
                 return await func(self, *args, **kwargs)
             except LockNotAcquiredException:
                 # If the ADB lock could not be acquired, skip this command
-                _LOGGER.info(
+                _LOGGER.debug(
                     (
                         "ADB command %s not executed because the connection is"
                         " currently in use"
@@ -151,5 +151,5 @@ class AndroidTVEntity(Entity):
             # Using "adb_shell" (Python ADB implementation)
             self.exceptions = ADB_PYTHON_EXCEPTIONS
         else:
-            # Using "pure-python-adb" (communicate with ADB server)
+            # Communicate via ADB server
             self.exceptions = ADB_TCP_EXCEPTIONS

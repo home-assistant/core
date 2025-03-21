@@ -28,6 +28,8 @@ _KNOWN_GENERIC_TYPES: set[str] = {
 }
 _KNOWN_GENERIC_TYPES_TUPLE = tuple(_KNOWN_GENERIC_TYPES)
 
+_FORCE_ANNOTATION_PLATFORMS = ["config_flow"]
+
 
 class _Special(Enum):
     """Sentinel values."""
@@ -53,10 +55,14 @@ class TypeHintMatch:
         """Confirm if function should be checked."""
         return (
             self.function_name == node.name
-            or self.has_async_counterpart
-            and node.name == f"async_{self.function_name}"
-            or self.function_name.endswith("*")
-            and node.name.startswith(self.function_name[:-1])
+            or (
+                self.has_async_counterpart
+                and node.name == f"async_{self.function_name}"
+            )
+            or (
+                self.function_name.endswith("*")
+                and node.name.startswith(self.function_name[:-1])
+            )
         )
 
 
@@ -100,7 +106,8 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "aiohttp_client": "ClientSessionGenerator",
     "aiohttp_server": "Callable[[], TestServer]",
     "area_registry": "AreaRegistry",
-    "async_test_recorder": "RecorderInstanceGenerator",
+    "async_test_recorder": "RecorderInstanceContextManager",
+    "async_setup_recorder_instance": "RecorderInstanceGenerator",
     "caplog": "pytest.LogCaptureFixture",
     "capsys": "pytest.CaptureFixture[str]",
     "current_request_with_host": "None",
@@ -245,7 +252,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             arg_types={
                 0: "HomeAssistant",
                 1: "ConfigEntry",
-                2: "AddEntitiesCallback",
+                2: "AddConfigEntryEntitiesCallback",
             },
             return_type=None,
         ),
@@ -1015,6 +1022,34 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type=None,
                     has_async_counterpart=True,
                 ),
+                TypeHintMatch(
+                    function_name="async_handle_async_webrtc_offer",
+                    arg_types={
+                        1: "str",
+                        2: "str",
+                        3: "WebRTCSendMessage",
+                    },
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_on_webrtc_candidate",
+                    arg_types={
+                        1: "str",
+                        2: "RTCIceCandidateInit",
+                    },
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="close_webrtc_session",
+                    arg_types={
+                        1: "str",
+                    },
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="_async_get_webrtc_client_configuration",
+                    return_type="WebRTCClientConfiguration",
+                ),
             ],
         ),
     ],
@@ -1316,7 +1351,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="source_type",
-                    return_type=["SourceType", "str"],
+                    return_type="SourceType",
                 ),
             ],
         ),
@@ -1373,6 +1408,16 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type="bool",
                 ),
             ],
+        ),
+    ],
+    "entity": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="RestoreEntity",
+            matches=_RESTORE_ENTITY_MATCH,
         ),
     ],
     "fan": [
@@ -2523,7 +2568,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="in_progress",
-                    return_type=["bool", "int", None],
+                    return_type=["bool", None],
                 ),
                 TypeHintMatch(
                     function_name="latest_version",
@@ -2544,6 +2589,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="title",
                     return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="update_percentage",
+                    return_type=["int", "float", None],
                 ),
                 TypeHintMatch(
                     function_name="install",
@@ -2968,8 +3017,8 @@ def _is_valid_type(
         isinstance(node, nodes.Subscript)
         and isinstance(node.value, nodes.Name)
         and node.value.name in _KNOWN_GENERIC_TYPES
-        or isinstance(node, nodes.Name)
-        and node.name.endswith(_KNOWN_GENERIC_TYPES_TUPLE)
+    ) or (
+        isinstance(node, nodes.Name) and node.name.endswith(_KNOWN_GENERIC_TYPES_TUPLE)
     ):
         return True
 
@@ -3108,6 +3157,7 @@ class HassTypeHintChecker(BaseChecker):
     _class_matchers: list[ClassTypeHintMatch]
     _function_matchers: list[TypeHintMatch]
     _module_node: nodes.Module
+    _module_platform: str | None
     _in_test_module: bool
 
     def visit_module(self, node: nodes.Module) -> None:
@@ -3115,24 +3165,22 @@ class HassTypeHintChecker(BaseChecker):
         self._class_matchers = []
         self._function_matchers = []
         self._module_node = node
+        self._module_platform = _get_module_platform(node.name)
         self._in_test_module = node.name.startswith("tests.")
 
-        if (
-            self._in_test_module
-            or (module_platform := _get_module_platform(node.name)) is None
-        ):
+        if self._in_test_module or self._module_platform is None:
             return
 
-        if module_platform in _PLATFORMS:
+        if self._module_platform in _PLATFORMS:
             self._function_matchers.extend(_FUNCTION_MATCH["__any_platform__"])
 
-        if function_matches := _FUNCTION_MATCH.get(module_platform):
+        if function_matches := _FUNCTION_MATCH.get(self._module_platform):
             self._function_matchers.extend(function_matches)
 
-        if class_matches := _CLASS_MATCH.get(module_platform):
+        if class_matches := _CLASS_MATCH.get(self._module_platform):
             self._class_matchers.extend(class_matches)
 
-        if property_matches := _INHERITANCE_MATCH.get(module_platform):
+        if property_matches := _INHERITANCE_MATCH.get(self._module_platform):
             self._class_matchers.extend(property_matches)
 
         self._class_matchers.reverse()
@@ -3142,7 +3190,12 @@ class HassTypeHintChecker(BaseChecker):
     ) -> bool:
         """Check if we can skip the function validation."""
         return (
-            self.linter.config.ignore_missing_annotations
+            # test modules are excluded from ignore_missing_annotations
+            not self._in_test_module
+            # some modules have checks forced
+            and self._module_platform not in _FORCE_ANNOTATION_PLATFORMS
+            # other modules are only checked ignore_missing_annotations
+            and self.linter.config.ignore_missing_annotations
             and node.returns is None
             and not _has_valid_annotations(annotations)
         )

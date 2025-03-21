@@ -20,6 +20,33 @@ async def test_airzone_create_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.bron_pro_temperature")
     assert state.state == "20.0"
 
+    state = hass.states.get("sensor.bron_pro_indoor_exchanger_temperature")
+    assert state.state == "26.0"
+
+    state = hass.states.get("sensor.bron_pro_indoor_return_temperature")
+    assert state.state == "26.0"
+
+    state = hass.states.get("sensor.bron_pro_indoor_working_temperature")
+    assert state.state == "25.0"
+
+    state = hass.states.get("sensor.bron_pro_outdoor_condenser_pressure")
+    assert state.state == "150.0"
+
+    state = hass.states.get("sensor.bron_pro_outdoor_discharge_temperature")
+    assert state.state == "121.0"
+
+    state = hass.states.get("sensor.bron_pro_outdoor_electric_current")
+    assert state.state == "3.0"
+
+    state = hass.states.get("sensor.bron_pro_outdoor_evaporator_pressure")
+    assert state.state == "20.0"
+
+    state = hass.states.get("sensor.bron_pro_outdoor_exchanger_temperature")
+    assert state.state == "-25.0"
+
+    state = hass.states.get("sensor.bron_pro_outdoor_temperature")
+    assert state.state == "29.0"
+
     # WebServers
     state = hass.states.get("sensor.webserver_11_22_33_44_55_66_cpu_usage")
     assert state.state == "32"

@@ -4,6 +4,7 @@ import http
 import time
 
 from aiohttp import ClientError
+from google_photos_library_api.exceptions import GooglePhotosApiError
 import pytest
 
 from homeassistant.components.google_photos.const import OAUTH2_TOKEN
@@ -20,6 +21,7 @@ async def test_setup(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test successful setup and unload."""
+    await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(config_entry.entry_id)
@@ -68,7 +70,6 @@ async def test_expired_token_refresh_success(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test expired token is refreshed."""
-
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.data["token"]["access_token"] == "updated-access-token"
     assert config_entry.data["token"]["expires_in"] == 3600
@@ -107,3 +108,13 @@ async def test_expired_token_refresh_failure(
     """Test failure while refreshing token with a transient error."""
 
     assert config_entry.state is expected_state
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("api_error", [GooglePhotosApiError("some error")])
+async def test_coordinator_init_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test init failure to load albums."""
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY

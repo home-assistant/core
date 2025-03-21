@@ -5,7 +5,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.button import DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -27,7 +27,9 @@ async def button_only() -> None:
 @pytest.fixture(autouse=True)
 async def setup_demo_button(hass: HomeAssistant, button_only) -> None:
     """Initialize setup demo button entity."""
-    assert await async_setup_component(hass, DOMAIN, {"button": {"platform": "demo"}})
+    assert await async_setup_component(
+        hass, BUTTON_DOMAIN, {"button": {"platform": "demo"}}
+    )
     await hass.async_block_till_done()
 
 
@@ -47,7 +49,7 @@ async def test_press(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
     freezer.move_to(now)
     await hass.services.async_call(
-        DOMAIN,
+        BUTTON_DOMAIN,
         SERVICE_PRESS,
         {ATTR_ENTITY_ID: ENTITY_PUSH},
         blocking=True,

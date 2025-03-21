@@ -15,16 +15,18 @@ from toonapi import (
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import ToonDataUpdateCoordinator
+from .entity import ToonDisplayDeviceEntity, ToonEntity, ToonRequiredKeysMixin
 from .helpers import toon_exception_handler
-from .models import ToonDisplayDeviceEntity, ToonEntity, ToonRequiredKeysMixin
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Toon switches based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]

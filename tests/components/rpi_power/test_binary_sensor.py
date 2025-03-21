@@ -68,6 +68,6 @@ async def test_new_detected(
     assert state.state == STATE_OFF
     assert (
         binary_sensor.__name__,
-        logging.INFO,
+        logging.DEBUG,
         DESCRIPTION_NORMALIZED,
     ) in caplog.record_tuples

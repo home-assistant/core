@@ -8,14 +8,13 @@ from typing import Any
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import EcobeeData
+from . import EcobeeConfigEntry, EcobeeData
 from .climate import HASS_TO_ECOBEE_HVAC
-from .const import DOMAIN, ECOBEE_AUX_HEAT_ONLY
+from .const import ECOBEE_AUX_HEAT_ONLY
 from .entity import EcobeeBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,31 +24,32 @@ DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EcobeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ecobee thermostat switch entity."""
-    data: EcobeeData = hass.data[DOMAIN]
+    data = config_entry.runtime_data
 
-    async_add_entities(
-        [
-            EcobeeVentilator20MinSwitch(
-                data,
-                index,
-                (await dt_util.async_get_time_zone(thermostat["location"]["timeZone"]))
-                or dt_util.get_default_time_zone(),
-            )
-            for index, thermostat in enumerate(data.ecobee.thermostats)
-            if thermostat["settings"]["ventilatorType"] != "none"
-        ],
-        update_before_add=True,
-    )
-
-    async_add_entities(
-        EcobeeSwitchAuxHeatOnly(data, index)
+    entities: list[SwitchEntity] = [
+        EcobeeVentilator20MinSwitch(
+            data,
+            index,
+            (await dt_util.async_get_time_zone(thermostat["location"]["timeZone"]))
+            or dt_util.get_default_time_zone(),
+        )
         for index, thermostat in enumerate(data.ecobee.thermostats)
-        if thermostat["settings"]["hasHeatPump"]
+        if thermostat["settings"]["ventilatorType"] != "none"
+    ]
+
+    entities.extend(
+        (
+            EcobeeSwitchAuxHeatOnly(data, index)
+            for index, thermostat in enumerate(data.ecobee.thermostats)
+            if thermostat["settings"]["hasHeatPump"]
+        )
     )
+
+    async_add_entities(entities, update_before_add=True)
 
 
 class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):

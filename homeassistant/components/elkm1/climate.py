@@ -19,9 +19,12 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import PRECISION_WHOLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from . import ElkEntity, ElkM1ConfigEntry, create_elk_entities
+from . import ElkM1ConfigEntry
+from .const import DOMAIN
+from .entity import ElkEntity, create_elk_entities
 
 SUPPORT_HVAC = [
     HVACMode.OFF,
@@ -57,7 +60,7 @@ ELK_TO_HASS_FAN_MODES = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ElkM1ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the Elk-M1 thermostat platform."""
     elk_data = config_entry.runtime_data
@@ -87,7 +90,6 @@ class ElkThermostat(ElkEntity, ClimateEntity):
     _attr_target_temperature_step = 1
     _attr_fan_modes = [FAN_AUTO, FAN_ON]
     _element: Thermostat
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def temperature_unit(self) -> str:
@@ -151,10 +153,30 @@ class ElkThermostat(ElkEntity, ClimateEntity):
 
     async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "migrate_aux_heat",
+            breaks_in_ha_version="2025.4.0",
+            is_fixable=True,
+            is_persistent=True,
+            translation_key="migrate_aux_heat",
+            severity=IssueSeverity.WARNING,
+        )
         self._elk_set(ThermostatMode.EMERGENCY_HEAT, None)
 
     async def async_turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "migrate_aux_heat",
+            breaks_in_ha_version="2025.4.0",
+            is_fixable=True,
+            is_persistent=True,
+            translation_key="migrate_aux_heat",
+            severity=IssueSeverity.WARNING,
+        )
         self._elk_set(ThermostatMode.HEAT, None)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:

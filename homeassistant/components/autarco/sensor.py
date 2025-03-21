@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from autarco import Inverter, Solar
+from autarco import Battery, Inverter, Solar
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,16 +13,90 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy, UnitOfPower
+from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AutarcoConfigEntry
 from .const import DOMAIN
-from .coordinator import AutarcoDataUpdateCoordinator
+from .coordinator import AutarcoConfigEntry, AutarcoDataUpdateCoordinator
+
+
+@dataclass(frozen=True, kw_only=True)
+class AutarcoBatterySensorEntityDescription(SensorEntityDescription):
+    """Describes an Autarco sensor entity."""
+
+    value_fn: Callable[[Battery], StateType]
+
+
+SENSORS_BATTERY: tuple[AutarcoBatterySensorEntityDescription, ...] = (
+    AutarcoBatterySensorEntityDescription(
+        key="flow_now",
+        translation_key="flow_now",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda battery: battery.flow_now,
+    ),
+    AutarcoBatterySensorEntityDescription(
+        key="state_of_charge",
+        translation_key="state_of_charge",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda battery: battery.state_of_charge,
+    ),
+    AutarcoBatterySensorEntityDescription(
+        key="discharged_today",
+        translation_key="discharged_today",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda battery: battery.discharged_today,
+    ),
+    AutarcoBatterySensorEntityDescription(
+        key="discharged_month",
+        translation_key="discharged_month",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda battery: battery.discharged_month,
+    ),
+    AutarcoBatterySensorEntityDescription(
+        key="discharged_total",
+        translation_key="discharged_total",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda battery: battery.discharged_total,
+    ),
+    AutarcoBatterySensorEntityDescription(
+        key="charged_today",
+        translation_key="charged_today",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda battery: battery.charged_today,
+    ),
+    AutarcoBatterySensorEntityDescription(
+        key="charged_month",
+        translation_key="charged_month",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda battery: battery.charged_month,
+    ),
+    AutarcoBatterySensorEntityDescription(
+        key="charged_total",
+        translation_key="charged_total",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda battery: battery.charged_total,
+    ),
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -46,6 +120,7 @@ SENSORS_SOLAR: tuple[AutarcoSolarSensorEntityDescription, ...] = (
         translation_key="energy_production_today",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
         value_fn=lambda solar: solar.energy_production_today,
     ),
     AutarcoSolarSensorEntityDescription(
@@ -53,6 +128,7 @@ SENSORS_SOLAR: tuple[AutarcoSolarSensorEntityDescription, ...] = (
         translation_key="energy_production_month",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
         value_fn=lambda solar: solar.energy_production_month,
     ),
     AutarcoSolarSensorEntityDescription(
@@ -96,7 +172,7 @@ SENSORS_INVERTER: tuple[AutarcoInverterSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutarcoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Autarco sensors based on a config entry."""
     entities: list[SensorEntity] = []
@@ -117,7 +193,50 @@ async def async_setup_entry(
             for description in SENSORS_INVERTER
             for inverter in coordinator.data.inverters
         )
+        if coordinator.data.battery:
+            entities.extend(
+                AutarcoBatterySensorEntity(
+                    coordinator=coordinator,
+                    description=description,
+                )
+                for description in SENSORS_BATTERY
+            )
     async_add_entities(entities)
+
+
+class AutarcoBatterySensorEntity(
+    CoordinatorEntity[AutarcoDataUpdateCoordinator], SensorEntity
+):
+    """Defines an Autarco battery sensor."""
+
+    entity_description: AutarcoBatterySensorEntityDescription
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        *,
+        coordinator: AutarcoDataUpdateCoordinator,
+        description: AutarcoBatterySensorEntityDescription,
+    ) -> None:
+        """Initialize Autarco sensor."""
+        super().__init__(coordinator)
+
+        self.entity_description = description
+        self._attr_unique_id = (
+            f"{coordinator.account_site.site_id}_battery_{description.key}"
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{coordinator.account_site.site_id}_battery")},
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="Autarco",
+            name="Battery",
+        )
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        assert self.coordinator.data.battery is not None
+        return self.entity_description.value_fn(self.coordinator.data.battery)
 
 
 class AutarcoSolarSensorEntity(
@@ -138,9 +257,11 @@ class AutarcoSolarSensorEntity(
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.site.site_id}_solar_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.account_site.site_id}_solar_{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{coordinator.site.site_id}_solar")},
+            identifiers={(DOMAIN, f"{coordinator.account_site.site_id}_solar")},
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Autarco",
             name="Solar",

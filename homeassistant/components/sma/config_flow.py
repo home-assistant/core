@@ -11,8 +11,8 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_GROUP, DOMAIN, GROUPS
 
@@ -40,6 +40,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMA."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize."""
@@ -76,7 +77,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if not errors:
-                await self.async_set_unique_id(device_info["serial"])
+                await self.async_set_unique_id(str(device_info["serial"]))
                 self._abort_if_unique_id_configured(updates=self._data)
                 return self.async_create_entry(
                     title=self._data[CONF_HOST], data=self._data

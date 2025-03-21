@@ -39,7 +39,7 @@ class SomaFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_creation(user_input)
 
-    async def async_step_creation(self, user_input=None):
+    async def async_step_creation(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Finish config flow."""
         try:
             api = await self.hass.async_add_executor_job(
@@ -50,7 +50,7 @@ class SomaFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="connection_error")
         try:
             result = await self.hass.async_add_executor_job(api.list_devices)
-            _LOGGER.info("Successfully set up Soma Connect")
+            _LOGGER.debug("Successfully set up Soma Connect")
             if result["result"] == "success":
                 return self.async_create_entry(
                     title="Soma Connect",

@@ -57,6 +57,7 @@ def mock_config_entry() -> MockConfigEntry:
         data=MOCK_CONFIG,
         unique_id=MOCK_MAC,
         title=DEFAULT_NAME,
+        entry_id="3bd2acb0e4f0476d40865546d0d91132",
     )
 
 

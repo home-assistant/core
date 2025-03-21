@@ -11,14 +11,13 @@ from pydeconz.models.sensor.presence import (
     PresenceConfigTriggerDistance,
 )
 
-from homeassistant.components.select import DOMAIN, SelectEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .deconz_device import DeconzDevice
-from .hub import DeconzHub
+from . import DeconzConfigEntry
+from .entity import DeconzDevice
 
 SENSITIVITY_TO_DECONZ = {
     "High": PresenceConfigSensitivity.HIGH.value,
@@ -30,12 +29,12 @@ DECONZ_TO_SENSITIVITY = {value: key for key, value in SENSITIVITY_TO_DECONZ.item
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DeconzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the deCONZ button entity."""
-    hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[DOMAIN] = set()
+    hub = config_entry.runtime_data
+    hub.entities[SELECT_DOMAIN] = set()
 
     @callback
     def async_add_air_purifier_sensor(_: EventType, sensor_id: str) -> None:
@@ -85,7 +84,7 @@ class DeconzAirPurifierFanMode(DeconzDevice[AirPurifier], SelectEntity):
         AirPurifierFanMode.SPEED_5.value,
     ]
 
-    TYPE = DOMAIN
+    TYPE = SELECT_DOMAIN
 
     @property
     def current_option(self) -> str:
@@ -113,7 +112,7 @@ class DeconzPresenceDeviceModeSelect(DeconzDevice[Presence], SelectEntity):
         PresenceConfigDeviceMode.UNDIRECTED.value,
     ]
 
-    TYPE = DOMAIN
+    TYPE = SELECT_DOMAIN
 
     @property
     def current_option(self) -> str | None:
@@ -140,7 +139,7 @@ class DeconzPresenceSensitivitySelect(DeconzDevice[Presence], SelectEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_options = list(SENSITIVITY_TO_DECONZ)
 
-    TYPE = DOMAIN
+    TYPE = SELECT_DOMAIN
 
     @property
     def current_option(self) -> str | None:
@@ -171,7 +170,7 @@ class DeconzPresenceTriggerDistanceSelect(DeconzDevice[Presence], SelectEntity):
         PresenceConfigTriggerDistance.NEAR.value,
     ]
 
-    TYPE = DOMAIN
+    TYPE = SELECT_DOMAIN
 
     @property
     def current_option(self) -> str | None:

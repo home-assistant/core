@@ -17,11 +17,17 @@ from uiprotect.data import (
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
-from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
+from .entity import (
+    PermRequired,
+    ProtectDeviceEntity,
+    ProtectEntityDescription,
+    ProtectSetableKeysMixin,
+    T,
+    async_all_device_entities,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -118,7 +124,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         name="Infrared custom lux trigger",
         icon="mdi:white-balance-sunny",
         entity_category=EntityCategory.CONFIG,
-        ufp_min=1,
+        ufp_min=0,
         ufp_max=30,
         ufp_step=1,
         ufp_required_field="feature_flags.has_led_ir",
@@ -221,7 +227,7 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up number entities for UniFi Protect integration."""
     data = entry.runtime_data

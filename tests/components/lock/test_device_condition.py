@@ -5,17 +5,8 @@ from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.lock import DOMAIN
-from homeassistant.const import (
-    STATE_JAMMED,
-    STATE_LOCKED,
-    STATE_LOCKING,
-    STATE_OPEN,
-    STATE_OPENING,
-    STATE_UNLOCKED,
-    STATE_UNLOCKING,
-    EntityCategory,
-)
+from homeassistant.components.lock import DOMAIN, LockState
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
@@ -142,7 +133,7 @@ async def test_if_state(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_LOCKED)
+    hass.states.async_set(entry.entity_id, LockState.LOCKED)
 
     assert await async_setup_component(
         hass,
@@ -284,38 +275,38 @@ async def test_if_state(
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "is_locked - event - test_event1"
 
-    hass.states.async_set(entry.entity_id, STATE_UNLOCKED)
+    hass.states.async_set(entry.entity_id, LockState.UNLOCKED)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     assert service_calls[1].data["some"] == "is_unlocked - event - test_event2"
 
-    hass.states.async_set(entry.entity_id, STATE_UNLOCKING)
+    hass.states.async_set(entry.entity_id, LockState.UNLOCKING)
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
     assert len(service_calls) == 3
     assert service_calls[2].data["some"] == "is_unlocking - event - test_event3"
 
-    hass.states.async_set(entry.entity_id, STATE_LOCKING)
+    hass.states.async_set(entry.entity_id, LockState.LOCKING)
     hass.bus.async_fire("test_event4")
     await hass.async_block_till_done()
     assert len(service_calls) == 4
     assert service_calls[3].data["some"] == "is_locking - event - test_event4"
 
-    hass.states.async_set(entry.entity_id, STATE_JAMMED)
+    hass.states.async_set(entry.entity_id, LockState.JAMMED)
     hass.bus.async_fire("test_event5")
     await hass.async_block_till_done()
     assert len(service_calls) == 5
     assert service_calls[4].data["some"] == "is_jammed - event - test_event5"
 
-    hass.states.async_set(entry.entity_id, STATE_OPENING)
+    hass.states.async_set(entry.entity_id, LockState.OPENING)
     hass.bus.async_fire("test_event6")
     await hass.async_block_till_done()
     assert len(service_calls) == 6
     assert service_calls[5].data["some"] == "is_opening - event - test_event6"
 
-    hass.states.async_set(entry.entity_id, STATE_OPEN)
+    hass.states.async_set(entry.entity_id, LockState.OPEN)
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
     assert len(service_calls) == 7
@@ -339,7 +330,7 @@ async def test_if_state_legacy(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_LOCKED)
+    hass.states.async_set(entry.entity_id, LockState.LOCKED)
 
     assert await async_setup_component(
         hass,

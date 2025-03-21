@@ -14,15 +14,15 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HuaweiLteBaseEntityWithDevice
 from .const import (
     DOMAIN,
     KEY_MONITORING_CHECK_NOTIFICATIONS,
     KEY_MONITORING_STATUS,
     KEY_WLAN_WIFI_FEATURE_SWITCH,
 )
+from .entity import HuaweiLteBaseEntityWithDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
     router = hass.data[DOMAIN].routers[config_entry.entry_id]

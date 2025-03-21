@@ -14,7 +14,7 @@ from homeassistant.components.fan import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
-    DOMAIN,
+    DOMAIN as FAN_DOMAIN,
     PLATFORM_SCHEMA as FAN_PLATFORM_SCHEMA,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
@@ -37,7 +37,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entity import GroupEntity
@@ -58,7 +61,7 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = FAN_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
+        vol.Required(CONF_ENTITIES): cv.entities_domain(FAN_DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
@@ -82,7 +85,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Fan Group config entry."""
     registry = er.async_get(hass)
@@ -109,7 +112,6 @@ class FanGroup(GroupEntity, FanEntity):
     """Representation of a FanGroup."""
 
     _attr_available: bool = False
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a FanGroup entity."""
@@ -218,7 +220,7 @@ class FanGroup(GroupEntity, FanEntity):
     ) -> None:
         """Call a service with all entities."""
         await self.hass.services.async_call(
-            DOMAIN,
+            FAN_DOMAIN,
             service,
             {**data, ATTR_ENTITY_ID: self._fans[support_flag]},
             blocking=True,
@@ -228,7 +230,7 @@ class FanGroup(GroupEntity, FanEntity):
     async def _async_call_all_entities(self, service: str) -> None:
         """Call a service with all entities."""
         await self.hass.services.async_call(
-            DOMAIN,
+            FAN_DOMAIN,
             service,
             {ATTR_ENTITY_ID: self._entity_ids},
             blocking=True,

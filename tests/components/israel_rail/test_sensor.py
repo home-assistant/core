@@ -26,7 +26,6 @@ async def test_valid_config(
 ) -> None:
     """Ensure everything starts correctly."""
     await init_integration(hass, mock_config_entry)
-    assert len(hass.states.async_entity_ids()) == 6
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 

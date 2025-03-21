@@ -6,7 +6,6 @@ import io
 import os
 import pathlib
 from typing import Any
-import unittest
 from unittest.mock import Mock, patch
 
 import pytest
@@ -16,10 +15,10 @@ import yaml as pyyaml
 from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import yaml
+from homeassistant.util import yaml as yaml_util
 from homeassistant.util.yaml import loader as yaml_loader
 
-from tests.common import extract_stack_to_frame, get_test_config_dir, patch_yaml_files
+from tests.common import extract_stack_to_frame
 
 
 @pytest.fixture(params=["enable_c_loader", "disable_c_loader"])
@@ -87,7 +86,7 @@ def test_unhashable_key() -> None:
 def test_no_key() -> None:
     """Test item without a key."""
     with pytest.raises(HomeAssistantError):
-        yaml.load_yaml(YAML_CONFIG_FILE)
+        yaml_util.load_yaml(YAML_CONFIG_FILE)
 
 
 @pytest.mark.usefixtures("try_both_loaders")
@@ -375,7 +374,7 @@ def test_include_dir_merge_named_recursive(mock_walk: Mock) -> None:
         }
 
 
-@patch("homeassistant.util.yaml.loader.open", create=True)
+@patch("annotatedyaml.loader.open", create=True)
 @pytest.mark.usefixtures("try_both_loaders")
 def test_load_yaml_encoding_error(mock_open: Mock) -> None:
     """Test raising a UnicodeDecodeError."""
@@ -387,152 +386,13 @@ def test_load_yaml_encoding_error(mock_open: Mock) -> None:
 @pytest.mark.usefixtures("try_both_dumpers")
 def test_dump() -> None:
     """The that the dump method returns empty None values."""
-    assert yaml.dump({"a": None, "b": "b"}) == "a:\nb: b\n"
+    assert yaml_util.dump({"a": None, "b": "b"}) == "a:\nb: b\n"
 
 
 @pytest.mark.usefixtures("try_both_dumpers")
 def test_dump_unicode() -> None:
     """The that the dump method returns empty None values."""
-    assert yaml.dump({"a": None, "b": "привет"}) == "a:\nb: привет\n"
-
-
-FILES = {}
-
-
-def load_yaml(fname, string, secrets=None):
-    """Write a string to file and return the parsed yaml."""
-    FILES[fname] = string
-    with patch_yaml_files(FILES):
-        return load_yaml_config_file(fname, secrets)
-
-
-class TestSecrets(unittest.TestCase):
-    """Test the secrets parameter in the yaml utility."""
-
-    def setUp(self):
-        """Create & load secrets file."""
-        config_dir = get_test_config_dir()
-        self._yaml_path = os.path.join(config_dir, YAML_CONFIG_FILE)
-        self._secret_path = os.path.join(config_dir, yaml.SECRET_YAML)
-        self._sub_folder_path = os.path.join(config_dir, "subFolder")
-        self._unrelated_path = os.path.join(config_dir, "unrelated")
-
-        load_yaml(
-            self._secret_path,
-            (
-                "http_pw: pwhttp\n"
-                "comp1_un: un1\n"
-                "comp1_pw: pw1\n"
-                "stale_pw: not_used\n"
-                "logger: debug\n"
-            ),
-        )
-        self._yaml = load_yaml(
-            self._yaml_path,
-            (
-                "http:\n"
-                "  api_password: !secret http_pw\n"
-                "component:\n"
-                "  username: !secret comp1_un\n"
-                "  password: !secret comp1_pw\n"
-                ""
-            ),
-            yaml_loader.Secrets(config_dir),
-        )
-
-    def tearDown(self):
-        """Clean up secrets."""
-        FILES.clear()
-
-    def test_secrets_from_yaml(self):
-        """Did secrets load ok."""
-        expected = {"api_password": "pwhttp"}
-        assert expected == self._yaml["http"]
-
-        expected = {"username": "un1", "password": "pw1"}
-        assert expected == self._yaml["component"]
-
-    def test_secrets_from_parent_folder(self):
-        """Test loading secrets from parent folder."""
-        expected = {"api_password": "pwhttp"}
-        self._yaml = load_yaml(
-            os.path.join(self._sub_folder_path, "sub.yaml"),
-            (
-                "http:\n"
-                "  api_password: !secret http_pw\n"
-                "component:\n"
-                "  username: !secret comp1_un\n"
-                "  password: !secret comp1_pw\n"
-                ""
-            ),
-            yaml_loader.Secrets(get_test_config_dir()),
-        )
-
-        assert expected == self._yaml["http"]
-
-    def test_secret_overrides_parent(self):
-        """Test loading current directory secret overrides the parent."""
-        expected = {"api_password": "override"}
-        load_yaml(
-            os.path.join(self._sub_folder_path, yaml.SECRET_YAML), "http_pw: override"
-        )
-        self._yaml = load_yaml(
-            os.path.join(self._sub_folder_path, "sub.yaml"),
-            (
-                "http:\n"
-                "  api_password: !secret http_pw\n"
-                "component:\n"
-                "  username: !secret comp1_un\n"
-                "  password: !secret comp1_pw\n"
-                ""
-            ),
-            yaml_loader.Secrets(get_test_config_dir()),
-        )
-
-        assert expected == self._yaml["http"]
-
-    def test_secrets_from_unrelated_fails(self):
-        """Test loading secrets from unrelated folder fails."""
-        load_yaml(os.path.join(self._unrelated_path, yaml.SECRET_YAML), "test: failure")
-        with pytest.raises(HomeAssistantError):
-            load_yaml(
-                os.path.join(self._sub_folder_path, "sub.yaml"),
-                "http:\n  api_password: !secret test",
-            )
-
-    def test_secrets_logger_removed(self):
-        """Ensure logger: debug was removed."""
-        with pytest.raises(HomeAssistantError):
-            load_yaml(self._yaml_path, "api_password: !secret logger")
-
-    @patch("homeassistant.util.yaml.loader._LOGGER.error")
-    def test_bad_logger_value(self, mock_error):
-        """Ensure logger: debug was removed."""
-        load_yaml(self._secret_path, "logger: info\npw: abc")
-        load_yaml(
-            self._yaml_path,
-            "api_password: !secret pw",
-            yaml_loader.Secrets(get_test_config_dir()),
-        )
-        assert mock_error.call_count == 1, "Expected an error about logger: value"
-
-    def test_secrets_are_not_dict(self):
-        """Did secrets handle non-dict file."""
-        FILES[self._secret_path] = (
-            "- http_pw: pwhttp\n  comp1_un: un1\n  comp1_pw: pw1\n"
-        )
-        with pytest.raises(HomeAssistantError):
-            load_yaml(
-                self._yaml_path,
-                (
-                    "http:\n"
-                    "  api_password: !secret http_pw\n"
-                    "component:\n"
-                    "  username: !secret comp1_un\n"
-                    "  password: !secret comp1_pw\n"
-                    ""
-                ),
-            )
+    assert yaml_util.dump({"a": None, "b": "привет"}) == "a:\nb: привет\n"
 
 
 @pytest.mark.parametrize("hass_config_yaml", ['key: [1, "2", 3]'])
@@ -540,7 +400,7 @@ class TestSecrets(unittest.TestCase):
 def test_representing_yaml_loaded_data() -> None:
     """Test we can represent YAML loaded data."""
     data = load_yaml_config_file(YAML_CONFIG_FILE)
-    assert yaml.dump(data) == "key:\n- 1\n- '2'\n- 3\n"
+    assert yaml_util.dump(data) == "key:\n- 1\n- '2'\n- 3\n"
 
 
 @pytest.mark.parametrize("hass_config_yaml", ["key: thing1\nkey: thing2"])
@@ -553,7 +413,7 @@ def test_duplicate_key(caplog: pytest.LogCaptureFixture) -> None:
 
 @pytest.mark.parametrize(
     "hass_config_yaml_files",
-    [{YAML_CONFIG_FILE: "key: !secret a", yaml.SECRET_YAML: "a: 1\nb: !secret a"}],
+    [{YAML_CONFIG_FILE: "key: !secret a", yaml_util.SECRET_YAML: "a: 1\nb: !secret a"}],
 )
 @pytest.mark.usefixtures("try_both_loaders", "mock_hass_config_yaml")
 def test_no_recursive_secrets() -> None:
@@ -566,8 +426,8 @@ def test_no_recursive_secrets() -> None:
 
 def test_input_class() -> None:
     """Test input class."""
-    yaml_input = yaml.Input("hello")
-    yaml_input2 = yaml.Input("hello")
+    yaml_input = yaml_util.Input("hello")
+    yaml_input2 = yaml_util.Input("hello")
 
     assert yaml_input.name == "hello"
     assert yaml_input == yaml_input2
@@ -578,8 +438,8 @@ def test_input_class() -> None:
 @pytest.mark.usefixtures("try_both_loaders", "try_both_dumpers")
 def test_input() -> None:
     """Test loading inputs."""
-    data = {"hello": yaml.Input("test_name")}
-    assert yaml.parse_yaml(yaml.dump(data)) == data
+    data = {"hello": yaml_util.Input("test_name")}
+    assert yaml_util.parse_yaml(yaml_util.dump(data)) == data
 
 
 @pytest.mark.skipif(
@@ -588,7 +448,7 @@ def test_input() -> None:
 )
 def test_c_loader_is_available_in_ci() -> None:
     """Verify we are testing the C loader in the CI."""
-    assert yaml.loader.HAS_C_LOADER is True
+    assert yaml_util.loader.HAS_C_LOADER is True
 
 
 @pytest.mark.usefixtures("try_both_loaders")
@@ -632,31 +492,6 @@ def mock_integration_frame() -> Generator[Mock]:
         ),
     ):
         yield correct_frame
-
-
-@pytest.mark.parametrize(
-    ("loader_class", "message"),
-    [
-        (yaml.loader.SafeLoader, "'SafeLoader' instead of 'FastSafeLoader'"),
-        (
-            yaml.loader.SafeLineLoader,
-            "'SafeLineLoader' instead of 'PythonSafeLoader'",
-        ),
-    ],
-)
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_deprecated_loaders(
-    caplog: pytest.LogCaptureFixture,
-    loader_class: type,
-    message: str,
-) -> None:
-    """Test instantiating the deprecated yaml loaders logs a warning."""
-    with (
-        pytest.raises(TypeError),
-        patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()),
-    ):
-        loader_class()
-    assert (f"Detected that integration 'hue' uses deprecated {message}") in caplog.text
 
 
 @pytest.mark.usefixtures("try_both_loaders")
@@ -717,7 +552,7 @@ def test_string_used_as_vol_schema() -> None:
 @pytest.mark.usefixtures("try_both_loaders", "mock_hass_config_yaml")
 def test_load_yaml_dict(expected_data: Any) -> None:
     """Test item without a key."""
-    assert yaml.load_yaml_dict(YAML_CONFIG_FILE) == expected_data
+    assert yaml_util.load_yaml_dict(YAML_CONFIG_FILE) == expected_data
 
 
 @pytest.mark.parametrize("hass_config_yaml", ["abc", "123", "[]"])
@@ -763,7 +598,7 @@ def test_load_yaml_wrap_oserror(
 ) -> None:
     """Test load_yaml wraps OSError in HomeAssistantError."""
     with (
-        patch("homeassistant.util.yaml.loader.open", side_effect=open_exception),
+        patch("annotatedyaml.loader.open", side_effect=open_exception),
         pytest.raises(load_yaml_exception),
     ):
         yaml_loader.load_yaml("bla")
