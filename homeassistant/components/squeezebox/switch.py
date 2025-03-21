@@ -8,6 +8,7 @@ from pysqueezebox.player import Alarm
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
@@ -74,6 +75,7 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
 
     _attr_icon = "mdi:alarm"
     _attr_translation_key = "alarm"
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self, alarm: Alarm, coordinator: SqueezeBoxPlayerUpdateCoordinator
@@ -184,8 +186,8 @@ class SqueezeBoxAlarmsEnabledEntity(SqueezeboxEntity, SwitchEntity):
     """Representation of a Squeezebox players alarms enabled master switch."""
 
     _attr_icon = "mdi:alarm"
-    # _attr_has_entity_name = True
     _attr_translation_key = "alarms_enabled"
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, coordinator: SqueezeBoxPlayerUpdateCoordinator) -> None:
         """Initialize the Squeezebox alarm switch."""
