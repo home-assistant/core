@@ -25,7 +25,14 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_EXPIRES, ATTR_NAME_SERVERS, ATTR_REGISTRAR, ATTR_UPDATED, DOMAIN
+from .const import (
+    ATTR_EXPIRES,
+    ATTR_NAME_SERVERS,
+    ATTR_REGISTRAR,
+    ATTR_STATUS,
+    ATTR_UPDATED,
+    DOMAIN,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -121,6 +128,13 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=lambda domain: getattr(domain, "reseller", None),
     ),
+    WhoisSensorEntityDescription(
+        key="status",
+        translation_key="status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda domain: getattr(domain, "status", None),
+    ),
 )
 
 
@@ -200,6 +214,9 @@ class WhoisSensorEntity(
 
         if registrar := self.coordinator.data.registrar:
             attrs[ATTR_REGISTRAR] = registrar
+
+        if status := self.coordinator.data.status:
+            attrs[ATTR_STATUS] = status
 
         if not attrs:
             return None
