@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
-from pysmartthings.models import Attribute, Capability, Command
+from awesomeversion import AwesomeVersion
+from pysmartthings import Attribute, Capability, Command
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SmartThingsConfigEntry
+from .const import MAIN
 from .entity import SmartThingsEntity
 
 
@@ -27,13 +28,20 @@ async def async_setup_entry(
     """Add update entities for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsSwitch(entry_data.client, device, [Capability.FIRMWARE_UPDATE])
+        SmartThingsUpdateEntity(
+            entry_data.client, device, entry_data.rooms, {Capability.FIRMWARE_UPDATE}
+        )
         for device in entry_data.devices.values()
-        if Capability.FIRMWARE_UPDATE in device.status["main"]
+        if Capability.FIRMWARE_UPDATE in device.status[MAIN]
     )
 
 
-class SmartThingsSwitch(SmartThingsEntity, UpdateEntity):
+def is_hex_version(version: str) -> bool:
+    """Check if the version is a hex version."""
+    return len(version) == 8 and all(c in "0123456789abcdefABCDEF" for c in version)
+
+
+class SmartThingsUpdateEntity(SmartThingsEntity, UpdateEntity):
     """Define a SmartThings update entity."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
@@ -74,8 +82,8 @@ class SmartThingsSwitch(SmartThingsEntity, UpdateEntity):
 
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
         """Return if the latest version is newer."""
-        return AwesomeVersion(
-            f"0x{latest_version}", ensure_strategy=[AwesomeVersionStrategy.HEXVER]
-        ) > AwesomeVersion(
-            f"0x{installed_version}", ensure_strategy=[AwesomeVersionStrategy.HEXVER]
-        )
+        if is_hex_version(latest_version):
+            latest_version = f"0x{latest_version}"
+        if is_hex_version(installed_version):
+            installed_version = f"0x{installed_version}"
+        return AwesomeVersion(latest_version) > AwesomeVersion(installed_version)

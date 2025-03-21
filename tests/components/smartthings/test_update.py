@@ -2,10 +2,11 @@
 
 from unittest.mock import AsyncMock
 
-from pysmartthings.models import Attribute, Capability, Command
+from pysmartthings import Attribute, Capability, Command
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.smartthings.const import MAIN
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     DOMAIN as UPDATE_DOMAIN,
@@ -33,7 +34,7 @@ async def test_all_entities(
     snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.UPDATE)
 
 
-@pytest.mark.parametrize("fixture", ["contact_sensor"])
+@pytest.mark.parametrize("device_fixture", ["contact_sensor"])
 async def test_installing_update(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -45,18 +46,18 @@ async def test_installing_update(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.front_door_open_closed_sensor"},
+        {ATTR_ENTITY_ID: "update.front_door_open_closed_sensor_firmware"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
         "2d9a892b-1c93-45a5-84cb-0e81889498c6",
         Capability.FIRMWARE_UPDATE,
         Command.UPDATE_FIRMWARE,
-        "main",
+        MAIN,
     )
 
 
-@pytest.mark.parametrize("fixture", ["contact_sensor"])
+@pytest.mark.parametrize("device_fixture", ["contact_sensor"])
 async def test_state_update(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -65,7 +66,10 @@ async def test_state_update(
     """Test state update."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("update.front_door_open_closed_sensor").state == STATE_ON
+    assert (
+        hass.states.get("update.front_door_open_closed_sensor_firmware").state
+        == STATE_ON
+    )
 
     await trigger_update(
         hass,
@@ -76,10 +80,13 @@ async def test_state_update(
         "00000104",
     )
 
-    assert hass.states.get("update.front_door_open_closed_sensor").state == STATE_OFF
+    assert (
+        hass.states.get("update.front_door_open_closed_sensor_firmware").state
+        == STATE_OFF
+    )
 
 
-@pytest.mark.parametrize("fixture", ["contact_sensor"])
+@pytest.mark.parametrize("device_fixture", ["contact_sensor"])
 async def test_state_progress_update(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -89,7 +96,7 @@ async def test_state_progress_update(
     await setup_integration(hass, mock_config_entry)
 
     assert (
-        hass.states.get("update.front_door_open_closed_sensor").attributes[
+        hass.states.get("update.front_door_open_closed_sensor_firmware").attributes[
             ATTR_IN_PROGRESS
         ]
         is False
@@ -105,14 +112,14 @@ async def test_state_progress_update(
     )
 
     assert (
-        hass.states.get("update.front_door_open_closed_sensor").attributes[
+        hass.states.get("update.front_door_open_closed_sensor_firmware").attributes[
             ATTR_IN_PROGRESS
         ]
         is True
     )
 
 
-@pytest.mark.parametrize("fixture", ["centralite"])
+@pytest.mark.parametrize("device_fixture", ["centralite"])
 async def test_state_update_available(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -121,7 +128,7 @@ async def test_state_update_available(
     """Test state update available."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("update.dimmer_debian").state == STATE_OFF
+    assert hass.states.get("update.dimmer_debian_firmware").state == STATE_OFF
 
     await trigger_update(
         hass,
@@ -132,4 +139,4 @@ async def test_state_update_available(
         "16015011",
     )
 
-    assert hass.states.get("update.dimmer_debian").state == STATE_ON
+    assert hass.states.get("update.dimmer_debian_firmware").state == STATE_ON
