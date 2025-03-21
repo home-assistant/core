@@ -1,7 +1,5 @@
 """The tests for lutron caseta logbook."""
 
-from unittest.mock import patch
-
 from homeassistant.components.lutron_caseta.const import (
     ATTR_ACTION,
     ATTR_AREA_NAME,
@@ -43,13 +41,7 @@ async def test_humanify_lutron_caseta_button_event(hass: HomeAssistant) -> None:
         unique_id="abc",
     )
     config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.lutron_caseta.Smartbridge.create_tls",
-        return_value=MockBridge(can_connect=True),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await async_setup_integration(hass, MockBridge, config_entry.entry_id)
 
     await hass.async_block_till_done()
 
@@ -104,15 +96,10 @@ async def test_humanify_lutron_caseta_button_event_integration_not_loaded(
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.lutron_caseta.Smartbridge.create_tls",
-        return_value=MockBridge(can_connect=True),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await async_setup_integration(hass, MockBridge, config_entry.entry_id)
 
-        await hass.config_entries.async_unload(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     for device in device_registry.devices.values():
         if device.config_entries == {config_entry.entry_id}:
