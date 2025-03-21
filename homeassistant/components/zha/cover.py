@@ -32,6 +32,7 @@ from .helpers import (
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     get_zha_data,
+    migrate_entities_unique_ids,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +46,8 @@ async def async_setup_entry(
     """Set up the Zigbee Home Automation cover from config entry."""
     zha_data = get_zha_data(hass)
     entities_to_create = zha_data.platforms[Platform.COVER]
+
+    await migrate_entities_unique_ids(hass, Platform.COVER, entities_to_create)
 
     unsub = async_dispatcher_connect(
         hass,
