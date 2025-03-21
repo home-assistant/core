@@ -296,7 +296,6 @@ class RpcEntityDescription(EntityDescription):
     value: Callable[[Any, Any], Any] | None = None
     available: Callable[[dict], bool] | None = None
     removal_condition: Callable[[dict, dict, str], bool] | None = None
-    extra_state_attributes: Callable[[dict, dict], dict | None] | None = None
     use_polling_coordinator: bool = False
     supported: Callable = lambda _: False
     unit: Callable[[dict], str | None] | None = None
@@ -313,7 +312,6 @@ class RestEntityDescription(EntityDescription):
     name: str = ""
 
     value: Callable[[dict, Any], Any] | None = None
-    extra_state_attributes: Callable[[dict], dict | None] | None = None
 
 
 class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
@@ -390,15 +388,20 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Handle device update."""
         self.async_write_ha_state()
 
-    async def call_rpc(self, method: str, params: Any) -> Any:
+    async def call_rpc(
+        self, method: str, params: Any, timeout: float | None = None
+    ) -> Any:
         """Call RPC method."""
         LOGGER.debug(
-            "Call RPC for entity %s, method: %s, params: %s",
+            "Call RPC for entity %s, method: %s, params: %s, timeout: %s",
             self.name,
             method,
             params,
+            timeout,
         )
         try:
+            if timeout:
+                return await self.coordinator.device.call_rpc(method, params, timeout)
             return await self.coordinator.device.call_rpc(method, params)
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False

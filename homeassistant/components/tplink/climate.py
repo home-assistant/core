@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
-from kasa import Device
+from kasa import Device, Module
 from kasa.smart.modules.temperaturecontrol import ThermostatState
 
 from homeassistant.components.climate import (
@@ -19,10 +19,10 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import PRECISION_TENTHS
+from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TPLinkConfigEntry, legacy_device_id
 from .const import DOMAIN, UNIT_MAPPING
@@ -42,6 +42,7 @@ STATE_TO_ACTION = {
     ThermostatState.Idle: HVACAction.IDLE,
     ThermostatState.Heating: HVACAction.HEATING,
     ThermostatState.Off: HVACAction.OFF,
+    ThermostatState.Calibrating: HVACAction.IDLE,
 }
 
 
@@ -62,7 +63,7 @@ class TPLinkClimateEntityDescription(
 CLIMATE_DESCRIPTIONS: tuple[TPLinkClimateEntityDescription, ...] = (
     TPLinkClimateEntityDescription(
         key="climate",
-        exists_fn=lambda dev, _: dev.device_type is Device.Type.Thermostat,
+        exists_fn=lambda dev, _: Module.Thermostat in dev.modules,
     ),
 )
 
@@ -70,7 +71,7 @@ CLIMATE_DESCRIPTIONS: tuple[TPLinkClimateEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TPLinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate entities."""
     data = config_entry.runtime_data
@@ -124,27 +125,42 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
     ) -> None:
         """Initialize the climate entity."""
         super().__init__(device, coordinator, description, parent=parent)
-        self._state_feature = device.features["state"]
-        self._mode_feature = device.features["thermostat_mode"]
-        self._temp_feature = device.features["temperature"]
-        self._target_feature = device.features["target_temperature"]
+        self._thermostat_module = device.modules[Module.Thermostat]
 
-        self._attr_min_temp = self._target_feature.minimum_value
-        self._attr_max_temp = self._target_feature.maximum_value
-        self._attr_temperature_unit = UNIT_MAPPING[cast(str, self._temp_feature.unit)]
+        if target_feature := self._thermostat_module.get_feature("target_temperature"):
+            self._attr_min_temp = target_feature.minimum_value
+            self._attr_max_temp = target_feature.maximum_value
+        else:
+            _LOGGER.error(
+                "Unable to get min/max target temperature for %s, using defaults",
+                device.host,
+            )
+
+        if temperature_feature := self._thermostat_module.get_feature("temperature"):
+            self._attr_temperature_unit = UNIT_MAPPING[
+                cast(str, temperature_feature.unit)
+            ]
+        else:
+            _LOGGER.error(
+                "Unable to get correct temperature unit for %s, defaulting to celsius",
+                device.host,
+            )
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @async_refresh_after
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
-        await self._target_feature.set_value(int(kwargs[ATTR_TEMPERATURE]))
+        await self._thermostat_module.set_target_temperature(
+            float(kwargs[ATTR_TEMPERATURE])
+        )
 
     @async_refresh_after
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode (heat/off)."""
         if hvac_mode is HVACMode.HEAT:
-            await self._state_feature.set_value(True)
+            await self._thermostat_module.set_state(True)
         elif hvac_mode is HVACMode.OFF:
-            await self._state_feature.set_value(False)
+            await self._thermostat_module.set_state(False)
         else:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -157,35 +173,33 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
     @async_refresh_after
     async def async_turn_on(self) -> None:
         """Turn heating on."""
-        await self._state_feature.set_value(True)
+        await self._thermostat_module.set_state(True)
 
     @async_refresh_after
     async def async_turn_off(self) -> None:
         """Turn heating off."""
-        await self._state_feature.set_value(False)
+        await self._thermostat_module.set_state(False)
 
     @callback
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
-        self._attr_current_temperature = cast(float | None, self._temp_feature.value)
-        self._attr_target_temperature = cast(float | None, self._target_feature.value)
+        self._attr_current_temperature = self._thermostat_module.temperature
+        self._attr_target_temperature = self._thermostat_module.target_temperature
 
         self._attr_hvac_mode = (
-            HVACMode.HEAT if self._state_feature.value else HVACMode.OFF
+            HVACMode.HEAT if self._thermostat_module.state else HVACMode.OFF
         )
 
         if (
-            self._mode_feature.value not in STATE_TO_ACTION
+            self._thermostat_module.mode not in STATE_TO_ACTION
             and self._attr_hvac_action is not HVACAction.OFF
         ):
             _LOGGER.warning(
                 "Unknown thermostat state, defaulting to OFF: %s",
-                self._mode_feature.value,
+                self._thermostat_module.mode,
             )
             self._attr_hvac_action = HVACAction.OFF
             return True
 
-        self._attr_hvac_action = STATE_TO_ACTION[
-            cast(ThermostatState, self._mode_feature.value)
-        ]
+        self._attr_hvac_action = STATE_TO_ACTION[self._thermostat_module.mode]
         return True

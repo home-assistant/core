@@ -1,0 +1,101 @@
+# serializer version: 1
+# name: test_all_entities[scene.away-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'scene',
+    'entity_category': None,
+    'entity_id': 'scene.away',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Away',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '743b0f37-89b8-476c-aedf-eea8ad8cd29d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[scene.away-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'color': None,
+      'friendly_name': 'Away',
+      'icon': '203',
+      'location_id': '88a3a314-f0c8-40b4-bb44-44ba06c9c42f',
+    }),
+    'context': <ANY>,
+    'entity_id': 'scene.away',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[scene.home-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'scene',
+    'entity_category': None,
+    'entity_id': 'scene.home',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Home',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'f3341e8b-9b32-4509-af2e-4f7c952e98ba',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[scene.home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'color': None,
+      'friendly_name': 'Home',
+      'icon': '204',
+      'location_id': '88a3a314-f0c8-40b4-bb44-44ba06c9c42f',
+    }),
+    'context': <ANY>,
+    'entity_id': 'scene.home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

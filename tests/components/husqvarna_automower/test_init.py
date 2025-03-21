@@ -7,10 +7,10 @@ import time
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import (
-    ApiException,
-    AuthException,
+    ApiError,
+    AuthError,
+    HusqvarnaTimeoutError,
     HusqvarnaWSServerHandshakeError,
-    TimeoutException,
 )
 from aioautomower.model import MowerAttributes, WorkArea
 from freezegun.api import FrozenDateTimeFactory
@@ -111,8 +111,8 @@ async def test_expired_token_refresh_failure(
 @pytest.mark.parametrize(
     ("exception", "entry_state"),
     [
-        (ApiException, ConfigEntryState.SETUP_RETRY),
-        (AuthException, ConfigEntryState.SETUP_ERROR),
+        (ApiError, ConfigEntryState.SETUP_RETRY),
+        (AuthError, ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_update_failed(
@@ -142,7 +142,7 @@ async def test_update_failed(
         ),
         (
             ["start_listening"],
-            TimeoutException,
+            HusqvarnaTimeoutError,
             "Failed to listen to websocket.",
         ),
     ],

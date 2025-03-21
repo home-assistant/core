@@ -1,8 +1,9 @@
-"""Common fixtures and objects for the LG webOS integration tests."""
+"""Common fixtures and objects for the LG webOS TV integration tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
+from aiowebostv import WebOsTvInfo, WebOsTvState
 import pytest
 
 from homeassistant.components.webostv.const import LIVE_TV_APP_ID
@@ -30,30 +31,40 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture(name="client")
 def client_fixture():
     """Patch of client library for tests."""
-    with patch(
-        "homeassistant.components.webostv.WebOsClient", autospec=True
-    ) as mock_client_class:
+    with (
+        patch(
+            "homeassistant.components.webostv.WebOsClient", autospec=True
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.webostv.config_flow.WebOsClient",
+            new=mock_client_class,
+        ),
+    ):
         client = mock_client_class.return_value
-        client.hello_info = {"deviceUUID": FAKE_UUID}
-        client.software_info = {"major_ver": "major", "minor_ver": "minor"}
-        client.system_info = {"modelName": TV_MODEL}
+        client.tv_info = WebOsTvInfo(
+            hello={"deviceUUID": FAKE_UUID},
+            system={"modelName": TV_MODEL, "serialNumber": "1234567890"},
+            software={"major_ver": "major", "minor_ver": "minor"},
+        )
         client.client_key = CLIENT_KEY
-        client.apps = MOCK_APPS
-        client.inputs = MOCK_INPUTS
-        client.current_app_id = LIVE_TV_APP_ID
+        client.tv_state = WebOsTvState(
+            apps=MOCK_APPS,
+            inputs=MOCK_INPUTS,
+            current_app_id=LIVE_TV_APP_ID,
+            channels=[CHANNEL_1, CHANNEL_2],
+            current_channel=CHANNEL_1,
+            volume=37,
+            sound_output="speaker",
+            muted=False,
+            is_on=True,
+            media_state=[{"playState": ""}],
+        )
 
-        client.channels = [CHANNEL_1, CHANNEL_2]
-        client.current_channel = CHANNEL_1
-
-        client.volume = 37
-        client.sound_output = "speaker"
-        client.muted = False
-        client.is_on = True
         client.is_registered = Mock(return_value=True)
         client.is_connected = Mock(return_value=True)
 
         async def mock_state_update_callback():
-            await client.register_state_update_callback.call_args[0][0](client)
+            await client.register_state_update_callback.call_args[0][0](client.tv_state)
 
         client.mock_state_update = AsyncMock(side_effect=mock_state_update_callback)
 

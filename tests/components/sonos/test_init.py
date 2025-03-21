@@ -21,7 +21,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import MockSoCo, SoCoMockFactory
 
@@ -455,3 +455,32 @@ async def test_async_poll_manual_hosts_8(
     assert "media_player.garage" in entity_registry.entities
     assert "media_player.studio" in entity_registry.entities
     await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def _setup_hass_ipv6_address_not_supported(hass: HomeAssistant):
+    await async_setup_component(
+        hass,
+        sonos.DOMAIN,
+        {
+            "sonos": {
+                "media_player": {
+                    "interface_addr": "127.0.0.1",
+                    "hosts": ["2001:db8:3333:4444:5555:6666:7777:8888"],
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+
+async def test_ipv6_not_supported(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Tests that invalid ipv4 addresses do not generate stack dump."""
+    with caplog.at_level(logging.DEBUG):
+        caplog.clear()
+        await _setup_hass_ipv6_address_not_supported(hass)
+        await hass.async_block_till_done()
+    assert "invalid ip_address received" in caplog.text
+    assert "2001:db8:3333:4444:5555:6666:7777:8888" in caplog.text

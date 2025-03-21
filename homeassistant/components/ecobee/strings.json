@@ -138,7 +138,7 @@
       }
     },
     "set_dst_mode": {
-      "name": "Set Daylight savings time mode",
+      "name": "Set daylight savings time mode",
       "description": "Enables/disables automatic daylight savings time.",
       "fields": {
         "dst_enabled": {
@@ -172,8 +172,8 @@
       }
     },
     "set_sensors_used_in_climate": {
-      "name": "Set Sensors Used in Climate",
-      "description": "Sets the participating sensors for a climate.",
+      "name": "Set sensors used in climate",
+      "description": "Sets the participating sensors for a climate program.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -198,7 +198,7 @@
       "message": "Invalid sensor for thermostat, available options are: {options}"
     },
     "sensor_lookup_failed": {
-      "message": "There was an error getting the sensor ids from sensor names. Try reloading the ecobee integration."
+      "message": "There was an error getting the sensor IDs from sensor names. Try reloading the ecobee integration."
     }
   },
   "issues": {

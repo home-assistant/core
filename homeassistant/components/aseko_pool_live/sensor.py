@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfElectricPotential, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .coordinator import AsekoConfigEntry
@@ -86,7 +86,7 @@ SENSORS: list[AsekoSensorEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AsekoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Aseko Pool Live sensors."""
     coordinator = config_entry.runtime_data

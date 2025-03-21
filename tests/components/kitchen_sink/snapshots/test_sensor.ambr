@@ -69,3 +69,84 @@
     }),
   })
 # ---
+# name: test_states_with_subentry
+  set({
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'power',
+        'friendly_name': 'Outlet 1 Power',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.outlet_1_power',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '50',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'power',
+        'friendly_name': 'Outlet 2 Power',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.outlet_2_power',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '1500',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Sensor test',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.sensor_test',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '15',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Statistics issues Issue 1',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.statistics_issues_issue_1',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '100',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Statistics issues Issue 2',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': 'dogs',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.statistics_issues_issue_2',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '100',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Statistics issues Issue 3',
+        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.statistics_issues_issue_3',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '100',
+    }),
+  })
+# ---

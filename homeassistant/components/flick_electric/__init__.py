@@ -9,7 +9,6 @@ from pyflick import FlickAPI
 from pyflick.authentication import SimpleFlickAuth
 from pyflick.const import DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
@@ -35,9 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlickConfigEntry) -> boo
     """Set up Flick Electric from a config entry."""
     auth = HassFlickAuth(hass, entry)
 
-    coordinator = FlickElectricDataCoordinator(
-        hass, FlickAPI(auth), entry.data[CONF_SUPPLY_NODE_REF]
-    )
+    coordinator = FlickElectricDataCoordinator(hass, entry, FlickAPI(auth))
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -53,7 +50,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: FlickConfigEntry) -> bo
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: FlickConfigEntry
+) -> bool:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",

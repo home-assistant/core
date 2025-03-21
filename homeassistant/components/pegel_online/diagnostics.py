@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import PegelOnlineConfigEntry
+from .coordinator import PegelOnlineConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

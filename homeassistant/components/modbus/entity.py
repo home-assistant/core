@@ -74,27 +74,30 @@ _LOGGER = logging.getLogger(__name__)
 class BasePlatform(Entity):
     """Base for readonly platforms."""
 
+    _value: str | None = None
+    _attr_should_poll = False
+    _attr_available = True
+    _attr_unit_of_measurement = None
+
     def __init__(
         self, hass: HomeAssistant, hub: ModbusHub, entry: dict[str, Any]
     ) -> None:
         """Initialize the Modbus binary sensor."""
 
         self._hub = hub
-        self._slave = entry.get(CONF_SLAVE) or entry.get(CONF_DEVICE_ADDRESS, 0)
+        if (conf_slave := entry.get(CONF_SLAVE)) is not None:
+            self._slave = conf_slave
+        else:
+            self._slave = entry.get(CONF_DEVICE_ADDRESS, 1)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
-        self._value: str | None = None
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
-        self._call_active = False
         self._cancel_timer: Callable[[], None] | None = None
         self._cancel_call: Callable[[], None] | None = None
 
         self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
         self._attr_name = entry[CONF_NAME]
-        self._attr_should_poll = False
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
-        self._attr_available = True
-        self._attr_unit_of_measurement = None
 
         def get_optional_numeric_config(config_name: str) -> int | float | None:
             if (val := entry.get(config_name)) is None:
@@ -386,13 +389,9 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             return
 
         # do not allow multiple active calls to the same platform
-        if self._call_active:
-            return
-        self._call_active = True
         result = await self._hub.async_pb_call(
             self._slave, self._verify_address, 1, self._verify_type
         )
-        self._call_active = False
         if result is None:
             self._attr_available = False
             return

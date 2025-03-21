@@ -85,6 +85,7 @@ from homeassistant.util.json import json_loads
 from .common import (
     async_block_recorder,
     async_recorder_block_till_done,
+    async_wait_recorder,
     async_wait_recording_done,
     convert_pending_states_to_meta,
     corrupt_db_file,
@@ -155,7 +156,7 @@ async def test_shutdown_before_startup_finishes(
 
     recorder_helper.async_initialize_recorder(hass)
     hass.async_create_task(async_setup_recorder_instance(hass, config))
-    await recorder_helper.async_wait_recorder(hass)
+    await async_wait_recorder(hass)
     instance = get_instance(hass)
 
     session = await instance.async_add_executor_job(instance.get_session)
@@ -188,7 +189,7 @@ async def test_canceled_before_startup_finishes(
     hass.set_state(CoreState.not_running)
     recorder_helper.async_initialize_recorder(hass)
     hass.async_create_task(async_setup_recorder_instance(hass))
-    await recorder_helper.async_wait_recorder(hass)
+    await async_wait_recorder(hass)
 
     instance = get_instance(hass)
     instance._hass_started.cancel()
@@ -240,7 +241,7 @@ async def test_state_gets_saved_when_set_before_start_event(
 
     recorder_helper.async_initialize_recorder(hass)
     hass.async_create_task(async_setup_recorder_instance(hass))
-    await recorder_helper.async_wait_recorder(hass)
+    await async_wait_recorder(hass)
 
     entity_id = "test.recorder"
     state = "restoring_from_db"
@@ -2724,7 +2725,7 @@ async def test_commit_before_commits_pending_writes(
 
     recorder_helper.async_initialize_recorder(hass)
     hass.async_create_task(async_setup_recorder_instance(hass, config))
-    await recorder_helper.async_wait_recorder(hass)
+    await async_wait_recorder(hass)
     instance = get_instance(hass)
     assert instance.commit_interval == 60
     verify_states_in_queue_future = hass.loop.create_future()

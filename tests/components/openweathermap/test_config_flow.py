@@ -18,7 +18,7 @@ from homeassistant.components.openweathermap.const import (
     DEFAULT_LANGUAGE,
     DEFAULT_OWM_MODE,
     DOMAIN,
-    OWM_MODE_V25,
+    OWM_MODE_V30,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
@@ -40,13 +40,15 @@ CONFIG = {
     CONF_LATITUDE: 50,
     CONF_LONGITUDE: 40,
     CONF_LANGUAGE: DEFAULT_LANGUAGE,
-    CONF_MODE: OWM_MODE_V25,
+    CONF_MODE: OWM_MODE_V30,
 }
 
 VALID_YAML_CONFIG = {CONF_API_KEY: "foo"}
 
 
-def _create_mocked_owm_factory(is_valid: bool):
+def _create_static_weather_report() -> WeatherReport:
+    """Create a static WeatherReport."""
+
     current_weather = CurrentWeather(
         date_time=datetime.fromtimestamp(1714063536, tz=UTC),
         temperature=6.84,
@@ -60,8 +62,8 @@ def _create_mocked_owm_factory(is_valid: bool):
         wind_speed=9.83,
         wind_bearing=199,
         wind_gust=None,
-        rain={},
-        snow={},
+        rain={"1h": 1.21},
+        snow=None,
         condition=WeatherCondition(
             id=803,
             main="Clouds",
@@ -106,13 +108,21 @@ def _create_mocked_owm_factory(is_valid: bool):
         rain=0,
         snow=0,
     )
-    minutely_weather_forecast = MinutelyWeatherForecast(
-        date_time=1728672360, precipitation=2.54
-    )
-    weather_report = WeatherReport(
-        current_weather, [minutely_weather_forecast], [], [daily_weather_forecast]
+    minutely_weather_forecast = [
+        MinutelyWeatherForecast(date_time=1728672360, precipitation=0),
+        MinutelyWeatherForecast(date_time=1728672420, precipitation=1.23),
+        MinutelyWeatherForecast(date_time=1728672480, precipitation=4.5),
+        MinutelyWeatherForecast(date_time=1728672540, precipitation=0),
+    ]
+    return WeatherReport(
+        current_weather, minutely_weather_forecast, [], [daily_weather_forecast]
     )
 
+
+def _create_mocked_owm_factory(is_valid: bool):
+    """Create a mocked OWM client."""
+
+    weather_report = _create_static_weather_report()
     mocked_owm_client = MagicMock()
     mocked_owm_client.validate_key = AsyncMock(return_value=is_valid)
     mocked_owm_client.get_weather = AsyncMock(return_value=weather_report)
