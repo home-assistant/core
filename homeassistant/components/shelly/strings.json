@@ -235,10 +235,10 @@
       "message": "An error occurred while retrieving data from {device} device"
     },
     "update_error_device_disconnected": {
-      "message": "An error occurred while retrieving data from {device} device: device disconnected"
+      "message": "An error occurred while retrieving data from {device} device because it is disconnected"
     },
     "update_error_reconnect_error": {
-      "message": "An error occurred while retrieving data from {device} device: device reconnect error"
+      "message": "An error occurred while reconnecting to {device} device"
     },
     "update_error_sleeping_device": {
       "message": "Sleeping device did not update within {period} seconds interval"
