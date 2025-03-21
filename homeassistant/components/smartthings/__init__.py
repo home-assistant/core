@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import ClientError
 from pysmartthings import (
@@ -22,6 +22,12 @@ from pysmartthings import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_CONNECTIONS,
+    ATTR_HW_VERSION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
+    ATTR_VIA_DEVICE,
     CONF_ACCESS_TOKEN,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
@@ -172,25 +178,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         raise ConfigEntryAuthFailed from err
 
     device_registry = dr.async_get(hass)
-    for dev in device_status.values():
-        for component in dev.device.components:
-            if component.id == MAIN and Capability.BRIDGE in component.capabilities:
-                assert dev.device.hub
-                device_registry.async_get_or_create(
-                    config_entry_id=entry.entry_id,
-                    identifiers={(DOMAIN, dev.device.device_id)},
-                    connections=(
-                        {(dr.CONNECTION_NETWORK_MAC, dev.device.hub.mac_address)}
-                        if dev.device.hub.mac_address
-                        else set()
-                    ),
-                    name=dev.device.label,
-                    sw_version=dev.device.hub.firmware_version,
-                    model=dev.device.hub.hardware_type,
-                    suggested_area=(
-                        rooms.get(dev.device.room_id) if dev.device.room_id else None
-                    ),
-                )
+    create_devices(device_registry, device_status, entry, rooms)
+
     scenes = {
         scene.scene_id: scene
         for scene in await client.get_scenes(location_id=entry.data[CONF_LOCATION_ID])
@@ -207,6 +196,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         rooms=rooms,
     )
 
+    # Events are deprecated and will be removed in 2025.10
     def handle_button_press(event: DeviceEvent) -> None:
         """Handle a button press."""
         if (
@@ -275,6 +265,58 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     return True
+
+
+def create_devices(
+    device_registry: dr.DeviceRegistry,
+    devices: dict[str, FullDevice],
+    entry: SmartThingsConfigEntry,
+    rooms: dict[str, str],
+) -> None:
+    """Create devices in the device registry."""
+    for device in devices.values():
+        kwargs: dict[str, Any] = {}
+        if device.device.hub is not None:
+            kwargs = {
+                ATTR_SW_VERSION: device.device.hub.firmware_version,
+                ATTR_MODEL: device.device.hub.hardware_type,
+            }
+            if device.device.hub.mac_address:
+                kwargs[ATTR_CONNECTIONS] = {
+                    (dr.CONNECTION_NETWORK_MAC, device.device.hub.mac_address)
+                }
+        if device.device.parent_device_id:
+            kwargs[ATTR_VIA_DEVICE] = (DOMAIN, device.device.parent_device_id)
+        if (ocf := device.device.ocf) is not None:
+            kwargs.update(
+                {
+                    ATTR_MANUFACTURER: ocf.manufacturer_name,
+                    ATTR_MODEL: (
+                        (ocf.model_number.split("|")[0]) if ocf.model_number else None
+                    ),
+                    ATTR_HW_VERSION: ocf.hardware_version,
+                    ATTR_SW_VERSION: ocf.firmware_version,
+                }
+            )
+        if (viper := device.device.viper) is not None:
+            kwargs.update(
+                {
+                    ATTR_MANUFACTURER: viper.manufacturer_name,
+                    ATTR_MODEL: viper.model_name,
+                    ATTR_HW_VERSION: viper.hardware_version,
+                    ATTR_SW_VERSION: viper.software_version,
+                }
+            )
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, device.device.device_id)},
+            configuration_url="https://account.smartthings.com",
+            name=device.device.label,
+            suggested_area=(
+                rooms.get(device.device.room_id) if device.device.room_id else None
+            ),
+            **kwargs,
+        )
 
 
 KEEP_CAPABILITY_QUIRK: dict[
