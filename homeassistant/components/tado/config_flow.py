@@ -189,7 +189,9 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input:
-            return self.async_create_entry(data=user_input)
+            result = self.async_create_entry(data=user_input)
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            return result
 
         data_schema = vol.Schema(
             {
