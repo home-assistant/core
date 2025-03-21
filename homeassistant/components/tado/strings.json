@@ -1,7 +1,7 @@
 {
   "config": {
     "progress": {
-      "wait_for_device": "To authenticate, open the following URL and login at Tado: \n {url} \n If the code is not automatically copied, and paste the following code to authorize the integration: \n```\n{code}\n```\n\nThe login atempt will time out after five minutes."
+      "wait_for_device": "To authenticate, open the following URL and login at Tado: \n {url} \n If the code is not automatically copied, and paste the following code to authorize the integration: \n```\n{code}\n```\n\nThe login attempt will time out after five minutes."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
@@ -12,26 +12,12 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "step": {
-      "user": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "title": "Connect to your Tado account"
-      },
-      "auth_prepare": {
+      "reauth_confirm": {
         "title": "Authenticate with Tado",
-        "description": "You need (re-)authenticate again with Tado. Press Submit to start the (re-)authentication process."
+        "description": "You need to reauthenticate with Tado. Press Submit to start the authentication process."
       },
-      "reconfigure": {
-        "title": "Reconfigure your Tado",
-        "description": "Reconfigure the entry for your account: `{username}`.",
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "password": "Enter the (new) password for Tado."
-        }
+      "timeout": {
+        "description": "The authentication process timed out. Please try again."
       }
     }
   },
