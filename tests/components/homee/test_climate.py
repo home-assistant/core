@@ -1,10 +1,14 @@
 """Test homee climate entities."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODES,
+    ATTR_PRESET_MODES,
+    DOMAIN as CLIMATE_DOMAIN,
     PRESET_BOOST,
     PRESET_ECO,
     PRESET_NONE,
@@ -17,12 +21,13 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.homee.const import PRESET_MANUAL
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import build_mock_node, setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def setup_mock_climate(
@@ -85,7 +90,7 @@ async def test_climate_features(
 
     attributes = hass.states.get(entity_id).attributes
     assert attributes["supported_features"] == features
-    assert attributes["hvac_modes"] == hvac_modes
+    assert attributes[ATTR_HVAC_MODES] == hvac_modes
 
 
 async def test_climate_preset_modes(
@@ -99,7 +104,12 @@ async def test_climate_preset_modes(
     )
 
     attributes = hass.states.get("climate.test_thermostat_4").attributes
-    assert attributes["preset_modes"] == ["boost", "eco", "manual", "none"]
+    assert attributes[ATTR_PRESET_MODES] == [
+        PRESET_NONE,
+        PRESET_ECO,
+        PRESET_BOOST,
+        PRESET_MANUAL,
+    ]
 
 
 @pytest.mark.parametrize(
@@ -117,12 +127,12 @@ async def test_climate_preset_modes(
         ),
         (
             SERVICE_SET_HVAC_MODE,
-            {"hvac_mode": "heat"},
+            {"hvac_mode": HVACMode.HEAT},
             (4, 3, 1),
         ),
         (
             SERVICE_SET_HVAC_MODE,
-            {"hvac_mode": "off"},
+            {"hvac_mode": HVACMode.OFF},
             (4, 3, 0),
         ),
         (
@@ -166,10 +176,30 @@ async def test_climate_services(
     )
 
     await hass.services.async_call(
-        "climate",
+        CLIMATE_DOMAIN,
         service,
         {ATTR_ENTITY_ID: "climate.test_thermostat_4", **service_data},
         blocking=True,
     )
 
     mock_homee.set_value.assert_called_once_with(*expected)
+
+
+async def test_light_snapshot(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test snapshot of climates."""
+    mock_homee.nodes = [
+        build_mock_node("thermostat_only_targettemp.json"),
+        build_mock_node("thermostat_with_currenttemp.json"),
+        build_mock_node("thermostat_with_heating_mode.json"),
+        build_mock_node("thermostat_with_preset.json"),
+    ]
+    with patch("homeassistant.components.homee.PLATFORMS", [Platform.CLIMATE]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

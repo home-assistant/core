@@ -240,8 +240,8 @@ def get_climate_features(
         ) is not None and attribute.maximum > 1:
             # Node supports more modes than off and heating.
             features |= ClimateEntityFeature.PRESET_MODE
-            preset_modes.extend([PRESET_BOOST, PRESET_ECO, PRESET_MANUAL])
+            preset_modes.extend([PRESET_ECO, PRESET_BOOST, PRESET_MANUAL])
 
     if len(preset_modes) > 0:
-        preset_modes.append(PRESET_NONE)
+        preset_modes.insert(0, PRESET_NONE)
     return (features, hvac_modes, preset_modes if len(preset_modes) > 0 else None)
