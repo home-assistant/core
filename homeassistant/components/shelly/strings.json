@@ -220,7 +220,7 @@
       "message": "{device} device is running an unsupported firmware, please update the firmware"
     },
     "invalid_trigger": {
-      "message": "Invalid device automation trigger: {trigger}"
+      "message": "Invalid device automation trigger (type, subtype): {trigger}"
     },
     "ota_update_connection_error": {
       "message": "Device communication error occurred while triggering OTA update for {device} device: {error}"
@@ -241,7 +241,7 @@
       "message": "An error occurred while retrieving data from {device} device: device reconnect error"
     },
     "update_error_sleeping_device": {
-      "message": "Sleeping {device} device did not update within {period} seconds interval"
+      "message": "Sleeping device did not update within {period} seconds interval"
     }
   },
   "issues": {

@@ -384,7 +384,10 @@ async def test_validate_trigger_invalid_triggers(
         },
     )
 
-    assert "Invalid (type,subtype): ('single', 'button3')" in caplog.text
+    assert (
+        "Invalid device automation trigger (type, subtype): ('single', 'button3')"
+        in caplog.text
+    )
 
 
 async def test_rpc_no_runtime_data(

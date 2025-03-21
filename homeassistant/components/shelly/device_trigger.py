@@ -107,9 +107,7 @@ async def async_validate_trigger_config(
     raise InvalidDeviceAutomationConfig(
         translation_domain=DOMAIN,
         translation_key="invalid_trigger",
-        translation_placeholders={
-            "trigger": f"({CONF_TYPE},{CONF_SUBTYPE}): {trigger}"
-        },
+        translation_placeholders={"trigger": str(trigger)},
     )
 
 
