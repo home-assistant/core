@@ -114,6 +114,7 @@ FLOWS = {
         "coinbase",
         "color_extractor",
         "comelit",
+        "compit",
         "control4",
         "cookidoo",
         "coolmaster",
