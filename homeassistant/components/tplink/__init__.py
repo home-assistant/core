@@ -283,6 +283,11 @@ def get_device_name(device: Device, parent: Device | None = None) -> str | None:
         ]
         suffix = f" {devices.index(device.device_id) + 1}" if len(devices) > 1 else ""
         return f"{device.device_type.value.capitalize()}{suffix}"
+    # The P304M is a power strip with no alias. During setup in the Tapo app the parent
+    # device cannot be named, only the individual outlets can have aliases so we need to
+    # return a valid one for the parent to avoid "unnamed_p304m" in the entity id.
+    if device.model == "P304M":
+        return "Tapo P304M"
     return None
 
 
