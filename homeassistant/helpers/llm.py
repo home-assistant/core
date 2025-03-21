@@ -354,24 +354,37 @@ class AssistAPI(API):
         ]
         area: ar.AreaEntry | None = None
         floor: fr.FloorEntry | None = None
+        device_name: str | None = None
+
         if llm_context.device_id:
             device_reg = dr.async_get(self.hass)
             device = device_reg.async_get(llm_context.device_id)
 
             if device:
+                device_name = device.name_by_user or device.name
+
                 area_reg = ar.async_get(self.hass)
                 if device.area_id and (area := area_reg.async_get_area(device.area_id)):
                     floor_reg = fr.async_get(self.hass)
                     if area.floor_id:
                         floor = floor_reg.async_get_floor(area.floor_id)
 
-            extra = "and all generic commands like 'turn on the lights' should target this area."
+        if area:
+            if device_name:
+                prefix = f"User is interacting with you via {device_name}"
+            else:
+                prefix = "You are"
 
-        if floor and area:
-            prompt.append(f"You are in area {area.name} (floor {floor.name}) {extra}")
-        elif area:
-            prompt.append(f"You are in area {area.name} {extra}")
+            area_info = f"in area {area.name}"
+            if floor:
+                area_info += f" (floor {floor.name})"
+            area_info += " and all generic commands like 'turn on the lights' should target this area."
+
+            prompt.append(f"{prefix} {area_info}")
         else:
+            if device_name:
+                prompt.append(f"User is interacting with you via {device_name}.")
+
             prompt.append(
                 "When a user asks to turn on all devices of a specific type, "
                 "ask user to specify an area, unless there is only one device of that type."
