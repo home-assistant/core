@@ -20,5 +20,5 @@ async def async_get_config_entry_diagnostics(
         "timezone": str(dt_util.get_default_time_zone()),
         "system_timezone": str(datetime.datetime.now().astimezone().tzinfo),
         "url": entry.data[CONF_URL],
-        "data": dict(coordinator.data),
+        "data": coordinator.ics.text,
     }
