@@ -176,7 +176,7 @@ async def test_connected_devices(
     assert entity_entries
 
 
-async def test_select_entity_availabilty(
+async def test_select_entity_availability(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -433,7 +433,7 @@ async def test_select_exception_handling(
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {"entity_id": entity_id, "option": program_to_set},
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: program_to_set},
             blocking=True,
         )
     assert getattr(client_with_exception, mock_attr).call_count == 2
@@ -497,7 +497,7 @@ async def test_select_functionality(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, "option": value_to_set},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: value_to_set},
     )
     await hass.async_block_till_done()
 
@@ -758,7 +758,7 @@ async def test_select_entity_error(
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, "option": value_to_set},
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: value_to_set},
             blocking=True,
         )
     assert getattr(client_with_exception, mock_attr).call_count == 2

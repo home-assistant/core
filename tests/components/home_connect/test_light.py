@@ -21,9 +21,15 @@ from homeassistant.components.home_connect.const import (
     BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR,
     DOMAIN,
 )
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_HS_COLOR,
+    ATTR_RGB_COLOR,
+    DOMAIN as LIGHT_DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -177,7 +183,7 @@ async def test_connected_devices(
 
 
 @pytest.mark.parametrize("appliance_ha_id", ["Hood"], indirect=True)
-async def test_light_availabilty(
+async def test_light_availability(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -256,7 +262,7 @@ async def test_light_availabilty(
                 SettingKey.COOKING_COMMON_LIGHTING_BRIGHTNESS: 80,
             },
             SERVICE_TURN_ON,
-            {"brightness": 199},
+            {ATTR_BRIGHTNESS: 199},
             STATE_ON,
             "Hood",
         ),
@@ -277,7 +283,7 @@ async def test_light_availabilty(
                 SettingKey.BSH_COMMON_AMBIENT_LIGHT_BRIGHTNESS: 80,
             },
             SERVICE_TURN_ON,
-            {"brightness": 199},
+            {ATTR_BRIGHTNESS: 199},
             STATE_ON,
             "Hood",
         ),
@@ -310,7 +316,7 @@ async def test_light_availabilty(
             },
             SERVICE_TURN_ON,
             {
-                "rgb_color": (255, 255, 0),
+                ATTR_RGB_COLOR: (255, 255, 0),
             },
             STATE_ON,
             "Hood",
@@ -324,8 +330,8 @@ async def test_light_availabilty(
             },
             SERVICE_TURN_ON,
             {
-                "hs_color": (255.484, 15.196),
-                "brightness": 199,
+                ATTR_HS_COLOR: (255.484, 15.196),
+                ATTR_BRIGHTNESS: 199,
             },
             STATE_ON,
             "Hood",
@@ -362,7 +368,7 @@ async def test_light_functionality(
     assert config_entry.state == ConfigEntryState.LOADED
 
     service_data = exprected_attributes.copy()
-    service_data["entity_id"] = entity_id
+    service_data[ATTR_ENTITY_ID] = entity_id
     await hass.services.async_call(
         LIGHT_DOMAIN,
         service,
@@ -417,16 +423,16 @@ async def test_light_color_different_than_custom(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            "rgb_color": (255, 255, 0),
-            "entity_id": entity_id,
+            ATTR_RGB_COLOR: (255, 255, 0),
+            ATTR_ENTITY_ID: entity_id,
         },
     )
     await hass.async_block_till_done()
     entity_state = hass.states.get(entity_id)
     assert entity_state is not None
     assert entity_state.state == STATE_ON
-    assert entity_state.attributes["rgb_color"] is not None
-    assert entity_state.attributes["hs_color"] is not None
+    assert entity_state.attributes[ATTR_RGB_COLOR] is not None
+    assert entity_state.attributes[ATTR_HS_COLOR] is not None
 
     await client.add_events(
         [
@@ -454,8 +460,8 @@ async def test_light_color_different_than_custom(
     entity_state = hass.states.get(entity_id)
     assert entity_state is not None
     assert entity_state.state == STATE_ON
-    assert entity_state.attributes["rgb_color"] is None
-    assert entity_state.attributes["hs_color"] is None
+    assert entity_state.attributes[ATTR_RGB_COLOR] is None
+    assert entity_state.attributes[ATTR_HS_COLOR] is None
 
 
 @pytest.mark.parametrize(
@@ -485,7 +491,7 @@ async def test_light_color_different_than_custom(
                 SettingKey.COOKING_COMMON_LIGHTING_BRIGHTNESS: 70,
             },
             SERVICE_TURN_ON,
-            {"brightness": 200},
+            {ATTR_BRIGHTNESS: 200},
             [HomeConnectError, HomeConnectError],
             r"Error.*turn.*on.*",
         ),
@@ -517,7 +523,7 @@ async def test_light_color_different_than_custom(
                 SettingKey.BSH_COMMON_AMBIENT_LIGHT_BRIGHTNESS: 70,
             },
             SERVICE_TURN_ON,
-            {"brightness": 200},
+            {ATTR_BRIGHTNESS: 200},
             [HomeConnectError, None, HomeConnectError],
             r"Error.*set.*brightness.*",
         ),
@@ -530,7 +536,7 @@ async def test_light_color_different_than_custom(
                 SettingKey.BSH_COMMON_AMBIENT_LIGHT_CUSTOM_COLOR: "#ffff00",
             },
             SERVICE_TURN_ON,
-            {"rgb_color": (255, 255, 0)},
+            {ATTR_RGB_COLOR: (255, 255, 0)},
             [HomeConnectError, None, HomeConnectError],
             r"Error.*select.*custom color.*",
         ),
@@ -543,7 +549,7 @@ async def test_light_color_different_than_custom(
                 SettingKey.BSH_COMMON_AMBIENT_LIGHT_CUSTOM_COLOR: "#ffff00",
             },
             SERVICE_TURN_ON,
-            {"rgb_color": (255, 255, 0)},
+            {ATTR_RGB_COLOR: (255, 255, 0)},
             [HomeConnectError, None, None, HomeConnectError],
             r"Error.*set.*color.*",
         ),
@@ -556,8 +562,8 @@ async def test_light_color_different_than_custom(
             },
             SERVICE_TURN_ON,
             {
-                "hs_color": (255.484, 15.196),
-                "brightness": 199,
+                ATTR_HS_COLOR: (255.484, 15.196),
+                ATTR_BRIGHTNESS: 199,
             },
             [HomeConnectError, None, None, HomeConnectError],
             r"Error.*set.*color.*",
@@ -600,7 +606,7 @@ async def test_light_exception_handling(
     with pytest.raises(HomeConnectError):
         await client_with_exception.set_setting()
 
-    service_data["entity_id"] = entity_id
+    service_data[ATTR_ENTITY_ID] = entity_id
     with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
             LIGHT_DOMAIN, service, service_data, blocking=True

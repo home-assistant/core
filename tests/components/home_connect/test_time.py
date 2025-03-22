@@ -151,7 +151,7 @@ async def test_connected_devices(
 
 
 @pytest.mark.parametrize("appliance_ha_id", ["Oven"], indirect=True)
-async def test_time_entity_availabilty(
+async def test_time_entity_availability(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
