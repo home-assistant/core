@@ -101,20 +101,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "gas": {
-        "state_attributes": {
-          "detected": {
-            "state": {
-              "none": "None",
-              "mild": "Mild",
-              "heavy": "Heavy",
-              "test": "Test"
-            }
-          }
-        }
-      }
-    },
     "event": {
       "input": {
         "state_attributes": {
@@ -161,16 +147,6 @@
           "warmup": "Warm-up",
           "normal": "Normal",
           "fault": "Fault"
-        },
-        "state_attributes": {
-          "self_test": {
-            "state": {
-              "not_completed": "Not completed",
-              "completed": "Completed",
-              "running": "Running",
-              "pending": "Pending"
-            }
-          }
         }
       },
       "self_test": {
