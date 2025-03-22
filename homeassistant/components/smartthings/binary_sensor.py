@@ -194,26 +194,11 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
         self._attr_unique_id = f"{device.device.device_id}.{attribute}"
         if (
             entity_description.category_device_class
-            and (
-                main_component := next(
-                    (
-                        component
-                        for component in device.device.components
-                        if component.id == MAIN
-                    ),
-                    None,
-                )
-            )
-            is not None
+            and (category := get_main_component_category(device))
+            in entity_description.category_device_class
         ):
-            category = (
-                main_component.user_category or main_component.manufacturer_category
-            )
-            if category in entity_description.category_device_class:
-                self._attr_device_class = entity_description.category_device_class[
-                    category
-                ]
-                self._attr_name = None
+            self._attr_device_class = entity_description.category_device_class[category]
+            self._attr_name = None
 
     @property
     def is_on(self) -> bool:
