@@ -950,7 +950,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.32.0
+habluetooth==3.36.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.94.0
@@ -1626,7 +1626,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==1.0.3
+pyheos==1.0.4
 
 # homeassistant.components.hive
 pyhive-integration==1.0.2
@@ -1883,7 +1883,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.7.2
+pysmartthings==2.7.4
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2001,7 +2001,7 @@ python-roborock==2.14.0
 python-smarttub==0.0.39
 
 # homeassistant.components.snoo
-python-snoo==0.6.3
+python-snoo==0.6.4
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -2122,7 +2122,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.12.3b1
+reolink-aio==0.12.3
 
 # homeassistant.components.rflink
 rflink==0.0.66
@@ -2539,7 +2539,7 @@ zeroconf==0.146.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.52
+zha==0.0.53
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.62.0

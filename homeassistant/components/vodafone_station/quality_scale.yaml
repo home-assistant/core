@@ -26,9 +26,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: button presses not exception handled with HomeAssistantError
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -70,9 +68,7 @@ rules:
     status: exempt
     comment: no known use case
   entity-translations: done
-  exception-translations:
-    status: todo
-    comment: some missing in coordinator
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow:
     status: todo
