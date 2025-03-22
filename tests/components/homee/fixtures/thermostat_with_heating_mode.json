@@ -93,6 +93,35 @@
       "based_on": 1,
       "data": "",
       "name": ""
+    },
+    {
+      "id": 4,
+      "node_id": 3,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 100,
+      "current_value": 70.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "%",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 18,
+      "state": 1,
+      "last_changed": 1711796633,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["step"],
+        "history": {
+          "day": 1,
+          "week": 26,
+          "month": 6
+        }
+      }
     }
   ]
 }

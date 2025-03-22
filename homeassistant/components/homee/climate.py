@@ -61,13 +61,13 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
             self._attr_preset_modes,
         ) = get_climate_features(self._node)
 
-        self._traget_temp = self._node.get_attribute_by_type(
+        self._target_temp = self._node.get_attribute_by_type(
             AttributeType.TARGET_TEMPERATURE
         )
-        assert self._traget_temp is not None
-        self._attr_temperature_unit = str(HOMEE_UNIT_TO_HA_UNIT[self._traget_temp.unit])
-        self._attr_target_temperature_step = self._traget_temp.step_value
-        self._attr_unique_id = f"{self._attr_unique_id}-{self._traget_temp.id}"
+        assert self._target_temp is not None
+        self._attr_temperature_unit = str(HOMEE_UNIT_TO_HA_UNIT[self._target_temp.unit])
+        self._attr_target_temperature_step = self._target_temp.step_value
+        self._attr_unique_id = f"{self._attr_unique_id}-{self._target_temp.id}"
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -118,6 +118,7 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
                 )
             )
             is not None
+            and attribute.current_value > 0
         ):
             assert self._attr_preset_modes is not None
             return self._attr_preset_modes[int(attribute.current_value) - 1]
@@ -136,20 +137,20 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
-        assert self._traget_temp is not None
-        return self._traget_temp.current_value
+        assert self._target_temp is not None
+        return self._target_temp.current_value
 
     @property
     def min_temp(self) -> float:
         """Return the lowest settable target temperature."""
-        assert self._traget_temp is not None
-        return self._traget_temp.minimum
+        assert self._target_temp is not None
+        return self._target_temp.minimum
 
     @property
     def max_temp(self) -> float:
         """Return the lowest settable target temperature."""
-        assert self._traget_temp is not None
-        return self._traget_temp.maximum
+        assert self._target_temp is not None
+        return self._target_temp.maximum
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -174,10 +175,10 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
 
-        assert self._traget_temp is not None
+        assert self._target_temp is not None
         if ATTR_TEMPERATURE in kwargs:
             await self.async_set_homee_value(
-                self._traget_temp, kwargs[ATTR_TEMPERATURE]
+                self._target_temp, kwargs[ATTR_TEMPERATURE]
             )
 
     async def async_turn_on(self) -> None:

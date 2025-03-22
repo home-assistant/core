@@ -2,10 +2,12 @@
 
 from unittest.mock import MagicMock, patch
 
+from pyHomee.const import AttributeType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODES,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
@@ -19,6 +21,7 @@ from homeassistant.components.climate import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.components.homee.const import PRESET_MANUAL
@@ -114,8 +117,43 @@ async def test_climate_preset_modes(
 
 
 @pytest.mark.parametrize(
+    ("attribute_type", "value", "expected"),
+    [
+        (AttributeType.HEATING_MODE, 0.0, HVACAction.OFF),
+        (AttributeType.CURRENT_VALVE_POSITION, 0.0, HVACAction.IDLE),
+        (AttributeType.TEMPERATURE, 25.0, HVACAction.IDLE),
+        (AttributeType.TEMPERATURE, 18.0, HVACAction.HEATING),
+    ],
+)
+async def test_hvac_action(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: MagicMock,
+    attribute_type: AttributeType,
+    value: float,
+    expected: HVACAction,
+) -> None:
+    """Test hvac action of climate entities."""
+    await setup_mock_climate(
+        hass, mock_config_entry, mock_homee, "thermostat_with_heating_mode.json"
+    )
+
+    node = mock_homee.nodes[0]
+    # set target temperature to 24.0
+    node.attributes[0].current_value = 24.0
+    attribute = node.get_attribute_by_type(attribute_type)
+    attribute.current_value = value
+    node.add_on_changed_listener.call_args_list[0][0][0](node)
+    await hass.async_block_till_done()
+
+    attributes = hass.states.get("climate.test_thermostat_3").attributes
+    assert attributes[ATTR_HVAC_ACTION] == expected
+
+
+@pytest.mark.parametrize(
     ("preset_mode_int", "expected"),
     [
+        (0, PRESET_NONE),
         (1, PRESET_NONE),
         (2, PRESET_ECO),
         (3, PRESET_BOOST),
