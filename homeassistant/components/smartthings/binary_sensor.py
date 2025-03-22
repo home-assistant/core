@@ -134,6 +134,14 @@ CAPABILITY_TO_SENSORS: dict[
             is_on_key="wet",
         )
     },
+    Capability.SAMSUNG_CE_DOOR_STATE: {
+        Attribute.DOOR_STATE: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.DOOR_STATE,
+            translation_key="door",
+            device_class=BinarySensorDeviceClass.OPENING,
+            is_on_key="open",
+        )
+    },
 }
 
 
