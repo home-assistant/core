@@ -74,11 +74,11 @@ async def test_rpc_button(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling the entity button.test_name_reboot action for Test name",
+            "Device communication error occurred while calling action for button.test_name_reboot of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling the entity button.test_name_reboot action for Test name",
+            "RPC call error occurred while calling action for button.test_name_reboot of Test name",
         ),
     ],
 )
@@ -212,11 +212,11 @@ async def test_rpc_blu_trv_button(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling the entity button.trv_name_calibrate action for Test name",
+            "Device communication error occurred while calling action for button.trv_name_calibrate of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling the entity button.trv_name_calibrate action for Test name",
+            "RPC call error occurred while calling action for button.trv_name_calibrate of Test name",
         ),
     ],
 )

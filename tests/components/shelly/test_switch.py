@@ -223,7 +223,7 @@ async def test_block_set_state_connection_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Device communication error occurred while calling the entity switch.test_name_channel_1 action for Test name",
+        match="Device communication error occurred while calling action for switch.test_name_channel_1 of Test name",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -368,11 +368,11 @@ async def test_rpc_device_switch_type_lights_mode(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling the entity switch.test_switch_0 action for Test name",
+            "Device communication error occurred while calling action for switch.test_switch_0 of Test name",
         ),
         (
             RpcCallError(-1, "error"),
-            "RPC call error occurred while calling the entity switch.test_switch_0 action for Test name",
+            "RPC call error occurred while calling action for switch.test_switch_0 of Test name",
         ),
     ],
 )

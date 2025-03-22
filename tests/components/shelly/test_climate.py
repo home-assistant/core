@@ -464,7 +464,7 @@ async def test_block_set_mode_connection_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Device communication error occurred while calling the entity climate.test_name action for Test name",
+        match="Device communication error occurred while calling action for climate.test_name of Test name",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,

@@ -202,7 +202,7 @@ async def test_block_set_value_connection_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Device communication error occurred while calling the entity number.test_name_valve_position action for Test name",
+        match="Device communication error occurred while calling action for number.test_name_valve_position of Test name",
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
