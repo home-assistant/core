@@ -34,9 +34,7 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery:
-    status: todo
-    comment: Determine if these devices can support discovery
+  discovery: done
   discovery-update-info:
     status: exempt
     comment: Devices do not support discovery.
