@@ -13,6 +13,28 @@
           "on": "mdi:lock"
         }
       }
+    },
+    "number": {
+      "washer_rinse_cycles": {
+        "default": "mdi:waves-arrow-up"
+      }
+    },
+    "select": {
+      "operating_state": {
+        "state": {
+          "run": "mdi:play",
+          "pause": "mdi:pause",
+          "stop": "mdi:stop"
+        }
+      }
+    },
+    "switch": {
+      "wrinkle_prevent": {
+        "default": "mdi:tumble-dryer",
+        "state": {
+          "off": "mdi:tumble-dryer-off"
+        }
+      }
     }
   }
 }

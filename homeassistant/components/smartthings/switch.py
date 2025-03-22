@@ -37,11 +37,28 @@ class SmartThingsSwitchEntityDescription(SwitchEntityDescription):
     status_attribute: Attribute
 
 
+@dataclass(frozen=True, kw_only=True)
+class SmartThingsCommandSwitchEntityDescription(SmartThingsSwitchEntityDescription):
+    """Describe a SmartThings switch entity."""
+
+    command: Command
+
+
 SWITCH = SmartThingsSwitchEntityDescription(
     key=Capability.SWITCH,
     status_attribute=Attribute.SWITCH,
     name=None,
 )
+CAPABILITY_TO_COMMAND_SWITCHES: dict[
+    Capability | str, SmartThingsCommandSwitchEntityDescription
+] = {
+    Capability.CUSTOM_DRYER_WRINKLE_PREVENT: SmartThingsCommandSwitchEntityDescription(
+        key=Capability.CUSTOM_DRYER_WRINKLE_PREVENT,
+        translation_key="wrinkle_prevent",
+        status_attribute=Attribute.DRYER_WRINKLE_PREVENT,
+        command=Command.SET_DRYER_WRINKLE_PREVENT,
+    )
+}
 CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescription] = {
     Capability.SAMSUNG_CE_SABBATH_MODE: SmartThingsSwitchEntityDescription(
         key=Capability.SAMSUNG_CE_SABBATH_MODE,
@@ -65,6 +82,17 @@ async def async_setup_entry(
         and not any(capability in device.status[MAIN] for capability in CAPABILITIES)
         and not all(capability in device.status[MAIN] for capability in AC_CAPABILITIES)
     ]
+    entities.extend(
+        SmartThingsCommandSwitch(
+            entry_data.client,
+            device,
+            description,
+            Capability(capability),
+        )
+        for device in entry_data.devices.values()
+        for capability, description in CAPABILITY_TO_COMMAND_SWITCHES.items()
+        if capability in device.status[MAIN]
+    )
     entities.extend(
         SmartThingsSwitch(
             entry_data.client,
@@ -121,4 +149,26 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
                 self.switch_capability, self.entity_description.status_attribute
             )
             == "on"
+        )
+
+
+class SmartThingsCommandSwitch(SmartThingsSwitch):
+    """Define a SmartThings command switch."""
+
+    entity_description: SmartThingsCommandSwitchEntityDescription
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the switch off."""
+        await self.execute_device_command(
+            self.switch_capability,
+            self.entity_description.command,
+            "off",
+        )
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the switch on."""
+        await self.execute_device_command(
+            self.switch_capability,
+            self.entity_description.command,
+            "on",
         )
