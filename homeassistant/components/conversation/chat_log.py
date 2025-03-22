@@ -412,8 +412,7 @@ class ChatLog:
         try:
             prompt_parts = [
                 template.Template(
-                    llm.BASE_PROMPT
-                    + (user_llm_prompt or llm.DEFAULT_INSTRUCTIONS_PROMPT),
+                    (user_llm_prompt or llm.DEFAULT_INSTRUCTIONS_PROMPT),
                     self.hass,
                 ).async_render(
                     {
@@ -440,6 +439,20 @@ class ChatLog:
 
         if llm_api:
             prompt_parts.append(llm_api.api_prompt)
+
+        prompt_parts.append(
+            template.Template(
+                llm.BASE_PROMPT,
+                self.hass,
+            ).async_render(
+                {
+                    "ha_name": self.hass.config.location_name,
+                    "user_name": user_name,
+                    "llm_context": llm_context,
+                },
+                parse_result=False,
+            )
+        )
 
         if extra_system_prompt := (
             # Take new system prompt if one was given
