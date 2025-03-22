@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entity_registry[switch.test_player_alarm-entry]
+# name: test_entity_registry[switch.test_player_alarm_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.test_player_alarm',
+    'entity_id': 'switch.test_player_alarm_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:alarm',
-    'original_name': 'Alarm',
+    'original_name': 'Alarm (1)',
     'platform': 'squeezebox',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -33,12 +33,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_registry[switch.test_player_alarm-state]
+# name: test_entity_registry[switch.test_player_alarm_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'alarm_id': '1',
       'dow': '[0, 1, 2, 3, 4, 5, 6]',
-      'friendly_name': 'Test Player Alarm',
+      'friendly_name': 'Test Player Alarm (1)',
       'icon': 'mdi:alarm',
       'repeat': 'False',
       'scheduled_today': True,
@@ -47,7 +47,7 @@
       'volume': 0.5,
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_player_alarm',
+    'entity_id': 'switch.test_player_alarm_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -79,7 +79,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:alarm',
-    'original_name': 'Alarms Enabled',
+    'original_name': 'Alarms enabled',
     'platform': 'squeezebox',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -91,7 +91,7 @@
 # name: test_entity_registry[switch.test_player_alarms_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Player Alarms Enabled',
+      'friendly_name': 'Test Player Alarms enabled',
       'icon': 'mdi:alarm',
     }),
     'context': <ANY>,
