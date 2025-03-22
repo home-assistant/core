@@ -91,6 +91,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
 
 @pytest.fixture(
     params=[
+        "da_ac_airsensor_01001",
         "da_ac_rac_000001",
         "da_ac_rac_100001",
         "da_ac_rac_01001",
@@ -106,6 +107,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "da_ref_normal_000001",
         "vd_network_audio_002s",
         "iphone",
+        "da_sac_ehs_000001_sub",
         "da_wm_dw_000001",
         "da_wm_wd_000001",
         "da_wm_wd_000001_1",
@@ -114,6 +116,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "da_rvc_normal_000001",
         "da_ks_microwave_0101x",
         "da_ks_range_0101x",
+        "da_ks_oven_01061",
         "hue_color_temperature_bulb",
         "hue_rgbw_color_bulb",
         "c2c_shade",
@@ -129,12 +132,14 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "fake_fan",
         "generic_fan_3_speed",
         "heatit_ztrm3_thermostat",
+        "heatit_zpushwall",
         "generic_ef00_v1",
         "bosch_radiator_thermostat_ii",
         "im_speaker_ai_0001",
         "abl_light_b_001",
         "tplink_p110",
         "ikea_kadrilj",
+        "aux_ac",
     ]
 )
 def device_fixture(
