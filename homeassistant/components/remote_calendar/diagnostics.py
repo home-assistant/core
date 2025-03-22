@@ -3,9 +3,10 @@
 import datetime
 from typing import Any
 
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-from homeassistant.const import CONF_URL
+
 from . import RemoteCalendarConfigEntry
 
 

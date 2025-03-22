@@ -1,34 +1,21 @@
 """Test the remote calendar diagnostics."""
 
 import datetime
-from unittest.mock import AsyncMock
-import zoneinfo
 
+from httpx import Response
 import pytest
+import respx
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
+from .conftest import CALENDER_URL
+
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
-
-from httpx import ConnectError, Response, UnsupportedProtocol
-import pytest
-import respx
-
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF
-from homeassistant.core import HomeAssistant
-
-from . import setup_integration
-from .conftest import CALENDER_URL, TEST_ENTITY
-
-from tests.common import MockConfigEntry
 
 
 @respx.mock
