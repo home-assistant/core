@@ -14,6 +14,11 @@
         }
       }
     },
+    "number": {
+      "washer_rinse_cycles": {
+        "default": "mdi:waves-arrow-up"
+      }
+    },
     "select": {
       "operating_state": {
         "state": {
