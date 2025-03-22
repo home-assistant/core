@@ -26,6 +26,8 @@ ATTR_MEDIA_ARTIST = "media_artist"
 ATTR_MEDIA_CHANNEL = "media_channel"
 ATTR_MEDIA_CONTENT_ID = "media_content_id"
 ATTR_MEDIA_CONTENT_TYPE = "media_content_type"
+ATTR_MEDIA_SEARCH_QUERY = "search_query"
+ATTR_MEDIA_TARGET_CLASSES = "allowed_classes"
 ATTR_MEDIA_DURATION = "media_duration"
 ATTR_MEDIA_ENQUEUE = "enqueue"
 ATTR_MEDIA_EXTRA = "extra"
@@ -42,6 +44,8 @@ ATTR_MEDIA_TITLE = "media_title"
 ATTR_MEDIA_TRACK = "media_track"
 ATTR_MEDIA_VOLUME_LEVEL = "volume_level"
 ATTR_MEDIA_VOLUME_MUTED = "is_volume_muted"
+ATTR_SEARCH_PAGE_SIZE = "page_size"
+ATTR_SEARCH_OFFSET_OR_NEXT = "offset_or_next"
 ATTR_SOUND_MODE = "sound_mode"
 ATTR_SOUND_MODE_LIST = "sound_mode_list"
 
@@ -174,6 +178,7 @@ SERVICE_CLEAR_PLAYLIST = "clear_playlist"
 SERVICE_JOIN = "join"
 SERVICE_PLAY_MEDIA = "play_media"
 SERVICE_BROWSE_MEDIA = "browse_media"
+SERVICE_SEARCH_MEDIA = "search_media"
 SERVICE_SELECT_SOUND_MODE = "select_sound_mode"
 SERVICE_SELECT_SOURCE = "select_source"
 SERVICE_UNJOIN = "unjoin"
@@ -220,6 +225,7 @@ class MediaPlayerEntityFeature(IntFlag):
     GROUPING = 524288
     MEDIA_ANNOUNCE = 1048576
     MEDIA_ENQUEUE = 2097152
+    SEARCH_MEDIA = 4194304
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.

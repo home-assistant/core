@@ -14,7 +14,7 @@ import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any, Final, Required, TypedDict, final
+from typing import Any, Final, Required, TypedDict, cast, final
 from urllib.parse import quote, urlparse
 
 import aiohttp
@@ -68,7 +68,11 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
-from .browse_media import BrowseMedia, async_process_play_media_url  # noqa: F401
+from .browse_media import (  # noqa: F401
+    BrowseMedia,
+    SearchMedia,
+    async_process_play_media_url,
+)
 from .const import (  # noqa: F401
     _DEPRECATED_MEDIA_CLASS_DIRECTORY,
     _DEPRECATED_SUPPORT_BROWSE_MEDIA,
@@ -111,14 +115,18 @@ from .const import (  # noqa: F401
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_REPEAT,
+    ATTR_MEDIA_SEARCH_QUERY,
     ATTR_MEDIA_SEASON,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SERIES_TITLE,
     ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_TARGET_CLASSES,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_SEARCH_OFFSET_OR_NEXT,
+    ATTR_SEARCH_PAGE_SIZE,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     CONTENT_AUTH_EXPIRY_TIME,
@@ -128,6 +136,7 @@ from .const import (  # noqa: F401
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_JOIN,
     SERVICE_PLAY_MEDIA,
+    SERVICE_SEARCH_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
@@ -137,7 +146,7 @@ from .const import (  # noqa: F401
     MediaType,
     RepeatMode,
 )
-from .errors import BrowseError
+from .errors import BrowseError, SearchError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -291,6 +300,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     websocket_api.async_register_command(hass, websocket_browse_media)
+    websocket_api.async_register_command(hass, websocket_search_media)
     hass.http.register_view(MediaPlayerImageView(component))
 
     await component.async_setup(config)
@@ -445,6 +455,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
         },
         "async_browse_media",
+        supports_response=SupportsResponse.ONLY,
+    )
+    component.async_register_entity_service(
+        SERVICE_SEARCH_MEDIA,
+        {
+            vol.Optional(ATTR_MEDIA_CONTENT_TYPE): cv.string,
+            vol.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
+            vol.Optional(ATTR_MEDIA_SEARCH_QUERY): cv.string,
+            vol.Optional(ATTR_MEDIA_TARGET_CLASSES): vol.All(
+                cv.ensure_list, [vol.In([m.value for m in MediaClass])]
+            ),
+            vol.Optional(ATTR_SEARCH_PAGE_SIZE, default=128): int,
+            vol.Optional(ATTR_SEARCH_OFFSET_OR_NEXT, default=0): vol.Any(int, str),
+        },
+        "async_search_media",
         supports_response=SupportsResponse.ONLY,
     )
     component.async_register_entity_service(
@@ -1157,6 +1182,22 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         raise NotImplementedError
 
+    async def async_search_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+        query: str | None = None,
+        target_media_classes: set[MediaClass] | None = None,
+        page_size: int = 128,
+        offset_or_next: int | str = 0,
+    ) -> SearchMedia:
+        """Return a list of BrowseMedia instances.
+
+        The BrowseMedia list will be used by the
+        "media_player/search_media" websocket command.
+        """
+        raise NotImplementedError
+
     def join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         raise NotImplementedError
@@ -1357,6 +1398,94 @@ async def websocket_browse_media(
         result = payload  # type: ignore[unreachable]
         _LOGGER.warning("Browse Media should use new BrowseMedia class")
 
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "media_player/search_media",
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Inclusive(
+            ATTR_MEDIA_CONTENT_TYPE,
+            "media_ids",
+            "media_content_type and media_content_id must be provided together",
+        ): str,
+        vol.Inclusive(
+            ATTR_MEDIA_CONTENT_ID,
+            "media_ids",
+            "media_content_type and media_content_id must be provided together",
+        ): str,
+        vol.Optional(ATTR_MEDIA_SEARCH_QUERY): str,
+        vol.Optional(ATTR_MEDIA_TARGET_CLASSES): vol.All(
+            cv.ensure_list, [vol.In([m.value for m in MediaClass])]
+        ),
+        vol.Optional(ATTR_SEARCH_PAGE_SIZE, default=128): int,
+        vol.Optional(ATTR_SEARCH_OFFSET_OR_NEXT, default=0): vol.Any(int, str),
+    }
+)
+@websocket_api.async_response
+async def websocket_search_media(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Search media available to the media_player entity.
+
+    To use, media_player integrations can implement
+    MediaPlayerEntity.async_search_media()
+    """
+    player = hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])
+
+    if player is None:
+        connection.send_error(msg["id"], "entity_not_found", "Entity not found")
+        return
+
+    if MediaPlayerEntityFeature.SEARCH_MEDIA not in player.supported_features_compat:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], ERR_NOT_SUPPORTED, "Player does not support searching media"
+            )
+        )
+        return
+
+    media_content_type = msg.get(ATTR_MEDIA_CONTENT_TYPE)
+    media_content_id = msg.get(ATTR_MEDIA_CONTENT_ID)
+    query = msg.get(ATTR_MEDIA_SEARCH_QUERY)
+    target_media_classes = msg.get(ATTR_MEDIA_TARGET_CLASSES)
+    page_size = cast(int, msg.get(ATTR_SEARCH_PAGE_SIZE))
+    offset_or_next = cast(int | str, msg.get(ATTR_SEARCH_OFFSET_OR_NEXT))
+
+    try:
+        payload = await player.async_search_media(
+            media_content_type,
+            media_content_id,
+            query,
+            target_media_classes,
+            page_size,
+            offset_or_next,
+        )
+    except NotImplementedError:
+        assert player.platform
+        _LOGGER.error(
+            "%s allows media searching but its integration (%s) does not",
+            player.entity_id,
+            player.platform.platform_name,
+        )
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"],
+                ERR_NOT_SUPPORTED,
+                "Integration does not support searching media",
+            )
+        )
+        return
+    except SearchError as err:
+        connection.send_message(
+            websocket_api.error_message(msg["id"], ERR_UNKNOWN_ERROR, str(err))
+        )
+        return
+
+    result = payload.as_dict()
     connection.send_result(msg["id"], result)
 
 
