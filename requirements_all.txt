@@ -2477,7 +2477,7 @@ python-snoo==0.6.4
 python-songpal==0.16.2
 
 # homeassistant.components.tado
-python-tado==0.18.6
+python-tado==0.18.9
 
 # homeassistant.components.technove
 python-technove==2.0.0
