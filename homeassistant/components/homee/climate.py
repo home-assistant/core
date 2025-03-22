@@ -69,14 +69,18 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
         self._attr_target_temperature_step = self._target_temp.step_value
         self._attr_unique_id = f"{self._attr_unique_id}-{self._target_temp.id}"
 
+        self._heating_mode = self._node.get_attribute_by_type(
+            AttributeType.HEATING_MODE
+        )
+        self._temperature = self._node.get_attribute_by_type(AttributeType.TEMPERATURE)
+
     @property
     def hvac_mode(self) -> HVACMode:
         """Return the hvac operation mode."""
         if ClimateEntityFeature.TURN_OFF in self.supported_features and (
-            (attribute := self._node.get_attribute_by_type(AttributeType.HEATING_MODE))
-            is not None
+            self._heating_mode is not None
         ):
-            if attribute.current_value == 0:
+            if self._heating_mode.current_value == 0:
                 return HVACMode.OFF
 
         return HVACMode.HEAT
@@ -85,23 +89,20 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
     def hvac_action(self) -> HVACAction:
         """Return the hvac action."""
         if ClimateEntityFeature.TURN_OFF in self.supported_features and (
-            (attribute := self._node.get_attribute_by_type(AttributeType.HEATING_MODE))
-            is not None
+            self._heating_mode is not None and self._heating_mode.current_value == 0
         ):
-            if attribute.current_value == 0:
-                return HVACAction.OFF
+            return HVACAction.OFF
 
         if (
             attribute := self._node.get_attribute_by_type(
                 AttributeType.CURRENT_VALVE_POSITION
             )
-        ) is not None:
-            if attribute.current_value == 0:
-                return HVACAction.IDLE
+        ) is not None and attribute.current_value == 0:
+            return HVACAction.IDLE
 
         if (
-            self.current_temperature
-            and self.current_temperature >= self.target_temperature
+            self._temperature is not None
+            and self._temperature.current_value >= self.target_temperature
         ):
             return HVACAction.IDLE
 
@@ -112,26 +113,19 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
         """Return the present preset mode."""
         if (
             ClimateEntityFeature.PRESET_MODE in self.supported_features
-            and (
-                attribute := self._node.get_attribute_by_type(
-                    AttributeType.HEATING_MODE
-                )
-            )
-            is not None
-            and attribute.current_value > 0
+            and self._heating_mode is not None
+            and self._heating_mode.current_value > 0
         ):
             assert self._attr_preset_modes is not None
-            return self._attr_preset_modes[int(attribute.current_value) - 1]
+            return self._attr_preset_modes[int(self._heating_mode.current_value) - 1]
 
         return PRESET_NONE
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if (
-            temp := self._node.get_attribute_by_type(AttributeType.TEMPERATURE)
-        ) is not None:
-            return temp.current_value
+        if self._temperature is not None:
+            return self._temperature.current_value
         return None
 
     @property
@@ -155,21 +149,17 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         # Currently only HEAT and OFF are supported.
-        if (
-            attribute := self._node.get_attribute_by_type(AttributeType.HEATING_MODE)
-        ) is not None:
+        if self._heating_mode is not None:
             await self.async_set_homee_value(
-                attribute, float(hvac_mode == HVACMode.HEAT)
+                self._heating_mode, float(hvac_mode == HVACMode.HEAT)
             )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
-        if (
-            attribute := self._node.get_attribute_by_type(AttributeType.HEATING_MODE)
-        ) is not None:
+        if self._heating_mode is not None:
             assert self._attr_preset_modes is not None
             await self.async_set_homee_value(
-                attribute, self._attr_preset_modes.index(preset_mode) + 1
+                self._heating_mode, self._attr_preset_modes.index(preset_mode) + 1
             )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -183,17 +173,13 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
-        if (
-            attribute := self._node.get_attribute_by_type(AttributeType.HEATING_MODE)
-        ) is not None:
-            await self.async_set_homee_value(attribute, 1)
+        if self._heating_mode is not None:
+            await self.async_set_homee_value(self._heating_mode, 1)
 
     async def async_turn_off(self) -> None:
         """Turn the entity on."""
-        if (
-            attribute := self._node.get_attribute_by_type(AttributeType.HEATING_MODE)
-        ) is not None:
-            await self.async_set_homee_value(attribute, 0)
+        if self._heating_mode is not None:
+            await self.async_set_homee_value(self._heating_mode, 0)
 
 
 def get_climate_features(
