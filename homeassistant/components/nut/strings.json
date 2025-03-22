@@ -221,6 +221,9 @@
       "ups_type": { "name": "UPS type" },
       "ups_watchdog_status": { "name": "Watchdog status" },
       "watts": { "name": "Watts" }
+    },
+    "button": {
+      "outlet_number_load_cycle": { "name": "Power cycle outlet {outlet_name}" }
     }
   }
 }

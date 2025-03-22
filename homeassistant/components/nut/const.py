@@ -6,7 +6,10 @@ from homeassistant.const import Platform
 
 DOMAIN = "nut"
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.SENSOR,
+]
 
 DEFAULT_NAME = "NUT UPS"
 DEFAULT_HOST = "localhost"
