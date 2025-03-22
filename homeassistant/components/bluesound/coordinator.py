@@ -41,7 +41,7 @@ class BluesoundData:
     inputs: list[Input]
 
 
-type BluesoundConfigEntry = ConfigEntry[BluesoundRuntimeData]
+type BluesoundConfigEntry = ConfigEntry[BluesoundRuntimeData | None]
 
 
 def cancel_task(task: asyncio.Task) -> Callable[[], Coroutine[None, None, None]]:
