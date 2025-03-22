@@ -10,12 +10,11 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import NutConfigEntry, PyNUTData
-from .const import DOMAIN
-from .sensor import _get_nut_device_info
+from .entity import NUTBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,34 +50,28 @@ async def async_setup_entry(
         }
 
     async_add_entities(
-        NUTButton(description, data, unique_id)
+        NUTButton(coordinator, description, data, unique_id)
         for button_id, description in valid_button_types.items()
         if button_id in pynut_data.user_available_commands
     )
 
 
-class NUTButton(ButtonEntity):
+class NUTButton(NUTBaseEntity, ButtonEntity):
     """Representation of a button entity for NUT."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
+        coordinator: DataUpdateCoordinator[dict[str, str]],
         button_description: ButtonEntityDescription,
         data: PyNUTData,
         unique_id: str,
     ) -> None:
         """Initialize the button."""
-        self.pynut_data = data
+        super().__init__(coordinator, data, unique_id)
         self.entity_description = button_description
-
-        device_name = data.name.title()
         self._attr_unique_id = f"{unique_id}_{button_description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            name=device_name,
-        )
-        self._attr_device_info.update(_get_nut_device_info(data))
 
     async def async_press(self) -> None:
         """Press the button."""
