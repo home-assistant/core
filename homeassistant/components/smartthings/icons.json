@@ -6,6 +6,12 @@
         "state": {
           "on": "mdi:remote"
         }
+      },
+      "child_lock": {
+        "default": "mdi:lock-open",
+        "state": {
+          "on": "mdi:lock"
+        }
       }
     }
   }
