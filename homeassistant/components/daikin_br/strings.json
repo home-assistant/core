@@ -4,27 +4,27 @@
     "step": {
       "user": {
         "title": "Set up Daikin Smart AC",
-        "description": "Enter the Device Name and Device Key for SSID: {hostname}.\n\nNote - To find the Device Key for the SSID shown above, open the Daikin Smart AC mobile app and navigate to Menu → Integrations → Home Assistant. Enter the SSID and press Submit.",
+        "description": "Enter the device name and device key for SSID: {hostname}.\n\nNote - To find the device key for the SSID shown above, open the Daikin Smart AC mobile app and navigate to menu → integrations → Home Assistant. Enter the SSID and press submit.",
         "data": {
-          "device_name": "Device Name",
-          "api_key": "Device Key",
-          "poll_interval": "Poll Interval (seconds)"
+          "device_name": "Device name",
+          "api_key": "Device key",
+          "poll_interval": "Poll interval (seconds)"
         }
       },
       "reconfigure": {
         "title": "Reconfigure Daikin Smart AC",
-        "description": "Enter the Device Key for SSID: {hostname}.\n\nNote - To find the Device Key for the SSID shown above, open the Daikin Smart AC mobile app and navigate to Menu → Integrations → Home Assistant. Enter the SSID and press Submit.",
+        "description": "Enter the device key for SSID: {hostname}.\n\nNote - To find the device key for the SSID shown above, open the Daikin Smart AC mobile app and navigate to menu → integrations → Home Assistant. Enter the SSID and press submit.",
         "data": {
-          "api_key": "Device Key"
+          "api_key": "Device key"
         }
       },
       "manual": {
         "title": "Set up Daikin Smart AC",
-        "description": "Open your network router setup and check the client list. The Daikin AC should appear in the list with the format DAIKINXXXXXX.\n\nNote - To find the Device Key, open the Daikin Smart AC mobile app and navigate to Menu → Integrations → Home Assistant. Enter the SSID (DAIKINXXXXXX) and press Submit.",
+        "description": "Open your network router setup and check the client list. The Daikin AC should appear in the list with the format DAIKINXXXXXX.\n\nNote - To find the device key, open the Daikin Smart AC mobile app and navigate to menu → integrations → Home Assistant. Enter the SSID (DAIKINXXXXXX) and press submit.",
         "data": {
-          "device_ip": "Device IP Address",
-          "device_name": "Device Name",
-          "api_key": "Device Key"
+          "device_ip": "Device IP address",
+          "device_name": "Device name",
+          "api_key": "Device key"
         }
       }
     },
@@ -49,15 +49,15 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
-              "medium_high": "Medium High",
-              "low_medium": "Low Medium",
+              "medium_high": "Medium high",
+              "low_medium": "Low medium",
               "quiet": "Quiet"
             }
           },
           "preset_mode": {
             "state": {
               "eco": "Econo",
-              "boost": "Power Chill"
+              "boost": "Power chill"
             }
           }
         }
