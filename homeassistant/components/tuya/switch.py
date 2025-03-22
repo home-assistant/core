@@ -385,6 +385,35 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
+    # Smart Control Panel Mini
+    # Not documented
+    "dgnzk": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            device_class=SwitchDeviceClass.SWITCH,
+            translation_key="switch_1",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            device_class=SwitchDeviceClass.SWITCH,
+            translation_key="switch_2",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_3,
+            device_class=SwitchDeviceClass.SWITCH,
+            translation_key="switch_3",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.VOICE_MIC,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="voice",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.VOICE_BT_PLAY,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="voice_bt_play",
+        ),
+    ),
     # Unknown product with switch capabilities
     # Fond in some diffusers, plugs and PIR flood lights
     # Not documented
