@@ -73,6 +73,9 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
             AttributeType.HEATING_MODE
         )
         self._temperature = self._node.get_attribute_by_type(AttributeType.TEMPERATURE)
+        self._valve_position = self._node.get_attribute_by_type(
+            AttributeType.CURRENT_VALVE_POSITION
+        )
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -93,11 +96,7 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
         ):
             return HVACAction.OFF
 
-        if (
-            attribute := self._node.get_attribute_by_type(
-                AttributeType.CURRENT_VALVE_POSITION
-            )
-        ) is not None and attribute.current_value == 0:
+        if self._valve_position is not None and self._valve_position.current_value == 0:
             return HVACAction.IDLE
 
         if (
@@ -190,14 +189,13 @@ def get_climate_features(
     hvac_modes = [HVACMode.HEAT]
     preset_modes: list[str] = []
 
-    if node.get_attribute_by_type(AttributeType.HEATING_MODE) is not None:
-        features |= ClimateEntityFeature.TURN_ON
-        features |= ClimateEntityFeature.TURN_OFF
+    if (
+        attribute := node.get_attribute_by_type(AttributeType.HEATING_MODE)
+    ) is not None:
+        features |= ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
         hvac_modes.append(HVACMode.OFF)
 
-        if (
-            attribute := node.get_attribute_by_type(AttributeType.HEATING_MODE)
-        ) is not None and attribute.maximum > 1:
+        if attribute.maximum > 1:
             # Node supports more modes than off and heating.
             features |= ClimateEntityFeature.PRESET_MODE
             preset_modes.extend([PRESET_ECO, PRESET_BOOST, PRESET_MANUAL])
