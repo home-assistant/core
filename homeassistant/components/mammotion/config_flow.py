@@ -20,7 +20,6 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD
 from homeassistant.core import callback
@@ -367,8 +366,14 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class MammotionConfigFlowHandler(OptionsFlowWithConfigEntry):
+class MammotionConfigFlowHandler(OptionsFlow):
     """Handles options flow for the component."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.stay_connected_bluetooth = config_entry.options.get(
+            CONF_STAY_CONNECTED_BLUETOOTH, False
+        )
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -381,9 +386,7 @@ class MammotionConfigFlowHandler(OptionsFlowWithConfigEntry):
             {
                 vol.Optional(
                     CONF_STAY_CONNECTED_BLUETOOTH,
-                    default=self.config_entry.options.get(
-                        CONF_STAY_CONNECTED_BLUETOOTH, False
-                    ),
+                    default=self.stay_connected_bluetooth,
                 ): cv.boolean
             }
         )

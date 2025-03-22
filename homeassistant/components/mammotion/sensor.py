@@ -14,7 +14,6 @@ from pymammotion.utility.constant.device_constant import (
 from pymammotion.utility.device_type import DeviceType
 
 from homeassistant.components.sensor import (
-    ENTITY_ID_FORMAT,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -93,10 +92,7 @@ SENSOR_TYPES: tuple[MammotionSensorEntityDescription, ...] = (
         key="connect_type",
         device_class=SensorDeviceClass.ENUM,
         native_unit_of_measurement=None,
-        value_fn=lambda mower_data: device_connection(
-            mower_data.report_data.connect.connect_type,
-            mower_data.report_data.connect.used_net,
-        ),
+        value_fn=lambda mower_data: device_connection(mower_data.report_data.connect),
     ),
     MammotionSensorEntityDescription(
         key="maintenance_distance",
@@ -285,9 +281,6 @@ class MammotionSensorEntity(MammotionBaseEntity, SensorEntity):
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
         self._attr_translation_key = entity_description.key
-        self.entity_id = ENTITY_ID_FORMAT.format(
-            f"{coordinator.device_name}_{entity_description.key}"
-        )
 
     @property
     def native_value(self) -> StateType:

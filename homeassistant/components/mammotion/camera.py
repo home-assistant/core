@@ -12,7 +12,6 @@ from pymammotion.aliyun.model.stream_subscription_response import (
 from pymammotion.utility.device_type import DeviceType
 
 from homeassistant.components.camera import (
-    ENTITY_ID_FORMAT,
     Camera,
     CameraEntityDescription,
     StreamType,
@@ -75,9 +74,6 @@ class MammotionWebRTCCamera(MammotionBaseEntity, Camera):
         self.entity_description = entity_description
         self._attr_translation_key = entity_description.key
         self._stream_data: StreamSubscriptionResponse | None = None
-        self.entity_id = ENTITY_ID_FORMAT.format(
-            f"{coordinator.device_name}_{entity_description.key}"
-        )
 
     @property
     def frontend_stream_type(self) -> StreamType | None:

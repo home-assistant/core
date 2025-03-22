@@ -88,7 +88,7 @@ SWITCH_ENTITIES: tuple[MammotionAsyncSwitchEntityDescription, ...] = (
 UPDATE_SWITCH_ENTITIES: tuple[MammotionUpdateSwitchEntityDescription, ...] = (
     MammotionUpdateSwitchEntityDescription(
         key="schedule_updates",
-        is_on_func=lambda coordinator: coordinator.enabled,
+        is_on_func=lambda coordinator: coordinator.data.enabled,
         set_fn=lambda coordinator, value: coordinator.set_scheduled_updates(value),
     ),
 )

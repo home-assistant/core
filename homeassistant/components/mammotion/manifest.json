@@ -17,8 +17,8 @@
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/mammotion",
-  "loggers": ["pymammotion"],
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["pymammotion==0.4.0a9"]
+  "loggers": ["pymammotion"],
+  "requirements": ["pymammotion==0.4.3"]
 }

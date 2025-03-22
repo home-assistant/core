@@ -3,11 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.device_tracker import (
-    ENTITY_ID_FORMAT,
-    SourceType,
-    TrackerEntity,
-)
+from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -44,7 +40,6 @@ class MammotionTracker(MammotionBaseEntity, TrackerEntity, RestoreEntity):
         super().__init__(coordinator, f"{coordinator.device_name}_gps")
 
         self._attr_name = coordinator.device_name
-        self.entity_id = ENTITY_ID_FORMAT.format(f"{coordinator.device_name}")
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
