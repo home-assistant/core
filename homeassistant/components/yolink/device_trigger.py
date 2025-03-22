@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
-from yolink.const import ATTR_DEVICE_SMART_REMOTER
+from yolink.const import ATTR_DEVICE_SMART_REMOTER, ATTR_DEVICE_SWITCH
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
@@ -21,6 +21,10 @@ from .const import (
     DEV_MODEL_FLEX_FOB_YS3604_UC,
     DEV_MODEL_FLEX_FOB_YS3614_EC,
     DEV_MODEL_FLEX_FOB_YS3614_UC,
+    DEV_MODEL_SWITCH_YS5708_EC,
+    DEV_MODEL_SWITCH_YS5708_UC,
+    DEV_MODEL_SWITCH_YS5709_EC,
+    DEV_MODEL_SWITCH_YS5709_UC,
 )
 
 CONF_BUTTON_1 = "button_1"
@@ -30,7 +34,7 @@ CONF_BUTTON_4 = "button_4"
 CONF_SHORT_PRESS = "short_press"
 CONF_LONG_PRESS = "long_press"
 
-FLEX_FOB_4_BUTTONS = {
+FLEX_BUTTONS_4 = {
     f"{CONF_BUTTON_1}_{CONF_SHORT_PRESS}",
     f"{CONF_BUTTON_1}_{CONF_LONG_PRESS}",
     f"{CONF_BUTTON_2}_{CONF_SHORT_PRESS}",
@@ -41,7 +45,7 @@ FLEX_FOB_4_BUTTONS = {
     f"{CONF_BUTTON_4}_{CONF_LONG_PRESS}",
 }
 
-FLEX_FOB_2_BUTTONS = {
+FLEX_BUTTONS_2 = {
     f"{CONF_BUTTON_1}_{CONF_SHORT_PRESS}",
     f"{CONF_BUTTON_1}_{CONF_LONG_PRESS}",
     f"{CONF_BUTTON_2}_{CONF_SHORT_PRESS}",
@@ -49,16 +53,19 @@ FLEX_FOB_2_BUTTONS = {
 }
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {vol.Required(CONF_TYPE): vol.In(FLEX_FOB_4_BUTTONS)}
+    {vol.Required(CONF_TYPE): vol.In(FLEX_BUTTONS_4)}
 )
 
-
-# YoLink Remotes YS3604/YS3614
-FLEX_FOB_TRIGGER_TYPES: dict[str, set[str]] = {
-    DEV_MODEL_FLEX_FOB_YS3604_EC: FLEX_FOB_4_BUTTONS,
-    DEV_MODEL_FLEX_FOB_YS3604_UC: FLEX_FOB_4_BUTTONS,
-    DEV_MODEL_FLEX_FOB_YS3614_UC: FLEX_FOB_2_BUTTONS,
-    DEV_MODEL_FLEX_FOB_YS3614_EC: FLEX_FOB_2_BUTTONS,
+# YoLink Remotes YS3604/YS3614, Switch YS5708/YS5709
+TRIGGER_MAPPINGS: dict[str, set[str]] = {
+    DEV_MODEL_FLEX_FOB_YS3604_EC: FLEX_BUTTONS_4,
+    DEV_MODEL_FLEX_FOB_YS3604_UC: FLEX_BUTTONS_4,
+    DEV_MODEL_FLEX_FOB_YS3614_UC: FLEX_BUTTONS_2,
+    DEV_MODEL_FLEX_FOB_YS3614_EC: FLEX_BUTTONS_2,
+    DEV_MODEL_SWITCH_YS5708_EC: FLEX_BUTTONS_2,
+    DEV_MODEL_SWITCH_YS5708_UC: FLEX_BUTTONS_2,
+    DEV_MODEL_SWITCH_YS5709_EC: FLEX_BUTTONS_2,
+    DEV_MODEL_SWITCH_YS5709_UC: FLEX_BUTTONS_2,
 }
 
 
@@ -68,9 +75,12 @@ async def async_get_triggers(
     """List device triggers for YoLink devices."""
     device_registry = dr.async_get(hass)
     registry_device = device_registry.async_get(device_id)
-    if not registry_device or registry_device.model != ATTR_DEVICE_SMART_REMOTER:
+    if not registry_device or registry_device.model not in [
+        ATTR_DEVICE_SMART_REMOTER,
+        ATTR_DEVICE_SWITCH,
+    ]:
         return []
-    if registry_device.model_id not in list(FLEX_FOB_TRIGGER_TYPES.keys()):
+    if registry_device.model_id not in list(TRIGGER_MAPPINGS.keys()):
         return []
     return [
         {
@@ -79,7 +89,7 @@ async def async_get_triggers(
             CONF_PLATFORM: "device",
             CONF_TYPE: trigger,
         }
-        for trigger in FLEX_FOB_TRIGGER_TYPES[registry_device.model_id]
+        for trigger in TRIGGER_MAPPINGS[registry_device.model_id]
     ]
 
 

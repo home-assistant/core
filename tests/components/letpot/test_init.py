@@ -2,7 +2,11 @@
 
 from unittest.mock import MagicMock
 
-from letpot.exceptions import LetPotAuthenticationException, LetPotConnectionException
+from letpot.exceptions import (
+    LetPotAuthenticationException,
+    LetPotConnectionException,
+    LetPotException,
+)
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -94,3 +98,34 @@ async def test_get_devices_exceptions(
     assert mock_config_entry.state is config_entry_state
     mock_client.get_devices.assert_called_once()
     mock_device_client.subscribe.assert_not_called()
+
+
+async def test_device_subscribe_authentication_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_device_client: MagicMock,
+) -> None:
+    """Test config entry errors if it is not allowed to subscribe to device updates."""
+    mock_device_client.subscribe.side_effect = LetPotAuthenticationException
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_device_client.subscribe.assert_called_once()
+    mock_device_client.get_current_status.assert_not_called()
+
+
+async def test_device_refresh_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_device_client: MagicMock,
+) -> None:
+    """Test config entry errors with retry if getting a device state update fails."""
+    mock_device_client.get_current_status.side_effect = LetPotException
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_device_client.get_current_status.assert_called_once()

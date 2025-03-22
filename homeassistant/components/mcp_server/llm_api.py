@@ -1,17 +1,16 @@
-"""LLM API for MCP Server."""
+"""LLM API for MCP Server.
 
-from homeassistant.core import HomeAssistant, callback
+This is a modified version of the AssistAPI that does not include the home state
+in the prompt. This API is not registered with the LLM API registry since it is
+only used by the MCP Server. The MCP server will substitute this API when the
+user selects the Assist API.
+"""
+
+from homeassistant.core import callback
 from homeassistant.helpers import llm
 from homeassistant.util import yaml as yaml_util
 
-from .const import LLM_API, LLM_API_NAME
-
 EXPOSED_ENTITY_FIELDS = {"name", "domain", "description", "areas", "names"}
-
-
-def async_register_api(hass: HomeAssistant) -> None:
-    """Register the LLM API."""
-    llm.async_register_api(hass, StatelessAssistAPI(hass))
 
 
 class StatelessAssistAPI(llm.AssistAPI):
@@ -21,12 +20,6 @@ class StatelessAssistAPI(llm.AssistAPI):
     the system so we are instead providing the prompt without entity state. Since
     actions don't care about the current state, there is little quality loss.
     """
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the StatelessAssistAPI."""
-        super().__init__(hass)
-        self.id = LLM_API
-        self.name = LLM_API_NAME
 
     @callback
     def _async_get_exposed_entities_prompt(

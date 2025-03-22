@@ -8,6 +8,8 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .common import mock_dsm_information
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -31,6 +33,7 @@ def fixture_dsm():
         dsm.login = AsyncMock(return_value=True)
         dsm.update = AsyncMock(return_value=True)
 
+        dsm.information = mock_dsm_information()
         dsm.network.update = AsyncMock(return_value=True)
         dsm.surveillance_station.update = AsyncMock(return_value=True)
         dsm.upgrade.update = AsyncMock(return_value=True)

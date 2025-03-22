@@ -15,7 +15,7 @@ from typing import Any, Literal, cast
 from unittest.mock import MagicMock, patch, sentinel
 
 from freezegun import freeze_time
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event as sqlalchemy_event
 from sqlalchemy.orm.session import Session
 
 from homeassistant import core as ha
@@ -37,6 +37,7 @@ from homeassistant.components.recorder.db_schema import (
 from homeassistant.components.recorder.tasks import RecorderTask, StatisticsTask
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import Event, HomeAssistant, State
+from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.util import dt as dt_util
 
 from . import db_schema_0
@@ -77,6 +78,11 @@ async def async_block_recorder(hass: HomeAssistant, seconds: float) -> None:
     event = asyncio.Event()
     get_instance(hass).queue_task(BlockRecorderTask(event, seconds))
     await event.wait()
+
+
+async def async_wait_recorder(hass: HomeAssistant) -> bool:
+    """Wait for recorder to initialize and return connection status."""
+    return await hass.data[recorder_helper.DATA_RECORDER].db_connected
 
 
 def get_start_time(start: datetime) -> datetime:
@@ -408,7 +414,15 @@ def create_engine_test_for_schema_version_postfix(
     schema_module = get_schema_module_path(schema_version_postfix)
     importlib.import_module(schema_module)
     old_db_schema = sys.modules[schema_module]
+    instance: Recorder | None = None
+    if "hass" in kwargs:
+        hass: HomeAssistant = kwargs.pop("hass")
+        instance = recorder.get_instance(hass)
     engine = create_engine(*args, **kwargs)
+    if instance is not None:
+        instance = recorder.get_instance(hass)
+        instance.engine = engine
+        sqlalchemy_event.listen(engine, "connect", instance._setup_recorder_connection)
     old_db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
         session.add(
@@ -429,7 +443,7 @@ def get_schema_module_path(schema_version_postfix: str) -> str:
 
 
 @contextmanager
-def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
+def old_db_schema(hass: HomeAssistant, schema_version_postfix: str) -> Iterator[None]:
     """Fixture to initialize the db with the old schema."""
     schema_module = get_schema_module_path(schema_version_postfix)
     importlib.import_module(schema_module)
@@ -449,6 +463,7 @@ def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
             CREATE_ENGINE_TARGET,
             new=partial(
                 create_engine_test_for_schema_version_postfix,
+                hass=hass,
                 schema_version_postfix=schema_version_postfix,
             ),
         ),

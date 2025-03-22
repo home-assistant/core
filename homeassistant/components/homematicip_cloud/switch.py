@@ -25,7 +25,7 @@ from homematicip.aio.group import AsyncExtendedLinkedSwitchingGroup, AsyncSwitch
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import ATTR_GROUP_MEMBER_UNREACHABLE, HomematicipGenericEntity
@@ -35,7 +35,7 @@ from .hap import HomematicipHAP
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP switch from a config entry."""
     hap = hass.data[DOMAIN][config_entry.unique_id]

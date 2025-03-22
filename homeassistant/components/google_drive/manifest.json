@@ -10,5 +10,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["google_drive_api"],
   "quality_scale": "platinum",
-  "requirements": ["python-google-drive-api==0.0.2"]
+  "requirements": ["python-google-drive-api==0.1.0"]
 }

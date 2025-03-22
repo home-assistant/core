@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BryantEvolutionConfigEntry, names
 from .const import CONF_SYSTEM_ZONE, DOMAIN
@@ -31,7 +31,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BryantEvolutionConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
 

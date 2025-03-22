@@ -23,7 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_when_setup
@@ -256,7 +256,7 @@ async def async_get_engine(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Home Assistant Cloud text-to-speech platform."""
     tts_platform_loaded = hass.data[DATA_PLATFORMS_SETUP][Platform.TTS]
@@ -286,7 +286,7 @@ class CloudTTSEntity(TextToSpeechEntity):
         return self._language
 
     @property
-    def default_options(self) -> dict[str, Any]:
+    def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {
             ATTR_AUDIO_OUTPUT: AudioOutput.MP3,
@@ -363,7 +363,7 @@ class CloudTTSEntity(TextToSpeechEntity):
             _LOGGER.error("Voice error: %s", err)
             return (None, None)
 
-        return (str(options[ATTR_AUDIO_OUTPUT].value), data)
+        return (options[ATTR_AUDIO_OUTPUT], data)
 
 
 class CloudProvider(Provider):
@@ -404,7 +404,7 @@ class CloudProvider(Provider):
         return [Voice(voice, voice) for voice in voices]
 
     @property
-    def default_options(self) -> dict[str, Any]:
+    def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {
             ATTR_AUDIO_OUTPUT: AudioOutput.MP3,
@@ -444,7 +444,7 @@ class CloudProvider(Provider):
             _LOGGER.error("Voice error: %s", err)
             return (None, None)
 
-        return (str(options[ATTR_AUDIO_OUTPUT].value), data)
+        return options[ATTR_AUDIO_OUTPUT], data
 
 
 @callback

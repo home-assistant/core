@@ -30,7 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -46,7 +46,23 @@ NUT_DEV_INFO_TO_DEV_INFO: dict[str, str] = {
     "serial": ATTR_SERIAL_NUMBER,
 }
 
+AMBIENT_PRESENT = "ambient.present"
+AMBIENT_SENSORS = {
+    "ambient.humidity",
+    "ambient.humidity.status",
+    "ambient.temperature",
+    "ambient.temperature.status",
+}
+AMBIENT_THRESHOLD_STATUS_OPTIONS = [
+    "good",
+    "warning-low",
+    "critical-low",
+    "warning-high",
+    "critical-high",
+]
+
 _LOGGER = logging.getLogger(__name__)
+
 
 SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     "ups.status.display": SensorEntityDescription(
@@ -454,6 +470,12 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
+    "input.voltage.status": SensorEntityDescription(
+        key="input.voltage.status",
+        translation_key="input_voltage_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
     "input.L1-N.voltage": SensorEntityDescription(
         key="input.L1-N.voltage",
         translation_key="input_l1_n_voltage",
@@ -662,6 +684,12 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
+    "input.current.status": SensorEntityDescription(
+        key="input.current.status",
+        translation_key="input_current_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
     "input.L1.current": SensorEntityDescription(
         key="input.L1.current",
         translation_key="input_l1_current",
@@ -689,9 +717,23 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
+    "input.load": SensorEntityDescription(
+        key="input.load",
+        translation_key="input_load",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     "input.phases": SensorEntityDescription(
         key="input.phases",
         translation_key="input_phases",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    "input.power": SensorEntityDescription(
+        key="input.power",
+        translation_key="input_power",
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -730,6 +772,13 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+    ),
+    "outlet.voltage": SensorEntityDescription(
+        key="outlet.voltage",
+        translation_key="outlet_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "output.power.nominal": SensorEntityDescription(
         key="output.power.nominal",
@@ -930,12 +979,26 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "ambient.humidity.status": SensorEntityDescription(
+        key="ambient.humidity.status",
+        translation_key="ambient_humidity_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=AMBIENT_THRESHOLD_STATUS_OPTIONS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     "ambient.temperature": SensorEntityDescription(
         key="ambient.temperature",
         translation_key="ambient_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "ambient.temperature.status": SensorEntityDescription(
+        key="ambient.temperature.status",
+        translation_key="ambient_temperature_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=AMBIENT_THRESHOLD_STATUS_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "watts": SensorEntityDescription(
@@ -963,9 +1026,10 @@ def _get_nut_device_info(data: PyNUTData) -> DeviceInfo:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: NutConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the NUT sensors."""
+    valid_sensor_types: dict[str, SensorEntityDescription]
 
     pynut_data = config_entry.runtime_data
     coordinator = pynut_data.coordinator
@@ -973,16 +1037,75 @@ async def async_setup_entry(
     unique_id = pynut_data.unique_id
     status = coordinator.data
 
-    resources = [sensor_id for sensor_id in SENSOR_TYPES if sensor_id in status]
+    # Dynamically add outlet sensors to valid sensors dictionary
+    if (num_outlets := status.get("outlet.count")) is not None:
+        additional_sensor_types: dict[str, SensorEntityDescription] = {}
+        for outlet_num in range(1, int(num_outlets) + 1):
+            outlet_num_str: str = str(outlet_num)
+            outlet_name: str = (
+                status.get(f"outlet.{outlet_num_str}.name") or outlet_num_str
+            )
+            additional_sensor_types |= {
+                f"outlet.{outlet_num_str}.current": SensorEntityDescription(
+                    key=f"outlet.{outlet_num_str}.current",
+                    translation_key="outlet_number_current",
+                    translation_placeholders={"outlet_name": outlet_name},
+                    native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+                    device_class=SensorDeviceClass.CURRENT,
+                    state_class=SensorStateClass.MEASUREMENT,
+                ),
+                f"outlet.{outlet_num_str}.current_status": SensorEntityDescription(
+                    key=f"outlet.{outlet_num_str}.current_status",
+                    translation_key="outlet_number_current_status",
+                    translation_placeholders={"outlet_name": outlet_name},
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    entity_registry_enabled_default=False,
+                ),
+                f"outlet.{outlet_num_str}.desc": SensorEntityDescription(
+                    key=f"outlet.{outlet_num_str}.desc",
+                    translation_key="outlet_number_desc",
+                    translation_placeholders={"outlet_name": outlet_name},
+                ),
+                f"outlet.{outlet_num_str}.power": SensorEntityDescription(
+                    key=f"outlet.{outlet_num_str}.power",
+                    translation_key="outlet_number_power",
+                    translation_placeholders={"outlet_name": outlet_name},
+                    native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+                    device_class=SensorDeviceClass.APPARENT_POWER,
+                    state_class=SensorStateClass.MEASUREMENT,
+                ),
+                f"outlet.{outlet_num_str}.realpower": SensorEntityDescription(
+                    key=f"outlet.{outlet_num_str}.realpower",
+                    translation_key="outlet_number_realpower",
+                    translation_placeholders={"outlet_name": outlet_name},
+                    native_unit_of_measurement=UnitOfPower.WATT,
+                    device_class=SensorDeviceClass.POWER,
+                    state_class=SensorStateClass.MEASUREMENT,
+                ),
+            }
+
+        valid_sensor_types = {**SENSOR_TYPES, **additional_sensor_types}
+    else:
+        valid_sensor_types = SENSOR_TYPES
+
+    # If device reports ambient sensors are not present, then remove
+    has_ambient_sensors: bool = status.get(AMBIENT_PRESENT) != "no"
+    resources = [
+        sensor_id
+        for sensor_id in valid_sensor_types
+        if sensor_id in status
+        and (has_ambient_sensors or sensor_id not in AMBIENT_SENSORS)
+    ]
+
     # Display status is a special case that falls back to the status value
     # of the UPS instead.
-    if KEY_STATUS in resources:
+    if KEY_STATUS in status:
         resources.append(KEY_STATUS_DISPLAY)
 
     async_add_entities(
         NUTSensor(
             coordinator,
-            SENSOR_TYPES[sensor_type],
+            valid_sensor_types[sensor_type],
             data,
             unique_id,
         )
