@@ -614,6 +614,54 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.dryer_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Dryer Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dryer_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -702,6 +750,54 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.seca_roupa_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.seca_roupa_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Seca-Roupa Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.seca_roupa_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -802,6 +898,54 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.washer_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Washer Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.washer_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -894,6 +1038,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.washing_machine_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Washing Machine Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.washing_machine_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_remote_control-entry]
