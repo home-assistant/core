@@ -58,6 +58,7 @@ from .const import ALL_DOMAIN_EXCLUDE_ATTRS, SupportedDialect
 from .models import (
     StatisticData,
     StatisticDataTimestamp,
+    StatisticMeanType,
     StatisticMetaData,
     bytes_to_ulid_or_none,
     bytes_to_uuid_hex_or_none,
@@ -77,7 +78,7 @@ class LegacyBase(DeclarativeBase):
     """Base class for tables, used for schema migration."""
 
 
-SCHEMA_VERSION = 48
+SCHEMA_VERSION = 49
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -848,11 +849,17 @@ class _StatisticsMeta:
     has_mean: Mapped[bool | None] = mapped_column(Boolean)
     has_sum: Mapped[bool | None] = mapped_column(Boolean)
     name: Mapped[str | None] = mapped_column(String(255))
+    mean_type: Mapped[StatisticMeanType | None] = mapped_column(
+        SmallInteger
+    )  # See StatisticMeanType
 
     @staticmethod
     def from_meta(meta: StatisticMetaData) -> StatisticsMeta:
         """Create object from meta data."""
-        return StatisticsMeta(**meta)
+        # has_mean is not used anymore
+        meta_dict = dict(meta.copy())
+        meta_dict["has_mean"] = None
+        return StatisticsMeta(**meta_dict)
 
 
 class StatisticsMeta(Base, _StatisticsMeta):

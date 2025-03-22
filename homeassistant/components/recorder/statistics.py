@@ -9,14 +9,27 @@ from datetime import datetime, timedelta
 from functools import lru_cache, partial
 from itertools import chain, groupby
 import logging
+import math
 from operator import itemgetter
 import re
 from time import time as time_time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
-from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
+from sqlalchemy import (
+    Engine,
+    Function,
+    Select,
+    and_,
+    bindparam,
+    case,
+    func,
+    lambda_stmt,
+    select,
+    text,
+)
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
@@ -29,6 +42,7 @@ from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.collection import chunked_or_all
+from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.unit_conversion import (
     AreaConverter,
     BaseUnitConverter,
@@ -74,6 +88,7 @@ from .db_schema import (
 from .models import (
     StatisticData,
     StatisticDataTimestamp,
+    StatisticMeanType,
     StatisticMetaData,
     StatisticResult,
     datetime_to_timestamp_or_none,
@@ -113,9 +128,27 @@ QUERY_STATISTICS_SHORT_TERM = (
     StatisticsShortTerm.sum,
 )
 
+
+def query_circular_mean(
+    column: str | InstrumentedAttribute, engine: Engine
+) -> Function[Any]:
+    """Return the sqlalchemy function for circular mean."""
+    # https://en.wikipedia.org/wiki/Circular_mean
+    radians = func.radians(column)
+    mean_fn = func.degrees(
+        func.atan2(func.sum(func.sin(radians)), func.sum(func.cos(radians)))
+    )
+
+    if engine.dialect.name == SupportedDialect.POSTGRESQL:
+        # Postgres doesn't support modulo on double precision
+        return mean_fn
+
+    # Modulo 360 to normalize the result [0, 360]
+    return func.mod(mean_fn, 360)
+
+
 QUERY_STATISTICS_SUMMARY_MEAN = (
     StatisticsShortTerm.metadata_id,
-    func.avg(StatisticsShortTerm.mean),
     func.min(StatisticsShortTerm.min),
     func.max(StatisticsShortTerm.max),
 )
@@ -178,6 +211,17 @@ def mean(values: list[float]) -> float | None:
     an order of magnitude slower.
     """
     return sum(values) / len(values)
+
+
+DEG_TO_RAD = math.pi / 180
+RAD_TO_DEG = 180 / math.pi
+
+
+def circular_mean(values: list[float]) -> float:
+    """Return the circular mean of the values."""
+    sin_sum = sum(math.sin(x * DEG_TO_RAD) for x in values)
+    cos_sum = sum(math.cos(x * DEG_TO_RAD) for x in values)
+    return (RAD_TO_DEG * math.atan2(sin_sum, cos_sum)) % 360
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -369,13 +413,32 @@ def get_start_time() -> datetime:
 
 
 def _compile_hourly_statistics_summary_mean_stmt(
-    start_time_ts: float, end_time_ts: float
+    start_time_ts: float, end_time_ts: float, engine: Engine
 ) -> StatementLambdaElement:
     """Generate the summary mean statement for hourly statistics."""
+    columns = (
+        *QUERY_STATISTICS_SUMMARY_MEAN,
+        case(
+            (
+                StatisticsMeta.mean_type == StatisticMeanType.ARIMETHIC,
+                func.avg(StatisticsShortTerm.mean),
+            ),
+            (
+                StatisticsMeta.mean_type == StatisticMeanType.CIRCULAR,
+                query_circular_mean(StatisticsShortTerm.mean, engine),
+            ),
+            else_=None,
+        ),
+        StatisticsMeta.mean_type,
+    )
+
     return lambda_stmt(
-        lambda: select(*QUERY_STATISTICS_SUMMARY_MEAN)
+        lambda: select(*columns)
         .filter(StatisticsShortTerm.start_ts >= start_time_ts)
         .filter(StatisticsShortTerm.start_ts < end_time_ts)
+        .join(
+            StatisticsMeta, and_(StatisticsShortTerm.metadata_id == StatisticsMeta.id)
+        )
         .group_by(StatisticsShortTerm.metadata_id)
         .order_by(StatisticsShortTerm.metadata_id)
     )
@@ -399,7 +462,9 @@ def _compile_hourly_statistics_last_sum_stmt(
     )
 
 
-def _compile_hourly_statistics(session: Session, start: datetime) -> None:
+def _compile_hourly_statistics(
+    session: Session, start: datetime, engine: Engine
+) -> None:
     """Compile hourly statistics.
 
     This will summarize 5-minute statistics for one hour:
@@ -413,12 +478,22 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
 
     # Compute last hour's average, min, max
     summary: dict[int, StatisticDataTimestamp] = {}
-    stmt = _compile_hourly_statistics_summary_mean_stmt(start_time_ts, end_time_ts)
+    stmt = _compile_hourly_statistics_summary_mean_stmt(
+        start_time_ts, end_time_ts, engine
+    )
     stats = execute_stmt_lambda_element(session, stmt)
 
     if stats:
         for stat in stats:
-            metadata_id, _mean, _min, _max = stat
+            metadata_id, _min, _max, _mean, _mean_type = stat
+            if (
+                engine.dialect.name == SupportedDialect.POSTGRESQL
+                and try_parse_enum(StatisticMeanType, _mean_type)
+                is StatisticMeanType.CIRCULAR
+            ):
+                # Postgres doesn't support modulo on double precision
+                # so we have to do it in Python
+                _mean = _mean % 360
             summary[metadata_id] = {
                 "start_ts": start_time_ts,
                 "mean": _mean,
@@ -612,7 +687,8 @@ def _compile_statistics(
 
     if start.minute == 55:
         # A full hour is ready, summarize it
-        _compile_hourly_statistics(session, start)
+        assert instance.engine is not None
+        _compile_hourly_statistics(session, start, instance.engine)
 
     session.add(StatisticsRuns(start=start))
 
@@ -827,7 +903,7 @@ def _statistic_by_id_from_metadata(
             "display_unit_of_measurement": get_display_unit(
                 hass, meta["statistic_id"], meta["unit_of_measurement"]
             ),
-            "has_mean": meta["has_mean"],
+            "mean_type": meta["mean_type"],
             "has_sum": meta["has_sum"],
             "name": meta["name"],
             "source": meta["source"],
@@ -846,7 +922,9 @@ def _flatten_list_statistic_ids_metadata_result(
         {
             "statistic_id": _id,
             "display_unit_of_measurement": info["display_unit_of_measurement"],
-            "has_mean": info["has_mean"],
+            "has_mean": info["mean_type"]
+            == StatisticMeanType.ARIMETHIC,  # Can be removed with 2026.4
+            "mean_type": info["mean_type"],
             "has_sum": info["has_sum"],
             "name": info.get("name"),
             "source": info["source"],
@@ -901,7 +979,7 @@ def list_statistic_ids(
                     continue
                 result[key] = {
                     "display_unit_of_measurement": meta["unit_of_measurement"],
-                    "has_mean": meta["has_mean"],
+                    "mean_type": meta["mean_type"],
                     "has_sum": meta["has_sum"],
                     "name": meta["name"],
                     "source": meta["source"],
@@ -919,6 +997,7 @@ def _reduce_statistics(
     period_start_end: Callable[[float], tuple[float, float]],
     period: timedelta,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to daily or monthly statistics."""
     result: dict[str, list[StatisticsRow]] = defaultdict(list)
@@ -946,7 +1025,14 @@ def _reduce_statistics(
                     "end": end,
                 }
                 if _want_mean:
-                    row["mean"] = mean(mean_values) if mean_values else None
+                    if mean_values:
+                        match metadata[statistic_id][1]["mean_type"]:
+                            case StatisticMeanType.ARIMETHIC:
+                                row["mean"] = mean(mean_values)
+                            case StatisticMeanType.CIRCULAR:
+                                row["mean"] = circular_mean(mean_values)
+                    else:
+                        row["mean"] = None
                     mean_values.clear()
                 if _want_min:
                     row["min"] = min(min_values) if min_values else None
@@ -963,8 +1049,9 @@ def _reduce_statistics(
                 result[statistic_id].append(row)
             if _want_max and (_max := statistic.get("max")) is not None:
                 max_values.append(_max)
-            if _want_mean and (_mean := statistic.get("mean")) is not None:
-                mean_values.append(_mean)
+            if _want_mean:
+                if (_mean := statistic.get("mean")) is not None:
+                    mean_values.append(_mean)
             if _want_min and (_min := statistic.get("min")) is not None:
                 min_values.append(_min)
             prev_stat = statistic
@@ -1011,11 +1098,12 @@ def reduce_day_ts_factory() -> tuple[
 def _reduce_statistics_per_day(
     stats: dict[str, list[StatisticsRow]],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to daily statistics."""
     _same_day_ts, _day_start_end_ts = reduce_day_ts_factory()
     return _reduce_statistics(
-        stats, _same_day_ts, _day_start_end_ts, timedelta(days=1), types
+        stats, _same_day_ts, _day_start_end_ts, timedelta(days=1), types, metadata
     )
 
 
@@ -1059,11 +1147,12 @@ def reduce_week_ts_factory() -> tuple[
 def _reduce_statistics_per_week(
     stats: dict[str, list[StatisticsRow]],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to weekly statistics."""
     _same_week_ts, _week_start_end_ts = reduce_week_ts_factory()
     return _reduce_statistics(
-        stats, _same_week_ts, _week_start_end_ts, timedelta(days=7), types
+        stats, _same_week_ts, _week_start_end_ts, timedelta(days=7), types, metadata
     )
 
 
@@ -1112,11 +1201,12 @@ def reduce_month_ts_factory() -> tuple[
 def _reduce_statistics_per_month(
     stats: dict[str, list[StatisticsRow]],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to monthly statistics."""
     _same_month_ts, _month_start_end_ts = reduce_month_ts_factory()
     return _reduce_statistics(
-        stats, _same_month_ts, _month_start_end_ts, timedelta(days=31), types
+        stats, _same_month_ts, _month_start_end_ts, timedelta(days=31), types, metadata
     )
 
 
@@ -1167,20 +1257,29 @@ def _get_max_mean_min_statistic_in_sub_period(
     end_time: datetime | None,
     table: type[StatisticsBase],
     types: set[Literal["max", "mean", "min", "change"]],
-    metadata_id: int,
+    metadata: tuple[int, StatisticMetaData],
+    engine: Engine,
 ) -> None:
     """Return max, mean and min during the period."""
     # Calculate max, mean, min
+    mean_type = metadata[1]["mean_type"]
     columns = select()
     if "max" in types:
         columns = columns.add_columns(func.max(table.max))
     if "mean" in types:
-        columns = columns.add_columns(func.avg(table.mean))
-        columns = columns.add_columns(func.count(table.mean))
+        match mean_type:
+            case StatisticMeanType.ARIMETHIC:
+                columns = columns.add_columns(func.avg(table.mean))
+                columns = columns.add_columns(func.count(table.mean))
+            case StatisticMeanType.CIRCULAR:
+                columns = columns.add_columns(
+                    query_circular_mean(table.mean, engine).label("mean")
+                )
     if "min" in types:
         columns = columns.add_columns(func.min(table.min))
+
     stmt = _generate_max_mean_min_statistic_in_sub_period_stmt(
-        columns, start_time, end_time, table, metadata_id
+        columns, start_time, end_time, table, metadata[0]
     )
     stats = cast(Sequence[Row[Any]], execute_stmt_lambda_element(session, stmt))
     if not stats:
@@ -1188,11 +1287,24 @@ def _get_max_mean_min_statistic_in_sub_period(
     if "max" in types and (new_max := stats[0].max) is not None:
         old_max = result.get("max")
         result["max"] = max(new_max, old_max) if old_max is not None else new_max
-    if "mean" in types and stats[0].avg is not None:
-        # https://github.com/sqlalchemy/sqlalchemy/issues/9127
-        duration = stats[0].count * table.duration.total_seconds()  # type: ignore[operator]
-        result["duration"] = result.get("duration", 0.0) + duration
-        result["mean_acc"] = result.get("mean_acc", 0.0) + stats[0].avg * duration
+    if "mean" in types:
+        match mean_type:
+            case StatisticMeanType.ARIMETHIC:
+                if stats[0].avg is not None:
+                    # https://github.com/sqlalchemy/sqlalchemy/issues/9127
+                    duration = stats[0].count * table.duration.total_seconds()  # type: ignore[operator]
+                    result["duration"] = result.get("duration", 0.0) + duration
+                    result["mean"] = result.get("mean", 0.0) + stats[0].avg * duration
+            case StatisticMeanType.CIRCULAR:
+                if (new_circular_mean := stats[0].mean) is not None:
+                    if engine.dialect.name == SupportedDialect.POSTGRESQL:
+                        # Postgres doesn't support modulo on double precision
+                        # so we have to do it in Python
+                        new_circular_mean = new_circular_mean % 360
+                    values = [new_circular_mean]
+                    if (old_circular_mean := result.get("mean")) is not None:
+                        values.append(old_circular_mean)
+                    result["mean"] = circular_mean(values)
     if "min" in types and (new_min := stats[0].min) is not None:
         old_min = result.get("min")
         result["min"] = min(new_min, old_min) if old_min is not None else new_min
@@ -1207,8 +1319,9 @@ def _get_max_mean_min_statistic(
     tail_start_time: datetime | None,
     tail_end_time: datetime | None,
     tail_only: bool,
-    metadata_id: int,
+    metadata: tuple[int, StatisticMetaData],
     types: set[Literal["max", "mean", "min", "change"]],
+    engine: Engine,
 ) -> dict[str, float | None]:
     """Return max, mean and min during the period.
 
@@ -1227,7 +1340,8 @@ def _get_max_mean_min_statistic(
             tail_end_time,
             StatisticsShortTerm,
             types,
-            metadata_id,
+            metadata,
+            engine,
         )
 
     if not tail_only:
@@ -1238,7 +1352,8 @@ def _get_max_mean_min_statistic(
             main_end_time,
             Statistics,
             types,
-            metadata_id,
+            metadata,
+            engine,
         )
 
     if head_start_time is not None:
@@ -1249,16 +1364,20 @@ def _get_max_mean_min_statistic(
             head_end_time,
             StatisticsShortTerm,
             types,
-            metadata_id,
+            metadata,
+            engine,
         )
 
     if "max" in types:
         result["max"] = max_mean_min.get("max")
     if "mean" in types:
-        if "mean_acc" not in max_mean_min:
-            result["mean"] = None
-        else:
-            result["mean"] = max_mean_min["mean_acc"] / max_mean_min["duration"]
+        mean_value = max_mean_min.get("mean")
+        if (
+            metadata[1]["mean_type"] == StatisticMeanType.ARIMETHIC
+            and mean_value is not None
+        ):
+            mean_value = mean_value / max_mean_min["duration"]
+        result["mean"] = mean_value
     if "min" in types:
         result["min"] = max_mean_min.get("min")
     return result
@@ -1471,10 +1590,9 @@ def statistic_during_period(
 
     with session_scope(hass=hass, read_only=True) as session:
         # Fetch metadata for the given statistic_id
+        instance = get_instance(hass)
         if not (
-            metadata := get_instance(hass).statistics_meta_manager.get(
-                session, statistic_id
-            )
+            metadata := instance.statistics_meta_manager.get(session, statistic_id)
         ):
             return result
 
@@ -1550,6 +1668,7 @@ def statistic_during_period(
             main_end_time = end_time if tail_start_time is None else tail_start_time
 
         if not types.isdisjoint({"max", "mean", "min"}):
+            assert instance.engine is not None
             result = _get_max_mean_min_statistic(
                 session,
                 head_start_time,
@@ -1559,8 +1678,9 @@ def statistic_during_period(
                 tail_start_time,
                 tail_end_time,
                 tail_only,
-                metadata_id,
+                metadata,
                 types,
+                instance.engine,
             )
 
         if "change" in types:
@@ -1642,7 +1762,7 @@ def _extract_metadata_and_discard_impossible_columns(
     has_sum = False
     for metadata_id, stats_metadata in metadata.values():
         metadata_ids.append(metadata_id)
-        has_mean |= stats_metadata["has_mean"]
+        has_mean |= stats_metadata["mean_type"] is not None
         has_sum |= stats_metadata["has_sum"]
     if not has_mean:
         types.discard("mean")
@@ -1798,13 +1918,13 @@ def _statistics_during_period_with_session(
     )
 
     if period == "day":
-        result = _reduce_statistics_per_day(result, types)
+        result = _reduce_statistics_per_day(result, types, metadata)
 
     if period == "week":
-        result = _reduce_statistics_per_week(result, types)
+        result = _reduce_statistics_per_week(result, types, metadata)
 
     if period == "month":
-        result = _reduce_statistics_per_month(result, types)
+        result = _reduce_statistics_per_month(result, types, metadata)
 
     if "change" in _types:
         _augment_result_with_change(

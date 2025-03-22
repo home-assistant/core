@@ -270,7 +270,7 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
             ]
 
             metadata: StatisticMetaData = {
-                "has_mean": False,
+                "mean_type": None,
                 "has_sum": True,
                 "name": f"{self.device_entry.name} {self.name}",
                 "source": DOMAIN,

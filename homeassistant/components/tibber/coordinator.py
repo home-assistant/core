@@ -159,7 +159,7 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                     )
 
                 metadata = StatisticMetaData(
-                    has_mean=False,
+                    mean_type=None,
                     has_sum=True,
                     name=f"{home.name} {sensor_type}",
                     source=TIBBER_DOMAIN,

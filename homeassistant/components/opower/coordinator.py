@@ -201,7 +201,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 f"{account.meter_type.name.lower()} {account.utility_account_id}"
             )
             cost_metadata = StatisticMetaData(
-                has_mean=False,
+                mean_type=None,
                 has_sum=True,
                 name=f"{name_prefix} cost",
                 source=DOMAIN,
@@ -209,7 +209,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 unit_of_measurement=None,
             )
             consumption_metadata = StatisticMetaData(
-                has_mean=False,
+                mean_type=None,
                 has_sum=True,
                 name=f"{name_prefix} consumption",
                 source=DOMAIN,

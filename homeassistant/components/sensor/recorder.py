@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 from contextlib import suppress
+from dataclasses import dataclass
 import datetime
 import itertools
 import logging
@@ -21,6 +22,7 @@ from homeassistant.components.recorder import (
 )
 from homeassistant.components.recorder.models import (
     StatisticData,
+    StatisticMeanType,
     StatisticMetaData,
     StatisticResult,
 )
@@ -52,10 +54,22 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
+@dataclass
+class _StatisticsConfig:
+    types: set[str]
+    mean_type: StatisticMeanType | None = None
+
+
 DEFAULT_STATISTICS = {
-    SensorStateClass.MEASUREMENT: {"mean", "min", "max"},
-    SensorStateClass.TOTAL: {"sum"},
-    SensorStateClass.TOTAL_INCREASING: {"sum"},
+    SensorStateClass.MEASUREMENT: _StatisticsConfig(
+        {"mean", "min", "max"}, StatisticMeanType.ARIMETHIC
+    ),
+    SensorStateClass.MEASUREMENT_ANGLE: _StatisticsConfig(
+        {"mean"}, StatisticMeanType.CIRCULAR
+    ),
+    SensorStateClass.TOTAL: _StatisticsConfig({"sum"}),
+    SensorStateClass.TOTAL_INCREASING: _StatisticsConfig({"sum"}),
 }
 
 EQUIVALENT_UNITS = {
@@ -135,6 +149,53 @@ def _time_weighted_average(
         accumulated += old_fstate * duration.total_seconds()
 
     return accumulated / (end - start).total_seconds()
+
+
+def _time_weighted_circular_mean(
+    fstates: list[tuple[float, State]], start: datetime.datetime, end: datetime.datetime
+) -> float:
+    """Calculate a time weighted circular mean.
+
+    The circular mean is calculated by weighting the states by duration in seconds between
+    state changes.
+    Note: there's no interpolation of values between state changes.
+    """
+    old_fstate: float | None = None
+    old_start_time: datetime.datetime | None = None
+    values: list[tuple[float, float]] = []
+
+    for fstate, state in fstates:
+        # The recorder will give us the last known state, which may be well
+        # before the requested start time for the statistics
+        start_time = max(state.last_updated, start)
+        if old_start_time is None:
+            # Adjust start time, if there was no last known state
+            start = start_time
+        else:
+            duration = (start_time - old_start_time).total_seconds()
+            if duration != 0:
+                # No need to add if duration is 0 as it won't affect the result
+                # Append same value for each second between state changes
+                assert old_fstate is not None
+                values.append((old_fstate, duration))
+
+        old_fstate = fstate
+        old_start_time = start_time
+
+    if old_fstate is not None:
+        # Accumulate the value, weighted by duration until end of the period
+        assert old_start_time is not None
+        duration = (end - old_start_time).total_seconds()
+        if duration != 0:
+            values.append((old_fstate, duration))
+
+    sin_sum = sum(
+        math.sin(x * statistics.DEG_TO_RAD) * duration for x, duration in values
+    )
+    cos_sum = sum(
+        math.cos(x * statistics.DEG_TO_RAD) * duration for x, duration in values
+    )
+    return (statistics.RAD_TO_DEG * math.atan2(sin_sum, cos_sum)) % 360
 
 
 def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
@@ -362,7 +423,7 @@ def reset_detected(
     return fstate < 0.9 * previous_fstate
 
 
-def _wanted_statistics(sensor_states: list[State]) -> dict[str, set[str]]:
+def _wanted_statistics(sensor_states: list[State]) -> dict[str, _StatisticsConfig]:
     """Prepare a dict with wanted statistics for entities."""
     return {
         state.entity_id: DEFAULT_STATISTICS[state.attributes[ATTR_STATE_CLASS]]
@@ -406,7 +467,9 @@ def compile_statistics(  # noqa: C901
     wanted_statistics = _wanted_statistics(sensor_states)
     # Get history between start and end
     entities_full_history = [
-        i.entity_id for i in sensor_states if "sum" in wanted_statistics[i.entity_id]
+        i.entity_id
+        for i in sensor_states
+        if "sum" in wanted_statistics[i.entity_id].types
     ]
     history_list: dict[str, list[State]] = {}
     if entities_full_history:
@@ -421,7 +484,7 @@ def compile_statistics(  # noqa: C901
     entities_significant_history = [
         i.entity_id
         for i in sensor_states
-        if "sum" not in wanted_statistics[i.entity_id]
+        if "sum" not in wanted_statistics[i.entity_id].types
     ]
     if entities_significant_history:
         _history_list = history.get_full_significant_states_with_session(
@@ -471,7 +534,7 @@ def compile_statistics(  # noqa: C901
             continue
         state_class: str = _state.attributes[ATTR_STATE_CLASS]
         to_process.append((entity_id, statistics_unit, state_class, valid_float_states))
-        if "sum" in wanted_statistics[entity_id]:
+        if "sum" in wanted_statistics[entity_id].types:
             to_query.add(entity_id)
 
     last_stats = statistics.get_latest_short_term_statistics_with_session(
@@ -508,10 +571,14 @@ def compile_statistics(  # noqa: C901
                     )
                 continue
 
+        mean_type = None
+        if "mean" in wanted_statistics[entity_id].types:
+            mean_type = wanted_statistics[entity_id].mean_type
+
         # Set meta data
         meta: StatisticMetaData = {
-            "has_mean": "mean" in wanted_statistics[entity_id],
-            "has_sum": "sum" in wanted_statistics[entity_id],
+            "mean_type": mean_type,
+            "has_sum": "sum" in wanted_statistics[entity_id].types,
             "name": None,
             "source": RECORDER_DOMAIN,
             "statistic_id": entity_id,
@@ -520,19 +587,24 @@ def compile_statistics(  # noqa: C901
 
         # Make calculations
         stat: StatisticData = {"start": start}
-        if "max" in wanted_statistics[entity_id]:
+        if "max" in wanted_statistics[entity_id].types:
             stat["max"] = max(
                 *itertools.islice(zip(*valid_float_states, strict=False), 1)
             )
-        if "min" in wanted_statistics[entity_id]:
+        if "min" in wanted_statistics[entity_id].types:
             stat["min"] = min(
                 *itertools.islice(zip(*valid_float_states, strict=False), 1)
             )
 
-        if "mean" in wanted_statistics[entity_id]:
-            stat["mean"] = _time_weighted_average(valid_float_states, start, end)
+        match mean_type:
+            case StatisticMeanType.ARIMETHIC:
+                stat["mean"] = _time_weighted_average(valid_float_states, start, end)
+            case StatisticMeanType.CIRCULAR:
+                stat["mean"] = _time_weighted_circular_mean(
+                    valid_float_states, start, end
+                )
 
-        if "sum" in wanted_statistics[entity_id]:
+        if "sum" in wanted_statistics[entity_id].types:
             last_reset = old_last_reset = None
             new_state = old_state = None
             _sum = 0.0
@@ -656,18 +728,25 @@ def list_statistic_ids(
         attributes = state.attributes
         state_class = attributes[ATTR_STATE_CLASS]
         provided_statistics = DEFAULT_STATISTICS[state_class]
-        if statistic_type is not None and statistic_type not in provided_statistics:
+        if (
+            statistic_type is not None
+            and statistic_type not in provided_statistics.types
+        ):
             continue
 
         if (
-            (has_sum := "sum" in provided_statistics)
+            (has_sum := "sum" in provided_statistics.types)
             and ATTR_LAST_RESET not in attributes
             and state_class == SensorStateClass.MEASUREMENT
         ):
             continue
 
+        mean_type = None
+        if "mean" in provided_statistics.types:
+            mean_type = provided_statistics.mean_type
+
         result[entity_id] = {
-            "has_mean": "mean" in provided_statistics,
+            "mean_type": mean_type,
             "has_sum": has_sum,
             "name": None,
             "source": RECORDER_DOMAIN,

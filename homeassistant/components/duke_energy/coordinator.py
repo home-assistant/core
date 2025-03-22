@@ -137,7 +137,7 @@ class DukeEnergyCoordinator(DataUpdateCoordinator[None]):
                 f"Duke Energy {meter['serviceType'].capitalize()} {serial_number}"
             )
             consumption_metadata = StatisticMetaData(
-                has_mean=False,
+                mean_type=None,
                 has_sum=True,
                 name=f"{name_prefix} Consumption",
                 source=DOMAIN,

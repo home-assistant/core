@@ -13,6 +13,7 @@ import pytest
 from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.db_schema import Statistics, StatisticsShortTerm
+from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -307,7 +308,7 @@ async def test_statistic_during_period(
         )
 
     imported_metadata = {
-        "has_mean": False,
+        "has_mean": True,
         "has_sum": True,
         "name": "Total imported energy",
         "source": "recorder",
@@ -655,7 +656,7 @@ async def test_statistic_during_period(
             hass,
             session,
             {"sensor.test"},
-            {"last_reset", "max", "mean", "min", "state", "sum"},
+            {"last_reset", "state", "sum"},
         )
     start = imported_stats_5min[-1]["start"].timestamp()
     end = start + (5 * 60)
@@ -704,7 +705,7 @@ async def test_statistic_during_period_hole(
     ]
 
     imported_metadata = {
-        "has_mean": False,
+        "has_mean": True,
         "has_sum": True,
         "name": "Total imported energy",
         "source": "recorder",
@@ -897,7 +898,7 @@ async def test_statistic_during_period_partial_overlap(
 
     statId = "sensor.test_overlapping"
     imported_metadata = {
-        "has_mean": False,
+        "has_mean": True,
         "has_sum": True,
         "name": "Total imported energy overlapping",
         "source": "recorder",
@@ -1766,6 +1767,7 @@ async def test_list_statistic_ids(
     """Test list_statistic_ids."""
     now = get_start_time(dt_util.utcnow())
     has_mean = attributes["state_class"] == "measurement"
+    mean_type = StatisticMeanType.ARIMETHIC if has_mean else None
     has_sum = not has_mean
 
     hass.config.units = units
@@ -1791,6 +1793,7 @@ async def test_list_statistic_ids(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": display_unit,
             "has_mean": has_mean,
+            "mean_type": mean_type,
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
@@ -1813,6 +1816,7 @@ async def test_list_statistic_ids(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": display_unit,
             "has_mean": has_mean,
+            "mean_type": mean_type,
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
@@ -1838,6 +1842,7 @@ async def test_list_statistic_ids(
                 "statistic_id": "sensor.test",
                 "display_unit_of_measurement": display_unit,
                 "has_mean": has_mean,
+                "mean_type": mean_type,
                 "has_sum": has_sum,
                 "name": None,
                 "source": "recorder",
@@ -1859,6 +1864,7 @@ async def test_list_statistic_ids(
                 "statistic_id": "sensor.test",
                 "display_unit_of_measurement": display_unit,
                 "has_mean": has_mean,
+                "mean_type": mean_type,
                 "has_sum": has_sum,
                 "name": None,
                 "source": "recorder",
@@ -1939,6 +1945,7 @@ async def test_list_statistic_ids_unit_change(
     """Test list_statistic_ids."""
     now = get_start_time(dt_util.utcnow())
     has_mean = attributes["state_class"] == "measurement"
+    mean_type = StatisticMeanType.ARIMETHIC if has_mean else None
     has_sum = not has_mean
 
     await async_setup_component(hass, "sensor", {})
@@ -1966,6 +1973,7 @@ async def test_list_statistic_ids_unit_change(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": statistics_unit,
             "has_mean": has_mean,
+            "mean_type": mean_type,
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
@@ -1987,6 +1995,7 @@ async def test_list_statistic_ids_unit_change(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": display_unit,
             "has_mean": has_mean,
+            "mean_type": mean_type,
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
@@ -2208,6 +2217,7 @@ async def test_update_statistics_metadata(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": "kW",
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
@@ -2235,6 +2245,7 @@ async def test_update_statistics_metadata(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": new_display_unit,
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
@@ -2324,6 +2335,7 @@ async def test_change_statistics_unit(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": "kW",
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
@@ -2375,6 +2387,7 @@ async def test_change_statistics_unit(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": "kW",
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
@@ -2428,6 +2441,7 @@ async def test_change_statistics_unit(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": "kW",
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
@@ -2455,6 +2469,7 @@ async def test_change_statistics_unit_errors(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": "kW",
             "has_mean": True,
+            "mean_type": StatisticMeanType.ARIMETHIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
@@ -2774,6 +2789,7 @@ async def test_get_statistics_metadata(
     """Test get_statistics_metadata."""
     now = get_start_time(dt_util.utcnow())
     has_mean = attributes["state_class"] == "measurement"
+    mean_type = StatisticMeanType.ARIMETHIC if has_mean else None
     has_sum = not has_mean
 
     hass.config.units = units
@@ -2843,6 +2859,7 @@ async def test_get_statistics_metadata(
             "statistic_id": "test:total_gas",
             "display_unit_of_measurement": unit,
             "has_mean": has_mean,
+            "mean_type": mean_type,
             "has_sum": has_sum,
             "name": "Total imported energy",
             "source": "test",
@@ -2874,6 +2891,7 @@ async def test_get_statistics_metadata(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": attributes["unit_of_measurement"],
             "has_mean": has_mean,
+            "mean_type": mean_type,
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
@@ -2901,6 +2919,7 @@ async def test_get_statistics_metadata(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": attributes["unit_of_measurement"],
             "has_mean": has_mean,
+            "mean_type": mean_type,
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
@@ -2995,6 +3014,7 @@ async def test_import_statistics(
         {
             "display_unit_of_measurement": "kWh",
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
@@ -3009,6 +3029,7 @@ async def test_import_statistics(
             1,
             {
                 "has_mean": False,
+                "mean_type": None,
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
@@ -3213,6 +3234,7 @@ async def test_adjust_sum_statistics_energy(
         {
             "display_unit_of_measurement": "kWh",
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
@@ -3227,6 +3249,7 @@ async def test_adjust_sum_statistics_energy(
             1,
             {
                 "has_mean": False,
+                "mean_type": None,
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
@@ -3406,6 +3429,7 @@ async def test_adjust_sum_statistics_gas(
         {
             "display_unit_of_measurement": "m³",
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
@@ -3420,6 +3444,7 @@ async def test_adjust_sum_statistics_gas(
             1,
             {
                 "has_mean": False,
+                "mean_type": None,
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
@@ -3617,6 +3642,7 @@ async def test_adjust_sum_statistics_errors(
         {
             "display_unit_of_measurement": state_unit,
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
@@ -3631,6 +3657,7 @@ async def test_adjust_sum_statistics_errors(
             1,
             {
                 "has_mean": False,
+                "mean_type": None,
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,

@@ -144,7 +144,7 @@ class ElviaImporter:
         async_add_external_statistics(
             hass=self.hass,
             metadata=StatisticMetaData(
-                has_mean=False,
+                mean_type=None,
                 has_sum=True,
                 name=f"{self.metering_point_id} Consumption",
                 source=DOMAIN,

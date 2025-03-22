@@ -786,6 +786,7 @@ async def test_import_statistics(
         {
             "display_unit_of_measurement": "kWh",
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
@@ -800,6 +801,7 @@ async def test_import_statistics(
             1,
             {
                 "has_mean": False,
+                "mean_type": None,
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
@@ -876,6 +878,7 @@ async def test_import_statistics(
         {
             "display_unit_of_measurement": "kWh",
             "has_mean": False,
+            "mean_type": None,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy renamed",
@@ -890,6 +893,7 @@ async def test_import_statistics(
             1,
             {
                 "has_mean": False,
+                "mean_type": None,
                 "has_sum": True,
                 "name": "Total imported energy renamed",
                 "source": source,
