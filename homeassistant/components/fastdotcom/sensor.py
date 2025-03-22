@@ -1,56 +1,80 @@
-"""Support for Fast.com internet speed testing sensor."""
-
-from __future__ import annotations
-
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
+    SensorDeviceClass,
+    UnitOfDataRate,
 )
-from homeassistant.const import UnitOfDataRate
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import FastdotcomConfigEntry, FastdotcomDataUpdateCoordinator
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: FastdotcomConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up the Fast.com sensor."""
-    async_add_entities([SpeedtestSensor(entry.entry_id, entry.runtime_data)])
+async def async_setup_entry(hass, entry: FastdotcomConfigEntry, async_add_entities):
+
+    async_add_entities(
+        [
+            DownloadSpeedSensor(entry.entry_id, entry.runtime_data),
+            UploadSpeedSensor(entry.entry_id, entry.runtime_data),
+            UnloadedPingSensor(entry.entry_id, entry.runtime_data),
+            LoadedPingSensor(entry.entry_id, entry.runtime_data),
+        ]
+    )
 
 
-class SpeedtestSensor(CoordinatorEntity[FastdotcomDataUpdateCoordinator], SensorEntity):
-    """Implementation of a Fast.com sensor."""
-
-    _attr_translation_key = "download"
-    _attr_device_class = SensorDeviceClass.DATA_RATE
+class DownloadSpeedSensor(CoordinatorEntity[FastdotcomDataUpdateCoordinator], SensorEntity):
+    _attr_name = "Download speed"
     _attr_native_unit_of_measurement = UnitOfDataRate.MEGABITS_PER_SECOND
+    _attr_device_class = SensorDeviceClass.DATA_RATE
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_should_poll = False
-    _attr_has_entity_name = True
 
-    def __init__(
-        self, entry_id: str, coordinator: FastdotcomDataUpdateCoordinator
-    ) -> None:
-        """Initialize the sensor."""
+    def __init__(self, entry_id, coordinator):
         super().__init__(coordinator)
-        self._attr_unique_id = entry_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry_id)},
-            entry_type=DeviceEntryType.SERVICE,
-            configuration_url="https://www.fast.com",
-        )
+        self._attr_unique_id = f"{entry_id}_download_speed"
 
     @property
-    def native_value(
-        self,
-    ) -> float:
-        """Return the state of the sensor."""
-        return self.coordinator.data
+    def native_value(self):
+        return round(self.coordinator.data.get("download_speed", 0.00), 2)
+
+
+class UploadSpeedSensor(DownloadSpeedSensor):
+    _attr_name = "Upload speed"
+
+    def __init__(self, entry_id, coordinator):
+        super().__init__(entry_id, coordinator)
+        self._attr_unique_id = f"{entry_id}_upload"
+
+    @property
+    def native_value(self):
+        return round(self.coordinator.data.get("upload_speed", 0.00), 2)
+
+
+class UnloadedPingSensor(SensorEntity):
+    _attr_name = "Unloaded ping"
+    _attr_native_unit_of_measurement = "ms"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, entry_id, coordinator):
+        super().__init__()
+        self.coordinator = coordinator
+        self._attr_unique_id = f"{entry_id}_unloaded_ping"
+
+    @property
+    def native_value(self):
+        return round(self.coordinator.data.get("ping_unloaded", 0), 1)
+
+
+class LoadedPingSensor(SensorEntity):
+    _attr_name = "Loaded ping"
+    _attr_native_unit_of_measurement = "ms"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, entry_id, coordinator):
+        super().__init__()
+        self.coordinator = coordinator
+        self._attr_unique_id = f"{entry_id}_loaded_ping"
+
+    @property
+    def native_value(self):
+        return round(self.coordinator.data.get("ping_loaded", 0), 1)
