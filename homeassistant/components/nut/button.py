@@ -26,45 +26,37 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the NUT buttons."""
-    valid_button_types: dict[str, ButtonEntityDescription] = {}
-
     pynut_data = config_entry.runtime_data
     coordinator = pynut_data.coordinator
-    data = pynut_data.data
-    unique_id = pynut_data.unique_id
     status = coordinator.data
 
-    # Dynammically add outlet button types
-    if (num_outlets := status.get("outlet.count")) is not None:
-        for outlet_num in range(1, int(num_outlets) + 1):
-            outlet_num_str = str(outlet_num)
-            outlet_name: str = (
-                status.get(f"outlet.{outlet_num_str}.name") or outlet_num_str
-            )
-            valid_button_types |= {
-                f"outlet.{outlet_num_str}.load.cycle": ButtonEntityDescription(
-                    key=f"outlet.{outlet_num_str}.load.cycle",
-                    translation_key="outlet_number_load_cycle",
-                    translation_placeholders={"outlet_name": outlet_name},
-                    device_class=ButtonDeviceClass.RESTART,
-                    entity_registry_enabled_default=True,
-                ),
-            }
+    # Dynamically add outlet button types
+    if (num_outlets := status.get("outlet.count")) is None:
+        return
 
-        resources = [
-            button_id
-            for button_id in valid_button_types
-            if button_id in pynut_data.user_available_commands
-        ]
-
-        async_add_entities(
-            NUTButton(
-                valid_button_types[button_type],
-                data,
-                unique_id,
-            )
-            for button_type in resources
+    data = pynut_data.data
+    unique_id = pynut_data.unique_id
+    valid_button_types: dict[str, ButtonEntityDescription] = {}
+    for outlet_num in range(1, int(num_outlets) + 1):
+        outlet_num_str = str(outlet_num)
+        outlet_name: str = (
+            status.get(f"outlet.{outlet_num_str}.name") or outlet_num_str
         )
+        valid_button_types |= {
+            f"outlet.{outlet_num_str}.load.cycle": ButtonEntityDescription(
+                key=f"outlet.{outlet_num_str}.load.cycle",
+                translation_key="outlet_number_load_cycle",
+                translation_placeholders={"outlet_name": outlet_name},
+                device_class=ButtonDeviceClass.RESTART,
+                entity_registry_enabled_default=True,
+            ),
+        }
+
+    async_add_entities(
+        NUTButton(description,data,unique_id)
+        for button_id, description in valid_button_types.items()
+        if button_id in pynut_data.user_available_commands
+    )
 
 
 class NUTButton(ButtonEntity):
