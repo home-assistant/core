@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
+    MAX_LENGTH_STATE_STATE,
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -65,6 +66,14 @@ def _cv_input_text(config: dict[str, Any]) -> dict[str, Any]:
     """Configure validation helper for input box (voluptuous)."""
     minimum: int = config[CONF_MIN]
     maximum: int = config[CONF_MAX]
+    if minimum < 0 or minimum > MAX_LENGTH_STATE_STATE:
+        raise vol.Invalid(
+            f"Min len ({minimum}) must be not less than 0 and not greater than {MAX_LENGTH_STATE_STATE}"
+        )
+    if maximum <= 0 or maximum > MAX_LENGTH_STATE_STATE:
+        raise vol.Invalid(
+            f"Max len ({maximum}) must be not less or equal to 0 and not greater than {MAX_LENGTH_STATE_STATE}"
+        )
     if minimum > maximum:
         raise vol.Invalid(
             f"Max len ({minimum}) is not greater than min len ({maximum})"
