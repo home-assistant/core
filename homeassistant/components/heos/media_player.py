@@ -654,10 +654,9 @@ def _media_to_browse_media(media: MediaItem | MediaMusicSource) -> BrowseMedia:
     can_play = False
 
     if isinstance(media, MediaMusicSource):
-        if media.source_id == heos_const.MUSIC_SOURCE_TUNEIN:
-            can_expand = True
-        else:
-            can_expand = media.available
+        can_expand = (
+            media.source_id == heos_const.MUSIC_SOURCE_TUNEIN or media.available
+        )
     else:
         can_expand = media.browsable
         can_play = media.playable
