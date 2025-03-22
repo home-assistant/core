@@ -34,6 +34,7 @@ class SmartThingsBinarySensorEntityDescription(BinarySensorEntityDescription):
 
     is_on_key: str
     category_device_class: dict[Category | str, BinarySensorDeviceClass] | None = None
+    category: set[Category] | None = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -102,6 +103,14 @@ CAPABILITY_TO_SENSORS: dict[
             is_on_key="detected",
         )
     },
+    Capability.SWITCH: {
+        Attribute.SWITCH: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.SWITCH,
+            device_class=BinarySensorDeviceClass.POWER,
+            is_on_key="on",
+            category={Category.DRYER, Category.WASHER},
+        )
+    },
     Capability.TAMPER_ALERT: {
         Attribute.TAMPER: SmartThingsBinarySensorEntityDescription(
             key=Attribute.TAMPER,
@@ -128,6 +137,16 @@ CAPABILITY_TO_SENSORS: dict[
 }
 
 
+def get_main_component_category(
+    device: FullDevice,
+) -> Category | str:
+    """Get the main component of a device."""
+    main = next(
+        component for component in device.device.components if component.id == MAIN
+    )
+    return main.user_category or main.manufacturer_category
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartThingsConfigEntry,
@@ -147,6 +166,10 @@ async def async_setup_entry(
         for capability, attribute_map in CAPABILITY_TO_SENSORS.items()
         if capability in device.status[MAIN]
         for attribute, description in attribute_map.items()
+        if (
+            not description.category
+            or get_main_component_category(device) in description.category
+        )
     )
 
 
