@@ -28,6 +28,7 @@ from .const import (
     DEFAULT_LANGUAGE,
 )
 from .entity import JewishCalendarConfigEntry, JewishCalendarData
+from .service import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -67,6 +68,7 @@ async def async_setup_entry(
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    async_setup_services(hass, config_entry)
 
     async def update_listener(
         hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
