@@ -1538,8 +1538,7 @@ class ConfigEntriesFlowManager(
             if (entry_id := flow.context.get("entry_id")) is not None and (
                 entry := self.config_entries.async_get_entry(entry_id)
             ) is not None:
-                issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
-                ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
+                _remove_reauth_issue(self.hass, entry.domain, entry_id)
 
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             # If there's an ignored config entry with a matching unique ID,
@@ -2128,13 +2127,8 @@ class ConfigEntries:
         # If the configuration entry is removed during reauth, it should
         # abort any reauth flow that is active for the removed entry and
         # linked issues.
-        for progress_flow in self.hass.config_entries.flow.async_progress_by_handler(
-            entry.domain, match_context={"entry_id": entry_id, "source": SOURCE_REAUTH}
-        ):
-            if "flow_id" in progress_flow:
-                self.hass.config_entries.flow.async_abort(progress_flow["flow_id"])
-                issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
-                ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
+        _abort_reauth_flows(self.hass, entry.domain, entry_id)
+        _remove_reauth_issue(self.hass, entry.domain, entry_id)
 
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
 
@@ -2239,16 +2233,18 @@ class ConfigEntries:
         return await entry.async_unload(self.hass)
 
     @callback
-    def async_schedule_reload(self, entry_id: str) -> None:
+    def async_schedule_reload(
+        self, entry_id: str, *, cancel_reauth: bool = True
+    ) -> None:
         """Schedule a config entry to be reloaded."""
         entry = self.async_get_known_entry(entry_id)
         entry.async_cancel_retry_setup()
         self.hass.async_create_task(
-            self.async_reload(entry_id),
+            self.async_reload(entry_id, cancel_reauth=cancel_reauth),
             f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
         )
 
-    async def async_reload(self, entry_id: str) -> bool:
+    async def async_reload(self, entry_id: str, *, cancel_reauth: bool = True) -> bool:
         """Reload an entry.
 
         When reloading from an integration is is preferable to
@@ -2265,6 +2261,11 @@ class ConfigEntries:
         # reload lock to reduce the chance of concurrent reload
         # attempts.
         entry.async_cancel_retry_setup()
+
+        # Abort any in-progress reauth flow and linked issues
+        if cancel_reauth:
+            _abort_reauth_flows(self.hass, entry.domain, entry_id)
+            _remove_reauth_issue(self.hass, entry.domain, entry_id)
 
         if entry.domain not in self.hass.config.components:
             # If the component is not loaded, just load it as
@@ -3268,7 +3269,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
             options=options,
         )
         if reload_even_if_entry_is_unchanged or result:
-            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            self.hass.config_entries.async_schedule_reload(
+                entry.entry_id, cancel_reauth=self.source != SOURCE_REAUTH
+            )
         if reason is UNDEFINED:
             reason = "reauth_successful"
             if self.source == SOURCE_RECONFIGURE:
@@ -3830,3 +3833,20 @@ async def _async_get_flow_handler(
         return handler
 
     raise data_entry_flow.UnknownHandler
+
+
+@callback
+def _abort_reauth_flows(hass: HomeAssistant, domain: str, entry_id: str) -> None:
+    """Abort reauth flows for an entry."""
+    for progress_flow in hass.config_entries.flow.async_progress_by_handler(
+        domain, match_context={"entry_id": entry_id, "source": SOURCE_REAUTH}
+    ):
+        if "flow_id" in progress_flow:
+            hass.config_entries.flow.async_abort(progress_flow["flow_id"])
+
+
+@callback
+def _remove_reauth_issue(hass: HomeAssistant, domain: str, entry_id: str) -> None:
+    """Remove reauth issue."""
+    issue_id = f"config_entry_reauth_{domain}_{entry_id}"
+    ir.async_delete_issue(hass, HOMEASSISTANT_DOMAIN, issue_id)
