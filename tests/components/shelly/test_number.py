@@ -200,7 +200,10 @@ async def test_block_set_value_connection_error(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Device communication error occurred while calling action for number.test_name_valve_position of Test name",
+    ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
