@@ -140,13 +140,18 @@ async def _transform_stream(
                     )
                 ]
             }
-        elif isinstance(event, ResponseCompletedEvent) and (usage := event.response.usage) is not None:
-            chat_log.async_trace({
-                "stats": {
-                    "input_tokens": usage.input_tokens,
-                    "output_tokens": usage.output_tokens,
+        elif (
+            isinstance(event, ResponseCompletedEvent)
+            and (usage := event.response.usage) is not None
+        ):
+            chat_log.async_trace(
+                {
+                    "stats": {
+                        "input_tokens": usage.input_tokens,
+                        "output_tokens": usage.output_tokens,
+                    }
                 }
-            })
+            )
 
 
 class OpenAIConversationEntity(
