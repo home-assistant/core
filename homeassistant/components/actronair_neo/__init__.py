@@ -15,7 +15,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronConfigEntry) -> bo
 
     # Initialize the data coordinator
     pairing_token = entry.data[CONF_API_TOKEN]
-    coordinator = ActronNeoDataUpdateCoordinator(hass, pairing_token)
+    coordinator = ActronNeoDataUpdateCoordinator(hass, entry, pairing_token)
     await coordinator.async_config_entry_first_refresh()
 
     # Update the title with the current username
