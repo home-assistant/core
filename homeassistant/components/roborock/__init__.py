@@ -45,10 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
-    api_client = RoborockApiClient(
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_BASE_URL],
-    )
+    api_client = RoborockApiClient(entry.data[CONF_USERNAME], entry.data[CONF_BASE_URL])
     _LOGGER.debug("Getting home data")
     try:
         home_data = await api_client.get_home_data_v2(user_data)
