@@ -268,15 +268,6 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         else:
             self._source_list.extend([source.name for source in self._inputs])
 
-    async def _async_update_players(self) -> None:
-        """Update players after reconnection."""
-        try:
-            player_updates = await self.heos.load_players()
-        except HeosError as error:
-            _LOGGER.error("Unable to refresh players: %s", error)
-            return
-        self._async_handle_player_update_result(player_updates)
-
     @callback
     def async_get_source_list(self) -> list[str]:
         """Return the list of sources for players."""
