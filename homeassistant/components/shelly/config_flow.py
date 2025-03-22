@@ -3,16 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
-from aioshelly.const import (
-    BLOCK_GENERATIONS,
-    DEFAULT_HTTP_PORT,
-    MODEL_WALL_DISPLAY,
-    RPC_GENERATIONS,
-)
+from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATIONS
 from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
@@ -39,6 +34,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .const import (
     CONF_BLE_SCANNER_MODE,
     CONF_GEN,
+    CONF_SCRIPT,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     LOGGER,
@@ -461,11 +457,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_supports_options_flow(cls, config_entry: ShellyConfigEntry) -> bool:
         """Return options flow support for this handler."""
-        return (
-            get_device_entry_gen(config_entry) in RPC_GENERATIONS
-            and not config_entry.data.get(CONF_SLEEP_PERIOD)
-            and config_entry.data.get(CONF_MODEL) != MODEL_WALL_DISPLAY
-        )
+        return cast(bool, config_entry.data.get(CONF_SCRIPT, False))
 
 
 class OptionsFlowHandler(OptionsFlow):
