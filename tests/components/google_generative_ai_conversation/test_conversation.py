@@ -156,8 +156,10 @@ async def test_function_call(
     trace_events = last_trace.get("events", [])
     assert [event["event_type"] for event in trace_events] == [
         trace.ConversationTraceEventType.ASYNC_PROCESS,
-        trace.ConversationTraceEventType.AGENT_DETAIL,
+        trace.ConversationTraceEventType.AGENT_DETAIL,  # prompt and tools
+        trace.ConversationTraceEventType.AGENT_DETAIL,  # stats for response
         trace.ConversationTraceEventType.TOOL_CALL,
+        trace.ConversationTraceEventType.AGENT_DETAIL,  # stats for response
     ]
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
@@ -165,6 +167,13 @@ async def test_function_call(
     assert [
         p["tool_name"] for p in detail_event["data"]["messages"][2]["tool_calls"]
     ] == ["test_tool"]
+
+    detail_event = trace_events[2]
+    assert set(detail_event["data"]["stats"].keys()) == {
+        "input_tokens",
+        "cached_input_tokens",
+        "output_tokens",
+    }
 
 
 @patch(
