@@ -25,9 +25,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import NutConfigEntry, PyNUTData
+from . import NutConfigEntry
 from .const import KEY_STATUS, KEY_STATUS_DISPLAY, STATE_TYPES
 from .entity import NUTBaseEntity
 
@@ -1088,20 +1087,6 @@ async def async_setup_entry(
 
 class NUTSensor(NUTBaseEntity, SensorEntity):
     """Representation of a sensor entity for NUT status values."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator[dict[str, str]],
-        sensor_description: SensorEntityDescription,
-        data: PyNUTData,
-        unique_id: str,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, data, unique_id)
-        self.entity_description = sensor_description
-        self._attr_unique_id = f"{unique_id}_{sensor_description.key}"
 
     @property
     def native_value(self) -> str | None:
