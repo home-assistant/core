@@ -1,0 +1,11 @@
+{
+  "domain": "bosch_alarm",
+  "name": "Bosch Alarm",
+  "codeowners": ["@mag1024", "@sanjay900"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/bosch_alarm",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["bosch-alarm-mode2==0.4.3"]
+}
