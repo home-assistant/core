@@ -11,9 +11,8 @@ from homeassistant.components.button import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import NutConfigEntry, PyNUTData
+from . import NutConfigEntry
 from .entity import NUTBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,20 +57,6 @@ async def async_setup_entry(
 
 class NUTButton(NUTBaseEntity, ButtonEntity):
     """Representation of a button entity for NUT."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator[dict[str, str]],
-        button_description: ButtonEntityDescription,
-        data: PyNUTData,
-        unique_id: str,
-    ) -> None:
-        """Initialize the button."""
-        super().__init__(coordinator, data, unique_id)
-        self.entity_description = button_description
-        self._attr_unique_id = f"{unique_id}_{button_description.key}"
 
     async def async_press(self) -> None:
         """Press the button."""
