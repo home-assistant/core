@@ -158,7 +158,7 @@ async def test_connected_devices(
     assert len(new_entity_entries) > len(entity_entries)
 
 
-async def test_button_entity_availabilty(
+async def test_button_entity_availability(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],

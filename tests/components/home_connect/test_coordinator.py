@@ -31,8 +31,17 @@ from homeassistant.components.home_connect.const import (
     BSH_POWER_OFF,
     DOMAIN,
 )
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.config_entries import ConfigEntries, ConfigEntryState
-from homeassistant.const import EVENT_STATE_REPORTED, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_STATE_REPORTED,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import (
     Event as HassEvent,
     EventStateReportedData,
@@ -98,30 +107,30 @@ async def test_coordinator_failure_refresh_and_stream(
     )
     entity_id_1 = "binary_sensor.washer_remote_control"
     entity_id_2 = "binary_sensor.washer_remote_start"
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HA_DOMAIN, {})
     await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
     state = hass.states.get(entity_id_1)
     assert state
-    assert state.state != "unavailable"
+    assert state.state != STATE_UNAVAILABLE
     state = hass.states.get(entity_id_2)
     assert state
-    assert state.state != "unavailable"
+    assert state.state != STATE_UNAVAILABLE
 
     client.get_home_appliances.side_effect = HomeConnectError()
 
     # Force a coordinator refresh.
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id_1}, blocking=True
+        HA_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: entity_id_1}, blocking=True
     )
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id_1)
     assert state
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
     state = hass.states.get(entity_id_2)
     assert state
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
     # Test that the entity becomes available again after a successful update.
 
@@ -137,16 +146,16 @@ async def test_coordinator_failure_refresh_and_stream(
 
     # Force a coordinator refresh.
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id_1}, blocking=True
+        HA_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: entity_id_1}, blocking=True
     )
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id_1)
     assert state
-    assert state.state != "unavailable"
+    assert state.state != STATE_UNAVAILABLE
     state = hass.states.get(entity_id_2)
     assert state
-    assert state.state != "unavailable"
+    assert state.state != STATE_UNAVAILABLE
 
     # Test that the event stream makes the entity go available too.
 
@@ -160,16 +169,16 @@ async def test_coordinator_failure_refresh_and_stream(
 
     # Force a coordinator refresh
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id_1}, blocking=True
+        HA_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: entity_id_1}, blocking=True
     )
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id_1)
     assert state
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
     state = hass.states.get(entity_id_2)
     assert state
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
     # Now make the entity available again.
     client.get_home_appliances.side_effect = None
@@ -199,10 +208,10 @@ async def test_coordinator_failure_refresh_and_stream(
 
     state = hass.states.get(entity_id_1)
     assert state
-    assert state.state != "unavailable"
+    assert state.state != STATE_UNAVAILABLE
     state = hass.states.get(entity_id_2)
     assert state
-    assert state.state != "unavailable"
+    assert state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -237,7 +246,7 @@ async def test_coordinator_update_failing(
 
 @pytest.mark.parametrize("appliance_ha_id", ["Dishwasher"], indirect=True)
 @pytest.mark.parametrize(
-    ("event_type", "event_key", "event_value", "entity_id"),
+    ("event_type", "event_key", "event_value", ATTR_ENTITY_ID),
     [
         (
             EventType.STATUS,
@@ -519,7 +528,7 @@ async def test_devices_updated_on_refresh(
         return_value=ArrayOfHomeAppliances(appliances[:2]),
     )
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HA_DOMAIN, {})
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
@@ -532,9 +541,9 @@ async def test_devices_updated_on_refresh(
         return_value=ArrayOfHomeAppliances(appliances[1:3]),
     )
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
-        {"entity_id": "switch.dishwasher_power"},
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "switch.dishwasher_power"},
         blocking=True,
     )
 

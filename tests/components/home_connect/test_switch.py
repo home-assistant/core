@@ -207,7 +207,7 @@ async def test_connected_devices(
 
 
 @pytest.mark.parametrize("appliance_ha_id", ["Dishwasher"], indirect=True)
-async def test_switch_entity_availabilty(
+async def test_switch_entity_availability(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -651,7 +651,7 @@ async def test_ent_desc_switch_exception_handling(
     ],
     indirect=["appliance_ha_id"],
 )
-async def test_power_swtich(
+async def test_power_switch(
     entity_id: str,
     allowed_values: list[str | None] | None,
     service: str,
