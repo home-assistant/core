@@ -36,7 +36,7 @@ async def async_setup_entry(
     config_entry: HomeeConfigEntry,
     async_add_devices: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the Homee platform for the climate integration."""
+    """Add the Homee platform for the climate component."""
 
     async_add_devices(
         HomeeClimate(node, config_entry)
@@ -46,7 +46,7 @@ async def async_setup_entry(
 
 
 class HomeeClimate(HomeeNodeEntity, ClimateEntity):
-    """Representation of a Homee climate device."""
+    """Representation of a Homee climate entity."""
 
     _attr_name = None
     _attr_translation_key = DOMAIN

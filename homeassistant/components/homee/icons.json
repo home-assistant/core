@@ -1,5 +1,16 @@
 {
   "entity": {
+    "climate": {
+      "homee": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "mdi:hand-back-left"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "brightness": {
         "default": "mdi:brightness-5"
