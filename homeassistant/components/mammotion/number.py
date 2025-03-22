@@ -5,7 +5,6 @@ from pymammotion.data.model.device_limits import DeviceLimits
 from pymammotion.utility.device_type import DeviceType
 
 from homeassistant.components.number import (
-    ENTITY_ID_FORMAT,
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
@@ -87,8 +86,8 @@ LUBA_WORKING_ENTITIES: tuple[MammotionConfigNumberEntityDescription, ...] = (
     MammotionConfigNumberEntityDescription(
         key="blade_height",
         step=1,
-        min_value=25,  # ToDo: To be dynamiclly set based on model (h\non H)
-        max_value=70,  # ToDo: To be dynamiclly set based on model (h\non H)
+        min_value=25,
+        max_value=70,
         mode=NumberMode.BOX,
         set_fn=lambda coordinator, value: setattr(
             coordinator.operation_settings, "blade_height", value
@@ -133,7 +132,6 @@ async def async_setup_entry(
 
     for mower in mammotion_devices:
         limits = mower.device_limits
-
         entities: list[MammotionConfigNumberEntity] = []
 
         for entity_description in NUMBER_WORKING_ENTITIES:
@@ -185,9 +183,6 @@ class MammotionConfigNumberEntity(MammotionBaseEntity, NumberEntity, RestoreEnti
             self._attr_native_value = 0
         if self.entity_description.key == "toward_included_angle":
             self._attr_native_value = 90
-        self.entity_id = ENTITY_ID_FORMAT.format(
-            f"{coordinator.device_name}_{entity_description.key}"
-        )
 
     async def async_set_native_value(self, value: float) -> None:
         """Set native value for number."""
@@ -208,19 +203,17 @@ class MammotionWorkingNumberEntity(MammotionConfigNumberEntity):
         """Init MammotionWorkingNumberEntity."""
         super().__init__(coordinator, entity_description)
 
-        min_attr = f"{entity_description.key}_min"
-        max_attr = f"{entity_description.key}_max"
-        self.entity_id = ENTITY_ID_FORMAT.format(
-            f"{coordinator.device_name}_{entity_description.key}"
-        )
-
-        if hasattr(limits, min_attr) and hasattr(limits, max_attr):
-            self._attr_native_min_value = getattr(limits, min_attr)
-            self._attr_native_max_value = getattr(limits, max_attr)
+        if hasattr(limits, entity_description.key):
+            self._attr_native_min_value = getattr(limits, entity_description.key).min
+            self._attr_native_max_value = getattr(limits, entity_description.key).max
         else:
             # Fallback to the values from entity_description
             self._attr_native_min_value = entity_description.min_value
             self._attr_native_max_value = entity_description.max_value
+
+        self._attr_native_value = max(
+            self._attr_native_value, self._attr_native_min_value
+        )
 
     @property
     def native_min_value(self) -> float:

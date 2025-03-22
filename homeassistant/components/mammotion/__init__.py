@@ -21,11 +21,12 @@ from pymammotion.utility.device_config import DeviceConfig
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import HassJob, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 
+from ...helpers.event import async_call_later
 from .const import (
     CONF_ACCOUNTNAME,
     CONF_AEP_DATA,
@@ -71,12 +72,6 @@ type MammotionConfigEntry = ConfigEntry[list[MammotionMowerData]]
 async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> bool:
     """Set up Mammotion Luba from a config entry."""
 
-    if not entry.options:
-        hass.config_entries.async_update_entry(
-            entry,
-            options={CONF_STAY_CONNECTED_BLUETOOTH: False},
-        )
-
     device_name = entry.data.get(CONF_DEVICE_NAME)
     address = entry.data.get(CONF_ADDRESS)
     mammotion = Mammotion()
@@ -84,6 +79,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
     password = entry.data.get(CONF_PASSWORD)
 
     stay_connected_ble = entry.data.get(CONF_STAY_CONNECTED_BLUETOOTH, False)
+
+    if not entry.options:
+        hass.config_entries.async_update_entry(
+            entry,
+            options={CONF_STAY_CONNECTED_BLUETOOTH: stay_connected_ble},
+        )
+
+    stay_connected_ble = entry.options.get(CONF_STAY_CONNECTED_BLUETOOTH, False)
+
     use_wifi = entry.data.get(CONF_USE_WIFI, True)
 
     mammotion_devices: list[MammotionMowerData] = []
@@ -104,8 +108,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
             LOGGER.debug(exc)
             await mammotion.login_and_initiate_cloud(account, password, True)
 
-
-
         if mqtt_client := mammotion.mqtt_list.get(account):
             store_cloud_credentials(hass, entry, mqtt_client.cloud_client)
             for (
@@ -125,32 +127,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                 map_coordinator = MammotionMapUpdateCoordinator(
                     hass, entry, device, mammotion
                 )
+                await report_coordinator.async_restore_data()
                 # other coordinator
                 await maintenance_coordinator.async_config_entry_first_refresh()
                 await version_coordinator.async_config_entry_first_refresh()
                 await report_coordinator.async_config_entry_first_refresh()
-                await map_coordinator.async_config_entry_first_refresh()
 
                 device_config = DeviceConfig()
-                if (
-                    device_limits := device_config.get_working_parameters(
+                device_limits = device_config.get_working_parameters(
+                    version_coordinator.data.sub_model_id
+                )
+                if device_limits is None:
+                    device_limits = device_config.get_working_parameters(
                         device.productKey
                     )
-                    is None
-                ):
-                    if version_coordinator.data.model_id == "":
-                        device_limits = device_config.get_best_default(
-                            device.productKey
-                        )
-                    else:
-                        device_limits = device_config.get_working_parameters(
-                            version_coordinator.data.model_id
-                        )
+
+                if device_limits is None:
+                    device_limits = device_config.get_best_default(device.productKey)
 
                 mammotion_device = mammotion.get_device_by_name(device.deviceName)
+                if mammotion_device is None:
+                    raise ConfigEntryError()
+
                 if address:
                     ble_device = bluetooth.async_ble_device_from_address(hass, address)
-                    if ble_device:
+                    if ble_device and ble_device.name == device_name:
                         mammotion_device.add_ble(ble_device)
                         mammotion_device.ble().set_disconnect_strategy(
                             not stay_connected_ble
@@ -159,6 +160,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                     mammotion_device.preference = ConnectionPreference.BLUETOOTH
                     await mammotion_device.cloud().stop()
                     mammotion_device.cloud().mqtt.disconnect() if mammotion_device.cloud().mqtt.is_connected() else None
+                    mammotion_device.remove_cloud()
 
                 mammotion_devices.append(
                     MammotionMowerData(
@@ -172,6 +174,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                         map_coordinator=map_coordinator,
                     )
                 )
+                try:
+                    await map_coordinator.async_request_refresh()
+                except:
+                    """Do nothing for now."""
 
     entry.runtime_data = mammotion_devices
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -183,15 +189,19 @@ def store_cloud_credentials(hass, config_entry, cloud_client: CloudIOTGateway) -
     """Store cloud credentials in config entry."""
 
     if cloud_client is not None:
+        mammotion_data = config_entry.data.get(CONF_MAMMOTION_DATA)
+        if cloud_client.mammotion_http is not None:
+            mammotion_data = cloud_client.mammotion_http.response
+
         config_updates = {
             **config_entry.data,
-            CONF_CONNECT_DATA: cloud_client.connect_response,
-            CONF_AUTH_DATA: cloud_client.login_by_oauth_response,
-            CONF_REGION_DATA: cloud_client.region_response,
-            CONF_AEP_DATA: cloud_client.aep_response,
-            CONF_SESSION_DATA: cloud_client.session_by_authcode_response,
-            CONF_DEVICE_DATA: cloud_client.devices_by_account_response,
-            CONF_MAMMOTION_DATA: cloud_client.mammotion_http.response,
+            CONF_CONNECT_DATA: cloud_client.connect_response.to_dict(),
+            CONF_AUTH_DATA: cloud_client.login_by_oauth_response.to_dict(),
+            CONF_REGION_DATA: cloud_client.region_response.to_dict(),
+            CONF_AEP_DATA: cloud_client.aep_response.to_dict(),
+            CONF_SESSION_DATA: cloud_client.session_by_authcode_response.to_dict(),
+            CONF_DEVICE_DATA: cloud_client.devices_by_account_response.to_dict(),
+            CONF_MAMMOTION_DATA: mammotion_data.to_dict(),
         }
         hass.config_entries.async_update_entry(config_entry, data=config_updates)
 
@@ -245,14 +255,13 @@ async def check_and_restore_cloud(
     )
 
     if isinstance(mammotion_data, dict):
-        mammotion_data = Response[LoginResponseData].from_dict(mammotion_data)
+        response = Response[LoginResponseData].from_dict(mammotion_data)
         mammotion_http = MammotionHTTP()
-        mammotion_http.response = mammotion_data
-        mammotion_http.login_info = mammotion_data.data
+        mammotion_http.response = response
+        mammotion_http.login_info = response.data
         cloud_client.set_http(mammotion_http)
 
     await hass.async_add_executor_job(cloud_client.check_or_refresh_session)
-    print("restore cloud")
     return cloud_client
 
 
