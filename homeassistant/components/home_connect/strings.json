@@ -811,8 +811,17 @@
       "bottle_cooler_door": {
         "name": "Bottle cooler door"
       },
+      "common_chiller_door": {
+        "name": "Common chiller door"
+      },
       "chiller_door": {
         "name": "Chiller door"
+      },
+      "left_chiller_door": {
+        "name": "Left chiller door"
+      },
+      "right_chiller_door": {
+        "name": "Right chiller door"
       },
       "flex_compartment_door": {
         "name": "Flex compartment door"

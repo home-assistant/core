@@ -84,6 +84,15 @@
         "unit_of_measurement": "cycles"
       }
     },
+    "select": {
+      "operating_state": {
+        "state": {
+          "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
+          "pause": "[%key:common::state::paused%]",
+          "stop": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::stop%]"
+        }
+      }
+    },
     "sensor": {
       "lighting_mode": {
         "name": "Activity lighting mode"
