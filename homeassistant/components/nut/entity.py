@@ -42,6 +42,7 @@ class NUTBaseEntity(CoordinatorEntity[DataUpdateCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
 
+        self.pynut_data = data
         device_name = data.name.title()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
