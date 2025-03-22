@@ -13,6 +13,15 @@
           "on": "mdi:lock"
         }
       }
+    },
+    "select": {
+      "operating_state": {
+        "state": {
+          "run": "mdi:play",
+          "pause": "mdi:pause",
+          "stop": "mdi:stop"
+        }
+      }
     }
   }
 }
