@@ -403,6 +403,18 @@ class GoogleGenerativeAIConversationEntity(
                 error = f"Sorry, I had a problem talking to Google Generative AI: {err}"
                 raise HomeAssistantError(error) from err
 
+            if (usage_metadata := chat_response.usage_metadata) is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": usage_metadata.prompt_token_count,
+                            "cached_input_tokens": usage_metadata.cached_content_token_count
+                            or 0,
+                            "output_tokens": usage_metadata.candidates_token_count,
+                        }
+                    }
+                )
+
             response_parts = chat_response.candidates[0].content.parts
             if not response_parts:
                 raise HomeAssistantError(
