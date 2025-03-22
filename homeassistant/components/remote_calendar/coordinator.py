@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from httpx import HTTPError, InvalidURL, Response
+from httpx import HTTPError, InvalidURL
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
 from ical.exceptions import CalendarParseError
@@ -26,7 +26,7 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
     """Class to manage fetching calendar data."""
 
     config_entry: RemoteCalendarConfigEntry
-    ics: Response
+    ics: str
 
     def __init__(
         self,
@@ -47,8 +47,8 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
     async def _async_update_data(self) -> Calendar:
         """Update data from the url."""
         try:
-            self.ics = await self._client.get(self._url, follow_redirects=True)
-            self.ics.raise_for_status()
+            resp = await self._client.get(self._url, follow_redirects=True)
+            resp.raise_for_status()
         except (HTTPError, InvalidURL) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -59,8 +59,9 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
             # calendar_from_ics will dynamically load packages
             # the first time it is called, so we need to do it
             # in a separate thread to avoid blocking the event loop
+            self.ics = resp.text
             return await self.hass.async_add_executor_job(
-                IcsCalendarStream.calendar_from_ics, self.ics.text
+                IcsCalendarStream.calendar_from_ics, self.ics
             )
         except CalendarParseError as err:
             raise UpdateFailed(
