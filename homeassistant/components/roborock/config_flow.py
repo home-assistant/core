@@ -21,6 +21,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -60,7 +61,8 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             username = user_input[CONF_USERNAME]
             await self.async_set_unique_id(username.lower())
-            self._abort_if_unique_id_configured(error="already_configured_account")
+            if self.source != SOURCE_RECONFIGURE:
+                self._abort_if_unique_id_configured(error="already_configured_account")
             self._username = username
             _LOGGER.debug("Requesting code for Roborock account")
             self._client = RoborockApiClient(username)
@@ -69,7 +71,13 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_code()
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_USERNAME): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME,
+                    ): str
+                }
+            ),
             errors=errors,
         )
 
@@ -126,6 +134,18 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                         },
                     )
                     return self.async_abort(reason="reauth_successful")
+                if self.source == SOURCE_RECONFIGURE:
+                    reconfig_entry = self._get_reconfigure_entry()
+                    return self.async_update_reload_and_abort(
+                        reconfig_entry,
+                        unique_id=self._username.lower(),
+                        title=self._username,
+                        data={
+                            **reconfig_entry.data,
+                            CONF_USER_DATA: login_data.as_dict(),
+                        },
+                    )
+
                 return self._create_entry(self._client, self._username, login_data)
 
         return self.async_show_form(
@@ -142,6 +162,12 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._username
         self._client = RoborockApiClient(self._username)
         return await self.async_step_reauth_confirm()
+
+    async def async_step_reconfigure(
+        self, entry_data: Mapping[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        return await self.async_step_user()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
