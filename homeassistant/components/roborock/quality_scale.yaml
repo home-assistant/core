@@ -73,7 +73,5 @@ rules:
   stale-devices: done
   # Platinum
   async-dependency: todo
-  inject-websession:
-    status: todo
-    comment: Web API uses aiohttp but does not yet inject web session.
+  inject-websession: done
   strict-typing: todo
