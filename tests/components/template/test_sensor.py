@@ -1527,6 +1527,45 @@ async def test_trigger_entity_available(hass: HomeAssistant) -> None:
     assert state.state == "unavailable"
 
 
+@pytest.mark.parametrize(("source_event_value"), [None, "None", "none"])
+async def test_numeric_trigger_entity_set_unknown(
+    hass: HomeAssistant, source_event_value: str | None
+) -> None:
+    """Test trigger entity state parsing with numeric sensors."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Source",
+                            "state": "{{ trigger.event.data.value }}",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("test_event", {"value": 1})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.source")
+    assert state is not None
+    assert state.state == "1"
+
+    hass.bus.async_fire("test_event", {"value": source_event_value})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.source")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_trigger_entity_device_class_parsing_works(hass: HomeAssistant) -> None:
     """Test trigger entity device class parsing works."""
     assert await async_setup_component(
