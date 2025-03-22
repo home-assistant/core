@@ -33,6 +33,9 @@
       "acceleration": {
         "name": "Acceleration"
       },
+      "door": {
+        "name": "[%key:component::binary_sensor::entity_component::door::name%]"
+      },
       "filter_status": {
         "name": "Filter status"
       },
