@@ -1112,7 +1112,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.36.0
+habluetooth==3.37.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.94.0
@@ -2000,7 +2000,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==1.0.3
+pyheos==1.0.4
 
 # homeassistant.components.hive
 pyhive-integration==1.0.2
