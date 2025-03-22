@@ -55,13 +55,26 @@ from homeassistant.util.json import json_loads_object
 from .. import subscription
 from ..config import DEFAULT_QOS, DEFAULT_RETAIN, MQTT_RW_SCHEMA
 from ..const import (
+    CONF_COLOR_MODE,
     CONF_COLOR_TEMP_KELVIN,
     CONF_COMMAND_TOPIC,
+    CONF_EFFECT_LIST,
+    CONF_FLASH_TIME_LONG,
+    CONF_FLASH_TIME_SHORT,
     CONF_MAX_KELVIN,
+    CONF_MAX_MIREDS,
     CONF_MIN_KELVIN,
+    CONF_MIN_MIREDS,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    CONF_SUPPORTED_COLOR_MODES,
+    DEFAULT_BRIGHTNESS,
+    DEFAULT_BRIGHTNESS_SCALE,
+    DEFAULT_EFFECT,
+    DEFAULT_FLASH_TIME_LONG,
+    DEFAULT_FLASH_TIME_SHORT,
+    DEFAULT_WHITE_SCALE,
 )
 from ..entity import MqttEntity
 from ..models import ReceiveMessage
@@ -78,25 +91,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "mqtt_json"
 
-DEFAULT_BRIGHTNESS = False
-DEFAULT_EFFECT = False
-DEFAULT_FLASH_TIME_LONG = 10
-DEFAULT_FLASH_TIME_SHORT = 2
 DEFAULT_NAME = "MQTT JSON Light"
-DEFAULT_BRIGHTNESS_SCALE = 255
-DEFAULT_WHITE_SCALE = 255
-
-CONF_COLOR_MODE = "color_mode"
-CONF_SUPPORTED_COLOR_MODES = "supported_color_modes"
-
-CONF_EFFECT_LIST = "effect_list"
-
-CONF_FLASH_TIME_LONG = "flash_time_long"
-CONF_FLASH_TIME_SHORT = "flash_time_short"
-
-CONF_MAX_MIREDS = "max_mireds"
-CONF_MIN_MIREDS = "min_mireds"
-
 
 _PLATFORM_SCHEMA_BASE = (
     MQTT_RW_SCHEMA.extend(
