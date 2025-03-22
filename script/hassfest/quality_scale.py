@@ -2240,6 +2240,7 @@ NO_QUALITY_SCALE = [
     *{platform.value for platform in Platform},
     "api",
     "application_credentials",
+    "assist_conversation",
     "auth",
     "automation",
     "blueprint",

@@ -59,6 +59,7 @@ NO_IOT_CLASS = [
     *{platform.value for platform in Platform},
     "api",
     "application_credentials",
+    "assist_conversation",
     "auth",
     "automation",
     "blueprint",

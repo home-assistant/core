@@ -4,17 +4,24 @@ from __future__ import annotations
 
 import dataclasses
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.core import Context, HomeAssistant, async_get_hass, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    HomeAssistant,
+    async_get_hass,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, singleton
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DATA_COMPONENT,
-    DATA_DEFAULT_ENTITY,
+    DOMAIN,
     HOME_ASSISTANT_AGENT,
     OLD_HOME_ASSISTANT_AGENT,
 )
@@ -30,6 +37,12 @@ from .trace import (
     ConversationTraceEventType,
     async_conversation_trace,
 )
+
+if TYPE_CHECKING:
+    # pylint: disable-next=hass-component-root-import
+    from homeassistant.components.assist_conversation.conversation import DefaultAgent
+
+    from .trigger import TriggerDetails
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,13 +67,13 @@ def async_get_agent(
     hass: HomeAssistant, agent_id: str | None = None
 ) -> AbstractConversationAgent | ConversationEntity | None:
     """Get specified agent."""
+    manager = get_agent_manager(hass)
+
     if agent_id is None or agent_id in (HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT):
-        return hass.data[DATA_DEFAULT_ENTITY]
+        return manager.default.agent
 
     if "." in agent_id:
         return hass.data[DATA_COMPONENT].get_entity(agent_id)
-
-    manager = get_agent_manager(hass)
 
     if not manager.async_is_valid_agent_id(agent_id):
         return None
@@ -137,6 +150,7 @@ class AgentManager:
         """Initialize the conversation agents."""
         self.hass = hass
         self._agents: dict[str, AbstractConversationAgent] = {}
+        self.default = DefaultAgentManager(hass)
 
     @callback
     def async_get_agent(self, agent_id: str) -> AbstractConversationAgent | None:
@@ -184,3 +198,36 @@ class AgentManager:
     def async_unset_agent(self, agent_id: str) -> None:
         """Unset the agent."""
         self._agents.pop(agent_id, None)
+
+
+class DefaultAgentManager:
+    """Class to manage default conversation agent."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the manager."""
+        self.hass = hass
+        self.agent: DefaultAgent | None = None
+        self.triggers_details: list[TriggerDetails] = []
+
+    async def async_setup_agent(self, config: ConfigType, agent: DefaultAgent) -> None:
+        """Set up the default agent."""
+        agent.setup_config_and_trigger_intents(
+            config.get(DOMAIN, {}).get("intents", {}), self.triggers_details
+        )
+        self.agent = agent
+        await self.hass.data[DATA_COMPONENT].async_add_entities([agent])
+
+    def register_trigger(self, trigger_details: TriggerDetails) -> CALLBACK_TYPE:
+        """Register a trigger."""
+        self.triggers_details.append(trigger_details)
+        if self.agent is not None:
+            self.agent.update_triggers(self.triggers_details)
+
+        @callback
+        def unregister_trigger() -> None:
+            """Unregister the trigger."""
+            self.triggers_details.remove(trigger_details)
+            if self.agent is not None:
+                self.agent.update_triggers(self.triggers_details)
+
+        return unregister_trigger

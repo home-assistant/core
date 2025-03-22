@@ -1,0 +1,9 @@
+{
+  "domain": "assist_conversation",
+  "name": "Assist Conversation",
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/conversation",
+  "integration_type": "system",
+  "quality_scale": "internal",
+  "requirements": ["hassil==2.2.3", "home-assistant-intents==2025.3.28"]
+}
