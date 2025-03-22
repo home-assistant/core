@@ -85,6 +85,7 @@ PLATFORMS = [
     Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.NUMBER,
     Platform.SCENE,
     Platform.SELECT,
     Platform.SENSOR,
