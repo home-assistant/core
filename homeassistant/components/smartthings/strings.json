@@ -39,8 +39,43 @@
       "remote_control": {
         "name": "Remote control"
       },
+      "child_lock": {
+        "name": "Child lock"
+      },
       "valve": {
         "name": "Valve"
+      }
+    },
+    "event": {
+      "button": {
+        "state": {
+          "pushed": "Pushed",
+          "held": "Held",
+          "double": "Double",
+          "pushed_2x": "Pushed 2x",
+          "pushed_3x": "Pushed 3x",
+          "pushed_4x": "Pushed 4x",
+          "pushed_5x": "Pushed 5x",
+          "pushed_6x": "Pushed 6x",
+          "down": "Down",
+          "down_2x": "Down 2x",
+          "down_3x": "Down 3x",
+          "down_4x": "Down 4x",
+          "down_5x": "Down 5x",
+          "down_6x": "Down 6x",
+          "down_hold": "Down hold",
+          "up": "Up",
+          "up_2x": "Up 2x",
+          "up_3x": "Up 3x",
+          "up_4x": "Up 4x",
+          "up_5x": "Up 5x",
+          "up_6x": "Up 6x",
+          "up_hold": "Up hold",
+          "swipe_up": "Swipe up",
+          "swipe_down": "Swipe down",
+          "swipe_left": "Swipe left",
+          "swipe_right": "Swipe right"
+        }
       }
     },
     "sensor": {
