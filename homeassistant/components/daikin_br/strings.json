@@ -1,9 +1,9 @@
 {
   "config": {
-    "flow_title": "Discovered Device: {name}",
+    "flow_title": "Discovered device: {name}",
     "step": {
       "user": {
-        "title": "Setup Daikin Smart AC",
+        "title": "Set up Daikin Smart AC",
         "description": "Enter the Device Name and Device Key for SSID: {hostname}.\n\nNote - To find the Device Key for the SSID shown above, open the Daikin Smart AC mobile app and navigate to Menu → Integrations → Home Assistant. Enter the SSID and press Submit.",
         "data": {
           "device_name": "Device Name",
@@ -19,7 +19,7 @@
         }
       },
       "manual": {
-        "title": "Setup Daikin Smart AC",
+        "title": "Set up Daikin Smart AC",
         "description": "Open your network router setup and check the client list. The Daikin AC should appear in the list with the format DAIKINXXXXXX.\n\nNote - To find the Device Key, open the Daikin Smart AC mobile app and navigate to Menu → Integrations → Home Assistant. Enter the SSID (DAIKINXXXXXX) and press Submit.",
         "data": {
           "device_ip": "Device IP Address",
