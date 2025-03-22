@@ -59,7 +59,8 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
             except ActronNeoAPIError:
                 errors["base"] = ERROR_API_ERROR
 
-            await self.async_set_unique_id(username.lower())
+            user_data = await api.get_user()
+            await self.async_set_unique_id(user_data["id"])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=username,
