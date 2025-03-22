@@ -24,6 +24,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 class HumidifierComelitMode(StrEnum):
     """Serial Bridge humidifier modes."""
@@ -127,7 +130,9 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         """Handle updated data from the coordinator."""
         device = self.coordinator.data[CLIMATE][self._device.index]
         if not isinstance(device.val, list):
-            raise HomeAssistantError("Invalid clima data")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="invalid_clima_data"
+            )
 
         # CLIMATE has a 2 item tuple:
         # - first  for Clima
