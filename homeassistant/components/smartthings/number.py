@@ -21,13 +21,13 @@ async def async_setup_entry(
     """Add number entities for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsNumberEntity(entry_data.client, device)
+        SmartThingsWasherRinseCyclesNumberEntity(entry_data.client, device)
         for device in entry_data.devices.values()
         if Capability.CUSTOM_WASHER_RINSE_CYCLES in device.status[MAIN]
     )
 
 
-class SmartThingsNumberEntity(SmartThingsEntity, NumberEntity):
+class SmartThingsWasherRinseCyclesNumberEntity(SmartThingsEntity, NumberEntity):
     """Define a SmartThings number."""
 
     _attr_translation_key = "washer_rinse_cycles"
