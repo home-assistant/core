@@ -9,7 +9,6 @@ DOMAIN = "nut"
 PLATFORMS = [
     Platform.BUTTON,
     Platform.SENSOR,
-    Platform.SWITCH,
 ]
 
 DEFAULT_NAME = "NUT UPS"

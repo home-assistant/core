@@ -218,9 +218,6 @@
       "ups_watchdog_status": { "name": "Watchdog status" },
       "watts": { "name": "Watts" }
     },
-    "switch": {
-      "outlet_number_load_poweronoff": { "name": "Power outlet {outlet_name}" }
-    },
     "button": {
       "outlet_number_load_cycle": { "name": "Power cycle outlet {outlet_name}" }
     }

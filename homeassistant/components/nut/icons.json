@@ -152,11 +152,6 @@
         "default": "mdi:information-outline"
       }
     },
-    "switch": {
-      "outlet_number_load_poweronoff": {
-        "default": "mdi:power"
-      }
-    },
     "button": {
       "outlet_number_load_cycle": {
         "default": "mdi:restart"
