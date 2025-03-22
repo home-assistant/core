@@ -28,7 +28,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: todo
   test-coverage: done
   # Gold
@@ -64,20 +64,14 @@ rules:
     status: exempt
     comment: There are no noisy entities.
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:
     status: todo
     comment: The Cloud vs Local API warning should probably be a repair issue.
-  stale-devices:
-    status: todo
-    comment: |
-      The integration does not yet handle stale devices. The roborock app does
-      support deleting devices and this is a gap #132590
+  stale-devices: done
   # Platinum
   async-dependency: todo
-  inject-websession:
-    status: todo
-    comment: Web API uses aiohttp but does not yet inject web session.
+  inject-websession: done
   strict-typing: todo
