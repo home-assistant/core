@@ -966,12 +966,11 @@ class _ScriptRun:
     ## Variable actions ##
 
     async def _async_step_variables(self) -> None:
-        """Define a local variable."""
-        self._step_log("defining local variables")
-        for key, value in (
-            self._action[CONF_VARIABLES].async_simple_render(self._variables).items()
-        ):
-            self._variables.define_local(key, value)
+        """Assign values to variables."""
+        self._step_log("assigning variables")
+        self._variables.update(
+            self._action[CONF_VARIABLES].async_simple_render(self._variables)
+        )
 
     ## External actions ##
 
