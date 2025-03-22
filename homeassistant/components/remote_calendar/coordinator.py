@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from httpx import HTTPError, InvalidURL
+from httpx import HTTPError, InvalidURL, Response
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
 from ical.exceptions import CalendarParseError
@@ -40,7 +40,7 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
             update_interval=SCAN_INTERVAL,
             always_update=True,
         )
-        self.ics = None
+        self.ics: Response | None = None
         self._client = get_async_client(hass)
         self._url = config_entry.data[CONF_URL]
 
