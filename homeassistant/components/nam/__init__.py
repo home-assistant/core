@@ -54,7 +54,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: NAMConfigEntry) -> bool:
             translation_placeholders={"device": entry.title},
         ) from err
     except AuthFailedError as err:
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_error",
+            translation_placeholders={"device": entry.title},
+        ) from err
 
     coordinator = NAMDataUpdateCoordinator(hass, entry, nam)
     await coordinator.async_config_entry_first_refresh()
