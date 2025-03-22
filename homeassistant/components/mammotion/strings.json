@@ -140,6 +140,9 @@
       }
     },
     "switch": {
+      "area": {
+        "name": "Area {name}"
+      },
       "blade_status": {
         "name": "Blades on/off"
       },
