@@ -1120,7 +1120,13 @@ class ConfigEntry[_DataT = Any]:
         Returns function to unlisten.
         """
         self.update_listeners.append(listener)
-        return lambda: self.update_listeners.remove(listener)
+
+        def remove_listener() -> None:
+            """Remove listener."""
+            if listener in self.update_listeners:
+                self.update_listeners.remove(listener)
+
+        return remove_listener
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this entry."""
@@ -3243,6 +3249,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Update config entry, reload config entry and finish config flow.
 
+        Any update listener will be removed before updating the entry as the config entry
+        will be reloaded in the case the entry has been updated.
+
         :param data: replace the entry data with new data
         :param data_updates: add items from data_updates to entry data - existing keys
         are overridden
@@ -3260,6 +3269,13 @@ class ConfigFlow(ConfigEntryBaseFlow):
             if data is not UNDEFINED:
                 raise ValueError("Cannot set both data and data_updates")
             data = entry.data | data_updates
+
+        restore_update_listeners = []
+        if entry.update_listeners:
+            # Save a copy of the update listeners to be restored in case no reload.
+            restore_update_listeners = list(entry.update_listeners)
+        entry.update_listeners = []
+
         result = self.hass.config_entries.async_update_entry(
             entry=entry,
             unique_id=unique_id,
@@ -3267,8 +3283,13 @@ class ConfigFlow(ConfigEntryBaseFlow):
             data=data,
             options=options,
         )
+
         if reload_even_if_entry_is_unchanged or result:
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
+        else:
+            # Restore the update listeners in the case an update did not occur.
+            entry.update_listeners = restore_update_listeners
+
         if reason is UNDEFINED:
             reason = "reauth_successful"
             if self.source == SOURCE_RECONFIGURE:
