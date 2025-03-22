@@ -1,7 +1,8 @@
 """Tests for the SmartThings component init module."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientResponseError, RequestInfo
 from pysmartthings import (
     Attribute,
     Capability,
@@ -262,6 +263,57 @@ async def test_removing_stale_devices(
     await hass.async_block_till_done()
 
     assert not device_registry.async_get_device({(DOMAIN, "aaa-bbb-ccc")})
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_refreshing_expired_token(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removing stale devices."""
+    with patch(
+        "homeassistant.components.smartthings.OAuth2Session.async_ensure_token_valid",
+        side_effect=ClientResponseError(
+            request_info=RequestInfo(
+                url="http://example.com",
+                method="GET",
+                headers={},
+                real_url="http://example.com",
+            ),
+            status=400,
+            history=(),
+        ),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_error_refreshing_token(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removing stale devices."""
+    with patch(
+        "homeassistant.components.smartthings.OAuth2Session.async_ensure_token_valid",
+        side_effect=ClientResponseError(
+            request_info=RequestInfo(
+                url="http://example.com",
+                method="GET",
+                headers={},
+                real_url="http://example.com",
+            ),
+            status=500,
+            history=(),
+        ),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_hub_via_device(
