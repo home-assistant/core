@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from aiohttp import ClientError
+from aiohttp import ClientResponseError
 from pysmartthings import (
     Attribute,
     Capability,
@@ -19,6 +20,7 @@ from pysmartthings import (
     SmartThingsSinkError,
     Status,
 )
+from pysmartthings.models import Lifecycle
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -102,7 +104,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     try:
         await session.async_ensure_token_valid()
-    except ClientError as err:
+    except ClientResponseError as err:
+        if err.status == HTTPStatus.BAD_REQUEST:
+            raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from err
         raise ConfigEntryNotReady from err
 
     client = SmartThings(session=async_get_clientsession(hass))
@@ -184,6 +188,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         scene.scene_id: scene
         for scene in await client.get_scenes(location_id=entry.data[CONF_LOCATION_ID])
     }
+
+    def handle_deleted_device(device_id: str) -> None:
+        """Handle a deleted device."""
+        dev_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)},
+        )
+        if dev_entry is not None:
+            device_registry.async_update_device(
+                dev_entry.id, remove_config_entry_id=entry.entry_id
+            )
+
+    entry.async_on_unload(
+        client.add_device_lifecycle_event_listener(
+            Lifecycle.DELETE, handle_deleted_device
+        )
+    )
 
     entry.runtime_data = SmartThingsData(
         devices={
