@@ -226,6 +226,12 @@
               "dog": "Dog mode",
               "camp": "Camp mode"
             }
+          },
+          "fan_mode": {
+            "state": {
+              "off": "Off",
+              "bioweapon": "Bioweapon Defense"
+            }
           }
         }
       }

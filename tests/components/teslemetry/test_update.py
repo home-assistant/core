@@ -61,7 +61,7 @@ async def test_update_services(
     entity_id = "update.test_update"
 
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.schedule_software_update",
+        "tesla_fleet_api.teslemetry.Vehicle.schedule_software_update",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
