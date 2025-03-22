@@ -427,6 +427,11 @@
           "freeze_protection": "Freeze protection"
         }
       }
+    },
+    "switch": {
+      "light": {
+        "name": "Light"
+      }
     }
   },
   "issues": {
