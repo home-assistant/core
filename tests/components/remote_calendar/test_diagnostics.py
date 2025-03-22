@@ -6,7 +6,6 @@ from httpx import Response
 import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
-from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
@@ -37,4 +36,4 @@ async def test_entry_diagnostics(
     await setup_integration(hass, config_entry)
     await hass.async_block_till_done()
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-    assert result == snapshot(exclude=props("created_at", "modified_at"))
+    assert result == snapshot
