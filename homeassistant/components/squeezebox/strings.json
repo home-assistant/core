@@ -128,7 +128,7 @@
     },
     "switch": {
       "alarm": {
-        "name": "Alarm"
+        "name": "Alarm ({alarm_id})"
       },
       "alarms_enabled": {
         "name": "Alarms enabled"

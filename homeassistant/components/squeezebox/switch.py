@@ -84,6 +84,7 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
         super().__init__(coordinator)
         self._alarm: Alarm | None = alarm
         self._attr_available = True
+        self._attr_translation_placeholders = {"alarm_id": alarm["id"]}
         self._attr_unique_id: str = (
             f"{format_mac(self._player.player_id)}-alarm-{alarm['id']}"
         )
@@ -159,11 +160,6 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
         return self.alarm is not None and self.alarm["enabled"]
 
     @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return "Alarm"
-
-    @property
     def _is_today(self) -> bool:
         """Return whether this alarm is scheduled for today."""
         daynum = datetime.datetime.today().weekday()
@@ -201,11 +197,6 @@ class SqueezeBoxAlarmsEnabledEntity(SqueezeboxEntity, SwitchEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.async_write_ha_state()
-
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return "Alarms Enabled"
 
     @property
     def is_on(self) -> bool:
