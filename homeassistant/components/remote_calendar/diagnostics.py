@@ -2,7 +2,7 @@
 
 import datetime
 from typing import Any
-from dataclasses import asdict
+
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 from homeassistant.const import CONF_URL
