@@ -29,7 +29,7 @@ async def test_cover_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod: AsyncMock,
+    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
     mock_hub_status_prod_awning: AsyncMock,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
@@ -37,7 +37,7 @@ async def test_cover_device(
     """Test that a cover device is created correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod.mock_calls) == 1
+    assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_awning.mock_calls) == 2
 
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "58717")})
@@ -49,7 +49,7 @@ async def test_cover_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod: AsyncMock,
+    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
     mock_hub_status_prod_awning: AsyncMock,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
@@ -57,7 +57,7 @@ async def test_cover_update(
     """Test that a cover entity is created and updated correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod.mock_calls) == 1
+    assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_awning.mock_calls) == 2
 
     entity = hass.states.get("cover.markise")
@@ -76,14 +76,14 @@ async def test_cover_open_and_close(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod: AsyncMock,
+    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
     mock_hub_status_prod_awning: AsyncMock,
     mock_action_call: AsyncMock,
 ) -> None:
     """Test that a cover entity is opened and closed correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod.mock_calls) == 1
+    assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_awning.mock_calls) >= 1
 
     entity = hass.states.get("cover.markise")
@@ -134,14 +134,14 @@ async def test_cover_open_to_pos(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod: AsyncMock,
+    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
     mock_hub_status_prod_awning: AsyncMock,
     mock_action_call: AsyncMock,
 ) -> None:
     """Test that a cover entity is opened to correct position."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod.mock_calls) == 1
+    assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_awning.mock_calls) >= 1
 
     entity = hass.states.get("cover.markise")
@@ -173,14 +173,14 @@ async def test_cover_open_and_stop(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod: AsyncMock,
+    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
     mock_hub_status_prod_awning: AsyncMock,
     mock_action_call: AsyncMock,
 ) -> None:
     """Test that a cover entity is opened and stopped correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod.mock_calls) == 1
+    assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
     assert len(mock_hub_status_prod_awning.mock_calls) >= 1
 
     entity = hass.states.get("cover.markise")
