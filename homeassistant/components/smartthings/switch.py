@@ -59,6 +59,13 @@ CAPABILITY_TO_COMMAND_SWITCHES: dict[
         command=Command.SET_DRYER_WRINKLE_PREVENT,
     )
 }
+CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescription] = {
+    Capability.SAMSUNG_CE_SABBATH_MODE: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_SABBATH_MODE,
+        translation_key="sabbath_mode",
+        status_attribute=Attribute.STATUS,
+    )
+}
 
 
 async def async_setup_entry(
@@ -84,6 +91,17 @@ async def async_setup_entry(
         )
         for device in entry_data.devices.values()
         for capability, description in CAPABILITY_TO_COMMAND_SWITCHES.items()
+        if capability in device.status[MAIN]
+    )
+    entities.extend(
+        SmartThingsSwitch(
+            entry_data.client,
+            device,
+            description,
+            Capability(capability),
+        )
+        for device in entry_data.devices.values()
+        for capability, description in CAPABILITY_TO_SWITCHES.items()
         if capability in device.status[MAIN]
     )
     async_add_entities(entities)
