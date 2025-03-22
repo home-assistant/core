@@ -211,7 +211,7 @@
       "message": "Device communication error occurred for {device}"
     },
     "device_communication_action_error": {
-      "message": "Device communication error occurred while calling the entity {entity} action for {device}"
+      "message": "Device communication error occurred while calling action for {entity} of {device}"
     },
     "device_not_found": {
       "message": "{device} not found while configuring device automation triggers"
@@ -229,7 +229,7 @@
       "message": "RPC call error occurred while triggering OTA update for {device}"
     },
     "rpc_call_action_error": {
-      "message": "RPC call error occurred while calling the entity {entity} action for {device}"
+      "message": "RPC call error occurred while calling action for {entity} of {device}"
     },
     "update_error": {
       "message": "An error occurred while retrieving data from {device}"
