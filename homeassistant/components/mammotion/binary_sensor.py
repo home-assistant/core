@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from pymammotion.data.model.device import MowingDevice
 
 from homeassistant.components.binary_sensor import (
-    ENTITY_ID_FORMAT,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -70,9 +69,6 @@ class MammotionBinarySensorEntity(MammotionBaseEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the binary sensor entity."""
         super().__init__(coordinator, entity_description.key)
-        self.entity_id = ENTITY_ID_FORMAT.format(
-            f"{coordinator.device_name}_{entity_description.key}"
-        )
         self.entity_description = entity_description
         self._attr_translation_key = entity_description.translation_key
 
