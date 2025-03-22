@@ -72,7 +72,10 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 
 from .config_validation import BITMASK_SCHEMA
 from .const import (
@@ -170,6 +173,9 @@ SUPPORTED_PROTOCOLS = "supportedProtocols"
 ADDITIONAL_PROPERTIES = "additional_properties"
 STATUS = "status"
 REQUESTED_SECURITY_CLASSES = "requestedSecurityClasses"
+
+DEVICE_NAME = "device_name"
+AREA_NAME = "area_name"
 
 FEATURE = "feature"
 STRATEGY = "strategy"
@@ -977,6 +983,8 @@ async def websocket_validate_dsk_and_enter_pin(
         vol.Required(TYPE): "zwave_js/provision_smart_start_node",
         vol.Required(ENTRY_ID): str,
         vol.Required(QR_PROVISIONING_INFORMATION): QR_PROVISIONING_INFORMATION_SCHEMA,
+        vol.Optional(DEVICE_NAME): str,
+        vol.Optional(AREA_NAME): str,
     }
 )
 @websocket_api.async_response
@@ -991,7 +999,6 @@ async def websocket_provision_smart_start_node(
     driver: Driver,
 ) -> None:
     """Pre-provision a smart start node."""
-
     provisioning_info = msg[QR_PROVISIONING_INFORMATION]
 
     if provisioning_info.version == QRCodeVersion.S2:
@@ -1001,6 +1008,43 @@ async def websocket_provision_smart_start_node(
             "QR code version S2 is not supported for this command",
         )
         return
+
+    # Create an empty device if device_name is provided
+    if device_name := msg.get(DEVICE_NAME):
+        dev_reg = dr.async_get(hass)
+
+        # Create a unique device identifier using the DSK
+        device_identifier = (DOMAIN, f"provision_{provisioning_info.dsk}")
+
+        manufacturer = None
+        model = None
+
+        device_info = await driver.config_manager.lookup_device(
+            provisioning_info.manufacturer_id,
+            provisioning_info.product_type,
+            provisioning_info.product_id,
+        )
+        if device_info:
+            manufacturer = device_info.manufacturer
+            model = device_info.label
+
+        # Create an empty device
+        device = dev_reg.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={device_identifier},
+            name=device_name,
+            manufacturer=manufacturer,
+            model=model,
+            suggested_area=msg.get(AREA_NAME),
+        )
+
+        if provisioning_info.additional_properties is None:
+            provisioning_info.additional_properties = {}
+        provisioning_info.additional_properties["device_id"] = device.id
+
+        # Dispatch event that device was added to registry
+        async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
+
     await driver.controller.async_provision_smart_start_node(provisioning_info)
     connection.send_result(msg[ID])
 
@@ -1036,7 +1080,23 @@ async def websocket_unprovision_smart_start_node(
         )
         return
     dsk_or_node_id = msg.get(DSK) or msg[NODE_ID]
-    await driver.controller.async_unprovision_smart_start_node(dsk_or_node_id)
+    provisioning_entry = await driver.controller.async_get_provisioning_entry(
+        dsk_or_node_id
+    )
+    if (
+        provisioning_entry
+        and provisioning_entry.additional_properties
+        and "device_id" in provisioning_entry.additional_properties
+    ):
+        device_identifier = (DOMAIN, f"provision_{provisioning_entry.dsk}")
+        device_id = provisioning_entry.additional_properties["device_id"]
+        dev_reg = dr.async_get(hass)
+        device = dev_reg.async_get(device_id)
+        if device and device.identifiers == {device_identifier}:
+            # Only remove the device if nothing else has claimed it
+            dev_reg.async_remove_device(device_id)
+        await driver.controller.async_unprovision_smart_start_node(dsk_or_node_id)
+
     connection.send_result(msg[ID])
 
 
