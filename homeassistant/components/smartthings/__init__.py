@@ -79,6 +79,7 @@ type SmartThingsConfigEntry = ConfigEntry[SmartThingsData]
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.EVENT,

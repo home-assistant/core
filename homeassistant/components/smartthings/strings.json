@@ -46,6 +46,11 @@
         "name": "Valve"
       }
     },
+    "button": {
+      "stop": {
+        "name": "Stop"
+      }
+    },
     "event": {
       "button": {
         "state": {
