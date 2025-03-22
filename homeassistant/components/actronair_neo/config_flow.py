@@ -29,7 +29,6 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.api = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -38,11 +37,11 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input:
-            username = user_input["username"]
-            password = user_input["password"]
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
             _LOGGER.debug("Connecting to Actron Neo API")
             try:
-                self.api = ActronNeoAPI(username, password)
+                api = ActronNeoAPI(username, password)
             except ActronNeoAuthError:
                 errors["base"] = ERROR_INVALID_AUTH
                 return self.async_show_form(
@@ -51,12 +50,12 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors=errors,
                 )
 
-            assert self.api is not None
+            assert api is not None
 
             try:
                 instance_uuid = await instance_id.async_get(self.hass)
-                await self.api.request_pairing_token("HomeAssistant", instance_uuid)
-                await self.api.refresh_token()
+                await api.request_pairing_token("HomeAssistant", instance_uuid)
+                await api.refresh_token()
             except ActronNeoAPIError:
                 errors["base"] = ERROR_API_ERROR
 
@@ -65,7 +64,7 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=username,
                 data={
-                    CONF_API_TOKEN: self.api.pairing_token,
+                    CONF_API_TOKEN: api.pairing_token,
                 },
             )
 
