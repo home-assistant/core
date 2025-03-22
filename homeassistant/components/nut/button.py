@@ -84,8 +84,6 @@ class NUTButton(ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        _LOGGER.debug("press button")
-
         name_list = self.entity_description.key.split(".")
         command_name = f"{name_list[0]}.{name_list[1]}.load.cycle"
         await self.pynut_data.async_run_command(command_name)
