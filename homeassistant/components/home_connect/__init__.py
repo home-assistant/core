@@ -16,10 +16,10 @@ from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_e
 from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .actions import register_actions
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, OLD_NEW_UNIQUE_ID_SUFFIX_MAP
 from .coordinator import HomeConnectConfigEntry, HomeConnectCoordinator
+from .services import register_actions
 
 _LOGGER = logging.getLogger(__name__)
 
