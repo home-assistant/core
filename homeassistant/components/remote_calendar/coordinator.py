@@ -26,6 +26,7 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
     """Class to manage fetching calendar data."""
 
     config_entry: RemoteCalendarConfigEntry
+    ics: Response
 
     def __init__(
         self,
@@ -40,7 +41,6 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
             update_interval=SCAN_INTERVAL,
             always_update=True,
         )
-        self.ics: Response | None = None
         self._client = get_async_client(hass)
         self._url = config_entry.data[CONF_URL]
 
