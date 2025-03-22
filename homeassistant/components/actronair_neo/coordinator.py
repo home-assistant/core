@@ -25,18 +25,12 @@ class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             update_interval=SCAN_INTERVAL,
         )
 
-        api = ActronNeoAPI(pairing_token=pairing_token)
-
-        self.api = api
-        self.systems = None
+        self.api = ActronNeoAPI(pairing_token=pairing_token)
 
     async def _async_update_data(self) -> dict:
         """Fetch updates and merge incremental changes into the full state."""
         if self.api.access_token is None:
             await self.api.refresh_token()
-
-        if self.systems is None:
-            self.systems = await self.api.get_ac_systems()
 
         await self.api.update_status()
 

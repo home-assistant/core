@@ -48,10 +48,7 @@ async def async_setup_entry(
     # Add system-wide climate entity
     entities: list[ClimateEntity] = []
 
-    assert coordinator.systems is not None
-
-    systems = coordinator.systems["_embedded"]["ac-system"]
-    for system in systems:
+    for system in coordinator.api.systems:
         name = system["description"]
         serial_number = system["serial"]
         entities.append(ActronSystemClimate(coordinator, serial_number, name))
@@ -118,7 +115,7 @@ class ActronSystemClimate(
     @property
     def fan_mode(self) -> str:
         """Return the current fan mode."""
-        api_fan_mode = self._status.get("UserAirconSettings", {}).get("FanMode").upper()
+        api_fan_mode = self._status["UserAirconSettings"]["FanMode"].upper()
         fan_mode_without_cont = api_fan_mode.split("+")[0]
         return FAN_MODE_MAPPING_REVERSE.get(fan_mode_without_cont, "AUTO")
 
@@ -161,7 +158,7 @@ class ActronSystemClimate(
         """Set a new fan mode."""
         api_fan_mode = FAN_MODE_MAPPING.get(fan_mode.lower())
         await self._api.set_fan_mode(self._serial_number, fan_mode=api_fan_mode)
-        self._attr_fan_mode = fan_mode
+        self._status["UserAirconSettings"]["FanMode"] = api_fan_mode
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
@@ -175,8 +172,7 @@ class ActronSystemClimate(
             await self._api.set_system_mode(
                 self._serial_number, is_on=True, mode=ac_mode
             )
-
-        self._attr_hvac_mode = hvac_mode
+        self._status["UserAirconSettings"]["Mode"] = hvac_mode
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
@@ -203,7 +199,7 @@ class ActronSystemClimate(
             )
         else:
             raise ValueError(f"Mode {hvac_mode} is invalid.")
-        self._attr_target_temperature = temp
+        self._status["MasterInfo"]["LiveTemp_oC"] = temp
 
     async def async_turn_on_continuous(self, continuous: bool) -> None:
         """Set the continuous mode."""
