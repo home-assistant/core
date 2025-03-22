@@ -68,6 +68,16 @@
           "intensive": "Intensive",
           "silent": "Silent"
         }
+      },
+      "battery_camera_work_mode": {
+        "name": "Battery work mode",
+        "state": {
+          "plugged_in": "Plugged in",
+          "high_performance": "High performance",
+          "power_save": "Power save",
+          "super_power_save": "Super power saving",
+          "custom": "Custom"
+        }
       }
     },
     "image": {
