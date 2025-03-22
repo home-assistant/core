@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
+from homeassistant.const import CONF_URL
 from . import RemoteCalendarConfigEntry
 
 
@@ -18,5 +18,6 @@ async def async_get_config_entry_diagnostics(
         "now": dt_util.now().isoformat(),
         "timezone": str(dt_util.get_default_time_zone()),
         "system_timezone": str(datetime.datetime.now().astimezone().tzinfo),
-        "data": coordinator.data,
+        "url": entry.data[CONF_URL],
+        "data": repr(coordinator.data),
     }
