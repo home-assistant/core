@@ -1451,7 +1451,7 @@
     'state': '8794.3125',
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_15m-entry]
+# name: test_sensor[sensor.192_168_1_1_load_15_min-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1466,7 +1466,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_load_15m',
+    'entity_id': 'sensor.192_168_1_1_load_15_min',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1478,7 +1478,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Load (15m)',
+    'original_name': 'Load (15 min)',
     'platform': 'webmin',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1487,21 +1487,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_15m-state]
+# name: test_sensor[sensor.192_168_1_1_load_15_min-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 Load (15m)',
+      'friendly_name': '192.168.1.1 Load (15 min)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_load_15m',
+    'entity_id': 'sensor.192_168_1_1_load_15_min',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.37',
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_1m-entry]
+# name: test_sensor[sensor.192_168_1_1_load_1_min-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1516,7 +1516,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_load_1m',
+    'entity_id': 'sensor.192_168_1_1_load_1_min',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1528,7 +1528,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Load (1m)',
+    'original_name': 'Load (1 min)',
     'platform': 'webmin',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1537,21 +1537,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_1m-state]
+# name: test_sensor[sensor.192_168_1_1_load_1_min-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 Load (1m)',
+      'friendly_name': '192.168.1.1 Load (1 min)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_load_1m',
+    'entity_id': 'sensor.192_168_1_1_load_1_min',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.29',
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_5m-entry]
+# name: test_sensor[sensor.192_168_1_1_load_5_min-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1566,7 +1566,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.192_168_1_1_load_5m',
+    'entity_id': 'sensor.192_168_1_1_load_5_min',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1578,7 +1578,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Load (5m)',
+    'original_name': 'Load (5 min)',
     'platform': 'webmin',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1587,14 +1587,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.192_168_1_1_load_5m-state]
+# name: test_sensor[sensor.192_168_1_1_load_5_min-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '192.168.1.1 Load (5m)',
+      'friendly_name': '192.168.1.1 Load (5 min)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.192_168_1_1_load_5m',
+    'entity_id': 'sensor.192_168_1_1_load_5_min',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

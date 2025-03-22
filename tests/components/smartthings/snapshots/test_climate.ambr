@@ -1,4 +1,68 @@
 # serializer version: 1
+# name: test_all_entities[aux_ac][climate.aux_a_c_on_off-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': None,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.aux_a_c_on_off',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 393>,
+    'translation_key': None,
+    'unique_id': 'bf53a150-f8a4-45d1-aac4-86252475d551',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[aux_ac][climate.aux_a_c_on_off-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.0,
+      'fan_mode': 'auto',
+      'fan_modes': None,
+      'friendly_name': 'AUX A/C on-off',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 393>,
+      'temperature': 20.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.aux_a_c_on_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[bosch_radiator_thermostat_ii][climate.radiator_thermostat_ii_m_wohnzimmer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -430,6 +494,70 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat',
+  })
+# ---
+# name: test_all_entities[ecobee_thermostat_offline][climate.downstairs-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': None,
+      'hvac_modes': list([
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.downstairs',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 395>,
+    'translation_key': None,
+    'unique_id': '1888b38f-6246-4f1e-911b-bfcfb66999db',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[ecobee_thermostat_offline][climate.downstairs-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': None,
+      'fan_mode': None,
+      'fan_modes': None,
+      'friendly_name': 'Downstairs',
+      'hvac_modes': list([
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 395>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.downstairs',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[generic_ef00_v1][climate.thermostat_kuche-entry]

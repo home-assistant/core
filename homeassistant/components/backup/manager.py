@@ -120,6 +120,7 @@ class BackupManagerState(StrEnum):
 
     IDLE = "idle"
     CREATE_BACKUP = "create_backup"
+    BLOCKED = "blocked"
     RECEIVE_BACKUP = "receive_backup"
     RESTORE_BACKUP = "restore_backup"
 
@@ -226,6 +227,13 @@ class RestoreBackupEvent(ManagerStateEvent):
     reason: str | None
     stage: RestoreBackupStage | None
     state: RestoreBackupState
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class BlockedEvent(ManagerStateEvent):
+    """Backup manager blocked, Home Assistant is starting."""
+
+    manager_state: BackupManagerState = BackupManagerState.BLOCKED
 
 
 class BackupPlatformProtocol(Protocol):
@@ -342,8 +350,8 @@ class BackupManager:
         self.remove_next_delete_event: Callable[[], None] | None = None
 
         # Latest backup event and backup event subscribers
-        self.last_event: ManagerStateEvent = IdleEvent()
-        self.last_non_idle_event: ManagerStateEvent | None = None
+        self.last_event: ManagerStateEvent = BlockedEvent()
+        self.last_action_event: ManagerStateEvent | None = None
         self._backup_event_subscriptions = hass.data[
             DATA_BACKUP
         ].backup_event_subscriptions
@@ -356,9 +364,18 @@ class BackupManager:
             self.known_backups.load(stored["backups"])
 
         await self._reader_writer.async_validate_config(config=self.config)
+
         await self._reader_writer.async_resume_restore_progress_after_restart(
             on_progress=self.async_on_backup_event
         )
+
+        async def set_manager_idle_after_start(hass: HomeAssistant) -> None:
+            """Set manager to idle after start."""
+            self.async_on_backup_event(IdleEvent())
+
+        if self.state == BackupManagerState.BLOCKED:
+            # If we're not finishing a restore job, set the manager to idle after start
+            start.async_at_started(self.hass, set_manager_idle_after_start)
 
         await self.load_platforms()
 
@@ -1319,8 +1336,8 @@ class BackupManager:
         if (current_state := self.state) != (new_state := event.manager_state):
             LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
         self.last_event = event
-        if not isinstance(event, IdleEvent):
-            self.last_non_idle_event = event
+        if not isinstance(event, (BlockedEvent, IdleEvent)):
+            self.last_action_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
 

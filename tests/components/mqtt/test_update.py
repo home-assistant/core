@@ -10,7 +10,7 @@ from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INS
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
