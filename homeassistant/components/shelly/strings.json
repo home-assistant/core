@@ -205,40 +205,40 @@
   },
   "exceptions": {
     "auth_error": {
-      "message": "Authentication failed for {device} device, please update your credentials"
+      "message": "Authentication failed for {device}, please update your credentials"
     },
     "device_communication_error": {
-      "message": "Device communication error occurred for {device} device"
+      "message": "Device communication error occurred for {device}"
     },
     "device_communication_action_error": {
-      "message": "Device communication error occurred while calling the entity {entity} action for {device} device"
+      "message": "Device communication error occurred while calling the entity {entity} action for {device}"
     },
     "device_not_found": {
-      "message": "Device {device} not found while configuring device automation triggers"
+      "message": "{device} not found while configuring device automation triggers"
     },
     "firmware_unsupported": {
-      "message": "{device} device is running an unsupported firmware, please update the firmware"
+      "message": "{device} is running an unsupported firmware, please update the firmware"
     },
     "invalid_trigger": {
       "message": "Invalid device automation trigger (type, subtype): {trigger}"
     },
     "ota_update_connection_error": {
-      "message": "Device communication error occurred while triggering OTA update for {device} device"
+      "message": "Device communication error occurred while triggering OTA update for {device}"
     },
     "ota_update_rpc_error": {
-      "message": "RPC call error occurred while triggering OTA update for {device} device"
+      "message": "RPC call error occurred while triggering OTA update for {device}"
     },
     "rpc_call_action_error": {
-      "message": "RPC call error occurred while calling the entity {entity} action for {device} device"
+      "message": "RPC call error occurred while calling the entity {entity} action for {device}"
     },
     "update_error": {
-      "message": "An error occurred while retrieving data from {device} device"
+      "message": "An error occurred while retrieving data from {device}"
     },
     "update_error_device_disconnected": {
-      "message": "An error occurred while retrieving data from {device} device because it is disconnected"
+      "message": "An error occurred while retrieving data from {device} because it is disconnected"
     },
     "update_error_reconnect_error": {
-      "message": "An error occurred while reconnecting to {device} device"
+      "message": "An error occurred while reconnecting to {device}"
     },
     "update_error_sleeping_device": {
       "message": "Sleeping device did not update within {period} seconds interval"
