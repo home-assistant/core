@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DISKS,
     PERCENTAGE,
@@ -31,14 +30,13 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
 from . import SynoApi
-from .const import CONF_VOLUMES, DOMAIN, ENTITY_UNIT_LOAD
-from .coordinator import SynologyDSMCentralUpdateCoordinator
+from .const import CONF_VOLUMES, ENTITY_UNIT_LOAD
+from .coordinator import SynologyDSMCentralUpdateCoordinator, SynologyDSMConfigEntry
 from .entity import (
     SynologyDSMBaseEntity,
     SynologyDSMDeviceEntity,
     SynologyDSMEntityDescription,
 )
-from .models import SynologyDSMData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -287,11 +285,11 @@ INFORMATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SynologyDSMConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Synology NAS Sensor."""
-    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+    data = entry.runtime_data
     api = data.api
     coordinator = data.coordinator_central
     storage = api.storage
