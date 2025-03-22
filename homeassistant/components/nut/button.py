@@ -39,9 +39,7 @@ async def async_setup_entry(
     valid_button_types: dict[str, ButtonEntityDescription] = {}
     for outlet_num in range(1, int(num_outlets) + 1):
         outlet_num_str = str(outlet_num)
-        outlet_name: str = (
-            status.get(f"outlet.{outlet_num_str}.name") or outlet_num_str
-        )
+        outlet_name: str = status.get(f"outlet.{outlet_num_str}.name") or outlet_num_str
         valid_button_types |= {
             f"outlet.{outlet_num_str}.load.cycle": ButtonEntityDescription(
                 key=f"outlet.{outlet_num_str}.load.cycle",
@@ -53,7 +51,7 @@ async def async_setup_entry(
         }
 
     async_add_entities(
-        NUTButton(description,data,unique_id)
+        NUTButton(description, data, unique_id)
         for button_id, description in valid_button_types.items()
         if button_id in pynut_data.user_available_commands
     )
