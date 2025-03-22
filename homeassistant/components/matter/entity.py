@@ -61,6 +61,7 @@ class MatterEntityDescription(EntityDescription):
     # convert the value from the primary attribute to the value used by HA
     measurement_to_ha: Callable[[Any], Any] | None = None
     ha_to_native_value: Callable[[Any], Any] | None = None
+    ignore_matter_label_name: bool = True
 
 
 class MatterEntity(Entity):
@@ -114,23 +115,27 @@ class MatterEntity(Entity):
         # prefer the label attribute for the entity name
         # Matter has a way for users and/or vendors to specify a name for an endpoint
         # which is always preferred over a standard HA (generated) name
-        for attr in (
-            clusters.FixedLabel.Attributes.LabelList,
-            clusters.UserLabel.Attributes.LabelList,
+        if (
+            not hasattr(entity_info.entity_description, "ignore_matter_label_name")
+            or entity_info.entity_description.ignore_matter_label_name is False
         ):
-            if not (labels := self.get_matter_attribute_value(attr)):
-                continue
-            for label in labels:
-                if label.label not in ["Label", "Button"]:
+            for attr in (
+                clusters.FixedLabel.Attributes.LabelList,
+                clusters.UserLabel.Attributes.LabelList,
+            ):
+                if not (labels := self.get_matter_attribute_value(attr)):
                     continue
-                # fixed or user label found: use it
-                label_value: str = label.value
-                # in the case the label is only the label id, use it as postfix only
-                if label_value.isnumeric():
-                    self._name_postfix = label_value
-                else:
-                    self._attr_name = label_value
-                break
+                for label in labels:
+                    if label.label not in ["Label", "Button"]:
+                        continue
+                    # fixed or user label found: use it
+                    label_value: str = label.value
+                    # in the case the label is only the label id, use it as postfix only
+                    if label_value.isnumeric():
+                        self._name_postfix = label_value
+                    else:
+                        self._attr_name = label_value
+                    break
 
         # make sure to update the attributes once
         self._update_from_device()
