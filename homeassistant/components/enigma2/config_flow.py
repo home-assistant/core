@@ -8,12 +8,7 @@ from openwebif.error import InvalidAuthError
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.config_entries import (
-    SOURCE_USER,
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -31,6 +26,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 
+from . import Enigma2ConfigEntry
 from .const import (
     CONF_DEEP_STANDBY,
     CONF_SOURCE_BOUQUET,
@@ -154,6 +150,8 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: Enigma2ConfigEntry,
+    ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
