@@ -18,6 +18,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronConfigEntry) -> bo
     coordinator = ActronNeoDataUpdateCoordinator(hass, pairing_token)
     await coordinator.async_config_entry_first_refresh()
 
+    # Update the title with the current username
+    user_data = await coordinator.api.get_user()
+    hass.config_entries.async_update_entry(entry, title=user_data["email"])
+
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORM)
