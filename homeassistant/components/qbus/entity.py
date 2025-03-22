@@ -11,6 +11,7 @@ from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
 from qbusmqttapi.state import QbusMqttState
 
 from homeassistant.components.mqtt import ReceiveMessage, client as mqtt
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -40,7 +41,9 @@ def add_new_outputs(
 
     if new_outputs:
         added_outputs.extend(new_outputs)
-        async_add_entities([entity_type(output) for output in new_outputs])
+        async_add_entities(
+            [entity_type(coordinator.hass, output) for output in new_outputs]
+        )
 
 
 def format_ref_id(ref_id: str) -> str | None:
@@ -61,7 +64,7 @@ class QbusEntity(Entity, ABC):
     _attr_name = None
     _attr_should_poll = False
 
-    def __init__(self, mqtt_output: QbusMqttOutput) -> None:
+    def __init__(self, hass: HomeAssistant, mqtt_output: QbusMqttOutput) -> None:
         """Initialize the Qbus entity."""
 
         self._topic_factory = QbusMqttTopicFactory()
