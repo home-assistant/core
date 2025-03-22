@@ -1796,7 +1796,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.16.3
+pyoverkiz==1.16.4
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -1995,7 +1995,7 @@ python-picnic-api2==1.2.2
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.14.0
+python-roborock==2.16.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.39

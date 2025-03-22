@@ -48,10 +48,9 @@ class NUTBaseEntity(CoordinatorEntity[DataUpdateCoordinator]):
         self._attr_unique_id = f"{unique_id}_{entity_description.key}"
 
         self.pynut_data = data
-        device_name = data.name.title()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
-            name=device_name,
+            name=self.pynut_data.device_name,
         )
         self._attr_device_info.update(_get_nut_device_info(data))
 

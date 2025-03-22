@@ -258,6 +258,7 @@ class PyNUTData:
 
         self._client = AIONUTClient(self._host, port, username, password, 5, persistent)
         self.ups_list: dict[str, str] | None = None
+        self.device_name: str | None = None
         self._status: dict[str, str] | None = None
         self._device_info: NUTDeviceInfo | None = None
 
@@ -268,7 +269,7 @@ class PyNUTData:
 
     @property
     def name(self) -> str:
-        """Return the name of the ups."""
+        """Return the name of the NUT device."""
         return self._alias or f"Nut-{self._host}"
 
     @property
@@ -312,6 +313,8 @@ class PyNUTData:
         self._status = await self._async_get_status()
         if self._device_info is None:
             self._device_info = self._get_device_info()
+        if self.device_name is None:
+            self.device_name = self.name.title()
         return self._status
 
     async def async_run_command(self, command_name: str) -> None:
