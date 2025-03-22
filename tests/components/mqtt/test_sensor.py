@@ -1664,21 +1664,41 @@ async def test_entity_icon_and_entity_picture(
 
 
 @pytest.mark.parametrize(
-    "hass_config",
+    ("hass_config", "enable_state_write_suppression"),
     [
-        help_custom_config(
-            sensor.DOMAIN,
-            DEFAULT_CONFIG,
-            (
-                {
-                    "state_class": "total",
-                    "availability_topic": "availability-topic",
-                    "json_attributes_topic": "json-attributes-topic",
-                    "value_template": "{{ value_json.state }}",
-                    "last_reset_value_template": "{{ value_json.last_reset }}",
-                },
+        (
+            help_custom_config(
+                sensor.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
+                        "state_class": "total",
+                        "availability_topic": "availability-topic",
+                        "json_attributes_topic": "json-attributes-topic",
+                        "value_template": "{{ value_json.state }}",
+                        "last_reset_value_template": "{{ value_json.last_reset }}",
+                    },
+                ),
             ),
-        )
+            True,
+        ),
+        (
+            help_custom_config(
+                sensor.DOMAIN,
+                DEFAULT_CONFIG,
+                (
+                    {
+                        "state_class": "total",
+                        "availability_topic": "availability-topic",
+                        "json_attributes_topic": "json-attributes-topic",
+                        "value_template": "{{ value_json.state }}",
+                        "last_reset_value_template": "{{ value_json.last_reset }}",
+                        "enable_state_write_suppression": False,
+                    },
+                ),
+            ),
+            False,
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -1700,10 +1720,13 @@ async def test_skipped_async_ha_write_state(
     topic: str,
     payload1: str,
     payload2: str,
+    enable_state_write_suppression: bool,
 ) -> None:
     """Test a write state command is only called when there is change."""
     await mqtt_mock_entry()
-    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+    await help_test_skipped_async_ha_write_state(
+        hass, topic, payload1, payload2, enable_state_write_suppression
+    )
 
 
 @pytest.mark.parametrize(

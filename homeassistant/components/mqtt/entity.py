@@ -400,6 +400,7 @@ class MqttAttributesMixin(Entity):
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
     _attr_tpl: Callable[[ReceivePayloadType], ReceivePayloadType] | None = None
+    flag_state_write: bool
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
@@ -476,12 +477,15 @@ class MqttAttributesMixin(Entity):
                     and k not in self._attributes_extra_blocked
                 }
                 self._attr_extra_state_attributes = filtered_dict
+                self.flag_state_write = True
             else:
                 _LOGGER.warning("JSON result was not a dictionary")
 
 
 class MqttAvailabilityMixin(Entity):
     """Mixin used for platforms that report availability."""
+
+    flag_state_write: bool
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the availability mixin."""
@@ -580,6 +584,7 @@ class MqttAvailabilityMixin(Entity):
         elif payload == avail_topic[CONF_PAYLOAD_NOT_AVAILABLE]:
             self._available[topic] = False
             self._available_latest = False
+        self.flag_state_write = True
 
     @callback
     def _availability_subscribe_topics(self) -> None:
@@ -1291,6 +1296,8 @@ class MqttEntity(
     _attr_should_poll = False
     _default_name: str | None
     _entity_id_format: str
+    enable_state_write_suppression: bool = True
+    flag_state_write: bool = False
 
     def __init__(
         self,
@@ -1378,6 +1385,7 @@ class MqttEntity(
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
         await self._subscribe_topics()
+        self.flag_state_write = False
         self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:
@@ -1476,7 +1484,9 @@ class MqttEntity(
         self, attrs_snapshot: tuple[tuple[str, Any | UndefinedType], ...]
     ) -> bool:
         """Return True if attributes on entity changed or if update is forced."""
-        if self._attr_force_update:
+        if self._attr_force_update or (
+            not self.enable_state_write_suppression and self.flag_state_write
+        ):
             return True
         for attribute, last_value in attrs_snapshot:
             if getattr(self, attribute, UNDEFINED) != last_value:
