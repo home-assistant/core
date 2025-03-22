@@ -24,7 +24,6 @@ from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
 from .coordinator import (
@@ -49,7 +48,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     api_client = RoborockApiClient(
         entry.data[CONF_USERNAME],
         entry.data[CONF_BASE_URL],
-        session=async_get_clientsession(hass),
     )
     _LOGGER.debug("Getting home data")
     try:

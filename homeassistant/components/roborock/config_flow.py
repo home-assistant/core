@@ -28,7 +28,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_BASE_URL,
@@ -64,9 +63,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(error="already_configured_account")
             self._username = username
             _LOGGER.debug("Requesting code for Roborock account")
-            self._client = RoborockApiClient(
-                username, session=async_get_clientsession(self.hass)
-            )
+            self._client = RoborockApiClient(username)
             errors = await self._request_code()
             if not errors:
                 return await self.async_step_code()
@@ -143,9 +140,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         """Perform reauth upon an API authentication error."""
         self._username = entry_data[CONF_USERNAME]
         assert self._username
-        self._client = RoborockApiClient(
-            self._username, session=async_get_clientsession(self.hass)
-        )
+        self._client = RoborockApiClient(self._username)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
