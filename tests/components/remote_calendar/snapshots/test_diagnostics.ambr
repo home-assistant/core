@@ -1,7 +1,28 @@
 # serializer version: 1
 # name: test_entry_diagnostics
   dict({
-    'data': "Calendar(calscale=None, method=None, prodid='-//github.com/allenporter/ical//9.0.1//EN', version='2.0', events=[Event(dtstamp=HAFakeDatetime(2023, 6, 5, 0, 0, tzinfo=datetime.timezone.utc), uid='ea0d0000-0333-11ee-bea7-0242ac110003', dtstart=HAFakeDatetime(1997, 7, 14, 17, 0, tzinfo=datetime.timezone.utc), dtend=HAFakeDatetime(1997, 7, 15, 4, 0, tzinfo=datetime.timezone.utc), duration=None, summary='Bastille Day Party', attendees=[], categories=[], classification=None, comment=[], contacts=[], created=None, description=None, geo=None, last_modified=None, location=None, organizer=None, priority=None, recurrence_id=None, related_to=[], related=[], resources=[], rrule=None, rdate=[], exdate=[], request_status=None, sequence=None, status=None, transparency=None, url=None, extras=[], alarm=[])], todos=[], journal=[], freebusy=[], timezones=[], extras=[])",
+    'data': dict({
+      'calscale': None,
+      'events': list([
+        dict({
+          '__type': "<class 'ical.event.Event'>",
+          'repr': "Event(dtstamp=HAFakeDatetime(2023, 6, 5, 0, 0, tzinfo=datetime.timezone.utc), uid='ea0d0000-0333-11ee-8226-0242ac110003', dtstart=HAFakeDatetime(1997, 7, 14, 17, 0, tzinfo=datetime.timezone.utc), dtend=HAFakeDatetime(1997, 7, 15, 4, 0, tzinfo=datetime.timezone.utc), duration=None, summary='Bastille Day Party', attendees=[], categories=[], classification=None, comment=[], contacts=[], created=None, description=None, geo=None, last_modified=None, location=None, organizer=None, priority=None, recurrence_id=None, related_to=[], related=[], resources=[], rrule=None, rdate=[], exdate=[], request_status=None, sequence=None, status=None, transparency=None, url=None, extras=[], alarm=[])",
+        }),
+      ]),
+      'extras': list([
+      ]),
+      'freebusy': list([
+      ]),
+      'journal': list([
+      ]),
+      'method': None,
+      'prodid': '-//github.com/allenporter/ical//9.0.1//EN',
+      'timezones': list([
+      ]),
+      'todos': list([
+      ]),
+      'version': '2.0',
+    }),
     'now': '2023-06-04T18:00:00-06:00',
     'system_timezone': 'tzlocal()',
     'timezone': 'America/Regina',

@@ -1,8 +1,8 @@
-"""Provides diagnostics for local calendar."""
+"""Provides diagnostics for the remote calendar."""
 
 import datetime
 from typing import Any
-
+from dataclasses import asdict
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 from homeassistant.const import CONF_URL
@@ -19,5 +19,5 @@ async def async_get_config_entry_diagnostics(
         "timezone": str(dt_util.get_default_time_zone()),
         "system_timezone": str(datetime.datetime.now().astimezone().tzinfo),
         "url": entry.data[CONF_URL],
-        "data": repr(coordinator.data),
+        "data": dict(coordinator.data),
     }
