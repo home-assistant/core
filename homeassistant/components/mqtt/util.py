@@ -9,7 +9,7 @@ import logging
 import os
 from pathlib import Path
 import tempfile
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -435,23 +435,30 @@ def learn_more_url(platform: str) -> str:
 
 @callback
 def validate_sensor_state_and_device_class_config(
-    config: ConfigType, errors: dict[str, str] | None = None
+    config: ConfigType,
+    errors: dict[str, str] | None = None,
+    reset_fields: list[str] | None = None,
 ) -> ConfigType:
     """Validate the sensor options, state and device class config."""
     if (
         CONF_LAST_RESET_VALUE_TEMPLATE in config
         and (state_class := config.get(CONF_STATE_CLASS)) != SensorStateClass.TOTAL
     ):
-        raise vol.Invalid(
-            f"The option `{CONF_LAST_RESET_VALUE_TEMPLATE}` cannot be used "
-            f"together with state class `{state_class}`"
-        )
+        if errors is None:
+            raise vol.Invalid(
+                f"The option `{CONF_LAST_RESET_VALUE_TEMPLATE}` cannot be used "
+                f"together with state class `{state_class}`"
+            )
+        if reset_fields is not None:
+            reset_fields.append(CONF_LAST_RESET_VALUE_TEMPLATE)
 
     # Only allow `options` to be set for `enum` sensors
     # to limit the possible sensor values
     if (options := config.get(CONF_OPTIONS)) is not None:
         if not options:
-            raise vol.Invalid("An empty options list is not allowed")
+            if reset_fields is None:
+                raise vol.Invalid("An empty options list is not allowed")
+            reset_fields.append(CONF_OPTIONS)
         if config.get(CONF_STATE_CLASS) or config.get(CONF_UNIT_OF_MEASUREMENT):
             if errors is None:
                 raise vol.Invalid(
@@ -467,11 +474,22 @@ def validate_sensor_state_and_device_class_config(
                     f"together with device class `{SensorDeviceClass.ENUM}`, "
                     f"got `{CONF_DEVICE_CLASS}` '{device_class}'"
                 )
-            errors[CONF_OPTIONS] = "options_device_class_enum"
+            if TYPE_CHECKING:
+                assert reset_fields is not None
+            errors[CONF_DEVICE_CLASS] = "options_device_class_enum"
+            reset_fields.append(CONF_OPTIONS)
 
-    if (device_class := config.get(CONF_DEVICE_CLASS)) is None or (
-        unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)
-    ) is None:
+    if (
+        (device_class := config.get(CONF_DEVICE_CLASS)) == SensorDeviceClass.ENUM
+        and errors is not None
+        and CONF_OPTIONS not in config
+    ):
+        errors[CONF_OPTIONS] = "options_with_enum_device_class"
+
+    if (
+        device_class is None
+        or (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None
+    ):
         return config
 
     if (

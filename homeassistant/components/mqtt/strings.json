@@ -250,7 +250,7 @@
           },
           "sections": {
             "advanced_settings": {
-              "name": "Advanced options",
+              "name": "Advanced settings",
               "data": {
                 "expire_after": "Expire after"
               },
@@ -274,7 +274,8 @@
         "invalid_uom": "The unit of measurement is not allowed with the selected device class, please use the correct device class, or pick a valid unit of measurement from the list",
         "invalid_url": "Invalid URL",
         "options_not_allowed_with_state_class_or_uom": "The 'Options' setting is not allowed when state class or unit of measurement are used",
-        "options_device_class_enum": "The 'Options' setting must be used with the Enumeration device class'"
+        "options_device_class_enum": "The 'Options' setting must be used with the Enumeration device class'. If you continue, the existing options will be reset",
+        "options_with_enum_device_class": "Configure options for the enumeration sensor"
       }
     }
   },

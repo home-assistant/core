@@ -2668,8 +2668,29 @@ async def test_migrate_of_incompatible_config_entry(
             {"device_class": "enum", "options": ["low", "medium", "high"]},
             (
                 (
-                    {"device_class": "energy", "options": ["less", "more"]},
-                    {"options": "options_device_class_enum"},
+                    {
+                        "device_class": "energy",
+                        "unit_of_measurement": "ppm",
+                    },
+                    {"unit_of_measurement": "invalid_uom"},
+                ),
+                # Trigger options to be shown on the form
+                (
+                    {"device_class": "enum"},
+                    {"options": "options_with_enum_device_class"},
+                ),
+                # Test options are only allowed with device_class enum
+                (
+                    {
+                        "device_class": "energy",
+                        "options": ["less", "more"],
+                    },
+                    {"device_class": "options_device_class_enum"},
+                ),
+                # Include options again to allow flow with valid data
+                (
+                    {"device_class": "enum"},
+                    {"options": "options_with_enum_device_class"},
                 ),
                 (
                     {
@@ -2678,13 +2699,6 @@ async def test_migrate_of_incompatible_config_entry(
                         "options": ["less", "more"],
                     },
                     {"options": "options_not_allowed_with_state_class_or_uom"},
-                ),
-                (
-                    {
-                        "device_class": "energy",
-                        "unit_of_measurement": "ppm",
-                    },
-                    {"unit_of_measurement": "invalid_uom"},
                 ),
             ),
             {
@@ -2706,9 +2720,6 @@ async def test_migrate_of_incompatible_config_entry(
             {"name": "Energy"},
             {
                 "state_class": "measurement",
-                # An empty options list should be reset. When all options are removed,
-                # an empty list is returned in the user_input
-                "options": [],
             },
             (),
             {
@@ -3120,7 +3131,12 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
 
 
 @pytest.mark.parametrize(
-    ("mqtt_config_subentries_data", "user_input_mqtt"),
+    (
+        "mqtt_config_subentries_data",
+        "user_input_platform_config_validation",
+        "user_input_platform_config",
+        "user_input_mqtt",
+    ),
     [
         (
             (
@@ -3130,20 +3146,62 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
                     title="Mock subentry",
                 ),
             ),
+            (),
+            None,
             {
                 "command_topic": "test-topic1-updated",
-                "command_template": "{{ value_json.value }}",
+                "command_template": "{{ value }}",
                 "retain": True,
             },
-        )
+        ),
+        (
+            (
+                ConfigSubentryData(
+                    data=MOCK_SENSOR_SUBENTRY_DATA_SINGLE,
+                    subentry_type="device",
+                    title="Mock subentry",
+                ),
+            ),
+            (
+                (
+                    {
+                        "device_class": "battery",
+                        "options": [],
+                        "state_class": "measurement",
+                        "unit_of_measurement": "invalid",
+                    },
+                    # Allow to accept options are being removed
+                    {
+                        "device_class": "options_device_class_enum",
+                        "options": "options_not_allowed_with_state_class_or_uom",
+                        "unit_of_measurement": "invalid_uom",
+                    },
+                ),
+            ),
+            {
+                "device_class": "battery",
+                "state_class": "measurement",
+                "unit_of_measurement": "%",
+                "advanced_settings": {"suggested_display_precision": 1},
+            },
+            {
+                "state_topic": "test-topic1-updated",
+                "value_template": "{{ value_json.value }}",
+            },
+        ),
     ],
-    ids=["notify"],
+    ids=["notify", "sensor"],
 )
 async def test_subentry_reconfigure_edit_entity_single_entity(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    user_input_platform_config_validation: tuple[
+        tuple[dict[str, Any], dict[str, str] | None], ...
+    ]
+    | None,
+    user_input_platform_config: dict[str, Any] | None,
     user_input_mqtt: dict[str, Any],
 ) -> None:
     """Test the subentry ConfigFlow reconfigure with single entity."""
@@ -3201,7 +3259,28 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
         user_input={},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "mqtt_platform_config"
+
+    if user_input_platform_config is None:
+        # Skip entity flow step
+        assert result["step_id"] == "mqtt_platform_config"
+    else:
+        # Additional entity flow step
+        assert result["step_id"] == "entity_platform_config"
+        for entity_validation_config, errors in user_input_platform_config_validation:
+            result = await hass.config_entries.subentries.async_configure(
+                result["flow_id"],
+                user_input=entity_validation_config,
+            )
+            assert result["step_id"] == "entity_platform_config"
+            assert result.get("errors") == errors
+            assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input=user_input_platform_config,
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "mqtt_platform_config"
 
     # submit the new platform specific entity data,
     result = await hass.config_entries.subentries.async_configure(
