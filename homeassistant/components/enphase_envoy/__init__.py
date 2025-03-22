@@ -9,8 +9,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DOMAIN,
@@ -19,6 +20,17 @@ from .const import (
     PLATFORMS,
 )
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
+from .services import setup_hass_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Enphase Envoy integration."""
+
+    # setup the enphase_envoy action services
+    await setup_hass_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
