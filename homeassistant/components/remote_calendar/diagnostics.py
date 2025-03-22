@@ -2,7 +2,9 @@
 
 import datetime
 from typing import Any
+
 from ical.diagnostics import redact_ics
+
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
