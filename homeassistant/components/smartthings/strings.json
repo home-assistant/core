@@ -78,6 +78,12 @@
         }
       }
     },
+    "number": {
+      "washer_rinse_cycles": {
+        "name": "Rinse cycles",
+        "unit_of_measurement": "cycles"
+      }
+    },
     "select": {
       "operating_state": {
         "state": {
