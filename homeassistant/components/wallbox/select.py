@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -21,7 +21,7 @@ from .const import (
     DOMAIN,
     EcoSmartMode,
 )
-from .coordinator import InvalidAuth, WallboxCoordinator
+from .coordinator import WallboxCoordinator
 from .entity import WallboxEntity
 
 
@@ -60,30 +60,16 @@ async def async_setup_entry(
     """Create wallbox select entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    # Check if power boost is available, if not, end setup
+    # Only add select if Power Boost is available
     if (
         CHARGER_POWER_BOOST_KEY
-        not in coordinator.data[CHARGER_DATA_KEY][CHARGER_PLAN_KEY][
-            CHARGER_FEATURES_KEY
-        ]
+        in coordinator.data[CHARGER_DATA_KEY][CHARGER_PLAN_KEY][CHARGER_FEATURES_KEY]
     ):
-        return
-
-    # Check if the user has sufficient rights to change values, if so, add select component:
-    try:
-        await coordinator.async_set_eco_smart(
-            coordinator.data[CHARGER_SOLAR_CHARGING_MODE]
+        async_add_entities(
+            WallboxSelect(coordinator, description)
+            for ent in coordinator.data
+            if (description := SELECT_TYPES.get(ent))
         )
-    except InvalidAuth:
-        return
-    except ConnectionError as exc:
-        raise PlatformNotReady from exc
-
-    async_add_entities(
-        WallboxSelect(coordinator, description)
-        for ent in coordinator.data
-        if (description := SELECT_TYPES.get(ent))
-    )
 
 
 class WallboxSelect(WallboxEntity, SelectEntity):

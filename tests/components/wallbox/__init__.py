@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 
+import requests
 import requests_mock
 
 from homeassistant.components.wallbox.const import (
@@ -135,6 +136,45 @@ test_response_full_solar = {
         },
     },
 }
+
+test_response_no_power_boost = {
+    CHARGER_CHARGING_POWER_KEY: 0,
+    CHARGER_STATUS_ID_KEY: 193,
+    CHARGER_MAX_AVAILABLE_POWER_KEY: 25.0,
+    CHARGER_CHARGING_SPEED_KEY: 0,
+    CHARGER_ADDED_RANGE_KEY: 150,
+    CHARGER_ADDED_ENERGY_KEY: 44.697,
+    CHARGER_NAME_KEY: "WallboxName",
+    CHARGER_DATA_KEY: {
+        CHARGER_MAX_CHARGING_CURRENT_KEY: 24,
+        CHARGER_ENERGY_PRICE_KEY: 0.4,
+        CHARGER_LOCKED_UNLOCKED_KEY: False,
+        CHARGER_SERIAL_NUMBER_KEY: "20000",
+        CHARGER_PART_NUMBER_KEY: "PLP1-0-2-4-9-002-E",
+        CHARGER_SOFTWARE_KEY: {CHARGER_CURRENT_VERSION_KEY: "5.5.10"},
+        CHARGER_CURRENCY_KEY: {"code": "EUR/kWh"},
+        CHARGER_MAX_ICP_CURRENT_KEY: 20,
+        CHARGER_PLAN_KEY: {CHARGER_FEATURES_KEY: []},
+    },
+}
+
+invalid_reauth_response = {
+    "jwt": "fakekeyhere",
+    "refresh_token": "refresh_fakekeyhere",
+    "user_id": 12345,
+    "ttl": 145656758,
+    "refresh_token_ttl": 145756758,
+    "error": False,
+    "status": 200,
+}
+
+http_403_error = requests.exceptions.HTTPError()
+http_403_error.response = requests.Response()
+http_403_error.response.status_code = HTTPStatus.FORBIDDEN
+
+http_404_error = requests.exceptions.HTTPError()
+http_404_error.response = requests.Response()
+http_404_error.response.status_code = HTTPStatus.NOT_FOUND
 
 authorisation_response = {
     "data": {
