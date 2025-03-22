@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from aiohttp.client_exceptions import ClientConnectorError, ClientError
+from aiohttp.client_exceptions import ClientError
 from nettigo_air_monitor import (
     ApiError,
     AuthFailedError,
@@ -38,13 +38,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: NAMConfigEntry) -> bool:
     options = ConnectionOptions(host=host, username=username, password=password)
     try:
         nam = await NettigoAirMonitor.create(websession, options)
-    except (ApiError, ClientError, ClientConnectorError, TimeoutError) as err:
-        raise ConfigEntryNotReady from err
+    except (ApiError, ClientError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_communication_error",
+            translation_placeholders={"device": entry.title},
+        ) from err
 
     try:
         await nam.async_check_credentials()
-    except ApiError as err:
-        raise ConfigEntryNotReady from err
+    except (ApiError, ClientError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_communication_error",
+            translation_placeholders={"device": entry.title},
+        ) from err
     except AuthFailedError as err:
         raise ConfigEntryAuthFailed from err
 

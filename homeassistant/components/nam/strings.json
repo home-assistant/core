@@ -207,6 +207,9 @@
     }
   },
   "exceptions": {
+    "device_communication_error": {
+      "message": "An error occurred while communicating with {device}"
+    },
     "update_error": {
       "message": "An error occurred while retrieving data from {device}"
     }
