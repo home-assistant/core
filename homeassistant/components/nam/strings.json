@@ -213,6 +213,9 @@
     "device_communication_error": {
       "message": "An error occurred while communicating with {device}"
     },
+    "device_communication_action_error": {
+      "message": "An error occurred while calling action for {entity} for {device}"
+    },
     "update_error": {
       "message": "An error occurred while retrieving data from {device}"
     }
