@@ -144,7 +144,6 @@ async def _transform_stream(
             chat_log.async_trace({
                 "stats": {
                     "input_tokens": usage.input_tokens,
-                    "cached_input_tokens": usage.input_tokens_details.cached_tokens,
                     "output_tokens": usage.output_tokens,
                 }
             })
