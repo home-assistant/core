@@ -60,9 +60,6 @@ from .const import (
     SERVICE_SET_PROGRAM_AND_OPTIONS,
     SERVICE_SETTING,
     SERVICE_START_PROGRAM,
-    SVE_TRANSLATION_PLACEHOLDER_KEY,
-    SVE_TRANSLATION_PLACEHOLDER_PROGRAM,
-    SVE_TRANSLATION_PLACEHOLDER_VALUE,
     TRANSLATION_KEYS_PROGRAMS_MAP,
 )
 from .coordinator import HomeConnectConfigEntry, HomeConnectCoordinator
@@ -336,7 +333,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 translation_key="start_program" if start else "select_program",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_PROGRAM: program,
+                    "program": program,
                 },
             ) from err
 
@@ -410,8 +407,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 else "set_options_selected_program",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_KEY: option_key,
-                    SVE_TRANSLATION_PLACEHOLDER_VALUE: str(value),
+                    "key": option_key,
+                    "value": str(value),
                 },
             ) from err
 
@@ -466,8 +463,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 translation_key="set_setting",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_KEY: key,
-                    SVE_TRANSLATION_PLACEHOLDER_VALUE: str(value),
+                    "key": key,
+                    "value": str(value),
                 },
             ) from err
 
@@ -545,11 +542,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 translation_key=exception_translation_key,
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    **(
-                        {SVE_TRANSLATION_PLACEHOLDER_PROGRAM: program}
-                        if program
-                        else {}
-                    ),
+                    **({"program": program} if program else {}),
                 },
             ) from err
 
