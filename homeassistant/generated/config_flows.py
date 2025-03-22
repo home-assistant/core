@@ -120,6 +120,7 @@ FLOWS = {
         "cpuspeed",
         "crownstone",
         "daikin",
+        "daikin_br",
         "deako",
         "deconz",
         "deluge",
