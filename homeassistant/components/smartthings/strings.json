@@ -442,6 +442,11 @@
           "freeze_protection": "Freeze protection"
         }
       }
+    },
+    "switch": {
+      "wrinkle_prevent": {
+        "name": "Wrinkle prevent"
+      }
     }
   },
   "issues": {

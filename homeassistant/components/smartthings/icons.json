@@ -27,6 +27,14 @@
           "stop": "mdi:stop"
         }
       }
+    },
+    "switch": {
+      "wrinkle_prevent": {
+        "default": "mdi:tumble-dryer",
+        "state": {
+          "off": "mdi:tumble-dryer-off"
+        }
+      }
     }
   }
 }
