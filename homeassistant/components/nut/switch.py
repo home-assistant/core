@@ -86,7 +86,6 @@ class NUTSwitch(NUTBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
-        _LOGGER.debug("turn_on -> kwargs: %s", kwargs)
 
         name_list = self.entity_description.key.split(".")
         command_name = f"{name_list[0]}.{name_list[1]}.load.on"
