@@ -88,6 +88,7 @@ class ShellyEntryData:
     rest: ShellyRestCoordinator | None = None
     rpc: ShellyRpcCoordinator | None = None
     rpc_poll: ShellyRpcPollingCoordinator | None = None
+    rpc_script_events: dict[int, list[str]] | None = None
 
 
 type ShellyConfigEntry = ConfigEntry[ShellyEntryData]

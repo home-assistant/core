@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pysmartthings import Attribute, Capability, SmartThings
+from pysmartthings import Attribute, Capability, Category, SmartThings
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import (
@@ -33,6 +33,8 @@ class SmartThingsBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describe a SmartThings binary sensor entity."""
 
     is_on_key: str
+    category_device_class: dict[Category | str, BinarySensorDeviceClass] | None = None
+    category: set[Category] | None = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -51,6 +53,11 @@ CAPABILITY_TO_SENSORS: dict[
             key=Attribute.CONTACT,
             device_class=BinarySensorDeviceClass.DOOR,
             is_on_key="open",
+            category_device_class={
+                Category.GARAGE_DOOR: BinarySensorDeviceClass.GARAGE_DOOR,
+                Category.DOOR: BinarySensorDeviceClass.DOOR,
+                Category.WINDOW: BinarySensorDeviceClass.WINDOW,
+            },
         )
     },
     Capability.FILTER_STATUS: {
@@ -59,6 +66,13 @@ CAPABILITY_TO_SENSORS: dict[
             translation_key="filter_status",
             device_class=BinarySensorDeviceClass.PROBLEM,
             is_on_key="replace",
+        )
+    },
+    Capability.SAMSUNG_CE_KIDS_LOCK: {
+        Attribute.LOCK_STATE: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.LOCK_STATE,
+            translation_key="child_lock",
+            is_on_key="locked",
         )
     },
     Capability.MOTION_SENSOR: {
@@ -89,6 +103,14 @@ CAPABILITY_TO_SENSORS: dict[
             is_on_key="detected",
         )
     },
+    Capability.SWITCH: {
+        Attribute.SWITCH: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.SWITCH,
+            device_class=BinarySensorDeviceClass.POWER,
+            is_on_key="on",
+            category={Category.DRYER, Category.WASHER},
+        )
+    },
     Capability.TAMPER_ALERT: {
         Attribute.TAMPER: SmartThingsBinarySensorEntityDescription(
             key=Attribute.TAMPER,
@@ -115,6 +137,16 @@ CAPABILITY_TO_SENSORS: dict[
 }
 
 
+def get_main_component_category(
+    device: FullDevice,
+) -> Category | str:
+    """Get the main component of a device."""
+    main = next(
+        component for component in device.device.components if component.id == MAIN
+    )
+    return main.user_category or main.manufacturer_category
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartThingsConfigEntry,
@@ -127,7 +159,6 @@ async def async_setup_entry(
             entry_data.client,
             device,
             description,
-            entry_data.rooms,
             capability,
             attribute,
         )
@@ -135,6 +166,10 @@ async def async_setup_entry(
         for capability, attribute_map in CAPABILITY_TO_SENSORS.items()
         if capability in device.status[MAIN]
         for attribute, description in attribute_map.items()
+        if (
+            not description.category
+            or get_main_component_category(device) in description.category
+        )
     )
 
 
@@ -148,16 +183,22 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
         client: SmartThings,
         device: FullDevice,
         entity_description: SmartThingsBinarySensorEntityDescription,
-        rooms: dict[str, str],
         capability: Capability,
         attribute: Attribute,
     ) -> None:
         """Init the class."""
-        super().__init__(client, device, rooms, {capability})
+        super().__init__(client, device, {capability})
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description
         self._attr_unique_id = f"{device.device.device_id}.{attribute}"
+        if (
+            entity_description.category_device_class
+            and (category := get_main_component_category(device))
+            in entity_description.category_device_class
+        ):
+            self._attr_device_class = entity_description.category_device_class[category]
+            self._attr_name = None
 
     @property
     def is_on(self) -> bool:

@@ -1112,7 +1112,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.36.0
+habluetooth==3.37.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.94.0
@@ -1817,7 +1817,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.7.7
+pyaprilaire==0.8.1
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21
@@ -2000,7 +2000,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==1.0.3
+pyheos==1.0.4
 
 # homeassistant.components.hive
 pyhive-integration==1.0.2
@@ -2465,7 +2465,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.14.0
+python-roborock==2.16.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.39
