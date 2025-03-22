@@ -444,6 +444,9 @@
       }
     },
     "switch": {
+      "bubble_soak": {
+        "name": "Bubble soak"
+      },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
       }
