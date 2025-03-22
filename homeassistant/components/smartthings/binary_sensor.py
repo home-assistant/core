@@ -33,6 +33,7 @@ class SmartThingsBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describe a SmartThings binary sensor entity."""
 
     is_on_key: str
+    category_device_class: dict[Category | str, BinarySensorDeviceClass] | None = None
     category: set[Category] | None = None
 
 
@@ -52,6 +53,11 @@ CAPABILITY_TO_SENSORS: dict[
             key=Attribute.CONTACT,
             device_class=BinarySensorDeviceClass.DOOR,
             is_on_key="open",
+            category_device_class={
+                Category.GARAGE_DOOR: BinarySensorDeviceClass.GARAGE_DOOR,
+                Category.DOOR: BinarySensorDeviceClass.DOOR,
+                Category.WINDOW: BinarySensorDeviceClass.WINDOW,
+            },
         )
     },
     Capability.FILTER_STATUS: {
@@ -186,6 +192,13 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
         self.capability = capability
         self.entity_description = entity_description
         self._attr_unique_id = f"{device.device.device_id}.{attribute}"
+        if (
+            entity_description.category_device_class
+            and (category := get_main_component_category(device))
+            in entity_description.category_device_class
+        ):
+            self._attr_device_class = entity_description.category_device_class[category]
+            self._attr_name = None
 
     @property
     def is_on(self) -> bool:
