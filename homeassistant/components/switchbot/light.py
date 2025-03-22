@@ -77,16 +77,22 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
         ):
             kelvin = max(2700, min(6500, kwargs[ATTR_COLOR_TEMP_KELVIN]))
             await self._device.set_color_temp(brightness, kelvin)
-            return
+            self._attr_color_temp_kelvin = kelvin
         if ATTR_RGB_COLOR in kwargs:
             rgb = kwargs[ATTR_RGB_COLOR]
             await self._device.set_rgb(brightness, rgb[0], rgb[1], rgb[2])
-            return
+            self._attr_rgb_color = rgb
         if ATTR_BRIGHTNESS in kwargs:
             await self._device.set_brightness(brightness)
-            return
-        await self._device.turn_on()
+            self._attr_brightness = brightness
+        self._last_run_success = await self._device.turn_on()
+        if self._last_run_success:
+            self._attr_is_on = True
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        await self._device.turn_off()
+        self._last_run_success = await self._device.turn_off()
+        if self._last_run_success:
+            self._attr_is_on = False
+        self.async_write_ha_state()
