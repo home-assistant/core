@@ -205,5 +205,10 @@
         "name": "Last restart"
       }
     }
+  },
+  "exceptions": {
+    "update_error": {
+      "message": "An error occurred while retrieving data from {device}"
+    }
   }
 }
