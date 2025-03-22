@@ -1095,8 +1095,8 @@ async def websocket_unprovision_smart_start_node(
         if device and device.identifiers == {device_identifier}:
             # Only remove the device if nothing else has claimed it
             dev_reg.async_remove_device(device_id)
+        await driver.controller.async_unprovision_smart_start_node(dsk_or_node_id)
 
-    await driver.controller.async_unprovision_smart_start_node(dsk_or_node_id)
     connection.send_result(msg[ID])
 
 

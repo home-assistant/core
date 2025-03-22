@@ -647,6 +647,7 @@ class ControllerEvents:
                 if dsk_identifier in preprovisioned_device.identifiers:
                     new_identifiers = preprovisioned_device.identifiers.copy()
                     new_identifiers.remove(dsk_identifier)
+                    new_identifiers.update(ids)
                     self.dev_reg.async_update_device(
                         preprovisioned_device.id, new_identifiers=new_identifiers
                     )
