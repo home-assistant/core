@@ -6,7 +6,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PterodactylConfigEntry, PterodactylCoordinator
@@ -71,11 +70,4 @@ class PterodactylBinarySensorEntity(PterodactylEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return binary sensor state."""
-        index = self.coordinator.api.get_index_from_identifier(self.identifier)
-
-        if index is None:
-            raise HomeAssistantError(
-                f"Identifier '{self.identifier}' not found in data list"
-            )
-
-        return self.coordinator.data[index].state == "running"
+        return self.coordinator.data[self.identifier].state == "running"

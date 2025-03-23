@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 type PterodactylConfigEntry = ConfigEntry[PterodactylCoordinator]
 
 
-class PterodactylCoordinator(DataUpdateCoordinator[list[PterodactylData]]):
+class PterodactylCoordinator(DataUpdateCoordinator[dict[str, PterodactylData]]):
     """Pterodactyl data update coordinator."""
 
     config_entry: PterodactylConfigEntry
@@ -59,9 +59,9 @@ class PterodactylCoordinator(DataUpdateCoordinator[list[PterodactylData]]):
         except PterodactylConfigurationError as error:
             raise ConfigEntryNotReady(error) from error
 
-    async def _async_update_data(self) -> list[PterodactylData]:
+    async def _async_update_data(self) -> dict[str, PterodactylData]:
         """Get updated data from the Pterodactyl server."""
         try:
-            return await self.api.async_get_data_list()
+            return await self.api.async_get_data()
         except (PterodactylNotInitializedError, PterodactylConnectionError) as error:
             raise UpdateFailed(error) from error

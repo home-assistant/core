@@ -49,7 +49,7 @@ class PterodactylAPI:
 
     pterodactyl: PterodactylClient | None
     identifiers: list[str]
-    data_list: list[PterodactylData]
+    data: dict[str, PterodactylData]
 
     def __init__(self, hass: HomeAssistant, host: str, api_key: str) -> None:
         """Initialize the Pterodactyl API."""
@@ -85,18 +85,9 @@ class PterodactylAPI:
 
             _LOGGER.debug("Identifiers of Pterodactyl servers: %s", self.identifiers)
 
-    def get_index_from_identifier(self, identifier: str) -> int | None:
-        """Get the index of the data list from the identifier."""
-        for index, data in enumerate(self.data_list):
-            if data.identifier == identifier:
-                return index
-
-        return None
-
-    async def async_get_data_list(self) -> list[PterodactylData]:
+    async def async_get_data(self) -> dict[str, PterodactylData]:
         """Update the data from all Pterodactyl servers."""
-        self.data_list = []
-        current_identifier: str
+        self.data = {}
 
         if self.pterodactyl is None:
             raise PterodactylNotInitializedError(
@@ -105,7 +96,6 @@ class PterodactylAPI:
 
         try:
             for identifier in self.identifiers:
-                current_identifier = identifier
                 server = await self.hass.async_add_executor_job(
                     self.pterodactyl.client.servers.get_server, identifier
                 )
@@ -113,10 +103,10 @@ class PterodactylAPI:
                     self.pterodactyl.client.servers.get_server_utilization, identifier
                 )
 
-                data = PterodactylData(
+                self.data[identifier] = PterodactylData(
                     name=server["name"],
                     uuid=server["uuid"],
-                    identifier=current_identifier,
+                    identifier=identifier,
                     state=utilization["current_state"],
                     cpu_utilization=utilization["resources"]["cpu_absolute"],
                     memory_utilization=utilization["resources"]["memory_bytes"],
@@ -126,8 +116,7 @@ class PterodactylAPI:
                     uptime=utilization["resources"]["uptime"],
                 )
 
-                self.data_list.append(data)
-                _LOGGER.debug("%s", data)
+                _LOGGER.debug("%s", self.data[identifier])
         except (
             PydactylError,
             BadRequestError,
@@ -138,4 +127,4 @@ class PterodactylAPI:
             _LOGGER.exception("Unexpected exception occurred during data update")
             raise PterodactylConnectionError(error) from error
         else:
-            return self.data_list
+            return self.data
