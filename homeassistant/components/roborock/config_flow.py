@@ -152,7 +152,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             for device in device_entries:
                 for connection in device.connections:
                     if (
-                        connection[0] == "mac"
+                        connection[0] == dr.CONNECTION_NETWORK_MAC
                         and connection[1].replace(":", "") == discovery_info.macaddress
                     ):
                         return self.async_abort(reason="already_configured")
