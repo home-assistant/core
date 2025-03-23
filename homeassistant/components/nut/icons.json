@@ -67,6 +67,21 @@
       "input_voltage_status": {
         "default": "mdi:information-outline"
       },
+      "outlet_number_current": {
+        "default": "mdi:gauge"
+      },
+      "outlet_number_current_status": {
+        "default": "mdi:information-outline"
+      },
+      "outlet_number_desc": {
+        "default": "mdi:information-outline"
+      },
+      "outlet_number_power": {
+        "default": "mdi:gauge"
+      },
+      "outlet_number_realpower": {
+        "default": "mdi:gauge"
+      },
       "outlet_voltage": {
         "default": "mdi:gauge"
       },
@@ -135,6 +150,16 @@
       },
       "ups_watchdog_status": {
         "default": "mdi:information-outline"
+      }
+    },
+    "button": {
+      "outlet_number_load_cycle": {
+        "default": "mdi:restart"
+      }
+    },
+    "switch": {
+      "outlet_number_load_poweronoff": {
+        "default": "mdi:power"
       }
     }
   }
