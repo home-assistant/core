@@ -10,6 +10,5 @@
   ],
   "documentation": "https://www.home-assistant.io/integrations/awtrix3",
   "iot_class": "local_polling",
-  "requirements": [],
-  "version": "0.1.13"
+  "requirements": []
 }
