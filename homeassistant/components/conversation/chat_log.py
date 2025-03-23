@@ -358,20 +358,10 @@ class ChatLog:
         self,
         llm_api: llm.APIInstance | None,
         llm_context: llm.LLMContext,
-        user_input: ConversationInput,
+        user_name: str | None = None,
         user_llm_prompt: str | None = None,
     ) -> str:
         """Return the LLM prompt based on current HA state."""
-        user_name: str | None = None
-        if (
-            user_input.context
-            and user_input.context.user_id
-            and (
-                user := await self.hass.auth.async_get_user(user_input.context.user_id)
-            )
-        ):
-            user_name = user.name
-
         prompt_parts = [
             template.Template(
                 (user_llm_prompt or llm.DEFAULT_INSTRUCTIONS_PROMPT),
@@ -402,14 +392,6 @@ class ChatLog:
                 parse_result=False,
             )
         )
-
-        if extra_system_prompt := (
-            # Take new system prompt if one was given
-            user_input.extra_system_prompt or self.extra_system_prompt
-        ):
-            prompt_parts.append(extra_system_prompt)
-
-        self.extra_system_prompt = extra_system_prompt
 
         return "\n".join(prompt_parts)
 
@@ -457,9 +439,20 @@ class ChatLog:
                     response=intent_response,
                 ) from err
 
+        user_name: str | None = None
+
+        if (
+            user_input.context
+            and user_input.context.user_id
+            and (
+                user := await self.hass.auth.async_get_user(user_input.context.user_id)
+            )
+        ):
+            user_name = user.name
+
         try:
             prompt = await self.async_get_llm_prompt(
-                llm_api, llm_context, user_input, user_llm_prompt
+                llm_api, llm_context, user_name, user_llm_prompt
             )
         except TemplateError as err:
             LOGGER.error("Error rendering prompt: %s", err)
@@ -473,6 +466,14 @@ class ChatLog:
                 conversation_id=self.conversation_id,
                 response=intent_response,
             ) from err
+
+        if extra_system_prompt := (
+            # Take new system prompt if one was given
+            user_input.extra_system_prompt or self.extra_system_prompt
+        ):
+            prompt += "\n" + extra_system_prompt
+
+        self.extra_system_prompt = extra_system_prompt
 
         self.llm_api = llm_api
         self.content[0] = SystemContent(content=prompt)
