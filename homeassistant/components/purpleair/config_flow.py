@@ -72,7 +72,6 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             keys_response: GetKeysResponse = await api.async_check_api_key()
-            LOGGER.debug("GetKeysResponse: %s", keys_response)
         except InvalidApiKeyError as err:
             LOGGER.exception("InvalidApiKeyError exception: %s", err)
             self._errors[CONF_API_KEY] = CONF_INVALID_API_KEY
@@ -95,12 +94,10 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
             self._errors[CONF_BASE] = CONF_UNKNOWN
             return False
 
-        # TODO: _abort_if_unique_id_configured() may do the same but is not recoverable in the same flow? # pylint: disable=fixme
-        api_key_list: list[str] = [
+        if str(self._flow_data[CONF_API_KEY]) in (
             str(config_entry.data[CONF_API_KEY])
             for config_entry in self.hass.config_entries.async_loaded_entries(DOMAIN)
-        ]
-        if str(self._flow_data[CONF_API_KEY]) in api_key_list:
+        ):
             self._errors[CONF_API_KEY] = CONF_ALREADY_CONFIGURED
             return False
 

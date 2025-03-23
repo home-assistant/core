@@ -96,7 +96,6 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
                 ),
                 limit_results=LIMIT_RESULTS,
             )
-            LOGGER.debug("NearbySensorResult: %s", nearby_sensor_list)
         except InvalidApiKeyError as err:
             LOGGER.exception("InvalidApiKeyError exception: %s", err)
             self._errors[CONF_BASE] = CONF_INVALID_API_KEY
@@ -144,7 +143,6 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
                 sensor_indices=index_list,
                 read_keys=read_key_list,
             )
-            LOGGER.debug("GetSensorsResponse: %s", sensors_response)
         except InvalidApiKeyError as err:
             LOGGER.exception("InvalidApiKeyError exception: %s", err)
             self._errors[CONF_BASE] = CONF_INVALID_API_KEY
@@ -189,6 +187,7 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Handle user initialization flow."""
         # TODO: Replace with self._get_entry() when PR merged ? # pylint: disable=fixme
+        # https://github.com/home-assistant/core/pull/141017
         self._flow_data[CONF_API_KEY] = self.hass.config_entries.async_get_known_entry(
             self.handler[0]
         ).data[CONF_API_KEY]

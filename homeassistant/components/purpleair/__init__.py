@@ -55,7 +55,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) 
             version=SCHEMA_VERSION,
         )
 
-    dev_count: int = 0
     dev_reg = dr.async_get(hass)
     dev_list = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
     for device in dev_list:
@@ -79,8 +78,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) 
                 unique_id=str(sensor_index),
             ),
         )
-        dev_count += 1
-    assert dev_count == len(index_list), "Device count does not match sensor count"
 
     # Keep entry logic in sync with config_flow.py:async_step_api_key()
     title: str = TITLE
