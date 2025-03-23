@@ -341,7 +341,7 @@ async def test_discovery_already_setup(
         context={"source": config_entries.SOURCE_DHCP},
         data=DhcpServiceInfo(
             ip=NETWORK_INFO.ip,
-            macaddress=NETWORK_INFO.mac,
+            macaddress=NETWORK_INFO.mac.replace(":", ""),
             hostname="roborock-vacuum-a72",
         ),
     )
