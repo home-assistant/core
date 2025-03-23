@@ -25,26 +25,6 @@
       "status": {
         "name": "Status"
       }
-    },
-    "sensor": {
-      "cpu_usage": {
-        "name": "CPU Usage"
-      },
-      "memory_usage": {
-        "name": "Memory Usage"
-      },
-      "disk_usage": {
-        "name": "Disk Usage"
-      },
-      "network_rx_usage": {
-        "name": "Network RX Usage"
-      },
-      "network_tx_usage": {
-        "name": "Network TX Usage"
-      },
-      "uptime": {
-        "name": "Uptime"
-      }
     }
   }
 }
