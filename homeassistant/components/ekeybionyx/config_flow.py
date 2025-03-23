@@ -2,6 +2,7 @@
 
 from collections.abc import Sequence
 import logging
+import re
 from typing import Any, NotRequired, TypedDict
 
 import aiohttp
@@ -104,7 +105,16 @@ class OAuth2FlowHandler(
             return self.async_abort(reason="no_availible_webhooks")
         if system.function_webhook_quotas["used"] > 0:
             return await self.async_step_delete_webhooks()
-        if user_input is None:
+        errors: dict[str, str] | None = None
+        if user_input is not None:
+            errors = {}
+            [
+                errors.update({webhooks[0]: "invalid_name"})
+                for webhooks in user_input.items()
+                if webhooks[0] != "url"
+                and not re.match(r"^(?![\d\s])[\w\d\u0020\.]*[\w\d]$", webhooks[1])
+            ]
+        if user_input is None or errors:
             data_schema: dict[Any, Any] = {
                 vol.Optional(f"webhook{i + 1}"): vol.All(str, vol.Length(max=50))
                 for i in range(self._data["system"].function_webhook_quotas["free"])
@@ -116,7 +126,7 @@ class OAuth2FlowHandler(
                 )
             ] = str
             return self.async_show_form(
-                step_id="webhooks", data_schema=vol.Schema(data_schema)
+                step_id="webhooks", data_schema=vol.Schema(data_schema), errors=errors
             )
         webhook_data = [
             {"webhook_id": webhook_generate_id(), "name": webhooks[1]}
