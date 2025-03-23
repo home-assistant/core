@@ -143,18 +143,16 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow started by a dhcp discovery."""
-        roborock_entries = self.hass.config_entries.async_entries(DOMAIN)
         device_registry = dr.async_get(self.hass)
-        for entry in roborock_entries:
-            device_entries = dr.async_entries_for_config_entry(
-                device_registry, config_entry_id=entry.entry_id
-            )
-            for device in device_entries:
-                for connection in device.connections:
-                    if connection[0] == dr.CONNECTION_NETWORK_MAC and dr.format_mac(
-                        connection[1]
-                    ) == dr.format_mac(discovery_info.macaddress):
-                        return self.async_abort(reason="already_configured")
+        device = device_registry.async_get_device(
+            connections={
+                (dr.CONNECTION_NETWORK_MAC, dr.format_mac(discovery_info.macaddress))
+            }
+        )
+        if device is not None and any(
+            identifier[0] == DOMAIN for identifier in device.identifiers
+        ):
+            return self.async_abort(reason="already_configured")
         return await self.async_step_user()
 
     async def async_step_reauth(

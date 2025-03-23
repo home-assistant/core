@@ -345,4 +345,5 @@ async def test_discovery_already_setup(
             hostname="roborock-vacuum-a72",
         ),
     )
+
     assert result["type"] is FlowResultType.ABORT
