@@ -101,13 +101,7 @@ def get_artwork_url(
     artwork_type: str | None = None
     parent_backdrop_id: str | None = item.get("ParentBackdropItemId")
 
-    # The first two cases here for Primary and AlbumPrimaryImageTag
-    # mirror the behavior of the official jellyfin media player
-    # https://github.com/jellyfin/jellyfin-media-player/blob/68ddf01ecef766620d4e564cada0a1125840547f/src/taskbar/TaskbarComponentWin.cpp#L351-L377
-    if "Primary" in item[ITEM_KEY_IMAGE_TAGS]:
-        artwork_type = "Primary"
-        artwork_id = item["Id"]
-    elif "AlbumPrimaryImageTag" in item:
+    if "AlbumPrimaryImageTag" in item:
         # jellyfin_apiclient_python doesn't support passing a specific tag to `.artwork`,
         # so we don't use the actual value of AlbumPrimaryImageTag.
         # However, its mere presence tells us that the album does have primary artwork,
@@ -120,6 +114,9 @@ def get_artwork_url(
     elif parent_backdrop_id:
         artwork_type = "Backdrop"
         artwork_id = parent_backdrop_id
+    elif "Primary" in item[ITEM_KEY_IMAGE_TAGS]:
+        artwork_type = "Primary"
+        artwork_id = item["Id"]
     else:
         return None
 
