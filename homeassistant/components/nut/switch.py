@@ -71,7 +71,7 @@ class NUTSwitch(NUTBaseEntity, SwitchEntity):
         outlet, outlet_num_str = self.entity_description.key.split(".", 2)[:2]
         if (state := status.get(f"{outlet}.{outlet_num_str}.status")) is None:
             return None
-        return state == "on"
+        return bool(state == "on")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
