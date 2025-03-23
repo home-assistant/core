@@ -30,6 +30,9 @@ from . import NutConfigEntry
 from .const import KEY_STATUS, KEY_STATUS_DISPLAY, STATE_TYPES
 from .entity import NUTBaseEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 AMBIENT_PRESENT = "ambient.present"
 AMBIENT_SENSORS = {
     "ambient.humidity",

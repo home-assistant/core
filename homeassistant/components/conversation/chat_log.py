@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field, replace
 import logging
-from typing import Literal, TypedDict
+from typing import Any, Literal, TypedDict
 
 import voluptuous as vol
 
@@ -469,10 +469,16 @@ class ChatLog:
         LOGGER.debug("Prompt: %s", self.content)
         LOGGER.debug("Tools: %s", self.llm_api.tools if self.llm_api else None)
 
-        trace.async_conversation_trace_append(
-            trace.ConversationTraceEventType.AGENT_DETAIL,
+        self.async_trace(
             {
                 "messages": self.content,
                 "tools": self.llm_api.tools if self.llm_api else None,
-            },
+            }
+        )
+
+    def async_trace(self, agent_details: dict[str, Any]) -> None:
+        """Append agent specific details to the conversation trace."""
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.AGENT_DETAIL,
+            agent_details,
         )
