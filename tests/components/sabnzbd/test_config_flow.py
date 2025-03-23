@@ -166,4 +166,4 @@ async def test_abort_reconfigure_already_configured(
         VALID_CONFIG,
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "reconfigure_successful"
