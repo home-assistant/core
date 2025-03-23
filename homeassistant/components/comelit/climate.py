@@ -123,8 +123,6 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
 
     def _update_attributes(self) -> None:
         """Update class attributes."""
-    def _update_attributes(self) -> None:
-        """Update class attributes."""
         device = self.coordinator.data[CLIMATE][self._device.index]
         if not isinstance(device.val, list):
             raise HomeAssistantError(
@@ -164,7 +162,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attributes()
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
