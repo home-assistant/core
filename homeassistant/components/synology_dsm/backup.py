@@ -178,8 +178,6 @@ class SynologyDSMBackupAgent(BackupAgent):
             )
         except SynologyDSMAPIErrorException as err:
             raise BackupAgentError("Failed to upload backup") from err
-        except SynologyDSMRequestException as err:
-            raise BackupAgentUnreachableError from err
 
         # upload backup_meta.json file when backup.tar was successful uploaded
         try:
@@ -190,8 +188,6 @@ class SynologyDSMBackupAgent(BackupAgent):
             )
         except SynologyDSMAPIErrorException as err:
             raise BackupAgentError("Failed to upload backup") from err
-        except SynologyDSMRequestException as err:
-            raise BackupAgentUnreachableError from err
 
     async def async_delete_backup(
         self,
