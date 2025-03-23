@@ -496,7 +496,7 @@ def _get_exposed_entities(
         CALENDAR_DOMAIN: {},
     }
 
-    for state in hass.states.async_all():
+    for state in sorted(hass.states.async_all(), key=lambda state: state.name):
         if not async_should_expose(hass, assistant, state.entity_id):
             continue
 
@@ -526,8 +526,6 @@ def _get_exposed_entities(
         info: dict[str, Any] = {
             "names": ", ".join(names),
             "domain": state.domain,
-            "state": state.state,
-            "last_changed": state.last_changed,
         }
 
         if include_state:
@@ -558,14 +556,6 @@ def _get_exposed_entities(
             entities[state.entity_id] = info
 
     data["entities"] = entities
-    sorted_entities = dict(
-        sorted(entities.items(), key=lambda item: item[1]["last_changed"])
-    )
-
-    for entity in sorted_entities.values():
-        entity.pop("last_changed", None)
-        data["entities"] = sorted_entities
-
     return data
 
 

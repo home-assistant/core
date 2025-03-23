@@ -354,6 +354,64 @@ class ChatLog:
                 if self.delta_listener:
                     self.delta_listener(self, asdict(tool_result))
 
+    async def async_get_llm_prompt(
+        self,
+        llm_api: llm.APIInstance | None,
+        llm_context: llm.LLMContext,
+        user_input: ConversationInput,
+        user_llm_prompt: str | None = None,
+    ) -> str:
+        """Return the LLM prompt based on current HA state."""
+        if (
+            user_input.context
+            and user_input.context.user_id
+            and (
+                user := await self.hass.auth.async_get_user(user_input.context.user_id)
+            )
+        ):
+            user_name = user.name
+
+        prompt_parts = [
+            template.Template(
+                (user_llm_prompt or llm.DEFAULT_INSTRUCTIONS_PROMPT),
+                self.hass,
+            ).async_render(
+                {
+                    "ha_name": self.hass.config.location_name,
+                    "user_name": user_name,
+                    "llm_context": llm_context,
+                },
+                parse_result=False,
+            )
+        ]
+
+        if llm_api:
+            prompt_parts.append(llm_api.api_prompt)
+
+        prompt_parts.append(
+            template.Template(
+                llm.BASE_PROMPT,
+                self.hass,
+            ).async_render(
+                {
+                    "ha_name": self.hass.config.location_name,
+                    "user_name": user_name,
+                    "llm_context": llm_context,
+                },
+                parse_result=False,
+            )
+        )
+
+        if extra_system_prompt := (
+            # Take new system prompt if one was given
+            user_input.extra_system_prompt or self.extra_system_prompt
+        ):
+            prompt_parts.append(extra_system_prompt)
+
+        self.extra_system_prompt = extra_system_prompt
+
+        return "\n".join(prompt_parts)
+
     async def async_update_llm_data(
         self,
         conversing_domain: str,
@@ -398,32 +456,10 @@ class ChatLog:
                     response=intent_response,
                 ) from err
 
-        user_name: str | None = None
-
-        if (
-            user_input.context
-            and user_input.context.user_id
-            and (
-                user := await self.hass.auth.async_get_user(user_input.context.user_id)
-            )
-        ):
-            user_name = user.name
-
         try:
-            prompt_parts = [
-                template.Template(
-                    (user_llm_prompt or llm.DEFAULT_INSTRUCTIONS_PROMPT),
-                    self.hass,
-                ).async_render(
-                    {
-                        "ha_name": self.hass.config.location_name,
-                        "user_name": user_name,
-                        "llm_context": llm_context,
-                    },
-                    parse_result=False,
-                )
-            ]
-
+            prompt = await self.async_get_llm_prompt(
+                llm_api, llm_context, user_input, user_llm_prompt
+            )
         except TemplateError as err:
             LOGGER.error("Error rendering prompt: %s", err)
             intent_response = intent.IntentResponse(language=user_input.language)
@@ -437,33 +473,7 @@ class ChatLog:
                 response=intent_response,
             ) from err
 
-        if llm_api:
-            prompt_parts.append(llm_api.api_prompt)
-
-        prompt_parts.append(
-            template.Template(
-                llm.BASE_PROMPT,
-                self.hass,
-            ).async_render(
-                {
-                    "ha_name": self.hass.config.location_name,
-                    "user_name": user_name,
-                    "llm_context": llm_context,
-                },
-                parse_result=False,
-            )
-        )
-
-        if extra_system_prompt := (
-            # Take new system prompt if one was given
-            user_input.extra_system_prompt or self.extra_system_prompt
-        ):
-            prompt_parts.append(extra_system_prompt)
-
-        prompt = "\n".join(prompt_parts)
-
         self.llm_api = llm_api
-        self.extra_system_prompt = extra_system_prompt
         self.content[0] = SystemContent(content=prompt)
 
         LOGGER.debug("Prompt: %s", self.content)
