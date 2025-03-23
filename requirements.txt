@@ -36,6 +36,7 @@ pyOpenSSL==25.0.0
 orjson==3.10.15
 packaging>=23.1
 psutil-home-assistant==0.0.1
+pylint==3.3.6
 python-slugify==8.0.4
 PyYAML==6.0.2
 requests==2.32.3
