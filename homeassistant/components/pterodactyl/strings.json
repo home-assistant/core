@@ -1,0 +1,50 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Pterodactyl server (including the port).",
+          "api_key": "The client API key for accessing your Pterodactyl server."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    },
+    "sensor": {
+      "cpu_usage": {
+        "name": "CPU Usage"
+      },
+      "memory_usage": {
+        "name": "Memory Usage"
+      },
+      "disk_usage": {
+        "name": "Disk Usage"
+      },
+      "network_rx_usage": {
+        "name": "Network RX Usage"
+      },
+      "network_tx_usage": {
+        "name": "Network TX Usage"
+      },
+      "uptime": {
+        "name": "Uptime"
+      }
+    }
+  }
+}
