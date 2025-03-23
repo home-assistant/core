@@ -14,7 +14,7 @@
     "step": {
       "reauth_confirm": {
         "title": "Authenticate with Tado",
-        "description": "You need to reauthenticate with Tado. Press Submit to start the authentication process."
+        "description": "You need to reauthenticate with Tado. Press `Submit` to start the authentication process."
       },
       "timeout": {
         "description": "The authentication process timed out. Please try again."
