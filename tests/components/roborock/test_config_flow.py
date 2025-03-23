@@ -19,8 +19,9 @@ from homeassistant.components.roborock.const import CONF_ENTRY_CODE, DOMAIN, DRA
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .mock_data import MOCK_CONFIG, USER_DATA, USER_EMAIL
+from .mock_data import MOCK_CONFIG, NETWORK_INFO, USER_DATA, USER_EMAIL
 
 from tests.common import MockConfigEntry
 
@@ -281,3 +282,68 @@ async def test_account_already_configured(
 
             assert result["type"] is FlowResultType.ABORT
             assert result["reason"] == "already_configured_account"
+
+
+async def test_discovery_not_setup(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+) -> None:
+    """Handle the config flow and make sure it succeeds."""
+    with (
+        patch("homeassistant.components.roborock.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip=NETWORK_INFO.ip,
+                macaddress=NETWORK_INFO.mac.replace(":", ""),
+                hostname="roborock-vacuum-a72",
+            ),
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        with patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code"
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_USERNAME: USER_EMAIL}
+            )
+
+            assert result["type"] is FlowResultType.FORM
+            assert result["step_id"] == "code"
+            assert result["errors"] == {}
+        with patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
+            return_value=USER_DATA,
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
+            )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == USER_EMAIL
+    assert result["data"] == MOCK_CONFIG
+    assert result["result"]
+
+
+async def test_discovery_already_setup(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    mock_roborock_entry: MockConfigEntry,
+    cleanup_map_storage_manual,
+) -> None:
+    """Handle aborting if the device is already setup."""
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip=NETWORK_INFO.ip,
+            macaddress=NETWORK_INFO.mac.replace(":", ""),
+            hostname="roborock-vacuum-a72",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
