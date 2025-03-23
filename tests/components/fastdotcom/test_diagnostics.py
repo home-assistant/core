@@ -36,8 +36,8 @@ async def test_get_config_entry_diagnostics(
         return_value={
             "download_speed": 100.0,
             "upload_speed": 50.0,
-            "ping_loaded": 20.5,
-            "ping_unloaded": 15.2,
+            "unloaded_ping": 15.2,
+            "loaded_ping": 20.5,
         },
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

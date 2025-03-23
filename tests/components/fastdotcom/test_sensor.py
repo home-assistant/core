@@ -1,15 +1,11 @@
-"""Test the Fast.com component sensors."""
+"""Test the Fast.com component sensors using the unified FastdotcomSensor."""
 
 import pytest
 
-from homeassistant.components.fastdotcom.sensor import (
-    DownloadSpeedSensor,
-    LoadedPingSensor,
-    UnloadedPingSensor,
-    UploadSpeedSensor,
-)
+from homeassistant.components.fastdotcom.sensor import SENSOR_TYPES, FastdotcomSensor
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import UnitOfDataRate
+from homeassistant.const import UnitOfDataRate, UnitOfTime
+from homeassistant.helpers.device_registry import DeviceInfo
 
 
 # A simple dummy coordinator that mimics the real coordinator used by the integration.
@@ -27,47 +23,68 @@ def dummy_coordinator():
     data = {
         "download_speed": 100.0,
         "upload_speed": 50.0,
-        "ping_loaded": 20.5,
-        "ping_unloaded": 15.2,
+        "unloaded_ping": 15.2,
+        "loaded_ping": 20.5,
     }
     return DummyCoordinator(data)
 
 
-def test_download_speed_sensor(dummy_coordinator):
-    """Test the DownloadSpeedSensor native_value and attributes."""
+@pytest.fixture
+def dummy_device_info():
+    """Fixture that provides dummy device info for testing."""
+    return DeviceInfo(
+        identifiers={("fastdotcom", "test_entry")},
+        name="Fast.com",
+        manufacturer="Fast.com",
+        model="Speed Test Integration",
+    )
+
+
+def test_download_speed_sensor(dummy_coordinator, dummy_device_info):
+    """Test the Download Speed sensor native_value and attributes."""
     entry_id = "test_entry"
-    sensor = DownloadSpeedSensor(entry_id, dummy_coordinator)
+    description = next(desc for desc in SENSOR_TYPES if desc.key == "download_speed")
+    sensor = FastdotcomSensor(
+        entry_id, dummy_coordinator, description, dummy_device_info
+    )
     assert sensor.native_value == 100.0
-    assert sensor._attr_native_unit_of_measurement == UnitOfDataRate.MEGABITS_PER_SECOND
-    assert sensor._attr_device_class == SensorDeviceClass.DATA_RATE
-    assert sensor._attr_state_class == SensorStateClass.MEASUREMENT
+    assert description.native_unit_of_measurement == UnitOfDataRate.MEGABITS_PER_SECOND
+    assert description.device_class == SensorDeviceClass.DATA_RATE
+    assert description.state_class == SensorStateClass.MEASUREMENT
 
 
-def test_upload_speed_sensor(dummy_coordinator):
-    """Test the UploadSpeedSensor native_value and attributes."""
+def test_upload_speed_sensor(dummy_coordinator, dummy_device_info):
+    """Test the Upload Speed sensor native_value and attributes."""
     entry_id = "test_entry"
-    sensor = UploadSpeedSensor(entry_id, dummy_coordinator)
+    description = next(desc for desc in SENSOR_TYPES if desc.key == "upload_speed")
+    sensor = FastdotcomSensor(
+        entry_id, dummy_coordinator, description, dummy_device_info
+    )
     assert sensor.native_value == 50.0
-    assert sensor._attr_native_unit_of_measurement == UnitOfDataRate.MEGABITS_PER_SECOND
-    assert sensor._attr_device_class == SensorDeviceClass.DATA_RATE
-    assert sensor._attr_state_class == SensorStateClass.MEASUREMENT
+    assert description.native_unit_of_measurement == UnitOfDataRate.MEGABITS_PER_SECOND
+    assert description.device_class == SensorDeviceClass.DATA_RATE
+    assert description.state_class == SensorStateClass.MEASUREMENT
 
 
-def test_unloaded_ping_sensor(dummy_coordinator):
-    """Test the UnloadedPingSensor native_value and attributes."""
+def test_unloaded_ping_sensor(dummy_coordinator, dummy_device_info):
+    """Test the Unloaded Ping sensor native_value and attributes."""
     entry_id = "test_entry"
-    sensor = UnloadedPingSensor(entry_id, dummy_coordinator)
+    description = next(desc for desc in SENSOR_TYPES if desc.key == "unloaded_ping")
+    sensor = FastdotcomSensor(
+        entry_id, dummy_coordinator, description, dummy_device_info
+    )
     assert sensor.native_value == 15.2
-    # Here you can optionally verify additional attributes (if set).
-    assert sensor._attr_native_unit_of_measurement == "ms"
-    assert sensor._attr_state_class == SensorStateClass.MEASUREMENT
+    assert description.native_unit_of_measurement == UnitOfTime.MILLISECONDS
+    assert description.state_class == SensorStateClass.MEASUREMENT
 
 
-def test_loaded_ping_sensor(dummy_coordinator):
-    """Test the LoadedPingSensor native_value and attributes."""
+def test_loaded_ping_sensor(dummy_coordinator, dummy_device_info):
+    """Test the Loaded Ping sensor native_value and attributes."""
     entry_id = "test_entry"
-    sensor = LoadedPingSensor(entry_id, dummy_coordinator)
+    description = next(desc for desc in SENSOR_TYPES if desc.key == "loaded_ping")
+    sensor = FastdotcomSensor(
+        entry_id, dummy_coordinator, description, dummy_device_info
+    )
     assert sensor.native_value == 20.5
-    # Optionally check additional attributes.
-    assert sensor._attr_native_unit_of_measurement == "ms"
-    assert sensor._attr_state_class == SensorStateClass.MEASUREMENT
+    assert description.native_unit_of_measurement == UnitOfTime.MILLISECONDS
+    assert description.state_class == SensorStateClass.MEASUREMENT

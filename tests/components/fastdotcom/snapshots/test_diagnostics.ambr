@@ -3,8 +3,8 @@
   dict({
     'coordinator_data': dict({
       'download_speed': 100.0,
-      'ping_loaded': 20.5,
-      'ping_unloaded': 15.2,
+      'loaded_ping': 20.5,
+      'unloaded_ping': 15.2,
       'upload_speed': 50.0,
     }),
   })

@@ -912,7 +912,7 @@ faadelays==2023.9.1
 # face-recognition==1.2.3
 
 # homeassistant.components.fastdotcom
-fastdotcom2==0.0.17
+fastdotcom2==0.0.19
 
 # homeassistant.components.feedreader
 feedparser==6.0.11

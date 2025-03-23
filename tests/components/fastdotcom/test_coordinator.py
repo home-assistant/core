@@ -23,8 +23,8 @@ async def test_coordinator_success(hass, dummy_config_entry):
     fake_data = {
         "download_speed": 100.0,
         "upload_speed": 50.0,
-        "ping_loaded": 20.5,
-        "ping_unloaded": 15.2,
+        "unloaded_ping": 15.2,
+        "loaded_ping": 20.2,
     }
 
     # Patch the fast_com2 function (used by the coordinator) to return fake_data.
