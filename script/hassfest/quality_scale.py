@@ -977,7 +977,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "syncthing",
     "syncthru",
     "synology_chat",
-    "synology_dsm",
     "synology_srm",
     "syslog",
     "system_bridge",
