@@ -17,6 +17,8 @@ from .const import MAP_SLEEP
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class RoborockSelectDescription(SelectEntityDescription):
@@ -32,6 +34,8 @@ class RoborockSelectDescription(SelectEntityDescription):
     parameter_lambda: Callable[[str, DeviceProp], list[int]]
 
     protocol_listener: RoborockDataProtocol | None = None
+    # If it is a dock entity
+    is_dock_entity: bool = False
 
 
 SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
@@ -70,6 +74,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         parameter_lambda=lambda key, _: [
             RoborockDockDustCollectionModeCode.as_dict().get(key)
         ],
+        is_dock_entity=True,
     ),
 ]
 
@@ -117,6 +122,7 @@ class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
             f"{entity_description.key}_{coordinator.duid_slug}",
             coordinator,
             entity_description.protocol_listener,
+            is_dock_entity=entity_description.is_dock_entity,
         )
         self._attr_options = options
 
@@ -143,8 +149,9 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
         """Set the option."""
         for map_id, map_ in self.coordinator.maps.items():
             if map_.name == option:
-                await self.send(
+                await self._send_command(
                     RoborockCommand.LOAD_MULTI_MAP,
+                    self.api,
                     [map_id],
                 )
                 # Update the current map id manually so that nothing gets broken
@@ -153,6 +160,7 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
                 # We need to wait after updating the map
                 # so that other commands will be executed correctly.
                 await asyncio.sleep(MAP_SLEEP)
+                await self.coordinator.async_refresh()
                 break
 
     @property

@@ -6,10 +6,11 @@ aiodns==3.2.0
 aiohasupervisor==0.3.0
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.2.3
-aiohttp==3.11.13
+aiohttp==3.11.14
 aiohttp_cors==0.7.0
 aiousbwatcher==1.1.1
 aiozoneinfo==0.2.3
+annotatedyaml==0.4.4
 astral==2.2
 async-interrupt==1.2.2
 async-upnp-client==0.43.0
@@ -23,17 +24,17 @@ bleak-retry-connector==3.9.0
 bleak==0.22.3
 bluetooth-adapters==0.21.4
 bluetooth-auto-recovery==1.4.5
-bluetooth-data-tools==1.26.0
+bluetooth-data-tools==1.26.1
 cached-ipaddress==0.10.0
 certifi>=2021.5.30
 ciso8601==2.3.2
 cronsim==2.6
 cryptography==44.0.1
-dbus-fast==2.39.5
+dbus-fast==2.41.1
 fnv-hash-fast==1.4.0
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
-habluetooth==3.27.0
+habluetooth==3.37.0
 hass-nabucasa==0.94.0
 hassil==2.2.3
 home-assistant-bluetooth==1.13.1
@@ -67,7 +68,7 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.4.0
 urllib3>=1.26.5,<2
-uv==0.6.1
+uv==0.6.8
 voluptuous-openapi==0.0.6
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
@@ -108,7 +109,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.8.0
+anyio==4.9.0
 h11==0.14.0
 httpcore==1.0.7
 
