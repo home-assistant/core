@@ -95,8 +95,6 @@ async def update_options_listener(
             config_entry.options[CONF_IPS_TO_REMOVE].remove(ip)
             config_entry.options[CONF_MANUAL_DEVICES].remove(ip)
 
-        # await hass.config_entries.async_reload(config_entry.entry_id)
-
     if (
         config.option_mode == OptionMode.CONFIGURE_AUTO_DISCOVERY
         and coordinator.discovery_enabled != config.auto_discovery
