@@ -118,6 +118,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
                 outlet_num_str: str = str(outlet_num)
                 additional_integration_commands |= {
                     f"outlet.{outlet_num_str}.load.cycle",
+                    f"outlet.{outlet_num_str}.load.on",
+                    f"outlet.{outlet_num_str}.load.off",
                 }
 
         valid_integration_commands = (
