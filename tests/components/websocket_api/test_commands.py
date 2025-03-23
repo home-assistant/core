@@ -2916,3 +2916,25 @@ async def test_subscribe_entities_chained_state_change(
 
     await websocket_client.close()
     await hass.async_block_till_done()
+
+
+async def test_get_states_entity_id_filter(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
+    """Test get_states command."""
+    hass.states.async_set("greeting.hello", "world")
+    hass.states.async_set("greeting.bye", "universe")
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "get_states",
+            "entity_ids": ["greeting.bye", "greeting.missing"],
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == [hass.states.get("greeting.bye").as_dict()]

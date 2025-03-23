@@ -325,12 +325,22 @@ def _async_get_allowed_states(
 
 
 @callback
-@decorators.websocket_command({vol.Required("type"): "get_states"})
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "get_states",
+        vol.Optional("entity_ids"): cv.entity_ids,
+    }
+)
 def handle_get_states(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get states command."""
     states = _async_get_allowed_states(hass, connection)
+
+    # filter states if entity_ids is set
+    entity_ids = set(msg.get("entity_ids", []))
+    if entity_ids:
+        states = [state for state in states if state.entity_id in entity_ids]
 
     try:
         serialized_states = [state.as_dict_json for state in states]
