@@ -216,7 +216,11 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         elif state_value == PAYLOAD_NONE:
             self._attr_is_on = None
         else:
-            _LOGGER.warning("Invalid state value received from '%s'", state_value)
+            _LOGGER.warning(
+                "Invalid state value '%s' received from %s", 
+                state_value, 
+                msg.topic,
+            )
 
         if CONF_BRIGHTNESS_TEMPLATE in self._config:
             brightness_value = self._value_templates[CONF_BRIGHTNESS_TEMPLATE](
@@ -238,7 +242,9 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                         )
                 except ValueError:
                     _LOGGER.warning(
-                        "Invalid brightness value received from %s", msg.topic
+                        "Invalid brightness value '%s' received from %s", 
+                        brightness_value,
+                        msg.topic,
                     )
 
         if CONF_COLOR_TEMP_TEMPLATE in self._config:
@@ -263,7 +269,9 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                     )
                 except ValueError:
                     _LOGGER.warning(
-                        "Invalid color temperature value received from %s", msg.topic
+                        "Invalid color temperature value '%s' received from %s", 
+                        color_temp_value,
+                        msg.topic,
                     )
 
         if (
