@@ -75,19 +75,19 @@
         "name": "Average load (15 min)"
       },
       "24ghz_temperature": {
-        "name": "2.4GHz Temperature"
+        "name": "2.4GHz temperature"
       },
       "5ghz_temperature": {
-        "name": "5GHz Temperature"
+        "name": "5GHz temperature"
       },
       "cpu_temperature": {
-        "name": "CPU Temperature"
+        "name": "CPU temperature"
       },
       "5ghz_2_temperature": {
-        "name": "5GHz Temperature (Radio 2)"
+        "name": "5GHz temperature (Radio 2)"
       },
       "6ghz_temperature": {
-        "name": "6GHz Temperature"
+        "name": "6GHz temperature"
       },
       "cpu_usage": {
         "name": "CPU usage"
