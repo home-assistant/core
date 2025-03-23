@@ -141,6 +141,16 @@ async def _transform_stream(
                 ]
             }
         elif isinstance(event, ResponseIncompleteEvent):
+            if event.response.usage is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": event.response.usage.input_tokens,
+                            "output_tokens": event.response.usage.output_tokens,
+                        }
+                    }
+                )
+
             if (
                 event.response.incomplete_details
                 and event.response.incomplete_details.reason
@@ -155,16 +165,6 @@ async def _transform_stream(
                 reason = "content filter triggered"
 
             raise HomeAssistantError(f"OpenAI response incomplete: {reason}")
-
-            if (usage := event.response.usage) is not None:
-                chat_log.async_trace(
-                    {
-                        "stats": {
-                            "input_tokens": usage.input_tokens,
-                            "output_tokens": usage.output_tokens,
-                        }
-                    }
-                )
 
 
 class OpenAIConversationEntity(
