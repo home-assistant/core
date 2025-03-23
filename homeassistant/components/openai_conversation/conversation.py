@@ -99,8 +99,7 @@ def _convert_content_to_param(
 
     if isinstance(content, conversation.AssistantContent) and content.tool_calls:
         messages.extend(
-            # https://github.com/openai/openai-python/issues/2205
-            ResponseFunctionToolCallParam(  # type: ignore[typeddict-item]
+            ResponseFunctionToolCallParam(
                 type="function_call",
                 name=tool_call.tool_name,
                 arguments=json.dumps(tool_call.tool_args),
