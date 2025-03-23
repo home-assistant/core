@@ -40,6 +40,8 @@ async def async_setup_entry(
             icon="mdi:chevron-right-box-outline")
     ])
 
+PARALLEL_UPDATES = 1
+
 class AwtrixBinarySensor(BinarySensorEntity, AwtrixEntity):
     """representation of a Awtrix binary sensor."""
 

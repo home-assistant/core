@@ -49,6 +49,7 @@ async def async_setup_entry(
         ]
     )
 
+PARALLEL_UPDATES = 1
 
 class AwtrixButton(ButtonEntity, AwtrixEntity):
     """Representation of awtrix button entity."""

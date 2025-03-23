@@ -75,6 +75,7 @@ FLOWS = {
         "aussie_broadband",
         "autarco",
         "awair",
+        "awtrix3",
         "axis",
         "azure_data_explorer",
         "azure_devops",

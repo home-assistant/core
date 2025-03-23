@@ -35,6 +35,8 @@ async def async_get_service(
 
 ########################################################################################################
 
+PARALLEL_UPDATES = 1
+
 class AwtrixNotificationService(BaseNotificationService):
     """Implement the notification service for Awtrix."""
 

@@ -36,6 +36,8 @@ async def async_setup_entry(
             icon="mdi:brightness-auto")
     ])
 
+PARALLEL_UPDATES = 1
+
 class AwtrixSwitch(SwitchEntity, AwtrixEntity):
     """Representation of a Awtrix switch."""
 

@@ -377,6 +377,11 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
+    "_awtrix._tcp.local.": [
+        {
+            "domain": "awtrix3",
+        },
+    ],
     "_axis-video._tcp.local.": [
         {
             "domain": "axis",
