@@ -1,0 +1,61 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "no_mac": "Could not configure unique ID for AWTRIX device.",
+      "no_device_info": "Could not get device informatiom.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "awtrix_error": "Error setting up AWTRIX device: {error}. Check logs for more information.",
+      "auth_failed": "Could not authenticate: {error}",
+      "no_awtrix_service": "No AWTRIX service found. Check that the port number is correct.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "auto": "Search automatically"
+        },
+        "title": "AWTRIX device setup",
+        "description": "By clicking submit, we will search your network for AWTTRIX devices."
+      },
+      "device": {
+        "data": {
+          "host": "Select discovered AWTRIX device"
+        },
+        "title": "Select AWTRIX device"
+      },
+      "configure": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your AWTRIX device."
+        },
+        "title": "Configure AWTRIX device"
+      },
+      "configure_profile": {
+        "description": "Create device entity for {profile} at {resolution} resolution?",
+        "title": "Configure Profiles",
+        "data": {
+          "include": "Create device entity"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate the AWTRIX device",
+        "description": "Some devices will reject authentication if the time is out of sync by more than 5 seconds. If authentication is unsuccessful, verify the time on the device is correct and try again.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    }
+  }
+}

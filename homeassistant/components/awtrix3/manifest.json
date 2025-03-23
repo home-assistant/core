@@ -1,0 +1,15 @@
+{
+  "domain": "awtrix3",
+  "name": "Awtrix 3",
+  "config_flow": true,
+  "codeowners": ["@10der"],
+  "integration_type": "device",
+  "dependencies": ["zeroconf"],
+  "zeroconf": [
+    "_awtrix._tcp.local."
+  ],
+  "documentation": "https://github.com/10der/new-awtrix3-hass-integration/blob/main/README.md",
+  "iot_class": "local_polling",
+  "requirements": [],
+  "version": "0.1.13"
+}
