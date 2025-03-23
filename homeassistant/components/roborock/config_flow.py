@@ -21,7 +21,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -32,6 +31,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from . import RoborockConfigEntry
 from .const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
@@ -193,7 +193,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: RoborockConfigEntry,
     ) -> RoborockOptionsFlowHandler:
         """Create the options flow."""
         return RoborockOptionsFlowHandler(config_entry)
@@ -202,7 +202,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
 class RoborockOptionsFlowHandler(OptionsFlow):
     """Handle an option flow for Roborock."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: RoborockConfigEntry) -> None:
         """Initialize options flow."""
         self.options = deepcopy(dict(config_entry.options))
 
