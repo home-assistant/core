@@ -28,7 +28,9 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     CONF_BASE_URL,
@@ -136,6 +138,22 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_ENTRY_CODE): str}),
             errors=errors,
         )
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a flow started by a dhcp discovery."""
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_device(
+            connections={
+                (dr.CONNECTION_NETWORK_MAC, dr.format_mac(discovery_info.macaddress))
+            }
+        )
+        if device is not None and any(
+            identifier[0] == DOMAIN for identifier in device.identifiers
+        ):
+            return self.async_abort(reason="already_configured")
+        return await self.async_step_user()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
