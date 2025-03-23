@@ -74,11 +74,7 @@
       "test_failure_stop": "Stop simulating a power failure",
       "test_panel_start": "Start testing the UPS panel",
       "test_panel_stop": "Stop a UPS panel test",
-      "test_system_start": "Start a system test",
-      "outlet_1_load_on": "Power outlet 1 on",
-      "outlet_1_load_off": "Power outlet 1 off",
-      "outlet_2_load_on": "Power outlet 2 on",
-      "outlet_2_load_off": "Power outlet 2 off"
+      "test_system_start": "Start a system test"
     }
   },
   "entity": {
@@ -157,6 +153,13 @@
       "input_l1_n_voltage": { "name": "Input L1 voltage" },
       "input_l2_n_voltage": { "name": "Input L2 voltage" },
       "input_l3_n_voltage": { "name": "Input L3 voltage" },
+      "outlet_number_current": { "name": "Outlet {outlet_name} current" },
+      "outlet_number_current_status": {
+        "name": "Outlet {outlet_name} current status"
+      },
+      "outlet_number_desc": { "name": "Outlet {outlet_name} description" },
+      "outlet_number_power": { "name": "Outlet {outlet_name} power" },
+      "outlet_number_realpower": { "name": "Outlet {outlet_name} real power" },
       "outlet_voltage": { "name": "Outlet voltage" },
       "output_current": { "name": "Output current" },
       "output_current_nominal": { "name": "Nominal output current" },
@@ -214,6 +217,12 @@
       "ups_type": { "name": "UPS type" },
       "ups_watchdog_status": { "name": "Watchdog status" },
       "watts": { "name": "Watts" }
+    },
+    "button": {
+      "outlet_number_load_cycle": { "name": "Power cycle outlet {outlet_name}" }
+    },
+    "switch": {
+      "outlet_number_load_poweronoff": { "name": "Power outlet {outlet_name}" }
     }
   }
 }
