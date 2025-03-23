@@ -62,15 +62,15 @@ async def async_setup_entry(
                 ),
             }
 
-        async_add_entities(
-            NUTSwitch(
-                coordinator,
-                available_switch_types[switch_type],
-                data,
-                unique_id,
-            )
-            for switch_type in available_switch_types
+    async_add_entities(
+        NUTSwitch(
+            coordinator,
+            available_switch_types[switch_type],
+            data,
+            unique_id,
         )
+        for switch_type in available_switch_types
+    )
 
 
 class NUTSwitch(NUTBaseEntity, SwitchEntity):
@@ -81,19 +81,19 @@ class NUTSwitch(NUTBaseEntity, SwitchEntity):
         """Return the state of the switch."""
         status = self.coordinator.data
 
-        name_list = self.entity_description.key.split(".")
-        return status.get(f"{name_list[0]}.{name_list[1]}.status") == "on"
+        outlet, outlet_num_str = self.entity_description.key.split(".", 2)[:2]
+        return status.get(f"{outlet}.{outlet_num_str}.status") == "on"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
 
-        name_list = self.entity_description.key.split(".")
-        command_name = f"{name_list[0]}.{name_list[1]}.load.on"
+        outlet, outlet_num_str = self.entity_description.key.split(".", 2)[:2]
+        command_name = f"{outlet}.{outlet_num_str}.load.on"
         await self.pynut_data.async_run_command(command_name)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
 
-        outlet, num_str = self.entity_description.key.split(".")
-        command_name = f"{name_list[0]}.{name_list[1]}.load.off"
+        outlet, outlet_num_str = self.entity_description.key.split(".", 2)[:2]
+        command_name = f"{outlet}.{outlet_num_str}.load.off"
         await self.pynut_data.async_run_command(command_name)
