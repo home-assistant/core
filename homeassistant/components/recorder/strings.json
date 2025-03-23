@@ -43,15 +43,15 @@
       "fields": {
         "entity_id": {
           "name": "Entities to remove",
-          "description": "List of entities for which the data is to be removed from the recorder database."
+          "description": "List of entities for which the data is to be removed from the Recorder database."
         },
         "domains": {
           "name": "Domains to remove",
-          "description": "List of domains for which the data needs to be removed from the recorder database."
+          "description": "List of domains for which the data needs to be removed from the Recorder database."
         },
         "entity_globs": {
           "name": "Entity globs to remove",
-          "description": "List of glob patterns used to select the entities for which the data is to be removed from the recorder database."
+          "description": "List of glob patterns used to select the entities for which the data is to be removed from the Recorder database."
         },
         "keep_days": {
           "name": "[%key:component::recorder::services::purge::fields::keep_days::name%]",
