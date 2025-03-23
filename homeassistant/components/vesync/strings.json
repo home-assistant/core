@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Enter Username and Password",
+        "title": "Enter username and password",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -10,7 +10,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The vesync integration needs to re-authenticate your account",
+        "description": "The VeSync integration needs to re-authenticate your account",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -71,7 +71,8 @@
         "state": {
           "bright": "Bright",
           "dim": "Dim",
-          "off": "[%key:common::state::off%]"
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
         }
       }
     },

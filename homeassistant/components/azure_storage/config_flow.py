@@ -1,5 +1,6 @@
 """Config flow for Azure Storage integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -26,6 +27,26 @@ _LOGGER = logging.getLogger(__name__)
 class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for azure storage."""
 
+    def get_account_url(self, account_name: str) -> str:
+        """Get the account URL."""
+        return f"https://{account_name}.blob.core.windows.net/"
+
+    async def validate_config(
+        self, container_client: ContainerClient
+    ) -> dict[str, str]:
+        """Validate the configuration."""
+        errors: dict[str, str] = {}
+        try:
+            await container_client.exists()
+        except ResourceNotFoundError:
+            errors["base"] = "cannot_connect"
+        except ClientAuthenticationError:
+            errors[CONF_STORAGE_ACCOUNT_KEY] = "invalid_auth"
+        except Exception:
+            _LOGGER.exception("Unknown exception occurred")
+            errors["base"] = "unknown"
+        return errors
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -38,20 +59,13 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
                 {CONF_ACCOUNT_NAME: user_input[CONF_ACCOUNT_NAME]}
             )
             container_client = ContainerClient(
-                account_url=f"https://{user_input[CONF_ACCOUNT_NAME]}.blob.core.windows.net/",
+                account_url=self.get_account_url(user_input[CONF_ACCOUNT_NAME]),
                 container_name=user_input[CONF_CONTAINER_NAME],
                 credential=user_input[CONF_STORAGE_ACCOUNT_KEY],
                 transport=AioHttpTransport(session=async_get_clientsession(self.hass)),
             )
-            try:
-                await container_client.exists()
-            except ResourceNotFoundError:
-                errors["base"] = "cannot_connect"
-            except ClientAuthenticationError:
-                errors[CONF_STORAGE_ACCOUNT_KEY] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unknown exception occurred")
-                errors["base"] = "unknown"
+            errors = await self.validate_config(container_client)
+
             if not errors:
                 return self.async_create_entry(
                     title=f"{user_input[CONF_ACCOUNT_NAME]}/{user_input[CONF_CONTAINER_NAME]}",
@@ -66,6 +80,80 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_CONTAINER_NAME, default="home-assistant-backups"
                     ): str,
                     vol.Required(CONF_STORAGE_ACCOUNT_KEY): str,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            container_client = ContainerClient(
+                account_url=self.get_account_url(reauth_entry.data[CONF_ACCOUNT_NAME]),
+                container_name=reauth_entry.data[CONF_CONTAINER_NAME],
+                credential=user_input[CONF_STORAGE_ACCOUNT_KEY],
+                transport=AioHttpTransport(session=async_get_clientsession(self.hass)),
+            )
+            errors = await self.validate_config(container_client)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data={**reauth_entry.data, **user_input},
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_STORAGE_ACCOUNT_KEY): str,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure the entry."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            container_client = ContainerClient(
+                account_url=self.get_account_url(
+                    reconfigure_entry.data[CONF_ACCOUNT_NAME]
+                ),
+                container_name=user_input[CONF_CONTAINER_NAME],
+                credential=user_input[CONF_STORAGE_ACCOUNT_KEY],
+                transport=AioHttpTransport(session=async_get_clientsession(self.hass)),
+            )
+            errors = await self.validate_config(container_client)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data={**reconfigure_entry.data, **user_input},
+                )
+        return self.async_show_form(
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_CONTAINER_NAME,
+                        default=reconfigure_entry.data[CONF_CONTAINER_NAME],
+                    ): str,
+                    vol.Required(
+                        CONF_STORAGE_ACCOUNT_KEY,
+                        default=reconfigure_entry.data[CONF_STORAGE_ACCOUNT_KEY],
+                    ): str,
                 }
             ),
             errors=errors,

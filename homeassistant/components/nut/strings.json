@@ -126,6 +126,7 @@
         "name": "Input bypass L3 real power"
       },
       "input_current": { "name": "Input current" },
+      "input_current_status": { "name": "Input current status" },
       "input_l1_current": { "name": "Input L1 current" },
       "input_l2_current": { "name": "Input L2 current" },
       "input_l3_current": { "name": "Input L3 current" },
@@ -136,19 +137,30 @@
       "input_l2_frequency": { "name": "Input L2 line frequency" },
       "input_l3_frequency": { "name": "Input L3 line frequency" },
       "input_phases": { "name": "Input phases" },
+      "input_power": { "name": "Input power" },
       "input_realpower": { "name": "Input real power" },
       "input_l1_realpower": { "name": "Input L1 real power" },
       "input_l2_realpower": { "name": "Input L2 real power" },
       "input_l3_realpower": { "name": "Input L3 real power" },
+      "input_load": { "name": "Input load" },
       "input_sensitivity": { "name": "Input power sensitivity" },
       "input_transfer_high": { "name": "High voltage transfer" },
       "input_transfer_low": { "name": "Low voltage transfer" },
       "input_transfer_reason": { "name": "Voltage transfer reason" },
       "input_voltage": { "name": "Input voltage" },
       "input_voltage_nominal": { "name": "Nominal input voltage" },
+      "input_voltage_status": { "name": "Input voltage status" },
       "input_l1_n_voltage": { "name": "Input L1 voltage" },
       "input_l2_n_voltage": { "name": "Input L2 voltage" },
       "input_l3_n_voltage": { "name": "Input L3 voltage" },
+      "outlet_number_current": { "name": "Outlet {outlet_name} current" },
+      "outlet_number_current_status": {
+        "name": "Outlet {outlet_name} current status"
+      },
+      "outlet_number_desc": { "name": "Outlet {outlet_name} description" },
+      "outlet_number_power": { "name": "Outlet {outlet_name} power" },
+      "outlet_number_realpower": { "name": "Outlet {outlet_name} real power" },
+      "outlet_voltage": { "name": "Outlet voltage" },
       "output_current": { "name": "Output current" },
       "output_current_nominal": { "name": "Nominal output current" },
       "output_l1_current": { "name": "Output L1 current" },
@@ -205,6 +217,12 @@
       "ups_type": { "name": "UPS type" },
       "ups_watchdog_status": { "name": "Watchdog status" },
       "watts": { "name": "Watts" }
+    },
+    "button": {
+      "outlet_number_load_cycle": { "name": "Power cycle outlet {outlet_name}" }
+    },
+    "switch": {
+      "outlet_number_load_poweronoff": { "name": "Power outlet {outlet_name}" }
     }
   }
 }

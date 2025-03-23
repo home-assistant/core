@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant import config as conf_util
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DISCOVERY, SERVICE_RELOAD
+from homeassistant.const import CONF_DISCOVERY, CONF_PLATFORM, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     ConfigValidationError,
@@ -81,6 +81,7 @@ from .const import (
     ENTRY_OPTION_FIELDS,
     MQTT_CONNECTION_STATE,
     TEMPLATE_ERRORS,
+    Platform,
 )
 from .models import (
     DATA_MQTT,
@@ -293,6 +294,21 @@ async def async_check_config_schema(
                     ) from exc
 
 
+def _platforms_in_use(hass: HomeAssistant, entry: ConfigEntry) -> set[str | Platform]:
+    """Return a set of platforms in use."""
+    domains: set[str | Platform] = {
+        entry.domain
+        for entry in er.async_entries_for_config_entry(
+            er.async_get(hass), entry.entry_id
+        )
+    }
+    # Update with domains from subentries
+    for subentry in entry.subentries.values():
+        components = subentry.data["components"].values()
+        domains.update(component[CONF_PLATFORM] for component in components)
+    return domains
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the actions and websocket API for the MQTT component."""
 
@@ -434,12 +450,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     mqtt_data, conf = await _setup_client()
     platforms_used = platforms_from_config(mqtt_data.config)
-    platforms_used.update(
-        entry.domain
-        for entry in er.async_entries_for_config_entry(
-            er.async_get(hass), entry.entry_id
-        )
-    )
+    platforms_used.update(_platforms_in_use(hass, entry))
     integration = async_get_loaded_integration(hass, DOMAIN)
     # Preload platforms we know we are going to use so
     # discovery can setup each platform synchronously

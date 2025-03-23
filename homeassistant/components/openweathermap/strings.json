@@ -51,7 +51,7 @@
   "services": {
     "get_minute_forecast": {
       "name": "Get minute forecast",
-      "description": "Get minute weather forecast."
+      "description": "Retrieves a minute-by-minute weather forecast for one hour."
     }
   },
   "exceptions": {

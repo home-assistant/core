@@ -138,7 +138,7 @@ class OneDriveBackupAgent(BackupAgent):
         """Download a backup file."""
         backups = await self._list_cached_backups()
         if backup_id not in backups:
-            raise BackupNotFound("Backup not found")
+            raise BackupNotFound(f"Backup {backup_id} not found")
 
         stream = await self._client.download_drive_item(
             backups[backup_id].backup_file_id, timeout=TIMEOUT
@@ -201,7 +201,7 @@ class OneDriveBackupAgent(BackupAgent):
         """Delete a backup file."""
         backups = await self._list_cached_backups()
         if backup_id not in backups:
-            return
+            raise BackupNotFound(f"Backup {backup_id} not found")
 
         backup = backups[backup_id]
 
@@ -221,12 +221,12 @@ class OneDriveBackupAgent(BackupAgent):
         ]
 
     @handle_backup_errors
-    async def async_get_backup(
-        self, backup_id: str, **kwargs: Any
-    ) -> AgentBackup | None:
+    async def async_get_backup(self, backup_id: str, **kwargs: Any) -> AgentBackup:
         """Return a backup."""
         backups = await self._list_cached_backups()
-        return backups[backup_id].backup if backup_id in backups else None
+        if backup_id not in backups:
+            raise BackupNotFound(f"Backup {backup_id} not found")
+        return backups[backup_id].backup
 
     async def _list_cached_backups(self) -> dict[str, OneDriveBackup]:
         """List backups with a cache."""
