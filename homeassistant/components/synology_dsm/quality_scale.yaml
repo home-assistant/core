@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: services are still registered in entry setup
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
