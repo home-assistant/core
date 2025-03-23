@@ -829,6 +829,8 @@ build.json @home-assistant/supervisor
 /tests/components/lcn/ @alengwenus
 /homeassistant/components/ld2410_ble/ @930913
 /tests/components/ld2410_ble/ @930913
+/homeassistant/components/lea_amp/ @lea_amp
+/tests/components/lea_amp/ @lea_amp
 /homeassistant/components/leaone/ @bdraco
 /tests/components/leaone/ @bdraco
 /homeassistant/components/led_ble/ @bdraco
