@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -26,8 +26,9 @@ from .services import AwtrixServicesSetup
 
 _LOGGER = logging.getLogger(__name__)
 
-type MyConfigEntry = ConfigEntry[RuntimeData]
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+type MyConfigEntry = ConfigEntry[RuntimeData]
 
 @dataclass
 class RuntimeData:
