@@ -40,6 +40,7 @@ async def mcp_client(url: str) -> AsyncGenerator[ClientSession]:
             await session.initialize()
             yield session
     except ExceptionGroup as err:
+        _LOGGER.debug("Error creating MCP client: %s", err)
         raise err.exceptions[0] from err
 
 
@@ -73,8 +74,10 @@ class ModelContextProtocolTool(llm.Tool):
                         tool_input.tool_name, tool_input.tool_args
                     )
         except TimeoutError as error:
+            _LOGGER.debug("Timeout when calling tool: %s", error)
             raise HomeAssistantError(f"Timeout when calling tool: {error}") from error
         except httpx.HTTPStatusError as error:
+            _LOGGER.debug("Error when calling tool: %s", error)
             raise HomeAssistantError(f"Error when calling tool: {error}") from error
         return result.model_dump(exclude_unset=True, exclude_none=True)
 
