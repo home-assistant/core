@@ -139,6 +139,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) 
             entry.async_on_state_change(async_notify_backup_listeners)
         )
 
+        entry.runtime_data.coordinator_central.async_add_listener(
+            async_notify_backup_listeners
+        )
+
     return True
 
 
