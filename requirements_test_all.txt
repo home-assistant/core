@@ -1548,7 +1548,7 @@ pydaikin==2.14.1
 pydeako==0.6.0
 
 # homeassistant.components.deconz
-pydeconz==118
+pydeconz==120
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
