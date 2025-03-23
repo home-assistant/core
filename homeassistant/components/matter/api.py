@@ -38,6 +38,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_open_commissioning_window)
     websocket_api.async_register_command(hass, websocket_remove_matter_fabric)
     websocket_api.async_register_command(hass, websocket_interview_node)
+    websocket_api.async_register_command(hass, websocket_get_node_binding)
+    websocket_api.async_register_command(hass, websocket_set_node_binding)
 
 
 def async_get_node(
@@ -237,6 +239,75 @@ async def websocket_node_diagnostics(
     result = await matter.matter_client.node_diagnostics(node_id=node.node_id)
     connection.send_result(msg[ID], dataclass_to_dict(result))
 
+
+from dataclasses import dataclass
+@dataclass
+class NodeBinding:
+    node: int
+    group: int
+    endpoint: int
+    cluster: int
+    fabricIndex: int
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "matter/get_node_binding",
+        vol.Required(DEVICE_ID): str,
+        vol.Required("endpoint"): int,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter_adapter
+@async_get_node
+async def websocket_get_node_binding(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: MatterAdapter,
+    node: MatterNode,
+) -> None:
+    result = node.get_attribute_value(endpoint=msg["endpoint"], cluster=0x001E, attribute=0)
+    ret = [
+        dataclass_to_dict(
+            NodeBinding(
+                node=val.node,
+                group=val.group,
+                endpoint=val.endpoint,
+                cluster=val.cluster,
+                fabricIndex=val.fabricIndex,
+            )
+        )
+        for val in result
+    ]
+    connection.send_result(msg[ID], ret)
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "matter/set_node_binding",
+        vol.Required(DEVICE_ID): str,
+        vol.Required("endpoint"): int,
+        vol.Required("bindings"): list,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_matter_adapter
+@async_get_node
+async def websocket_set_node_binding(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    matter: MatterAdapter,
+    node: MatterNode,
+) -> None:
+    attribute_path=f"{msg["endpoint"]}/30/0"
+    result = await matter.matter_client.write_attribute(
+        node_id=node.node_id,
+        attribute_path=attribute_path,
+        value=msg["bindings"],
+    )
+    connection.send_result(msg[ID], result)
 
 @websocket_api.websocket_command(
     {
