@@ -39,6 +39,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> boo
         state_file=state_file,
         brand=brand,
     )
+    # start out logging responses if we are initially enabled for debug logging
+    nexia_home.log_response = _LOGGER.isEnabledFor(logging.DEBUG)
 
     try:
         await nexia_home.login()
@@ -68,6 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> bool:
     """Unload a config entry."""
+    coordinator = entry.runtime_data
+    coordinator.async_cleanup()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
