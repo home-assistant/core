@@ -5,7 +5,7 @@
         "title": "Zimi",
         "description": "Discover details of your Zimi Cloud Connect device."
       },
-      "finish": {
+      "manual": {
         "title": "Zimi",
         "description": "Confirm details of your Zimi Cloud Connect device.",
         "data": {

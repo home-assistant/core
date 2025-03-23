@@ -63,17 +63,17 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Handle the initial auto-discovery step."""
 
-        api_description: ControlPointDescription | None = None
+        api_descriptions: list[ControlPointDescription]
 
         self.data: dict[str, str] = {}
 
         try:
-            api_description = await ControlPointDiscoveryService().discover()
+            api_descriptions = await ControlPointDiscoveryService().discovers()
         except ControlPointError as e:
             _LOGGER.error(e)
-            return await self.async_step_finish()
+            return await self.async_step_manual()
 
-        if api_description:
+        for api_description in api_descriptions:
             self.data[CONF_HOST] = api_description.host
             self.data[CONF_PORT] = api_description.port
 
@@ -84,13 +84,20 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if self.api and self.api.ready:
                 self.data[CONF_MAC] = format_mac(self.api.mac)
+                self.api.disconnect()
+                await self.async_set_unique_id(self.data[CONF_MAC])
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=f"{TITLE} ({self.data[CONF_HOST]}:{self.data[CONF_PORT]})",
+                    data=self.data,
+                )
 
-        return await self.async_step_finish()
+        return await self.async_step_manual()
 
-    async def async_step_finish(
+    async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
-        """Handle the final step."""
+        """Handle manual configuration step if needed."""
 
         errors: dict[str, str] = {}
 
@@ -106,25 +113,14 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
             self.api = None
 
             await self.async_set_unique_id(self.data[CONF_MAC])
-
-            # Check if we have (re)discovered a ZCC that is already configured
-            # in the ZCC discovery step which will need manual configuration.
-            if (
-                self.unique_id
-                and self.hass.config_entries.async_entry_for_domain_unique_id(
-                    self.handler, self.unique_id
-                )
-            ):
-                errors = {"base": ZimiConfigErrors.ALREADY_CONFIGURED}
-            else:
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=f"{TITLE} ({self.data[CONF_HOST]}:{self.data[CONF_PORT]})",
-                    data=self.data,
-                )
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=f"{TITLE} ({self.data[CONF_HOST]}:{self.data[CONF_PORT]})",
+                data=self.data,
+            )
 
         return self.async_show_form(
-            step_id="finish",
+            step_id="manual",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA, self.data
             ),

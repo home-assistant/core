@@ -61,9 +61,9 @@ async def test_user_discovery_success(
 ) -> None:
     """Test user form transitions to creation if zcc discovery succeeds."""
 
-    discovery_mock.discover.return_value = ControlPointDescription(
-        host=INPUT_HOST, port=INPUT_PORT
-    )
+    discovery_mock.discovers.return_value = [
+        ControlPointDescription(host=INPUT_HOST, port=INPUT_PORT)
+    ]
 
     api_mock.return_value.mac = INPUT_MAC
     api_mock.return_value.ready = True
@@ -93,7 +93,7 @@ async def test_user_discovery_failure(
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
-    assert result["step_id"] == "finish"
+    assert result["step_id"] == "manual"
 
 
 async def test_finish_manual_success(
