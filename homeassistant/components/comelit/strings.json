@@ -20,7 +20,7 @@
         "data_description": {
           "host": "The hostname or IP address of your Comelit device.",
           "port": "The port of your Comelit device.",
-          "pin": "The PIN of your Comelit device.",
+          "pin": "[%key:component::comelit::config::step::reauth_confirm::data_description::pin%]",
           "type": "The type of your Comelit device."
         }
       }
