@@ -1,32 +1,73 @@
-"""Test the FastdotcomDataUpdateCoordindator."""
+"""Test the Fast.com component sensors."""
 
-from unittest.mock import patch
+import pytest
 
-from freezegun.api import FrozenDateTimeFactory
+from homeassistant.components.fastdotcom.sensor import (
+    DownloadSpeedSensor,
+    LoadedPingSensor,
+    UnloadedPingSensor,
+    UploadSpeedSensor,
+)
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import UnitOfDataRate
 
-from homeassistant.components.fastdotcom.const import DEFAULT_NAME, DOMAIN
-from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+# A simple dummy coordinator that mimics the real coordinator used by the integration.
+class DummyCoordinator:
+    """Dummy coordinator for testing Fast.com sensors."""
+
+    def __init__(self, data):
+        """Initialize dummy coordinator with provided test data."""
+        self.data = data
 
 
-async def test_fastdotcom_data_update_coordinator(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Test the update coordinator."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="UNIQUE_TEST_ID",
-        title=DEFAULT_NAME,
-    )
-    config_entry.add_to_hass(hass)
+@pytest.fixture
+def dummy_coordinator():
+    """Fixture that provides a dummy coordinator instance for testing."""
+    data = {
+        "download_speed": 100.0,
+        "upload_speed": 50.0,
+        "ping_loaded": 20.5,
+        "ping_unloaded": 15.2,
+    }
+    return DummyCoordinator(data)
 
-    with patch(
-        "homeassistant.components.fastdotcom.coordinator.fast_com", return_value=5.0
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.fast_com_download")
-    assert state is not None
-    assert state.state == "5.0"
+def test_download_speed_sensor(dummy_coordinator):
+    """Test the DownloadSpeedSensor native_value and attributes."""
+    entry_id = "test_entry"
+    sensor = DownloadSpeedSensor(entry_id, dummy_coordinator)
+    assert sensor.native_value == 100.0
+    assert sensor._attr_native_unit_of_measurement == UnitOfDataRate.MEGABITS_PER_SECOND
+    assert sensor._attr_device_class == SensorDeviceClass.DATA_RATE
+    assert sensor._attr_state_class == SensorStateClass.MEASUREMENT
+
+
+def test_upload_speed_sensor(dummy_coordinator):
+    """Test the UploadSpeedSensor native_value and attributes."""
+    entry_id = "test_entry"
+    sensor = UploadSpeedSensor(entry_id, dummy_coordinator)
+    assert sensor.native_value == 50.0
+    assert sensor._attr_native_unit_of_measurement == UnitOfDataRate.MEGABITS_PER_SECOND
+    assert sensor._attr_device_class == SensorDeviceClass.DATA_RATE
+    assert sensor._attr_state_class == SensorStateClass.MEASUREMENT
+
+
+def test_unloaded_ping_sensor(dummy_coordinator):
+    """Test the UnloadedPingSensor native_value and attributes."""
+    entry_id = "test_entry"
+    sensor = UnloadedPingSensor(entry_id, dummy_coordinator)
+    assert sensor.native_value == 15.2
+    # Here you can optionally verify additional attributes (if set).
+    assert sensor._attr_native_unit_of_measurement == "ms"
+    assert sensor._attr_state_class == SensorStateClass.MEASUREMENT
+
+
+def test_loaded_ping_sensor(dummy_coordinator):
+    """Test the LoadedPingSensor native_value and attributes."""
+    entry_id = "test_entry"
+    sensor = LoadedPingSensor(entry_id, dummy_coordinator)
+    assert sensor.native_value == 20.5
+    # Optionally check additional attributes.
+    assert sensor._attr_native_unit_of_measurement == "ms"
+    assert sensor._attr_state_class == SensorStateClass.MEASUREMENT

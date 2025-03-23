@@ -1,6 +1,11 @@
 # serializer version: 1
 # name: test_get_config_entry_diagnostics
   dict({
-    'coordinator_data': 50.3,
+    'coordinator_data': dict({
+      'download_speed': 100.0,
+      'ping_loaded': 20.5,
+      'ping_unloaded': 15.2,
+      'upload_speed': 50.0,
+    }),
   })
 # ---
