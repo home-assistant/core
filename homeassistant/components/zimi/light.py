@@ -56,31 +56,31 @@ class ZimiLight(ZimiEntity, LightEntity):
         self._attr_supported_color_modes = {ColorMode.ONOFF}
 
         _LOGGER.debug(
-            "Initialising ZimiLight %s in %s", self._device.name, self._device.room
+            "Initialising ZimiLight %s in %s", self._entity.name, self._entity.room
         )
 
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return self._device.is_on
+        return self._entity.is_on
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on (with optional brightness)."""
 
         _LOGGER.debug(
-            "Sending turn_on() for %s in %s", self._device.name, self._device.room
+            "Sending turn_on() for %s in %s", self._entity.name, self._entity.room
         )
 
-        await self._device.turn_on()
+        await self._entity.turn_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
 
         _LOGGER.debug(
-            "Sending turn_off() for %s in %s", self._device.name, self._device.room
+            "Sending turn_off() for %s in %s", self._entity.name, self._entity.room
         )
 
-        await self._device.turn_off()
+        await self._entity.turn_off()
 
 
 class ZimiDimmer(ZimiLight):
@@ -91,11 +91,11 @@ class ZimiDimmer(ZimiLight):
         super().__init__(device, api)
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-        if self._device.type != "dimmer":
+        if self._entity.type != "dimmer":
             raise ValueError("ZimiDimmer needs a dimmable light")
 
         _LOGGER.debug(
-            "Initialising ZimiDimmer %s in %s", self._device.name, self._device.room
+            "Initialising ZimiDimmer %s in %s", self._entity.name, self._entity.room
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -104,13 +104,13 @@ class ZimiDimmer(ZimiLight):
         _LOGGER.debug(
             "Sending turn_on(brightness=%d) for %s in %s",
             kwargs.get(ATTR_BRIGHTNESS, 255) * 100 / 255,
-            self._device.name,
-            self._device.room,
+            self._entity.name,
+            self._entity.room,
         )
 
-        await self._device.set_brightness(kwargs.get(ATTR_BRIGHTNESS, 255) * 100 / 255)
+        await self._entity.set_brightness(kwargs.get(ATTR_BRIGHTNESS, 255) * 100 / 255)
 
     @property
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
-        return self._device.brightness * 255 / 100
+        return self._entity.brightness * 255 / 100
