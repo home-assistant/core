@@ -3136,6 +3136,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
         "user_input_platform_config_validation",
         "user_input_platform_config",
         "user_input_mqtt",
+        "removed_options",
     ),
     [
         (
@@ -3153,6 +3154,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
                 "command_template": "{{ value }}",
                 "retain": True,
             },
+            {"entity_picture"},
         ),
         (
             (
@@ -3188,6 +3190,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
                 "state_topic": "test-topic1-updated",
                 "value_template": "{{ value_json.value }}",
             },
+            {"options", "expire_after", "entity_picture"},
         ),
     ],
     ids=["notify", "sensor"],
@@ -3203,6 +3206,7 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     | None,
     user_input_platform_config: dict[str, Any] | None,
     user_input_mqtt: dict[str, Any],
+    removed_options: tuple[str, ...],
 ) -> None:
     """Test the subentry ConfigFlow reconfigure with single entity."""
     await mqtt_mock_entry()
@@ -3308,6 +3312,8 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     # Check the second component was updated
     for key, value in user_input_mqtt.items():
         assert new_components[component_id][key] == value
+
+    assert set(component) - set(new_components[component_id]) == removed_options
 
 
 @pytest.mark.parametrize(

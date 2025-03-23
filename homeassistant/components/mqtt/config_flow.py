@@ -463,6 +463,25 @@ def _check_conditions(
 
 
 @callback
+def calculate_merged_config(
+    merged_user_input: dict[str, Any],
+    data_schema_fields: dict[str, PlatformField],
+    component_data: dict[str, Any],
+) -> dict[str, Any]:
+    """Calculate merged config."""
+    base_schema_fields = {
+        key
+        for key, platform_field in data_schema_fields.items()
+        if _check_conditions(platform_field, component_data)
+    } - set(merged_user_input)
+    return {
+        key: value
+        for key, value in component_data.items()
+        if key not in base_schema_fields
+    } | merged_user_input
+
+
+@callback
 def validate_user_input(
     user_input: dict[str, Any],
     data_schema_fields: dict[str, PlatformField],
@@ -494,21 +513,11 @@ def validate_user_input(
     if config_validator is not None:
         if TYPE_CHECKING:
             assert component_data is not None
-        schema_fields = tuple(
-            {
-                key
-                for key, platform_field in data_schema_fields.items()
-                if _check_conditions(platform_field, component_data)
-            }
-            - set(merged_user_input)
-        )
+
         config_validator(
-            {
-                key: value
-                for key, value in component_data.items()
-                if key not in schema_fields
-            }
-            | merged_user_input,
+            calculate_merged_config(
+                merged_user_input, data_schema_fields, component_data
+            ),
             errors,
             reset_fields,
         )
@@ -1095,18 +1104,29 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
 
     @callback
     def update_component_fields(
-        self, data_schema: vol.Schema, merged_user_input: dict[str, Any]
+        self,
+        data_schema_fields: dict[str, PlatformField],
+        merged_user_input: dict[str, Any],
     ) -> None:
         """Update the componment fields."""
         if TYPE_CHECKING:
             assert self._component_id is not None
         component_data = self._subentry_data["components"][self._component_id]
-        # Remove the fields from the component data if they are not in the user input
-        for field in [
-            form_field
-            for form_field in data_schema.schema
-            if form_field in component_data and form_field not in merged_user_input
-        ]:
+        # Remove the fields from the component data
+        # if they are not in the schema and not in the user input
+        config = calculate_merged_config(
+            merged_user_input, data_schema_fields, component_data
+        )
+        for field in (
+            field
+            for field in (set(component_data) - set(config))
+            if field
+            in {
+                field
+                for field, platform_field in data_schema_fields.items()
+                if not platform_field.exclude_from_reconfig
+            }
+        ):
             component_data.pop(field)
         component_data.update(merged_user_input)
 
@@ -1227,7 +1247,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 if self._component_id is None:
                     self._component_id = uuid4().hex
                 self._subentry_data["components"].setdefault(self._component_id, {})
-                self.update_component_fields(data_schema, merged_user_input)
+                self.update_component_fields(data_schema_fields, merged_user_input)
                 return await self.async_step_entity_platform_config()
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
         elif self.source == SOURCE_RECONFIGURE and self._component_id is not None:
@@ -1325,7 +1345,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 ENTITY_CONFIG_VALIDATOR[platform],
             )
             if not errors:
-                self.update_component_fields(data_schema, merged_user_input)
+                self.update_component_fields(data_schema_fields, merged_user_input)
                 return await self.async_step_mqtt_platform_config()
 
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
@@ -1375,7 +1395,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 ENTITY_CONFIG_VALIDATOR[platform],
             )
             if not errors:
-                self.update_component_fields(data_schema, merged_user_input)
+                self.update_component_fields(data_schema_fields, merged_user_input)
                 self._component_id = None
                 if self.source == SOURCE_RECONFIGURE:
                     return await self.async_step_summary_menu()
