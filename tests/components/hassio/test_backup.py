@@ -2394,7 +2394,7 @@ async def test_reader_writer_restore_wrong_parameters(
 
 
 @pytest.mark.parametrize(
-    ("get_job_result", "last_non_idle_event"),
+    ("get_job_result", "last_action_event"),
     [
         (
             TEST_JOB_DONE,
@@ -2422,7 +2422,7 @@ async def test_restore_progress_after_restart(
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
     get_job_result: supervisor_jobs.Job,
-    last_non_idle_event: dict[str, Any],
+    last_action_event: dict[str, Any],
 ) -> None:
     """Test restore backup progress after restart."""
 
@@ -2438,7 +2438,7 @@ async def test_restore_progress_after_restart(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"]["last_non_idle_event"] == last_non_idle_event
+    assert response["result"]["last_action_event"] == last_action_event
     assert response["result"]["state"] == "idle"
 
 
@@ -2516,7 +2516,7 @@ async def test_restore_progress_after_restart_report_progress(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"]["last_non_idle_event"] == {
+    assert response["result"]["last_action_event"] == {
         "manager_state": "restore_backup",
         "reason": None,
         "stage": "addons",
@@ -2545,7 +2545,7 @@ async def test_restore_progress_after_restart_unknown_job(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"]["last_non_idle_event"] is None
+    assert response["result"]["last_action_event"] is None
     assert response["result"]["state"] == "idle"
 
 

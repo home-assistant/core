@@ -25,7 +25,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "away_indefinitely": "Away Indefinitely"
+              "away_indefinitely": "Away indefinitely"
             }
           }
         }
@@ -91,7 +91,7 @@
         },
         "fan_min_on_time": {
           "name": "Fan minimum on time",
-          "description": "Minimum number of minutes to run the fan each hour (0 to 60) during the vacation."
+          "description": "Minimum number of minutes to run the fan each hour during the vacation."
         }
       }
     },
@@ -125,7 +125,7 @@
     },
     "set_fan_min_on_time": {
       "name": "Set fan minimum on time",
-      "description": "Sets the minimum fan on time.",
+      "description": "Sets the minimum amount of time that the fan will run per hour.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -133,7 +133,7 @@
         },
         "fan_min_on_time": {
           "name": "[%key:component::ecobee::services::create_vacation::fields::fan_min_on_time::name%]",
-          "description": "New value of fan min on time."
+          "description": "Minimum number of minutes to run the fan each hour."
         }
       }
     },

@@ -383,9 +383,9 @@ class GoogleCalendarEntity(
             for attendee in event.attendees
         ):
             return False
-
-        if event.event_type == EventTypeEnum.WORKING_LOCATION:
-            return self.entity_description.working_location
+        is_working_location_event = event.event_type == EventTypeEnum.WORKING_LOCATION
+        if self.entity_description.working_location != is_working_location_event:
+            return False
         if self._ignore_availability:
             return True
         return event.transparency == OPAQUE

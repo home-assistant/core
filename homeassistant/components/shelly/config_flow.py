@@ -22,12 +22,7 @@ from aioshelly.exceptions import (
 from aioshelly.rpc_device import RpcDevice
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -49,7 +44,7 @@ from .const import (
     LOGGER,
     BLEScannerMode,
 )
-from .coordinator import async_reconnect_soon
+from .coordinator import ShellyConfigEntry, async_reconnect_soon
 from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
@@ -458,13 +453,13 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    def async_get_options_flow(config_entry: ShellyConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
     @classmethod
     @callback
-    def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
+    def async_supports_options_flow(cls, config_entry: ShellyConfigEntry) -> bool:
         """Return options flow support for this handler."""
         return (
             get_device_entry_gen(config_entry) in RPC_GENERATIONS

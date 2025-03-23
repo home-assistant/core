@@ -1,21 +1,28 @@
 """Home Connect entity base class."""
 
 from abc import abstractmethod
+from collections.abc import Callable, Coroutine
 import contextlib
+from datetime import datetime
 import logging
-from typing import cast
+from typing import Any, Concatenate, cast
 
 from aiohomeconnect.model import EventKey, OptionKey
-from aiohomeconnect.model.error import ActiveProgramNotSetError, HomeConnectError
+from aiohomeconnect.model.error import (
+    ActiveProgramNotSetError,
+    HomeConnectError,
+    TooManyRequestsError,
+)
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import API_DEFAULT_RETRY_AFTER, DOMAIN
 from .coordinator import HomeConnectApplianceData, HomeConnectCoordinator
 from .utils import get_dict_from_home_connect_error
 
@@ -33,9 +40,13 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
         coordinator: HomeConnectCoordinator,
         appliance: HomeConnectApplianceData,
         desc: EntityDescription,
+        context_override: Any | None = None,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, (appliance.info.ha_id, EventKey(desc.key)))
+        context = (appliance.info.ha_id, EventKey(desc.key))
+        if context_override is not None:
+            context = context_override
+        super().__init__(coordinator, context)
         self.appliance = appliance
         self.entity_description = desc
         self._attr_unique_id = f"{appliance.info.ha_id}-{desc.key}"
@@ -127,3 +138,34 @@ class HomeConnectOptionEntity(HomeConnectEntity):
     def bsh_key(self) -> OptionKey:
         """Return the BSH key."""
         return cast(OptionKey, self.entity_description.key)
+
+
+def constraint_fetcher[_EntityT: HomeConnectEntity, **_P](
+    func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate the function to catch Home Connect too many requests error and retry later.
+
+    If it needs to be called later, it will call async_write_ha_state function
+    """
+
+    async def handler_to_return(
+        self: _EntityT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> None:
+        async def handler(_datetime: datetime | None = None) -> None:
+            try:
+                await func(self, *args, **kwargs)
+            except TooManyRequestsError as err:
+                if (retry_after := err.retry_after) is None:
+                    retry_after = API_DEFAULT_RETRY_AFTER
+                async_call_later(self.hass, retry_after, handler)
+            except HomeConnectError as err:
+                _LOGGER.error(
+                    "Error fetching constraints for %s: %s", self.entity_id, err
+                )
+            else:
+                if _datetime is not None:
+                    self.async_write_ha_state()
+
+        await handler()
+
+    return handler_to_return

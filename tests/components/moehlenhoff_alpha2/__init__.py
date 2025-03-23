@@ -19,7 +19,7 @@ async def mock_update_data(self):
     for _type in ("HEATAREA", "HEATCTRL", "IODEVICE"):
         if not isinstance(data["Devices"]["Device"][_type], list):
             data["Devices"]["Device"][_type] = [data["Devices"]["Device"][_type]]
-    self.static_data = data
+    self._static_data = data
 
 
 async def init_integration(hass: HomeAssistant) -> MockConfigEntry:

@@ -101,28 +101,60 @@
     "mode": "TypeB",
     "Group1": [
       {
+        "mode": "TypeA",
         "groupNumber": "Group1",
         "doseType": "DoseA",
         "preWetTime": 0.5,
         "preWetHoldTime": 1
       },
       {
+        "mode": "TypeB",
+        "groupNumber": "Group1",
+        "doseType": "DoseA",
+        "preWetTime": 0,
+        "preWetHoldTime": 4
+      },
+      {
+        "mode": "TypeA",
         "groupNumber": "Group1",
         "doseType": "DoseB",
         "preWetTime": 0.5,
         "preWetHoldTime": 1
       },
       {
+        "mode": "TypeB",
         "groupNumber": "Group1",
-        "doseType": "DoseC",
-        "preWetTime": 3.2999999523162842,
-        "preWetHoldTime": 3.2999999523162842
+        "doseType": "DoseB",
+        "preWetTime": 0,
+        "preWetHoldTime": 4
       },
       {
+        "mode": "TypeA",
+        "groupNumber": "Group1",
+        "doseType": "DoseC",
+        "preWetTime": 3.3,
+        "preWetHoldTime": 3.3
+      },
+      {
+        "mode": "TypeB",
+        "groupNumber": "Group1",
+        "doseType": "DoseC",
+        "preWetTime": 0,
+        "preWetHoldTime": 4
+      },
+      {
+        "mode": "TypeA",
         "groupNumber": "Group1",
         "doseType": "DoseD",
         "preWetTime": 2,
         "preWetHoldTime": 2
+      },
+      {
+        "mode": "TypeB",
+        "groupNumber": "Group1",
+        "doseType": "DoseD",
+        "preWetTime": 0,
+        "preWetHoldTime": 4
       }
     ]
   },

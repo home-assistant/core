@@ -146,6 +146,9 @@
     },
     "unknown_source": {
       "message": "Unknown source: {source}"
+    },
+    "unsupported_media_content_id": {
+      "message": "Unsupported media_content_id: {media_content_id}"
     }
   },
   "issues": {

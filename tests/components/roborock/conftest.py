@@ -228,8 +228,14 @@ async def setup_entry(
         yield mock_roborock_entry
 
 
+@pytest.fixture(autouse=True)
+async def cleanup_map_storage(cleanup_map_storage_manual) -> Generator[pathlib.Path]:
+    """Test cleanup, remove any map storage persisted during the test."""
+    return cleanup_map_storage_manual
+
+
 @pytest.fixture
-async def cleanup_map_storage(
+async def cleanup_map_storage_manual(
     hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
 ) -> Generator[pathlib.Path]:
     """Test cleanup, remove any map storage persisted during the test."""
