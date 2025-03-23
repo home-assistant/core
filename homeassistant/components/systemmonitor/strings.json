@@ -51,7 +51,7 @@
         "name": "Load (15 min)"
       },
       "load_1m": {
-        "name": "Load (1 min )"
+        "name": "Load (1 min)"
       },
       "load_5m": {
         "name": "Load (5 min)"
