@@ -10,6 +10,7 @@ from aiohomeconnect.model import (
     EventMessage,
     EventType,
     GetSetting,
+    HomeAppliance,
     SettingKey,
 )
 from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
@@ -44,9 +45,9 @@ async def test_time(
     assert config_entry.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.parametrize("appliance_ha_id", ["Oven"], indirect=True)
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 async def test_paired_depaired_devices_flow(
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -60,7 +61,7 @@ async def test_paired_depaired_devices_flow(
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
     entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
     assert entity_entries
@@ -68,7 +69,7 @@ async def test_paired_depaired_devices_flow(
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.DEPAIRED,
                 data=ArrayOfEvents([]),
             )
@@ -76,7 +77,7 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert not device
     for entity_entry in entity_entries:
         assert not entity_registry.async_get(entity_entry.entity_id)
@@ -85,7 +86,7 @@ async def test_paired_depaired_devices_flow(
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.PAIRED,
                 data=ArrayOfEvents([]),
             )
@@ -93,14 +94,14 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     for entity_entry in entity_entries:
         assert entity_registry.async_get(entity_entry.entity_id)
 
 
-@pytest.mark.parametrize("appliance_ha_id", ["Oven"], indirect=True)
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 async def test_connected_devices(
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -117,7 +118,7 @@ async def test_connected_devices(
     get_settings_original_mock = client.get_settings
 
     async def get_settings_side_effect(ha_id: str):
-        if ha_id == appliance_ha_id:
+        if ha_id == appliance.ha_id:
             raise HomeConnectApiError(
                 "SDK.Error.HomeAppliance.Connection.Initialization.Failed"
             )
@@ -129,14 +130,14 @@ async def test_connected_devices(
     assert config_entry.state == ConfigEntryState.LOADED
     client.get_settings = get_settings_original_mock
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
     entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
 
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.CONNECTED,
                 data=ArrayOfEvents([]),
             )
@@ -144,20 +145,20 @@ async def test_connected_devices(
     )
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
     new_entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
     assert len(new_entity_entries) > len(entity_entries)
 
 
-@pytest.mark.parametrize("appliance_ha_id", ["Oven"], indirect=True)
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 async def test_time_entity_availability(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
     client: MagicMock,
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
 ) -> None:
     """Test if time entities availability are based on the appliance connection state."""
     entity_ids = [
@@ -175,7 +176,7 @@ async def test_time_entity_availability(
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.DISCONNECTED,
                 ArrayOfEvents([]),
             )
@@ -189,7 +190,7 @@ async def test_time_entity_availability(
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.CONNECTED,
                 ArrayOfEvents([]),
             )
@@ -203,7 +204,7 @@ async def test_time_entity_availability(
         assert state.state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("appliance_ha_id", ["Oven"], indirect=True)
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
 @pytest.mark.parametrize(
     ("entity_id", "setting_key"),
     [
@@ -214,7 +215,7 @@ async def test_time_entity_availability(
     ],
 )
 async def test_time_entity_functionality(
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     entity_id: str,
     setting_key: SettingKey,
     hass: HomeAssistant,
@@ -242,7 +243,7 @@ async def test_time_entity_functionality(
     )
     await hass.async_block_till_done()
     client.set_setting.assert_awaited_once_with(
-        appliance_ha_id, setting_key=setting_key, value=value
+        appliance.ha_id, setting_key=setting_key, value=value
     )
     assert hass.states.is_state(entity_id, str(time(second=value)))
 

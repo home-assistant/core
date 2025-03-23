@@ -12,6 +12,7 @@ from aiohomeconnect.model import (
     EventMessage,
     EventType,
     GetSetting,
+    HomeAppliance,
     SettingKey,
 )
 from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
@@ -64,9 +65,9 @@ async def test_light(
     assert config_entry.state == ConfigEntryState.LOADED
 
 
-@pytest.mark.parametrize("appliance_ha_id", ["Hood"], indirect=True)
+@pytest.mark.parametrize("appliance", ["Hood"], indirect=True)
 async def test_paired_depaired_devices_flow(
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -80,7 +81,7 @@ async def test_paired_depaired_devices_flow(
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
     entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
     assert entity_entries
@@ -88,7 +89,7 @@ async def test_paired_depaired_devices_flow(
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.DEPAIRED,
                 data=ArrayOfEvents([]),
             )
@@ -96,7 +97,7 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert not device
     for entity_entry in entity_entries:
         assert not entity_registry.async_get(entity_entry.entity_id)
@@ -105,7 +106,7 @@ async def test_paired_depaired_devices_flow(
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.PAIRED,
                 data=ArrayOfEvents([]),
             )
@@ -113,14 +114,14 @@ async def test_paired_depaired_devices_flow(
     )
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     for entity_entry in entity_entries:
         assert entity_registry.async_get(entity_entry.entity_id)
 
 
-@pytest.mark.parametrize("appliance_ha_id", ["Hood"], indirect=True)
+@pytest.mark.parametrize("appliance", ["Hood"], indirect=True)
 async def test_connected_devices(
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -138,14 +139,14 @@ async def test_connected_devices(
     get_available_programs_mock = client.get_available_programs
 
     async def get_settings_side_effect(ha_id: str):
-        if ha_id == appliance_ha_id:
+        if ha_id == appliance.ha_id:
             raise HomeConnectApiError(
                 "SDK.Error.HomeAppliance.Connection.Initialization.Failed"
             )
         return await get_settings_original_mock.side_effect(ha_id)
 
     async def get_available_programs_side_effect(ha_id: str):
-        if ha_id == appliance_ha_id:
+        if ha_id == appliance.ha_id:
             raise HomeConnectApiError(
                 "SDK.Error.HomeAppliance.Connection.Initialization.Failed"
             )
@@ -161,14 +162,14 @@ async def test_connected_devices(
     client.get_settings = get_settings_original_mock
     client.get_available_programs = get_available_programs_mock
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
     entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
 
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.CONNECTED,
                 data=ArrayOfEvents([]),
             )
@@ -176,20 +177,20 @@ async def test_connected_devices(
     )
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
     new_entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
     assert len(new_entity_entries) > len(entity_entries)
 
 
-@pytest.mark.parametrize("appliance_ha_id", ["Hood"], indirect=True)
+@pytest.mark.parametrize("appliance", ["Hood"], indirect=True)
 async def test_light_availability(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
     client: MagicMock,
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
 ) -> None:
     """Test if light entities availability are based on the appliance connection state."""
     entity_ids = [
@@ -207,7 +208,7 @@ async def test_light_availability(
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.DISCONNECTED,
                 ArrayOfEvents([]),
             )
@@ -221,7 +222,7 @@ async def test_light_availability(
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.CONNECTED,
                 ArrayOfEvents([]),
             )
@@ -242,7 +243,7 @@ async def test_light_availability(
         "service",
         "exprected_attributes",
         "state",
-        "appliance_ha_id",
+        "appliance",
     ),
     [
         (
@@ -347,7 +348,7 @@ async def test_light_availability(
             "FridgeFreezer",
         ),
     ],
-    indirect=["appliance_ha_id"],
+    indirect=["appliance"],
 )
 async def test_light_functionality(
     entity_id: str,
@@ -355,7 +356,7 @@ async def test_light_functionality(
     service: str,
     exprected_attributes: dict[str, Any],
     state: str,
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -377,7 +378,7 @@ async def test_light_functionality(
     await hass.async_block_till_done()
     client.set_setting.assert_has_calls(
         [
-            call(appliance_ha_id, setting_key=setting_key, value=value)
+            call(appliance.ha_id, setting_key=setting_key, value=value)
             for setting_key, value in set_settings_args.items()
         ]
     )
@@ -392,7 +393,7 @@ async def test_light_functionality(
     (
         "entity_id",
         "events",
-        "appliance_ha_id",
+        "appliance",
     ),
     [
         (
@@ -403,12 +404,12 @@ async def test_light_functionality(
             "Hood",
         ),
     ],
-    indirect=["appliance_ha_id"],
+    indirect=["appliance"],
 )
 async def test_light_color_different_than_custom(
     entity_id: str,
     events: dict[EventKey, Any],
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -437,7 +438,7 @@ async def test_light_color_different_than_custom(
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.NOTIFY,
                 ArrayOfEvents(
                     [

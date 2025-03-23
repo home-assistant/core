@@ -244,7 +244,7 @@ async def test_coordinator_update_failing(
     getattr(client, mock_method).assert_called()
 
 
-@pytest.mark.parametrize("appliance_ha_id", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
 @pytest.mark.parametrize(
     ("event_type", "event_key", "event_value", ATTR_ENTITY_ID),
     [
@@ -278,7 +278,7 @@ async def test_event_listener(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
     client: MagicMock,
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that the event listener works."""
@@ -289,7 +289,7 @@ async def test_event_listener(
     state = hass.states.get(entity_id)
     assert state
     event_message = EventMessage(
-        appliance_ha_id,
+        appliance.ha_id,
         event_type,
         ArrayOfEvents(
             [
@@ -336,13 +336,14 @@ async def test_event_listener(
     listener.assert_called_once_with(new_entity_id)
 
 
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def tests_receive_setting_and_status_for_first_time_at_events(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
     client: MagicMock,
-    appliance_ha_id: str,
+    appliance: HomeAppliance,
 ) -> None:
     """Test that the event listener is capable of receiving settings and status for the first time."""
     client.get_setting = AsyncMock(return_value=ArrayOfSettings([]))
@@ -355,7 +356,7 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
     await client.add_events(
         [
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.NOTIFY,
                 ArrayOfEvents(
                     [
@@ -371,7 +372,7 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
                 ),
             ),
             EventMessage(
-                appliance_ha_id,
+                appliance.ha_id,
                 EventType.STATUS,
                 ArrayOfEvents(
                     [
