@@ -66,13 +66,13 @@
         "name": "Upload"
       },
       "load_avg_1m": {
-        "name": "Average load (1m)"
+        "name": "Average load (1 min)"
       },
       "load_avg_5m": {
-        "name": "Average load (5m)"
+        "name": "Average load (5 min)"
       },
       "load_avg_15m": {
-        "name": "Average load (15m)"
+        "name": "Average load (15 min)"
       },
       "24ghz_temperature": {
         "name": "2.4GHz Temperature"
