@@ -1,7 +1,9 @@
 """Provides a sensor for Home Connect."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import partial
 import logging
 from typing import cast
 
@@ -42,7 +44,6 @@ class HomeConnectSensorEntityDescription(
 ):
     """Entity Description class for sensors."""
 
-    default_value: str | None = None
     appliance_types: tuple[str, ...] | None = None
     fetch_unit: bool = False
 
@@ -198,7 +199,6 @@ EVENT_SENSORS = (
         key=EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_FREEZER,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
-        default_value="off",
         translation_key="freezer_door_alarm",
         appliance_types=("FridgeFreezer", "Freezer"),
     ),
@@ -206,7 +206,6 @@ EVENT_SENSORS = (
         key=EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_REFRIGERATOR,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
-        default_value="off",
         translation_key="refrigerator_door_alarm",
         appliance_types=("FridgeFreezer", "Refrigerator"),
     ),
@@ -214,7 +213,6 @@ EVENT_SENSORS = (
         key=EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_TEMPERATURE_ALARM_FREEZER,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
-        default_value="off",
         translation_key="freezer_temperature_alarm",
         appliance_types=("FridgeFreezer", "Freezer"),
     ),
@@ -222,7 +220,6 @@ EVENT_SENSORS = (
         key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_BEAN_CONTAINER_EMPTY,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
-        default_value="off",
         translation_key="bean_container_empty",
         appliance_types=("CoffeeMaker",),
     ),
@@ -230,7 +227,6 @@ EVENT_SENSORS = (
         key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_WATER_TANK_EMPTY,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
-        default_value="off",
         translation_key="water_tank_empty",
         appliance_types=("CoffeeMaker",),
     ),
@@ -238,7 +234,6 @@ EVENT_SENSORS = (
         key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_DRIP_TRAY_FULL,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
-        default_value="off",
         translation_key="drip_tray_full",
         appliance_types=("CoffeeMaker",),
     ),
@@ -246,7 +241,6 @@ EVENT_SENSORS = (
         key=EventKey.DISHCARE_DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
-        default_value="off",
         translation_key="salt_nearly_empty",
         appliance_types=("Dishwasher",),
     ),
@@ -254,7 +248,6 @@ EVENT_SENSORS = (
         key=EventKey.DISHCARE_DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
-        default_value="off",
         translation_key="rinse_aid_nearly_empty",
         appliance_types=("Dishwasher",),
     ),
@@ -268,12 +261,6 @@ def _get_entities_for_appliance(
     """Get a list of entities."""
     return [
         *[
-            HomeConnectEventSensor(entry.runtime_data, appliance, description)
-            for description in EVENT_SENSORS
-            if description.appliance_types
-            and appliance.info.type in description.appliance_types
-        ],
-        *[
             HomeConnectProgramSensor(entry.runtime_data, appliance, desc)
             for desc in BSH_PROGRAM_SENSORS
             if desc.appliance_types and appliance.info.type in desc.appliance_types
@@ -284,6 +271,28 @@ def _get_entities_for_appliance(
             if description.key in appliance.status
         ],
     ]
+
+
+def _add_event_sensor_entity(
+    entry: HomeConnectConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    appliance: HomeConnectApplianceData,
+    description: HomeConnectSensorEntityDescription,
+    remove_listener: list[Callable[[], None]],
+) -> None:
+    """Add an event sensor entity."""
+    if (
+        (appliance_data := entry.runtime_data.data.get(appliance.info.ha_id)) is None
+    ) or description.key not in appliance_data.events:
+        return
+
+    for listener in remove_listener:
+        listener()
+    async_add_entities(
+        [
+            HomeConnectEventSensor(entry.runtime_data, appliance, description),
+        ]
+    )
 
 
 async def async_setup_entry(
@@ -297,6 +306,29 @@ async def async_setup_entry(
         _get_entities_for_appliance,
         async_add_entities,
     )
+
+    for appliance in entry.runtime_data.data.values():
+        for event_sensor_description in EVENT_SENSORS:
+            if appliance.info.type not in cast(
+                tuple[str, ...], event_sensor_description.appliance_types
+            ):
+                continue
+            # We use a list as a kind of lazy initializer, as we can use the
+            # remove_listener while we are initializing it.
+            remove_listener_list: list[Callable[[], None]] = []
+            remove_listener = entry.runtime_data.async_add_listener(
+                partial(
+                    _add_event_sensor_entity,
+                    entry,
+                    async_add_entities,
+                    appliance,
+                    event_sensor_description,
+                    remove_listener_list,
+                ),
+                (appliance.info.ha_id, event_sensor_description.key),
+            )
+            remove_listener_list.append(remove_listener)
+            entry.async_on_unload(remove_listener)
 
 
 class HomeConnectSensor(HomeConnectEntity, SensorEntity):
@@ -402,8 +434,5 @@ class HomeConnectEventSensor(HomeConnectSensor):
 
     def update_native_value(self) -> None:
         """Update the sensor's status."""
-        event = self.appliance.events.get(cast(EventKey, self.bsh_key))
-        if event:
-            self._update_native_value(event.value)
-        elif not self._attr_native_value:
-            self._attr_native_value = self.entity_description.default_value
+        event = self.appliance.events[cast(EventKey, self.bsh_key)]
+        self._update_native_value(event.value)
