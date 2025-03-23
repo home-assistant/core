@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Set up Daikin Smart AC",
-        "description": "Enter the device name and device key for SSID: {hostname}.\n\nNote - To find the device key for the SSID shown above, open the Daikin Smart AC mobile app and navigate to menu → integrations → Home Assistant. Enter the SSID and press submit.",
+        "description": "Enter the device name and device key for SSID: {hostname}.\n\nNote - To find the device key for the SSID shown above, open the Daikin Smart AC mobile app and navigate to Menu → Integrations → Home Assistant. Enter the SSID and press Submit.",
         "data": {
           "device_name": "Device name",
           "api_key": "Device key",
@@ -13,14 +13,14 @@
       },
       "reconfigure": {
         "title": "Reconfigure Daikin Smart AC",
-        "description": "Enter the device key for SSID: {hostname}.\n\nNote - To find the device key for the SSID shown above, open the Daikin Smart AC mobile app and navigate to menu → integrations → Home Assistant. Enter the SSID and press submit.",
+        "description": "Enter the device key for SSID: {hostname}.\n\nNote - To find the device key for the SSID shown above, open the Daikin Smart AC mobile app and navigate to Menu → Integrations → Home Assistant. Enter the SSID and press Submit.",
         "data": {
           "api_key": "Device key"
         }
       },
       "manual": {
         "title": "Set up Daikin Smart AC",
-        "description": "Open your network router setup and check the client list. The Daikin AC should appear in the list with the format DAIKINXXXXXX.\n\nNote - To find the device key, open the Daikin Smart AC mobile app and navigate to menu → integrations → Home Assistant. Enter the SSID (DAIKINXXXXXX) and press submit.",
+        "description": "Open your network router setup and check the client list. The Daikin AC should appear in the list with the format DAIKINXXXXXX.\n\nNote - To find the device key, open the Daikin Smart AC mobile app and navigate to Menu → Integrations → Home Assistant. Enter the SSID (DAIKINXXXXXX) and press Submit.",
         "data": {
           "device_ip": "Device IP address",
           "device_name": "Device name",
