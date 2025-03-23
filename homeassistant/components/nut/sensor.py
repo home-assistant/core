@@ -1,10 +1,9 @@
-"""Provides a sensor to track various status aspects of a UPS."""
+"""Provides a sensor to track various status aspects of a NUT device."""
 
 from __future__ import annotations
 
-from dataclasses import asdict
 import logging
-from typing import Final, cast
+from typing import Final
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,10 +12,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
-    ATTR_SW_VERSION,
     PERCENTAGE,
     STATE_UNKNOWN,
     EntityCategory,
@@ -29,22 +24,11 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
 
-from . import NutConfigEntry, PyNUTData
-from .const import DOMAIN, KEY_STATUS, KEY_STATUS_DISPLAY, STATE_TYPES
-
-NUT_DEV_INFO_TO_DEV_INFO: dict[str, str] = {
-    "manufacturer": ATTR_MANUFACTURER,
-    "model": ATTR_MODEL,
-    "firmware": ATTR_SW_VERSION,
-    "serial": ATTR_SERIAL_NUMBER,
-}
+from . import NutConfigEntry
+from .const import KEY_STATUS, KEY_STATUS_DISPLAY, STATE_TYPES
+from .entity import NUTBaseEntity
 
 AMBIENT_PRESENT = "ambient.present"
 AMBIENT_SENSORS = {
@@ -1011,18 +995,6 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
 }
 
 
-def _get_nut_device_info(data: PyNUTData) -> DeviceInfo:
-    """Return a DeviceInfo object filled with NUT device info."""
-    nut_dev_infos = asdict(data.device_info)
-    nut_infos = {
-        info_key: nut_dev_infos[nut_key]
-        for nut_key, info_key in NUT_DEV_INFO_TO_DEV_INFO.items()
-        if nut_dev_infos[nut_key] is not None
-    }
-
-    return cast(DeviceInfo, nut_infos)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: NutConfigEntry,
@@ -1113,33 +1085,12 @@ async def async_setup_entry(
     )
 
 
-class NUTSensor(CoordinatorEntity[DataUpdateCoordinator[dict[str, str]]], SensorEntity):
+class NUTSensor(NUTBaseEntity, SensorEntity):
     """Representation of a sensor entity for NUT status values."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator[dict[str, str]],
-        sensor_description: SensorEntityDescription,
-        data: PyNUTData,
-        unique_id: str,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = sensor_description
-
-        device_name = data.name.title()
-        self._attr_unique_id = f"{unique_id}_{sensor_description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
-            name=device_name,
-        )
-        self._attr_device_info.update(_get_nut_device_info(data))
 
     @property
     def native_value(self) -> str | None:
-        """Return entity state from ups."""
+        """Return entity state from NUT device."""
         status = self.coordinator.data
         if self.entity_description.key == KEY_STATUS_DISPLAY:
             return _format_display_state(status)

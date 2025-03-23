@@ -33,6 +33,9 @@
       "acceleration": {
         "name": "Acceleration"
       },
+      "door": {
+        "name": "[%key:component::binary_sensor::entity_component::door::name%]"
+      },
       "filter_status": {
         "name": "Filter status"
       },
@@ -44,6 +47,11 @@
       },
       "valve": {
         "name": "Valve"
+      }
+    },
+    "button": {
+      "stop": {
+        "name": "Stop"
       }
     },
     "event": {
@@ -76,6 +84,12 @@
           "swipe_left": "Swipe left",
           "swipe_right": "Swipe right"
         }
+      }
+    },
+    "number": {
+      "washer_rinse_cycles": {
+        "name": "Rinse cycles",
+        "unit_of_measurement": "cycles"
       }
     },
     "select": {
@@ -435,6 +449,11 @@
           "wrinkle_prevent": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wrinkle_prevent%]",
           "freeze_protection": "Freeze protection"
         }
+      }
+    },
+    "switch": {
+      "wrinkle_prevent": {
+        "name": "Wrinkle prevent"
       }
     }
   },
