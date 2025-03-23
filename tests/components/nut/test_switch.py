@@ -12,6 +12,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -126,3 +127,33 @@ async def test_switch_pdu_dynamic_outlets(
 
     switch = hass.states.get("switch.ups1_power_outlet_a25")
     assert not switch
+
+
+async def test_switch_pdu_dynamic_outlets_state_unknown(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test switch entity with missing status is reported as unknown."""
+
+    config_entry = await async_init_integration(
+        hass,
+        list_ups={"ups1": "UPS 1"},
+        list_vars={
+            "outlet.count": "1",
+            "outlet.1.switchable": "yes",
+            "outlet.1.name": "A1",
+        },
+        list_commands_return_value={
+            "outlet.1.load.on": None,
+            "outlet.1.load.off": None,
+        },
+    )
+
+    entity_id = "switch.ups1_power_outlet_a1"
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == f"{config_entry.entry_id}_outlet.1.load.poweronoff"
+
+    switch = hass.states.get(entity_id)
+    assert switch
+    assert switch.state == STATE_UNKNOWN
