@@ -77,12 +77,13 @@ class NUTSwitch(NUTBaseEntity, SwitchEntity):
     """Representation of a switch entity for NUT status values."""
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the switch."""
         status = self.coordinator.data
-
         outlet, outlet_num_str = self.entity_description.key.split(".", 2)[:2]
-        return status.get(f"{outlet}.{outlet_num_str}.status") == "on"
+        if (state := status.get(f"{outlet}.{outlet_num_str}.status")) is None:
+            return None
+        return state == "on"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
