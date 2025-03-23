@@ -452,7 +452,7 @@ anthemav==1.4.1
 anthropic==0.47.2
 
 # homeassistant.components.mcp_server
-anyio==4.8.0
+anyio==4.9.0
 
 # homeassistant.components.weatherkit
 apple_weatherkit==1.1.3
