@@ -86,7 +86,9 @@ REPEAT_MAP: dict[LoopMode, RepeatMode] = {
 
 REPEAT_MAP_INV: dict[RepeatMode, LoopMode] = {v: k for k, v in REPEAT_MAP.items()}
 
-EQUALIZER_MAP_INV: dict[str, EqualizerMode] = {mode.value: mode for mode in EqualizerMode}
+EQUALIZER_MAP_INV: dict[str, EqualizerMode] = {
+    mode.value: mode for mode in EqualizerMode
+}
 
 DEFAULT_FEATURES: MediaPlayerEntityFeature = (
     MediaPlayerEntityFeature.PLAY
