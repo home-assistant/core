@@ -58,8 +58,6 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         """Return the source type, eg gps or router, of the device."""
         if self._source_type == "PHONE":
             return SourceType.BLUETOOTH
-        if self._source_type == "KNOWN_WIFI":
-            return SourceType.ROUTER
         return SourceType.GPS
 
     @property
