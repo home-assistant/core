@@ -36,6 +36,9 @@
         "description": "Webhook configuration inconsistent. Webhooks with Home Assistant were already configured. If you continue they will be marked for removal."
       }
     },
+    "error": {
+      "invalid_name": "Name is invalid"
+    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
