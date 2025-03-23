@@ -7,7 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_URL
 
 from .api import (
     PterodactylAPI,
@@ -16,11 +16,11 @@ from .api import (
 )
 from .const import DOMAIN
 
-DEFAULT_HOST = "http://localhost:8080"
+DEFAULT_URL = "http://localhost:8080"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        vol.Required(CONF_URL, default=DEFAULT_URL): str,
         vol.Required(CONF_API_KEY): str,
     }
 )
@@ -37,10 +37,10 @@ class PterodactylConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST]
+            host = user_input[CONF_URL]
             api_key = user_input[CONF_API_KEY]
 
-            self._async_abort_entries_match({CONF_HOST: host})
+            self._async_abort_entries_match({CONF_URL: host})
             api = PterodactylAPI(self.hass, host, api_key)
 
             try:

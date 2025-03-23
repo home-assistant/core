@@ -3,11 +3,11 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
+          "url": "[%key:common::config_flow::data::url%]",
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "host": "The IP address or hostname of your Pterodactyl server, starting with either 'http://' or 'https://', optionally including the port at the end.",
+          "url": "The IP address or hostname of your Pterodactyl server, starting with either 'http://' or 'https://', optionally including the port at the end.",
           "api_key": "The client (account) API key for accessing your Pterodactyl server."
         }
       }

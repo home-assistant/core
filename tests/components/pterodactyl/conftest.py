@@ -5,14 +5,14 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.pterodactyl.const import DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_URL
 
 from tests.common import MockConfigEntry
 
-TEST_HOST = "https://192.168.0.1:8080"
+TEST_URL = "https://192.168.0.1:8080"
 TEST_API_KEY = "TestClientApiKey"
 TEST_USER_INPUT = {
-    CONF_HOST: TEST_HOST,
+    CONF_URL: TEST_URL,
     CONF_API_KEY: TEST_API_KEY,
 }
 TEST_SERVER_LIST_DATA = {
@@ -118,9 +118,9 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=None,
         entry_id="01234567890123456789012345678901",
-        title=TEST_HOST,
+        title=TEST_URL,
         data={
-            CONF_HOST: TEST_HOST,
+            CONF_URL: TEST_URL,
             CONF_API_KEY: TEST_API_KEY,
         },
         version=1,

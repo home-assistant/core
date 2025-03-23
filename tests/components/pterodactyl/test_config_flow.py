@@ -11,10 +11,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import (
-    TEST_HOST,
     TEST_SERVER,
     TEST_SERVER_LIST_DATA,
     TEST_SERVER_UTILIZATION,
+    TEST_URL,
     TEST_USER_INPUT,
 )
 
@@ -47,7 +47,7 @@ async def test_full_flow(
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == TEST_HOST
+    assert result2["title"] == TEST_URL
     assert result2["data"] == TEST_USER_INPUT
 
 
@@ -95,7 +95,7 @@ async def test_recovery_after_error(
     await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == TEST_HOST
+    assert result3["title"] == TEST_URL
     assert result3["data"] == TEST_USER_INPUT
 
 

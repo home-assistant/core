@@ -1,7 +1,7 @@
 """Base entity for the Pterodactyl integration."""
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_URL
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -31,5 +31,5 @@ class PterodactylEntity(CoordinatorEntity[PterodactylCoordinator]):
             name=coordinator.data[identifier].name,
             model=coordinator.data[identifier].name,
             model_id=coordinator.data[identifier].uuid,
-            configuration_url=f"{config_entry.data[CONF_HOST]}/server/{identifier}",
+            configuration_url=f"{config_entry.data[CONF_URL]}/server/{identifier}",
         )

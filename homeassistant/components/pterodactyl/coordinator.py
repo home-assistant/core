@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -41,7 +41,7 @@ class PterodactylCoordinator(DataUpdateCoordinator[dict[str, PterodactylData]]):
 
         super().__init__(
             hass=hass,
-            name=config_entry.data[CONF_HOST],
+            name=config_entry.data[CONF_URL],
             config_entry=config_entry,
             logger=_LOGGER,
             update_interval=SCAN_INTERVAL,
@@ -52,7 +52,7 @@ class PterodactylCoordinator(DataUpdateCoordinator[dict[str, PterodactylData]]):
         try:
             self.api = PterodactylAPI(
                 hass=self.hass,
-                host=self.config_entry.data[CONF_HOST],
+                host=self.config_entry.data[CONF_URL],
                 api_key=self.config_entry.data[CONF_API_KEY],
             )
             await self.api.async_init()
