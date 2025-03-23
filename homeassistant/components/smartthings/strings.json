@@ -51,7 +51,7 @@
     },
     "button": {
       "stop": {
-        "name": "Stop"
+        "name": "[%key:common::action::stop%]"
       }
     },
     "event": {
