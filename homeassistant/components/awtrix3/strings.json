@@ -20,7 +20,7 @@
           "auto": "Search automatically"
         },
         "title": "AWTRIX device setup",
-        "description": "By clicking submit, we will search your network for AWTTRIX devices."
+        "description": "Start searching your network for AWTTRIX devices by clicking Submit."
       },
       "device": {
         "data": {
@@ -43,7 +43,7 @@
       },
       "configure_profile": {
         "description": "Create device entity for {profile} at {resolution} resolution?",
-        "title": "Configure Profiles",
+        "title": "Configure profiles",
         "data": {
           "include": "Create device entity"
         }
