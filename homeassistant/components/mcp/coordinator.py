@@ -40,7 +40,6 @@ async def mcp_client(url: str) -> AsyncGenerator[ClientSession]:
             await session.initialize()
             yield session
     except ExceptionGroup as err:
-        _LOGGER.debug("Error creating MCP client: %s", err)
         raise err.exceptions[0] from err
 
 
