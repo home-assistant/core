@@ -91,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
             entry, unique_id=device_info.serial_number
         )
 
-    coordinator = PowerviewShadeUpdateCoordinator(hass, shades, hub)
+    coordinator = PowerviewShadeUpdateCoordinator(hass, entry, shades, hub)
     coordinator.async_set_updated_data(PowerviewShadeData())
     # populate raw shade data into the coordinator for diagnostics
     coordinator.data.store_group_data(shade_data)

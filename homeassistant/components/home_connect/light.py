@@ -17,15 +17,11 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from .common import setup_home_connect_entry
-from .const import (
-    BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR,
-    DOMAIN,
-    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
-)
+from .const import BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR, DOMAIN
 from .coordinator import (
     HomeConnectApplianceData,
     HomeConnectConfigEntry,
@@ -35,6 +31,8 @@ from .entity import HomeConnectEntity
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -94,7 +92,7 @@ def _get_entities_for_appliance(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Home Connect light."""
     setup_home_connect_entry(
@@ -162,7 +160,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 translation_key="turn_on_light",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                    "entity_id": self.entity_id,
                 },
             ) from err
         if self._color_key and self._custom_color_key:
@@ -181,7 +179,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         translation_key="select_light_custom_color",
                         translation_placeholders={
                             **get_dict_from_home_connect_error(err),
-                            SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                            "entity_id": self.entity_id,
                         },
                     ) from err
 
@@ -199,7 +197,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         translation_key="set_light_color",
                         translation_placeholders={
                             **get_dict_from_home_connect_error(err),
-                            SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                            "entity_id": self.entity_id,
                         },
                     ) from err
                 return
@@ -229,7 +227,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         translation_key="set_light_color",
                         translation_placeholders={
                             **get_dict_from_home_connect_error(err),
-                            SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                            "entity_id": self.entity_id,
                         },
                     ) from err
                 return
@@ -252,7 +250,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     translation_key="set_light_brightness",
                     translation_placeholders={
                         **get_dict_from_home_connect_error(err),
-                        SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                        "entity_id": self.entity_id,
                     },
                 ) from err
 
@@ -270,7 +268,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 translation_key="turn_off_light",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                    "entity_id": self.entity_id,
                 },
             ) from err
 

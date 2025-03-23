@@ -508,7 +508,9 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
             )
 
         for child in children:
-            child_coordinator = coordinator.get_child_coordinator(child)
+            child_coordinator = coordinator.get_child_coordinator(
+                child, platform_domain
+            )
 
             child_entities = cls._entities_for_device(
                 hass,
@@ -651,7 +653,9 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
                 device.host,
             )
         for child in children:
-            child_coordinator = coordinator.get_child_coordinator(child)
+            child_coordinator = coordinator.get_child_coordinator(
+                child, platform_domain
+            )
 
             child_entities: list[_E] = cls._entities_for_device(
                 hass,

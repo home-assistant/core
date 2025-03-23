@@ -39,7 +39,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import EsphomeAssistEntity
@@ -87,7 +87,7 @@ _CONFIG_TIMEOUT_SEC = 5
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ESPHomeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Assist satellite entity."""
     entry_data = entry.runtime_data
@@ -284,7 +284,10 @@ class EsphomeAssistSatellite(
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END:
             assert event.data is not None
             data_to_send = {
-                "conversation_id": event.data["intent_output"]["conversation_id"] or "",
+                "conversation_id": event.data["intent_output"]["conversation_id"],
+                "continue_conversation": str(
+                    int(event.data["intent_output"]["continue_conversation"])
+                ),
             }
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
             assert event.data is not None

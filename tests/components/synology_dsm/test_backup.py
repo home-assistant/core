@@ -28,10 +28,12 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockStreamReader
 
-from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
+from .common import mock_dsm_information
+from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -99,7 +101,7 @@ def mock_dsm_with_filestation():
             volumes_ids=["volume_1"],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=SERIAL)
+        dsm.information = mock_dsm_information()
         dsm.file = AsyncMock(
             get_shared_folders=AsyncMock(
                 return_value=[
@@ -147,12 +149,12 @@ def mock_dsm_without_filestation():
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
         dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.information = mock_dsm_information()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
             volumes_ids=["volume_1"],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=SERIAL)
         dsm.file = None
 
         yield dsm
@@ -163,7 +165,8 @@ async def setup_dsm_with_filestation(
     hass: HomeAssistant,
     mock_dsm_with_filestation: MagicMock,
 ):
-    """Mock setup of synology dsm config entry."""
+    """Mock setup of synology dsm config entry and backup integration."""
+    async_initialize_backup(hass)
     with (
         patch(
             "homeassistant.components.synology_dsm.common.SynologyDSM",
@@ -221,6 +224,7 @@ async def test_agents_not_loaded(
 ) -> None:
     """Test backup agent with no loaded config entry."""
     with patch("homeassistant.components.backup.is_hassio", return_value=False):
+        async_initialize_backup(hass)
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -334,7 +338,7 @@ async def test_agents_list_backups_error(
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
-        "last_non_idle_event": None,
+        "last_action_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
         "state": "idle",

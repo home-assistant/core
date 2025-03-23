@@ -107,7 +107,7 @@
       "cp_state": {
         "name": "State",
         "state": {
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "error": "Error",
           "fault": "Fault",
           "invalid": "Invalid",
@@ -153,6 +153,9 @@
       }
     },
     "switch": {
+      "charge": {
+        "name": "Charge"
+      },
       "force_single_phase": {
         "name": "Force single phase"
       }

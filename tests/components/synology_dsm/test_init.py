@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -108,6 +109,7 @@ async def test_config_entry_migrations(
                 CONF_PASSWORD: PASSWORD,
                 CONF_MAC: MACS[0],
             },
+            options={CONF_SCAN_INTERVAL: 30},
         )
         entry.add_to_hass(hass)
 
@@ -118,5 +120,6 @@ async def test_config_entry_migrations(
         assert await hass.config_entries.async_setup(entry.entry_id)
 
         assert entry.data[CONF_VERIFY_SSL] == DEFAULT_VERIFY_SSL
+        assert CONF_SCAN_INTERVAL not in entry.options
         assert entry.options[CONF_BACKUP_SHARE] is None
         assert entry.options[CONF_BACKUP_PATH] is None

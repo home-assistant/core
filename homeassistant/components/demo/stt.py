@@ -17,7 +17,7 @@ from homeassistant.components.stt import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 SUPPORT_LANGUAGES = ["en", "de"]
 
@@ -25,7 +25,7 @@ SUPPORT_LANGUAGES = ["en", "de"]
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Demo speech platform via config entry."""
     async_add_entities([DemoProviderEntity()])

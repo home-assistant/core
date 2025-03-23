@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock
 
-from aioshelly.const import MODEL_BLU_GATEWAY_GEN3
+from aioshelly.const import BLU_TRV_TIMEOUT, MODEL_BLU_GATEWAY_G3
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 import pytest
 from syrupy import SnapshotAssertion
@@ -18,7 +18,7 @@ from homeassistant.components.number import (
     SERVICE_SET_VALUE,
     NumberMode,
 )
-from homeassistant.components.shelly.const import BLU_TRV_TIMEOUT, DOMAIN
+from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
@@ -405,7 +405,7 @@ async def test_blu_trv_number_entity(
     # disable automatic temperature control in the device
     monkeypatch.setitem(mock_blu_trv.config["blutrv:200"], "enable", False)
 
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     for entity in ("external_temperature", "valve_position"):
         entity_id = f"{NUMBER_DOMAIN}.trv_name_{entity}"
@@ -421,7 +421,7 @@ async def test_blu_trv_ext_temp_set_value(
     hass: HomeAssistant, mock_blu_trv: Mock
 ) -> None:
     """Test the set value action for BLU TRV External Temperature number entity."""
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     entity_id = f"{NUMBER_DOMAIN}.trv_name_external_temperature"
 
@@ -461,7 +461,7 @@ async def test_blu_trv_valve_pos_set_value(
     # disable automatic temperature control to enable valve position entity
     monkeypatch.setitem(mock_blu_trv.config["blutrv:200"], "enable", False)
 
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     entity_id = f"{NUMBER_DOMAIN}.trv_name_valve_position"
 

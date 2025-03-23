@@ -7,7 +7,7 @@ from requests import Session
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -41,7 +41,7 @@ LIST_NOTIFICATIONS_SERVICE_SCHEMA = vol.All(
 
 
 def _setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: FlumeConfigEntry
 ) -> tuple[FlumeAuth, FlumeDeviceList, Session]:
     """Config entry set up in executor."""
     config = entry.data
@@ -79,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlumeConfigEntry) -> boo
         _setup_entry, hass, entry
     )
     notification_coordinator = FlumeNotificationDataUpdateCoordinator(
-        hass=hass, auth=flume_auth
+        hass=hass, config_entry=entry, auth=flume_auth
     )
 
     entry.runtime_data = FlumeRuntimeData(

@@ -9,19 +9,15 @@ from aiohomeconnect.model.error import HomeConnectError
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
-from .const import (
-    DOMAIN,
-    SVE_TRANSLATION_KEY_SET_SETTING,
-    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
-    SVE_TRANSLATION_PLACEHOLDER_KEY,
-    SVE_TRANSLATION_PLACEHOLDER_VALUE,
-)
+from .const import DOMAIN
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 from .utils import get_dict_from_home_connect_error
+
+PARALLEL_UPDATES = 1
 
 TIME_ENTITIES = (
     TimeEntityDescription(
@@ -46,7 +42,7 @@ def _get_entities_for_appliance(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Home Connect switch."""
     setup_home_connect_entry(
@@ -82,12 +78,12 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
         except HomeConnectError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=SVE_TRANSLATION_KEY_SET_SETTING,
+                translation_key="set_setting_entity",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
-                    SVE_TRANSLATION_PLACEHOLDER_KEY: self.bsh_key,
-                    SVE_TRANSLATION_PLACEHOLDER_VALUE: str(value),
+                    "entity_id": self.entity_id,
+                    "key": self.bsh_key,
+                    "value": str(value),
                 },
             ) from err
 

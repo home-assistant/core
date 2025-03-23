@@ -15,9 +15,9 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FytaConfigEntry
+from .coordinator import FytaConfigEntry
 from .entity import FytaPlantEntity
 
 
@@ -83,7 +83,9 @@ BINARY_SENSORS: Final[list[FytaBinarySensorEntityDescription]] = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: FytaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FytaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the FYTA binary sensors."""
     coordinator = entry.runtime_data

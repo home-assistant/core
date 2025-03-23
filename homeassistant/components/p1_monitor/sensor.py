@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CURRENCY_EURO,
@@ -22,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -33,7 +32,7 @@ from .const import (
     SERVICE_SMARTMETER,
     SERVICE_WATERMETER,
 )
-from .coordinator import P1MonitorDataUpdateCoordinator
+from .coordinator import P1MonitorConfigEntry, P1MonitorDataUpdateCoordinator
 
 SENSORS_SMARTMETER: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -236,7 +235,9 @@ SENSORS_WATERMETER: tuple[SensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: P1MonitorConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up P1 Monitor Sensors based on a config entry."""
     entities: list[P1MonitorSensorEntity] = []
@@ -290,7 +291,7 @@ class P1MonitorSensorEntity(
     def __init__(
         self,
         *,
-        entry: ConfigEntry,
+        entry: P1MonitorConfigEntry,
         description: SensorEntityDescription,
         name: str,
         service: Literal["smartmeter", "watermeter", "phases", "settings"],
