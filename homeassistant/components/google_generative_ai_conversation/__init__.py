@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import mimetypes
 from pathlib import Path
 
 from google import genai  # type: ignore[attr-defined]
@@ -83,7 +84,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     )
                 if not Path(filename).exists():
                     raise HomeAssistantError(f"`{filename}` does not exist")
-                prompt_parts.append(client.files.upload(file=filename))
+                mimetype = mimetypes.guess_type(filename)[0]
+                with open(filename, "rb") as file:
+                    uploaded_file = client.files.upload(
+                        file=file, config={"mime_type": mimetype}
+                    )
+                    prompt_parts.append(uploaded_file)
 
         await hass.async_add_executor_job(append_files_to_prompt)
 

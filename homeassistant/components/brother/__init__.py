@@ -9,6 +9,7 @@ from homeassistant.const import CONF_HOST, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from .const import DOMAIN
 from .coordinator import BrotherConfigEntry, BrotherDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -25,7 +26,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> b
             host, printer_type=printer_type, snmp_engine=snmp_engine
         )
     except (ConnectionError, SnmpError, TimeoutError) as error:
-        raise ConfigEntryNotReady from error
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={
+                "device": entry.title,
+                "error": repr(error),
+            },
+        ) from error
 
     coordinator = BrotherDataUpdateCoordinator(hass, entry, brother)
     await coordinator.async_config_entry_first_refresh()
