@@ -362,6 +362,7 @@ class ChatLog:
         user_llm_prompt: str | None = None,
     ) -> str:
         """Return the LLM prompt based on current HA state."""
+        user_name: str | None = None
         if (
             user_input.context
             and user_input.context.user_id
