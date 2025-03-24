@@ -90,6 +90,10 @@ WARN_NEGATIVE: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_total_increasing_nega
 # Keep track of entities for which a warning about unsupported unit has been logged
 WARN_UNSUPPORTED_UNIT: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_unsupported_unit")
 WARN_UNSTABLE_UNIT: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_unstable_unit")
+# Keep track of entities for which a warning about statistics mean algorithm change has been logged
+WARN_STATISTICS_MEAN_CHANGED: HassKey[set[str]] = HassKey(
+    f"{DOMAIN}_warn_statistics_mean_change"
+)
 # Link to dev statistics where issues around LTS can be fixed
 LINK_DEV_STATISTICS = "https://my.home-assistant.io/redirect/developer_statistics"
 
@@ -546,6 +550,10 @@ def compile_statistics(  # noqa: C901
         state_class,
         valid_float_states,
     ) in to_process:
+        mean_type = None
+        if "mean" in wanted_statistics[entity_id].types:
+            mean_type = wanted_statistics[entity_id].mean_type
+
         # Check metadata
         if old_metadata := old_metadatas.get(entity_id):
             if not _equivalent_units(
@@ -571,9 +579,26 @@ def compile_statistics(  # noqa: C901
                     )
                 continue
 
-        mean_type = None
-        if "mean" in wanted_statistics[entity_id].types:
-            mean_type = wanted_statistics[entity_id].mean_type
+            if (
+                old_mean_type := old_metadata[1]["mean_type"]
+            ) is not None and mean_type != old_mean_type:
+                if WARN_STATISTICS_MEAN_CHANGED not in hass.data:
+                    hass.data[WARN_STATISTICS_MEAN_CHANGED] = set()
+                if entity_id not in hass.data[WARN_STATISTICS_MEAN_CHANGED]:
+                    hass.data[WARN_STATISTICS_MEAN_CHANGED].add(entity_id)
+                    _LOGGER.warning(
+                        (
+                            "The statistics mean algorithm for %s have changed from %s to %s."
+                            " Generation of long term statistics will be suppressed"
+                            " unless it changes back or go to %s to delete the old"
+                            " statistics"
+                        ),
+                        entity_id,
+                        old_mean_type.name,
+                        mean_type.name if mean_type else "None",
+                        LINK_DEV_STATISTICS,
+                    )
+                continue
 
         # Set meta data
         meta: StatisticMetaData = {
@@ -811,6 +836,23 @@ def _update_issues(
                     },
                 )
 
+            if (
+                (current_mean_type := metadata[1]["mean_type"]) is not None
+                and state_class
+                and (new_mean_type := DEFAULT_STATISTICS[state_class].mean_type)
+                != current_mean_type
+            ):
+                # The mean type has changed and the old statistics are not valid anymore
+                report_issue(
+                    "mean_type_changed",
+                    entity_id,
+                    {
+                        "statistic_id": entity_id,
+                        "current_mean_type": current_mean_type,
+                        "new_mean_type": new_mean_type,
+                    },
+                )
+
 
 def update_statistics_issues(
     hass: HomeAssistant,
@@ -833,7 +875,7 @@ def update_statistics_issues(
                 issue.domain != DOMAIN
                 or not (issue_data := issue.data)
                 or issue_data.get("issue_type")
-                not in ("state_class_removed", "units_changed")
+                not in ("state_class_removed", "units_changed", "mean_type_changed")
             ):
                 continue
             issues.add(issue.issue_id)

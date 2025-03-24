@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable
 from datetime import datetime, timedelta
+import logging
 import math
 from statistics import mean
 from typing import Any, Literal
@@ -6161,6 +6162,7 @@ async def test_clean_up_repairs(
     create_issue(DOMAIN, "test_issue_2", {"issue_type": "another_issue"})
     create_issue(DOMAIN, "test_issue_3", {"issue_type": "state_class_removed"})
     create_issue(DOMAIN, "test_issue_4", {"issue_type": "units_changed"})
+    create_issue(DOMAIN, "test_issue_5", {"issue_type": "mean_type_changed"})
 
     # Check the issues
     assert set(issue_registry.issues) == {
@@ -6169,6 +6171,7 @@ async def test_clean_up_repairs(
         ("sensor", "test_issue_2"),
         ("sensor", "test_issue_3"),
         ("sensor", "test_issue_4"),
+        ("sensor", "test_issue_5"),
     }
 
     # Request update of issues
@@ -6182,3 +6185,140 @@ async def test_clean_up_repairs(
         ("sensor", "test_issue_1"),
         ("sensor", "test_issue_2"),
     }
+
+
+async def test_validate_statistics_mean_type_changed(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test validate_statistics.
+
+    This tests a validation issue is created when a the mean type is changed.
+    """
+    now = get_start_time(dt_util.utcnow())
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(hass, client, {}, {})
+
+    # No statistics, original unit - empty response
+    hass.states.async_set(
+        "sensor.wind_direction",
+        10,
+        attributes=WIND_DIRECTION_ATTRIBUTES,
+        timestamp=now.timestamp(),
+    )
+    await assert_validation_result(hass, client, {}, {})
+
+    # Run statistics
+    await async_recorder_block_till_done(hass)
+    do_adhoc_statistics(hass, start=now)
+    await async_recorder_block_till_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.wind_direction",
+            "display_unit_of_measurement": DEGREE,
+            "has_mean": False,
+            "mean_type": StatisticMeanType.CIRCULAR,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": DEGREE,
+            "unit_class": None,
+        }
+    ]
+
+    expected_log_entry = (
+        "homeassistant.components.sensor.recorder",
+        logging.WARNING,
+        (
+            "The statistics mean algorithm for sensor.wind_direction have changed from"
+            " CIRCULAR to ARIMETHIC. Generation of long term statistics will be "
+            "suppressed unless it changes back or go to "
+            "https://my.home-assistant.io/redirect/developer_statistics "
+            "to delete the old statistics"
+        ),
+    )
+    # Valid stats, no log entry
+    assert expected_log_entry not in caplog.record_tuples
+
+    # State class changed
+    hass.states.async_set(
+        "sensor.wind_direction",
+        5,
+        attributes={
+            **WIND_DIRECTION_ATTRIBUTES,
+            "state_class": SensorStateClass.MEASUREMENT,
+        },
+        timestamp=now.timestamp(),
+    )
+    expected = {
+        "sensor.wind_direction": [
+            {
+                "data": {
+                    "statistic_id": "sensor.wind_direction",
+                    "current_mean_type": StatisticMeanType.CIRCULAR,
+                    "new_mean_type": StatisticMeanType.ARIMETHIC,
+                },
+                "type": "mean_type_changed",
+            }
+        ],
+    }
+    await assert_validation_result(hass, client, expected, {"mean_type_changed"})
+
+    # Run statistics one hour later, metadata will not be updated
+    await async_recorder_block_till_done(hass)
+    do_adhoc_statistics(hass, start=now + timedelta(hours=1))
+    await async_recorder_block_till_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.wind_direction",
+            "display_unit_of_measurement": DEGREE,
+            "has_mean": False,
+            "mean_type": StatisticMeanType.CIRCULAR,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": DEGREE,
+            "unit_class": None,
+        }
+    ]
+    await assert_validation_result(hass, client, expected, {"mean_type_changed"})
+    assert expected_log_entry in caplog.record_tuples
+
+    # State class changed back
+    hass.states.async_set(
+        "sensor.wind_direction",
+        350,
+        attributes=WIND_DIRECTION_ATTRIBUTES,
+        timestamp=now.timestamp(),
+    )
+    await assert_validation_result(hass, client, {}, {})
+
+    # Run statistics
+    await async_recorder_block_till_done(hass)
+    do_adhoc_statistics(hass, start=now)
+    await async_recorder_block_till_done(hass)
+    statistic_ids = await async_list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.wind_direction",
+            "display_unit_of_measurement": DEGREE,
+            "has_mean": False,
+            "mean_type": StatisticMeanType.CIRCULAR,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": DEGREE,
+            "unit_class": None,
+        }
+    ]
+
+    # Issue should be resolved
+    await assert_validation_result(hass, client, {}, {})
