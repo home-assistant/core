@@ -43,6 +43,15 @@ def is_closed(device: Device) -> bool | None:
     return False
 
 
+def is_closed_upper(device: Device) -> bool | None:
+    """Return if the cover is closed."""
+
+    if state := device.states[OverkizState.CORE_UPPER_OPEN_CLOSED]:
+        return state.value == OverkizCommandParam.CLOSED
+
+    return False
+
+
 @dataclass(frozen=True, kw_only=True)
 class OverkizCoverDescription(CoverEntityDescription):
     """Class to describe an Overkiz cover."""
@@ -78,16 +87,33 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command=OverkizCommand.CLOSE_SLATS,
         stop_tilt_command=OverkizCommand.STOP,
     ),
-    ## TiltOnlyVenetianBlind (UIWidget)
-    ## Needs override to remove open/close commands
-    # OverkizCoverDescription(
-    #     key=UIWidget.TILT_ONLY_VENETIAN_BLIND,
-    #     device_class=CoverDeviceClass.BLIND,
-    #     is_closed_fn=is_closed,
-    #     open_tilt_command=OverkizCommand.TILT_POSITIVE,
-    #     close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-    #     stop_tilt_command=OverkizCommand.STOP,
-    # ),
+    # Needs override to support lower/upper position control
+    # uiClass is RollerShutter
+    OverkizCoverDescription(
+        key=UIWidget.POSITIONABLE_DUAL_ROLLER_SHUTTER,
+        device_class=CoverDeviceClass.SHUTTER,
+        current_position_state=OverkizState.CORE_UPPER_CLOSURE,
+        set_position_command=OverkizCommand.SET_UPPER_CLOSURE,
+        open_command=OverkizCommand.UPPER_OPEN,
+        close_command=OverkizCommand.UPPER_CLOSE,
+        invert_position=False,
+        is_closed_fn=is_closed_upper,
+        current_tilt_position_state=OverkizState.CORE_LOWER_CLOSURE,
+        set_tilt_position_command=OverkizCommand.SET_LOWER_CLOSURE,
+        open_tilt_command=OverkizCommand.LOWER_OPEN,
+        close_tilt_command=OverkizCommand.LOWER_CLOSE,
+        stop_tilt_command=OverkizCommand.STOP,
+    ),
+    # Needs override to remove open/close commands
+    # uiClass is VenetianBlind
+    OverkizCoverDescription(
+        key=UIWidget.TILT_ONLY_VENETIAN_BLIND,
+        device_class=CoverDeviceClass.BLIND,
+        is_closed_fn=is_closed,
+        # open_tilt_command=OverkizCommand.TILT_POSITIVE,
+        # close_tilt_command=OverkizCommand.TILT_NEGATIVE,
+        stop_tilt_command=OverkizCommand.STOP,
+    ),
     ## Default cover behavior (via UIClass)
     OverkizCoverDescription(
         key=UIClass.AWNING,
