@@ -9,6 +9,7 @@ from openai._streaming import AsyncStream
 from openai.types.responses import (
     EasyInputMessageParam,
     FunctionToolParam,
+    ResponseCompletedEvent,
     ResponseFunctionCallArgumentsDeltaEvent,
     ResponseFunctionCallArgumentsDoneEvent,
     ResponseFunctionToolCall,
@@ -99,8 +100,7 @@ def _convert_content_to_param(
 
     if isinstance(content, conversation.AssistantContent) and content.tool_calls:
         messages.extend(
-            # https://github.com/openai/openai-python/issues/2205
-            ResponseFunctionToolCallParam(  # type: ignore[typeddict-item]
+            ResponseFunctionToolCallParam(
                 type="function_call",
                 name=tool_call.tool_name,
                 arguments=json.dumps(tool_call.tool_args),
@@ -112,6 +112,7 @@ def _convert_content_to_param(
 
 
 async def _transform_stream(
+    chat_log: conversation.ChatLog,
     result: AsyncStream[ResponseStreamEvent],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform an OpenAI delta stream into HA format."""
@@ -138,6 +139,18 @@ async def _transform_stream(
                     )
                 ]
             }
+        elif (
+            isinstance(event, ResponseCompletedEvent)
+            and (usage := event.response.usage) is not None
+        ):
+            chat_log.async_trace(
+                {
+                    "stats": {
+                        "input_tokens": usage.input_tokens,
+                        "output_tokens": usage.output_tokens,
+                    }
+                }
+            )
 
 
 class OpenAIConversationEntity(
@@ -253,7 +266,7 @@ class OpenAIConversationEntity(
                 raise HomeAssistantError("Error talking to OpenAI") from err
 
             async for content in chat_log.async_add_delta_content_stream(
-                user_input.agent_id, _transform_stream(result)
+                user_input.agent_id, _transform_stream(chat_log, result)
             ):
                 messages.extend(_convert_content_to_param(content))
 
