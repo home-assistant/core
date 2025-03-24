@@ -949,6 +949,53 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_wrinkle_prevent_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.dryer_wrinkle_prevent_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wrinkle prevent active',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'dryer_wrinkle_prevent_active',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.operatingState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_wrinkle_prevent_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dryer Wrinkle prevent active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dryer_wrinkle_prevent_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1085,6 +1132,53 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.seca_roupa_remote_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_wrinkle_prevent_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.seca_roupa_wrinkle_prevent_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wrinkle prevent active',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'dryer_wrinkle_prevent_active',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.operatingState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_wrinkle_prevent_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Seca-Roupa Wrinkle prevent active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.seca_roupa_wrinkle_prevent_active',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

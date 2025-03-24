@@ -68,6 +68,14 @@ CAPABILITY_TO_SENSORS: dict[
             },
         )
     },
+    Capability.CUSTOM_DRYER_WRINKLE_PREVENT: {
+        Attribute.OPERATING_STATE: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.OPERATING_STATE,
+            translation_key="dryer_wrinkle_prevent_active",
+            is_on_key="running",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+    },
     Capability.FILTER_STATUS: {
         Attribute.FILTER_STATUS: SmartThingsBinarySensorEntityDescription(
             key=Attribute.FILTER_STATUS,
