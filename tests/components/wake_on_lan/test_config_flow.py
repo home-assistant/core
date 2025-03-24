@@ -9,6 +9,7 @@ from homeassistant.components.wake_on_lan.const import DOMAIN
 from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import DEFAULT_MAC
 
@@ -77,10 +78,21 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
         CONF_BROADCAST_PORT: 10,
     }
 
-    # Check the entity was updated, no new entity was created
-    assert len(hass.states.async_all()) == 1
+    entity_registry = er.async_get(hass)
+    entity_registry.async_update_entity(
+        "switch.wake_on_lan_00_01_02_03_04_05", disabled_by=None
+    )
+
+    await hass.config_entries.async_reload(loaded_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the entities were updated, no new entity was created
+    assert len(hass.states.async_all()) == 2
 
     state = hass.states.get("button.wake_on_lan_00_01_02_03_04_05")
+    assert state is not None
+
+    state = hass.states.get("switch.wake_on_lan_00_01_02_03_04_05")
     assert state is not None
 
 

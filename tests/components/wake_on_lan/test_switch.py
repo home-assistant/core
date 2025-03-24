@@ -5,93 +5,110 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import switch
+from homeassistant.components.wake_on_lan.const import CONF_OFF_ACTION
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_BROADCAST_ADDRESS,
+    CONF_BROADCAST_PORT,
+    CONF_HOST,
+    CONF_MAC,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import async_mock_service
+from tests.common import MockConfigEntry, async_mock_service
 
 
 async def test_valid_hostname(
-    hass: HomeAssistant, mock_send_magic_packet: AsyncMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    loaded_entry: MockConfigEntry,
+    mock_send_magic_packet: AsyncMock,
 ) -> None:
     """Test with valid hostname."""
-    assert await async_setup_component(
-        hass,
-        switch.DOMAIN,
-        {
-            "switch": {
-                "platform": "wake_on_lan",
-                "mac": "00-01-02-03-04-05",
-                "host": "validhostname",
-            }
+    entity_registry = er.async_get(hass)
+    entity_registry.async_update_entity(
+        "switch.wake_on_lan_00_01_02_03_04_05", disabled_by=None
+    )
+
+    hass.config_entries.async_update_entry(
+        loaded_entry,
+        options={
+            CONF_MAC: dr.format_mac("00:01:02:03:04:05"),
+            CONF_HOST: "validhostname",
         },
     )
+
+    await hass.config_entries.async_reload(loaded_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.wake_on_lan")
+    state = hass.states.get("switch.wake_on_lan_00_01_02_03_04_05")
+    assert state is not None
     assert state.state == STATE_OFF
+
+    entry = entity_registry.async_get("switch.wake_on_lan_00_01_02_03_04_05")
+    assert entry
+    assert entry.unique_id == "00:01:02:03:04:05"
 
     with patch("homeassistant.components.wake_on_lan.switch.sp.call", return_value=0):
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            {ATTR_ENTITY_ID: "switch.wake_on_lan_00_01_02_03_04_05"},
             blocking=True,
         )
 
-        state = hass.states.get("switch.wake_on_lan")
+        state = hass.states.get("switch.wake_on_lan_00_01_02_03_04_05")
         assert state.state == STATE_ON
 
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            {ATTR_ENTITY_ID: "switch.wake_on_lan_00_01_02_03_04_05"},
             blocking=True,
         )
 
-        state = hass.states.get("switch.wake_on_lan")
+        state = hass.states.get("switch.wake_on_lan_00_01_02_03_04_05")
         assert state.state == STATE_ON
 
 
 async def test_broadcast_config_ip_and_port(
-    hass: HomeAssistant, mock_send_magic_packet: AsyncMock
+    hass: HomeAssistant,
+    mock_send_magic_packet: AsyncMock,
+    loaded_entry: MockConfigEntry,
 ) -> None:
     """Test with broadcast address and broadcast port config."""
-    mac = "00:01:02:03:04:05"
-    broadcast_address = "255.255.255.255"
-    port = 999
+    entity_registry = er.async_get(hass)
+    entity_registry.async_update_entity(
+        "switch.wake_on_lan_00_01_02_03_04_05", disabled_by=None
+    )
 
-    assert await async_setup_component(
-        hass,
-        switch.DOMAIN,
-        {
-            "switch": {
-                "platform": "wake_on_lan",
-                "mac": mac,
-                "broadcast_address": broadcast_address,
-                "broadcast_port": port,
-            }
+    hass.config_entries.async_update_entry(
+        loaded_entry,
+        options={
+            CONF_MAC: dr.format_mac("00:01:02:03:04:05"),
+            CONF_BROADCAST_ADDRESS: "255.255.255.255",
+            CONF_BROADCAST_PORT: 9,
         },
     )
-    await hass.async_block_till_done()
 
-    state = hass.states.get("switch.wake_on_lan")
-    assert state.state == STATE_OFF
+    await hass.config_entries.async_reload(loaded_entry.entry_id)
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         switch.DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+        {ATTR_ENTITY_ID: "switch.wake_on_lan_00_01_02_03_04_05"},
         blocking=True,
     )
+
+    mac = "00:01:02:03:04:05"
+    broadcast_address = "255.255.255.255"
+    port = 9
 
     mac = dr.format_mac(mac)
     mock_send_magic_packet.assert_called_with(
@@ -100,101 +117,114 @@ async def test_broadcast_config_ip_and_port(
 
 
 async def test_broadcast_config_ip(
-    hass: HomeAssistant, mock_send_magic_packet: AsyncMock
+    hass: HomeAssistant,
+    mock_send_magic_packet: AsyncMock,
+    loaded_entry: MockConfigEntry,
 ) -> None:
     """Test with only broadcast address."""
+    entity_registry = er.async_get(hass)
+    entity_registry.async_update_entity(
+        "switch.wake_on_lan_00_01_02_03_04_05", disabled_by=None
+    )
 
-    mac = "00:01:02:03:04:05"
-    broadcast_address = "255.255.255.255"
-
-    assert await async_setup_component(
-        hass,
-        switch.DOMAIN,
-        {
-            "switch": {
-                "platform": "wake_on_lan",
-                "mac": mac,
-                "broadcast_address": broadcast_address,
-            }
+    hass.config_entries.async_update_entry(
+        loaded_entry,
+        options={
+            CONF_MAC: dr.format_mac("00:01:02:03:04:05"),
+            CONF_BROADCAST_ADDRESS: "255.255.255.255",
         },
     )
-    await hass.async_block_till_done()
 
-    state = hass.states.get("switch.wake_on_lan")
-    assert state.state == STATE_OFF
+    await hass.config_entries.async_reload(loaded_entry.entry_id)
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         switch.DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+        {ATTR_ENTITY_ID: "switch.wake_on_lan_00_01_02_03_04_05"},
         blocking=True,
     )
+
+    mac = "00:01:02:03:04:05"
+    broadcast_address = "255.255.255.255"
 
     mac = dr.format_mac(mac)
     mock_send_magic_packet.assert_called_with(mac, ip_address=broadcast_address)
 
 
 async def test_broadcast_config_port(
-    hass: HomeAssistant, mock_send_magic_packet: AsyncMock
+    hass: HomeAssistant,
+    mock_send_magic_packet: AsyncMock,
+    loaded_entry: MockConfigEntry,
 ) -> None:
     """Test with only broadcast port config."""
-
-    mac = "00:01:02:03:04:05"
-    port = 999
-
-    assert await async_setup_component(
-        hass,
-        switch.DOMAIN,
-        {"switch": {"platform": "wake_on_lan", "mac": mac, "broadcast_port": port}},
+    entity_registry = er.async_get(hass)
+    entity_registry.async_update_entity(
+        "switch.wake_on_lan_00_01_02_03_04_05", disabled_by=None
     )
-    await hass.async_block_till_done()
 
-    state = hass.states.get("switch.wake_on_lan")
-    assert state.state == STATE_OFF
+    hass.config_entries.async_update_entry(
+        loaded_entry,
+        options={
+            CONF_MAC: dr.format_mac("00:01:02:03:04:05"),
+            CONF_BROADCAST_PORT: 9,
+        },
+    )
+
+    await hass.config_entries.async_reload(loaded_entry.entry_id)
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         switch.DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+        {ATTR_ENTITY_ID: "switch.wake_on_lan_00_01_02_03_04_05"},
         blocking=True,
     )
+
+    mac = "00:01:02:03:04:05"
+    port = 9
 
     mac = dr.format_mac(mac)
     mock_send_magic_packet.assert_called_with(mac, port=port)
 
 
 async def test_off_script(
-    hass: HomeAssistant, mock_send_magic_packet: AsyncMock
+    hass: HomeAssistant,
+    mock_send_magic_packet: AsyncMock,
+    loaded_entry: MockConfigEntry,
 ) -> None:
     """Test with turn off script."""
+    entity_registry = er.async_get(hass)
+    entity_registry.async_update_entity(
+        "switch.wake_on_lan_00_01_02_03_04_05", disabled_by=None
+    )
 
-    assert await async_setup_component(
-        hass,
-        switch.DOMAIN,
-        {
-            "switch": {
-                "platform": "wake_on_lan",
-                "mac": "00-01-02-03-04-05",
-                "host": "validhostname",
-                "turn_off": {"service": "shell_command.turn_off_target"},
-            }
+    hass.config_entries.async_update_entry(
+        loaded_entry,
+        options={
+            CONF_MAC: dr.format_mac("00:01:02:03:04:05"),
+            CONF_HOST: "validhostname",
+            CONF_OFF_ACTION: [{"service_template": "shell_command.turn_off_target"}],
         },
     )
+
+    await hass.config_entries.async_reload(loaded_entry.entry_id)
     await hass.async_block_till_done()
+
     calls = async_mock_service(hass, "shell_command", "turn_off_target")
 
-    state = hass.states.get("switch.wake_on_lan")
+    state = hass.states.get("switch.wake_on_lan_00_01_02_03_04_05")
     assert state.state == STATE_OFF
 
     with patch("homeassistant.components.wake_on_lan.switch.sp.call", return_value=0):
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            {ATTR_ENTITY_ID: "switch.wake_on_lan_00_01_02_03_04_05"},
             blocking=True,
         )
 
-        state = hass.states.get("switch.wake_on_lan")
+        state = hass.states.get("switch.wake_on_lan_00_01_02_03_04_05")
         assert state.state == STATE_ON
         assert len(calls) == 0
 
@@ -202,51 +232,48 @@ async def test_off_script(
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            {ATTR_ENTITY_ID: "switch.wake_on_lan_00_01_02_03_04_05"},
             blocking=True,
         )
 
-        state = hass.states.get("switch.wake_on_lan")
+        state = hass.states.get("switch.wake_on_lan_00_01_02_03_04_05")
         assert state.state == STATE_OFF
         assert len(calls) == 1
 
 
 async def test_no_hostname_state(
-    hass: HomeAssistant, mock_send_magic_packet: AsyncMock
+    hass: HomeAssistant,
+    mock_send_magic_packet: AsyncMock,
+    loaded_entry: MockConfigEntry,
 ) -> None:
     """Test that the state updates if we do not pass in a hostname."""
-
-    assert await async_setup_component(
-        hass,
-        switch.DOMAIN,
-        {
-            "switch": {
-                "platform": "wake_on_lan",
-                "mac": "00-01-02-03-04-05",
-            }
-        },
+    entity_registry = er.async_get(hass)
+    entity_registry.async_update_entity(
+        "switch.wake_on_lan_00_01_02_03_04_05", disabled_by=None
     )
+
+    await hass.config_entries.async_reload(loaded_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.wake_on_lan")
+    state = hass.states.get("switch.wake_on_lan_00_01_02_03_04_05")
     assert state.state == STATE_OFF
 
     await hass.services.async_call(
         switch.DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+        {ATTR_ENTITY_ID: "switch.wake_on_lan_00_01_02_03_04_05"},
         blocking=True,
     )
 
-    state = hass.states.get("switch.wake_on_lan")
+    state = hass.states.get("switch.wake_on_lan_00_01_02_03_04_05")
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         switch.DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+        {ATTR_ENTITY_ID: "switch.wake_on_lan_00_01_02_03_04_05"},
         blocking=True,
     )
 
-    state = hass.states.get("switch.wake_on_lan")
+    state = hass.states.get("switch.wake_on_lan_00_01_02_03_04_05")
     assert state.state == STATE_OFF
