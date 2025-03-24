@@ -237,7 +237,7 @@ async def test_validation_device_consumption_entity_unexpected_unit(
                     "type": "entity_unexpected_unit_energy",
                     "affected_entities": {("sensor.unexpected_unit", "beers")},
                     "translation_placeholders": {
-                        "energy_units": "GJ, GCal, kWh, MJ, MWh, Wh"
+                        "energy_units": "GJ, Gcal, kWh, MJ, MWh, Wh"
                     },
                 }
             ]
@@ -327,7 +327,7 @@ async def test_validation_solar(
                     "type": "entity_unexpected_unit_energy",
                     "affected_entities": {("sensor.solar_production", "beers")},
                     "translation_placeholders": {
-                        "energy_units": "GJ, GCal, kWh, MJ, MWh, Wh"
+                        "energy_units": "GJ, Gcal, kWh, MJ, MWh, Wh"
                     },
                 }
             ]
@@ -380,7 +380,7 @@ async def test_validation_battery(
                         ("sensor.battery_export", "beers"),
                     },
                     "translation_placeholders": {
-                        "energy_units": "GJ, GCal, kWh, MJ, MWh, Wh"
+                        "energy_units": "GJ, Gcal, kWh, MJ, MWh, Wh"
                     },
                 },
             ]
@@ -451,7 +451,7 @@ async def test_validation_grid(
                         ("sensor.grid_production_1", "beers"),
                     },
                     "translation_placeholders": {
-                        "energy_units": "GJ, GCal, kWh, MJ, MWh, Wh"
+                        "energy_units": "GJ, Gcal, kWh, MJ, MWh, Wh"
                     },
                 },
                 {
@@ -540,7 +540,7 @@ async def test_validation_grid_external_cost_compensation(
                         ("sensor.grid_production_1", "beers"),
                     },
                     "translation_placeholders": {
-                        "energy_units": "GJ, GCal, kWh, MJ, MWh, Wh"
+                        "energy_units": "GJ, Gcal, kWh, MJ, MWh, Wh"
                     },
                 },
                 {
@@ -712,7 +712,7 @@ async def test_validation_grid_auto_cost_entity_errors(
                 "type": "entity_unexpected_unit_energy_price",
                 "affected_entities": {("sensor.grid_price_1", "$/Ws")},
                 "translation_placeholders": {
-                    "price_units": "EUR/GJ, EUR/GCal, EUR/kWh, EUR/MJ, EUR/MWh, EUR/Wh"
+                    "price_units": "EUR/GJ, EUR/Gcal, EUR/kWh, EUR/MJ, EUR/MWh, EUR/Wh"
                 },
             },
         ),
@@ -856,7 +856,7 @@ async def test_validation_gas(
                     "type": "entity_unexpected_unit_gas",
                     "affected_entities": {("sensor.gas_consumption_1", "beers")},
                     "translation_placeholders": {
-                        "energy_units": "GJ, GCal, kWh, MJ, MWh, Wh",
+                        "energy_units": "GJ, Gcal, kWh, MJ, MWh, Wh",
                         "gas_units": "CCF, ft³, m³",
                     },
                 },
@@ -886,7 +886,7 @@ async def test_validation_gas(
                     "affected_entities": {("sensor.gas_price_2", "EUR/invalid")},
                     "translation_placeholders": {
                         "price_units": (
-                            "EUR/GJ, EUR/GCal, EUR/kWh, EUR/MJ, EUR/MWh, EUR/Wh, EUR/CCF, EUR/ft³, EUR/m³"
+                            "EUR/GJ, EUR/Gcal, EUR/kWh, EUR/MJ, EUR/MWh, EUR/Wh, EUR/CCF, EUR/ft³, EUR/m³"
                         )
                     },
                 },
