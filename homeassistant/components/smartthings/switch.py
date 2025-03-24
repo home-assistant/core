@@ -123,9 +123,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         super().__init__(client, device, {capability})
         self.entity_description = entity_description
         self.switch_capability = capability
-        self._attr_unique_id = device.device.device_id
-        if capability is not Capability.SWITCH:
-            self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{capability}"
+        self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{capability}_{entity_description.status_attribute}_{entity_description.status_attribute}"
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
