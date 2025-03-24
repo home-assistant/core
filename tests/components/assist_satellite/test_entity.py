@@ -217,6 +217,20 @@ async def test_new_pipeline_cancels_pipeline(
                 media_id_source="url",
             ),
         ),
+        (
+            {
+                "media_id": "http://example.com/bla.mp3",
+                "preannounce_media_id": "http://example.com/preannounce.mp3",
+            },
+            AssistSatelliteAnnouncement(
+                message="",
+                media_id="http://example.com/bla.mp3",
+                original_media_id="http://example.com/bla.mp3",
+                tts_token=None,
+                media_id_source="url",
+                preannounce_media_id="http://example.com/preannounce.mp3",
+            ),
+        ),
     ],
 )
 async def test_announce(
@@ -548,6 +562,24 @@ async def test_vad_sensitivity_entity_not_found(
                     tts_token=None,
                     original_media_id="http://example.com/given.mp3",
                     media_id_source="url",
+                ),
+            ),
+        ),
+        (
+            {
+                "start_media_id": "http://example.com/given.mp3",
+                "preannounce_media_id": "http://example.com/preannounce.mp3",
+            },
+            (
+                "mock-conversation-id",
+                None,
+                AssistSatelliteAnnouncement(
+                    message="",
+                    media_id="http://example.com/given.mp3",
+                    tts_token=None,
+                    original_media_id="http://example.com/given.mp3",
+                    media_id_source="url",
+                    preannounce_media_id="http://example.com/preannounce.mp3",
                 ),
             ),
         ),
