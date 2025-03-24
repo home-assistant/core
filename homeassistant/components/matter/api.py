@@ -241,6 +241,8 @@ async def websocket_node_diagnostics(
 
 
 from dataclasses import dataclass
+
+
 @dataclass
 class NodeBinding:
     node: int
@@ -253,7 +255,6 @@ class NodeBinding:
     {
         vol.Required(TYPE): "matter/get_node_binding",
         vol.Required(DEVICE_ID): str,
-        vol.Required("endpoint"): int,
     }
 )
 @websocket_api.async_response
@@ -267,19 +268,7 @@ async def websocket_get_node_binding(
     matter: MatterAdapter,
     node: MatterNode,
 ) -> None:
-    result = node.get_attribute_value(endpoint=msg["endpoint"], cluster=0x001E, attribute=0)
-    ret = [
-        dataclass_to_dict(
-            NodeBinding(
-                node=val.node,
-                group=val.group,
-                endpoint=val.endpoint,
-                cluster=val.cluster,
-                fabricIndex=val.fabricIndex,
-            )
-        )
-        for val in result
-    ]
+    ret = {k: v.get_attribute_value(30,0) for k, v in node.endpoints.items() if v.has_cluster(30)}
     connection.send_result(msg[ID], ret)
 
 @websocket_api.websocket_command(
