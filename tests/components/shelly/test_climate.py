@@ -462,7 +462,10 @@ async def test_block_set_mode_connection_error(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Device communication error occurred while calling action for climate.test_name of Test name",
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,

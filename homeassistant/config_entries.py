@@ -195,8 +195,6 @@ DISCOVERY_SOURCES = {
     SOURCE_ZEROCONF,
 }
 
-RECONFIGURE_NOTIFICATION_ID = "config_entry_reconfigure"
-
 EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
 SIGNAL_CONFIG_ENTRY_CHANGED = SignalType["ConfigEntryChange", "ConfigEntry"](
@@ -1714,16 +1712,6 @@ class ConfigEntriesFlowManager(
         # Create notification.
         if source in DISCOVERY_SOURCES:
             await self._discovery_debouncer.async_call()
-        elif source == SOURCE_REAUTH:
-            persistent_notification.async_create(
-                self.hass,
-                title="Integration requires reconfiguration",
-                message=(
-                    "At least one of your integrations requires reconfiguration to "
-                    "continue functioning. [Check it out](/config/integrations)."
-                ),
-                notification_id=RECONFIGURE_NOTIFICATION_ID,
-            )
 
     @callback
     def _async_discovery(self) -> None:
@@ -3119,29 +3107,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Handle a flow initialized by discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @callback
-    def async_abort(
-        self,
-        *,
-        reason: str,
-        description_placeholders: Mapping[str, str] | None = None,
-    ) -> ConfigFlowResult:
-        """Abort the config flow."""
-        # Remove reauth notification if no reauth flows are in progress
-        if self.source == SOURCE_REAUTH and not any(
-            ent["flow_id"] != self.flow_id
-            for ent in self.hass.config_entries.flow.async_progress_by_handler(
-                self.handler, match_context={"source": SOURCE_REAUTH}
-            )
-        ):
-            persistent_notification.async_dismiss(
-                self.hass, RECONFIGURE_NOTIFICATION_ID
-            )
-
-        return super().async_abort(
-            reason=reason, description_placeholders=description_placeholders
-        )
-
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -3491,18 +3456,14 @@ class ConfigSubentryFlow(
         return self.async_abort(reason="reconfigure_successful")
 
     @property
-    def _reconfigure_entry_id(self) -> str:
-        """Return reconfigure entry id."""
-        if self.source != SOURCE_RECONFIGURE:
-            raise ValueError(f"Source is {self.source}, expected {SOURCE_RECONFIGURE}")
+    def _entry_id(self) -> str:
+        """Return config entry id."""
         return self.handler[0]
 
     @callback
-    def _get_reconfigure_entry(self) -> ConfigEntry:
-        """Return the reconfigure config entry linked to the current context."""
-        return self.hass.config_entries.async_get_known_entry(
-            self._reconfigure_entry_id
-        )
+    def _get_entry(self) -> ConfigEntry:
+        """Return the config entry linked to the current context."""
+        return self.hass.config_entries.async_get_known_entry(self._entry_id)
 
     @property
     def _reconfigure_subentry_id(self) -> str:
@@ -3514,9 +3475,7 @@ class ConfigSubentryFlow(
     @callback
     def _get_reconfigure_subentry(self) -> ConfigSubentry:
         """Return the reconfigure config subentry linked to the current context."""
-        entry = self.hass.config_entries.async_get_known_entry(
-            self._reconfigure_entry_id
-        )
+        entry = self.hass.config_entries.async_get_known_entry(self._entry_id)
         subentry_id = self._reconfigure_subentry_id
         if subentry_id not in entry.subentries:
             raise UnknownSubEntry(subentry_id)

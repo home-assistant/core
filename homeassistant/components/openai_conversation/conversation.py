@@ -10,10 +10,13 @@ from openai.types.responses import (
     EasyInputMessageParam,
     FunctionToolParam,
     ResponseCompletedEvent,
+    ResponseErrorEvent,
+    ResponseFailedEvent,
     ResponseFunctionCallArgumentsDeltaEvent,
     ResponseFunctionCallArgumentsDoneEvent,
     ResponseFunctionToolCall,
     ResponseFunctionToolCallParam,
+    ResponseIncompleteEvent,
     ResponseInputParam,
     ResponseOutputItemAddedEvent,
     ResponseOutputMessage,
@@ -139,18 +142,57 @@ async def _transform_stream(
                     )
                 ]
             }
-        elif (
-            isinstance(event, ResponseCompletedEvent)
-            and (usage := event.response.usage) is not None
-        ):
-            chat_log.async_trace(
-                {
-                    "stats": {
-                        "input_tokens": usage.input_tokens,
-                        "output_tokens": usage.output_tokens,
+        elif isinstance(event, ResponseCompletedEvent):
+            if event.response.usage is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": event.response.usage.input_tokens,
+                            "output_tokens": event.response.usage.output_tokens,
+                        }
                     }
-                }
-            )
+                )
+        elif isinstance(event, ResponseIncompleteEvent):
+            if event.response.usage is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": event.response.usage.input_tokens,
+                            "output_tokens": event.response.usage.output_tokens,
+                        }
+                    }
+                )
+
+            if (
+                event.response.incomplete_details
+                and event.response.incomplete_details.reason
+            ):
+                reason: str = event.response.incomplete_details.reason
+            else:
+                reason = "unknown reason"
+
+            if reason == "max_output_tokens":
+                reason = "max output tokens reached"
+            elif reason == "content_filter":
+                reason = "content filter triggered"
+
+            raise HomeAssistantError(f"OpenAI response incomplete: {reason}")
+        elif isinstance(event, ResponseFailedEvent):
+            if event.response.usage is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": event.response.usage.input_tokens,
+                            "output_tokens": event.response.usage.output_tokens,
+                        }
+                    }
+                )
+            reason = "unknown reason"
+            if event.response.error is not None:
+                reason = event.response.error.message
+            raise HomeAssistantError(f"OpenAI response failed: {reason}")
+        elif isinstance(event, ResponseErrorEvent):
+            raise HomeAssistantError(f"OpenAI response error: {event.message}")
 
 
 class OpenAIConversationEntity(

@@ -59,16 +59,23 @@ async def test_state_update(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize("device_fixture", ["virtual_valve"])
+@pytest.mark.parametrize(
+    ("device_fixture", "issue_string", "entity_id"),
+    [
+        ("virtual_valve", "valve", "binary_sensor.volvo_valve"),
+        ("da_ref_normal_000001", "fridge_door", "binary_sensor.refrigerator_door"),
+    ],
+)
 async def test_create_issue(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
+    issue_string: str,
+    entity_id: str,
 ) -> None:
     """Test we create an issue when an automation or script is using a deprecated entity."""
-    entity_id = "binary_sensor.volvo_valve"
-    issue_id = f"deprecated_binary_valve_{entity_id}"
+    issue_id = f"deprecated_binary_{issue_string}_{entity_id}"
 
     assert await async_setup_component(
         hass,

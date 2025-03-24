@@ -52,7 +52,7 @@ async def create_server(
     if llm_api_id == STATELESS_LLM_API:
         llm_api_id = llm.LLM_API_ASSIST
 
-    server = Server("home-assistant")
+    server = Server[Any]("home-assistant")
 
     async def get_api_instance() -> llm.APIInstance:
         """Get the LLM API selected."""

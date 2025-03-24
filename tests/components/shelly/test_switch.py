@@ -221,7 +221,10 @@ async def test_block_set_state_connection_error(
     )
     await init_integration(hass, 1)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Device communication error occurred while calling action for switch.test_name_channel_1 of Test name",
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
@@ -360,10 +363,23 @@ async def test_rpc_device_switch_type_lights_mode(
     assert hass.states.get("switch.test_switch_0") is None
 
 
-@pytest.mark.parametrize("exc", [DeviceConnectionError, RpcCallError(-1, "error")])
+@pytest.mark.parametrize(
+    ("exc", "error"),
+    [
+        (
+            DeviceConnectionError,
+            "Device communication error occurred while calling action for switch.test_switch_0 of Test name",
+        ),
+        (
+            RpcCallError(-1, "error"),
+            "RPC call error occurred while calling action for switch.test_switch_0 of Test name",
+        ),
+    ],
+)
 async def test_rpc_set_state_errors(
     hass: HomeAssistant,
     exc: Exception,
+    error: str,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -373,7 +389,7 @@ async def test_rpc_set_state_errors(
     monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
