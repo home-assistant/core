@@ -10,11 +10,14 @@ from homeassistant.components.usb import USBDevice, async_register_port_event_ca
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DESCRIPTION, DEVICE, DOMAIN, FIRMWARE, FIRMWARE_VERSION, PRODUCT
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
