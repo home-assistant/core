@@ -12,6 +12,7 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -36,11 +37,15 @@ class NUTBaseEntity(CoordinatorEntity[DataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
+        entity_description: EntityDescription,
         data: PyNUTData,
         unique_id: str,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{unique_id}_{entity_description.key}"
 
         self.pynut_data = data
         self._attr_device_info = DeviceInfo(

@@ -1515,7 +1515,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Save the changes made to the subentry."""
-        entry = self._get_reconfigure_entry()
+        entry = self._get_entry()
         subentry = self._get_reconfigure_subentry()
         entity_registry = er.async_get(self.hass)
 
