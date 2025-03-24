@@ -71,4 +71,11 @@ class JellyfinServerSensor(JellyfinServerEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
+        if self.coordinator.data is None:
+            return None  # Ensure it reflects the unavailable state
         return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    def available(self) -> bool:
+        """Return True if the sensor is available (i.e., data is available)."""
+        return self.coordinator.data is not None

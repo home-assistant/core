@@ -66,6 +66,11 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
 
         self._update_from_session_data()
 
+    @property
+    def available(self) -> bool:
+        """Return True if the media player is available."""
+        return self.coordinator.data is not None and self.session_id in self.coordinator.data
+
     @callback
     def _handle_coordinator_update(self) -> None:
         if self.available:

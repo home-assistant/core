@@ -49,18 +49,20 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, An
         self.device_ids: set[str] = set()
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
-        """Get the latest data from Jellyfin."""
-        sessions = await self.hass.async_add_executor_job(
-            self.api_client.jellyfin.sessions
-        )
+        """Fetch data from Jellyfin API and handle errors gracefully."""
+        try:
+            sessions = await self.hass.async_add_executor_job(
+                self.api_client.jellyfin.sessions
+            )
+            return sessions
 
-        sessions_by_id: dict[str, dict[str, Any]] = {
-            session["Id"]: session
-            for session in sessions
-            if session["DeviceId"] != self.client_device_id
-            and session["Client"] != USER_APP_NAME
-        }
+        except requests.exceptions.ConnectionError as err:
+            _LOGGER.error("Jellyfin server unreachable: %s", err)
 
-        self.device_ids = {session["DeviceId"] for session in sessions_by_id.values()}
+        except KeyError as err:
+            _LOGGER.error("Missing key in Jellyfin API response: %s", err)
 
-        return sessions_by_id
+        except Exception as err:
+            _LOGGER.error("Unexpected error fetching Jellyfin data: %s", err)
+
+        return None  # Mark the device as unavailable
