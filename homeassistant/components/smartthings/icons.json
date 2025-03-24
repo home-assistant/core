@@ -14,6 +14,11 @@
         }
       }
     },
+    "button": {
+      "stop": {
+        "default": "mdi:stop"
+      }
+    },
     "number": {
       "washer_rinse_cycles": {
         "default": "mdi:waves-arrow-up"
@@ -29,6 +34,12 @@
       }
     },
     "switch": {
+      "bubble_soak": {
+        "default": "mdi:water-off",
+        "state": {
+          "on": "mdi:water"
+        }
+      },
       "wrinkle_prevent": {
         "default": "mdi:tumble-dryer",
         "state": {

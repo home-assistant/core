@@ -33,8 +33,17 @@
       "acceleration": {
         "name": "Acceleration"
       },
+      "door": {
+        "name": "[%key:component::binary_sensor::entity_component::door::name%]"
+      },
       "filter_status": {
         "name": "Filter status"
+      },
+      "freezer_door": {
+        "name": "Freezer door"
+      },
+      "cooler_door": {
+        "name": "Cooler door"
       },
       "remote_control": {
         "name": "Remote control"
@@ -44,6 +53,11 @@
       },
       "valve": {
         "name": "Valve"
+      }
+    },
+    "button": {
+      "stop": {
+        "name": "[%key:common::action::stop%]"
       }
     },
     "event": {
@@ -444,6 +458,9 @@
       }
     },
     "switch": {
+      "bubble_soak": {
+        "name": "Bubble Soak"
+      },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
       },
