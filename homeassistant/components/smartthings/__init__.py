@@ -13,8 +13,10 @@ from aiohttp import ClientResponseError
 from pysmartthings import (
     Attribute,
     Capability,
+    ComponentStatus,
     Device,
     DeviceEvent,
+    Lifecycle,
     Scene,
     SmartThings,
     SmartThingsAuthenticationFailedError,
@@ -22,7 +24,6 @@ from pysmartthings import (
     SmartThingsSinkError,
     Status,
 )
-from pysmartthings.models import Lifecycle
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -74,7 +75,7 @@ class FullDevice:
     """Define an object to hold device data."""
 
     device: Device
-    status: dict[str, dict[Capability | str, dict[Attribute | str, Status]]]
+    status: dict[str, ComponentStatus]
 
 
 type SmartThingsConfigEntry = ConfigEntry[SmartThingsData]
@@ -363,9 +364,7 @@ KEEP_CAPABILITY_QUIRK: dict[
 }
 
 
-def process_status(
-    status: dict[str, dict[Capability | str, dict[Attribute | str, Status]]],
-) -> dict[str, dict[Capability | str, dict[Attribute | str, Status]]]:
+def process_status(status: dict[str, ComponentStatus]) -> dict[str, ComponentStatus]:
     """Remove disabled capabilities from status."""
     if (main_component := status.get(MAIN)) is None:
         return status

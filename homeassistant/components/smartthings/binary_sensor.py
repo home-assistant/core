@@ -157,9 +157,7 @@ def get_main_component_category(
     device: FullDevice,
 ) -> Category | str:
     """Get the main component of a device."""
-    main = next(
-        component for component in device.device.components if component.id == MAIN
-    )
+    main = device.device.components[MAIN]
     return main.user_category or main.manufacturer_category
 
 
