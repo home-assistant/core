@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock
 
-from aioshelly.const import MODEL_BLU_GATEWAY_GEN3
+from aioshelly.const import BLU_TRV_TIMEOUT, MODEL_BLU_GATEWAY_G3
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 import pytest
 from syrupy import SnapshotAssertion
@@ -405,7 +405,7 @@ async def test_blu_trv_number_entity(
     # disable automatic temperature control in the device
     monkeypatch.setitem(mock_blu_trv.config["blutrv:200"], "enable", False)
 
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     for entity in ("external_temperature", "valve_position"):
         entity_id = f"{NUMBER_DOMAIN}.trv_name_{entity}"
@@ -415,3 +415,79 @@ async def test_blu_trv_number_entity(
 
         entry = entity_registry.async_get(entity_id)
         assert entry == snapshot(name=f"{entity_id}-entry")
+
+
+async def test_blu_trv_ext_temp_set_value(
+    hass: HomeAssistant, mock_blu_trv: Mock
+) -> None:
+    """Test the set value action for BLU TRV External Temperature number entity."""
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    entity_id = f"{NUMBER_DOMAIN}.trv_name_external_temperature"
+
+    # After HA start the state should be unknown because there was no previous external
+    # temperature report
+    assert hass.states.get(entity_id).state is STATE_UNKNOWN
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_VALUE: 22.2,
+        },
+        blocking=True,
+    )
+    mock_blu_trv.mock_update()
+    mock_blu_trv.call_rpc.assert_called_once_with(
+        "BluTRV.Call",
+        {
+            "id": 200,
+            "method": "Trv.SetExternalTemperature",
+            "params": {"id": 0, "t_C": 22.2},
+        },
+        BLU_TRV_TIMEOUT,
+    )
+
+    assert hass.states.get(entity_id).state == "22.2"
+
+
+async def test_blu_trv_valve_pos_set_value(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the set value action for BLU TRV Valve Position number entity."""
+    # disable automatic temperature control to enable valve position entity
+    monkeypatch.setitem(mock_blu_trv.config["blutrv:200"], "enable", False)
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+
+    entity_id = f"{NUMBER_DOMAIN}.trv_name_valve_position"
+
+    assert hass.states.get(entity_id).state == "0"
+
+    monkeypatch.setitem(mock_blu_trv.status["blutrv:200"], "pos", 20)
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_VALUE: 20.0,
+        },
+        blocking=True,
+    )
+    mock_blu_trv.mock_update()
+    mock_blu_trv.call_rpc.assert_called_once_with(
+        "BluTRV.Call",
+        {
+            "id": 200,
+            "method": "Trv.SetPosition",
+            "params": {"id": 0, "pos": 20},
+        },
+        BLU_TRV_TIMEOUT,
+    )
+    # device only accepts int for 'pos' value
+    assert isinstance(mock_blu_trv.call_rpc.call_args[0][1]["params"]["pos"], int)
+
+    assert hass.states.get(entity_id).state == "20"

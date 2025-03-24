@@ -6,6 +6,7 @@ import time
 
 from ld2410_ble import LD2410BLE, LD2410BLEState
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -21,11 +22,16 @@ DEBOUNCE_SECONDS = 1.0
 class LD2410BLECoordinator(DataUpdateCoordinator[None]):
     """Data coordinator for receiving LD2410B updates."""
 
-    def __init__(self, hass: HomeAssistant, ld2410_ble: LD2410BLE) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, ld2410_ble: LD2410BLE
+    ) -> None:
         """Initialise the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
         )
         self._ld2410_ble = ld2410_ble

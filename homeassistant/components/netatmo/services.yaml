@@ -39,7 +39,7 @@ set_preset_mode_with_end_datetime:
         select:
           options:
             - "away"
-            - "Frost Guard"
+            - "frost_guard"
     end_datetime:
       required: true
       example: '"2019-04-20 05:04:20"'

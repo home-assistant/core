@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -16,7 +16,6 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
-from homeassistant.util import slugify
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
@@ -89,19 +88,6 @@ STORAGE_DASHBOARD_CREATE_FIELDS: VolDictType = {
 }
 
 STORAGE_DASHBOARD_UPDATE_FIELDS = DASHBOARD_BASE_UPDATE_FIELDS
-
-
-def url_slug(value: Any) -> str:
-    """Validate value is a valid url slug."""
-    if value is None:
-        raise vol.Invalid("Slug should not be None")
-    if "-" not in value:
-        raise vol.Invalid("Url path needs to contain a hyphen (-)")
-    str_value = str(value)
-    slg = slugify(str_value, separator="-")
-    if str_value == slg:
-        return str_value
-    raise vol.Invalid(f"invalid slug {value} (try {slg})")
 
 
 class ConfigNotFound(HomeAssistantError):

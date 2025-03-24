@@ -16,11 +16,17 @@ import pytest
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.mcp_server.const import STATELESS_LLM_API
 from homeassistant.components.mcp_server.http import MESSAGES_API, SSE_API
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LLM_HASS_API, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    llm,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, setup_test_component_platform
@@ -45,6 +51,11 @@ INITIALIZE_MESSAGE = {
 }
 EVENT_PREFIX = "event: "
 DATA_PREFIX = "data: "
+EXPECTED_PROMPT_SUFFIX = """
+- names: Kitchen Light
+  domain: light
+  areas: Kitchen
+"""
 
 
 @pytest.fixture
@@ -59,11 +70,13 @@ async def mock_entities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
     setup_integration: None,
 ) -> None:
     """Fixture to expose entities to the conversation agent."""
-    entity = MockLight("kitchen", STATE_OFF)
+    entity = MockLight("Kitchen Light", STATE_OFF)
     entity.entity_id = TEST_ENTITY
+    entity.unique_id = "test-light-unique-id"
     setup_test_component_platform(hass, LIGHT_DOMAIN, [entity])
 
     assert await async_setup_component(
@@ -71,6 +84,9 @@ async def mock_entities(
         LIGHT_DOMAIN,
         {LIGHT_DOMAIN: [{"platform": "test"}]},
     )
+    await hass.async_block_till_done()
+    kitchen = area_registry.async_get_or_create("Kitchen")
+    entity_registry.async_update_entity(TEST_ENTITY, area_id=kitchen.id)
 
     async_expose_entity(hass, CONVERSATION_DOMAIN, TEST_ENTITY, True)
 
@@ -283,6 +299,7 @@ async def mcp_session(
         yield session
 
 
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
 async def test_mcp_tools_list(
     hass: HomeAssistant,
     setup_integration: None,
@@ -305,6 +322,7 @@ async def test_mcp_tools_list(
     assert properties.get("name") == {"type": "string"}
 
 
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
 async def test_mcp_tool_call(
     hass: HomeAssistant,
     setup_integration: None,
@@ -320,7 +338,7 @@ async def test_mcp_tool_call(
     async with mcp_session(mcp_sse_url, hass_supervisor_access_token) as session:
         result = await session.call_tool(
             name="HassTurnOn",
-            arguments={"name": "kitchen"},
+            arguments={"name": "kitchen light"},
         )
 
     assert not result.isError
@@ -357,6 +375,7 @@ async def test_mcp_tool_call_failed(
     assert "Error calling tool" in result.content[0].text
 
 
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
 async def test_prompt_list(
     hass: HomeAssistant,
     setup_integration: None,
@@ -371,9 +390,10 @@ async def test_prompt_list(
     assert len(result.prompts) == 1
     prompt = result.prompts[0]
     assert prompt.name == "Assist"
-    assert prompt.description == "Default prompt for the Home Assistant LLM API Assist"
+    assert prompt.description == "Default prompt for Home Assistant Assist API"
 
 
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
 async def test_prompt_get(
     hass: HomeAssistant,
     setup_integration: None,
@@ -385,11 +405,12 @@ async def test_prompt_get(
     async with mcp_session(mcp_sse_url, hass_supervisor_access_token) as session:
         result = await session.get_prompt(name="Assist")
 
-    assert result.description == "Default prompt for the Home Assistant LLM API Assist"
+    assert result.description == "Default prompt for Home Assistant Assist API"
     assert len(result.messages) == 1
     assert result.messages[0].role == "assistant"
     assert result.messages[0].content.type == "text"
     assert "When controlling Home Assistant" in result.messages[0].content.text
+    assert result.messages[0].content.text.endswith(EXPECTED_PROMPT_SUFFIX)
 
 
 async def test_get_unknwon_prompt(

@@ -46,7 +46,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, cal
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from . import UnjoinData, media_browser
@@ -108,7 +108,7 @@ ATTR_QUEUE_POSITION = "queue_position"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sonos from a config entry."""
     platform = entity_platform.async_get_current_platform()
@@ -462,11 +462,20 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Play a favorite."""
         uri = favorite.reference.get_uri()
         soco = self.coordinator.soco
-        if soco.music_source_from_uri(uri) in [
-            MUSIC_SRC_RADIO,
-            MUSIC_SRC_LINE_IN,
-        ]:
-            soco.play_uri(uri, title=favorite.title, timeout=LONG_SERVICE_TIMEOUT)
+        if (
+            soco.music_source_from_uri(uri)
+            in [
+                MUSIC_SRC_RADIO,
+                MUSIC_SRC_LINE_IN,
+            ]
+            or favorite.reference.item_class == "object.item.audioItem.audioBook"
+        ):
+            soco.play_uri(
+                uri,
+                title=favorite.title,
+                meta=favorite.resource_meta_data,
+                timeout=LONG_SERVICE_TIMEOUT,
+            )
         else:
             soco.clear_queue()
             soco.add_to_queue(favorite.reference, timeout=LONG_SERVICE_TIMEOUT)

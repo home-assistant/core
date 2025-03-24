@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from renault_api.kamereon.exceptions import (
     AccessDeniedException,
@@ -18,6 +18,9 @@ from renault_api.kamereon.models import KamereonVehicleDataAttributes
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+if TYPE_CHECKING:
+    from . import RenaultConfigEntry
+
 T = TypeVar("T", bound=KamereonVehicleDataAttributes)
 
 # We have potentially 7 coordinators per vehicle
@@ -27,11 +30,13 @@ _PARALLEL_SEMAPHORE = asyncio.Semaphore(1)
 class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
     """Handle vehicle communication with Renault servers."""
 
+    config_entry: RenaultConfigEntry
     update_method: Callable[[], Awaitable[T]]
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: RenaultConfigEntry,
         logger: logging.Logger,
         *,
         name: str,
@@ -42,6 +47,7 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
         super().__init__(
             hass,
             logger,
+            config_entry=config_entry,
             name=name,
             update_interval=update_interval,
             update_method=update_method,

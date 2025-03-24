@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from mastodon.Mastodon import Account, Instance, InstanceV2, Mastodon, MastodonError
 
-from mastodon.Mastodon import Mastodon, MastodonError
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
@@ -16,27 +13,24 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 from .const import CONF_BASE_URL, DOMAIN, LOGGER
-from .coordinator import MastodonCoordinator
+from .coordinator import MastodonConfigEntry, MastodonCoordinator, MastodonData
+from .services import setup_services
 from .utils import construct_mastodon_username, create_mastodon_client
 
 PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.SENSOR]
 
-
-@dataclass
-class MastodonData:
-    """Mastodon data type."""
-
-    client: Mastodon
-    instance: dict
-    account: dict
-    coordinator: MastodonCoordinator
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
-type MastodonConfigEntry = ConfigEntry[MastodonData]
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Mastodon component."""
+    setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> bool:
@@ -53,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> 
 
     assert entry.unique_id
 
-    coordinator = MastodonCoordinator(hass, client)
+    coordinator = MastodonCoordinator(hass, entry, client)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -113,7 +107,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -
     return True
 
 
-def setup_mastodon(entry: MastodonConfigEntry) -> tuple[Mastodon, dict, dict]:
+def setup_mastodon(
+    entry: MastodonConfigEntry,
+) -> tuple[Mastodon, InstanceV2 | Instance, Account]:
     """Get mastodon details."""
     client = create_mastodon_client(
         entry.data[CONF_BASE_URL],

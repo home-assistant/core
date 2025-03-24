@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["pyfibaro"],
-  "requirements": ["pyfibaro==0.8.0"]
+  "requirements": ["pyfibaro==0.8.2"]
 }

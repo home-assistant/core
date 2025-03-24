@@ -5,17 +5,24 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.nut.const import DOMAIN
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     CONF_RESOURCES,
     PERCENTAGE,
     STATE_UNKNOWN,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .util import _get_mock_nutclient, async_init_integration
+from .util import (
+    _get_mock_nutclient,
+    _test_sensor_and_attributes,
+    async_init_integration,
+)
 
 from tests.common import MockConfigEntry
 
@@ -32,7 +39,7 @@ from tests.common import MockConfigEntry
         "blazer_usb",
     ],
 )
-async def test_devices(
+async def test_ups_devices(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, model: str
 ) -> None:
     """Test creation of device sensors."""
@@ -67,7 +74,7 @@ async def test_devices(
         ),
     ],
 )
-async def test_devices_with_unique_ids(
+async def test_ups_devices_with_unique_ids(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, model: str, unique_id: str
 ) -> None:
     """Test creation of device sensors with unique ids."""
@@ -89,6 +96,67 @@ async def test_devices_with_unique_ids(
     # HA changes the implementation and a new one appears
     assert all(
         state.attributes[key] == attr for key, attr in expected_attributes.items()
+    )
+
+
+@pytest.mark.parametrize(
+    ("model", "unique_id_base"),
+    [
+        (
+            "EATON-EPDU-G3",
+            "EATON_ePDU MA 00U-C IN: TYPE 00A 0P OUT: 00xTYPE_A000A00000",
+        ),
+    ],
+)
+async def test_pdu_devices_with_unique_ids(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    model: str,
+    unique_id_base: str,
+) -> None:
+    """Test creation of device sensors with unique ids."""
+
+    await async_init_integration(hass, model)
+
+    _test_sensor_and_attributes(
+        hass,
+        entity_registry,
+        model,
+        unique_id=f"{unique_id_base}_input.voltage",
+        device_id="sensor.ups1_input_voltage",
+        state_value="122.91",
+        expected_attributes={
+            "device_class": SensorDeviceClass.VOLTAGE,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "friendly_name": "Ups1 Input voltage",
+            "unit_of_measurement": UnitOfElectricPotential.VOLT,
+        },
+    )
+
+    _test_sensor_and_attributes(
+        hass,
+        entity_registry,
+        model,
+        unique_id=f"{unique_id_base}_ambient.humidity.status",
+        device_id="sensor.ups1_ambient_humidity_status",
+        state_value="good",
+        expected_attributes={
+            "device_class": SensorDeviceClass.ENUM,
+            "friendly_name": "Ups1 Ambient humidity status",
+        },
+    )
+
+    _test_sensor_and_attributes(
+        hass,
+        entity_registry,
+        model,
+        unique_id=f"{unique_id_base}_ambient.temperature.status",
+        device_id="sensor.ups1_ambient_temperature_status",
+        state_value="good",
+        expected_attributes={
+            "device_class": SensorDeviceClass.ENUM,
+            "friendly_name": "Ups1 Ambient temperature status",
+        },
     )
 
 
@@ -176,3 +244,89 @@ async def test_stale_options(
 
         state = hass.states.get("sensor.ups1_battery_charge")
         assert state.state == "10"
+
+
+@pytest.mark.parametrize(
+    ("model", "unique_id_base"),
+    [
+        (
+            "EATON-EPDU-G3-AMBIENT-NOT-PRESENT",
+            "EATON_ePDU MA 00U-C IN: TYPE 00A 0P OUT: 00xTYPE_A000A00000",
+        ),
+    ],
+)
+async def test_pdu_devices_ambient_not_present(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    model: str,
+    unique_id_base: str,
+) -> None:
+    """Test that ambient sensors not created."""
+
+    await async_init_integration(hass, model)
+
+    entry = entity_registry.async_get("sensor.ups1_ambient_humidity")
+    assert not entry
+
+    entry = entity_registry.async_get("sensor.ups1_ambient_humidity_status")
+    assert not entry
+
+    entry = entity_registry.async_get("sensor.ups1_ambient_temperature")
+    assert not entry
+
+    entry = entity_registry.async_get("sensor.ups1_ambient_temperature_status")
+    assert not entry
+
+
+@pytest.mark.parametrize(
+    ("model", "unique_id_base"),
+    [
+        (
+            "EATON-EPDU-G3",
+            "EATON_ePDU MA 00U-C IN: TYPE 00A 0P OUT: 00xTYPE_A000A00000",
+        ),
+    ],
+)
+async def test_pdu_dynamic_outlets(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    model: str,
+    unique_id_base: str,
+) -> None:
+    """Test for dynamically created outlet sensors."""
+
+    await async_init_integration(hass, model)
+
+    _test_sensor_and_attributes(
+        hass,
+        entity_registry,
+        model,
+        unique_id=f"{unique_id_base}_outlet.1.current",
+        device_id="sensor.ups1_outlet_a1_current",
+        state_value="0",
+        expected_attributes={
+            "device_class": SensorDeviceClass.CURRENT,
+            "friendly_name": "Ups1 Outlet A1 current",
+            "unit_of_measurement": UnitOfElectricCurrent.AMPERE,
+        },
+    )
+
+    _test_sensor_and_attributes(
+        hass,
+        entity_registry,
+        model,
+        unique_id=f"{unique_id_base}_outlet.24.current",
+        device_id="sensor.ups1_outlet_a24_current",
+        state_value="0.19",
+        expected_attributes={
+            "device_class": SensorDeviceClass.CURRENT,
+            "friendly_name": "Ups1 Outlet A24 current",
+            "unit_of_measurement": UnitOfElectricCurrent.AMPERE,
+        },
+    )
+
+    entry = entity_registry.async_get("sensor.ups1_outlet_25_current")
+    assert not entry
+
+    entry = entity_registry.async_get("sensor.ups1_outlet_a25_current")
+    assert not entry
