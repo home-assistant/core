@@ -487,6 +487,15 @@ def validate_sensor_state_and_device_class_config(
         errors[CONF_OPTIONS] = "options_with_enum_device_class"
 
     if (
+        device_class in DEVICE_CLASS_UNITS
+        and (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None
+        and errors is not None
+    ):
+        # Do not allow an empty unit of measurement in a subentry data flow
+        errors[CONF_UNIT_OF_MEASUREMENT] = "invalid_uom"
+        return config
+
+    if (
         device_class is None
         or (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None
     ):
