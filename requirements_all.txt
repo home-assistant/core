@@ -201,7 +201,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2025.3.1
+aioautomower==2025.3.2
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -744,7 +744,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.41.1
+dbus-fast==2.43.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.13
@@ -1158,7 +1158,7 @@ holidays==0.68
 home-assistant-frontend==20250306.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.3.5
+home-assistant-intents==2025.3.23
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.1.7
@@ -1382,7 +1382,7 @@ mbddns==0.1.2
 
 # homeassistant.components.mcp
 # homeassistant.components.mcp_server
-mcp==1.1.2
+mcp==1.5.0
 
 # homeassistant.components.minecraft_server
 mcstatus==11.1.1
@@ -1895,7 +1895,7 @@ pydanfossair==0.1.0
 pydeako==0.6.0
 
 # homeassistant.components.deconz
-pydeconz==118
+pydeconz==120
 
 # homeassistant.components.delijn
 pydelijn==1.1.0
