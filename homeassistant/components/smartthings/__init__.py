@@ -37,13 +37,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 
+from ...helpers.entity_registry import RegistryEntry, async_migrate_entries
 from .const import (
     CONF_INSTALLED_APP_ID,
     CONF_LOCATION_ID,
@@ -286,6 +287,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry, version=3, data={OLD_DATA: dict(entry.data)}
         )
+
+    if entry.minor_version < 2:
+
+        def migrate_entities(entity_entry: RegistryEntry) -> dict[str, Any] | None:
+            pass
+
+        await async_migrate_entries(hass, entry.entry_id, migrate_entities)
 
     return True
 
