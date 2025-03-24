@@ -175,7 +175,7 @@ STATUS = "status"
 REQUESTED_SECURITY_CLASSES = "requestedSecurityClasses"
 
 DEVICE_NAME = "device_name"
-AREA_NAME = "area_name"
+AREA_ID = "area_id"
 
 FEATURE = "feature"
 STRATEGY = "strategy"
@@ -984,7 +984,7 @@ async def websocket_validate_dsk_and_enter_pin(
         vol.Required(ENTRY_ID): str,
         vol.Required(QR_PROVISIONING_INFORMATION): QR_PROVISIONING_INFORMATION_SCHEMA,
         vol.Optional(DEVICE_NAME): str,
-        vol.Optional(AREA_NAME): str,
+        vol.Optional(AREA_ID): str,
     }
 )
 @websocket_api.async_response
@@ -1035,8 +1035,9 @@ async def websocket_provision_smart_start_node(
             name=device_name,
             manufacturer=manufacturer,
             model=model,
-            suggested_area=msg.get(AREA_NAME),
         )
+        if area_id := msg.get(AREA_ID):
+            dev_reg.async_update_device(device.id, area_id=area_id)
 
         if provisioning_info.additional_properties is None:
             provisioning_info.additional_properties = {}
