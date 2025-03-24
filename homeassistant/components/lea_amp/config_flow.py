@@ -6,7 +6,7 @@ import asyncio
 from contextlib import suppress
 import logging
 
-from const import CONNECTION_TIMEOUT, DOMAIN, PORT
+from constlea import CONNECTION_TIMEOUT, DOMAIN, PORT
 from controller import LeaController
 
 from homeassistant.components import network

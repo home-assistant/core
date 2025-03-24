@@ -5,7 +5,7 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from const import DOMAIN
+from constlea import DOMAIN
 from Coordinator import LEAAMPApiCoordinator, LEAAMPConfigEntry
 from zone import LeaZone
 
