@@ -30,7 +30,7 @@ TEST_PARAMS = [
     pytest.param(
         "Jerusalem",
         dt(2018, 9, 3),
-        {"state": "23 Elul 5778", "attr": None},
+        {"state": "23 Elul 5778"},
         "english",
         "date",
         id="date_output",
@@ -38,7 +38,7 @@ TEST_PARAMS = [
     pytest.param(
         "Jerusalem",
         dt(2018, 9, 3),
-        {"state": 'כ"ג אלול ה\' תשע"ח', "attr": None},
+        {"state": 'כ"ג אלול ה\' תשע"ח'},
         "hebrew",
         "date",
         id="date_output_hebrew",
@@ -46,7 +46,7 @@ TEST_PARAMS = [
     pytest.param(
         "Jerusalem",
         dt(2018, 9, 10),
-        {"state": "א' ראש השנה", "attr": None},
+        {"state": "א' ראש השנה"},
         "hebrew",
         "holiday",
         id="holiday",
@@ -106,7 +106,7 @@ TEST_PARAMS = [
     pytest.param(
         "New York",
         dt(2018, 9, 8),
-        {"state": dt(2018, 9, 8, 19, 47), "attr": None},
+        {"state": dt(2018, 9, 8, 19, 47)},
         "hebrew",
         "t_set_hakochavim",
         id="first_stars_ny",
@@ -114,7 +114,7 @@ TEST_PARAMS = [
     pytest.param(
         "Jerusalem",
         dt(2018, 9, 8),
-        {"state": dt(2018, 9, 8, 19, 21), "attr": None},
+        {"state": dt(2018, 9, 8, 19, 21)},
         "hebrew",
         "t_set_hakochavim",
         id="first_stars_jerusalem",
@@ -122,7 +122,7 @@ TEST_PARAMS = [
     pytest.param(
         "Jerusalem",
         dt(2018, 10, 14),
-        {"state": "לך לך", "attr": None},
+        {"state": "לך לך"},
         "hebrew",
         "parshat_hashavua",
         id="torah_reading_weekday",
@@ -130,7 +130,7 @@ TEST_PARAMS = [
     pytest.param(
         "Jerusalem",
         dt(2018, 10, 14, 17, 0, 0),
-        {"state": "ה' מרחשוון ה' תשע\"ט", "attr": None},
+        {"state": "ה' מרחשוון ה' תשע\"ט"},
         "hebrew",
         "date",
         id="date_before_sunset",
