@@ -36,6 +36,9 @@
       "door": {
         "name": "[%key:component::binary_sensor::entity_component::door::name%]"
       },
+      "dryer_wrinkle_prevent_active": {
+        "name": "Wrinkle prevent active"
+      },
       "filter_status": {
         "name": "Filter status"
       },
