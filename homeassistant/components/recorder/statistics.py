@@ -439,7 +439,7 @@ def _compile_hourly_statistics_summary_mean_stmt(
         .join(
             StatisticsMeta, and_(StatisticsShortTerm.metadata_id == StatisticsMeta.id)
         )
-        .group_by(StatisticsShortTerm.metadata_id)
+        .group_by(StatisticsShortTerm.metadata_id, StatisticsMeta.mean_type)
         .order_by(StatisticsShortTerm.metadata_id)
     )
 
