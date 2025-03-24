@@ -5,7 +5,7 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from message import DevStatusResponse
+from .message import DevStatusResponse
 
 _LOGGER = logging.getLogger(__name__)
 
