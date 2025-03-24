@@ -1421,83 +1421,6 @@ async def test_discovery_notification(
         assert "config_entry_discovery" not in notifications
 
 
-async def test_reauth_notification(hass: HomeAssistant) -> None:
-    """Test that we create/dismiss a notification when source is reauth."""
-    mock_integration(hass, MockModule("test"))
-    mock_platform(hass, "test.config_flow", None)
-
-    entry = MockConfigEntry(title="test_title", domain="test")
-    entry.add_to_hass(hass)
-
-    class TestFlow(config_entries.ConfigFlow):
-        """Test flow."""
-
-        VERSION = 5
-
-        async def async_step_user(self, user_input):
-            """Test user step."""
-            return self.async_show_form(step_id="user_confirm")
-
-        async def async_step_user_confirm(self, user_input):
-            """Test user confirm step."""
-            return self.async_show_form(step_id="user_confirm")
-
-        async def async_step_reauth(self, user_input):
-            """Test reauth step."""
-            return self.async_show_form(step_id="reauth_confirm")
-
-        async def async_step_reauth_confirm(self, user_input):
-            """Test reauth confirm step."""
-            return self.async_abort(reason="test")
-
-    with mock_config_flow("test", TestFlow):
-        # Start user flow to assert that reconfigure notification doesn't fire
-        await hass.config_entries.flow.async_init(
-            "test", context={"source": config_entries.SOURCE_USER}
-        )
-
-        await hass.async_block_till_done()
-        notifications = async_get_persistent_notifications(hass)
-        assert "config_entry_reconfigure" not in notifications
-
-        # Start first reauth flow to assert that reconfigure notification fires
-        flow1 = await hass.config_entries.flow.async_init(
-            "test",
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-            },
-        )
-
-        await hass.async_block_till_done()
-        notifications = async_get_persistent_notifications(hass)
-        assert "config_entry_reconfigure" in notifications
-
-        # Start a second reauth flow so we can finish the first and assert that
-        # the reconfigure notification persists until the second one is complete
-        flow2 = await hass.config_entries.flow.async_init(
-            "test",
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-            },
-        )
-
-        flow1 = await hass.config_entries.flow.async_configure(flow1["flow_id"], {})
-        assert flow1["type"] == data_entry_flow.FlowResultType.ABORT
-
-        await hass.async_block_till_done()
-        notifications = async_get_persistent_notifications(hass)
-        assert "config_entry_reconfigure" in notifications
-
-        flow2 = await hass.config_entries.flow.async_configure(flow2["flow_id"], {})
-        assert flow2["type"] == data_entry_flow.FlowResultType.ABORT
-
-        await hass.async_block_till_done()
-        notifications = async_get_persistent_notifications(hass)
-        assert "config_entry_reconfigure" not in notifications
-
-
 async def test_reauth_issue(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -6566,7 +6489,7 @@ async def test_update_subentry_and_abort(
         class SubentryFlowHandler(config_entries.ConfigSubentryFlow):
             async def async_step_reconfigure(self, user_input=None):
                 return self.async_update_and_abort(
-                    self._get_reconfigure_entry(),
+                    self._get_entry(),
                     self._get_reconfigure_subentry(),
                     **kwargs,
                 )
@@ -8158,10 +8081,10 @@ async def test_get_reconfigure_entry(
         assert result["reason"] == "Source is user, expected reconfigure: -"
 
 
-async def test_subentry_get_reconfigure_entry(
+async def test_subentry_get_entry(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
-    """Test subentry _get_reconfigure_entry and _get_reconfigure_subentry behavior."""
+    """Test subentry _get_entry and _get_reconfigure_subentry behavior."""
     subentry_id = "mock_subentry_id"
     entry = MockConfigEntry(
         data={},
@@ -8198,13 +8121,13 @@ async def test_subentry_get_reconfigure_entry(
             async def _async_step_confirm(self):
                 """Confirm input."""
                 try:
-                    entry = self._get_reconfigure_entry()
+                    entry = self._get_entry()
                 except ValueError as err:
                     reason = str(err)
                 else:
                     reason = f"Found entry {entry.title}"
                 try:
-                    entry_id = self._reconfigure_entry_id
+                    entry_id = self._entry_id
                 except ValueError:
                     reason = f"{reason}: -"
                 else:
@@ -8233,7 +8156,7 @@ async def test_subentry_get_reconfigure_entry(
         ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
             return {"test": TestFlow.SubentryFlowHandler}
 
-    # A reconfigure flow finds the config entry
+    # A reconfigure flow finds the config entry and subentry
     with mock_config_flow("test", TestFlow):
         result = await entry.start_subentry_reconfigure_flow(hass, "test", subentry_id)
         assert (
@@ -8255,14 +8178,14 @@ async def test_subentry_get_reconfigure_entry(
             == "Found entry entry_title: mock_entry_id/Subentry not found: 01JRemoved"
         )
 
-    # A user flow does not have access to the config entry or subentry
+    # A user flow finds the config entry but not the subentry
     with mock_config_flow("test", TestFlow):
         result = await manager.subentries.async_init(
             (entry.entry_id, "test"), context={"source": config_entries.SOURCE_USER}
         )
         assert (
             result["reason"]
-            == "Source is user, expected reconfigure: -/Source is user, expected reconfigure: -"
+            == "Found entry entry_title: mock_entry_id/Source is user, expected reconfigure: -"
         )
 
 

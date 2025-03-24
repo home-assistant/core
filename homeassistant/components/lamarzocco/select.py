@@ -38,6 +38,7 @@ STEAM_LEVEL_LM_TO_HA = {value: key for key, value in STEAM_LEVEL_HA_TO_LM.items(
 PREBREW_MODE_HA_TO_LM = {
     "disabled": PrebrewMode.DISABLED,
     "prebrew": PrebrewMode.PREBREW,
+    "prebrew_enabled": PrebrewMode.PREBREW_ENABLED,
     "preinfusion": PrebrewMode.PREINFUSION,
 }
 
