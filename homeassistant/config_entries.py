@@ -2898,6 +2898,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> None:
         """Abort if current entries match all data.
 
+        Do not abort for the entry that is being updated by the current flow.
         Requires `already_configured` in strings.json in user visible flows.
         """
         _async_abort_entries_match(
