@@ -163,6 +163,13 @@
           "fault": "Fault"
         },
         "state_attributes": {
+          "options": {
+            "state": {
+              "warmup": "[%key:component::shelly::entity::sensor::operation::state::warmup%]",
+              "normal": "[%key:component::shelly::entity::sensor::operation::state::normal%]",
+              "fault": "[%key:component::shelly::entity::sensor::operation::state::fault%]"
+            }
+          },
           "self_test": {
             "state": {
               "not_completed": "Not completed",
@@ -199,6 +206,18 @@
           "failure": "Failure",
           "opened": "Opened",
           "opening": "Opening"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "checking": "[%key:component::shelly::entity::sensor::valve_status::state::checking%]",
+              "closed": "[%key:component::shelly::entity::sensor::valve_status::state::closed%]",
+              "closing": "[%key:component::shelly::entity::sensor::valve_status::state::closing%]",
+              "failure": "[%key:component::shelly::entity::sensor::valve_status::state::failure%]",
+              "opened": "[%key:component::shelly::entity::sensor::valve_status::state::opened%]",
+              "opening": "[%key:component::shelly::entity::sensor::valve_status::state::opening%]"
+            }
+          }
         }
       }
     }
