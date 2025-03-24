@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from pysmartthings import Attribute, Capability, Category, SmartThings
@@ -35,6 +36,8 @@ class SmartThingsBinarySensorEntityDescription(BinarySensorEntityDescription):
     is_on_key: str
     category_device_class: dict[Category | str, BinarySensorDeviceClass] | None = None
     category: set[Category] | None = None
+    exists_fn: Callable[[str], bool] | None = None
+    component_translation_key: dict[str, str] | None = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -57,6 +60,11 @@ CAPABILITY_TO_SENSORS: dict[
                 Category.GARAGE_DOOR: BinarySensorDeviceClass.GARAGE_DOOR,
                 Category.DOOR: BinarySensorDeviceClass.DOOR,
                 Category.WINDOW: BinarySensorDeviceClass.WINDOW,
+            },
+            exists_fn=lambda key: key in {"freezer", "cooler"},
+            component_translation_key={
+                "freezer": "freezer_door",
+                "cooler": "cooler_door",
             },
         )
     },
@@ -164,17 +172,18 @@ async def async_setup_entry(
     entry_data = entry.runtime_data
     async_add_entities(
         SmartThingsBinarySensor(
-            entry_data.client,
-            device,
-            description,
-            capability,
-            attribute,
+            entry_data.client, device, description, capability, attribute, component
         )
         for device in entry_data.devices.values()
         for capability, attribute_map in CAPABILITY_TO_SENSORS.items()
-        if capability in device.status[MAIN]
         for attribute, description in attribute_map.items()
-        if (
+        for component in device.status
+        if capability in device.status[component]
+        and (
+            component == MAIN
+            or (description.exists_fn is not None and description.exists_fn(component))
+        )
+        and (
             not description.category
             or get_main_component_category(device) in description.category
         )
@@ -193,9 +202,10 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
         entity_description: SmartThingsBinarySensorEntityDescription,
         capability: Capability,
         attribute: Attribute,
+        component: str,
     ) -> None:
         """Init the class."""
-        super().__init__(client, device, {capability})
+        super().__init__(client, device, {capability}, component=component)
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description
@@ -207,6 +217,19 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
         ):
             self._attr_device_class = entity_description.category_device_class[category]
             self._attr_name = None
+        if (
+            entity_description.component_translation_key is not None
+            and (
+                translation_key := entity_description.component_translation_key.get(
+                    component
+                )
+            )
+            is not None
+        ):
+            self._attr_translation_key = translation_key
+            self._attr_unique_id = (
+                f"{device.device.device_id}_{component}_{capability}_{attribute}"
+            )
 
     @property
     def is_on(self) -> bool:
