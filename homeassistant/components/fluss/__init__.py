@@ -27,13 +27,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         api = FlussApiClient(entry.data[CONF_API_KEY])
     except FlussApiClientAuthenticationError as e:
-        LOGGER.error("Authentication error initializing FlussApiClient: %s", e)
         raise ConfigEntryAuthFailed from e
-    except FlussApiClientCommunicationError as e:
-        LOGGER.error("Communication error initializing FlussApiClient: %s", e)
-        raise ConfigEntryNotReady from e
-    except FlussApiClientError as e:
-        LOGGER.error("General error initializing FlussApiClient: %s", e)
+    except (FlussApiClientCommunicationError, FlussApiClientError) as e:
         raise ConfigEntryNotReady from e
 
     entry.runtime_data = api
