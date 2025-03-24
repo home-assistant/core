@@ -4,12 +4,13 @@ import asyncio
 from collections.abc import Callable
 import logging
 
-from constlea import CONNECTION_TIMEOUT, PORT, SCAN_INTERVAL
 from controller import IP_ADDRESS, LeaController, LeaZone
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .constlea import CONNECTION_TIMEOUT, PORT, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
