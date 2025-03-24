@@ -49,7 +49,6 @@ class PterodactylAPI:
 
     pterodactyl: PterodactylClient | None
     identifiers: list[str]
-    data: dict[str, PterodactylData]
 
     def __init__(self, hass: HomeAssistant, host: str, api_key: str) -> None:
         """Initialize the Pterodactyl API."""
@@ -87,7 +86,7 @@ class PterodactylAPI:
 
     async def async_get_data(self) -> dict[str, PterodactylData]:
         """Update the data from all Pterodactyl servers."""
-        self.data = {}
+        data = {}
 
         if self.pterodactyl is None:
             raise PterodactylNotInitializedError(
@@ -103,7 +102,7 @@ class PterodactylAPI:
                     self.pterodactyl.client.servers.get_server_utilization, identifier
                 )
 
-                self.data[identifier] = PterodactylData(
+                data[identifier] = PterodactylData(
                     name=server["name"],
                     uuid=server["uuid"],
                     identifier=identifier,
@@ -116,7 +115,7 @@ class PterodactylAPI:
                     uptime=utilization["resources"]["uptime"],
                 )
 
-                _LOGGER.debug("%s", self.data[identifier])
+                _LOGGER.debug("%s", data[identifier])
         except (
             PydactylError,
             BadRequestError,
@@ -127,4 +126,4 @@ class PterodactylAPI:
             _LOGGER.exception("Unexpected exception occurred during data update")
             raise PterodactylConnectionError(error) from error
         else:
-            return self.data
+            return data
