@@ -494,7 +494,7 @@ async def test_calling_service_response_data_in_scopes(hass: HomeAssistant) -> N
     assert result.variables["my_response"] == expected_var
 
     expected_trace = {
-        "0": [{"variables": {"my_response": expected_var}}],
+        "0": [{"variables": {"my_response": expected_var, "state": "off"}}],
         "0/parallel/0/sequence/0": [{"variables": {"state": "off"}}],
         "0/parallel/0/sequence/1": [
             {
@@ -1797,7 +1797,7 @@ async def test_wait_in_sequence(hass: HomeAssistant) -> None:
     assert result.variables["wait"] == expected_var
 
     expected_trace = {
-        "0": [{"variables": {"wait": expected_var}}],
+        "0": [{"variables": {"wait": expected_var, "state": "off"}}],
         "0/sequence/0": [{"variables": {"state": "off"}}],
         "0/sequence/1": [
             {
@@ -1840,7 +1840,7 @@ async def test_wait_in_parallel(hass: HomeAssistant) -> None:
     assert "wait" not in result.variables
 
     expected_trace = {
-        "0": [{}],
+        "0": [{"variables": {"state": "off"}}],
         "0/parallel/0/sequence/0": [{"variables": {"state": "off"}}],
         "0/parallel/0/sequence/1": [
             {
@@ -5277,11 +5277,23 @@ async def test_set_variable(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setting variables in scripts."""
-    alias = "variables step"
     sequence = cv.SCRIPT_SCHEMA(
         [
-            {"alias": alias, "variables": {"variable": "value"}},
-            {"action": "test.script", "data": {"value": "{{ variable }}"}},
+            {"alias": "variables", "variables": {"x": 1, "y": 1}},
+            {
+                "alias": "scope",
+                "sequence": [
+                    {"variables": {"y": 3, "z": 3}},
+                    {
+                        "action": "test.script",
+                        "data": {"value": "x={{ x }}, y={{ y }}, z={{ z }}"},
+                    },
+                ],
+            },
+            {
+                "action": "test.script",
+                "data": {"value": "x={{ x }}, y={{ y }}, z={{ z }}"},
+            },
         ]
     )
     script_obj = script.Script(hass, sequence, "test script", "test_domain")
@@ -5291,18 +5303,36 @@ async def test_set_variable(
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
 
-    assert mock_calls[0].data["value"] == "value"
-    assert f"Executing step {alias}" in caplog.text
+    assert len(mock_calls) == 2
+    assert mock_calls[0].data["value"] == "x=1, y=3, z=3"
+    assert mock_calls[1].data["value"] == "x=1, y=3, z=3"
+
+    assert "Executing step variables" in caplog.text
 
     expected_trace = {
-        "0": [{"variables": {"variable": "value"}}],
-        "1": [
+        "0": [{"variables": {"x": 1, "y": 1}}],
+        "1": [{"variables": {"y": 3, "z": 3}}],
+        "1/sequence/0": [{"variables": {"y": 3, "z": 3}}],
+        "1/sequence/1": [
             {
                 "result": {
                     "params": {
                         "domain": "test",
                         "service": "script",
-                        "service_data": {"value": "value"},
+                        "service_data": {"value": "x=1, y=3, z=3"},
+                        "target": {},
+                    },
+                    "running_script": False,
+                },
+            }
+        ],
+        "2": [
+            {
+                "result": {
+                    "params": {
+                        "domain": "test",
+                        "service": "script",
+                        "service_data": {"value": "x=1, y=3, z=3"},
                         "target": {},
                     },
                     "running_script": False,
@@ -5899,7 +5929,9 @@ async def test_stop_action_nested_response_variables(
                 "variables": {"var": var, "output": {"value": "Testing 123"}},
             }
         ],
-        "1": [{"result": {"choice": choice}}],
+        "1": [
+            {"result": {"choice": choice}, "variables": {"output": {"value": response}}}
+        ],
         "1/if": [{"result": {"result": if_result}}],
         "1/if/condition/0": [{"result": {"result": var == 1, "entities": []}}],
         f"1/{choice}/0": [{"variables": {"output": {"value": response}}}],
