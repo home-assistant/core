@@ -91,15 +91,12 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction:
         """Return the hvac action."""
-        if ClimateEntityFeature.TURN_OFF in self.supported_features and (
-            self._heating_mode is not None and self._heating_mode.current_value == 0
-        ):
+        if self._heating_mode is not None and self._heating_mode.current_value == 0:
             return HVACAction.OFF
 
-        if self._valve_position is not None and self._valve_position.current_value == 0:
-            return HVACAction.IDLE
-
         if (
+            self._valve_position is not None and self._valve_position.current_value == 0
+        ) or (
             self._temperature is not None
             and self._temperature.current_value >= self.target_temperature
         ):
@@ -163,7 +160,6 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-
         assert self._target_temp is not None
         if ATTR_TEMPERATURE in kwargs:
             await self.async_set_homee_value(
