@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, TypedDict, TypeVar, cast
+from typing import Any, Generic, NotRequired, Required, TypedDict, TypeVar, cast
 
 import voluptuous as vol
 
@@ -144,6 +144,7 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     result: Any
     step_id: str
     title: str
+    translation_field_mappings: Mapping[str, TranslationFieldMapping] | None
     translation_domain: str
     type: FlowResultType
     url: str
@@ -692,6 +693,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         description_placeholders: Mapping[str, str] | None = None,
         last_step: bool | None = None,
         preview: str | None = None,
+        translation_field_mappings: Mapping[str, TranslationFieldMapping] | None = None,
     ) -> _FlowResultT:
         """Return the definition of a form to gather user input.
 
@@ -706,6 +708,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             description_placeholders=description_placeholders,
             last_step=last_step,  # Display next or submit button in frontend
             preview=preview,  # Display preview component in frontend
+            translation_field_mappings=translation_field_mappings,
         )
         if step_id is not None:
             flow_result["step_id"] = step_id
@@ -915,3 +918,10 @@ class section:
     def __call__(self, value: Any) -> Any:
         """Validate input."""
         return self.schema(value)
+
+
+class TranslationFieldMapping(TypedDict):
+    """TypedDict for translation field mapping."""
+
+    translation_key: str
+    description_placeholders: NotRequired[Mapping[str, str]]
