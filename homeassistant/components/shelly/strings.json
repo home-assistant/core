@@ -211,7 +211,7 @@
           "options": {
             "state": {
               "checking": "[%key:component::shelly::entity::sensor::valve_status::state::checking%]",
-              "closed": "[%key:component::shelly::entity::sensor::valve_status::state::closed%]",
+              "closed": "[%key:common::state::closed%]",
               "closing": "[%key:component::shelly::entity::sensor::valve_status::state::closing%]",
               "failure": "[%key:component::shelly::entity::sensor::valve_status::state::failure%]",
               "opened": "[%key:component::shelly::entity::sensor::valve_status::state::opened%]",
