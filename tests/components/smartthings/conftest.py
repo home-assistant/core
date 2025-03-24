@@ -4,7 +4,7 @@ from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
 
-from pysmartthings.models import (
+from pysmartthings import (
     DeviceResponse,
     DeviceStatus,
     LocationResponse,
@@ -91,6 +91,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
 
 @pytest.fixture(
     params=[
+        "da_ac_airsensor_01001",
         "da_ac_rac_000001",
         "da_ac_rac_100001",
         "da_ac_rac_01001",
@@ -131,6 +132,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "fake_fan",
         "generic_fan_3_speed",
         "heatit_ztrm3_thermostat",
+        "heatit_zpushwall",
         "generic_ef00_v1",
         "bosch_radiator_thermostat_ii",
         "im_speaker_ai_0001",

@@ -129,7 +129,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         self.current_map: int | None = None
 
         if mac := self.roborock_device_info.network_info.mac:
-            self.device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, mac)}
+            self.device_info[ATTR_CONNECTIONS] = {
+                (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))
+            }
         # Maps from map flag to map name
         self.maps: dict[int, RoborockMapInfo] = {}
         self._home_data_rooms = {str(room.id): room.name for room in home_data_rooms}

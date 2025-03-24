@@ -29,7 +29,6 @@
   "documentation": "https://www.home-assistant.io/integrations/smartthings",
   "iot_class": "cloud_push",
   "loggers": ["pysmartthings"],
-  "requirements": [
-    "git+https://github.com/joostlek/pysmartthings.git@retry#python-tado==2.7.5"
-  ]
+  "quality_scale": "bronze",
+  "requirements": ["pysmartthings==3.0.0"]
 }

@@ -95,7 +95,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[contact_sensor][binary_sensor.front_door_open_closed_sensor_door-entry]
+# name: test_all_entities[contact_sensor][binary_sensor.front_door_open_closed_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -108,7 +108,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.front_door_open_closed_sensor_door',
+    'entity_id': 'binary_sensor.front_door_open_closed_sensor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -118,9 +118,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_device_class': <BinarySensorDeviceClass.GARAGE_DOOR: 'garage_door'>,
     'original_icon': None,
-    'original_name': 'Door',
+    'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -129,14 +129,109 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[contact_sensor][binary_sensor.front_door_open_closed_sensor_door-state]
+# name: test_all_entities[contact_sensor][binary_sensor.front_door_open_closed_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': '.Front Door Open/Closed Sensor Door',
+      'device_class': 'garage_door',
+      'friendly_name': '.Front Door Open/Closed Sensor',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.front_door_open_closed_sensor_door',
+    'entity_id': 'binary_sensor.front_door_open_closed_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.microwave_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a.lockState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Microwave Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.microwave_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.microwave_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a.doorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_microwave_0101x][binary_sensor.microwave_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'opening',
+      'friendly_name': 'Microwave Door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.microwave_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -190,6 +285,101 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_ks_oven_01061][binary_sensor.oven_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.oven_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f.lockState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_oven_01061][binary_sensor.oven_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Oven Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.oven_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ks_oven_01061][binary_sensor.oven_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.oven_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f.doorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_oven_01061][binary_sensor.oven_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'opening',
+      'friendly_name': 'Oven Door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.oven_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_ks_oven_01061][binary_sensor.oven_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -235,6 +425,101 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.vulcan_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18.lockState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Vulcan Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.vulcan_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.vulcan_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'door',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18.doorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'opening',
+      'friendly_name': 'Vulcan Door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.vulcan_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_remote_control-entry]
@@ -284,6 +569,54 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_cooler_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.refrigerator_cooler_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Cooler door',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooler_door',
+    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_cooler_contactSensor_contact',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_cooler_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Refrigerator Cooler door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.refrigerator_cooler_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -326,6 +659,101 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.refrigerator_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_freezer_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.refrigerator_freezer_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Freezer door',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'freezer_door',
+    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_freezer_contactSensor_contact',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_000001][binary_sensor.refrigerator_freezer_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Refrigerator Freezer door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.refrigerator_freezer_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.dishwasher_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676.lockState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dishwasher Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dishwasher_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -379,6 +807,101 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.dryer_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.lockState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dryer Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dryer_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.dryer_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b.switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Dryer Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dryer_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_wm_wd_000001][binary_sensor.dryer_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -420,6 +943,101 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dryer_remote_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.seca_roupa_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.lockState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Seca-Roupa Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.seca_roupa_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.seca_roupa_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd.switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_000001_1][binary_sensor.seca_roupa_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Seca-Roupa Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.seca_roupa_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -473,6 +1091,101 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.washer_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.lockState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washer Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.washer_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.washer_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'f984b91d-f250-9d42-3436-33f09a422a47.switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Washer Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.washer_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_wm_wm_000001][binary_sensor.washer_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -518,6 +1231,101 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.washing_machine_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.lockState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washing Machine Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.washing_machine_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.washing_machine_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7.switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Washing Machine Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.washing_machine_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][binary_sensor.washing_machine_remote_control-entry]
@@ -711,6 +1519,54 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.deck_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c.contact',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Deck Door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.deck_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door_acceleration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -753,54 +1609,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.deck_door_acceleration',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door_door-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.deck_door_door',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
-    'original_icon': None,
-    'original_name': 'Door',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c.contact',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door_door-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Deck Door Door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.deck_door_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
