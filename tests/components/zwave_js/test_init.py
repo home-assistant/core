@@ -2027,7 +2027,14 @@ async def test_server_logging(hass: HomeAssistant, client) -> None:
     # is enabled
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command.call_args_list) == 2
+    assert client.async_send_command.call_args_list[0][0][0] == {
+        "command": "controller.get_provisioning_entries",
+    }
+    assert client.async_send_command.call_args_list[1][0][0] == {
+        "command": "controller.get_provisioning_entry",
+        "dskOrNodeId": 1,
+    }
     assert not client.enable_server_logging.called
     assert not client.disable_server_logging.called
 
