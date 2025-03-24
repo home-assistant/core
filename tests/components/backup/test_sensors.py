@@ -58,6 +58,9 @@ async def test_sensor_updates(
     create_backup: AsyncMock,
 ) -> None:
     """Test update of backup sensors."""
+    # Ensure created backup is already protected,
+    # to avoid manager creating a new EncryptedBackupStreamer
+    # instead of using the already mocked stream writer.
     created_backup: MagicMock = create_backup.return_value[1].result().backup
     created_backup.protected = True
 
