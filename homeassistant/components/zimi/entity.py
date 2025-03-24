@@ -39,10 +39,6 @@ class ZimiEntity(Entity):
         self._attr_name = self._entity.name.strip()
         self._attr_suggested_area = self._entity.room
 
-        _LOGGER.debug(
-            "Initialising ZimiDevice %s in %s", self._entity.name, self._entity.room
-        )
-
     @property
     def available(self) -> bool:
         """Return True if Home Assistant is able to read the state and control the underlying device."""
