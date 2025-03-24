@@ -59,10 +59,10 @@ async def test_full_flow(
     ],
 )
 @pytest.mark.usefixtures("mock_pterodactyl")
-async def test_recovery_after_error(
+async def test_recovery_after_api_error(
     hass: HomeAssistant, exception_type, mock_pterodactyl: PterodactylClient
 ) -> None:
-    """Test recovery after connection error."""
+    """Test recovery after an API error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )

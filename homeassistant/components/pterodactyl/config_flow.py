@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL
@@ -37,18 +38,18 @@ class PterodactylConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_URL]
+            url = URL(user_input[CONF_URL]).human_repr()
             api_key = user_input[CONF_API_KEY]
 
-            self._async_abort_entries_match({CONF_URL: host})
-            api = PterodactylAPI(self.hass, host, api_key)
+            self._async_abort_entries_match({CONF_URL: url})
+            api = PterodactylAPI(self.hass, url, api_key)
 
             try:
                 await api.async_init()
             except (PterodactylConfigurationError, PterodactylConnectionError):
                 errors["base"] = "cannot_connect"
             else:
-                return self.async_create_entry(title=host, data=user_input)
+                return self.async_create_entry(title=url, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

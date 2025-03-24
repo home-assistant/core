@@ -9,7 +9,7 @@ from homeassistant.const import CONF_API_KEY, CONF_URL
 
 from tests.common import MockConfigEntry
 
-TEST_URL = "https://192.168.0.1:8080"
+TEST_URL = "https://192.168.0.1:8080/"
 TEST_API_KEY = "TestClientApiKey"
 TEST_USER_INPUT = {
     CONF_URL: TEST_URL,
