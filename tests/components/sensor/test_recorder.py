@@ -6262,8 +6262,8 @@ async def test_validate_statistics_mean_type_changed(
             {
                 "data": {
                     "statistic_id": "sensor.wind_direction",
-                    "current_mean_type": StatisticMeanType.CIRCULAR,
-                    "new_mean_type": StatisticMeanType.ARIMETHIC,
+                    "metadata_mean_type": StatisticMeanType.CIRCULAR,
+                    "state_mean_type": StatisticMeanType.ARIMETHIC,
                 },
                 "type": "mean_type_changed",
             }

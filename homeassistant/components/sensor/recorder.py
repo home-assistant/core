@@ -837,10 +837,10 @@ def _update_issues(
                 )
 
             if (
-                (current_mean_type := metadata[1]["mean_type"]) is not None
+                (metadata_mean_type := metadata[1]["mean_type"]) is not None
                 and state_class
-                and (new_mean_type := DEFAULT_STATISTICS[state_class].mean_type)
-                != current_mean_type
+                and (state_mean_type := DEFAULT_STATISTICS[state_class].mean_type)
+                != metadata_mean_type
             ):
                 # The mean type has changed and the old statistics are not valid anymore
                 report_issue(
@@ -848,8 +848,8 @@ def _update_issues(
                     entity_id,
                     {
                         "statistic_id": entity_id,
-                        "current_mean_type": current_mean_type,
-                        "new_mean_type": new_mean_type,
+                        "metadata_mean_type": metadata_mean_type,
+                        "state_mean_type": state_mean_type,
                     },
                 )
 
