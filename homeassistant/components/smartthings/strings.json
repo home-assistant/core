@@ -39,6 +39,12 @@
       "filter_status": {
         "name": "Filter status"
       },
+      "freezer_door": {
+        "name": "Freezer door"
+      },
+      "cooler_door": {
+        "name": "Cooler door"
+      },
       "remote_control": {
         "name": "Remote control"
       },
