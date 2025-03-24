@@ -22,13 +22,12 @@ async def async_setup_entry(
 ) -> None:
     """Add the Homee platform for the lock component."""
 
-    for node in config_entry.runtime_data.nodes:
-        async_add_devices(
-            HomeeLock(attribute, config_entry)
-            for node in config_entry.runtime_data.nodes
-            for attribute in node.attributes
-            if (attribute.type == AttributeType.LOCK_STATE and attribute.editable)
-        )
+    async_add_devices(
+        HomeeLock(attribute, config_entry)
+        for node in config_entry.runtime_data.nodes
+        for attribute in node.attributes
+        if (attribute.type == AttributeType.LOCK_STATE and attribute.editable)
+    )
 
 
 class HomeeLock(HomeeEntity, LockEntity):
@@ -39,7 +38,7 @@ class HomeeLock(HomeeEntity, LockEntity):
     @property
     def is_locked(self) -> bool:
         """Return if lock is locked."""
-        return bool(self._attribute.current_value)
+        return self._attribute.current_value == 1.0
 
     @property
     def is_locking(self) -> bool:
