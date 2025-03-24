@@ -166,8 +166,6 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except aiovodafone_exceptions.CannotAuthenticate:
             errors["base"] = "invalid_auth"
-        except aiovodafone_exceptions.ModelNotSupported:
-            errors["base"] = "model_not_supported"
         except Exception:  # noqa: BLE001
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
