@@ -57,7 +57,7 @@ async def async_setup_entry(
     entry_data = entry.runtime_data
 
     entities: list[MediaPlayerEntity] = [
-        SmartThingsMediaPlayer(entry_data.client, entry_data.rooms, device)
+        SmartThingsMediaPlayer(entry_data.client, device)
         for device in entry_data.devices.values()
         if all(
             capability in device.status[MAIN]
@@ -73,14 +73,13 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     _attr_name = None
 
     def __init__(
-        self, client: SmartThings, rooms: dict[str, str], device: FullDevice
+        self, client: SmartThings, device: FullDevice
     ) -> None:
         """Initialize the media_player class."""
 
         super().__init__(
             client,
             device,
-            rooms,
             {
                 Capability.AUDIO_MUTE,
                 Capability.AUDIO_TRACK_DATA,
