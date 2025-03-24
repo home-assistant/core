@@ -1,7 +1,7 @@
 {
   "config": {
     "progress": {
-      "wait_for_device": "To authenticate, open the following URL and login at Tado: \n {url} \n If the code is not automatically copied, and paste the following code to authorize the integration: \n```\n{code}\n```\n\nThe login attempt will time out after five minutes."
+      "wait_for_device": "To authenticate, open the following URL and login at Tado:\n{url}\nIf the code is not automatically copied, paste the following code to authorize the integration:\n\n```{code}```\n\n\nThe login attempt will time out after five minutes."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
