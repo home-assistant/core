@@ -35,6 +35,7 @@ class SmartThingsSwitchEntityDescription(SwitchEntityDescription):
     """Describe a SmartThings switch entity."""
 
     status_attribute: Attribute
+    component_translation_key: dict[str, str] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -64,7 +65,14 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         key=Capability.SAMSUNG_CE_WASHER_BUBBLE_SOAK,
         translation_key="bubble_soak",
         status_attribute=Attribute.STATUS,
-    )
+    ),
+    Capability.SWITCH: SmartThingsSwitchEntityDescription(
+        key=Capability.SWITCH,
+        status_attribute=Attribute.SWITCH,
+        component_translation_key={
+            "icemaker": "ice_maker",
+        },
+    ),
 }
 
 
@@ -99,10 +107,19 @@ async def async_setup_entry(
             device,
             description,
             Capability(capability),
+            component,
         )
         for device in entry_data.devices.values()
         for capability, description in CAPABILITY_TO_SWITCHES.items()
-        if capability in device.status[MAIN]
+        for component in device.status
+        if capability in device.status[component]
+        and (
+            (description.component_translation_key is None and component == MAIN)
+            or (
+                description.component_translation_key is not None
+                and component in description.component_translation_key
+            )
+        )
     )
     async_add_entities(entities)
 
@@ -118,14 +135,19 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         device: FullDevice,
         entity_description: SmartThingsSwitchEntityDescription,
         capability: Capability,
+        component: str = MAIN,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(client, device, {capability})
+        super().__init__(client, device, {capability}, component=component)
         self.entity_description = entity_description
         self.switch_capability = capability
-        self._attr_unique_id = device.device.device_id
-        if capability is not Capability.SWITCH:
-            self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{capability}"
+        self._attr_unique_id = f"{device.device.device_id}_{component}_{capability}"
+        if (
+            translation_keys := entity_description.component_translation_key
+        ) is not None and (
+            translation_key := translation_keys.get(component)
+        ) is not None:
+            self._attr_translation_key = translation_key
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""

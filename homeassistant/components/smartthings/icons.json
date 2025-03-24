@@ -51,6 +51,9 @@
         "state": {
           "off": "mdi:tumble-dryer-off"
         }
+      },
+      "ice_maker": {
+        "default": "mdi:delete-variant"
       }
     }
   }
