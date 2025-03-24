@@ -5425,7 +5425,7 @@ async def test_async_abort_entries_match_context(
 
         VERSION = 1
 
-        async def async_step_user(self, user_input=None):
+        async def async_step_reconfigure(self, user_input=None):
             """Test user step."""
             self._async_abort_entries_match(matchers)
             return self.async_abort(reason="no_match")
@@ -5433,7 +5433,10 @@ async def test_async_abort_entries_match_context(
     with mock_config_flow("comp", TestFlow), mock_config_flow("invalid_flow", 5):
         result = await manager.flow.async_init(
             "comp",
-            context={"source": config_entries.SOURCE_USER, "entry_id": entry.entry_id},
+            context={
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "entry_id": entry.entry_id,
+            },
         )
         await hass.async_block_till_done()
 
