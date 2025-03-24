@@ -3,16 +3,17 @@ from __future__ import annotations
 
 from typing import Any
 
+from pysmartthings import Attribute, Capability, Category, Command, SmartThings
+
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     RepeatMode,
-    MediaPlayerDeviceClass
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from pysmartthings import Capability, Command, SmartThings, Attribute, Category
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN
@@ -22,7 +23,6 @@ MEDIA_PLAYER_CAPABILITIES = (
     Capability.AUDIO_MUTE,
     Capability.AUDIO_TRACK_DATA,
     Capability.AUDIO_VOLUME,
-    Capability.MEDIA_INPUT_SOURCE,
     Capability.MEDIA_PLAYBACK,
 )
 
@@ -108,8 +108,6 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         if self.supports_capability(Capability.SWITCH):
             flags |= (MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF)
         if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
-            flags |= MediaPlayerEntityFeature.SELECT_SOURCE
-        if self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
             flags |= MediaPlayerEntityFeature.SELECT_SOURCE
         if self.supports_capability(Capability.MEDIA_PLAYBACK_SHUFFLE):
             flags |= MediaPlayerEntityFeature.SHUFFLE_SET
@@ -198,18 +196,11 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
 
     async def async_select_source(self, source: str) -> None:
         """Select source."""
-        if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
-            await self.execute_device_command(
-                Capability.MEDIA_INPUT_SOURCE,
-                Command.SET_INPUT_SOURCE,
-                argument=source,
-            )
-        elif self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
-            await self.execute_device_command(
-                Capability.MEDIA_INPUT_SOURCE,
-                Command.SET_INPUT_SOURCE,
-                argument=source,
-            )
+        await self.execute_device_command(
+            Capability.MEDIA_INPUT_SOURCE,
+            Command.SET_INPUT_SOURCE,
+            argument=source,
+        )
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Set shuffle mode."""
