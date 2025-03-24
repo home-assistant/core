@@ -33,7 +33,7 @@ from .const import TEST_INSTALLS_WITH_DHW
 DHW_ENTITY_ID = "water_heater.domestic_hot_water"
 
 
-@pytest.mark.parametrize("install", [*TEST_INSTALLS_WITH_DHW, "botched"])
+@pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_setup_platform(
     hass: HomeAssistant,
     config: dict[str, str],

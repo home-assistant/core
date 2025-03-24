@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import timedelta
 from typing import Any, Final
 
 from pysmhi import SMHIForecast
@@ -79,12 +78,6 @@ CONDITION_MAP = {
     for cond_ha, cond_codes in CONDITION_CLASSES.items()
     for cond_code in cond_codes
 }
-
-TIMEOUT = 10
-# 5 minutes between retrying connect to API again
-RETRY_TIMEOUT = 5 * 60
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=31)
 
 
 async def async_setup_entry(

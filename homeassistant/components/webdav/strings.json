@@ -21,6 +21,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_method": "The server does not support the required methods. Please check whether you have the correct URL. Check with your provider for the correct URL.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
@@ -36,6 +37,9 @@
     },
     "cannot_access_or_create_backup_path": {
       "message": "Cannot access or create backup path. Please check the path and permissions."
+    },
+    "failed_to_migrate_folder": {
+      "message": "Failed to migrate wrong encoded folder \"{wrong_path}\" to \"{correct_path}\"."
     }
   }
 }
