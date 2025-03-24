@@ -37,7 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -311,6 +311,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 return {"new_unique_id": f"{entity_entry.unique_id}_{MAIN}"}
             if entity_entry.domain == "sensor":
                 delimiter = "." if " " not in entity_entry.unique_id else " "
+                if delimiter not in entity_entry.unique_id:
+                    return None
                 device_id, attribute = entity_entry.unique_id.split(
                     delimiter, maxsplit=1
                 )
@@ -340,6 +342,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         return {
                             "new_unique_id": f"{device_id}_{MAIN}_{Capability.THREE_AXIS}_{Attribute.THREE_AXIS}_{new_attribute}",
                         }
+                    if attribute == Attribute.MACHINE_STATE:
+                        capability = determine_machine_type(
+                            hass, entry.entry_id, device_id
+                        )
+                        if capability is None:
+                            return None
+                        return {
+                            "new_unique_id": f"{device_id}_{MAIN}_{capability}_{attribute}_{attribute}",
+                        }
                     return None
                 return {
                     "new_unique_id": f"{device_id}_{MAIN}_{capability}_{attribute}_{attribute}",
@@ -359,6 +370,27 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     return True
+
+
+def determine_machine_type(
+    hass: HomeAssistant,
+    entry_id: str,
+    device_id: str,
+) -> Capability | None:
+    """Determine the machine type for a device."""
+    entity_registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(entity_registry, entry_id)
+    device_entries = [entry for entry in entries if device_id in entry.unique_id]
+    for entry in device_entries:
+        if Attribute.DISHWASHER_JOB_STATE in entry.unique_id:
+            return Capability.DISHWASHER_OPERATING_STATE
+        if Attribute.WASHER_JOB_STATE in entry.unique_id:
+            return Capability.WASHER_OPERATING_STATE
+        if Attribute.DRYER_JOB_STATE in entry.unique_id:
+            return Capability.DRYER_OPERATING_STATE
+        if Attribute.OVEN_JOB_STATE in entry.unique_id:
+            return Capability.OVEN_OPERATING_STATE
+    return None
 
 
 def create_devices(

@@ -83,7 +83,7 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
             capabilities.add(Capability.REMOTE_CONTROL_STATUS)
         super().__init__(client, device, capabilities)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{entity_description.key}_{entity_description.status_attribute}"
+        self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{entity_description.key}_{entity_description.status_attribute}_{entity_description.status_attribute}"
 
     @property
     def options(self) -> list[str]:

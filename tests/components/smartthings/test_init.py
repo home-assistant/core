@@ -500,3 +500,135 @@ async def test_entity_unique_id_migration(
     entry = entity_registry.async_get(entry.entity_id)
 
     assert entry.unique_id == new_unique_id
+
+
+@pytest.mark.parametrize(
+    (
+        "device_fixture",
+        "domain",
+        "other_unique_id",
+        "old_unique_id",
+        "suggested_object_id",
+        "new_unique_id",
+    ),
+    [
+        (
+            "da_ks_microwave_0101x",
+            SENSOR_DOMAIN,
+            "2bad3237-4886-e699-1b90-4a51a3d55c8a.ovenJobState",
+            "2bad3237-4886-e699-1b90-4a51a3d55c8a.machineState",
+            "microwave_machine_state",
+            "2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_machineState_machineState",
+        ),
+        (
+            "da_ks_microwave_0101x",
+            SENSOR_DOMAIN,
+            "2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_ovenJobState_ovenJobState",
+            "2bad3237-4886-e699-1b90-4a51a3d55c8a.machineState",
+            "microwave_machine_state",
+            "2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_machineState_machineState",
+        ),
+        (
+            "da_wm_dw_000001",
+            SENSOR_DOMAIN,
+            "f36dc7ce-cac0-0667-dc14-a3704eb5e676.dishwasherJobState",
+            "f36dc7ce-cac0-0667-dc14-a3704eb5e676.machineState",
+            "microwave_machine_state",
+            "f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_machineState_machineState",
+        ),
+        (
+            "da_wm_dw_000001",
+            SENSOR_DOMAIN,
+            "f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_dishwasherJobState_dishwasherJobState",
+            "f36dc7ce-cac0-0667-dc14-a3704eb5e676.machineState",
+            "microwave_machine_state",
+            "f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_machineState_machineState",
+        ),
+        (
+            "da_wm_wd_000001",
+            SENSOR_DOMAIN,
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b.dryerJobState",
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b.machineState",
+            "dryer_machine_state",
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_machineState_machineState",
+        ),
+        (
+            "da_wm_wd_000001",
+            SENSOR_DOMAIN,
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_dryerJobState_dryerJobState",
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b.machineState",
+            "dryer_machine_state",
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_machineState_machineState",
+        ),
+        (
+            "da_wm_wm_000001",
+            SENSOR_DOMAIN,
+            "f984b91d-f250-9d42-3436-33f09a422a47.washerJobState",
+            "f984b91d-f250-9d42-3436-33f09a422a47.machineState",
+            "washer_machine_state",
+            "f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_machineState_machineState",
+        ),
+        (
+            "da_wm_wm_000001",
+            SENSOR_DOMAIN,
+            "f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_washerJobState_washerJobState",
+            "f984b91d-f250-9d42-3436-33f09a422a47.machineState",
+            "washer_machine_state",
+            "f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_machineState_machineState",
+        ),
+    ],
+)
+async def test_entity_unique_id_migration_machine_state(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    expires_at: int,
+    entity_registry: er.EntityRegistry,
+    domain: str,
+    other_unique_id: str,
+    old_unique_id: str,
+    suggested_object_id: str,
+    new_unique_id: str,
+) -> None:
+    """Test entity unique ID migration."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="My home",
+        unique_id="397678e5-9995-4a39-9d9f-ae6ba310236c",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": " ".join(SCOPES),
+                "access_tier": 0,
+                "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
+            },
+            CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
+            CONF_INSTALLED_APP_ID: "123",
+        },
+        version=3,
+        minor_version=1,
+    )
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        domain,
+        DOMAIN,
+        other_unique_id,
+        config_entry=mock_config_entry,
+        suggested_object_id="job_state",
+    )
+    entry = entity_registry.async_get_or_create(
+        domain,
+        DOMAIN,
+        old_unique_id,
+        config_entry=mock_config_entry,
+        suggested_object_id=suggested_object_id,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entry.entity_id)
+
+    assert entry.unique_id == new_unique_id
