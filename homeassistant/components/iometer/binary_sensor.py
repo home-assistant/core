@@ -20,7 +20,7 @@ from .entity import IOmeterEntity
 class IOmeterBinarySensorDescription(BinarySensorEntityDescription):
     """Describes Iometer binary sensor entity."""
 
-    value_fn: Callable[[IOmeterData], str | None]
+    value_fn: Callable[[IOmeterData], bool | None]
 
 
 SENSOR_TYPES: list[IOmeterBinarySensorDescription] = [
@@ -29,14 +29,22 @@ SENSOR_TYPES: list[IOmeterBinarySensorDescription] = [
         translation_key="connection_status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data.status.device.core.connection_status,
+        value_fn=lambda data: (
+            data.status.device.core.connection_status == "connected"
+            if data.status.device.core.connection_status is not None
+            else None
+        ),
     ),
     IOmeterBinarySensorDescription(
         key="attachment_status",
         translation_key="attachment_status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data.status.device.core.attachment_status,
+        value_fn=lambda data: (
+            data.status.device.core.attachment_status == "attached"
+            if data.status.device.core.attachment_status is not None
+            else None
+        ),
     ),
 ]
 
@@ -76,12 +84,4 @@ class IOmeterBinarySensor(IOmeterEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return the binary sensor state."""
-        value = self.entity_description.value_fn(self.coordinator.data)
-
-        if value is None:
-            return None
-
-        if self.entity_description.key == "connection_status":
-            return value == "connected"
-
-        return value == "attached"
+        return self.entity_description.value_fn(self.coordinator.data)
