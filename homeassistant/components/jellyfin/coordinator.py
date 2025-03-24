@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+import requests
 from datetime import timedelta
 from typing import Any
 
@@ -64,7 +66,4 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, An
         except KeyError as err:
             _LOGGER.error("Missing key in Jellyfin API response: %s", err)
 
-        except Exception as err:
-            _LOGGER.error("Unexpected error fetching Jellyfin data: %s", err)
-
-        return None  # Mark the device as unavailable
+        return {}  # Mark the device as unavailable
