@@ -3,6 +3,8 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, call
 
+import pytest
+
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
@@ -17,6 +19,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.qbus.climate import STATE_REQUEST_DELAY
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.util import dt as dt_util
 
@@ -193,6 +196,25 @@ async def test_climate_with_fast_subsequent_changes(
 
     # State request should be requested only once
     _wait_and_assert_state_request(hass, mqtt_mock)
+
+
+async def test_climate_with_unknown_preset(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    setup_integration: None,
+) -> None:
+    """Test climate with passing an unknown preset value."""
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {
+                ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
+                ATTR_PRESET_MODE: "What is cooler than begin cool?",
+            },
+            blocking=True,
+        )
 
 
 def _wait_and_assert_state_request(

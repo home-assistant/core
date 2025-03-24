@@ -46,10 +46,10 @@ class QbusLight(QbusEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_color_mode = ColorMode.BRIGHTNESS
 
-    def __init__(self, hass: HomeAssistant, mqtt_output: QbusMqttOutput) -> None:
+    def __init__(self, mqtt_output: QbusMqttOutput) -> None:
         """Initialize light entity."""
 
-        super().__init__(hass, mqtt_output)
+        super().__init__(mqtt_output)
 
         self._set_state()
 

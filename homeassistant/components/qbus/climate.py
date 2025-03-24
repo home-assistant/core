@@ -63,10 +63,10 @@ class QbusClimate(QbusEntity, ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, hass: HomeAssistant, mqtt_output: QbusMqttOutput) -> None:
+    def __init__(self, mqtt_output: QbusMqttOutput) -> None:
         """Initialize climate entity."""
 
-        super().__init__(hass, mqtt_output)
+        super().__init__(mqtt_output)
 
         self._attr_hvac_action = HVACAction.IDLE
         self._attr_hvac_mode = HVACMode.HEAT
@@ -86,13 +86,18 @@ class QbusClimate(QbusEntity, ClimateEntity):
             self._attr_preset_modes[0] if len(self._attr_preset_modes) > 0 else ""
         )
 
-        self._request_state_debouncer: Debouncer = Debouncer(
-            hass,
+        self._request_state_debouncer: Debouncer | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        self._request_state_debouncer = Debouncer(
+            self.hass,
             _LOGGER,
             cooldown=STATE_REQUEST_DELAY,
             immediate=False,
             function=self._async_request_state,
         )
+        await super().async_added_to_hass()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
@@ -146,6 +151,7 @@ class QbusClimate(QbusEntity, ClimateEntity):
         # temperature step by step could cause a flood of state requests, so we're
         # holding off a few seconds before requesting the full state.
         if state.type == StateType.EVENT:
+            assert self._request_state_debouncer is not None
             await self._request_state_debouncer.async_call()
 
         self.async_schedule_update_ha_state()
