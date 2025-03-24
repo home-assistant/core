@@ -830,7 +830,7 @@ gTTS==2.5.3
 gardena-bluetooth==1.6.0
 
 # homeassistant.components.google_assistant_sdk
-gassist-text==0.0.11
+gassist-text==0.0.12
 
 # homeassistant.components.google
 gcal-sync==7.0.0
