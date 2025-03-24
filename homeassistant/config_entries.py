@@ -2974,8 +2974,11 @@ class ConfigFlow(ConfigEntryBaseFlow):
             return None
 
         if raise_on_progress:
-            if self._async_in_progress(
-                include_uninitialized=True, match_context={"unique_id": unique_id}
+            if any(
+                flow["context"]["source"] != SOURCE_REAUTH
+                for flow in self._async_in_progress(
+                    include_uninitialized=True, match_context={"unique_id": unique_id}
+                )
             ):
                 raise data_entry_flow.AbortFlow("already_in_progress")
 
