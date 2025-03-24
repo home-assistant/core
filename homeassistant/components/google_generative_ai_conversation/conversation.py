@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import codecs
 from collections.abc import Callable
+from dataclasses import replace
 from typing import Any, Literal, cast
 
 from google.genai.errors import APIError
@@ -332,6 +333,14 @@ class GoogleGenerativeAIConversationEntity(
             if chat_content.role == "tool_result":
                 tool_results.append(chat_content)
                 continue
+
+            if (
+                not isinstance(chat_content, conversation.ToolResultContent)
+                and chat_content.content == ""
+            ):
+                # Skipping is not possible since the number of function calls need to match the number of function responses
+                # and skipping one would mean removing the other and hence this would prevent a proper chat log
+                chat_content = replace(chat_content, content=" ")
 
             if tool_results:
                 messages.append(_create_google_tool_response_content(tool_results))
