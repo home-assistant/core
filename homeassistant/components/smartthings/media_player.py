@@ -1,4 +1,5 @@
 """Support for media players through the SmartThings cloud API."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -48,9 +49,9 @@ VALUE_TO_STATE = {
 
 
 async def async_setup_entry(
-        hass: HomeAssistant,
-        entry: SmartThingsConfigEntry,
-        async_add_entities: AddConfigEntryEntitiesCallback,
+    hass: HomeAssistant,
+    entry: SmartThingsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add media players for a config entry."""
     entry_data = entry.runtime_data
@@ -58,16 +59,22 @@ async def async_setup_entry(
     entities: list[MediaPlayerEntity] = [
         SmartThingsMediaPlayer(entry_data.client, entry_data.rooms, device)
         for device in entry_data.devices.values()
-        if all(capability in device.status[MAIN] for capability in MEDIA_PLAYER_CAPABILITIES)
+        if all(
+            capability in device.status[MAIN]
+            for capability in MEDIA_PLAYER_CAPABILITIES
+        )
     ]
     async_add_entities(entities)
 
 
 class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     """Define a SmartThings media player."""
+
     _attr_name = None
 
-    def __init__(self, client: SmartThings, rooms: dict[str, str], device: FullDevice) -> None:
+    def __init__(
+        self, client: SmartThings, rooms: dict[str, str], device: FullDevice
+    ) -> None:
         """Initialize the media_player class."""
 
         super().__init__(
@@ -90,7 +97,9 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
 
     def _determine_features(self) -> MediaPlayerEntityFeature:
         flags = MediaPlayerEntityFeature(0)
-        playback_commands = self.get_attribute_value(Capability.MEDIA_PLAYBACK, Attribute.SUPPORTED_PLAYBACK_COMMANDS)
+        playback_commands = self.get_attribute_value(
+            Capability.MEDIA_PLAYBACK, Attribute.SUPPORTED_PLAYBACK_COMMANDS
+        )
         if "play" in playback_commands:
             flags |= MediaPlayerEntityFeature.PLAY
         if "pause" in playback_commands:
@@ -102,11 +111,16 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         if "fastForward" in playback_commands:
             flags |= MediaPlayerEntityFeature.NEXT_TRACK
         if self.supports_capability(Capability.AUDIO_VOLUME):
-            flags |= (MediaPlayerEntityFeature.VOLUME_SET | MediaPlayerEntityFeature.VOLUME_STEP)
+            flags |= (
+                MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.VOLUME_STEP
+            )
         if self.supports_capability(Capability.AUDIO_MUTE):
             flags |= MediaPlayerEntityFeature.VOLUME_MUTE
         if self.supports_capability(Capability.SWITCH):
-            flags |= (MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF)
+            flags |= (
+                MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
+            )
         if self.supports_capability(Capability.MEDIA_INPUT_SOURCE):
             flags |= MediaPlayerEntityFeature.SELECT_SOURCE
         if self.supports_capability(Capability.MEDIA_PLAYBACK_SHUFFLE):
@@ -220,18 +234,31 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
 
     @property
     def device_class(self) -> MediaPlayerDeviceClass | None:
-        category = next(map(lambda c: c.manufacturer_category, self.device.device.components), None)
+        """Return the class of this entity."""
+        category = next(
+            map(lambda c: c.manufacturer_category, self.device.device.components), None
+        )
         return MEDIA_PLAYER_DEVICE_CLASSES.get(category, None)
 
     @property
     def media_title(self) -> str | None:
-        if (track_data := self.get_attribute_value(Capability.AUDIO_TRACK_DATA, Attribute.AUDIO_TRACK_DATA)) is None:
+        """Title of current playing media."""
+        if (
+            track_data := self.get_attribute_value(
+                Capability.AUDIO_TRACK_DATA, Attribute.AUDIO_TRACK_DATA
+            )
+        ) is None:
             return None
         return track_data.get("title", None)
 
     @property
     def media_artist(self) -> str | None:
-        if (track_data := self.get_attribute_value(Capability.AUDIO_TRACK_DATA, Attribute.AUDIO_TRACK_DATA)) is None:
+        """Artist of current playing media."""
+        if (
+            track_data := self.get_attribute_value(
+                Capability.AUDIO_TRACK_DATA, Attribute.AUDIO_TRACK_DATA
+            )
+        ) is None:
             return None
         return track_data.get("artist", None)
 
@@ -239,10 +266,20 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     def state(self) -> MediaPlayerState | None:
         """State of the media player."""
         if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on":
-            if self.source is not None and self.source in CONTROLLABLE_SOURCES:  # todo ???
-                if self.get_attribute_value(Capability.MEDIA_PLAYBACK, Attribute.PLAYBACK_STATUS) in VALUE_TO_STATE:
+            if (
+                self.source is not None and self.source in CONTROLLABLE_SOURCES
+            ):  # todo ???
+                if (
+                    self.get_attribute_value(
+                        Capability.MEDIA_PLAYBACK, Attribute.PLAYBACK_STATUS
+                    )
+                    in VALUE_TO_STATE
+                ):
                     return VALUE_TO_STATE[
-                        self.get_attribute_value(Capability.MEDIA_PLAYBACK, Attribute.PLAYBACK_STATUS)]
+                        self.get_attribute_value(
+                            Capability.MEDIA_PLAYBACK, Attribute.PLAYBACK_STATUS
+                        )
+                    ]
             return MediaPlayerState.ON
         return MediaPlayerState.OFF
 
@@ -250,18 +287,17 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     def is_volume_muted(self) -> bool | None:
         """Returns if the volume is muted."""
         if self.supports_capability(Capability.AUDIO_MUTE):
-            return self.get_attribute_value(
-                Capability.AUDIO_MUTE, Attribute.MUTE
-            )
+            return self.get_attribute_value(Capability.AUDIO_MUTE, Attribute.MUTE)
         return None
 
     @property
     def volume_level(self) -> float | None:
         """Volume level."""
         if self.supports_capability(Capability.AUDIO_VOLUME):
-            return self.get_attribute_value(
-                Capability.AUDIO_VOLUME, Attribute.VOLUME
-            ) / 100
+            return (
+                self.get_attribute_value(Capability.AUDIO_VOLUME, Attribute.VOLUME)
+                / 100
+            )
         return None
 
     @property
@@ -286,7 +322,8 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             )
         if self.supports_capability(Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE):
             return self.get_attribute_value(
-                Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE, Attribute.SUPPORTED_INPUT_SOURCES
+                Capability.SAMSUNG_VD_AUDIO_INPUT_SOURCE,
+                Attribute.SUPPORTED_INPUT_SOURCES,
             )
         return None
 

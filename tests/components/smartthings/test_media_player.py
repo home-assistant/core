@@ -6,32 +6,32 @@ from pysmartthings import Attribute, Capability, Command, Status
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.smartthings.const import MAIN
-from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_SELECT_SOURCE,
-    RepeatMode
+    RepeatMode,
 )
+from homeassistant.components.smartthings.const import MAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_STOP,
+    SERVICE_REPEAT_SET,
+    SERVICE_SHUFFLE_SET,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_STOP,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_SHUFFLE_SET,
-    SERVICE_REPEAT_SET,
     STATE_OFF,
     STATE_PLAYING,
     Platform,
@@ -54,7 +54,9 @@ async def test_all_entities(
     """Test all entities."""
     await setup_integration(hass, mock_config_entry)
 
-    snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.MEDIA_PLAYER)
+    snapshot_smartthings_entities(
+        hass, entity_registry, snapshot, Platform.MEDIA_PLAYER
+    )
 
 
 @pytest.mark.parametrize("device_fixture", ["hw_q80r_soundbar"])
@@ -111,7 +113,11 @@ async def test_mute_unmute(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "afcf3b91-0000-1111-2222-ddff2a0a6577", Capability.AUDIO_MUTE, Command.SET_MUTE, MAIN, argument=argument
+        "afcf3b91-0000-1111-2222-ddff2a0a6577",
+        Capability.AUDIO_MUTE,
+        Command.SET_MUTE,
+        MAIN,
+        argument=argument,
     )
 
 
@@ -131,7 +137,11 @@ async def test_set_volume_level(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "afcf3b91-0000-1111-2222-ddff2a0a6577", Capability.AUDIO_VOLUME, Command.SET_VOLUME, MAIN, argument=31
+        "afcf3b91-0000-1111-2222-ddff2a0a6577",
+        Capability.AUDIO_VOLUME,
+        Command.SET_VOLUME,
+        MAIN,
+        argument=31,
     )
 
 
@@ -151,7 +161,10 @@ async def test_volume_up(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "afcf3b91-0000-1111-2222-ddff2a0a6577", Capability.AUDIO_VOLUME, Command.VOLUME_UP, MAIN
+        "afcf3b91-0000-1111-2222-ddff2a0a6577",
+        Capability.AUDIO_VOLUME,
+        Command.VOLUME_UP,
+        MAIN,
     )
 
 
@@ -171,7 +184,10 @@ async def test_volume_down(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "afcf3b91-0000-1111-2222-ddff2a0a6577", Capability.AUDIO_VOLUME, Command.VOLUME_DOWN, MAIN
+        "afcf3b91-0000-1111-2222-ddff2a0a6577",
+        Capability.AUDIO_VOLUME,
+        Command.VOLUME_DOWN,
+        MAIN,
     )
 
 
@@ -191,7 +207,10 @@ async def test_media_play(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "afcf3b91-0000-1111-2222-ddff2a0a6577", Capability.MEDIA_PLAYBACK, Command.PLAY, MAIN
+        "afcf3b91-0000-1111-2222-ddff2a0a6577",
+        Capability.MEDIA_PLAYBACK,
+        Command.PLAY,
+        MAIN,
     )
 
 
@@ -211,7 +230,10 @@ async def test_media_pause(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "afcf3b91-0000-1111-2222-ddff2a0a6577", Capability.MEDIA_PLAYBACK, Command.PAUSE, MAIN
+        "afcf3b91-0000-1111-2222-ddff2a0a6577",
+        Capability.MEDIA_PLAYBACK,
+        Command.PAUSE,
+        MAIN,
     )
 
 
@@ -231,7 +253,10 @@ async def test_media_stop(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "afcf3b91-0000-1111-2222-ddff2a0a6577", Capability.MEDIA_PLAYBACK, Command.STOP, MAIN
+        "afcf3b91-0000-1111-2222-ddff2a0a6577",
+        Capability.MEDIA_PLAYBACK,
+        Command.STOP,
+        MAIN,
     )
 
 
@@ -242,9 +267,9 @@ async def test_media_previous_track(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test media player previous track command."""
-    devices.get_device_status.return_value[MAIN][
-        Capability.MEDIA_PLAYBACK
-    ] = {Attribute.SUPPORTED_PLAYBACK_COMMANDS: Status(["rewind"])}
+    devices.get_device_status.return_value[MAIN][Capability.MEDIA_PLAYBACK] = {
+        Attribute.SUPPORTED_PLAYBACK_COMMANDS: Status(["rewind"])
+    }
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -254,7 +279,10 @@ async def test_media_previous_track(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "afcf3b91-0000-1111-2222-ddff2a0a6577", Capability.MEDIA_PLAYBACK, Command.REWIND, MAIN
+        "afcf3b91-0000-1111-2222-ddff2a0a6577",
+        Capability.MEDIA_PLAYBACK,
+        Command.REWIND,
+        MAIN,
     )
 
 
@@ -265,9 +293,9 @@ async def test_media_next_track(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test media player next track command."""
-    devices.get_device_status.return_value[MAIN][
-        Capability.MEDIA_PLAYBACK
-    ] = {Attribute.SUPPORTED_PLAYBACK_COMMANDS: Status(["fastForward"])}
+    devices.get_device_status.return_value[MAIN][Capability.MEDIA_PLAYBACK] = {
+        Attribute.SUPPORTED_PLAYBACK_COMMANDS: Status(["fastForward"])
+    }
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -277,7 +305,10 @@ async def test_media_next_track(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "afcf3b91-0000-1111-2222-ddff2a0a6577", Capability.MEDIA_PLAYBACK, Command.FAST_FORWARD, MAIN
+        "afcf3b91-0000-1111-2222-ddff2a0a6577",
+        Capability.MEDIA_PLAYBACK,
+        Command.FAST_FORWARD,
+        MAIN,
     )
 
 
@@ -297,7 +328,11 @@ async def test_select_source(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "afcf3b91-0000-1111-2222-ddff2a0a6577", Capability.MEDIA_INPUT_SOURCE, Command.SET_INPUT_SOURCE, MAIN, "digital"
+        "afcf3b91-0000-1111-2222-ddff2a0a6577",
+        Capability.MEDIA_INPUT_SOURCE,
+        Command.SET_INPUT_SOURCE,
+        MAIN,
+        "digital",
     )
 
 
@@ -317,9 +352,9 @@ async def test_media_shuffle_on_off(
     argument: bool,
 ) -> None:
     """Test media player media shuffle command."""
-    devices.get_device_status.return_value[MAIN][
-        Capability.MEDIA_PLAYBACK_SHUFFLE
-    ] = {Attribute.PLAYBACK_SHUFFLE: Status(True)}
+    devices.get_device_status.return_value[MAIN][Capability.MEDIA_PLAYBACK_SHUFFLE] = {
+        Attribute.PLAYBACK_SHUFFLE: Status(True)
+    }
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -329,7 +364,11 @@ async def test_media_shuffle_on_off(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "afcf3b91-0000-1111-2222-ddff2a0a6577", Capability.MEDIA_PLAYBACK_SHUFFLE, Command.SET_PLAYBACK_SHUFFLE, MAIN, argument=argument
+        "afcf3b91-0000-1111-2222-ddff2a0a6577",
+        Capability.MEDIA_PLAYBACK_SHUFFLE,
+        Command.SET_PLAYBACK_SHUFFLE,
+        MAIN,
+        argument=argument,
     )
 
 
@@ -350,9 +389,9 @@ async def test_media_repeat_mode(
     argument: bool,
 ) -> None:
     """Test media player repeat mode command."""
-    devices.get_device_status.return_value[MAIN][
-        Capability.MEDIA_PLAYBACK_REPEAT
-    ] = {Attribute.REPEAT_MODE: Status("one")}
+    devices.get_device_status.return_value[MAIN][Capability.MEDIA_PLAYBACK_REPEAT] = {
+        Attribute.REPEAT_MODE: Status("one")
+    }
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -362,7 +401,11 @@ async def test_media_repeat_mode(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "afcf3b91-0000-1111-2222-ddff2a0a6577", Capability.MEDIA_PLAYBACK_REPEAT, Command.SET_PLAYBACK_REPEAT_MODE, MAIN, argument=argument
+        "afcf3b91-0000-1111-2222-ddff2a0a6577",
+        Capability.MEDIA_PLAYBACK_REPEAT,
+        Command.SET_PLAYBACK_REPEAT_MODE,
+        MAIN,
+        argument=argument,
     )
 
 
