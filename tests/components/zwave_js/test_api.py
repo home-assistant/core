@@ -1224,7 +1224,11 @@ async def test_provision_smart_start_node(
 
 
 async def test_unprovision_smart_start_node(
-    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    integration,
+    client,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test unprovision_smart_start_node websocket command."""
     entry = integration
@@ -1233,9 +1237,8 @@ async def test_unprovision_smart_start_node(
     client.async_send_command.return_value = {}
 
     # Test node ID as input
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            ID: 1,
             TYPE: "zwave_js/unprovision_smart_start_node",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 1,
@@ -1245,8 +1248,12 @@ async def test_unprovision_smart_start_node(
     msg = await ws_client.receive_json()
     assert msg["success"]
 
-    assert len(client.async_send_command.call_args_list) == 1
-    assert client.async_send_command.call_args[0][0] == {
+    assert len(client.async_send_command.call_args_list) == 2
+    assert client.async_send_command.call_args_list[0][0][0] == {
+        "command": "controller.get_provisioning_entry",
+        "dskOrNodeId": 1,
+    }
+    assert client.async_send_command.call_args_list[1][0][0] == {
         "command": "controller.unprovision_smart_start_node",
         "dskOrNodeId": 1,
     }
@@ -1255,9 +1262,8 @@ async def test_unprovision_smart_start_node(
     client.async_send_command.return_value = {}
 
     # Test DSK as input
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            ID: 2,
             TYPE: "zwave_js/unprovision_smart_start_node",
             ENTRY_ID: entry.entry_id,
             DSK: "test",
@@ -1267,8 +1273,12 @@ async def test_unprovision_smart_start_node(
     msg = await ws_client.receive_json()
     assert msg["success"]
 
-    assert len(client.async_send_command.call_args_list) == 1
-    assert client.async_send_command.call_args[0][0] == {
+    assert len(client.async_send_command.call_args_list) == 2
+    assert client.async_send_command.call_args_list[0][0][0] == {
+        "command": "controller.get_provisioning_entry",
+        "dskOrNodeId": "test",
+    }
+    assert client.async_send_command.call_args_list[1][0][0] == {
         "command": "controller.unprovision_smart_start_node",
         "dskOrNodeId": "test",
     }
@@ -1277,9 +1287,8 @@ async def test_unprovision_smart_start_node(
     client.async_send_command.return_value = {}
 
     # Test not including DSK or node ID as input fails
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            ID: 3,
             TYPE: "zwave_js/unprovision_smart_start_node",
             ENTRY_ID: entry.entry_id,
         }
@@ -1290,14 +1299,78 @@ async def test_unprovision_smart_start_node(
 
     assert len(client.async_send_command.call_args_list) == 0
 
+    # Test with pre provisioned device
+    # Create device registry entry for mock node
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "provision_test"), "test"},
+        name="Node 67",
+    )
+    provisioning_entry = ProvisioningEntry.from_dict(
+        {
+            "dsk": "test",
+            "securityClasses": [SecurityClass.S2_UNAUTHENTICATED],
+            "device_id": device.id,
+        }
+    )
+    with patch.object(
+        client.driver.controller,
+        "async_get_provisioning_entry",
+        return_value=provisioning_entry,
+    ):
+        # Don't remove the device if it has additional identifiers
+        await ws_client.send_json_auto_id(
+            {
+                TYPE: "zwave_js/unprovision_smart_start_node",
+                ENTRY_ID: entry.entry_id,
+                DSK: "test",
+            }
+        )
+        msg = await ws_client.receive_json()
+        assert msg["success"]
+
+        assert len(client.async_send_command.call_args_list) == 1
+        assert client.async_send_command.call_args[0][0] == {
+            "command": "controller.unprovision_smart_start_node",
+            "dskOrNodeId": "test",
+        }
+
+        device = device_registry.async_get(device.id)
+        assert device is not None
+
+        client.async_send_command.reset_mock()
+
+        # Remove the device if it doesn't have additional identifiers
+        device_registry.async_update_device(
+            device.id, new_identifiers={(DOMAIN, "provision_test")}
+        )
+        await ws_client.send_json_auto_id(
+            {
+                TYPE: "zwave_js/unprovision_smart_start_node",
+                ENTRY_ID: entry.entry_id,
+                DSK: "test",
+            }
+        )
+        msg = await ws_client.receive_json()
+        assert msg["success"]
+
+        assert len(client.async_send_command.call_args_list) == 1
+        assert client.async_send_command.call_args[0][0] == {
+            "command": "controller.unprovision_smart_start_node",
+            "dskOrNodeId": "test",
+        }
+
+        # Verify device was removed from device registry
+        device = device_registry.async_get(device.id)
+        assert device is None
+
     # Test FailedZWaveCommand is caught
     with patch(
         f"{CONTROLLER_PATCH_PREFIX}.async_unprovision_smart_start_node",
         side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
     ):
-        await ws_client.send_json(
+        await ws_client.send_json_auto_id(
             {
-                ID: 6,
                 TYPE: "zwave_js/unprovision_smart_start_node",
                 ENTRY_ID: entry.entry_id,
                 DSK: "test",
@@ -1313,9 +1386,8 @@ async def test_unprovision_smart_start_node(
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    await ws_client.send_json(
+    await ws_client.send_json_auto_id(
         {
-            ID: 7,
             TYPE: "zwave_js/unprovision_smart_start_node",
             ENTRY_ID: entry.entry_id,
             DSK: "test",
