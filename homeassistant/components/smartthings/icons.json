@@ -1,6 +1,12 @@
 {
   "entity": {
     "binary_sensor": {
+      "dryer_wrinkle_prevent_active": {
+        "default": "mdi:tumble-dryer",
+        "state": {
+          "on": "mdi:tumble-dryer-alert"
+        }
+      },
       "remote_control": {
         "default": "mdi:remote-off",
         "state": {
@@ -34,6 +40,12 @@
       }
     },
     "switch": {
+      "bubble_soak": {
+        "default": "mdi:water-off",
+        "state": {
+          "on": "mdi:water"
+        }
+      },
       "wrinkle_prevent": {
         "default": "mdi:tumble-dryer",
         "state": {
