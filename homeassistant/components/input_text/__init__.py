@@ -52,8 +52,12 @@ STORAGE_VERSION = 1
 
 STORAGE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.Coerce(int),
-    vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.Coerce(int),
+    vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=MAX_LENGTH_STATE_STATE)
+    ),
+    vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.All(
+        vol.Coerce(int), vol.Range(min=1, max=MAX_LENGTH_STATE_STATE)
+    ),
     vol.Optional(CONF_INITIAL, ""): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
@@ -66,14 +70,6 @@ def _cv_input_text(config: dict[str, Any]) -> dict[str, Any]:
     """Configure validation helper for input box (voluptuous)."""
     minimum: int = config[CONF_MIN]
     maximum: int = config[CONF_MAX]
-    if minimum < 0 or minimum > MAX_LENGTH_STATE_STATE:
-        raise vol.Invalid(
-            f"Min len ({minimum}) must be not less than 0 and not greater than {MAX_LENGTH_STATE_STATE}"
-        )
-    if maximum <= 0 or maximum > MAX_LENGTH_STATE_STATE:
-        raise vol.Invalid(
-            f"Max len ({maximum}) must be not less or equal to 0 and not greater than {MAX_LENGTH_STATE_STATE}"
-        )
     if minimum > maximum:
         raise vol.Invalid(
             f"Max len ({minimum}) is not greater than min len ({maximum})"
