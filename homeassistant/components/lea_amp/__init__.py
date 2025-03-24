@@ -7,7 +7,6 @@ from contextlib import suppress
 from errno import EADDRINUSE
 import logging
 
-from controller import PORT
 from Coordinator import LEAAMPApiCoordinator, LEAAMPConfigEntry
 
 from homeassistant.const import Platform
@@ -16,6 +15,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 PLATFORMS: list[Platform] = [Platform.REMOTE]
 CONNECTION_TIMEOUT = 5  # seconds
+PORT = "4321"
 
 _LOGGER = logging.getLogger(__name__)
 
