@@ -93,11 +93,15 @@ class PGLabCover(PGLabEntity, CoverEntity):
         return self._shutter.state == PyPGLabShutter.STATE_CLOSED
 
     @property
-    def is_closing(self) -> bool:
+    def is_closing(self) -> bool | None:
         """Return if the cover is closing."""
+        if not self._shutter.state:
+            return None
         return self._shutter.state == PyPGLabShutter.STATE_CLOSING
 
     @property
-    def is_opening(self) -> bool:
+    def is_opening(self) -> bool | None:
         """Return if the cover is opening."""
+        if not self._shutter.state:
+            return None
         return self._shutter.state == PyPGLabShutter.STATE_OPENING
