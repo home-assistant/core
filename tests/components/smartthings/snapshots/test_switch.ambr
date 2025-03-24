@@ -469,6 +469,53 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[hw_q80r_soundbar][switch.soundbar-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.soundbar',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'afcf3b91-0000-1111-2222-ddff2a0a6577',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[hw_q80r_soundbar][switch.soundbar-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Soundbar',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.soundbar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[sensibo_airconditioner_1][switch.office-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

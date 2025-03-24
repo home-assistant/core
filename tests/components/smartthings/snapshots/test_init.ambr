@@ -1091,6 +1091,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[hw_q80r_soundbar]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '0-0',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'afcf3b91-0000-1111-2222-ddff2a0a6577',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'Q80R',
+    'model_id': None,
+    'name': 'Soundbar',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'HW-Q80RWWB-1012.6',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[ikea_kadrilj]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
