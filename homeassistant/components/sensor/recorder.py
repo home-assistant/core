@@ -96,6 +96,7 @@ WARN_STATISTICS_MEAN_CHANGED: HassKey[set[str]] = HassKey(
 )
 # Link to dev statistics where issues around LTS can be fixed
 LINK_DEV_STATISTICS = "https://my.home-assistant.io/redirect/developer_statistics"
+MEAN_TYPE_CHANGED_ISSUE = "mean_type_changed"
 
 
 def _get_sensor_states(hass: HomeAssistant) -> list[State]:
@@ -580,8 +581,10 @@ def compile_statistics(  # noqa: C901
                 continue
 
             if (
-                old_mean_type := old_metadata[1]["mean_type"]
-            ) is not None and mean_type != old_mean_type:
+                mean_type is not None
+                and (old_mean_type := old_metadata[1]["mean_type"]) is not None
+                and mean_type != old_mean_type
+            ):
                 if WARN_STATISTICS_MEAN_CHANGED not in hass.data:
                     hass.data[WARN_STATISTICS_MEAN_CHANGED] = set()
                 if entity_id not in hass.data[WARN_STATISTICS_MEAN_CHANGED]:
@@ -595,7 +598,7 @@ def compile_statistics(  # noqa: C901
                         ),
                         entity_id,
                         old_mean_type.name,
-                        mean_type.name if mean_type else "None",
+                        mean_type.name,
                         LINK_DEV_STATISTICS,
                     )
                 continue
@@ -844,7 +847,7 @@ def _update_issues(
             ):
                 # The mean type has changed and the old statistics are not valid anymore
                 report_issue(
-                    "mean_type_changed",
+                    MEAN_TYPE_CHANGED_ISSUE,
                     entity_id,
                     {
                         "statistic_id": entity_id,
@@ -875,7 +878,7 @@ def update_statistics_issues(
                 issue.domain != DOMAIN
                 or not (issue_data := issue.data)
                 or issue_data.get("issue_type")
-                not in ("state_class_removed", "units_changed", "mean_type_changed")
+                not in ("state_class_removed", "units_changed", MEAN_TYPE_CHANGED_ISSUE)
             ):
                 continue
             issues.add(issue.issue_id)
