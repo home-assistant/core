@@ -29,7 +29,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'stop',
-    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState',
+    'unique_id': '2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_stop',
     'unit_of_measurement': None,
   })
 # ---
@@ -76,7 +76,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'stop',
-    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenOperatingState',
+    'unique_id': '9447959a-0dfa-6b27-d40d-650da525c53f_main_ovenOperatingState_stop',
     'unit_of_measurement': None,
   })
 # ---
@@ -123,7 +123,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'stop',
-    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenOperatingState',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_ovenOperatingState_stop',
     'unit_of_measurement': None,
   })
 # ---
