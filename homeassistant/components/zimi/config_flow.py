@@ -152,10 +152,11 @@ class ZimiConfigFlow(ConfigFlow, domain=DOMAIN):
     async def create_entry(self) -> config_entries.ConfigFlowResult:
         """Create entry for zcc."""
 
-        with contextlib.suppress(ControlPointError):
-            self.api = await async_connect_to_controller(
-                self.data[CONF_HOST], self.data[CONF_PORT], fast=True
-            )
+        if not self.api:
+            with contextlib.suppress(ControlPointError):
+                self.api = await async_connect_to_controller(
+                    self.data[CONF_HOST], self.data[CONF_PORT], fast=True
+                )
 
         if self.api and self.api.ready:
             self.data[CONF_MAC] = format_mac(self.api.mac)
