@@ -39,10 +39,12 @@ from zwave_js_server.model.value import ConfigurationValue, get_value_id_str
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT, ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
     APPLICATION_VERSION,
+    AREA_ID,
     CLIENT_SIDE_AUTH,
     COMMAND_CLASS_ID,
     CONFIG,
     DEVICE_ID,
+    DEVICE_NAME,
     DSK,
     ENABLED,
     ENDPOINT,
@@ -1087,7 +1089,11 @@ async def test_validate_dsk_and_enter_pin(
 
 
 async def test_provision_smart_start_node(
-    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    integration,
+    client,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test provision_smart_start_node websocket command."""
     entry = integration
@@ -1145,6 +1151,60 @@ async def test_provision_smart_start_node(
 
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
+
+    # Test QR provisioning information with device name and area
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/provision_smart_start_node",
+            ENTRY_ID: entry.entry_id,
+            QR_PROVISIONING_INFORMATION: {
+                **valid_qr_info,
+            },
+            DEVICE_NAME: "test_name",
+            AREA_ID: "test_area",
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    # verify a device was created
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "provision_test")},
+    )
+    assert device is not None
+    assert device.name == "test_name"
+    assert device.area_id == "test_area"
+
+    assert len(client.async_send_command.call_args_list) == 2
+    assert client.async_send_command.call_args_list[0][0][0] == {
+        "command": "config_manager.lookup_device",
+        "manufacturerId": 1,
+        "productType": 1,
+        "productId": 1,
+    }
+    assert client.async_send_command.call_args_list[1][0][0] == {
+        "command": "controller.provision_smart_start_node",
+        "entry": QRProvisioningInformation(
+            version=QRCodeVersion.SMART_START,
+            security_classes=[SecurityClass.S2_UNAUTHENTICATED],
+            dsk="test",
+            generic_device_class=1,
+            specific_device_class=1,
+            installer_icon_type=1,
+            manufacturer_id=1,
+            product_type=1,
+            product_id=1,
+            application_version="test",
+            max_inclusion_request_interval=None,
+            uuid=None,
+            supported_protocols=None,
+            additional_properties={
+                "name": "test",
+                "device_id": device.id,
+            },
+        ).to_dict(),
+    }
 
     # Test QR provisioning information with S2 version throws error
     await ws_client.send_json(
