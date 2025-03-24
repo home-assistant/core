@@ -94,15 +94,6 @@ HEAT_METER_SENSOR_TYPES = (
         value_fn=lambda res: res.heat_previous_year_gj,
     ),
     HeatMeterSensorEntityDescription(
-        key="heat_previous_year_gcal",
-        icon="mdi:fire",
-        name="Heat previous year GCal",
-        native_unit_of_measurement=UnitOfEnergy.GIGA_CALORIE,
-        device_class=SensorDeviceClass.ENERGY,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda res: res.heat_previous_year_gcal,
-    ),
-    HeatMeterSensorEntityDescription(
         key="volume_previous_year_m3",
         icon="mdi:fire",
         name="Volume usage previous year",
