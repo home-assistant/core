@@ -107,7 +107,8 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         LOGGER.debug("Found device: %s", title)
 
-        mower = Mower(channel_id, self.address, self.pin)
+        pin = int(self.pin) if self.pin else None
+        mower = Mower(channel_id, self.address, pin)
 
         try:
             errors: dict[str, str] = {}
@@ -171,7 +172,8 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             self.address = user_input[CONF_ADDRESS]
             self.pin = user_input[CONF_PIN]
 
-            mower = Mower(channel_id, self.address, self.pin)
+            pin = int(self.pin) if self.pin else None
+            mower = Mower(channel_id, self.address, pin)
 
             try:
                 device = bluetooth.async_ble_device_from_address(
