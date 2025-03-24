@@ -627,7 +627,6 @@ bluecurrent-api==1.2.3
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.decora
-# homeassistant.components.zengge
 # bluepy==1.3.0
 
 # homeassistant.components.bluetooth
@@ -3142,9 +3141,6 @@ zabbix-utils==2.0.2
 
 # homeassistant.components.zamg
 zamg==0.3.6
-
-# homeassistant.components.zengge
-zengge==0.2
 
 # homeassistant.components.zeroconf
 zeroconf==0.146.0
