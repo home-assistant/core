@@ -657,6 +657,19 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                 ):
                     continue
 
+            # Process the section schema options
+            if (
+                suggested_values is not None
+                and isinstance(val, section)
+                and key in suggested_values
+            ):
+                new_section_key = copy.copy(key)
+                schema[new_section_key] = val
+                val.schema = self.add_suggested_values_to_schema(
+                    copy.deepcopy(val.schema), suggested_values[key]
+                )
+                continue
+
             new_key = key
             if (
                 suggested_values

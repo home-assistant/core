@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from pysmartthings import (
     Attribute,
@@ -27,38 +27,27 @@ class SmartThingsEntity(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, client: SmartThings, device: FullDevice, capabilities: set[Capability]
+        self,
+        client: SmartThings,
+        device: FullDevice,
+        capabilities: set[Capability],
+        *,
+        component: str = MAIN,
     ) -> None:
         """Initialize the instance."""
         self.client = client
         self.capabilities = capabilities
+        self.component = component
         self._internal_state: dict[Capability | str, dict[Attribute | str, Status]] = {
-            capability: device.status[MAIN][capability]
+            capability: device.status[component][capability]
             for capability in capabilities
-            if capability in device.status[MAIN]
+            if capability in device.status[component]
         }
         self.device = device
         self._attr_unique_id = device.device.device_id
         self._attr_device_info = DeviceInfo(
-            configuration_url="https://account.smartthings.com",
             identifiers={(DOMAIN, device.device.device_id)},
-            name=device.device.label,
         )
-        if (ocf := device.status[MAIN].get(Capability.OCF)) is not None:
-            self._attr_device_info.update(
-                {
-                    "manufacturer": cast(
-                        str | None, ocf[Attribute.MANUFACTURER_NAME].value
-                    ),
-                    "model": cast(str | None, ocf[Attribute.MODEL_NUMBER].value),
-                    "hw_version": cast(
-                        str | None, ocf[Attribute.HARDWARE_VERSION].value
-                    ),
-                    "sw_version": cast(
-                        str | None, ocf[Attribute.OCF_FIRMWARE_VERSION].value
-                    ),
-                }
-            )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
@@ -67,7 +56,7 @@ class SmartThingsEntity(Entity):
             self.async_on_remove(
                 self.client.add_device_capability_event_listener(
                     self.device.device.device_id,
-                    MAIN,
+                    self.component,
                     capability,
                     self._update_handler,
                 )
@@ -81,7 +70,7 @@ class SmartThingsEntity(Entity):
 
     def supports_capability(self, capability: Capability) -> bool:
         """Test if device supports a capability."""
-        return capability in self.device.status[MAIN]
+        return capability in self.device.status[self.component]
 
     def get_attribute_value(self, capability: Capability, attribute: Attribute) -> Any:
         """Get the value of a device attribute."""
@@ -106,5 +95,5 @@ class SmartThingsEntity(Entity):
         if argument is not None:
             kwargs["argument"] = argument
         await self.client.execute_device_command(
-            self.device.device.device_id, capability, command, MAIN, **kwargs
+            self.device.device.device_id, capability, command, self.component, **kwargs
         )

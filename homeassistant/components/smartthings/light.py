@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import Any, cast
 
-from pysmartthings import Attribute, Capability, Command, SmartThings
+from pysmartthings import Attribute, Capability, Command, DeviceEvent, SmartThings
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
@@ -19,6 +20,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN
@@ -53,7 +55,7 @@ def convert_scale(
     return round(value * target_scale / value_scale, round_digits)
 
 
-class SmartThingsLight(SmartThingsEntity, LightEntity):
+class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
     """Define a SmartThings Light."""
 
     _attr_name = None
@@ -84,17 +86,27 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         color_modes = set()
         if self.supports_capability(Capability.COLOR_TEMPERATURE):
             color_modes.add(ColorMode.COLOR_TEMP)
+            self._attr_color_mode = ColorMode.COLOR_TEMP
         if self.supports_capability(Capability.COLOR_CONTROL):
             color_modes.add(ColorMode.HS)
+            self._attr_color_mode = ColorMode.HS
         if not color_modes and self.supports_capability(Capability.SWITCH_LEVEL):
             color_modes.add(ColorMode.BRIGHTNESS)
         if not color_modes:
             color_modes.add(ColorMode.ONOFF)
+        if len(color_modes) == 1:
+            self._attr_color_mode = list(color_modes)[0]
         self._attr_supported_color_modes = color_modes
         features = LightEntityFeature(0)
         if self.supports_capability(Capability.SWITCH_LEVEL):
             features |= LightEntityFeature.TRANSITION
         self._attr_supported_features = features
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_extra_data()) is not None:
+            self._attr_color_mode = last_state.as_dict()[ATTR_COLOR_MODE]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
@@ -135,14 +147,21 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         """Update entity attributes when the device status has changed."""
         # Brightness and transition
         if brightness_supported(self._attr_supported_color_modes):
-            self._attr_brightness = int(
-                convert_scale(
-                    self.get_attribute_value(Capability.SWITCH_LEVEL, Attribute.LEVEL),
-                    100,
-                    255,
-                    0,
+            if (
+                brightness := self.get_attribute_value(
+                    Capability.SWITCH_LEVEL, Attribute.LEVEL
                 )
-            )
+            ) is None:
+                self._attr_brightness = None
+            else:
+                self._attr_brightness = int(
+                    convert_scale(
+                        brightness,
+                        100,
+                        255,
+                        0,
+                    )
+                )
         # Color Temperature
         if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
             self._attr_color_temp_kelvin = self.get_attribute_value(
@@ -150,16 +169,21 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
             )
         # Color
         if ColorMode.HS in self._attr_supported_color_modes:
-            self._attr_hs_color = (
-                convert_scale(
-                    self.get_attribute_value(Capability.COLOR_CONTROL, Attribute.HUE),
-                    100,
-                    360,
-                ),
-                self.get_attribute_value(
-                    Capability.COLOR_CONTROL, Attribute.SATURATION
-                ),
-            )
+            if (
+                hue := self.get_attribute_value(Capability.COLOR_CONTROL, Attribute.HUE)
+            ) is None:
+                self._attr_hs_color = None
+            else:
+                self._attr_hs_color = (
+                    convert_scale(
+                        hue,
+                        100,
+                        360,
+                    ),
+                    self.get_attribute_value(
+                        Capability.COLOR_CONTROL, Attribute.SATURATION
+                    ),
+                )
 
     async def async_set_color(self, hs_color):
         """Set the color of the device."""
@@ -195,19 +219,20 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
             argument=[level, duration],
         )
 
-    @property
-    def color_mode(self) -> ColorMode:
-        """Return the color mode of the light."""
-        if len(self._attr_supported_color_modes) == 1:
-            # The light supports only a single color mode
-            return list(self._attr_supported_color_modes)[0]
-
-        # The light supports hs + color temp, determine which one it is
-        if self._attr_hs_color and self._attr_hs_color[1]:
-            return ColorMode.HS
-        return ColorMode.COLOR_TEMP
+    def _update_handler(self, event: DeviceEvent) -> None:
+        """Handle device updates."""
+        if event.capability in (Capability.COLOR_CONTROL, Capability.COLOR_TEMPERATURE):
+            self._attr_color_mode = {
+                Capability.COLOR_CONTROL: ColorMode.HS,
+                Capability.COLOR_TEMPERATURE: ColorMode.COLOR_TEMP,
+            }[cast(Capability, event.capability)]
+        super()._update_handler(event)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if light is on."""
-        return self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on"
+        if (
+            state := self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH)
+        ) is None:
+            return None
+        return state == "on"
