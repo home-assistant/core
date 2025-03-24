@@ -3491,18 +3491,14 @@ class ConfigSubentryFlow(
         return self.async_abort(reason="reconfigure_successful")
 
     @property
-    def _reconfigure_entry_id(self) -> str:
-        """Return reconfigure entry id."""
-        if self.source != SOURCE_RECONFIGURE:
-            raise ValueError(f"Source is {self.source}, expected {SOURCE_RECONFIGURE}")
+    def _entry_id(self) -> str:
+        """Return config entry id."""
         return self.handler[0]
 
     @callback
-    def _get_reconfigure_entry(self) -> ConfigEntry:
-        """Return the reconfigure config entry linked to the current context."""
-        return self.hass.config_entries.async_get_known_entry(
-            self._reconfigure_entry_id
-        )
+    def _get_entry(self) -> ConfigEntry:
+        """Return the config entry linked to the current context."""
+        return self.hass.config_entries.async_get_known_entry(self._entry_id)
 
     @property
     def _reconfigure_subentry_id(self) -> str:
@@ -3514,9 +3510,7 @@ class ConfigSubentryFlow(
     @callback
     def _get_reconfigure_subentry(self) -> ConfigSubentry:
         """Return the reconfigure config subentry linked to the current context."""
-        entry = self.hass.config_entries.async_get_known_entry(
-            self._reconfigure_entry_id
-        )
+        entry = self.hass.config_entries.async_get_known_entry(self._entry_id)
         subentry_id = self._reconfigure_subentry_id
         if subentry_id not in entry.subentries:
             raise UnknownSubEntry(subentry_id)
