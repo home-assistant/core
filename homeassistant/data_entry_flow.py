@@ -666,7 +666,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                 new_section_key = copy.copy(key)
                 schema[new_section_key] = val
                 val.schema = self.add_suggested_values_to_schema(
-                    copy.deepcopy(val.schema), suggested_values[key]
+                    val.schema, suggested_values[key]
                 )
                 continue
 

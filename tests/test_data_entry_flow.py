@@ -178,6 +178,10 @@ async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) 
     assert markers[2] == "section_1"
     section_validator = form["data_schema"].schema["section_1"]
     assert isinstance(section_validator, data_entry_flow.section)
+    # The section class was not replaced
+    assert section_validator is schema.schema["section_1"]
+    # The section schema was not replaced
+    assert section_validator.schema is schema.schema["section_1"].schema
     section_markers = list(section_validator.schema.schema)
     assert len(section_markers) == 1
     assert section_markers[0] == "full_name"
