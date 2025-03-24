@@ -72,13 +72,12 @@ async def test_lock_state(
     expected: LockState,
 ) -> None:
     """Test lock state."""
-    await setup_lock(hass, mock_config_entry, mock_homee)
-
+    mock_homee.nodes = [build_mock_node("lock.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     attribute = mock_homee.nodes[0].attributes[0]
     attribute.target_value = target_value
     attribute.current_value = current_value
-    attribute.add_on_changed_listener.call_args_list[0][0][0](attribute)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("lock.test_lock").state == expected
 
