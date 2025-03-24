@@ -5,7 +5,6 @@
         "data": {
           "name": "Region name",
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "fuel_types": "Fuel types",
           "location": "[%key:common::config_flow::data::location%]",
           "stations": "Additional fuel stations",
           "radius": "Search radius"
@@ -42,6 +41,9 @@
           "show_on_map": "Show stations on map"
         }
       }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
   },
   "entity": {

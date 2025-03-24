@@ -1,4 +1,5 @@
 """Constants for the Open-Meteo integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -30,7 +31,7 @@ WMO_TO_HA_CONDITION_MAP = {
     2: ATTR_CONDITION_PARTLYCLOUDY,  # Partly cloudy
     3: ATTR_CONDITION_CLOUDY,  # Overcast
     45: ATTR_CONDITION_FOG,  # Fog
-    48: ATTR_CONDITION_FOG,  # Depositing rime fog
+    48: ATTR_CONDITION_FOG,  # Depositing rime fog  # codespell:ignore rime
     51: ATTR_CONDITION_RAINY,  # Drizzle: Light intensity
     53: ATTR_CONDITION_RAINY,  # Drizzle: Moderate intensity
     55: ATTR_CONDITION_RAINY,  # Drizzle: Dense intensity

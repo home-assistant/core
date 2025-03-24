@@ -1,0 +1,182 @@
+{
+  "config": {
+    "flow_title": "{model}",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Airgradient device."
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to set up {model}?"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "invalid_version": "This firmware version is unsupported. Please upgrade the firmware of the device to at least version 3.1.1.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "button": {
+      "co2_calibration": {
+        "name": "Calibrate CO2 sensor"
+      },
+      "led_bar_test": {
+        "name": "Test LED bar"
+      }
+    },
+    "number": {
+      "led_bar_brightness": {
+        "name": "LED bar brightness"
+      },
+      "display_brightness": {
+        "name": "Display brightness"
+      }
+    },
+    "select": {
+      "configuration_control": {
+        "name": "Configuration source",
+        "state": {
+          "cloud": "Cloud",
+          "local": "Local"
+        }
+      },
+      "display_temperature_unit": {
+        "name": "Display temperature unit",
+        "state": {
+          "c": "Celsius",
+          "f": "Fahrenheit"
+        }
+      },
+      "display_pm_standard": {
+        "name": "Display PM standard",
+        "state": {
+          "ugm3": "µg/m³",
+          "us_aqi": "US AQI"
+        }
+      },
+      "led_bar_mode": {
+        "name": "LED bar mode",
+        "state": {
+          "off": "Off",
+          "co2": "Carbon dioxide",
+          "pm": "Particulate matter"
+        }
+      },
+      "nox_index_learning_time_offset": {
+        "name": "NOx index learning offset",
+        "state": {
+          "12": "12 hours",
+          "60": "60 hours",
+          "120": "120 hours",
+          "360": "360 hours",
+          "720": "720 hours"
+        }
+      },
+      "voc_index_learning_time_offset": {
+        "name": "VOC index learning offset",
+        "state": {
+          "12": "[%key:component::airgradient::entity::select::nox_index_learning_time_offset::state::12%]",
+          "60": "[%key:component::airgradient::entity::select::nox_index_learning_time_offset::state::60%]",
+          "120": "[%key:component::airgradient::entity::select::nox_index_learning_time_offset::state::120%]",
+          "360": "[%key:component::airgradient::entity::select::nox_index_learning_time_offset::state::360%]",
+          "720": "[%key:component::airgradient::entity::select::nox_index_learning_time_offset::state::720%]"
+        }
+      },
+      "co2_automatic_baseline_calibration": {
+        "name": "CO2 automatic baseline duration",
+        "state": {
+          "1": "1 day",
+          "8": "8 days",
+          "30": "30 days",
+          "90": "90 days",
+          "180": "180 days",
+          "0": "[%key:common::state::off%]"
+        }
+      }
+    },
+    "sensor": {
+      "total_volatile_organic_component_index": {
+        "name": "VOC index"
+      },
+      "nitrogen_index": {
+        "name": "NOx index"
+      },
+      "pm003_count": {
+        "name": "PM0.3"
+      },
+      "raw_total_volatile_organic_component": {
+        "name": "Raw VOC"
+      },
+      "raw_nitrogen": {
+        "name": "Raw NOx"
+      },
+      "raw_pm02": {
+        "name": "Raw PM2.5"
+      },
+      "display_pm_standard": {
+        "name": "[%key:component::airgradient::entity::select::display_pm_standard::name%]",
+        "state": {
+          "ugm3": "[%key:component::airgradient::entity::select::display_pm_standard::state::ugm3%]",
+          "us_aqi": "[%key:component::airgradient::entity::select::display_pm_standard::state::us_aqi%]"
+        }
+      },
+      "co2_automatic_baseline_calibration_days": {
+        "name": "Carbon dioxide automatic baseline calibration"
+      },
+      "nox_learning_offset": {
+        "name": "[%key:component::airgradient::entity::select::nox_index_learning_time_offset::name%]"
+      },
+      "tvoc_learning_offset": {
+        "name": "[%key:component::airgradient::entity::select::voc_index_learning_time_offset::name%]"
+      },
+      "led_bar_mode": {
+        "name": "[%key:component::airgradient::entity::select::led_bar_mode::name%]",
+        "state": {
+          "off": "[%key:component::airgradient::entity::select::led_bar_mode::state::off%]",
+          "co2": "[%key:component::airgradient::entity::select::led_bar_mode::state::co2%]",
+          "pm": "[%key:component::airgradient::entity::select::led_bar_mode::state::pm%]"
+        }
+      },
+      "led_bar_brightness": {
+        "name": "[%key:component::airgradient::entity::number::led_bar_brightness::name%]"
+      },
+      "display_temperature_unit": {
+        "name": "[%key:component::airgradient::entity::select::display_temperature_unit::name%]",
+        "state": {
+          "c": "[%key:component::airgradient::entity::select::display_temperature_unit::state::c%]",
+          "f": "[%key:component::airgradient::entity::select::display_temperature_unit::state::f%]"
+        }
+      },
+      "display_brightness": {
+        "name": "[%key:component::airgradient::entity::number::display_brightness::name%]"
+      }
+    },
+    "switch": {
+      "post_data_to_airgradient": {
+        "name": "Post data to Airgradient"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the Airgradient device: {error}"
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the Airgradient device: {error}"
+    },
+    "update_error": {
+      "message": "An error occurred while communicating with the Airgradient device: {error}"
+    }
+  }
+}

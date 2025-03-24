@@ -1,4 +1,5 @@
 """Config flow for Glances."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -10,7 +11,7 @@ from glances_api.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -19,7 +20,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.data_entry_flow import FlowResult
 
 from . import ServerVersionMismatch, get_api
 from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
@@ -36,27 +36,26 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class GlancesFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Glances config flow."""
 
     VERSION = 1
-    _reauth_entry: config_entries.ConfigEntry | None
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors = {}
-        assert self._reauth_entry
+
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            user_input = {**self._reauth_entry.data, **user_input}
+            user_input = {**reauth_entry.data, **user_input}
             try:
                 await get_api(self.hass, user_input)
             except GlancesApiAuthorizationError:
@@ -65,15 +64,13 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=user_input
+                    reauth_entry, data=user_input
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+                await self.hass.config_entries.async_reload(reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
-            description_placeholders={
-                CONF_USERNAME: self._reauth_entry.data[CONF_USERNAME]
-            },
+            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
             step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
@@ -85,7 +82,7 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:

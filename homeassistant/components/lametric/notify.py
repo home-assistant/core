@@ -1,15 +1,18 @@
 """Support for LaMetric notifications."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from demetriek import (
+    AlarmSound,
     LaMetricDevice,
     LaMetricError,
     Model,
     Notification,
     NotificationIconType,
     NotificationPriority,
+    NotificationSound,
     Simple,
     Sound,
 )
@@ -17,8 +20,9 @@ from demetriek import (
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 from homeassistant.const import CONF_ICON
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.enum import try_parse_enum
 
 from .const import CONF_CYCLES, CONF_ICON_TYPE, CONF_PRIORITY, CONF_SOUND, DOMAIN
 from .coordinator import LaMetricDataUpdateCoordinator
@@ -52,7 +56,12 @@ class LaMetricNotificationService(BaseNotificationService):
 
         sound = None
         if CONF_SOUND in data:
-            sound = Sound(sound=data[CONF_SOUND], category=None)
+            snd: AlarmSound | NotificationSound | None
+            if (snd := try_parse_enum(AlarmSound, data[CONF_SOUND])) is None and (
+                snd := try_parse_enum(NotificationSound, data[CONF_SOUND])
+            ) is None:
+                raise ServiceValidationError("Unknown sound provided")
+            sound = Sound(sound=snd, category=None)
 
         notification = Notification(
             icon_type=NotificationIconType(data.get(CONF_ICON_TYPE, "none")),

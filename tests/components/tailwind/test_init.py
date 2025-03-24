@@ -1,4 +1,5 @@
 """Integration tests for the Tailwind integration."""
+
 from unittest.mock import MagicMock
 
 from gotailwind import TailwindAuthenticationError, TailwindConnectionError
@@ -65,8 +66,8 @@ async def test_config_entry_authentication_failed(
     assert len(flows) == 1
 
     flow = flows[0]
-    assert flow.get("step_id") == "reauth_confirm"
-    assert flow.get("handler") == DOMAIN
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
 
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH

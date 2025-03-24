@@ -1,20 +1,17 @@
 """Offer webhook triggered automation rules."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from typing import Any
 
-from aiohttp import hdrs
+from aiohttp import hdrs, web
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM, CONF_WEBHOOK_ID
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
@@ -57,9 +54,11 @@ class TriggerInstance:
     job: HassJob
 
 
-async def _handle_webhook(hass, webhook_id, request):
+async def _handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> None:
     """Handle incoming webhook."""
-    base_result = {"platform": "webhook", "webhook_id": webhook_id}
+    base_result: dict[str, Any] = {"platform": "webhook", "webhook_id": webhook_id}
 
     if "json" in request.headers.get(hdrs.CONTENT_TYPE, ""):
         base_result["json"] = await request.json()
@@ -85,31 +84,7 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Trigger based on incoming webhooks."""
     webhook_id: str = config[CONF_WEBHOOK_ID]
-    local_only = config.get(CONF_LOCAL_ONLY)
-    issue_id: str | None = None
-    if local_only is None:
-        issue_id = f"trigger_missing_local_only_{webhook_id}"
-        variables = trigger_info["variables"] or {}
-        automation_info = variables.get("this", {})
-        automation_id = automation_info.get("attributes", {}).get("id")
-        automation_entity_id = automation_info.get("entity_id")
-        automation_name = trigger_info.get("name") or automation_entity_id
-        async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            breaks_in_ha_version="2023.11.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            learn_more_url="https://www.home-assistant.io/docs/automation/trigger/#webhook-trigger",
-            translation_key="trigger_missing_local_only",
-            translation_placeholders={
-                "webhook_id": webhook_id,
-                "automation_name": automation_name,
-                "entity_id": automation_entity_id,
-                "edit": f"/config/automation/edit/{automation_id}",
-            },
-        )
+    local_only = config.get(CONF_LOCAL_ONLY, True)
     allowed_methods = config.get(CONF_ALLOWED_METHODS, DEFAULT_METHODS)
     job = HassJob(action)
 
@@ -133,10 +108,8 @@ async def async_attach_trigger(
     triggers[webhook_id].append(trigger_instance)
 
     @callback
-    def unregister():
+    def unregister() -> None:
         """Unregister webhook."""
-        if issue_id:
-            async_delete_issue(hass, DOMAIN, issue_id)
         triggers[webhook_id].remove(trigger_instance)
         if not triggers[webhook_id]:
             async_unregister(hass, webhook_id)

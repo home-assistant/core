@@ -1,4 +1,5 @@
 """Diagnostics support for Tibber."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -17,11 +18,8 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     tibber_connection: tibber.Tibber = hass.data[DOMAIN]
 
-    diagnostics_data = {}
-
-    homes = []
-    for home in tibber_connection.get_homes(only_active=False):
-        homes.append(
+    return {
+        "homes": [
             {
                 "last_data_timestamp": home.last_data_timestamp,
                 "has_active_subscription": home.has_active_subscription,
@@ -29,7 +27,6 @@ async def async_get_config_entry_diagnostics(
                 "last_cons_data_timestamp": home.last_cons_data_timestamp,
                 "country": home.country,
             }
-        )
-    diagnostics_data["homes"] = homes
-
-    return diagnostics_data
+            for home in tibber_connection.get_homes(only_active=False)
+        ]
+    }

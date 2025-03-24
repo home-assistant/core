@@ -1,4 +1,5 @@
 """Notify tests for the Google Mail integration."""
+
 from unittest.mock import patch
 
 import pytest

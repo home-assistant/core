@@ -1,4 +1,5 @@
 """Type definitions for 1-Wire integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -15,4 +16,4 @@ class OWDeviceDescription:
     family: str
     id: str
     path: str
-    type: str
+    type: str | None

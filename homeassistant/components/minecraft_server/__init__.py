@@ -1,57 +1,46 @@
 """The Minecraft Server integration."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ADDRESS,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TYPE,
-    Platform,
-)
+import dns.rdata
+import dns.rdataclass
+import dns.rdatatype
+
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError
-import homeassistant.helpers.device_registry as dr
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .api import MinecraftServer, MinecraftServerAddressError, MinecraftServerType
 from .const import DOMAIN, KEY_LATENCY, KEY_MOTD
-from .coordinator import MinecraftServerCoordinator
+from .coordinator import MinecraftServerConfigEntry, MinecraftServerCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+def load_dnspython_rdata_classes() -> None:
+    """Load dnspython rdata classes used by mcstatus."""
+    for rdtype in dns.rdatatype.RdataType:
+        if not dns.rdatatype.is_metatype(rdtype) or rdtype == dns.rdatatype.OPT:
+            dns.rdata.get_rdata_class(dns.rdataclass.IN, rdtype)  # type: ignore[no-untyped-call]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: MinecraftServerConfigEntry
+) -> bool:
     """Set up Minecraft Server from a config entry."""
 
-    # Create API instance.
-    api = MinecraftServer(
-        hass,
-        entry.data.get(CONF_TYPE, MinecraftServerType.JAVA_EDITION),
-        entry.data[CONF_ADDRESS],
-    )
+    # Workaround to avoid blocking imports from dnspython (https://github.com/rthalley/dnspython/issues/1083)
+    await hass.async_add_executor_job(load_dnspython_rdata_classes)
 
-    # Initialize API instance.
-    try:
-        await api.async_initialize()
-    except MinecraftServerAddressError as error:
-        raise ConfigEntryError(
-            f"Server address in configuration entry is invalid: {error}"
-        ) from error
-
-    # Create coordinator instance.
-    coordinator = MinecraftServerCoordinator(hass, entry.data[CONF_NAME], api)
+    # Create coordinator instance and store it.
+    coordinator = MinecraftServerCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-
-    # Store coordinator instance.
-    domain_data = hass.data.setdefault(DOMAIN, {})
-    domain_data[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     # Set up platforms.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -59,21 +48,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: MinecraftServerConfigEntry
+) -> bool:
     """Unload Minecraft Server config entry."""
-
-    # Unload platforms.
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-
-    # Clean up.
-    hass.data[DOMAIN].pop(config_entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: MinecraftServerConfigEntry
+) -> bool:
     """Migrate old config entry to a new format."""
 
     # 1 --> 2: Use config entry ID as base for unique IDs.
@@ -86,9 +70,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
         # Migrate config entry.
         _LOGGER.debug("Migrating config entry. Resetting unique ID: %s", old_unique_id)
-        config_entry.unique_id = None
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry)
+        hass.config_entries.async_update_entry(config_entry, unique_id=None, version=2)
 
         # Migrate device.
         await _async_migrate_device_identifiers(hass, config_entry, old_unique_id)
@@ -124,10 +106,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
             try:
                 await api.async_initialize()
-            except MinecraftServerAddressError as error:
+            except MinecraftServerAddressError:
                 _LOGGER.exception(
-                    "Can't migrate configuration entry due to error while parsing server address, try again later: %s",
-                    error,
+                    "Can't migrate configuration entry due to error while parsing server address, try again later"
                 )
                 return False
 
@@ -142,8 +123,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         new_data[CONF_ADDRESS] = address
         del new_data[CONF_HOST]
         del new_data[CONF_PORT]
-        config_entry.version = 3
-        hass.config_entries.async_update_entry(config_entry, data=new_data)
+        hass.config_entries.async_update_entry(config_entry, data=new_data, version=3)
 
         _LOGGER.debug("Migration to version 3 successful")
 
@@ -151,7 +131,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
 
 async def _async_migrate_device_identifiers(
-    hass: HomeAssistant, config_entry: ConfigEntry, old_unique_id: str | None
+    hass: HomeAssistant,
+    config_entry: MinecraftServerConfigEntry,
+    old_unique_id: str | None,
 ) -> None:
     """Migrate the device identifiers to the new format."""
     device_registry = dr.async_get(hass)

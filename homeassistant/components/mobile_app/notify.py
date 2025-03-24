@@ -1,4 +1,5 @@
 """Support for mobile_app push notifications."""
+
 from __future__ import annotations
 
 import asyncio
@@ -20,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_APP_DATA,
@@ -197,7 +198,7 @@ class MobileAppNotificationService(BaseNotificationService):
             else:
                 _LOGGER.error(message)
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error("Timeout sending notification to %s", push_url)
         except aiohttp.ClientError as err:
             _LOGGER.error("Error sending notification to %s: %r", push_url, err)

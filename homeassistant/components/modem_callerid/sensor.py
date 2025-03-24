@@ -1,4 +1,5 @@
 """A sensor for incoming calls using a USB modem that supports caller ID."""
+
 from __future__ import annotations
 
 from phone_modem import PhoneModem
@@ -8,13 +9,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_IDLE
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CID, DATA_KEY_API, DOMAIN, ICON
+from .const import CID, DATA_KEY_API, DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Modem Caller ID sensor."""
     api = hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]
@@ -40,10 +43,10 @@ async def async_setup_entry(
 class ModemCalleridSensor(SensorEntity):
     """Implementation of USB modem caller ID sensor."""
 
-    _attr_icon = ICON
     _attr_should_poll = False
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "incoming_call"
 
     def __init__(self, api: PhoneModem, server_unique_id: str) -> None:
         """Initialize the sensor."""

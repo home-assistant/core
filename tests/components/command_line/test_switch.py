@@ -1,14 +1,15 @@
 """The tests for the Command line switch platform."""
+
 from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
 import json
 import os
-import subprocess
 import tempfile
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import setup
@@ -25,12 +26,33 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
+
+from . import mock_asyncio_subprocess_run
 
 from tests.common import async_fire_time_changed
+
+
+async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
+    """Test setting up the platform with platform yaml."""
+    await setup.async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "command_line",
+                "command": "echo 1",
+                "payload_on": "1",
+                "payload_off": "0",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
 
 
 async def test_state_integration_yaml(hass: HomeAssistant) -> None:
@@ -346,7 +368,7 @@ async def test_switch_command_state_fail(
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("switch.test")
     assert entity_state
@@ -372,13 +394,7 @@ async def test_switch_command_state_code_exceptions(
 ) -> None:
     """Test that switch state code exceptions are handled correctly."""
 
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        side_effect=[
-            subprocess.TimeoutExpired("cmd", 10),
-            subprocess.SubprocessError(),
-        ],
-    ) as check_output:
+    with mock_asyncio_subprocess_run(exception=asyncio.TimeoutError) as run:
         await setup.async_setup_component(
             hass,
             DOMAIN,
@@ -399,12 +415,13 @@ async def test_switch_command_state_code_exceptions(
 
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
-        assert check_output.called
+        assert run.called
         assert "Timeout for command" in caplog.text
 
+    with mock_asyncio_subprocess_run(returncode=127) as run:
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
         await hass.async_block_till_done()
-        assert check_output.called
+        assert run.called
         assert "Error trying to exec command" in caplog.text
 
 
@@ -413,13 +430,7 @@ async def test_switch_command_state_value_exceptions(
 ) -> None:
     """Test that switch state value exceptions are handled correctly."""
 
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        side_effect=[
-            subprocess.TimeoutExpired("cmd", 10),
-            subprocess.SubprocessError(),
-        ],
-    ) as check_output:
+    with mock_asyncio_subprocess_run(exception=asyncio.TimeoutError) as run:
         await setup.async_setup_component(
             hass,
             DOMAIN,
@@ -441,13 +452,14 @@ async def test_switch_command_state_value_exceptions(
 
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
-        assert check_output.call_count == 1
+        assert run.call_count == 1
         assert "Timeout for command" in caplog.text
 
+    with mock_asyncio_subprocess_run(returncode=127) as run:
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
         await hass.async_block_till_done()
-        assert check_output.call_count == 2
-        assert "Error trying to exec command" in caplog.text
+        assert run.call_count == 1
+        assert "Command failed (with return code 127)" in caplog.text
 
 
 async def test_unique_id(
@@ -540,7 +552,7 @@ async def test_templating(hass: HomeAssistant) -> None:
                             "command_off": f"echo 0 > {path}",
                             "value_template": '{{ value=="1" }}',
                             "icon": (
-                                '{% if this.state=="on" %} mdi:on {% else %} mdi:off {% endif %}'
+                                '{% if this.attributes.icon=="mdi:icon2" %} mdi:icon1 {% else %} mdi:icon2 {% endif %}'
                             ),
                             "name": "Test",
                         }
@@ -552,7 +564,7 @@ async def test_templating(hass: HomeAssistant) -> None:
                             "command_off": f"echo 0 > {path}",
                             "value_template": '{{ value=="1" }}',
                             "icon": (
-                                '{% if states("switch.test2")=="on" %} mdi:on {% else %} mdi:off {% endif %}'
+                                '{% if states("switch.test")=="off" %} mdi:off {% else %} mdi:on {% endif %}'
                             ),
                             "name": "Test2",
                         },
@@ -583,7 +595,7 @@ async def test_templating(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         entity_state2 = hass.states.get("switch.test2")
         assert entity_state.state == STATE_ON
-        assert entity_state.attributes.get("icon") == "mdi:on"
+        assert entity_state.attributes.get("icon") == "mdi:icon2"
         assert entity_state2.state == STATE_ON
         assert entity_state2.attributes.get("icon") == "mdi:on"
 
@@ -710,3 +722,49 @@ async def test_updating_manually(
     )
     await hass.async_block_till_done()
     assert called
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "switch": {
+                        "command_state": "echo 1",
+                        "command_on": "echo 2",
+                        "command_off": "echo 3",
+                        "name": "Test",
+                        "availability": '{{ states("sensor.input1")=="on" }}',
+                    },
+                }
+            ]
+        }
+    ],
+)
+async def test_availability(
+    hass: HomeAssistant,
+    load_yaml_integration: None,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test availability."""
+
+    hass.states.async_set("sensor.input1", "on")
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_ON
+
+    hass.states.async_set("sensor.input1", "off")
+    await hass.async_block_till_done()
+    with mock_asyncio_subprocess_run(b"50\n"):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE

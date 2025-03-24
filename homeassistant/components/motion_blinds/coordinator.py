@@ -1,12 +1,13 @@
-"""DataUpdateCoordinator for motion blinds integration."""
+"""DataUpdateCoordinator for Motionblinds integration."""
+
 import asyncio
 from datetime import timedelta
 import logging
-from socket import timeout
 from typing import Any
 
-from motionblinds import ParseException
+from motionblinds import DEVICE_TYPES_WIFI, ParseException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -25,21 +26,22 @@ _LOGGER = logging.getLogger(__name__)
 class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
     """Class to manage fetching data from single endpoint."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         logger: logging.Logger,
         coordinator_info: dict[str, Any],
-        *,
-        name: str,
-        update_interval: timedelta,
     ) -> None:
         """Initialize global data updater."""
         super().__init__(
             hass,
             logger,
-            name=name,
-            update_interval=update_interval,
+            config_entry=config_entry,
+            name=config_entry.title,
+            update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
         self.api_lock = coordinator_info[KEY_API_LOCK]
@@ -50,7 +52,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         """Fetch data from gateway."""
         try:
             self._gateway.Update()
-        except (timeout, ParseException):
+        except (TimeoutError, ParseException):
             # let the error be logged and handled by the motionblinds library
             return {ATTR_AVAILABLE: False}
 
@@ -59,11 +61,13 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
     def update_blind(self, blind):
         """Fetch data from a blind."""
         try:
-            if self._wait_for_push:
+            if blind.device_type in DEVICE_TYPES_WIFI:
+                blind.Update_from_cache()
+            elif self._wait_for_push:
                 blind.Update()
             else:
                 blind.Update_trigger()
-        except (timeout, ParseException):
+        except (TimeoutError, ParseException):
             # let the error be logged and handled by the motionblinds library
             return {ATTR_AVAILABLE: False}
 

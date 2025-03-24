@@ -1,11 +1,16 @@
 """The nut component."""
+
 from __future__ import annotations
 
 from homeassistant.const import Platform
 
 DOMAIN = "nut"
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 DEFAULT_NAME = "NUT UPS"
 DEFAULT_HOST = "localhost"
@@ -14,14 +19,7 @@ DEFAULT_PORT = 3493
 KEY_STATUS = "ups.status"
 KEY_STATUS_DISPLAY = "ups.status.display"
 
-COORDINATOR = "coordinator"
 DEFAULT_SCAN_INTERVAL = 60
-
-PYNUT_DATA = "data"
-PYNUT_UNIQUE_ID = "unique_id"
-
-
-USER_AVAILABLE_COMMANDS = "user_available_commands"
 
 STATE_TYPES = {
     "OL": "Online",
@@ -39,6 +37,8 @@ STATE_TYPES = {
     "BOOST": "Boosting Voltage",
     "FSD": "Forced Shutdown",
     "ALARM": "Alarm",
+    "HE": "ECO Mode",
+    "TEST": "Battery Testing",
 }
 
 COMMAND_BEEPER_DISABLE = "beeper.disable"

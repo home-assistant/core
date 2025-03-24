@@ -39,8 +39,10 @@ GENERIC_THERMOSTAT_INFO = {
             "running": True,
             "type": "hold",
             "holdClimateRef": "away",
-            "endDate": "2022-01-01 10:00:00",
-            "startDate": "2022-02-02 11:00:00",
+            "startDate": "2022-02-02",
+            "startTime": "11:00:00",
+            "endDate": "2022-01-01",
+            "endTime": "10:00:00",
         }
     ],
     "remoteSensors": [
@@ -63,6 +65,9 @@ GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP = {
     "identifier": 8675309,
     "name": "ecobee",
     "modelNumber": "athenaSmart",
+    "utcTime": "2022-01-01 10:00:00",
+    "thermostatTime": "2022-01-01 6:00:00",
+    "location": {"timeZone": "America/Toronto"},
     "program": {
         "climates": [
             {"name": "Climate1", "climateRef": "c1"},
@@ -90,7 +95,8 @@ GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP = {
         "humidifierMode": "manual",
         "humidity": "30",
         "hasHeatPump": True,
-        "ventilatorType": "none",
+        "ventilatorType": "hrv",
+        "ventilatorOffDateTime": "2022-01-01 6:00:00",
     },
     "equipmentStatus": "fan",
     "events": [
@@ -99,8 +105,10 @@ GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP = {
             "running": True,
             "type": "hold",
             "holdClimateRef": "away",
-            "endDate": "2022-01-01 10:00:00",
-            "startDate": "2022-02-02 11:00:00",
+            "startDate": "2022-02-02",
+            "startTime": "11:00:00",
+            "endDate": "2022-01-01",
+            "endTime": "10:00:00",
         }
     ],
     "remoteSensors": [

@@ -1,13 +1,13 @@
 """Test the Advantage Air Sensor Platform."""
+
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.advantage_air.const import DOMAIN as ADVANTAGE_AIR_DOMAIN
 from homeassistant.components.advantage_air.sensor import (
     ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
     ADVANTAGE_AIR_SET_COUNTDOWN_VALUE,
 )
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -123,15 +123,14 @@ async def test_sensor_platform_disabled_entity(
     assert not hass.states.get(entity_id)
 
     mock_get.reset_mock()
-    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
-    await hass.async_block_till_done()
 
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-    await hass.async_block_till_done()
-    assert len(mock_get.mock_calls) == 2
+    with patch("homeassistant.config_entries.RELOAD_AFTER_UPDATE_DELAY", 1):
+        entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert len(mock_get.mock_calls) == 1
 
     state = hass.states.get(entity_id)
     assert state

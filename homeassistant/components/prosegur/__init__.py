@@ -1,4 +1,5 @@
 """The Prosegur Alarm integration."""
+
 import logging
 
 from pyprosegur.auth import Auth

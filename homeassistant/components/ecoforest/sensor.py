@@ -1,4 +1,5 @@
 """Support for Ecoforest sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfPressure,
@@ -20,11 +20,10 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
-from .coordinator import EcoforestCoordinator
+from .coordinator import EcoforestConfigEntry
 from .entity import EcoforestEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,18 +32,11 @@ STATUS_TYPE = [s.value for s in State]
 ALARM_TYPE = [a.value for a in Alarm] + ["none"]
 
 
-@dataclass(frozen=True)
-class EcoforestRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EcoforestSensorEntityDescription(SensorEntityDescription):
+    """Describes Ecoforest sensor entity."""
 
     value_fn: Callable[[Device], StateType]
-
-
-@dataclass(frozen=True)
-class EcoforestSensorEntityDescription(
-    SensorEntityDescription, EcoforestRequiredKeysMixin
-):
-    """Describes Ecoforest sensor entity."""
 
 
 SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (
@@ -90,7 +82,6 @@ SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (
         translation_key="alarm",
         device_class=SensorDeviceClass.ENUM,
         options=ALARM_TYPE,
-        icon="mdi:alert",
         value_fn=lambda data: data.alarm.value if data.alarm else "none",
     ),
     EcoforestSensorEntityDescription(
@@ -150,10 +141,12 @@ SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EcoforestConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Ecoforest sensor platform."""
-    coordinator: EcoforestCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities = [
         EcoforestSensor(coordinator, description) for description in SENSOR_TYPES

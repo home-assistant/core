@@ -1,4 +1,5 @@
 """Constants for the Livisi Smart Home integration."""
+
 import logging
 from typing import Final
 

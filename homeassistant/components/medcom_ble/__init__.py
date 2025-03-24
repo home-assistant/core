@@ -1,4 +1,5 @@
 """The Medcom BLE integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -52,6 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=DOMAIN,
         update_method=_async_update_method,
         update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),

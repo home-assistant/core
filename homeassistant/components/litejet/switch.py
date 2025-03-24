@@ -1,4 +1,5 @@
 """Support for LiteJet switch."""
+
 from typing import Any
 
 from pylitejet import LiteJet, LiteJetError
@@ -8,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 
@@ -18,7 +19,7 @@ ATTR_NUMBER = "number"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
 
@@ -91,11 +92,11 @@ class LiteJetSwitch(SwitchEntity):
         try:
             await self._lj.press_switch(self._index)
         except LiteJetError as exc:
-            raise HomeAssistantError() from exc
+            raise HomeAssistantError from exc
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Release the switch."""
         try:
             await self._lj.release_switch(self._index)
         except LiteJetError as exc:
-            raise HomeAssistantError() from exc
+            raise HomeAssistantError from exc

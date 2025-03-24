@@ -1,4 +1,5 @@
 """Support for UK Met Office weather service."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -19,7 +20,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -141,7 +142,9 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Met Office weather sensor platform."""
     hass_data = hass.data[DOMAIN][entry.entry_id]
@@ -251,6 +254,6 @@ class MetOfficeCurrentSensor(
         return {
             ATTR_LAST_UPDATE: self.coordinator.data.now.date,
             ATTR_SENSOR_ID: self.entity_description.key,
-            ATTR_SITE_ID: self.coordinator.data.site.id,
+            ATTR_SITE_ID: self.coordinator.data.site.location_id,
             ATTR_SITE_NAME: self.coordinator.data.site.name,
         }

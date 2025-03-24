@@ -1,4 +1,5 @@
 """Adds constants for Trafikverket Train integration."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "trafikverket_train"

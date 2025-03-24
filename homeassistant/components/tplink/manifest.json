@@ -1,12 +1,16 @@
 {
   "domain": "tplink",
-  "name": "TP-Link Kasa Smart",
-  "codeowners": ["@rytilahti", "@thegardenmonkey", "@bdraco"],
+  "name": "TP-Link Smart Home",
+  "codeowners": ["@rytilahti", "@bdraco", "@sdb9696"],
   "config_flow": true,
-  "dependencies": ["network"],
+  "dependencies": ["network", "ffmpeg", "stream"],
   "dhcp": [
     {
       "registered_devices": true
+    },
+    {
+      "hostname": "e[sp]*",
+      "macaddress": "3C52A1*"
     },
     {
       "hostname": "e[sp]*",
@@ -31,6 +35,14 @@
     {
       "hostname": "hs*",
       "macaddress": "9C5322*"
+    },
+    {
+      "hostname": "k[lps]*",
+      "macaddress": "5091E3*"
+    },
+    {
+      "hostname": "p1*",
+      "macaddress": "5091E3*"
     },
     {
       "hostname": "k[lps]*",
@@ -149,6 +161,10 @@
       "macaddress": "54AF97*"
     },
     {
+      "hostname": "l[59]*",
+      "macaddress": "54AF97*"
+    },
+    {
       "hostname": "k[lps]*",
       "macaddress": "AC15A2*"
     },
@@ -163,11 +179,127 @@
     {
       "hostname": "k[lps]*",
       "macaddress": "1C61B4*"
+    },
+    {
+      "hostname": "l[59]*",
+      "macaddress": "5CE931*"
+    },
+    {
+      "hostname": "l[59]*",
+      "macaddress": "3C52A1*"
+    },
+    {
+      "hostname": "l[59]*",
+      "macaddress": "5C628B*"
+    },
+    {
+      "hostname": "l[59]*",
+      "macaddress": "14EBB6*"
+    },
+    {
+      "hostname": "tp*",
+      "macaddress": "5C628B*"
+    },
+    {
+      "hostname": "p1*",
+      "macaddress": "482254*"
+    },
+    {
+      "hostname": "s5*",
+      "macaddress": "482254*"
+    },
+    {
+      "hostname": "p1*",
+      "macaddress": "30DE4B*"
+    },
+    {
+      "hostname": "p1*",
+      "macaddress": "3C52A1*"
+    },
+    {
+      "hostname": "tp*",
+      "macaddress": "3C52A1*"
+    },
+    {
+      "hostname": "s5*",
+      "macaddress": "3C52A1*"
+    },
+    {
+      "hostname": "h1*",
+      "macaddress": "3C52A1*"
+    },
+    {
+      "hostname": "l9*",
+      "macaddress": "A842A1*"
+    },
+    {
+      "hostname": "p1*",
+      "macaddress": "A842A1*"
+    },
+    {
+      "hostname": "l9*",
+      "macaddress": "3460F9*"
+    },
+    {
+      "hostname": "p1*",
+      "macaddress": "3460F9*"
+    },
+    {
+      "hostname": "hs*",
+      "macaddress": "704F57*"
+    },
+    {
+      "hostname": "k[lps]*",
+      "macaddress": "74DA88*"
+    },
+    {
+      "hostname": "p1*",
+      "macaddress": "74DA88*"
+    },
+    {
+      "hostname": "p3*",
+      "macaddress": "788CB5*"
+    },
+    {
+      "hostname": "p1*",
+      "macaddress": "CC32E5*"
+    },
+    {
+      "hostname": "k[lps]*",
+      "macaddress": "CC32E5*"
+    },
+    {
+      "hostname": "hs*",
+      "macaddress": "CC32E5*"
+    },
+    {
+      "hostname": "k[lps]*",
+      "macaddress": "D80D17*"
+    },
+    {
+      "hostname": "k[lps]*",
+      "macaddress": "D84732*"
+    },
+    {
+      "hostname": "p1*",
+      "macaddress": "F0A731*"
+    },
+    {
+      "hostname": "l9*",
+      "macaddress": "F0A731*"
+    },
+    {
+      "hostname": "ks2*",
+      "macaddress": "F0A731*"
+    },
+    {
+      "hostname": "kh1*",
+      "macaddress": "F0A731*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/tplink",
   "iot_class": "local_polling",
   "loggers": ["kasa"],
   "quality_scale": "platinum",
-  "requirements": ["python-kasa[speedups]==0.5.4"]
+  "requirements": ["python-kasa[speedups]==0.10.2"]
 }

@@ -1,4 +1,5 @@
 """Support for AirVisual Pro sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -20,26 +20,19 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AirVisualProData, AirVisualProEntity
-from .const import DOMAIN
+from . import AirVisualProConfigEntry
+from .entity import AirVisualProEntity
 
 
-@dataclass(frozen=True)
-class AirVisualProMeasurementKeyMixin:
-    """Define an entity description mixin to include a measurement key."""
+@dataclass(frozen=True, kw_only=True)
+class AirVisualProMeasurementDescription(SensorEntityDescription):
+    """Describe an AirVisual Pro sensor."""
 
     value_fn: Callable[
         [dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]], float | int
     ]
-
-
-@dataclass(frozen=True)
-class AirVisualProMeasurementDescription(
-    SensorEntityDescription, AirVisualProMeasurementKeyMixin
-):
-    """Describe an AirVisual Pro sensor."""
 
 
 SENSOR_DESCRIPTIONS = (
@@ -57,7 +50,7 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda settings, status, measurements, history: int(
             history.get(
-                f'Outdoor {"AQI(US)" if settings["is_aqi_usa"] else "AQI(CN)"}', -1
+                f"Outdoor {'AQI(US)' if settings['is_aqi_usa'] else 'AQI(CN)'}", -1
             )
         ),
         translation_key="outdoor_air_quality_index",
@@ -67,6 +60,7 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda settings, status, measurements, history: status["battery"],
     ),
     AirVisualProMeasurementDescription(
@@ -80,6 +74,7 @@ SENSOR_DESCRIPTIONS = (
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda settings, status, measurements, history: measurements[
             "humidity"
         ],
@@ -133,13 +128,13 @@ def async_get_aqi_locale(settings: dict[str, Any]) -> str:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirVisualProConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AirVisual sensors based on a config entry."""
-    data: AirVisualProData = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        AirVisualProSensor(data.coordinator, description)
+        AirVisualProSensor(entry.runtime_data.coordinator, description)
         for description in SENSOR_DESCRIPTIONS
     )
 

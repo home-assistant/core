@@ -1,6 +1,9 @@
 """Support for ESPHome climate devices."""
+
 from __future__ import annotations
 
+from functools import partial
+from math import isfinite
 from typing import Any, cast
 
 from aioesphomeapi import (
@@ -44,7 +47,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
@@ -52,27 +54,18 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 
-from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    esphome_float_state_property,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 from .enum_mapper import EsphomeEnumMapper
 
 FAN_QUIET = "quiet"
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up ESPHome climate devices based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=ClimateInfo,
-        entity_type=EsphomeClimateEntity,
-        state_type=ClimateState,
-    )
 
 
 _CLIMATE_MODES: EsphomeEnumMapper[ClimateMode, HVACMode] = EsphomeEnumMapper(
@@ -167,11 +160,11 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         self._attr_min_humidity = round(static_info.visual_min_humidity)
         self._attr_max_humidity = round(static_info.visual_max_humidity)
         features = ClimateEntityFeature(0)
-        if self._static_info.supports_two_point_target_temperature:
+        if static_info.supports_two_point_target_temperature:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         else:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE
-        if self._static_info.supports_target_humidity:
+        if static_info.supports_target_humidity:
             features |= ClimateEntityFeature.TARGET_HUMIDITY
         if self.preset_modes:
             features |= ClimateEntityFeature.PRESET_MODE
@@ -179,6 +172,8 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             features |= ClimateEntityFeature.FAN_MODE
         if self.swing_modes:
             features |= ClimateEntityFeature.SWING_MODE
+        if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
+            features |= ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         self._attr_supported_features = features
 
     def _get_precision(self) -> float:
@@ -233,33 +228,39 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         return _SWING_MODES.from_esphome(self._state.swing_mode)
 
     @property
-    @esphome_state_property
+    @esphome_float_state_property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
+        if not self._static_info.supports_current_temperature:
+            return None
         return self._state.current_temperature
 
     @property
     @esphome_state_property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        if not self._static_info.supports_current_humidity:
+        if (
+            not self._static_info.supports_current_humidity
+            or (val := self._state.current_humidity) is None
+            or not isfinite(val)
+        ):
             return None
-        return round(self._state.current_humidity)
+        return round(val)
 
     @property
-    @esphome_state_property
+    @esphome_float_state_property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._state.target_temperature
 
     @property
-    @esphome_state_property
+    @esphome_float_state_property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._state.target_temperature_low
 
     @property
-    @esphome_state_property
+    @esphome_float_state_property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         return self._state.target_temperature_high
@@ -270,6 +271,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         """Return the humidity we try to reach."""
         return round(self._state.target_humidity)
 
+    @convert_api_error_ha_error
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature (and operation mode if set)."""
         data: dict[str, Any] = {"key": self._key}
@@ -283,18 +285,21 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             data["target_temperature_low"] = kwargs[ATTR_TARGET_TEMP_LOW]
         if ATTR_TARGET_TEMP_HIGH in kwargs:
             data["target_temperature_high"] = kwargs[ATTR_TARGET_TEMP_HIGH]
-        await self._client.climate_command(**data)
+        self._client.climate_command(**data)
 
+    @convert_api_error_ha_error
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        await self._client.climate_command(key=self._key, target_humidity=humidity)
+        self._client.climate_command(key=self._key, target_humidity=humidity)
 
+    @convert_api_error_ha_error
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        await self._client.climate_command(
+        self._client.climate_command(
             key=self._key, mode=_CLIMATE_MODES.from_hass(hvac_mode)
         )
 
+    @convert_api_error_ha_error
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         kwargs: dict[str, Any] = {"key": self._key}
@@ -302,8 +307,9 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             kwargs["custom_preset"] = preset_mode
         else:
             kwargs["preset"] = _PRESETS.from_hass(preset_mode)
-        await self._client.climate_command(**kwargs)
+        self._client.climate_command(**kwargs)
 
+    @convert_api_error_ha_error
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         kwargs: dict[str, Any] = {"key": self._key}
@@ -311,10 +317,19 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             kwargs["custom_fan_mode"] = fan_mode
         else:
             kwargs["fan_mode"] = _FAN_MODES.from_hass(fan_mode)
-        await self._client.climate_command(**kwargs)
+        self._client.climate_command(**kwargs)
 
+    @convert_api_error_ha_error
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""
-        await self._client.climate_command(
+        self._client.climate_command(
             key=self._key, swing_mode=_SWING_MODES.from_hass(swing_mode)
         )
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=ClimateInfo,
+    entity_type=EsphomeClimateEntity,
+    state_type=ClimateState,
+)

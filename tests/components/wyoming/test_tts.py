@@ -1,4 +1,5 @@
 """Test tts."""
+
 from __future__ import annotations
 
 import io
@@ -6,6 +7,7 @@ from unittest.mock import patch
 import wave
 
 import pytest
+from syrupy import SnapshotAssertion
 from wyoming.audio import AudioChunk, AudioStop
 
 from homeassistant.components import tts, wyoming
@@ -37,7 +39,9 @@ async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
     assert not entity.async_get_supported_voices("de-DE")
 
 
-async def test_get_tts_audio(hass: HomeAssistant, init_wyoming_tts, snapshot) -> None:
+async def test_get_tts_audio(
+    hass: HomeAssistant, init_wyoming_tts, snapshot: SnapshotAssertion
+) -> None:
     """Test get audio."""
     audio = bytes(100)
     audio_events = [
@@ -78,7 +82,7 @@ async def test_get_tts_audio(hass: HomeAssistant, init_wyoming_tts, snapshot) ->
 
 
 async def test_get_tts_audio_different_formats(
-    hass: HomeAssistant, init_wyoming_tts, snapshot
+    hass: HomeAssistant, init_wyoming_tts, snapshot: SnapshotAssertion
 ) -> None:
     """Test changing preferred audio format."""
     audio = bytes(16000 * 2 * 1)  # one second
@@ -146,14 +150,15 @@ async def test_get_tts_audio_connection_lost(
     hass: HomeAssistant, init_wyoming_tts
 ) -> None:
     """Test streaming audio and losing connection."""
+    stream = tts.async_create_stream(hass, "tts.test_tts", "en-US")
     with patch(
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         MockAsyncTcpClient([None]),
-    ), pytest.raises(HomeAssistantError):
-        await tts.async_get_media_source_audio(
-            hass,
-            tts.generate_media_source_id(hass, "Hello world", "tts.test_tts", "en-US"),
-        )
+    ):
+        stream.async_set_message("Hello world")
+        with pytest.raises(HomeAssistantError):
+            async for _chunk in stream.async_stream_result():
+                pass
 
 
 async def test_get_tts_audio_audio_oserror(
@@ -168,13 +173,15 @@ async def test_get_tts_audio_audio_oserror(
 
     mock_client = MockAsyncTcpClient(audio_events)
 
-    with patch(
-        "homeassistant.components.wyoming.tts.AsyncTcpClient",
-        mock_client,
-    ), patch.object(
-        mock_client, "read_event", side_effect=OSError("Boom!")
-    ), pytest.raises(
-        HomeAssistantError,
+    with (
+        patch(
+            "homeassistant.components.wyoming.tts.AsyncTcpClient",
+            mock_client,
+        ),
+        patch.object(mock_client, "read_event", side_effect=OSError("Boom!")),
+        pytest.raises(
+            HomeAssistantError,
+        ),
     ):
         await tts.async_get_media_source_audio(
             hass,
@@ -184,7 +191,9 @@ async def test_get_tts_audio_audio_oserror(
         )
 
 
-async def test_voice_speaker(hass: HomeAssistant, init_wyoming_tts, snapshot) -> None:
+async def test_voice_speaker(
+    hass: HomeAssistant, init_wyoming_tts, snapshot: SnapshotAssertion
+) -> None:
     """Test using a different voice and speaker."""
     audio = bytes(100)
     audio_events = [

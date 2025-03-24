@@ -1,7 +1,8 @@
 """Support for ESPHome lights."""
+
 from __future__ import annotations
 
-from functools import lru_cache
+from functools import lru_cache, partial
 from typing import TYPE_CHECKING, Any, cast
 
 from aioesphomeapi import (
@@ -28,27 +29,16 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 
-from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 
 FLASH_LENGTHS = {FLASH_SHORT: 2, FLASH_LONG: 10}
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up ESPHome lights based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=LightInfo,
-        entity_type=EsphomeLight,
-        state_type=LightState,
-    )
 
 
 _COLOR_MODE_MAPPING = {
@@ -132,7 +122,7 @@ def _color_mode_to_ha(mode: int) -> str:
         return ColorMode.UNKNOWN
 
     # choose the color mode with the most bits set
-    candidates.sort(key=lambda key: bin(key[1]).count("1"))
+    candidates.sort(key=lambda key: key[1].bit_count())
     return candidates[-1][0]
 
 
@@ -156,7 +146,7 @@ def _least_complex_color_mode(color_modes: tuple[int, ...]) -> int:
     # popcount with bin() function because it appears
     # to be the best way: https://stackoverflow.com/a/9831671
     color_modes_list = list(color_modes)
-    color_modes_list.sort(key=lambda mode: bin(mode).count("1"))
+    color_modes_list.sort(key=lambda mode: (mode).bit_count())
     return color_modes_list[0]
 
 
@@ -172,6 +162,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         """Return true if the light is on."""
         return self._state.state
 
+    @convert_api_error_ha_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         data: dict[str, Any] = {"key": self._key, "state": True}
@@ -285,8 +276,9 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
                 # (fewest capabilities set)
                 data["color_mode"] = _least_complex_color_mode(color_modes)
 
-        await self._client.light_command(**data)
+        self._client.light_command(**data)
 
+    @convert_api_error_ha_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         data: dict[str, Any] = {"key": self._key, "state": False}
@@ -294,7 +286,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             data["flash_length"] = FLASH_LENGTHS[kwargs[ATTR_FLASH]]
         if ATTR_TRANSITION in kwargs:
             data["transition_length"] = kwargs[ATTR_TRANSITION]
-        await self._client.light_command(**data)
+        self._client.light_command(**data)
 
     @property
     @esphome_state_property
@@ -402,16 +394,33 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         self._attr_supported_features = flags
 
         supported = set(map(_color_mode_to_ha, self._native_supported_color_modes))
+
+        # If we don't know the supported color modes, ESPHome lights
+        # are always at least ONOFF so we can safely discard UNKNOWN
+        supported.discard(ColorMode.UNKNOWN)
+
         if ColorMode.ONOFF in supported and len(supported) > 1:
             supported.remove(ColorMode.ONOFF)
         if ColorMode.BRIGHTNESS in supported and len(supported) > 1:
             supported.remove(ColorMode.BRIGHTNESS)
         if ColorMode.WHITE in supported and len(supported) == 1:
             supported.remove(ColorMode.WHITE)
+
+        # If we don't know the supported color modes, its a very old
+        # legacy device, and since ESPHome lights are always at least ONOFF
+        # we can safely assume that it supports ONOFF
+        if not supported:
+            supported.add(ColorMode.ONOFF)
+
         self._attr_supported_color_modes = supported
         self._attr_effect_list = static_info.effects
-        self._attr_min_mireds = round(static_info.min_mireds)
-        self._attr_max_mireds = round(static_info.max_mireds)
-        if ColorMode.COLOR_TEMP in supported:
-            self._attr_min_color_temp_kelvin = _mired_to_kelvin(static_info.max_mireds)
-            self._attr_max_color_temp_kelvin = _mired_to_kelvin(static_info.min_mireds)
+        self._attr_min_color_temp_kelvin = _mired_to_kelvin(static_info.max_mireds)
+        self._attr_max_color_temp_kelvin = _mired_to_kelvin(static_info.min_mireds)
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=LightInfo,
+    entity_type=EsphomeLight,
+    state_type=LightState,
+)

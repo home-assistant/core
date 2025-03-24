@@ -4,6 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -18,13 +19,17 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
+      'model_id': 'XJB1SU',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
-      'sw_version': 'XJB1SU',
+      'sw_version': None,
       'via_device_id': None,
     }),
   ])
@@ -37,6 +42,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -47,11 +53,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -67,12 +75,12 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
-        'icon': 'mdi:car',
         'source_type': <SourceType.GPS: 'gps'>,
       }),
       'context': <ANY>,
       'entity_id': 'device_tracker.reg_number_location',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -83,6 +91,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -97,13 +106,17 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
+      'model_id': 'XJB1SU',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
-      'sw_version': 'XJB1SU',
+      'sw_version': None,
       'via_device_id': None,
     }),
   ])
@@ -116,6 +129,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -126,11 +140,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -146,12 +162,12 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
-        'icon': 'mdi:car',
         'source_type': <SourceType.GPS: 'gps'>,
       }),
       'context': <ANY>,
       'entity_id': 'device_tracker.reg_number_location',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -162,6 +178,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -176,13 +193,17 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
+      'model_id': 'X101VE',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
-      'sw_version': 'X101VE',
+      'sw_version': None,
       'via_device_id': None,
     }),
   ])
@@ -200,6 +221,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -214,13 +236,17 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
+      'model_id': 'X102VE',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
-      'sw_version': 'X102VE',
+      'sw_version': None,
       'via_device_id': None,
     }),
   ])
@@ -233,6 +259,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -243,11 +270,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -263,12 +292,12 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
-        'icon': 'mdi:car',
         'source_type': <SourceType.GPS: 'gps'>,
       }),
       'context': <ANY>,
       'entity_id': 'device_tracker.reg_number_location',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -279,6 +308,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -293,13 +323,17 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
+      'model_id': 'XJB1SU',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
-      'sw_version': 'XJB1SU',
+      'sw_version': None,
       'via_device_id': None,
     }),
   ])
@@ -312,6 +346,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -322,11 +357,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -343,7 +380,6 @@
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
         'gps_accuracy': 0,
-        'icon': 'mdi:car',
         'latitude': 48.1234567,
         'longitude': 11.1234567,
         'source_type': <SourceType.GPS: 'gps'>,
@@ -351,6 +387,7 @@
       'context': <ANY>,
       'entity_id': 'device_tracker.reg_number_location',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'not_home',
     }),
@@ -361,6 +398,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -375,13 +413,17 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
+      'model_id': 'XJB1SU',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
-      'sw_version': 'XJB1SU',
+      'sw_version': None,
       'via_device_id': None,
     }),
   ])
@@ -394,6 +436,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -404,11 +447,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -425,7 +470,6 @@
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
         'gps_accuracy': 0,
-        'icon': 'mdi:car',
         'latitude': 48.1234567,
         'longitude': 11.1234567,
         'source_type': <SourceType.GPS: 'gps'>,
@@ -433,6 +477,7 @@
       'context': <ANY>,
       'entity_id': 'device_tracker.reg_number_location',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'not_home',
     }),
@@ -443,6 +488,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -457,13 +503,17 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
+      'model_id': 'X101VE',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
-      'sw_version': 'X101VE',
+      'sw_version': None,
       'via_device_id': None,
     }),
   ])
@@ -481,6 +531,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -495,13 +546,17 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
+      'model_id': 'X102VE',
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
-      'sw_version': 'X102VE',
+      'sw_version': None,
       'via_device_id': None,
     }),
   ])
@@ -514,6 +569,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -524,11 +580,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': None,
-      'original_icon': 'mdi:car',
+      'original_icon': None,
       'original_name': 'Location',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -545,7 +603,6 @@
       'attributes': ReadOnlyDict({
         'friendly_name': 'REG-NUMBER Location',
         'gps_accuracy': 0,
-        'icon': 'mdi:car',
         'latitude': 48.1234567,
         'longitude': 11.1234567,
         'source_type': <SourceType.GPS: 'gps'>,
@@ -553,6 +610,7 @@
       'context': <ANY>,
       'entity_id': 'device_tracker.reg_number_location',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'not_home',
     }),

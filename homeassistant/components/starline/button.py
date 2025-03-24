@@ -1,10 +1,11 @@
 """Support for StarLine button."""
+
 from __future__ import annotations
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
@@ -14,22 +15,37 @@ BUTTON_TYPES: tuple[ButtonEntityDescription, ...] = (
     ButtonEntityDescription(
         key="poke",
         translation_key="horn",
-        icon="mdi:bullhorn-outline",
     ),
+    ButtonEntityDescription(
+        key="panic",
+        translation_key="panic",
+        entity_registry_enabled_default=False,
+    ),
+    *[
+        ButtonEntityDescription(
+            key=f"flex_{i}",
+            translation_key="flex",
+            translation_placeholders={"num": str(i)},
+            entity_registry_enabled_default=False,
+        )
+        for i in range(1, 10)
+    ],
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the StarLine button."""
     account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
-    entities = []
-    for device in account.api.devices.values():
-        if device.support_state:
-            for description in BUTTON_TYPES:
-                entities.append(StarlineButton(account, device, description))
-    async_add_entities(entities)
+    async_add_entities(
+        StarlineButton(account, device, description)
+        for device in account.api.devices.values()
+        if device.support_state
+        for description in BUTTON_TYPES
+    )
 
 
 class StarlineButton(StarlineEntity, ButtonEntity):

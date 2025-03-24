@@ -1,4 +1,5 @@
 """motionEye Media Source Implementation."""
+
 from __future__ import annotations
 
 import logging
@@ -8,12 +9,13 @@ from typing import cast
 from motioneye_client.const import KEY_MEDIA_LIST, KEY_MIME_TYPE, KEY_PATH
 
 from homeassistant.components.media_player import MediaClass, MediaType
-from homeassistant.components.media_source.error import MediaSourceError, Unresolvable
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
+    MediaSourceError,
     MediaSourceItem,
     PlayMedia,
+    Unresolvable,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback

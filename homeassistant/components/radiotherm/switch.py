@@ -1,4 +1,5 @@
 """Support for radiotherm switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,7 +7,7 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import RadioThermUpdateCoordinator
@@ -18,7 +19,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches for a radiotherm device."""
     coordinator: RadioThermUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -34,11 +35,6 @@ class RadioThermHoldSwitch(RadioThermostatEntity, SwitchEntity):
         """Initialize the hold mode switch."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.init_data.mac}_hold"
-
-    @property
-    def icon(self) -> str:
-        """Return the icon for the switch."""
-        return "mdi:timer-off" if self.is_on else "mdi:timer"
 
     @callback
     def _process_data(self) -> None:

@@ -1,7 +1,7 @@
 """Homekit Controller entities."""
+
 from __future__ import annotations
 
-import contextlib
 from typing import Any
 
 from aiohomekit.model.characteristics import (
@@ -79,11 +79,7 @@ class HomeKitEntity(Entity):
     def _async_clear_property_cache(self, properties: tuple[str, ...]) -> None:
         """Clear the cache of properties."""
         for prop in properties:
-            # suppress is slower than try-except-pass, but
-            # we do not expect to have many properties to clear
-            # or this to be called often.
-            with contextlib.suppress(AttributeError):
-                delattr(self, prop)
+            self.__dict__.pop(prop, None)
 
     @callback
     def _async_reconfigure(self) -> None:
@@ -109,7 +105,7 @@ class HomeKitEntity(Entity):
         self._accessory.async_entity_key_removed(self._entity_key)
 
     @callback
-    def _async_unsubscribe_chars(self):
+    def _async_unsubscribe_chars(self) -> None:
         """Handle unsubscribing from characteristics."""
         if self._char_subscription:
             self._char_subscription()
@@ -118,7 +114,7 @@ class HomeKitEntity(Entity):
         self._accessory.remove_watchable_characteristics(self.watchable_characteristics)
 
     @callback
-    def _async_subscribe_chars(self):
+    def _async_subscribe_chars(self) -> None:
         """Handle registering characteristics to watch and subscribe."""
         self._accessory.add_pollable_characteristics(self.pollable_characteristics)
         self._accessory.add_watchable_characteristics(self.watchable_characteristics)

@@ -1,4 +1,5 @@
 """Sensors for the Elexa Guardian integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -14,31 +15,37 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EntityCategory,
+    UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfTemperature,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import (
-    GuardianData,
-    PairedSensorEntity,
-    ValveControllerEntity,
-    ValveControllerEntityDescription,
-)
+from . import GuardianData
 from .const import (
     API_SYSTEM_DIAGNOSTICS,
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
+    API_VALVE_STATUS,
     CONF_UID,
     DOMAIN,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
+from .entity import (
+    PairedSensorEntity,
+    ValveControllerEntity,
+    ValveControllerEntityDescription,
+)
 
+SENSOR_KIND_AVG_CURRENT = "average_current"
 SENSOR_KIND_BATTERY = "battery"
+SENSOR_KIND_INST_CURRENT = "instantaneous_current"
+SENSOR_KIND_INST_CURRENT_DDT = "instantaneous_current_ddt"
 SENSOR_KIND_TEMPERATURE = "temperature"
+SENSOR_KIND_TRAVEL_COUNT = "travel_count"
 SENSOR_KIND_UPTIME = "uptime"
 
 
@@ -76,6 +83,33 @@ PAIRED_SENSOR_DESCRIPTIONS = (
 )
 VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSensorDescription(
+        key=SENSOR_KIND_AVG_CURRENT,
+        translation_key="current",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        api_category=API_VALVE_STATUS,
+        value_fn=lambda data: data["average_current"],
+    ),
+    ValveControllerSensorDescription(
+        key=SENSOR_KIND_INST_CURRENT,
+        translation_key="instantaneous_current",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        api_category=API_VALVE_STATUS,
+        value_fn=lambda data: data["instantaneous_current"],
+    ),
+    ValveControllerSensorDescription(
+        key=SENSOR_KIND_INST_CURRENT_DDT,
+        translation_key="instantaneous_current_ddt",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        api_category=API_VALVE_STATUS,
+        value_fn=lambda data: data["instantaneous_current_ddt"],
+    ),
+    ValveControllerSensorDescription(
         key=SENSOR_KIND_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
@@ -86,17 +120,26 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSensorDescription(
         key=SENSOR_KIND_UPTIME,
         translation_key="uptime",
-        icon="mdi:timer",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         api_category=API_SYSTEM_DIAGNOSTICS,
         value_fn=lambda data: data["uptime"],
     ),
+    ValveControllerSensorDescription(
+        key=SENSOR_KIND_TRAVEL_COUNT,
+        translation_key="travel_count",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement="revolutions",
+        api_category=API_VALVE_STATUS,
+        value_fn=lambda data: data["travel_count"],
+    ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Guardian switches based on a config entry."""
     data: GuardianData = hass.data[DOMAIN][entry.entry_id]

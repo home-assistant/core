@@ -15,11 +15,9 @@ from homeassistant.components.aosmith.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_array_fixture,
-)
+from .conftest import build_device_fixture
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_config_entry_setup(init_integration: MockConfigEntry) -> None:
@@ -52,14 +50,24 @@ async def test_config_entry_not_ready_get_energy_use_data_error(
     """Test the config entry not ready when get_energy_use_data fails."""
     mock_config_entry.add_to_hass(hass)
 
-    get_devices_fixture = load_json_array_fixture("get_devices.json", DOMAIN)
+    get_devices_fixture = [
+        build_device_fixture(
+            heat_pump=True,
+            mode_pending=False,
+            setpoint_pending=False,
+            has_vacation_mode=True,
+        )
+    ]
 
-    with patch(
-        "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
-        return_value=get_devices_fixture,
-    ), patch(
-        "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_energy_use_data",
-        side_effect=AOSmithUnknownException("Unknown error"),
+    with (
+        patch(
+            "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
+            return_value=get_devices_fixture,
+        ),
+        patch(
+            "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_energy_use_data",
+            side_effect=AOSmithUnknownException("Unknown error"),
+        ),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -68,12 +76,17 @@ async def test_config_entry_not_ready_get_energy_use_data_error(
 
 
 @pytest.mark.parametrize(
-    ("get_devices_fixture", "time_to_wait", "expected_call_count"),
+    (
+        "get_devices_fixture_mode_pending",
+        "get_devices_fixture_setpoint_pending",
+        "time_to_wait",
+        "expected_call_count",
+    ),
     [
-        ("get_devices", REGULAR_INTERVAL, 1),
-        ("get_devices", FAST_INTERVAL, 0),
-        ("get_devices_mode_pending", FAST_INTERVAL, 1),
-        ("get_devices_setpoint_pending", FAST_INTERVAL, 1),
+        (False, False, REGULAR_INTERVAL, 1),
+        (False, False, FAST_INTERVAL, 0),
+        (True, False, FAST_INTERVAL, 1),
+        (False, True, FAST_INTERVAL, 1),
     ],
 )
 async def test_update(

@@ -1,4 +1,5 @@
 """ISY Services and Commands."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -13,10 +14,11 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.service import entity_service_call
+from homeassistant.helpers.typing import VolDictType
 
 from .const import _LOGGER, DOMAIN
 
@@ -101,12 +103,14 @@ SERVICE_SET_ZWAVE_PARAMETER_SCHEMA = {
     vol.Required(CONF_SIZE): vol.All(vol.Coerce(int), vol.In(VALID_PARAMETER_SIZES)),
 }
 
-SERVICE_SET_USER_CODE_SCHEMA = {
+SERVICE_SET_USER_CODE_SCHEMA: VolDictType = {
     vol.Required(CONF_USER_NUM): vol.Coerce(int),
     vol.Required(CONF_CODE): vol.Coerce(int),
 }
 
-SERVICE_DELETE_USER_CODE_SCHEMA = {vol.Required(CONF_USER_NUM): vol.Coerce(int)}
+SERVICE_DELETE_USER_CODE_SCHEMA: VolDictType = {
+    vol.Required(CONF_USER_NUM): vol.Coerce(int)
+}
 
 SERVICE_SEND_PROGRAM_COMMAND_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_ADDRESS, CONF_NAME),
@@ -130,9 +134,9 @@ def async_get_entities(hass: HomeAssistant) -> dict[str, Entity]:
 
 
 @callback
-def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
+def async_setup_services(hass: HomeAssistant) -> None:
     """Create and register services for the ISY integration."""
-    existing_services = hass.services.async_services().get(DOMAIN)
+    existing_services = hass.services.async_services_for_domain(DOMAIN)
     if existing_services and SERVICE_SEND_PROGRAM_COMMAND in existing_services:
         # Integration-level services have already been added. Return.
         return
@@ -234,11 +238,11 @@ def async_unload_services(hass: HomeAssistant) -> None:
         # There is still another config entry for this domain, don't remove services.
         return
 
-    existing_services = hass.services.async_services().get(DOMAIN)
+    existing_services = hass.services.async_services_for_domain(DOMAIN)
     if not existing_services or SERVICE_SEND_PROGRAM_COMMAND not in existing_services:
         return
 
-    _LOGGER.info("Unloading ISY994 Services")
+    _LOGGER.debug("Unloading ISY994 Services")
     hass.services.async_remove(domain=DOMAIN, service=SERVICE_SEND_PROGRAM_COMMAND)
     hass.services.async_remove(domain=DOMAIN, service=SERVICE_SEND_RAW_NODE_COMMAND)
     hass.services.async_remove(domain=DOMAIN, service=SERVICE_SEND_NODE_COMMAND)

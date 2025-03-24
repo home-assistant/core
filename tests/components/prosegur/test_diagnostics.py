@@ -1,4 +1,5 @@
 """Test Prosegur diagnostics."""
+
 from unittest.mock import patch
 
 from homeassistant.core import HomeAssistant

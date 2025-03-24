@@ -1,4 +1,5 @@
 """Netgear component constants."""
+
 from datetime import timedelta
 
 from homeassistant.const import Platform
@@ -36,6 +37,7 @@ MODELS_PORT_80 = [
     "RBR",
     "RBS",
     "RBW",
+    "RS",
     "LBK",
     "LBR",
     "CBK",
@@ -60,6 +62,7 @@ MODELS_V2 = [
     "RBR",
     "RBS",
     "RBW",
+    "RS",
     "LBK",
     "LBR",
     "CBK",

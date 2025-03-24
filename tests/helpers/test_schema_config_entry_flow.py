@@ -1,4 +1,5 @@
 """Tests for the schema based data entry flows."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -67,7 +68,9 @@ def manager_fixture():
             return result
 
     mgr = FlowManager(None)
+    # pylint: disable-next=attribute-defined-outside-init
     mgr.mock_created_entries = entries
+    # pylint: disable-next=attribute-defined-outside-init
     mgr.mock_reg_handler = handlers.register
     return mgr
 
@@ -103,7 +106,7 @@ async def test_name(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> 
     assert wrapped_entity_config_entry_title(hass, entry.id) == "Custom Name"
 
 
-@pytest.mark.parametrize("marker", (vol.Required, vol.Optional))
+@pytest.mark.parametrize("marker", [vol.Required, vol.Optional])
 async def test_config_flow_advanced_option(
     hass: HomeAssistant, manager: data_entry_flow.FlowManager, marker
 ) -> None:
@@ -198,7 +201,7 @@ async def test_config_flow_advanced_option(
         assert isinstance(option, str)
 
 
-@pytest.mark.parametrize("marker", (vol.Required, vol.Optional))
+@pytest.mark.parametrize("marker", [vol.Required, vol.Optional])
 async def test_options_flow_advanced_option(
     hass: HomeAssistant, manager: data_entry_flow.FlowManager, marker
 ) -> None:
@@ -644,6 +647,10 @@ async def test_options_flow_state(hass: HomeAssistant) -> None:
     options_handler: SchemaOptionsFlowHandler
     options_handler = hass.config_entries.options._progress[result["flow_id"]]
     assert options_handler._common_handler.flow_state == {"idx": None}
+
+    # Ensure that self.options and self._common_handler.options refer to the
+    # same mutable copy of the options
+    assert options_handler.options is options_handler._common_handler.options
 
     # In step 1, flow state is updated with user input
     result = await hass.config_entries.options.async_configure(

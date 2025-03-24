@@ -1,9 +1,10 @@
 """Helper methods for common tasks."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Concatenate, overload
 
 from requests.exceptions import Timeout
 from soco import SoCo
@@ -25,31 +26,26 @@ UID_POSTFIX = "01400"
 
 _LOGGER = logging.getLogger(__name__)
 
-_T = TypeVar(
-    "_T", bound="SonosSpeaker | SonosMedia | SonosEntity | SonosHouseholdCoordinator"
+type _SonosEntitiesType = (
+    SonosSpeaker | SonosMedia | SonosEntity | SonosHouseholdCoordinator
 )
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
-_FuncType = Callable[Concatenate[_T, _P], _R]
-_ReturnFuncType = Callable[Concatenate[_T, _P], _R | None]
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
+type _ReturnFuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R | None]
 
 
 @overload
-def soco_error(
+def soco_error[_T: _SonosEntitiesType, **_P, _R](
     errorcodes: None = ...,
-) -> Callable[[_FuncType[_T, _P, _R]], _FuncType[_T, _P, _R]]:
-    ...
+) -> Callable[[_FuncType[_T, _P, _R]], _FuncType[_T, _P, _R]]: ...
 
 
 @overload
-def soco_error(
+def soco_error[_T: _SonosEntitiesType, **_P, _R](
     errorcodes: list[str],
-) -> Callable[[_FuncType[_T, _P, _R]], _ReturnFuncType[_T, _P, _R]]:
-    ...
+) -> Callable[[_FuncType[_T, _P, _R]], _ReturnFuncType[_T, _P, _R]]: ...
 
 
-def soco_error(
+def soco_error[_T: _SonosEntitiesType, **_P, _R](
     errorcodes: list[str] | None = None,
 ) -> Callable[[_FuncType[_T, _P, _R]], _ReturnFuncType[_T, _P, _R]]:
     """Filter out specified UPnP errors and raise exceptions for service calls."""
@@ -104,7 +100,7 @@ def _find_target_identifier(instance: Any, fallback_soco: SoCo | None) -> str | 
     if soco := getattr(instance, "soco", fallback_soco):
         # Holds a SoCo instance attribute
         # Only use attributes with no I/O
-        return soco._player_name or soco.ip_address  # pylint: disable=protected-access
+        return soco._player_name or soco.ip_address  # noqa: SLF001
     return None
 
 

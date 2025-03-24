@@ -1,6 +1,9 @@
 """Entity tests for mobile_app."""
-from http import HTTPStatus
 
+from http import HTTPStatus
+from typing import Any
+
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.const import STATE_UNKNOWN
@@ -11,8 +14,8 @@ from homeassistant.helpers import device_registry as dr
 async def test_sensor(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    create_registrations,
-    webhook_client,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
 ) -> None:
     """Test that sensors can be registered and updated."""
     webhook_id = create_registrations[1]["webhook_id"]
@@ -97,7 +100,9 @@ async def test_sensor(
 
 
 async def test_sensor_must_register(
-    hass: HomeAssistant, create_registrations, webhook_client
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
 ) -> None:
     """Test that sensors must be registered before updating."""
     webhook_id = create_registrations[1]["webhook_id"]
@@ -121,8 +126,8 @@ async def test_sensor_must_register(
 
 async def test_sensor_id_no_dupes(
     hass: HomeAssistant,
-    create_registrations,
-    webhook_client,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that a duplicate unique ID in registration updates the sensor."""
@@ -184,7 +189,9 @@ async def test_sensor_id_no_dupes(
 
 
 async def test_register_sensor_no_state(
-    hass: HomeAssistant, create_registrations, webhook_client
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
 ) -> None:
     """Test that sensors can be registered, when there is no (unknown) state."""
     webhook_id = create_registrations[1]["webhook_id"]
@@ -243,7 +250,9 @@ async def test_register_sensor_no_state(
 
 
 async def test_update_sensor_no_state(
-    hass: HomeAssistant, create_registrations, webhook_client
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
 ) -> None:
     """Test that sensors can be updated, when there is no (unknown) state."""
     webhook_id = create_registrations[1]["webhook_id"]

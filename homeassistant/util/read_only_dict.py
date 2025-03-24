@@ -1,5 +1,7 @@
 """Read only dictionary."""
-from typing import Any, TypeVar
+
+from copy import deepcopy
+from typing import Any
 
 
 def _readonly(*args: Any, **kwargs: Any) -> Any:
@@ -7,11 +9,7 @@ def _readonly(*args: Any, **kwargs: Any) -> Any:
     raise RuntimeError("Cannot modify ReadOnlyDict")
 
 
-_KT = TypeVar("_KT")
-_VT = TypeVar("_VT")
-
-
-class ReadOnlyDict(dict[_KT, _VT]):
+class ReadOnlyDict[_KT, _VT](dict[_KT, _VT]):
     """Read only version of dict that is compatible with dict types."""
 
     __setitem__ = _readonly
@@ -21,3 +19,13 @@ class ReadOnlyDict(dict[_KT, _VT]):
     clear = _readonly
     update = _readonly
     setdefault = _readonly
+
+    def __copy__(self) -> dict[_KT, _VT]:
+        """Create a shallow copy."""
+        return ReadOnlyDict(self)
+
+    def __deepcopy__(self, memo: Any) -> dict[_KT, _VT]:
+        """Create a deep copy."""
+        return ReadOnlyDict(
+            {deepcopy(key, memo): deepcopy(value, memo) for key, value in self.items()}
+        )

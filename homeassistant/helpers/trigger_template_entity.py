@@ -1,4 +1,5 @@
 """TemplateEntity utility class."""
+
 from __future__ import annotations
 
 import contextlib
@@ -29,7 +30,7 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import config_validation as cv
 from .entity import Entity
-from .template import attach as template_attach, render_complex
+from .template import TemplateStateFromEntityId, render_complex
 from .typing import ConfigType
 
 CONF_AVAILABILITY = "availability"
@@ -156,11 +157,6 @@ class TriggerBaseEntity(Entity):
         """Return extra attributes."""
         return self._rendered.get(CONF_ATTRIBUTES)
 
-    async def async_added_to_hass(self) -> None:
-        """Handle being added to Home Assistant."""
-        await super().async_added_to_hass()
-        template_attach(self.hass, self._config)
-
     def _set_unique_id(self, unique_id: str | None) -> None:
         """Set unique id."""
         self._unique_id = unique_id
@@ -235,16 +231,14 @@ class ManualTriggerEntity(TriggerBaseEntity):
         Ex: self._process_manual_data(payload)
         """
 
-        self.async_write_ha_state()
-        this = None
-        if state := self.hass.states.get(self.entity_id):
-            this = state.as_dict()
-
         run_variables: dict[str, Any] = {"value": value}
         # Silently try if variable is a json and store result in `value_json` if it is.
         with contextlib.suppress(*JSON_DECODE_EXCEPTIONS):
             run_variables["value_json"] = json_loads(run_variables["value"])
-        variables = {"this": this, **(run_variables or {})}
+        variables = {
+            "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            **(run_variables or {}),
+        }
 
         self._render_templates(variables)
 

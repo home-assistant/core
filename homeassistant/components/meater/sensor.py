@@ -1,4 +1,5 @@
 """The Meater Temperature Probe integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -17,7 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -27,19 +28,12 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 
 
-@dataclass(frozen=True)
-class MeaterSensorEntityDescriptionMixin:
-    """Mixin for MeaterSensorEntityDescription."""
+@dataclass(frozen=True, kw_only=True)
+class MeaterSensorEntityDescription(SensorEntityDescription):
+    """Describes meater sensor entity."""
 
     available: Callable[[MeaterProbe | None], bool]
     value: Callable[[MeaterProbe], datetime | float | str | None]
-
-
-@dataclass(frozen=True)
-class MeaterSensorEntityDescription(
-    SensorEntityDescription, MeaterSensorEntityDescriptionMixin
-):
-    """Describes meater sensor entity."""
 
 
 def _elapsed_time_to_timestamp(probe: MeaterProbe) -> datetime | None:
@@ -142,7 +136,9 @@ SENSOR_TYPES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the entry."""
     coordinator: DataUpdateCoordinator[dict[str, MeaterProbe]] = hass.data[DOMAIN][
@@ -153,7 +149,7 @@ async def async_setup_entry(
     def async_update_data():
         """Handle updated data from the API endpoint."""
         if not coordinator.last_update_success:
-            return
+            return None
 
         devices = coordinator.data
         entities = []

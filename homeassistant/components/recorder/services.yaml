@@ -20,20 +20,21 @@ purge:
         boolean:
 
 purge_entities:
-  target:
-    entity: {}
   fields:
+    entity_id:
+      required: false
+      selector:
+        entity:
+          multiple: true
     domains:
       example: "sun"
       required: false
-      default: []
       selector:
         object:
 
     entity_globs:
       example: "domain*.object_id*"
       required: false
-      default: []
       selector:
         object:
 

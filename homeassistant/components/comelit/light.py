@@ -1,29 +1,31 @@
 """Support for lights."""
+
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import LIGHT, STATE_OFF, STATE_ON
 
-from homeassistant.components.light import LightEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import ComelitSerialBridge
+from .coordinator import ComelitConfigEntry, ComelitSerialBridge
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ComelitConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Comelit lights."""
 
-    coordinator: ComelitSerialBridge = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
 
     async_add_entities(
         ComelitLightEntity(coordinator, device, config_entry.entry_id)
@@ -34,8 +36,10 @@ async def async_setup_entry(
 class ComelitLightEntity(CoordinatorEntity[ComelitSerialBridge], LightEntity):
     """Light device."""
 
+    _attr_color_mode = ColorMode.ONOFF
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(
         self,

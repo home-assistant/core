@@ -1,4 +1,5 @@
 """Common methods used across tests for Freebox."""
+
 from unittest.mock import patch
 
 from homeassistant.components.freebox.const import DOMAIN

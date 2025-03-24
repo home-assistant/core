@@ -1,7 +1,10 @@
 """Tests the Home Assistant workday binary sensor."""
+
 from __future__ import annotations
 
 from typing import Any
+
+from holidays import OPTIONAL
 
 from homeassistant.components.workday.const import (
     DEFAULT_EXCLUDES,
@@ -181,6 +184,16 @@ TEST_CONFIG_REMOVE_NAMED = {
     "remove_holidays": ["Not a Holiday", "Christmas", "Thanksgiving"],
     "language": "en_US",
 }
+TEST_CONFIG_REMOVE_DATE = {
+    "name": DEFAULT_NAME,
+    "country": "US",
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": [],
+    "remove_holidays": ["2024-02-05", "2024-02-06"],
+    "language": "en_US",
+}
 TEST_CONFIG_TOMORROW = {
     "name": DEFAULT_NAME,
     "country": "DE",
@@ -298,4 +311,27 @@ TEST_LANGUAGE_NO_CHANGE = {
     "add_holidays": ["2022-12-01", "2022-12-05,2022-12-15"],
     "remove_holidays": ["2022-12-04", "2022-12-24,2022-12-26"],
     "language": "de",
+}
+TEST_NO_OPTIONAL_CATEGORY = {
+    "name": DEFAULT_NAME,
+    "country": "CH",
+    "province": "FR",
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": [],
+    "remove_holidays": [],
+    "language": "de",
+}
+TEST_OPTIONAL_CATEGORY = {
+    "name": DEFAULT_NAME,
+    "country": "CH",
+    "province": "FR",
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": [],
+    "remove_holidays": [],
+    "language": "de",
+    "category": [OPTIONAL],
 }

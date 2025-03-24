@@ -1,53 +1,29 @@
 """Test diagnostics of Linear Garage Door."""
 
+from unittest.mock import AsyncMock
+
+from syrupy import SnapshotAssertion
+from syrupy.filters import props
+
 from homeassistant.core import HomeAssistant
 
-from .util import async_init_integration
+from . import setup_integration
 
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
+    mock_linear: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test config entry diagnostics."""
-    entry = await async_init_integration(hass)
-    result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
-
-    assert result["entry"]["data"] == {
-        "email": "**REDACTED**",
-        "password": "**REDACTED**",
-        "site_id": "test-site-id",
-        "device_id": "test-uuid",
-    }
-    assert result["coordinator_data"] == {
-        "test1": {
-            "name": "Test Garage 1",
-            "subdevices": {
-                "GDO": {"Open_B": "true", "Open_P": "100"},
-                "Light": {"On_B": "true", "On_P": "100"},
-            },
-        },
-        "test2": {
-            "name": "Test Garage 2",
-            "subdevices": {
-                "GDO": {"Open_B": "false", "Open_P": "0"},
-                "Light": {"On_B": "false", "On_P": "0"},
-            },
-        },
-        "test3": {
-            "name": "Test Garage 3",
-            "subdevices": {
-                "GDO": {"Open_B": "false", "Opening_P": "0"},
-                "Light": {"On_B": "false", "On_P": "0"},
-            },
-        },
-        "test4": {
-            "name": "Test Garage 4",
-            "subdevices": {
-                "GDO": {"Open_B": "true", "Opening_P": "100"},
-                "Light": {"On_B": "true", "On_P": "100"},
-            },
-        },
-    }
+    await setup_integration(hass, mock_config_entry, [])
+    result = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
+    assert result == snapshot(exclude=props("created_at", "modified_at"))

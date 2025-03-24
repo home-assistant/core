@@ -1,5 +1,6 @@
 """ESPHome set up tests."""
 
+import pytest
 
 from homeassistant.components.esphome import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
@@ -8,9 +9,8 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_delete_entry(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_delete_entry(hass: HomeAssistant, mock_client) -> None:
     """Test we can delete an entry with error."""
     entry = MockConfigEntry(
         domain=DOMAIN,

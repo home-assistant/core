@@ -1,4 +1,5 @@
 """Network utilities."""
+
 from __future__ import annotations
 
 from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
@@ -97,8 +98,7 @@ def is_host_valid(host: str) -> bool:
         return False
     if re.match(r"^[0-9\.]+$", host):  # reject invalid IPv4
         return False
-    if host.endswith("."):  # dot at the end is correct
-        host = host[:-1]
+    host = host.removesuffix(".")
     allowed = re.compile(r"(?!-)[A-Z\d\-]{1,63}(?<!-)$", re.IGNORECASE)
     return all(allowed.match(x) for x in host.split("."))
 

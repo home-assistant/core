@@ -1,4 +1,5 @@
 """Support for myStrom sensors of switches/plugs."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -16,7 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER
 
@@ -29,6 +30,13 @@ class MyStromSwitchSensorEntityDescription(SensorEntityDescription):
 
 
 SENSOR_TYPES: tuple[MyStromSwitchSensorEntityDescription, ...] = (
+    MyStromSwitchSensorEntityDescription(
+        key="avg_consumption",
+        translation_key="avg_consumption",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_fn=lambda device: device.consumedWs,
+    ),
     MyStromSwitchSensorEntityDescription(
         key="consumption",
         device_class=SensorDeviceClass.POWER,
@@ -47,17 +55,18 @@ SENSOR_TYPES: tuple[MyStromSwitchSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the myStrom entities."""
     device: MyStromSwitch = hass.data[DOMAIN][entry.entry_id].device
-    sensors = []
 
-    for description in SENSOR_TYPES:
-        if description.value_fn(device) is not None:
-            sensors.append(MyStromSwitchSensor(device, entry.title, description))
-
-    async_add_entities(sensors)
+    async_add_entities(
+        MyStromSwitchSensor(device, entry.title, description)
+        for description in SENSOR_TYPES
+        if description.value_fn(device) is not None
+    )
 
 
 class MyStromSwitchSensor(SensorEntity):

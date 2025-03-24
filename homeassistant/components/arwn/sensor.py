@@ -1,4 +1,5 @@
 """Support for collecting data from the ARWN project."""
+
 from __future__ import annotations
 
 import logging
@@ -91,7 +92,12 @@ def discover_sensors(topic: str, payload: dict[str, Any]) -> list[ArwnSensor] | 
                 device_class=SensorDeviceClass.WIND_SPEED,
             ),
             ArwnSensor(
-                topic + "/dir", "Wind Direction", "direction", DEGREE, "mdi:compass"
+                topic + "/dir",
+                "Wind Direction",
+                "direction",
+                DEGREE,
+                "mdi:compass",
+                device_class=SensorDeviceClass.WIND_DIRECTION,
             ),
         ]
     return None

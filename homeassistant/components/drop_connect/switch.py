@@ -8,9 +8,8 @@ import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_DEVICE_TYPE,
@@ -18,17 +17,11 @@ from .const import (
     DEV_HUB,
     DEV_PROTECTION_VALVE,
     DEV_SOFTENER,
-    DOMAIN,
 )
-from .coordinator import DROPDeviceDataUpdateCoordinator
+from .coordinator import DROPConfigEntry, DROPDeviceDataUpdateCoordinator
 from .entity import DROPEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-ICON_VALVE_OPEN = "mdi:valve-open"
-ICON_VALVE_CLOSED = "mdi:valve-closed"
-ICON_VALVE_UNKNOWN = "mdi:valve"
-ICON_VALVE = {False: ICON_VALVE_CLOSED, True: ICON_VALVE_OPEN, None: ICON_VALVE_UNKNOWN}
 
 SWITCH_VALUE: dict[int | None, bool] = {0: False, 1: True}
 
@@ -49,14 +42,12 @@ SWITCHES: list[DROPSwitchEntityDescription] = [
     DROPSwitchEntityDescription(
         key=WATER_SWITCH,
         translation_key=WATER_SWITCH,
-        icon=ICON_VALVE_UNKNOWN,
         value_fn=lambda device: device.drop_api.water(),
         set_fn=lambda device, value: device.set_water(value),
     ),
     DROPSwitchEntityDescription(
         key=BYPASS_SWITCH,
         translation_key=BYPASS_SWITCH,
-        icon=ICON_VALVE_UNKNOWN,
         value_fn=lambda device: device.drop_api.bypass(),
         set_fn=lambda device, value: device.set_bypass(value),
     ),
@@ -73,8 +64,8 @@ DEVICE_SWITCHES: dict[str, list[str]] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DROPConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the DROP switches from config entry."""
     _LOGGER.debug(
@@ -83,9 +74,10 @@ async def async_setup_entry(
         config_entry.entry_id,
     )
 
+    coordinator = config_entry.runtime_data
     if config_entry.data[CONF_DEVICE_TYPE] in DEVICE_SWITCHES:
         async_add_entities(
-            DROPSwitch(hass.data[DOMAIN][config_entry.entry_id], switch)
+            DROPSwitch(coordinator, switch)
             for switch in SWITCHES
             if switch.key in DEVICE_SWITCHES[config_entry.data[CONF_DEVICE_TYPE]]
         )
@@ -117,8 +109,3 @@ class DROPSwitch(DROPEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         await self.entity_description.set_fn(self.coordinator, 0)
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use for dynamic states."""
-        return ICON_VALVE[self.is_on]

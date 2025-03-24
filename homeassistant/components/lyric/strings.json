@@ -16,7 +16,8 @@
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -41,17 +42,23 @@
       },
       "setpoint_status": {
         "name": "Setpoint status"
+      },
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "room_humidity": {
+        "name": "Room humidity"
       }
     }
   },
   "services": {
     "set_hold_time": {
-      "name": "Set Hold Time",
-      "description": "Sets the time to hold until.",
+      "name": "Set hold time",
+      "description": "Sets the time period to keep the temperature and override the schedule.",
       "fields": {
         "time_period": {
-          "name": "Time Period",
-          "description": "Time to hold until."
+          "name": "Time period",
+          "description": "Duration for which to override the schedule."
         }
       }
     }

@@ -1,4 +1,5 @@
 """Tests for the Freedompro fan."""
+
 from datetime import timedelta
 from unittest.mock import ANY, patch
 
@@ -16,7 +17,7 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import get_states_response_for_uid
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 uid = "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*ILYH1E3DWZOVMNEUIMDYMNLOW-LFRQFDPWWJOVHVDOS"
 
@@ -25,10 +26,9 @@ async def test_fan_get_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    init_integration,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test states of the fan."""
-    init_integration
 
     device = device_registry.async_get_device(identifiers={("freedompro", uid)})
     assert device is not None
@@ -71,10 +71,11 @@ async def test_fan_get_state(
 
 
 async def test_fan_set_off(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, init_integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test turn off the fan."""
-    init_integration
 
     entity_id = "fan.bedroom"
 
@@ -125,10 +126,11 @@ async def test_fan_set_off(
 
 
 async def test_fan_set_on(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, init_integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test turn on the fan."""
-    init_integration
 
     entity_id = "fan.bedroom"
     state = hass.states.get(entity_id)
@@ -166,10 +168,11 @@ async def test_fan_set_on(
 
 
 async def test_fan_set_percent(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, init_integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test turn on the fan."""
-    init_integration
 
     entity_id = "fan.bedroom"
     state = hass.states.get(entity_id)

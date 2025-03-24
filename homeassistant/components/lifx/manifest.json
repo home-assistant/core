@@ -1,7 +1,7 @@
 {
   "domain": "lifx",
   "name": "LIFX",
-  "codeowners": [],
+  "codeowners": ["@Djelibeybi"],
   "config_flow": true,
   "dependencies": ["network"],
   "dhcp": [
@@ -16,25 +16,34 @@
   "homekit": {
     "models": [
       "LIFX A19",
+      "LIFX A21",
       "LIFX Beam",
       "LIFX BR30",
       "LIFX Candle",
+      "LIFX Ceiling",
       "LIFX Clean",
       "LIFX Color",
+      "LIFX Colour",
       "LIFX DLCOL",
       "LIFX Dlight",
       "LIFX DLWW",
       "LIFX Downlight",
       "LIFX Filament",
       "LIFX GU10",
+      "LIFX Indoor Neon",
       "LIFX Lightstrip",
       "LIFX Mini",
       "LIFX Neon",
       "LIFX Nightvision",
+      "LIFX PAR38",
+      "LIFX Permanent Outdoor",
       "LIFX Pls",
       "LIFX Plus",
+      "LIFX Round",
+      "LIFX Square",
       "LIFX String",
       "LIFX Tile",
+      "LIFX Tube",
       "LIFX White",
       "LIFX Z"
     ]
@@ -42,8 +51,8 @@
   "iot_class": "local_polling",
   "loggers": ["aiolifx", "aiolifx_effects", "bitstring"],
   "requirements": [
-    "aiolifx==1.0.0",
+    "aiolifx==1.1.4",
     "aiolifx-effects==0.3.2",
-    "aiolifx-themes==0.4.10"
+    "aiolifx-themes==0.6.4"
   ]
 }

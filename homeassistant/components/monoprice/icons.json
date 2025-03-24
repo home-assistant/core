@@ -1,0 +1,10 @@
+{
+  "services": {
+    "snapshot": {
+      "service": "mdi:content-copy"
+    },
+    "restore": {
+      "service": "mdi:content-paste"
+    }
+  }
+}

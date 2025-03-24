@@ -1,4 +1,5 @@
 """Entity for UPnP/IGD."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -1,4 +1,5 @@
 """Script to check the configuration file."""
+
 from __future__ import annotations
 
 import argparse
@@ -11,6 +12,9 @@ import os
 from typing import Any
 from unittest.mock import patch
 
+from annotatedyaml import loader as yaml_loader
+from annotatedyaml.loader import Secrets
+
 from homeassistant import core, loader
 from homeassistant.config import get_default_config_dir
 from homeassistant.config_entries import ConfigEntries
@@ -22,18 +26,16 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.check_config import async_check_ha_config_file
-from homeassistant.util.yaml import Secrets
-import homeassistant.util.yaml.loader as yaml_loader
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==6.7.0",)
+REQUIREMENTS = ("colorlog==6.8.2",)
 
 _LOGGER = logging.getLogger(__name__)
 MOCKS: dict[str, tuple[str, Callable]] = {
-    "load": ("homeassistant.util.yaml.loader.load_yaml", yaml_loader.load_yaml),
+    "load": ("annotatedyaml.loader.load_yaml", yaml_loader.load_yaml),
     "load*": ("homeassistant.config.load_yaml_dict", yaml_loader.load_yaml_dict),
-    "secrets": ("homeassistant.util.yaml.loader.secret_yaml", yaml_loader.secret_yaml),
+    "secrets": ("annotatedyaml.loader.secret_yaml", yaml_loader.secret_yaml),
 }
 
 PATCHES: dict[str, Any] = {}
@@ -175,7 +177,7 @@ def check(config_dir, secrets=False):
         "secrets": OrderedDict(),  # secret cache and secrets loaded
         "except": OrderedDict(),  # critical exceptions raised (with config)
         "warn": OrderedDict(),  # non critical exceptions raised (with config)
-        #'components' is a HomeAssistantConfig  # noqa: E265
+        #'components' is a HomeAssistantConfig
         "secret_cache": {},
     }
 
@@ -214,7 +216,7 @@ def check(config_dir, secrets=False):
 
     def secrets_proxy(*args):
         secrets = Secrets(*args)
-        res["secret_cache"] = secrets._cache  # pylint: disable=protected-access
+        res["secret_cache"] = secrets._cache  # noqa: SLF001
         return secrets
 
     try:
@@ -235,7 +237,7 @@ def check(config_dir, secrets=False):
             if err.config:
                 res["warn"].setdefault(domain, []).append(err.config)
 
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         print(color("red", "Fatal error while loading config:"), str(err))
         res["except"].setdefault(ERROR_STR, []).append(str(err))
     finally:

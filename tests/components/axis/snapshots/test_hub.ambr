@@ -1,0 +1,75 @@
+# serializer version: 1
+# name: test_device_registry_entry[api_discovery_items0]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://1.2.3.4:80',
+    'connections': set({
+      tuple(
+        'mac',
+        '00:40:8c:12:34:56',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'axis',
+        '00:40:8c:12:34:56',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Axis Communications AB',
+    'model': 'A1234 Network Camera',
+    'model_id': None,
+    'name': 'home',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '00:40:8c:12:34:56',
+    'suggested_area': None,
+    'sw_version': '9.10.1',
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry_entry[api_discovery_items1]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://1.2.3.4:80',
+    'connections': set({
+      tuple(
+        'mac',
+        '00:40:8c:12:34:56',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'axis',
+        '00:40:8c:12:34:56',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Axis Communications AB',
+    'model': 'A1234 Network Camera',
+    'model_id': None,
+    'name': 'home',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '00:40:8c:12:34:56',
+    'suggested_area': None,
+    'sw_version': '9.80.1',
+    'via_device_id': None,
+  })
+# ---

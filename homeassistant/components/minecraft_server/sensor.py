@@ -1,33 +1,23 @@
 """The Minecraft Server sensor platform."""
+
 from __future__ import annotations
 
-from collections.abc import Callable, MutableMapping
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .api import MinecraftServerData, MinecraftServerType
-from .const import DOMAIN, KEY_LATENCY, KEY_MOTD
-from .coordinator import MinecraftServerCoordinator
+from .const import KEY_LATENCY, KEY_MOTD
+from .coordinator import MinecraftServerConfigEntry, MinecraftServerCoordinator
 from .entity import MinecraftServerEntity
 
 ATTR_PLAYERS_LIST = "players_list"
-
-ICON_EDITION = "mdi:minecraft"
-ICON_GAME_MODE = "mdi:cog"
-ICON_MAP_NAME = "mdi:map"
-ICON_LATENCY = "mdi:signal"
-ICON_PLAYERS_MAX = "mdi:account-multiple"
-ICON_PLAYERS_ONLINE = "mdi:account-multiple"
-ICON_PROTOCOL_VERSION = "mdi:numeric"
-ICON_VERSION = "mdi:numeric"
-ICON_MOTD = "mdi:minecraft"
 
 KEY_EDITION = "edition"
 KEY_GAME_MODE = "game_mode"
@@ -40,21 +30,17 @@ KEY_VERSION = "version"
 UNIT_PLAYERS_MAX = "players"
 UNIT_PLAYERS_ONLINE = "players"
 
+# Coordinator is used to centralize the data updates.
+PARALLEL_UPDATES = 0
 
-@dataclass(frozen=True)
-class MinecraftServerEntityDescriptionMixin:
-    """Mixin values for Minecraft Server entities."""
+
+@dataclass(frozen=True, kw_only=True)
+class MinecraftServerSensorEntityDescription(SensorEntityDescription):
+    """Class describing Minecraft Server sensor entities."""
 
     value_fn: Callable[[MinecraftServerData], StateType]
-    attributes_fn: Callable[[MinecraftServerData], MutableMapping[str, Any]] | None
+    attributes_fn: Callable[[MinecraftServerData], dict[str, Any]] | None
     supported_server_types: set[MinecraftServerType]
-
-
-@dataclass(frozen=True)
-class MinecraftServerSensorEntityDescription(
-    SensorEntityDescription, MinecraftServerEntityDescriptionMixin
-):
-    """Class describing Minecraft Server sensor entities."""
 
 
 def get_extra_state_attributes_players_list(
@@ -74,7 +60,6 @@ SENSOR_DESCRIPTIONS = [
     MinecraftServerSensorEntityDescription(
         key=KEY_VERSION,
         translation_key=KEY_VERSION,
-        icon=ICON_VERSION,
         value_fn=lambda data: data.version,
         attributes_fn=None,
         supported_server_types={
@@ -86,7 +71,6 @@ SENSOR_DESCRIPTIONS = [
     MinecraftServerSensorEntityDescription(
         key=KEY_PROTOCOL_VERSION,
         translation_key=KEY_PROTOCOL_VERSION,
-        icon=ICON_PROTOCOL_VERSION,
         value_fn=lambda data: data.protocol_version,
         attributes_fn=None,
         supported_server_types={
@@ -100,7 +84,6 @@ SENSOR_DESCRIPTIONS = [
         key=KEY_PLAYERS_MAX,
         translation_key=KEY_PLAYERS_MAX,
         native_unit_of_measurement=UNIT_PLAYERS_MAX,
-        icon=ICON_PLAYERS_MAX,
         value_fn=lambda data: data.players_max,
         attributes_fn=None,
         supported_server_types={
@@ -114,7 +97,6 @@ SENSOR_DESCRIPTIONS = [
         translation_key=KEY_LATENCY,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         suggested_display_precision=0,
-        icon=ICON_LATENCY,
         value_fn=lambda data: data.latency,
         attributes_fn=None,
         supported_server_types={
@@ -126,7 +108,6 @@ SENSOR_DESCRIPTIONS = [
     MinecraftServerSensorEntityDescription(
         key=KEY_MOTD,
         translation_key=KEY_MOTD,
-        icon=ICON_MOTD,
         value_fn=lambda data: data.motd,
         attributes_fn=None,
         supported_server_types={
@@ -138,7 +119,6 @@ SENSOR_DESCRIPTIONS = [
         key=KEY_PLAYERS_ONLINE,
         translation_key=KEY_PLAYERS_ONLINE,
         native_unit_of_measurement=UNIT_PLAYERS_ONLINE,
-        icon=ICON_PLAYERS_ONLINE,
         value_fn=lambda data: data.players_online,
         attributes_fn=get_extra_state_attributes_players_list,
         supported_server_types={
@@ -149,7 +129,6 @@ SENSOR_DESCRIPTIONS = [
     MinecraftServerSensorEntityDescription(
         key=KEY_EDITION,
         translation_key=KEY_EDITION,
-        icon=ICON_EDITION,
         value_fn=lambda data: data.edition,
         attributes_fn=None,
         supported_server_types={
@@ -161,7 +140,6 @@ SENSOR_DESCRIPTIONS = [
     MinecraftServerSensorEntityDescription(
         key=KEY_GAME_MODE,
         translation_key=KEY_GAME_MODE,
-        icon=ICON_GAME_MODE,
         value_fn=lambda data: data.game_mode,
         attributes_fn=None,
         supported_server_types={
@@ -171,7 +149,6 @@ SENSOR_DESCRIPTIONS = [
     MinecraftServerSensorEntityDescription(
         key=KEY_MAP_NAME,
         translation_key=KEY_MAP_NAME,
-        icon=ICON_MAP_NAME,
         value_fn=lambda data: data.map_name,
         attributes_fn=None,
         supported_server_types={
@@ -183,11 +160,11 @@ SENSOR_DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: MinecraftServerConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Minecraft Server sensor platform."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     # Add sensor entities.
     async_add_entities(
@@ -209,7 +186,7 @@ class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
         self,
         coordinator: MinecraftServerCoordinator,
         description: MinecraftServerSensorEntityDescription,
-        config_entry: ConfigEntry,
+        config_entry: MinecraftServerConfigEntry,
     ) -> None:
         """Initialize sensor base entity."""
         super().__init__(coordinator, config_entry)

@@ -1,4 +1,5 @@
 """Provides an HTTP API for mobile_app."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -10,7 +11,7 @@ from nacl.secret import SecretBox
 import voluptuous as vol
 
 from homeassistant.components import cloud
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_validation as cv
@@ -34,7 +35,6 @@ from .const import (
     DOMAIN,
     SCHEMA_APP_DATA,
 )
-from .helpers import supports_encryption
 from .util import async_create_cloud_hook
 
 
@@ -65,7 +65,7 @@ class RegistrationsView(HomeAssistantView):
     )
     async def post(self, request: Request, data: dict) -> Response:
         """Handle the POST request for registration."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         webhook_id = secrets.token_hex()
 
@@ -76,7 +76,7 @@ class RegistrationsView(HomeAssistantView):
 
         data[CONF_WEBHOOK_ID] = webhook_id
 
-        if data[ATTR_SUPPORTS_ENCRYPTION] and supports_encryption():
+        if data[ATTR_SUPPORTS_ENCRYPTION]:
             data[CONF_SECRET] = secrets.token_hex(SecretBox.KEY_SIZE)
 
         data[CONF_USER_ID] = request["hass_user"].id
@@ -93,7 +93,7 @@ class RegistrationsView(HomeAssistantView):
 
         remote_ui_url = None
         if cloud.async_active_subscription(hass):
-            with suppress(hass.components.cloud.CloudNotAvailable):
+            with suppress(cloud.CloudNotAvailable):
                 remote_ui_url = cloud.async_remote_ui_url(hass)
 
         return self.json(

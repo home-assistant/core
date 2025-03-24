@@ -1,4 +1,5 @@
 """Support for Tailscale sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -15,10 +16,10 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TailscaleEntity
 from .const import DOMAIN
+from .entity import TailscaleEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -39,7 +40,6 @@ SENSORS: tuple[TailscaleSensorEntityDescription, ...] = (
     TailscaleSensorEntityDescription(
         key="ip",
         translation_key="ip",
-        icon="mdi:ip-network",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.addresses[0] if device.addresses else None,
     ),
@@ -55,7 +55,7 @@ SENSORS: tuple[TailscaleSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Tailscale sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]

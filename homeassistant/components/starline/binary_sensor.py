@@ -1,4 +1,5 @@
 """Reads vehicle status from StarLine API."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -9,7 +10,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
@@ -19,7 +20,6 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="hbrake",
         translation_key="hand_brake",
-        icon="mdi:car-brake-parking",
     ),
     BinarySensorEntityDescription(
         key="hood",
@@ -42,28 +42,37 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.LOCK,
     ),
     BinarySensorEntityDescription(
+        key="run",
+        translation_key="ignition",
+        entity_registry_enabled_default=False,
+    ),
+    BinarySensorEntityDescription(
+        key="r_start",
+        translation_key="autostart",
+        entity_registry_enabled_default=False,
+    ),
+    BinarySensorEntityDescription(
         key="hfree",
         translation_key="handsfree",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:hand-back-right",
     ),
     BinarySensorEntityDescription(
         key="neutral",
         translation_key="neutral",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:car-shift-pattern",
     ),
     BinarySensorEntityDescription(
         key="arm_moving_pb",
         translation_key="moving_ban",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:car-off",
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the StarLine sensors."""
     account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]

@@ -1,4 +1,5 @@
 """NextBus Constants."""
+
 DOMAIN = "nextbus"
 
 CONF_AGENCY = "agency"

@@ -13,29 +13,19 @@ from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .models import (
-    MelnorDataUpdateCoordinator,
-    MelnorZoneEntity,
-    get_entities_for_valves,
-)
+from .coordinator import MelnorDataUpdateCoordinator
+from .entity import MelnorZoneEntity, get_entities_for_valves
 
 
-@dataclass(frozen=True)
-class MelnorZoneTimeEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class MelnorZoneTimeEntityDescription(TimeEntityDescription):
+    """Describes Melnor number entity."""
 
     set_time_fn: Callable[[Valve, time], Coroutine[Any, Any, None]]
     state_fn: Callable[[Valve], Any]
-
-
-@dataclass(frozen=True)
-class MelnorZoneTimeEntityDescription(
-    TimeEntityDescription, MelnorZoneTimeEntityDescriptionMixin
-):
-    """Describes Melnor number entity."""
 
 
 ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneTimeEntityDescription] = [
@@ -52,7 +42,7 @@ ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneTimeEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the number platform."""
 

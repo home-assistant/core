@@ -1,0 +1,67 @@
+{
+  "entity": {
+    "number": {
+      "volume": {
+        "default": "mdi:bell-ring"
+      },
+      "doorbell_volume": {
+        "default": "mdi:bell-ring"
+      },
+      "mic_volume": {
+        "default": "mdi:microphone"
+      },
+      "voice_volume": {
+        "default": "mdi:account-voice"
+      }
+    },
+    "sensor": {
+      "last_activity": {
+        "default": "mdi:history"
+      },
+      "last_ding": {
+        "default": "mdi:history"
+      },
+      "last_motion": {
+        "default": "mdi:history"
+      },
+      "volume": {
+        "default": "mdi:bell-ring"
+      },
+      "doorbell_volume": {
+        "default": "mdi:bell-ring"
+      },
+      "mic_volume": {
+        "default": "mdi:microphone"
+      },
+      "voice_volume": {
+        "default": "mdi:account-voice"
+      },
+      "open_door": {
+        "default": "mdi:door-closed-lock"
+      },
+      "wifi_signal_category": {
+        "default": "mdi:wifi"
+      },
+      "wifi_signal_strength": {
+        "default": "mdi:wifi"
+      }
+    },
+    "switch": {
+      "siren": {
+        "default": "mdi:alarm-bell"
+      },
+      "in_home_chime": {
+        "default": "mdi:bell-ring-outline",
+        "state": {
+          "on": "mdi:bell-ring"
+        }
+      },
+      "motion_detection": {
+        "default": "mdi:motion-sensor-off",
+        "state": {
+          "on": "mdi:motion-sensor"
+        }
+      }
+    }
+  }
+}

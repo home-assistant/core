@@ -1,7 +1,9 @@
 """Test the CO2Signal diagnostics."""
+
 from unittest.mock import MagicMock, patch
 
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.goodwe import CONF_MODEL_FAMILY, DOMAIN
 from homeassistant.const import CONF_HOST
@@ -31,4 +33,4 @@ async def test_entry_diagnostics(
         assert await async_setup_component(hass, DOMAIN, {})
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-    assert result == snapshot
+    assert result == snapshot(exclude=props("created_at", "modified_at"))

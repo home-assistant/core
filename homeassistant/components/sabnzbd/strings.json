@@ -4,17 +4,42 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "name": "[%key:common::config_flow::data::name%]",
           "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "The full URL, including port, of the SABnzbd server. Example: `http://localhost:8080` or `http://a02368d7-sabnzbd:8080`, if you are using the add-on.",
+          "api_key": "The API key of the SABnzbd server. This can be found in the SABnzbd web interface under Config cog (top right) > General > Security."
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
+    "binary_sensor": {
+      "warnings": {
+        "name": "Warnings"
+      }
+    },
+    "button": {
+      "pause": {
+        "name": "[%key:common::action::pause%]"
+      },
+      "resume": {
+        "name": "[%key:component::sabnzbd::services::resume::name%]"
+      }
+    },
+    "number": {
+      "speedlimit": {
+        "name": "Speedlimit"
+      }
+    },
     "sensor": {
       "status": {
         "name": "Status"
@@ -85,6 +110,25 @@
           "description": "Speed limit. If specified as a number with no units, will be interpreted as a percent. If units are provided (e.g., 500K) will be interpreted absolutely."
         }
       }
+    }
+  },
+  "issues": {
+    "pause_action_deprecated": {
+      "title": "SABnzbd pause action deprecated",
+      "description": "The 'Pause' action is deprecated and will be removed in a future version. Please use the 'Pause' button instead. To remove this issue, please adjust automations accordingly and restart Home Assistant."
+    },
+    "resume_action_deprecated": {
+      "title": "SABnzbd resume action deprecated",
+      "description": "The 'Resume' action is deprecated and will be removed in a future version. Please use the 'Resume' button instead. To remove this issue, please adjust automations accordingly and restart Home Assistant."
+    },
+    "set_speed_action_deprecated": {
+      "title": "SABnzbd set_speed action deprecated",
+      "description": "The 'Set speed' action is deprecated and will be removed in a future version. Please use the 'Speedlimit' number entity instead. To remove this issue, please adjust automations accordingly and restart Home Assistant."
+    }
+  },
+  "exceptions": {
+    "service_call_exception": {
+      "message": "Unable to send command to SABnzbd due to a connection error, try again later"
     }
   }
 }

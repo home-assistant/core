@@ -1,4 +1,5 @@
 """Buttons for the SimpliSafe integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -12,25 +13,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SimpliSafe, SimpliSafeEntity
+from . import SimpliSafe
 from .const import DOMAIN
+from .entity import SimpliSafeEntity
 from .typing import SystemType
 
 
-@dataclass(frozen=True)
-class SimpliSafeButtonDescriptionMixin:
-    """Define an entity description mixin for SimpliSafe buttons."""
+@dataclass(frozen=True, kw_only=True)
+class SimpliSafeButtonDescription(ButtonEntityDescription):
+    """Describe a SimpliSafe button entity."""
 
     push_action: Callable[[System], Awaitable]
-
-
-@dataclass(frozen=True)
-class SimpliSafeButtonDescription(
-    ButtonEntityDescription, SimpliSafeButtonDescriptionMixin
-):
-    """Describe a SimpliSafe button entity."""
 
 
 BUTTON_KIND_CLEAR_NOTIFICATIONS = "clear_notifications"
@@ -51,7 +46,9 @@ BUTTON_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SimpliSafe buttons based on a config entry."""
     simplisafe = hass.data[DOMAIN][entry.entry_id]

@@ -1,16 +1,23 @@
 """Support for SleepIQ SleepNumber firmness number entities."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, cast
 
-from asyncsleepiq import SleepIQActuator, SleepIQBed, SleepIQFootWarmer, SleepIQSleeper
+from asyncsleepiq import (
+    FootWarmingTemps,
+    SleepIQActuator,
+    SleepIQBed,
+    SleepIQFootWarmer,
+    SleepIQSleeper,
+)
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ACTUATOR,
@@ -24,21 +31,14 @@ from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
 from .entity import SleepIQBedEntity, sleeper_for_side
 
 
-@dataclass(frozen=True)
-class SleepIQNumberEntityDescriptionMixin:
-    """Mixin to describe a SleepIQ number entity."""
+@dataclass(frozen=True, kw_only=True)
+class SleepIQNumberEntityDescription(NumberEntityDescription):
+    """Class to describe a SleepIQ number entity."""
 
     value_fn: Callable[[Any], float]
     set_value_fn: Callable[[Any, int], Coroutine[None, None, None]]
     get_name_fn: Callable[[SleepIQBed, Any], str]
     get_unique_id_fn: Callable[[SleepIQBed, Any], str]
-
-
-@dataclass(frozen=True)
-class SleepIQNumberEntityDescription(
-    NumberEntityDescription, SleepIQNumberEntityDescriptionMixin
-):
-    """Class to describe a SleepIQ number entity."""
 
 
 async def _async_set_firmness(sleeper: SleepIQSleeper, firmness: int) -> None:
@@ -79,6 +79,10 @@ def _get_sleeper_unique_id(bed: SleepIQBed, sleeper: SleepIQSleeper) -> str:
 async def _async_set_foot_warmer_time(
     foot_warmer: SleepIQFootWarmer, time: int
 ) -> None:
+    temperature = FootWarmingTemps(foot_warmer.temperature)
+    if temperature != FootWarmingTemps.OFF:
+        await foot_warmer.turn_on(temperature, time)
+
     foot_warmer.timer = time
 
 
@@ -134,40 +138,40 @@ NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ bed sensors."""
     data: SleepIQData = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
+    entities: list[SleepIQNumberEntity] = []
     for bed in data.client.beds.values():
-        for sleeper in bed.sleepers:
-            entities.append(
-                SleepIQNumberEntity(
-                    data.data_coordinator,
-                    bed,
-                    sleeper,
-                    NUMBER_DESCRIPTIONS[FIRMNESS],
-                )
+        entities.extend(
+            SleepIQNumberEntity(
+                data.data_coordinator,
+                bed,
+                sleeper,
+                NUMBER_DESCRIPTIONS[FIRMNESS],
             )
-        for actuator in bed.foundation.actuators:
-            entities.append(
-                SleepIQNumberEntity(
-                    data.data_coordinator,
-                    bed,
-                    actuator,
-                    NUMBER_DESCRIPTIONS[ACTUATOR],
-                )
+            for sleeper in bed.sleepers
+        )
+        entities.extend(
+            SleepIQNumberEntity(
+                data.data_coordinator,
+                bed,
+                actuator,
+                NUMBER_DESCRIPTIONS[ACTUATOR],
             )
-        for foot_warmer in bed.foundation.foot_warmers:
-            entities.append(
-                SleepIQNumberEntity(
-                    data.data_coordinator,
-                    bed,
-                    foot_warmer,
-                    NUMBER_DESCRIPTIONS[FOOT_WARMING_TIMER],
-                )
+            for actuator in bed.foundation.actuators
+        )
+        entities.extend(
+            SleepIQNumberEntity(
+                data.data_coordinator,
+                bed,
+                foot_warmer,
+                NUMBER_DESCRIPTIONS[FOOT_WARMING_TIMER],
             )
+            for foot_warmer in bed.foundation.foot_warmers
+        )
 
     async_add_entities(entities)
 

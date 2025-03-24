@@ -1,8 +1,11 @@
 """Support for exposing regular REST commands as services."""
-import asyncio
+
+from __future__ import annotations
+
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
 import logging
+from typing import Any
 
 import aiohttp
 from aiohttp import hdrs
@@ -27,10 +30,11 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.ssl import SSLCipherList
 
 DOMAIN = "rest_command"
 
@@ -43,6 +47,7 @@ DEFAULT_VERIFY_SSL = True
 SUPPORT_REST_METHODS = ["get", "patch", "post", "put", "delete"]
 
 CONF_CONTENT_TYPE = "content_type"
+CONF_INSECURE_CIPHER = "insecure_cipher"
 
 COMMAND_SCHEMA = vol.Schema(
     {
@@ -57,6 +62,7 @@ COMMAND_SCHEMA = vol.Schema(
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
         vol.Optional(CONF_CONTENT_TYPE): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        vol.Optional(CONF_INSECURE_CIPHER, default=False): cv.boolean,
     }
 )
 
@@ -76,7 +82,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if conf is None:
             return
 
-        existing = hass.services.async_services().get(DOMAIN, {})
+        existing = hass.services.async_services_for_domain(DOMAIN)
         for existing_service in existing:
             if existing_service == SERVICE_RELOAD:
                 continue
@@ -86,14 +92,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_register_rest_command(name, command_config)
 
     @callback
-    def async_register_rest_command(name, command_config):
+    def async_register_rest_command(name: str, command_config: dict[str, Any]) -> None:
         """Create service for rest command."""
-        websession = async_get_clientsession(hass, command_config.get(CONF_VERIFY_SSL))
+        websession = async_get_clientsession(
+            hass,
+            command_config[CONF_VERIFY_SSL],
+            ssl_cipher=(
+                SSLCipherList.INSECURE
+                if command_config[CONF_INSECURE_CIPHER]
+                else SSLCipherList.PYTHON_DEFAULT
+            ),
+        )
         timeout = command_config[CONF_TIMEOUT]
         method = command_config[CONF_METHOD]
 
         template_url = command_config[CONF_URL]
-        template_url.hass = hass
 
         auth = None
         if CONF_USERNAME in command_config:
@@ -104,11 +117,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         template_payload = None
         if CONF_PAYLOAD in command_config:
             template_payload = command_config[CONF_PAYLOAD]
-            template_payload.hass = hass
 
         template_headers = command_config.get(CONF_HEADERS, {})
-        for template_header in template_headers.values():
-            template_header.hass = hass
 
         content_type = command_config.get(CONF_CONTENT_TYPE)
 
@@ -135,6 +145,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             if content_type:
                 headers[hdrs.CONTENT_TYPE] = content_type
+
+            _LOGGER.debug(
+                "Calling %s %s with headers: %s and payload: %s",
+                method,
+                request_url,
+                headers,
+                payload,
+            )
 
             try:
                 async with getattr(websession, method)(
@@ -170,33 +188,38 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             _content = await response.text()
                     except (JSONDecodeError, AttributeError) as err:
                         raise HomeAssistantError(
-                            f"Response of '{request_url}' could not be decoded as JSON",
                             translation_domain=DOMAIN,
                             translation_key="decoding_error",
-                            translation_placeholders={"decoding_type": "json"},
+                            translation_placeholders={
+                                "request_url": request_url,
+                                "decoding_type": "JSON",
+                            },
                         ) from err
 
                     except UnicodeDecodeError as err:
                         raise HomeAssistantError(
-                            f"Response of '{request_url}' could not be decoded as text",
                             translation_domain=DOMAIN,
                             translation_key="decoding_error",
-                            translation_placeholders={"decoding_type": "text"},
+                            translation_placeholders={
+                                "request_url": request_url,
+                                "decoding_type": "text",
+                            },
                         ) from err
                     return {"content": _content, "status": response.status}
 
-            except asyncio.TimeoutError as err:
+            except TimeoutError as err:
                 raise HomeAssistantError(
-                    f"Timeout when calling resource '{request_url}'",
                     translation_domain=DOMAIN,
                     translation_key="timeout",
+                    translation_placeholders={"request_url": request_url},
                 ) from err
 
             except aiohttp.ClientError as err:
+                _LOGGER.error("Error fetching data: %s", err)
                 raise HomeAssistantError(
-                    f"Client error occurred when calling resource '{request_url}'",
                     translation_domain=DOMAIN,
                     translation_key="client_error",
+                    translation_placeholders={"request_url": request_url},
                 ) from err
 
         # register services

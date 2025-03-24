@@ -111,6 +111,7 @@
                 'id': '12:34:56:30:d5:d4',
                 'modules_bridged': list([
                   '0009999992',
+                  '0009999993',
                 ]),
                 'name': '**REDACTED**',
                 'room_id': '222452125',
@@ -124,6 +125,14 @@
                 'room_id': '3688132631',
                 'setup_date': 1578551339,
                 'type': 'NBR',
+              }),
+              dict({
+                'bridge': '12:34:56:30:d5:d4',
+                'id': '0009999993',
+                'name': '**REDACTED**',
+                'room_id': '3688132631',
+                'setup_date': 1594132017,
+                'type': 'NBO',
               }),
               dict({
                 'alarm_config': dict({
@@ -248,6 +257,7 @@
                   '12:34:56:00:00:a1:4c:da',
                   '12:34:56:00:01:01:01:a1',
                   '00:11:22:33:00:11:45:fe',
+                  '12:34:56:00:01:01:01:b1',
                 ]),
                 'name': '**REDACTED**',
                 'room_id': '1310352496',
@@ -408,6 +418,14 @@
                 'setup_date': 1598367404,
                 'type': 'NLFN',
               }),
+              dict({
+                'bridge': '12:34:56:80:60:40',
+                'id': '12:34:56:00:01:01:01:b1',
+                'name': '**REDACTED**',
+                'room_id': '1002003001',
+                'setup_date': 1598367504,
+                'type': 'NLLF',
+              }),
             ]),
             'name': '**REDACTED**',
             'persons': list([
@@ -443,6 +461,7 @@
                   '12:34:56:10:f1:66',
                   '12:34:56:00:e3:9b',
                   '0009999992',
+                  '0009999993',
                 ]),
                 'name': '**REDACTED**',
                 'type': 'custom',
@@ -589,6 +608,8 @@
         'webhook_id': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'netatmo',
       'minor_version': 1,
       'options': dict({
@@ -611,11 +632,22 @@
             'mode': 'max',
             'show_on_map': True,
           }),
+          'Home min': dict({
+            'area_name': 'Home min',
+            'lat_ne': '**REDACTED**',
+            'lat_sw': '**REDACTED**',
+            'lon_ne': '**REDACTED**',
+            'lon_sw': '**REDACTED**',
+            'mode': 'min',
+            'show_on_map': True,
+          }),
         }),
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Mock Title',
       'unique_id': 'netatmo',
       'version': 1,

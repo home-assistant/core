@@ -5,7 +5,7 @@
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"
         },
-        "description": "Enter your Blue Current api token",
+        "description": "Enter your Blue Current API token",
         "title": "Authentication"
       }
     },
@@ -13,14 +13,13 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "limit_reached": "Request limit reached",
       "invalid_token": "Invalid token",
-      "no_cards_found": "No charge cards found",
       "already_connected": "Already connected",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "wrong_account": "Wrong account: Please authenticate with the api key for {email}."
+      "wrong_account": "Wrong account: Please authenticate with the API token for {email}."
     }
   },
   "entity": {
@@ -29,7 +28,7 @@
         "name": "Activity",
         "state": {
           "available": "Available",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "unavailable": "Unavailable",
           "error": "Error",
           "offline": "Offline"

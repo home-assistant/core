@@ -1,4 +1,5 @@
 """The tests for the MQTT text platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,15 +8,10 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import mqtt, text
-from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -52,13 +48,6 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {text.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
-
-
-@pytest.fixture(autouse=True)
-def text_platform_only():
-    """Only setup the text platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.TEXT]):
-        yield
 
 
 async def async_set_value(
@@ -124,6 +113,63 @@ async def test_controlling_state_via_topic(
                     "name": "test",
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
+                    "min": 5,
+                    "max": 5,
+                }
+            }
+        }
+    ],
+)
+async def test_forced_text_length(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a text entity that only allows a fixed length."""
+    await mqtt_mock_entry()
+
+    state = hass.states.get("text.test")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "state-topic", "12345")
+    state = hass.states.get("text.test")
+    assert state.state == "12345"
+
+    caplog.clear()
+    # Text too long
+    async_fire_mqtt_message(hass, "state-topic", "123456")
+    state = hass.states.get("text.test")
+    assert state.state == "12345"
+    assert (
+        "Entity text.test provides state 123456 "
+        "which is too long (maximum length 5)" in caplog.text
+    )
+
+    caplog.clear()
+    # Text too short
+    async_fire_mqtt_message(hass, "state-topic", "1")
+    state = hass.states.get("text.test")
+    assert state.state == "12345"
+    assert (
+        "Entity text.test provides state 1 "
+        "which is too short (minimum length 5)" in caplog.text
+    )
+    # Valid update
+    async_fire_mqtt_message(hass, "state-topic", "54321")
+    state = hass.states.get("text.test")
+    assert state.state == "54321"
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                text.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
                     "mode": "text",
                     "min": 2,
                     "max": 10,
@@ -154,7 +200,7 @@ async def test_controlling_validation_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", "other")
     await hass.async_block_till_done()
     assert (
-        "ValueError: Entity text.test provides state other which does not match expected pattern (y|n)"
+        "Entity text.test provides state other which does not match expected pattern (y|n)"
         in caplog.text
     )
     state = hass.states.get("text.test")
@@ -165,7 +211,7 @@ async def test_controlling_validation_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", "yesyesyesyes")
     await hass.async_block_till_done()
     assert (
-        "ValueError: Entity text.test provides state yesyesyesyes which is too long (maximum length 10)"
+        "Entity text.test provides state yesyesyesyes which is too long (maximum length 10)"
         in caplog.text
     )
     state = hass.states.get("text.test")
@@ -176,7 +222,7 @@ async def test_controlling_validation_state_via_topic(
     async_fire_mqtt_message(hass, "state-topic", "y")
     await hass.async_block_till_done()
     assert (
-        "ValueError: Entity text.test provides state y which is too short (minimum length 2)"
+        "Entity text.test provides state y which is too short (minimum length 2)"
         in caplog.text
     )
     state = hass.states.get("text.test")
@@ -205,13 +251,11 @@ async def test_controlling_validation_state_via_topic(
     ],
 )
 async def test_attribute_validation_max_greater_then_min(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry: MqttMockHAClientGenerator, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the validation of min and max configuration attributes."""
     assert await mqtt_mock_entry()
-    assert "text length min must be >= max" in caplog.text
+    assert "text length min must be <= max" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -230,13 +274,41 @@ async def test_attribute_validation_max_greater_then_min(
     ],
 )
 async def test_attribute_validation_max_not_greater_then_max_state_length(
+    mqtt_mock_entry: MqttMockHAClientGenerator, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the max value of of max configuration attribute."""
+    assert await mqtt_mock_entry()
+    assert "max text length must be <= 255" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                text.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "state_topic": "state-topic",
+                }
+            }
+        }
+    ],
+)
+async def test_validation_payload_greater_then_max_state_length(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the max value of of max configuration attribute."""
     assert await mqtt_mock_entry()
-    assert "max text length must be <= 255" in caplog.text
+
+    state = hass.states.get("text.test")
+    assert state.state == STATE_UNKNOWN
+
+    async_fire_mqtt_message(hass, "state-topic", "".join("x" for _ in range(310)))
+
+    assert "Cannot update state for entity text.test" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -360,13 +432,7 @@ async def test_default_availability_payload(
         }
     }
     await help_test_default_availability_payload(
-        hass,
-        mqtt_mock_entry,
-        text.DOMAIN,
-        config,
-        True,
-        "state-topic",
-        "some state",
+        hass, mqtt_mock_entry, text.DOMAIN, config, True, "state-topic", "some state"
     )
 
 
@@ -385,13 +451,7 @@ async def test_custom_availability_payload(
     }
 
     await help_test_custom_availability_payload(
-        hass,
-        mqtt_mock_entry,
-        text.DOMAIN,
-        config,
-        True,
-        "state-topic",
-        "1",
+        hass, mqtt_mock_entry, text.DOMAIN, config, True, "state-topic", "1"
     )
 
 
@@ -409,7 +469,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry, text.DOMAIN, DEFAULT_CONFIG, {}
+        hass, mqtt_mock_entry, text.DOMAIN, DEFAULT_CONFIG, None
     )
 
 
@@ -429,11 +489,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        text.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, text.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -444,26 +500,16 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        text.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, text.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        text.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, text.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -498,9 +544,7 @@ async def test_unique_id(
 
 
 async def test_discovery_removal_text(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered text entity."""
     data = (
@@ -508,13 +552,11 @@ async def test_discovery_removal_text(
         '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
-    await help_test_discovery_removal(hass, mqtt_mock_entry, caplog, text.DOMAIN, data)
+    await help_test_discovery_removal(hass, mqtt_mock_entry, text.DOMAIN, data)
 
 
 async def test_discovery_text_update(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered text entity."""
     config1 = {
@@ -529,14 +571,12 @@ async def test_discovery_text_update(
     }
 
     await help_test_discovery_update(
-        hass, mqtt_mock_entry, caplog, text.DOMAIN, config1, config2
+        hass, mqtt_mock_entry, text.DOMAIN, config1, config2
     )
 
 
 async def test_discovery_update_unchanged_update(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered update."""
     data1 = '{ "name": "Beer", "state_topic": "text-topic", "command_topic": "command-topic"}'
@@ -544,32 +584,23 @@ async def test_discovery_update_unchanged_update(
         "homeassistant.components.mqtt.text.MqttTextEntity.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            text.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, text.DOMAIN, data1, discovery_update
         )
 
 
 async def test_discovery_update_text(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered text entity."""
     config1 = {"name": "Beer", "command_topic": "cmd-topic1"}
     config2 = {"name": "Milk", "command_topic": "cmd-topic2"}
     await help_test_discovery_update(
-        hass, mqtt_mock_entry, caplog, text.DOMAIN, config1, config2
+        hass, mqtt_mock_entry, text.DOMAIN, config1, config2
     )
 
 
 async def test_discovery_update_unchanged_climate(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered text entity."""
     data1 = '{ "name": "Beer", "command_topic": "cmd-topic" }'
@@ -577,20 +608,13 @@ async def test_discovery_update_unchanged_climate(
         "homeassistant.components.mqtt.text.MqttTextEntity.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            text.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, text.DOMAIN, data1, discovery_update
         )
 
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
@@ -599,9 +623,7 @@ async def test_discovery_broken(
         '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
-    await help_test_discovery_broken(
-        hass, mqtt_mock_entry, caplog, text.DOMAIN, data1, data2
-    )
+    await help_test_discovery_broken(hass, mqtt_mock_entry, text.DOMAIN, data1, data2)
 
 
 async def test_entity_device_info_with_connection(
@@ -708,8 +730,7 @@ async def test_publishing_with_custom_encoding(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = text.DOMAIN
@@ -759,8 +780,7 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = text.DOMAIN
@@ -804,3 +824,32 @@ async def test_skipped_async_ha_write_state(
     """Test a write state command is only called when there is change."""
     await mqtt_mock_entry()
     await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            text.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "state_topic": "test-topic",
+                    "value_template": "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

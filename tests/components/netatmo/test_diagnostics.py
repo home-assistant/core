@@ -1,4 +1,5 @@
 """Test the Netatmo diagnostics."""
+
 from unittest.mock import AsyncMock, patch
 
 from syrupy import SnapshotAssertion
@@ -9,6 +10,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import fake_post_request
 
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -17,15 +19,19 @@ async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
-    config_entry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test config entry diagnostics."""
-    with patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
-    ) as mock_auth, patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ), patch(
-        "homeassistant.components.netatmo.webhook_generate_url",
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
+        ) as mock_auth,
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook_generate_url",
+        ),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -36,4 +42,11 @@ async def test_entry_diagnostics(
 
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
-    ) == snapshot(exclude=paths("info.data.token.expires_at", "info.entry_id"))
+    ) == snapshot(
+        exclude=paths(
+            "info.data.token.expires_at",
+            "info.entry_id",
+            "info.created_at",
+            "info.modified_at",
+        )
+    )

@@ -1,6 +1,7 @@
 """Test helpers for Freebox."""
+
 import json
-from unittest.mock import AsyncMock, PropertyMock, patch
+from unittest.mock import AsyncMock, patch
 
 from freebox_api.exceptions import HttpRequestError
 import pytest
@@ -28,18 +29,9 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 def mock_path():
     """Mock path lib."""
-    with patch("homeassistant.components.freebox.router.Path"), patch(
-        "homeassistant.components.freebox.router.os.makedirs"
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def enable_all_entities():
-    """Make sure all entities are enabled."""
-    with patch(
-        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-        PropertyMock(return_value=True),
+    with (
+        patch("homeassistant.components.freebox.router.Path"),
+        patch("homeassistant.components.freebox.router.os.makedirs"),
     ):
         yield
 
@@ -106,9 +98,19 @@ def mock_router_bridge_mode(mock_device_registry_devices, router):
 
     router().lan.get_hosts_list = AsyncMock(
         side_effect=HttpRequestError(
-            "Request failed (APIResponse: %s)"
-            % json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)
+            f"Request failed (APIResponse: {json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)})"
         )
+    )
+
+    return router
+
+
+@pytest.fixture
+def mock_router_bridge_mode_error(mock_device_registry_devices, router):
+    """Mock a failed connection to Freebox Bridge mode."""
+
+    router().lan.get_hosts_list = AsyncMock(
+        side_effect=HttpRequestError("Request failed (APIResponse: some unknown error)")
     )
 
     return router

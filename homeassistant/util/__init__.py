@@ -1,4 +1,5 @@
 """Helper methods for various modules."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,14 +10,11 @@ import random
 import re
 import string
 import threading
-from typing import Any, TypeVar
+from typing import Any
 
 import slugify as unicode_slug
 
 from .dt import as_local, utcnow
-
-_T = TypeVar("_T")
-_U = TypeVar("_U")
 
 RE_SANITIZE_FILENAME = re.compile(r"(~|\.\.|/|\\)")
 RE_SANITIZE_PATH = re.compile(r"(~|\.(\.)+)")
@@ -60,7 +58,7 @@ def repr_helper(inp: Any) -> str:
     return str(inp)
 
 
-def convert(
+def convert[_T, _U](
     value: _T | None, to_type: Callable[[_T], _U], default: _U | None = None
 ) -> _U | None:
     """Convert value to to_type, returns default if fails."""
@@ -131,13 +129,11 @@ class Throttle:
 
             async def throttled_value() -> None:
                 """Stand-in function for when real func is being throttled."""
-                return None
 
         else:
 
             def throttled_value() -> None:  # type: ignore[misc]
                 """Stand-in function for when real func is being throttled."""
-                return None
 
         if self.limit_no_throttle is not None:
             method = Throttle(self.limit_no_throttle)(method)
@@ -170,14 +166,12 @@ class Throttle:
             else:
                 host = args[0] if args else wrapper
 
-            # pylint: disable=protected-access
             if not hasattr(host, "_throttle"):
-                host._throttle = {}
+                host._throttle = {}  # noqa: SLF001
 
-            if id(self) not in host._throttle:
-                host._throttle[id(self)] = [threading.Lock(), None]
-            throttle = host._throttle[id(self)]
-            # pylint: enable=protected-access
+            if id(self) not in host._throttle:  # noqa: SLF001
+                host._throttle[id(self)] = [threading.Lock(), None]  # noqa: SLF001
+            throttle = host._throttle[id(self)]  # noqa: SLF001
 
             if not throttle[0].acquire(False):
                 return throttled_value()

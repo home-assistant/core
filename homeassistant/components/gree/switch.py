@@ -1,4 +1,5 @@
 """Support for interface with a Gree climate systems."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -15,7 +16,7 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DOMAIN
 from .entity import GreeEntity
@@ -56,7 +57,6 @@ def _set_anion(device: Device, value: bool) -> None:
 
 GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
     GreeSwitchEntityDescription(
-        icon="mdi:lightbulb",
         key="Panel Light",
         translation_key="light",
         get_value_fn=lambda d: d.light,
@@ -81,7 +81,6 @@ GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
         set_value_fn=_set_xfan,
     ),
     GreeSwitchEntityDescription(
-        icon="mdi:pine-tree",
         key="Health mode",
         translation_key="health_mode",
         get_value_fn=lambda d: d.anion,
@@ -94,7 +93,7 @@ GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Gree HVAC device from a config entry."""
 

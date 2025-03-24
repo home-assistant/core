@@ -1,6 +1,5 @@
 """Tests for the INKBIRD integration."""
 
-
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 NOT_INKBIRD_SERVICE_INFO = BluetoothServiceInfo(
@@ -22,6 +21,17 @@ SPS_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=["0000fff0-0000-1000-8000-00805f9b34fb"],
     source="local",
 )
+
+SPS_WITH_CORRUPT_NAME_SERVICE_INFO = BluetoothServiceInfo(
+    name="XXXXcorruptXXXX",
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-63,
+    service_data={},
+    manufacturer_data={2096: b"\x0f\x12\x00Z\xc7W\x06"},
+    service_uuids=["0000fff0-0000-1000-8000-00805f9b34fb"],
+    source="local",
+)
+
 
 IBBQ_SERVICE_INFO = BluetoothServiceInfo(
     name="iBBQ",

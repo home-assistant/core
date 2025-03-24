@@ -1,4 +1,5 @@
 """Z-Wave JS trigger dispatcher."""
+
 from __future__ import annotations
 
 from homeassistant.const import CONF_PLATFORM

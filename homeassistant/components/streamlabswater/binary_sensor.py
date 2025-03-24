@@ -1,10 +1,11 @@
 """Support for Streamlabs Water Monitor Away Mode."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import StreamlabsCoordinator
 from .const import DOMAIN
@@ -14,7 +15,7 @@ from .entity import StreamlabsWaterEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Streamlabs water binary sensor from a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]

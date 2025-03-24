@@ -1,14 +1,14 @@
 """Tests for the Abode cover device."""
+
 from unittest.mock import patch
 
 from homeassistant.components.abode import ATTR_DEVICE_ID
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
-    STATE_CLOSED,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -33,7 +33,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
     await setup_platform(hass, COVER_DOMAIN)
 
     state = hass.states.get(DEVICE_ID)
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
     assert state.attributes.get(ATTR_DEVICE_ID) == "ZW:00000007"
     assert not state.attributes.get("battery_low")
     assert not state.attributes.get("no_response")

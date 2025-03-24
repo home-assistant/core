@@ -11,7 +11,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEnti
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator
@@ -35,7 +35,9 @@ def _switchbee_brightness_to_hass(value: int) -> int:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBee light."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -100,7 +102,7 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
             await self.coordinator.api.set_state(self._device.id, state)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
             raise HomeAssistantError(
-                f"Failed to set {self.name} state {state}, {str(exp)}"
+                f"Failed to set {self.name} state {state}, {exp!s}"
             ) from exp
 
         if not isinstance(state, int):
@@ -120,7 +122,7 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
             await self.coordinator.api.set_state(self._device.id, ApiStateCommand.OFF)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
             raise HomeAssistantError(
-                f"Failed to turn off {self._attr_name}, {str(exp)}"
+                f"Failed to turn off {self._attr_name}, {exp!s}"
             ) from exp
 
         # update the coordinator manually

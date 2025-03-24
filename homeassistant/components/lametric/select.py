@@ -1,4 +1,5 @@
 """Support for LaMetric selects."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -11,7 +12,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import LaMetricDataUpdateCoordinator
@@ -31,7 +32,6 @@ SELECTS = [
     LaMetricSelectEntityDescription(
         key="brightness_mode",
         translation_key="brightness_mode",
-        icon="mdi:brightness-auto",
         entity_category=EntityCategory.CONFIG,
         options=["auto", "manual"],
         current_fn=lambda device: device.display.brightness_mode.value,
@@ -43,7 +43,7 @@ SELECTS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LaMetric select based on a config entry."""
     coordinator: LaMetricDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]

@@ -1,4 +1,5 @@
 """Support for the Airly sensor service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_NAME,
@@ -21,10 +21,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirlyDataUpdateCoordinator
 from .const import (
     ATTR_ADVICE,
     ATTR_API_ADVICE,
@@ -52,6 +51,7 @@ from .const import (
     SUFFIX_PERCENT,
     URL,
 )
+from .coordinator import AirlyConfigEntry, AirlyDataUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
@@ -66,7 +66,6 @@ class AirlySensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_CAQI,
-        icon="mdi:air-filter",
         translation_key="caqi",
         native_unit_of_measurement="CAQI",
         suggested_display_precision=0,
@@ -174,20 +173,24 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirlyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Airly sensor entities based on a config entry."""
     name = entry.data[CONF_NAME]
 
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
-    sensors = []
-    for description in SENSOR_TYPES:
-        # When we use the nearest method, we are not sure which sensors are available
-        if coordinator.data.get(description.key):
-            sensors.append(AirlySensor(coordinator, name, description))
-
-    async_add_entities(sensors, False)
+    async_add_entities(
+        (
+            AirlySensor(coordinator, name, description)
+            for description in SENSOR_TYPES
+            # When we use the nearest method, we are not sure which sensors are available
+            if coordinator.data.get(description.key)
+        ),
+        False,
+    )
 
 
 class AirlySensor(CoordinatorEntity[AirlyDataUpdateCoordinator], SensorEntity):

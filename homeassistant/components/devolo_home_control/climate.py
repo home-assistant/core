@@ -1,4 +1,5 @@
 """Platform for climate integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,39 +13,38 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import DevoloHomeControlConfigEntry
 from .devolo_multi_level_switch import DevoloMultiLevelSwitchDeviceEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DevoloHomeControlConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Get all cover devices and setup them via config entry."""
-    entities = []
 
-    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
-        for device in gateway.multi_level_switch_devices:
-            for multi_level_switch in device.multi_level_switch_property:
-                if device.device_model_uid in (
-                    "devolo.model.Thermostat:Valve",
-                    "devolo.model.Room:Thermostat",
-                    "devolo.model.Eurotronic:Spirit:Device",
-                    "unk.model.Danfoss:Thermostat",
-                ):
-                    entities.append(
-                        DevoloClimateDeviceEntity(
-                            homecontrol=gateway,
-                            device_instance=device,
-                            element_uid=multi_level_switch,
-                        )
-                    )
-
-    async_add_entities(entities)
+    async_add_entities(
+        DevoloClimateDeviceEntity(
+            homecontrol=gateway,
+            device_instance=device,
+            element_uid=multi_level_switch,
+        )
+        for gateway in entry.runtime_data
+        for device in gateway.multi_level_switch_devices
+        for multi_level_switch in device.multi_level_switch_property
+        if device.device_model_uid
+        in (
+            "devolo.model.Thermostat:Valve",
+            "devolo.model.Room:Thermostat",
+            "devolo.model.Eurotronic:Spirit:Device",
+            "unk.model.Danfoss:Thermostat",
+        )
+    )
 
 
 class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntity):

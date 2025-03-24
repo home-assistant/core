@@ -1,20 +1,28 @@
 {
   "config": {
     "step": {
-      "user": {
-        "description": "Enter your Tuya credentials",
+      "reauth_user_code": {
+        "description": "The Tuya integration now uses an improved login method. To reauthenticate with your Smart Life or Tuya Smart account, you need to enter your user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case sensitive, please be sure to enter it exactly as shown in the app.",
         "data": {
-          "country_code": "Country",
-          "access_id": "Tuya IoT Access ID",
-          "access_secret": "Tuya IoT Access Secret",
-          "username": "Account",
-          "password": "[%key:common::config_flow::data::password%]"
+          "user_code": "User code"
         }
+      },
+      "user": {
+        "description": "Enter your Smart Life or Tuya Smart user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case sensitive, please be sure to enter it exactly as shown in the app.",
+        "data": {
+          "user_code": "User code"
+        }
+      },
+      "scan": {
+        "description": "Use Smart Life app or Tuya Smart app to scan the following QR-code to complete the login.\n\nContinue to the next step once you have completed this step in the app."
       }
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "login_error": "Login error ({code}): {msg}"
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "entity": {
@@ -111,6 +119,9 @@
       }
     },
     "number": {
+      "alarm_duration": {
+        "name": "Alarm duration"
+      },
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
@@ -137,6 +148,9 @@
       },
       "far_detection": {
         "name": "Far detection"
+      },
+      "target_dis_closest": {
+        "name": "Clostest target distance"
       },
       "water_level": {
         "name": "Water level"
@@ -267,7 +281,7 @@
         "name": "Indicator light mode",
         "state": {
           "none": "[%key:common::state::off%]",
-          "pos": "Indicate switch location",
+          "pos": "Indicate inverted switch state",
           "relay": "Indicate switch on/off state"
         }
       },
@@ -455,6 +469,9 @@
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
+      "temperature_external": {
+        "name": "Probe temperature"
+      },
       "humidity": {
         "name": "[%key:component::sensor::entity_component::humidity::name%]"
       },
@@ -508,6 +525,9 @@
       },
       "total_energy": {
         "name": "Total energy"
+      },
+      "total_production": {
+        "name": "Total production"
       },
       "phase_a_current": {
         "name": "Phase A current"
@@ -609,6 +629,17 @@
           "good": "Good",
           "severe": "Severe"
         }
+      },
+      "air_quality_index": {
+        "name": "Air quality index",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6"
+        }
       }
     },
     "switch": {
@@ -629,6 +660,9 @@
       },
       "filter_reset": {
         "name": "Filter reset"
+      },
+      "pump": {
+        "name": "Pump"
       },
       "water_pump_reset": {
         "name": "Water pump reset"
@@ -815,30 +849,6 @@
       },
       "sterilization": {
         "name": "Sterilization"
-      }
-    }
-  },
-  "issues": {
-    "service_deprecation_turn_off": {
-      "title": "Tuya vacuum support for vacuum.turn_off is being removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::tuya::issues::service_deprecation_turn_off::title%]",
-            "description": "Tuya vacuum support for the vacuum.turn_off service is deprecated and will be removed in Home Assistant 2024.2; Please adjust any automation or script that uses the service to instead call vacuum.stop and select submit below to mark this issue as resolved."
-          }
-        }
-      }
-    },
-    "service_deprecation_turn_on": {
-      "title": "Tuya vacuum support for vacuum.turn_on is being removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::tuya::issues::service_deprecation_turn_on::title%]",
-            "description": "Tuya vacuum support for the vacuum.turn_on service is deprecated and will be removed in Home Assistant 2024.2; Please adjust any automation or script that uses the service to instead call vacuum.start and select submit below to mark this issue as resolved."
-          }
-        }
       }
     }
   }

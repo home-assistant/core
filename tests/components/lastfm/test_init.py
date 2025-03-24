@@ -1,4 +1,5 @@
 """Test LastFM component setup process."""
+
 from __future__ import annotations
 
 from homeassistant.components.lastfm.const import DOMAIN

@@ -1,22 +1,33 @@
 """Support for Lutron lights."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from pylutron import Lutron, LutronEntity, Output
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_FLASH,
+    ATTR_TRANSITION,
+    ColorMode,
+    LightEntity,
+    LightEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN, LutronData
+from .const import CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL
 from .entity import LutronDevice
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron light platform.
 
@@ -24,11 +35,12 @@ async def async_setup_entry(
     light entities.
     """
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+
     async_add_entities(
-        [
-            LutronLight(area_name, device, entry_data.client)
+        (
+            LutronLight(area_name, device, entry_data.client, config_entry)
             for area_name, device in entry_data.lights
-        ],
+        ),
         True,
     )
 
@@ -48,46 +60,62 @@ class LutronLight(LutronDevice, LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.FLASH
+    _lutron_device: Output
+    _prev_brightness: int | None = None
+    _attr_name = None
 
-    def __init__(self, area_name, lutron_device, controller) -> None:
-        """Initialize the light."""
-        self._prev_brightness = None
+    def __init__(
+        self,
+        area_name: str,
+        lutron_device: LutronEntity,
+        controller: Lutron,
+        config_entry: ConfigEntry,
+    ) -> None:
+        """Initialize the device."""
         super().__init__(area_name, lutron_device, controller)
-
-    @property
-    def brightness(self) -> int:
-        """Return the brightness of the light."""
-        new_brightness = to_hass_level(self._lutron_device.last_level())
-        if new_brightness != 0:
-            self._prev_brightness = new_brightness
-        return new_brightness
+        self._config_entry = config_entry
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if ATTR_BRIGHTNESS in kwargs and self._lutron_device.is_dimmable:
-            brightness = kwargs[ATTR_BRIGHTNESS]
-        elif self._prev_brightness == 0:
-            brightness = 255 / 2
+        if flash := kwargs.get(ATTR_FLASH):
+            self._lutron_device.flash(0.5 if flash == "short" else 1.5)
         else:
-            brightness = self._prev_brightness
-        self._prev_brightness = brightness
-        self._lutron_device.level = to_lutron_level(brightness)
+            if ATTR_BRIGHTNESS in kwargs and self._lutron_device.is_dimmable:
+                brightness = kwargs[ATTR_BRIGHTNESS]
+            elif self._prev_brightness == 0:
+                brightness = self._config_entry.options.get(
+                    CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL
+                )
+            else:
+                brightness = self._prev_brightness
+            self._prev_brightness = brightness
+            args = {"new_level": to_lutron_level(brightness)}
+            if ATTR_TRANSITION in kwargs:
+                args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
+            self._lutron_device.set_level(**args)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        self._lutron_device.level = 0
+        args = {"new_level": 0}
+        if ATTR_TRANSITION in kwargs:
+            args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
+        self._lutron_device.set_level(**args)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return self._lutron_device.last_level() > 0
+    def _request_state(self) -> None:
+        """Request the state from the device."""
+        _ = self._lutron_device.level
 
-    def update(self) -> None:
-        """Call when forcing a refresh of the device."""
-        if self._prev_brightness is None:
-            self._prev_brightness = to_hass_level(self._lutron_device.level)
+    def _update_attrs(self) -> None:
+        """Update the state attributes."""
+        level = self._lutron_device.last_level()
+        self._attr_is_on = level > 0
+        hass_level = to_hass_level(level)
+        self._attr_brightness = hass_level
+        if self._prev_brightness is None or hass_level != 0:
+            self._prev_brightness = hass_level

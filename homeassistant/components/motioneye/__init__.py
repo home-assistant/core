@@ -1,4 +1,5 @@
 """The motionEye integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -7,7 +8,6 @@ from http import HTTPStatus
 import json
 import logging
 import os
-from types import MappingProxyType
 from typing import Any
 from urllib.parse import urlencode, urljoin
 
@@ -51,18 +51,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ATTR_EVENT_TYPE,
@@ -122,13 +116,6 @@ def split_motioneye_device_identifier(
     except ValueError:
         return None
     return (DOMAIN, config_id, camera_id)
-
-
-def get_motioneye_entity_unique_id(
-    config_entry_id: str, camera_id: int, entity_type: str
-) -> str:
-    """Get the unique_id for a motionEye entity."""
-    return f"{config_entry_id}_{camera_id}_{entity_type}"
 
 
 def get_camera_from_cameras(
@@ -335,6 +322,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=DOMAIN,
         update_method=async_update_data,
         update_interval=DEFAULT_SCAN_INTERVAL,
@@ -413,7 +401,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def handle_webhook(
     hass: HomeAssistant, webhook_id: str, request: Request
-) -> None | Response:
+) -> Response | None:
     """Handle webhook callback."""
 
     try:
@@ -529,51 +517,3 @@ def get_media_url(
             return client.get_image_url(camera_id, path)
         return client.get_movie_url(camera_id, path)
     return None
-
-
-class MotionEyeEntity(CoordinatorEntity):
-    """Base class for motionEye entities."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        config_entry_id: str,
-        type_name: str,
-        camera: dict[str, Any],
-        client: MotionEyeClient,
-        coordinator: DataUpdateCoordinator,
-        options: MappingProxyType[str, Any],
-        entity_description: EntityDescription | None = None,
-    ) -> None:
-        """Initialize a motionEye entity."""
-        self._camera_id = camera[KEY_ID]
-        self._device_identifier = get_motioneye_device_identifier(
-            config_entry_id, self._camera_id
-        )
-        self._unique_id = get_motioneye_entity_unique_id(
-            config_entry_id,
-            self._camera_id,
-            type_name,
-        )
-        self._client = client
-        self._camera: dict[str, Any] | None = camera
-        self._options = options
-        if entity_description is not None:
-            self.entity_description = entity_description
-        super().__init__(coordinator)
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id for this instance."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(identifiers={self._device_identifier})
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self._camera is not None and super().available

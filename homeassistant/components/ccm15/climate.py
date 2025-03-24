@@ -1,4 +1,5 @@
 """Climate device for CCM15 coordinator."""
+
 import logging
 from typing import Any
 
@@ -16,26 +17,25 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONST_CMD_FAN_MAP, CONST_CMD_STATE_MAP, DOMAIN
-from .coordinator import CCM15Coordinator
+from .coordinator import CCM15ConfigEntry, CCM15Coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: CCM15ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all climate."""
-    coordinator: CCM15Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     ac_data: CCM15DeviceState = coordinator.data
     entities = [
@@ -56,6 +56,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         HVACMode.HEAT,
         HVACMode.COOL,
         HVACMode.DRY,
+        HVACMode.FAN_ONLY,
         HVACMode.AUTO,
     ]
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
@@ -64,6 +65,8 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_name = None
 
@@ -128,7 +131,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
 
     @property
     def available(self) -> bool:
-        """Return the avalability of the entity."""
+        """Return the availability of the entity."""
         return self.data is not None
 
     @property

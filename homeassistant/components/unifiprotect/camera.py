@@ -1,24 +1,23 @@
 """Support for Ubiquiti's UniFi Protect NVR."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
 import logging
-from typing import cast
 
-from pyunifiprotect.data import (
+from uiprotect.data import (
     Camera as UFPCamera,
     CameraChannel,
-    ModelType,
     ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
     StateType,
 )
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity
 
 from .const import (
     ATTR_BITRATE,
@@ -26,28 +25,51 @@ from .const import (
     ATTR_FPS,
     ATTR_HEIGHT,
     ATTR_WIDTH,
-    DISPATCH_ADOPT,
-    DISPATCH_CHANNELS,
     DOMAIN,
 )
-from .data import ProtectData
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
-from .utils import async_dispatch_id as _ufpd
+from .utils import get_camera_base_name
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_camera_channels(
+@callback
+def _create_rtsp_repair(
+    hass: HomeAssistant, entry: UFPConfigEntry, data: ProtectData, camera: UFPCamera
+) -> None:
+    edit_key = "readonly"
+    if camera.can_write(data.api.bootstrap.auth_user):
+        edit_key = "writable"
+
+    translation_key = f"rtsp_disabled_{edit_key}"
+    issue_key = f"rtsp_disabled_{camera.id}"
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_key,
+        is_fixable=True,
+        is_persistent=False,
+        learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#camera-streams",
+        severity=IssueSeverity.WARNING,
+        translation_key=translation_key,
+        translation_placeholders={"camera": camera.display_name},
+        data={"entry_id": entry.entry_id, "camera_id": camera.id},
+    )
+
+
+@callback
+def _get_camera_channels(
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
     data: ProtectData,
     ufp_device: UFPCamera | None = None,
-) -> Generator[tuple[UFPCamera, CameraChannel, bool], None, None]:
+) -> Generator[tuple[UFPCamera, CameraChannel, bool]]:
     """Get all the camera channels."""
 
-    devices = (
-        data.get_by_types({ModelType.CAMERA}) if ufp_device is None else [ufp_device]
-    )
-    for camera in devices:
-        camera = cast(UFPCamera, camera)
+    cameras = data.get_cameras() if ufp_device is None else [ufp_device]
+    for camera in cameras:
         if not camera.channels:
             if ufp_device is None:
                 # only warn on startup
@@ -68,16 +90,24 @@ def get_camera_channels(
                 is_default = False
 
         # no RTSP enabled use first channel with no stream
-        if is_default:
+        if is_default and not camera.is_third_party_camera:
+            _create_rtsp_repair(hass, entry, data, camera)
             yield camera, camera.channels[0], True
+        else:
+            ir.async_delete_issue(hass, DOMAIN, f"rtsp_disabled_{camera.id}")
 
 
 def _async_camera_entities(
-    data: ProtectData, ufp_device: UFPCamera | None = None
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
+    data: ProtectData,
+    ufp_device: UFPCamera | None = None,
 ) -> list[ProtectDeviceEntity]:
     disable_stream = data.disable_stream
     entities: list[ProtectDeviceEntity] = []
-    for camera, channel, is_default in get_camera_channels(data, ufp_device):
+    for camera, channel, is_default in _get_camera_channels(
+        hass, entry, data, ufp_device
+    ):
         # do not enable streaming for package camera
         # 2 FPS causes a lot of buferring
         entities.append(
@@ -107,34 +137,38 @@ def _async_camera_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: UFPConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Discover cameras on a UniFi Protect NVR."""
-    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         if not isinstance(device, UFPCamera):
-            return  # type: ignore[unreachable]
+            return
+        async_add_entities(_async_camera_entities(hass, entry, data, ufp_device=device))
 
-        entities = _async_camera_entities(data, ufp_device=device)
-        async_add_entities(entities)
-
+    data.async_subscribe_adopt(_add_new_device)
     entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+        async_dispatcher_connect(hass, data.channels_signal, _add_new_device)
     )
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_CHANNELS), _add_new_device)
-    )
+    async_add_entities(_async_camera_entities(hass, entry, data))
 
-    entities = _async_camera_entities(data)
-    async_add_entities(entities)
+
+_DISABLE_FEATURE = CameraEntityFeature(0)
+_ENABLE_FEATURE = CameraEntityFeature.STREAM
 
 
 class ProtectCamera(ProtectDeviceEntity, Camera):
     """A Ubiquiti UniFi Protect Camera."""
 
     device: UFPCamera
+    _state_attrs = (
+        "_attr_available",
+        "_attr_is_recording",
+        "_attr_motion_detection_enabled",
+    )
 
     def __init__(
         self,
@@ -153,36 +187,34 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         super().__init__(data, camera)
         device = self.device
 
+        camera_name = get_camera_base_name(channel)
         if self._secure:
             self._attr_unique_id = f"{device.mac}_{channel.id}"
-            self._attr_name = f"{device.display_name} {channel.name}"
+            self._attr_name = camera_name
         else:
             self._attr_unique_id = f"{device.mac}_{channel.id}_insecure"
-            self._attr_name = f"{device.display_name} {channel.name} Insecure"
+            self._attr_name = f"{camera_name} (insecure)"
         # only the default (first) channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default and secure
+        # Set the stream source before finishing the init
+        # because async_added_to_hass is too late and camera
+        # integration uses async_internal_added_to_hass to access
+        # the stream source which is called before async_added_to_hass
+        self._async_set_stream_source()
 
     @callback
     def _async_set_stream_source(self) -> None:
-        disable_stream = self._disable_stream
         channel = self.channel
-
-        if not channel.is_rtsp_enabled:
-            disable_stream = False
-
-        rtsp_url = channel.rtsps_url if self._secure else channel.rtsp_url
-
-        # _async_set_stream_source called by __init__
-        self._stream_source = (  # pylint: disable=attribute-defined-outside-init
-            None if disable_stream else rtsp_url
-        )
-        if self._stream_source:
-            self._attr_supported_features = CameraEntityFeature.STREAM
-        else:
-            self._attr_supported_features = CameraEntityFeature(0)
+        enable_stream = not self._disable_stream and channel.is_rtsp_enabled
+        # SRTP disabled because go2rtc does not support it
+        # https://github.com/AlexxIT/go2rtc/#source-rtsp
+        rtsp_url = channel.rtsps_no_srtp_url if self._secure else channel.rtsp_url
+        source = rtsp_url if enable_stream else None
+        self._attr_supported_features = _ENABLE_FEATURE if source else _DISABLE_FEATURE
+        self._stream_source = source
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         updated_device = self.device
         channel = updated_device.channels[self.channel.id]

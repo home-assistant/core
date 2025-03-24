@@ -1,4 +1,5 @@
 """The AirVisual Pro integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -23,19 +24,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
+from .const import LOGGER
 
 PLATFORMS = [Platform.SENSOR]
 
 UPDATE_INTERVAL = timedelta(minutes=1)
+
+type AirVisualProConfigEntry = ConfigEntry[AirVisualProData]
 
 
 @dataclass
@@ -46,14 +43,16 @@ class AirVisualProData:
     node: NodeSamba
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: AirVisualProConfigEntry
+) -> bool:
     """Set up AirVisual Pro from a config entry."""
     node = NodeSamba(entry.data[CONF_IP_ADDRESS], entry.data[CONF_PASSWORD])
 
     try:
         await node.async_connect()
     except NodeProError as err:
-        raise ConfigEntryNotReady() from err
+        raise ConfigEntryNotReady from err
 
     reload_task: asyncio.Task | None = None
 
@@ -82,15 +81,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
+        config_entry=entry,
         name="Node/Pro data",
         update_interval=UPDATE_INTERVAL,
         update_method=async_get_data,
     )
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AirVisualProData(
-        coordinator=coordinator, node=node
-    )
+    entry.runtime_data = AirVisualProData(coordinator=coordinator, node=node)
 
     async def async_shutdown(_: Event) -> None:
         """Define an event handler to disconnect from the websocket."""
@@ -109,35 +107,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: AirVisualProConfigEntry
+) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        data = hass.data[DOMAIN].pop(entry.entry_id)
-        await data.node.async_disconnect()
+        await entry.runtime_data.node.async_disconnect()
 
     return unload_ok
-
-
-class AirVisualProEntity(CoordinatorEntity):
-    """Define a generic AirVisual Pro entity."""
-
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, description: EntityDescription
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-
-        self._attr_unique_id = f"{coordinator.data['serial_number']}_{description.key}"
-        self.entity_description = description
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device registry information for this entity."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.data["serial_number"])},
-            manufacturer="AirVisual",
-            model=self.coordinator.data["status"]["model"],
-            name=self.coordinator.data["settings"]["node_name"],
-            hw_version=self.coordinator.data["status"]["system_version"],
-            sw_version=self.coordinator.data["status"]["app_version"],
-        )

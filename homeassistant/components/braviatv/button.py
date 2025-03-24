@@ -1,4 +1,5 @@
 """Button support for Bravia TV."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -9,28 +10,19 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import BraviaTVCoordinator
+from .coordinator import BraviaTVConfigEntry, BraviaTVCoordinator
 from .entity import BraviaTVEntity
 
 
-@dataclass(frozen=True)
-class BraviaTVButtonDescriptionMixin:
-    """Mixin to describe a Bravia TV Button entity."""
+@dataclass(frozen=True, kw_only=True)
+class BraviaTVButtonDescription(ButtonEntityDescription):
+    """Bravia TV Button description."""
 
     press_action: Callable[[BraviaTVCoordinator], Coroutine]
-
-
-@dataclass(frozen=True)
-class BraviaTVButtonDescription(
-    ButtonEntityDescription, BraviaTVButtonDescriptionMixin
-):
-    """Bravia TV Button description."""
 
 
 BUTTONS: tuple[BraviaTVButtonDescription, ...] = (
@@ -51,12 +43,12 @@ BUTTONS: tuple[BraviaTVButtonDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: BraviaTVConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Bravia TV Button entities."""
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     unique_id = config_entry.unique_id
     assert unique_id is not None
 

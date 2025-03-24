@@ -1,4 +1,7 @@
 """The tests for Philips Hue device triggers for V2 bridge."""
+
+from unittest.mock import Mock
+
 from aiohue.v2.models.button import ButtonEvent
 from pytest_unordered import unordered
 
@@ -7,7 +10,8 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.hue.v2.device import async_setup_devices
 from homeassistant.components.hue.v2.hue_event import async_setup_hue_events
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_platform
 
@@ -15,7 +19,7 @@ from tests.common import async_capture_events, async_get_device_automations
 
 
 async def test_hue_event(
-    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
 ) -> None:
     """Test hue button events."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
@@ -27,7 +31,12 @@ async def test_hue_event(
 
     # Emit button update event
     btn_event = {
-        "button": {"last_event": "initial_press"},
+        "button": {
+            "button_report": {
+                "event": "initial_press",
+                "updated": "2021-10-01T12:00:00Z",
+            }
+        },
         "id": "c658d3d8-a013-4b81-8ac6-78b248537e70",
         "metadata": {"control_id": 1},
         "type": "button",
@@ -40,23 +49,23 @@ async def test_hue_event(
     assert len(events) == 1
     assert events[0].data["id"] == "wall_switch_with_2_controls_button"
     assert events[0].data["unique_id"] == btn_event["id"]
-    assert events[0].data["type"] == btn_event["button"]["last_event"]
+    assert events[0].data["type"] == btn_event["button"]["button_report"]["event"]
     assert events[0].data["subtype"] == btn_event["metadata"]["control_id"]
 
 
 async def test_get_triggers(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_bridge_v2,
-    v2_resources_test_data,
-    device_reg,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we get the expected triggers from a hue remote."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, ["binary_sensor", "sensor"])
 
     # Get triggers for `Wall switch with 2 controls`
-    hue_wall_switch_device = device_reg.async_get_device(
+    hue_wall_switch_device = device_registry.async_get_device(
         identifiers={(hue.DOMAIN, "3ff06175-29e8-44a8-8fe7-af591b0025da")}
     )
     hue_bat_sensor = entity_registry.async_get(

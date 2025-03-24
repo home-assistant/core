@@ -1,4 +1,5 @@
 """Kuler Sky light platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -17,7 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DATA_ADDRESSES, DATA_DISCOVERY_SUBSCRIPTION, DOMAIN
@@ -30,7 +31,7 @@ DISCOVERY_INTERVAL = timedelta(seconds=60)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Kuler sky light devices."""
 
@@ -136,7 +137,7 @@ class KulerskyLight(LightEntity):
             self._attr_available = False
             return
         if self._attr_available is False:
-            _LOGGER.info("Reconnected to %s", self._light.address)
+            _LOGGER.warning("Reconnected to %s", self._light.address)
 
         self._attr_available = True
         brightness = max(rgbw)

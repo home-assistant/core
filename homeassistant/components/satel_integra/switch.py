@@ -1,4 +1,5 @@
 """Support for Satel Integra modifiable outputs represented as switches."""
+
 from __future__ import annotations
 
 import logging
@@ -57,6 +58,7 @@ class SatelIntegraSwitch(SwitchEntity):
     def __init__(self, controller, device_number, device_name, code):
         """Initialize the binary_sensor."""
         self._device_number = device_number
+        self._attr_unique_id = f"satel_switch_{device_number}"
         self._name = device_name
         self._state = False
         self._code = code

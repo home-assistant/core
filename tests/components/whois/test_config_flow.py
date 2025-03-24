@@ -1,4 +1,5 @@
 """Tests for the Whois config flow."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -30,7 +31,7 @@ async def test_full_user_flow(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -38,7 +39,7 @@ async def test_full_user_flow(
         user_input={CONF_DOMAIN: "Example.com"},
     )
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2 == snapshot
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -70,7 +71,7 @@ async def test_full_flow_with_error(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     mock_whois.side_effect = throw
@@ -79,7 +80,7 @@ async def test_full_flow_with_error(
         user_input={CONF_DOMAIN: "Example.com"},
     )
 
-    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "user"
     assert result2.get("errors") == {"base": reason}
 
@@ -92,7 +93,7 @@ async def test_full_flow_with_error(
         user_input={CONF_DOMAIN: "Example.com"},
     )
 
-    assert result3.get("type") == FlowResultType.CREATE_ENTRY
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
     assert result3 == snapshot
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -114,7 +115,7 @@ async def test_already_configured(
         data={CONF_DOMAIN: "HOME-Assistant.io"},
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
     assert len(mock_setup_entry.mock_calls) == 0

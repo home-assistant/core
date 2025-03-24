@@ -1,4 +1,5 @@
 """Test the SmartTub climate platform."""
+
 import smarttub
 
 from homeassistant.components.climate import (

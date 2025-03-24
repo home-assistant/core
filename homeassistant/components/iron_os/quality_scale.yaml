@@ -1,0 +1,84 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not have actions
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: done
+    comment: Integration does register actions aside from entity actions
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not register events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure:
+    status: exempt
+    comment: Device is set up from a Bluetooth discovery
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration has no options flow
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Devices don't require authentication
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: Device is not connected to an ip network. Other information from discovery is immutable and does not require updating.
+  discovery: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: Only one device per config entry. New devices are set up as new entries.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: Reconfiguration would force a new config entry
+  repair-issues:
+    status: exempt
+    comment: no repairs/issues
+  stale-devices:
+    status: exempt
+    comment: Stale devices are removed with the config entry as there is only one device per entry
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: Device doesn't make http requests.
+  strict-typing: done

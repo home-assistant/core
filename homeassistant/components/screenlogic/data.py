@@ -1,4 +1,5 @@
 """Support for configurable supported data values for the ScreenLogic integration."""
+
 from screenlogicpy.const.data import DEVICE, VALUE
 
 ENTITY_MIGRATIONS = {

@@ -1,4 +1,5 @@
 """Helper to test significant Number state changes."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -20,10 +21,10 @@ from .const import NumberDeviceClass
 
 
 def _absolute_and_relative_change(
-    old_state: int | float | None,
-    new_state: int | float | None,
-    absolute_change: int | float,
-    percentage_change: int | float,
+    old_state: float | None,
+    new_state: float | None,
+    absolute_change: float,
+    percentage_change: float,
 ) -> bool:
     return check_absolute_change(
         old_state, new_state, absolute_change
@@ -43,7 +44,6 @@ def async_check_significant_change(
     if (device_class := new_attrs.get(ATTR_DEVICE_CLASS)) is None:
         return None
 
-    absolute_change: float | None = None
     percentage_change: float | None = None
 
     # special for temperature
@@ -82,11 +82,8 @@ def async_check_significant_change(
         # Old state was invalid, we should report again
         return True
 
-    if absolute_change is not None and percentage_change is not None:
+    if percentage_change is not None:
         return _absolute_and_relative_change(
             float(old_state), float(new_state), absolute_change, percentage_change
         )
-    if absolute_change is not None:
-        return check_absolute_change(
-            float(old_state), float(new_state), absolute_change
-        )
+    return check_absolute_change(float(old_state), float(new_state), absolute_change)

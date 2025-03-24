@@ -1,6 +1,8 @@
 """The tests for the Tasmota cover platform."""
+
 import copy
 import json
+from typing import Any
 from unittest.mock import patch
 
 from hatasmota.utils import (
@@ -296,7 +298,7 @@ async def test_controlling_state_via_mqtt_tilt(
     assert state.attributes["current_position"] == 100
 
 
-@pytest.mark.parametrize("tilt", ("", ',"Tilt":0'))
+@pytest.mark.parametrize("tilt", ["", ',"Tilt":0'])
 async def test_controlling_state_via_mqtt_inverted(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota, tilt
 ) -> None:
@@ -463,7 +465,9 @@ async def test_controlling_state_via_mqtt_inverted(
     assert state.attributes["current_position"] == 0
 
 
-async def call_service(hass, entity_id, service, **kwargs):
+async def call_service(
+    hass: HomeAssistant, entity_id: str, service: str, **kwargs: Any
+) -> None:
     """Call a fan service."""
     await hass.services.async_call(
         cover.DOMAIN,

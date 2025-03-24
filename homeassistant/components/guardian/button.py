@@ -1,11 +1,11 @@
 """Buttons for the Elexa Guardian integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from aioguardian import Client
-from aioguardian.errors import GuardianError
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -15,12 +15,13 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescription
+from . import GuardianData
 from .const import API_SYSTEM_DIAGNOSTICS, DOMAIN
+from .entity import ValveControllerEntity, ValveControllerEntityDescription
+from .util import convert_exceptions_to_homeassistant_error
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -67,7 +68,9 @@ BUTTON_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Guardian buttons based on a config entry."""
     data: GuardianData = hass.data[DOMAIN][entry.entry_id]
@@ -96,14 +99,10 @@ class GuardianButton(ValveControllerEntity, ButtonEntity):
 
         self._client = data.client
 
+    @convert_exceptions_to_homeassistant_error
     async def async_press(self) -> None:
         """Send out a restart command."""
-        try:
-            async with self._client:
-                await self.entity_description.push_action(self._client)
-        except GuardianError as err:
-            raise HomeAssistantError(
-                f'Error while pressing button "{self.entity_id}": {err}'
-            ) from err
+        async with self._client:
+            await self.entity_description.push_action(self._client)
 
         async_dispatcher_send(self.hass, self.coordinator.signal_reboot_requested)

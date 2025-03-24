@@ -1,4 +1,5 @@
 """Test the switch entity for HomeWizard."""
+
 from unittest.mock import MagicMock
 
 from homewizard_energy import UnsupportedError
@@ -17,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -41,7 +42,6 @@ pytestmark = [
             [
                 "switch.device",
                 "switch.device_switch_lock",
-                "switch.device_cloud_connection",
             ],
         ),
         (
@@ -53,6 +53,20 @@ pytestmark = [
         ),
         (
             "SDM630",
+            [
+                "switch.device",
+                "switch.device_switch_lock",
+            ],
+        ),
+        (
+            "HWE-KWH1",
+            [
+                "switch.device",
+                "switch.device_switch_lock",
+            ],
+        ),
+        (
+            "HWE-KWH3",
             [
                 "switch.device",
                 "switch.device_switch_lock",
@@ -72,11 +86,17 @@ async def test_entities_not_created_for_device(
 @pytest.mark.parametrize(
     ("device_fixture", "entity_id", "method", "parameter"),
     [
-        ("HWE-SKT", "switch.device", "state_set", "power_on"),
-        ("HWE-SKT", "switch.device_switch_lock", "state_set", "switch_lock"),
-        ("HWE-SKT", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
-        ("SDM230", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
-        ("SDM630", "switch.device_cloud_connection", "system_set", "cloud_enabled"),
+        ("HWE-SKT-11", "switch.device", "state", "power_on"),
+        ("HWE-SKT-11", "switch.device_switch_lock", "state", "switch_lock"),
+        ("HWE-SKT-11", "switch.device_cloud_connection", "system", "cloud_enabled"),
+        ("HWE-SKT-21", "switch.device", "state", "power_on"),
+        ("HWE-SKT-21", "switch.device_switch_lock", "state", "switch_lock"),
+        ("HWE-SKT-21", "switch.device_cloud_connection", "system", "cloud_enabled"),
+        ("HWE-WTR", "switch.device_cloud_connection", "system", "cloud_enabled"),
+        ("SDM230", "switch.device_cloud_connection", "system", "cloud_enabled"),
+        ("SDM630", "switch.device_cloud_connection", "system", "cloud_enabled"),
+        ("HWE-KWH1", "switch.device_cloud_connection", "system", "cloud_enabled"),
+        ("HWE-KWH3", "switch.device_cloud_connection", "system", "cloud_enabled"),
     ],
 )
 async def test_switch_entities(
@@ -154,7 +174,7 @@ async def test_switch_entities(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"^The local API of the HomeWizard device is disabled$",
+        match=r"^The local API is disabled$",
     ):
         await hass.services.async_call(
             switch.DOMAIN,
@@ -165,7 +185,7 @@ async def test_switch_entities(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"^The local API of the HomeWizard device is disabled$",
+        match=r"^The local API is disabled$",
     ):
         await hass.services.async_call(
             switch.DOMAIN,
@@ -175,14 +195,14 @@ async def test_switch_entities(
         )
 
 
-@pytest.mark.parametrize("device_fixture", ["HWE-SKT"])
-@pytest.mark.parametrize("exception", [RequestError, DisabledError, UnsupportedError])
+@pytest.mark.parametrize("device_fixture", ["HWE-SKT-11", "HWE-SKT-21"])
+@pytest.mark.parametrize("exception", [RequestError, UnsupportedError])
 @pytest.mark.parametrize(
     ("entity_id", "method"),
     [
-        ("switch.device", "state"),
-        ("switch.device_switch_lock", "state"),
-        ("switch.device_cloud_connection", "system"),
+        ("switch.device", "combined"),
+        ("switch.device_switch_lock", "combined"),
+        ("switch.device_cloud_connection", "combined"),
     ],
 )
 async def test_switch_unreachable(

@@ -1,4 +1,5 @@
 """Support for Velux lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,25 +7,27 @@ from typing import Any
 from pyvlx import Intensity, LighteningDevice
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DATA_VELUX, VeluxEntity
+from .const import DOMAIN
+from .entity import VeluxEntity
 
 PARALLEL_UPDATES = 1
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up light(s) for Velux platform."""
+    module = hass.data[DOMAIN][config.entry_id]
+
     async_add_entities(
-        VeluxLight(node)
-        for node in hass.data[DATA_VELUX].pyvlx.nodes
+        VeluxLight(node, config.entry_id)
+        for node in module.pyvlx.nodes
         if isinstance(node, LighteningDevice)
     )
 

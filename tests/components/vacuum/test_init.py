@@ -1,147 +1,484 @@
 """The tests for the Vacuum entity integration."""
+
 from __future__ import annotations
 
-from collections.abc import Generator
+from enum import Enum
+from types import ModuleType
+from typing import Any
 
 import pytest
 
+from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
-    VacuumEntity,
+    SERVICE_CLEAN_SPOT,
+    SERVICE_LOCATE,
+    SERVICE_PAUSE,
+    SERVICE_RETURN_TO_BASE,
+    SERVICE_SEND_COMMAND,
+    SERVICE_SET_FAN_SPEED,
+    SERVICE_START,
+    SERVICE_STOP,
+    StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import MockVacuum, help_async_setup_entry_init, help_async_unload_entry
+from .common import async_start
 
 from tests.common import (
     MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
     MockModule,
-    MockPlatform,
-    mock_config_flow,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
     mock_integration,
-    mock_platform,
+    setup_test_component_platform,
 )
 
-TEST_DOMAIN = "test"
 
-
-class MockFlow(ConfigFlow):
-    """Test flow."""
-
-
-@pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
-    """Mock config flow."""
-    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
-
-    with mock_config_flow(TEST_DOMAIN, MockFlow):
-        yield
-
-
-ISSUE_TRACKER = "https://blablabla.com"
+def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, str]]:
+    return [(enum_field, constant_prefix) for enum_field in enum if enum_field]
 
 
 @pytest.mark.parametrize(
-    ("manifest_extra", "translation_key", "translation_placeholders_extra"),
+    "module",
+    [vacuum],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
+
+
+@pytest.mark.parametrize(
+    ("enum", "constant_prefix"), _create_tuples(vacuum.VacuumEntityFeature, "SUPPORT_")
+)
+@pytest.mark.parametrize(
+    "module",
+    [vacuum],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: Enum,
+    constant_prefix: str,
+    module: ModuleType,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, module, enum, constant_prefix, "2025.10"
+    )
+
+
+@pytest.mark.parametrize(
+    ("enum", "constant_prefix"), _create_tuples(vacuum.VacuumActivity, "STATE_")
+)
+@pytest.mark.parametrize(
+    "module",
+    [vacuum],
+)
+def test_deprecated_constants_for_state(
+    caplog: pytest.LogCaptureFixture,
+    enum: Enum,
+    constant_prefix: str,
+    module: ModuleType,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, module, enum, constant_prefix, "2026.1"
+    )
+
+
+@pytest.mark.parametrize(
+    ("service", "expected_state"),
     [
-        (
-            {},
-            "deprecated_vacuum_base_class",
-            {},
-        ),
-        (
-            {"issue_tracker": ISSUE_TRACKER},
-            "deprecated_vacuum_base_class_url",
-            {"issue_tracker": ISSUE_TRACKER},
-        ),
+        (SERVICE_CLEAN_SPOT, VacuumActivity.CLEANING),
+        (SERVICE_PAUSE, VacuumActivity.PAUSED),
+        (SERVICE_RETURN_TO_BASE, VacuumActivity.RETURNING),
+        (SERVICE_START, VacuumActivity.CLEANING),
+        (SERVICE_STOP, VacuumActivity.IDLE),
     ],
 )
-async def test_deprecated_base_class(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    manifest_extra: dict[str, str],
-    translation_key: str,
-    translation_placeholders_extra: dict[str, str],
+async def test_state_services(
+    hass: HomeAssistant, config_flow_fixture: None, service: str, expected_state: str
 ) -> None:
-    """Test warnings when adding VacuumEntity to the state machine."""
+    """Test get vacuum service that affect state."""
+    mock_vacuum = MockVacuum(
+        name="Testing",
+        entity_id="vacuum.testing",
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, VACUUM_DOMAIN)
-        return True
-
-    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(
         hass,
         MockModule(
-            TEST_DOMAIN,
-            async_setup_entry=async_setup_entry_init,
-            partial_manifest=manifest_extra,
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(
+        hass, VACUUM_DOMAIN, [mock_vacuum], from_config_entry=True
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        service,
+        {"entity_id": mock_vacuum.entity_id},
+        blocking=True,
+    )
+    activity = hass.states.get(mock_vacuum.entity_id)
+
+    assert activity.state == expected_state
+
+
+async def test_fan_speed(hass: HomeAssistant, config_flow_fixture: None) -> None:
+    """Test set vacuum fan speed."""
+    mock_vacuum = MockVacuum(
+        name="Testing",
+        entity_id="vacuum.testing",
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(
+        hass, VACUUM_DOMAIN, [mock_vacuum], from_config_entry=True
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_SET_FAN_SPEED,
+        {"entity_id": mock_vacuum.entity_id, "fan_speed": "high"},
+        blocking=True,
+    )
+
+    assert mock_vacuum.fan_speed == "high"
+
+
+async def test_locate(hass: HomeAssistant, config_flow_fixture: None) -> None:
+    """Test vacuum locate."""
+
+    calls = []
+
+    class MockVacuumWithLocation(MockVacuum):
+        def __init__(self, calls: list[str], **kwargs) -> None:
+            super().__init__()
+            self._attr_supported_features = (
+                self.supported_features | VacuumEntityFeature.LOCATE
+            )
+            self._calls = calls
+
+        def locate(self, **kwargs: Any) -> None:
+            self._calls.append("locate")
+
+    mock_vacuum = MockVacuumWithLocation(
+        name="Testing", entity_id="vacuum.testing", calls=calls
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(
+        hass, VACUUM_DOMAIN, [mock_vacuum], from_config_entry=True
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_LOCATE,
+        {"entity_id": mock_vacuum.entity_id},
+        blocking=True,
+    )
+
+    assert "locate" in calls
+
+
+async def test_send_command(hass: HomeAssistant, config_flow_fixture: None) -> None:
+    """Test Vacuum send command."""
+
+    strings = []
+
+    class MockVacuumWithSendCommand(MockVacuum):
+        def __init__(self, strings: list[str], **kwargs) -> None:
+            super().__init__()
+            self._attr_supported_features = (
+                self.supported_features | VacuumEntityFeature.SEND_COMMAND
+            )
+            self._strings = strings
+
+        def send_command(
+            self,
+            command: str,
+            params: dict[str, Any] | list[Any] | None = None,
+            **kwargs: Any,
+        ) -> None:
+            if command == "add_str":
+                self._strings.append(params["str"])
+
+    mock_vacuum = MockVacuumWithSendCommand(
+        name="Testing", entity_id="vacuum.testing", strings=strings
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(
+        hass, VACUUM_DOMAIN, [mock_vacuum], from_config_entry=True
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {
+            "entity_id": mock_vacuum.entity_id,
+            "command": "add_str",
+            "params": {"str": "test"},
+        },
+        blocking=True,
+    )
+
+    assert "test" in strings
+
+
+async def test_supported_features_compat(hass: HomeAssistant) -> None:
+    """Test StateVacuumEntity using deprecated feature constants features."""
+
+    features = (
+        VacuumEntityFeature.BATTERY
+        | VacuumEntityFeature.FAN_SPEED
+        | VacuumEntityFeature.START
+        | VacuumEntityFeature.STOP
+        | VacuumEntityFeature.PAUSE
+    )
+
+    class _LegacyConstantsStateVacuum(StateVacuumEntity):
+        _attr_supported_features = int(features)
+        _attr_fan_speed_list = ["silent", "normal", "pet hair"]
+
+    entity = _LegacyConstantsStateVacuum()
+    entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
+    assert isinstance(entity.supported_features, int)
+    assert entity.supported_features == int(features)
+    assert entity.supported_features_compat is (
+        VacuumEntityFeature.BATTERY
+        | VacuumEntityFeature.FAN_SPEED
+        | VacuumEntityFeature.START
+        | VacuumEntityFeature.STOP
+        | VacuumEntityFeature.PAUSE
+    )
+    assert entity.state_attributes == {
+        "battery_level": None,
+        "battery_icon": "mdi:battery-unknown",
+        "fan_speed": None,
+    }
+    assert entity.capability_attributes == {
+        "fan_speed_list": ["silent", "normal", "pet hair"]
+    }
+    assert entity._deprecated_supported_features_reported
+
+
+async def test_vacuum_not_log_deprecated_state_warning(
+    hass: HomeAssistant,
+    mock_vacuum_entity: MockVacuum,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test correctly using activity doesn't log issue or raise repair."""
+    state = hass.states.get(mock_vacuum_entity.entity_id)
+    assert state is not None
+    assert (
+        "should implement the 'activity' property and return its state using the VacuumActivity enum"
+        not in caplog.text
+    )
+
+
+@pytest.mark.usefixtures("mock_as_custom_component")
+async def test_vacuum_log_deprecated_state_warning_using_state_prop(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test incorrectly using state property does log issue and raise repair."""
+
+    class MockLegacyVacuum(MockVacuum):
+        """Mocked vacuum entity."""
+
+        @property
+        def state(self) -> str:
+            """Return the state of the entity."""
+            return VacuumActivity.CLEANING
+
+    entity = MockLegacyVacuum(
+        name="Testing",
+        entity_id="vacuum.test",
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
         ),
         built_in=False,
     )
-
-    entity1 = VacuumEntity()
-    entity1.entity_id = "vacuum.test1"
-
-    async def async_setup_entry_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test vacuum platform via config entry."""
-        async_add_entities([entity1])
-
-    mock_platform(
-        hass,
-        f"{TEST_DOMAIN}.{VACUUM_DOMAIN}",
-        MockPlatform(async_setup_entry=async_setup_entry_platform),
-    )
-
-    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
-    config_entry.add_to_hass(hass)
+    setup_test_component_platform(hass, VACUUM_DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
-    assert hass.states.get(entity1.entity_id)
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
 
     assert (
-        "test::VacuumEntity is extending the deprecated base class VacuumEntity"
+        "should implement the 'activity' property and return its state using the VacuumActivity enum"
         in caplog.text
     )
 
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(
-        VACUUM_DOMAIN, f"deprecated_vacuum_base_class_{TEST_DOMAIN}"
+
+@pytest.mark.usefixtures("mock_as_custom_component")
+async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test incorrectly using _attr_state attribute does log issue and raise repair."""
+
+    class MockLegacyVacuum(MockVacuum):
+        """Mocked vacuum entity."""
+
+        def start(self) -> None:
+            """Start cleaning."""
+            self._attr_state = VacuumActivity.CLEANING
+
+    entity = MockLegacyVacuum(
+        name="Testing",
+        entity_id="vacuum.test",
     )
-    assert issue.issue_domain == TEST_DOMAIN
-    assert issue.issue_id == f"deprecated_vacuum_base_class_{TEST_DOMAIN}"
-    assert issue.translation_key == translation_key
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+        built_in=False,
+    )
+    setup_test_component_platform(hass, VACUUM_DOMAIN, [entity], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+
     assert (
-        issue.translation_placeholders
-        == {"platform": "test"} | translation_placeholders_extra
+        "should implement the 'activity' property and return its state using the VacuumActivity enum"
+        not in caplog.text
+    )
+
+    await async_start(hass, entity.entity_id)
+
+    assert (
+        "should implement the 'activity' property and return its state using the VacuumActivity enum"
+        in caplog.text
+    )
+    caplog.clear()
+    await async_start(hass, entity.entity_id)
+    # Test we only log once
+    assert (
+        "should implement the 'activity' property and return its state using the VacuumActivity enum"
+        not in caplog.text
     )
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecated supported features ints."""
+@pytest.mark.usefixtures("mock_as_custom_component")
+async def test_vacuum_deprecated_state_does_not_break_state(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test using _attr_state attribute does not break state."""
 
-    class MockVacuumEntity(VacuumEntity):
-        @property
-        def supported_features(self) -> int:
-            """Return supported features."""
-            return 1
+    class MockLegacyVacuum(MockEntity, StateVacuumEntity):
+        """Mocked vacuum entity."""
 
-    entity = MockVacuumEntity()
-    assert entity.supported_features_compat is VacuumEntityFeature(1)
-    assert "MockVacuumEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "VacuumEntityFeature.TURN_ON" in caplog.text
-    caplog.clear()
-    assert entity.supported_features_compat is VacuumEntityFeature(1)
-    assert "is using deprecated supported features values" not in caplog.text
+        _attr_supported_features = VacuumEntityFeature.STATE | VacuumEntityFeature.START
+
+        def __init__(self, **values: Any) -> None:
+            """Initialize a mock vacuum entity."""
+            super().__init__(**values)
+            self._attr_state = VacuumActivity.DOCKED
+
+        def start(self) -> None:
+            """Start cleaning."""
+            self._attr_state = VacuumActivity.CLEANING
+
+    entity = MockLegacyVacuum(
+        name="Testing",
+        entity_id="vacuum.test",
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+        built_in=False,
+    )
+    setup_test_component_platform(hass, VACUUM_DOMAIN, [entity], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == "docked"
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_START,
+        {
+            "entity_id": entity.entity_id,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == "cleaning"

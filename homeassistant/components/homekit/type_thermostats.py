@@ -1,4 +1,5 @@
 """Class to hold all thermostat accessories."""
+
 import logging
 from typing import Any
 
@@ -13,6 +14,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
+    ATTR_MAX_HUMIDITY,
     ATTR_MAX_TEMP,
     ATTR_MIN_HUMIDITY,
     ATTR_MIN_TEMP,
@@ -20,6 +22,7 @@ from homeassistant.components.climate import (
     ATTR_SWING_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    DEFAULT_MAX_HUMIDITY,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_HUMIDITY,
     DEFAULT_MIN_TEMP,
@@ -54,6 +57,8 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     PERCENTAGE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     UnitOfTemperature,
 )
 from homeassistant.core import State, callback
@@ -87,7 +92,7 @@ from .const import (
     SERV_FANV2,
     SERV_THERMOSTAT,
 )
-from .util import temperature_to_homekit, temperature_to_states
+from .util import get_min_max, temperature_to_homekit, temperature_to_states
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -147,6 +152,8 @@ HC_HASS_TO_HOMEKIT_ACTION = {
     HVACAction.COOLING: HC_HEAT_COOL_COOL,
     HVACAction.DRYING: HC_HEAT_COOL_COOL,
     HVACAction.FAN: HC_HEAT_COOL_COOL,
+    HVACAction.PREHEATING: HC_HEAT_COOL_HEAT,
+    HVACAction.DEFROSTING: HC_HEAT_COOL_HEAT,
 }
 
 FAN_STATE_INACTIVE = 0
@@ -167,7 +174,9 @@ HEAT_COOL_DEADBAND = 5
 
 def _hk_hvac_mode_from_state(state: State) -> int | None:
     """Return the equivalent HomeKit HVAC mode for a given state."""
-    if not (hvac_mode := try_parse_enum(HVACMode, state.state)):
+    if (current_state := state.state) in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+        return None
+    if not (hvac_mode := try_parse_enum(HVACMode, current_state)):
         _LOGGER.error(
             "%s: Received invalid HVAC mode: %s", state.entity_id, state.state
         )
@@ -201,7 +210,10 @@ class Thermostat(HomeAccessory):
         self.fan_chars: list[str] = []
 
         attributes = state.attributes
-        min_humidity = attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)
+        min_humidity, _ = get_min_max(
+            attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY),
+            attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY),
+        )
         features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
@@ -406,10 +418,10 @@ class Thermostat(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
         self.async_call_service(DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE, params)
 
-    def _temperature_to_homekit(self, temp: float | int) -> float:
+    def _temperature_to_homekit(self, temp: float) -> float:
         return temperature_to_homekit(temp, self._unit)
 
-    def _temperature_to_states(self, temp: float | int) -> float:
+    def _temperature_to_states(self, temp: float) -> float:
         return temperature_to_states(temp, self._unit)
 
     def _set_chars(self, char_values: dict[str, Any]) -> None:
@@ -619,8 +631,9 @@ class Thermostat(HomeAccessory):
 
         # Set current operation mode for supported thermostats
         if hvac_action := attributes.get(ATTR_HVAC_ACTION):
-            homekit_hvac_action = HC_HASS_TO_HOMEKIT_ACTION[hvac_action]
-            self.char_current_heat_cool.set_value(homekit_hvac_action)
+            self.char_current_heat_cool.set_value(
+                HC_HASS_TO_HOMEKIT_ACTION.get(hvac_action, HC_HEAT_COOL_OFF)
+            )
 
         # Update current temperature
         current_temp = _get_current_temperature(new_state, self._unit)
@@ -831,12 +844,14 @@ def _get_temperature_range_from_state(
     else:
         max_temp = default_max
 
+    # Handle reversed temperature range
+    min_temp, max_temp = get_min_max(min_temp, max_temp)
+
     # Homekit only supports 10-38, overwriting
     # the max to appears to work, but less than 0 causes
     # a crash on the home app
     min_temp = max(min_temp, 0)
-    if min_temp > max_temp:
-        max_temp = min_temp
+    max_temp = max(max_temp, min_temp)
 
     return min_temp, max_temp
 

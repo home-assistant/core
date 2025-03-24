@@ -4,11 +4,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'date',
       'friendly_name': 'Twente Milieu Christmas tree pickup',
-      'icon': 'mdi:pine-tree',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.twente_milieu_christmas_tree_pickup',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2022-01-06',
   })
@@ -20,6 +20,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -30,11 +31,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
-    'original_icon': 'mdi:pine-tree',
+    'original_icon': None,
     'original_name': 'Christmas tree pickup',
     'platform': 'twentemilieu',
     'previous_unique_id': None,
@@ -48,6 +51,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://www.twentemilieu.nl',
     'connections': set({
     }),
@@ -62,10 +66,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Twente Milieu',
     'model': None,
+    'model_id': None,
     'name': 'Twente Milieu',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -77,11 +85,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'date',
       'friendly_name': 'Twente Milieu Non-recyclable waste pickup',
-      'icon': 'mdi:delete-empty',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.twente_milieu_non_recyclable_waste_pickup',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2021-11-01',
   })
@@ -93,6 +101,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -103,11 +112,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
-    'original_icon': 'mdi:delete-empty',
+    'original_icon': None,
     'original_name': 'Non-recyclable waste pickup',
     'platform': 'twentemilieu',
     'previous_unique_id': None,
@@ -121,6 +132,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://www.twentemilieu.nl',
     'connections': set({
     }),
@@ -135,10 +147,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Twente Milieu',
     'model': None,
+    'model_id': None,
     'name': 'Twente Milieu',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -150,11 +166,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'date',
       'friendly_name': 'Twente Milieu Organic waste pickup',
-      'icon': 'mdi:delete-empty',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.twente_milieu_organic_waste_pickup',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2021-11-02',
   })
@@ -166,6 +182,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -176,11 +193,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
-    'original_icon': 'mdi:delete-empty',
+    'original_icon': None,
     'original_name': 'Organic waste pickup',
     'platform': 'twentemilieu',
     'previous_unique_id': None,
@@ -194,6 +213,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://www.twentemilieu.nl',
     'connections': set({
     }),
@@ -208,10 +228,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Twente Milieu',
     'model': None,
+    'model_id': None,
     'name': 'Twente Milieu',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -223,11 +247,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'date',
       'friendly_name': 'Twente Milieu Packages waste pickup',
-      'icon': 'mdi:delete-empty',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.twente_milieu_packages_waste_pickup',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2021-11-03',
   })
@@ -239,6 +263,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -249,11 +274,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
-    'original_icon': 'mdi:delete-empty',
+    'original_icon': None,
     'original_name': 'Packages waste pickup',
     'platform': 'twentemilieu',
     'previous_unique_id': None,
@@ -267,6 +294,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://www.twentemilieu.nl',
     'connections': set({
     }),
@@ -281,10 +309,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Twente Milieu',
     'model': None,
+    'model_id': None,
     'name': 'Twente Milieu',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -296,11 +328,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'date',
       'friendly_name': 'Twente Milieu Paper waste pickup',
-      'icon': 'mdi:delete-empty',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.twente_milieu_paper_waste_pickup',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
@@ -312,6 +344,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -322,11 +355,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
-    'original_icon': 'mdi:delete-empty',
+    'original_icon': None,
     'original_name': 'Paper waste pickup',
     'platform': 'twentemilieu',
     'previous_unique_id': None,
@@ -340,6 +375,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://www.twentemilieu.nl',
     'connections': set({
     }),
@@ -354,10 +390,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Twente Milieu',
     'model': None,
+    'model_id': None,
     'name': 'Twente Milieu',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,

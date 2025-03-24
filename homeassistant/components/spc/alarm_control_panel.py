@@ -1,18 +1,15 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
+
 from __future__ import annotations
 
 from pyspcwebgw import SpcWebGateway
 from pyspcwebgw.area import Area
 from pyspcwebgw.const import AreaMode
 
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -22,17 +19,17 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import DATA_API, SIGNAL_UPDATE_ALARM
 
 
-def _get_alarm_state(area: Area) -> str | None:
+def _get_alarm_state(area: Area) -> AlarmControlPanelState | None:
     """Get the alarm state."""
 
     if area.verified_alarm:
-        return STATE_ALARM_TRIGGERED
+        return AlarmControlPanelState.TRIGGERED
 
     mode_to_state = {
-        AreaMode.UNSET: STATE_ALARM_DISARMED,
-        AreaMode.PART_SET_A: STATE_ALARM_ARMED_HOME,
-        AreaMode.PART_SET_B: STATE_ALARM_ARMED_NIGHT,
-        AreaMode.FULL_SET: STATE_ALARM_ARMED_AWAY,
+        AreaMode.UNSET: AlarmControlPanelState.DISARMED,
+        AreaMode.PART_SET_A: AlarmControlPanelState.ARMED_HOME,
+        AreaMode.PART_SET_B: AlarmControlPanelState.ARMED_NIGHT,
+        AreaMode.FULL_SET: AlarmControlPanelState.ARMED_AWAY,
     }
     return mode_to_state.get(area.mode)
 
@@ -50,7 +47,7 @@ async def async_setup_platform(
     async_add_entities([SpcAlarm(area=area, api=api) for area in api.areas.values()])
 
 
-class SpcAlarm(alarm.AlarmControlPanelEntity):
+class SpcAlarm(AlarmControlPanelEntity):
     """Representation of the SPC alarm panel."""
 
     _attr_should_poll = False
@@ -59,6 +56,7 @@ class SpcAlarm(alarm.AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_NIGHT
     )
+    _attr_code_arm_required = False
 
     def __init__(self, area: Area, api: SpcWebGateway) -> None:
         """Initialize the SPC alarm panel."""
@@ -87,7 +85,7 @@ class SpcAlarm(alarm.AlarmControlPanelEntity):
         return self._area.last_changed_by
 
     @property
-    def state(self) -> str | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         return _get_alarm_state(self._area)
 

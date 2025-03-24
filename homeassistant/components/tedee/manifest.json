@@ -3,8 +3,10 @@
   "name": "Tedee",
   "codeowners": ["@patrickhilker", "@zweckj"],
   "config_flow": true,
-  "dependencies": ["http"],
+  "dependencies": ["http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/tedee",
   "iot_class": "local_push",
-  "requirements": ["pytedee-async==0.2.6"]
+  "loggers": ["aiotedee"],
+  "quality_scale": "platinum",
+  "requirements": ["aiotedee==0.2.20"]
 }

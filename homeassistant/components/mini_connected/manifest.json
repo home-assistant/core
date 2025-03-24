@@ -1,0 +1,6 @@
+{
+  "domain": "mini_connected",
+  "name": "MINI Connected",
+  "integration_type": "virtual",
+  "supported_by": "bmw_connected_drive"
+}

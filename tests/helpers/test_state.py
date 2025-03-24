@@ -1,21 +1,21 @@
 """Test state helpers."""
+
 import asyncio
 from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.lock import LockState
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
 from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_CLOSED,
     STATE_HOME,
-    STATE_LOCKED,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
-    STATE_UNLOCKED,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import state
@@ -142,11 +142,17 @@ async def test_as_number_states(hass: HomeAssistant) -> None:
     zero_states = (
         STATE_OFF,
         STATE_CLOSED,
-        STATE_UNLOCKED,
+        LockState.UNLOCKED,
         STATE_BELOW_HORIZON,
         STATE_NOT_HOME,
     )
-    one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON, STATE_HOME)
+    one_states = (
+        STATE_ON,
+        STATE_OPEN,
+        LockState.LOCKED,
+        STATE_ABOVE_HORIZON,
+        STATE_HOME,
+    )
     for _state in zero_states:
         assert state.state_as_number(State("domain.test", _state, {})) == 0
     for _state in one_states:

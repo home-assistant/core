@@ -1,13 +1,9 @@
 """Fixtures for Met Office weather integration tests."""
-import sys
+
 from unittest.mock import patch
 
+from datapoint.exceptions import APIException
 import pytest
-
-if sys.version_info < (3, 12):
-    from datapoint.exceptions import APIException
-else:
-    collect_ignore_glob = ["test_*.py"]
 
 
 @pytest.fixture

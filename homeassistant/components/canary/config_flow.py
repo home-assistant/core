@@ -1,4 +1,5 @@
 """Config flow for Canary."""
+
 from __future__ import annotations
 
 import logging
@@ -8,10 +9,14 @@ from canary.api import Api
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_FFMPEG_ARGUMENTS,
@@ -47,21 +52,16 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return CanaryOptionsFlowHandler(config_entry)
+        return CanaryOptionsFlowHandler()
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow initiated by configuration file."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         errors = {}
         default_username = ""
 
@@ -77,7 +77,7 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except (ConnectTimeout, HTTPError):
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
             else:
@@ -101,13 +101,9 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
 class CanaryOptionsFlowHandler(OptionsFlow):
     """Handle Canary client options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage Canary options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

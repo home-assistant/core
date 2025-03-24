@@ -1,45 +1,62 @@
 """The tests for the Jewish calendar sensors."""
+
 from datetime import datetime as dt, timedelta
 
+from freezegun import freeze_time
+from hdate.holidays import HolidayDatabase
+from hdate.parasha import Parasha
 import pytest
 
-from homeassistant.components import jewish_calendar
-from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
-
-from . import (
-    HDATE_DEFAULT_ALTITUDE,
-    alter_time,
-    make_jerusalem_test_params,
-    make_nyc_test_params,
+from homeassistant.components.jewish_calendar.const import (
+    CONF_CANDLE_LIGHT_MINUTES,
+    CONF_DIASPORA,
+    CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_NAME,
+    DOMAIN,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_LANGUAGE, CONF_PLATFORM
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from . import make_jerusalem_test_params, make_nyc_test_params
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_jewish_calendar_min_config(hass: HomeAssistant) -> None:
     """Test minimum jewish calendar configuration."""
-    assert await async_setup_component(
-        hass, jewish_calendar.DOMAIN, {"jewish_calendar": {}}
-    )
+    entry = MockConfigEntry(title=DEFAULT_NAME, domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.jewish_calendar_date") is not None
 
 
 async def test_jewish_calendar_hebrew(hass: HomeAssistant) -> None:
     """Test jewish calendar sensor with language set to hebrew."""
-    assert await async_setup_component(
-        hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"language": "hebrew"}}
+    entry = MockConfigEntry(
+        title=DEFAULT_NAME, domain=DOMAIN, data={"language": "hebrew"}
     )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.jewish_calendar_date") is not None
 
 
 TEST_PARAMS = [
-    (dt(2018, 9, 3), "UTC", 31.778, 35.235, "english", "date", False, "23 Elul 5778"),
+    (
+        dt(2018, 9, 3),
+        "UTC",
+        31.778,
+        35.235,
+        "english",
+        "date",
+        False,
+        "23 Elul 5778",
+        None,
+    ),
     (
         dt(2018, 9, 3),
         "UTC",
@@ -49,8 +66,19 @@ TEST_PARAMS = [
         "date",
         False,
         'כ"ג אלול ה\' תשע"ח',
+        None,
     ),
-    (dt(2018, 9, 10), "UTC", 31.778, 35.235, "hebrew", "holiday", False, "א' ראש השנה"),
+    (
+        dt(2018, 9, 10),
+        "UTC",
+        31.778,
+        35.235,
+        "hebrew",
+        "holiday",
+        False,
+        "א' ראש השנה",
+        None,
+    ),
     (
         dt(2018, 9, 10),
         "UTC",
@@ -60,6 +88,32 @@ TEST_PARAMS = [
         "holiday",
         False,
         "Rosh Hashana I",
+        {
+            "device_class": "enum",
+            "friendly_name": "Jewish Calendar Holiday",
+            "icon": "mdi:calendar-star",
+            "id": "rosh_hashana_i",
+            "type": "YOM_TOV",
+            "options": HolidayDatabase(False).get_all_names("english"),
+        },
+    ),
+    (
+        dt(2024, 12, 31),
+        "UTC",
+        31.778,
+        35.235,
+        "english",
+        "holiday",
+        False,
+        "Chanukah, Rosh Chodesh",
+        {
+            "device_class": "enum",
+            "friendly_name": "Jewish Calendar Holiday",
+            "icon": "mdi:calendar-star",
+            "id": "chanukah, rosh_chodesh",
+            "type": "MELACHA_PERMITTED_HOLIDAY, ROSH_CHODESH",
+            "options": HolidayDatabase(False).get_all_names("english"),
+        },
     ),
     (
         dt(2018, 9, 8),
@@ -70,6 +124,12 @@ TEST_PARAMS = [
         "parshat_hashavua",
         False,
         "נצבים",
+        {
+            "device_class": "enum",
+            "friendly_name": "Jewish Calendar Parshat Hashavua",
+            "icon": "mdi:book-open-variant",
+            "options": list(Parasha),
+        },
     ),
     (
         dt(2018, 9, 8),
@@ -79,7 +139,8 @@ TEST_PARAMS = [
         "hebrew",
         "t_set_hakochavim",
         True,
-        dt(2018, 9, 8, 19, 45),
+        dt(2018, 9, 8, 19, 47),
+        None,
     ),
     (
         dt(2018, 9, 8),
@@ -89,7 +150,8 @@ TEST_PARAMS = [
         "hebrew",
         "t_set_hakochavim",
         False,
-        dt(2018, 9, 8, 19, 19),
+        dt(2018, 9, 8, 19, 21),
+        None,
     ),
     (
         dt(2018, 10, 14),
@@ -100,6 +162,7 @@ TEST_PARAMS = [
         "parshat_hashavua",
         False,
         "לך לך",
+        None,
     ),
     (
         dt(2018, 10, 14, 17, 0, 0),
@@ -110,6 +173,7 @@ TEST_PARAMS = [
         "date",
         False,
         "ה' מרחשוון ה' תשע\"ט",
+        None,
     ),
     (
         dt(2018, 10, 14, 19, 0, 0),
@@ -120,6 +184,13 @@ TEST_PARAMS = [
         "date",
         False,
         "ו' מרחשוון ה' תשע\"ט",
+        {
+            "hebrew_year": "5779",
+            "hebrew_month_name": "מרחשוון",
+            "hebrew_day": "6",
+            "icon": "mdi:star-david",
+            "friendly_name": "Jewish Calendar Date",
+        },
     ),
 ]
 
@@ -128,6 +199,7 @@ TEST_IDS = [
     "date_output_hebrew",
     "holiday",
     "holiday_english",
+    "holiday_multiple",
     "torah_reading",
     "first_stars_ny",
     "first_stars_jerusalem",
@@ -147,10 +219,12 @@ TEST_IDS = [
         "sensor",
         "diaspora",
         "result",
+        "attrs",
     ),
     TEST_PARAMS,
     ids=TEST_IDS,
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_jewish_calendar_sensor(
     hass: HomeAssistant,
     now,
@@ -161,30 +235,30 @@ async def test_jewish_calendar_sensor(
     sensor,
     diaspora,
     result,
+    attrs,
 ) -> None:
     """Test Jewish calendar sensor output."""
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
 
-    hass.config.set_time_zone(tzname)
+    await hass.config.async_set_time_zone(tzname)
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
-    with alter_time(test_time):
-        assert await async_setup_component(
-            hass,
-            jewish_calendar.DOMAIN,
-            {
-                "jewish_calendar": {
-                    "name": "test",
-                    "language": language,
-                    "diaspora": diaspora,
-                }
+    with freeze_time(test_time):
+        entry = MockConfigEntry(
+            title=DEFAULT_NAME,
+            domain=DOMAIN,
+            data={
+                CONF_LANGUAGE: language,
+                CONF_DIASPORA: diaspora,
             },
         )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        future = dt_util.utcnow() + timedelta(seconds=30)
+        future = test_time + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -194,13 +268,11 @@ async def test_jewish_calendar_sensor(
         else result
     )
 
-    sensor_object = hass.states.get(f"sensor.test_{sensor}")
+    sensor_object = hass.states.get(f"sensor.jewish_calendar_{sensor}")
     assert sensor_object.state == result
 
-    if sensor == "holiday":
-        assert sensor_object.attributes.get("id") == "rosh_hashana_i"
-        assert sensor_object.attributes.get("type") == "YOM_TOV"
-        assert sensor_object.attributes.get("type_id") == 1
+    if attrs:
+        assert sensor_object.attributes == attrs
 
 
 SHABBAT_PARAMS = [
@@ -352,9 +424,9 @@ SHABBAT_PARAMS = [
     make_jerusalem_test_params(
         dt(2018, 9, 29, 21, 25),
         {
-            "english_upcoming_candle_lighting": dt(2018, 9, 30, 18, 7),
+            "english_upcoming_candle_lighting": dt(2018, 9, 30, 17, 45),
             "english_upcoming_havdalah": dt(2018, 10, 1, 19, 1),
-            "english_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 18, 1),
+            "english_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 17, 39),
             "english_upcoming_shabbat_havdalah": dt(2018, 10, 6, 18, 54),
             "english_parshat_hashavua": "Bereshit",
             "hebrew_parshat_hashavua": "בראשית",
@@ -365,22 +437,22 @@ SHABBAT_PARAMS = [
     make_jerusalem_test_params(
         dt(2018, 9, 30, 21, 25),
         {
-            "english_upcoming_candle_lighting": dt(2018, 9, 30, 18, 7),
+            "english_upcoming_candle_lighting": dt(2018, 9, 30, 17, 45),
             "english_upcoming_havdalah": dt(2018, 10, 1, 19, 1),
-            "english_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 18, 1),
+            "english_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 17, 39),
             "english_upcoming_shabbat_havdalah": dt(2018, 10, 6, 18, 54),
             "english_parshat_hashavua": "Bereshit",
             "hebrew_parshat_hashavua": "בראשית",
-            "english_holiday": "Shmini Atzeret",
-            "hebrew_holiday": "שמיני עצרת",
+            "english_holiday": "Shmini Atzeret, Simchat Torah",
+            "hebrew_holiday": "שמיני עצרת, שמחת תורה",
         },
     ),
     make_jerusalem_test_params(
         dt(2018, 10, 1, 21, 25),
         {
-            "english_upcoming_candle_lighting": dt(2018, 10, 5, 18, 1),
+            "english_upcoming_candle_lighting": dt(2018, 10, 5, 17, 39),
             "english_upcoming_havdalah": dt(2018, 10, 6, 18, 54),
-            "english_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 18, 1),
+            "english_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 17, 39),
             "english_upcoming_shabbat_havdalah": dt(2018, 10, 6, 18, 54),
             "english_parshat_hashavua": "Bereshit",
             "hebrew_parshat_hashavua": "בראשית",
@@ -415,9 +487,9 @@ SHABBAT_PARAMS = [
     make_jerusalem_test_params(
         dt(2017, 9, 21, 8, 25),
         {
-            "english_upcoming_candle_lighting": dt(2017, 9, 20, 18, 20),
+            "english_upcoming_candle_lighting": dt(2017, 9, 20, 17, 58),
             "english_upcoming_havdalah": dt(2017, 9, 23, 19, 11),
-            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 19, 12),
+            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 17, 56),
             "english_upcoming_shabbat_havdalah": dt(2017, 9, 23, 19, 11),
             "english_parshat_hashavua": "Ha'Azinu",
             "hebrew_parshat_hashavua": "האזינו",
@@ -428,9 +500,9 @@ SHABBAT_PARAMS = [
     make_jerusalem_test_params(
         dt(2017, 9, 22, 8, 25),
         {
-            "english_upcoming_candle_lighting": dt(2017, 9, 20, 18, 20),
+            "english_upcoming_candle_lighting": dt(2017, 9, 20, 17, 58),
             "english_upcoming_havdalah": dt(2017, 9, 23, 19, 11),
-            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 19, 12),
+            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 17, 56),
             "english_upcoming_shabbat_havdalah": dt(2017, 9, 23, 19, 11),
             "english_parshat_hashavua": "Ha'Azinu",
             "hebrew_parshat_hashavua": "האזינו",
@@ -441,9 +513,9 @@ SHABBAT_PARAMS = [
     make_jerusalem_test_params(
         dt(2017, 9, 23, 8, 25),
         {
-            "english_upcoming_candle_lighting": dt(2017, 9, 20, 18, 20),
+            "english_upcoming_candle_lighting": dt(2017, 9, 20, 17, 58),
             "english_upcoming_havdalah": dt(2017, 9, 23, 19, 11),
-            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 19, 12),
+            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 17, 56),
             "english_upcoming_shabbat_havdalah": dt(2017, 9, 23, 19, 11),
             "english_parshat_hashavua": "Ha'Azinu",
             "hebrew_parshat_hashavua": "האזינו",
@@ -494,9 +566,9 @@ SHABBAT_TEST_IDS = [
     SHABBAT_PARAMS,
     ids=SHABBAT_TEST_IDS,
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_shabbat_times_sensor(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     language,
     now,
     candle_lighting,
@@ -511,27 +583,28 @@ async def test_shabbat_times_sensor(
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
 
-    hass.config.set_time_zone(tzname)
+    await hass.config.async_set_time_zone(tzname)
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
-    with alter_time(test_time):
-        assert await async_setup_component(
-            hass,
-            jewish_calendar.DOMAIN,
-            {
-                "jewish_calendar": {
-                    "name": "test",
-                    "language": language,
-                    "diaspora": diaspora,
-                    "candle_lighting_minutes_before_sunset": candle_lighting,
-                    "havdalah_minutes_after_sunset": havdalah,
-                }
+    with freeze_time(test_time):
+        entry = MockConfigEntry(
+            title=DEFAULT_NAME,
+            domain=DOMAIN,
+            data={
+                CONF_LANGUAGE: language,
+                CONF_DIASPORA: diaspora,
+            },
+            options={
+                CONF_CANDLE_LIGHT_MINUTES: candle_lighting,
+                CONF_HAVDALAH_OFFSET_MINUTES: havdalah,
             },
         )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        future = dt_util.utcnow() + timedelta(seconds=30)
+        future = test_time + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -547,29 +620,9 @@ async def test_shabbat_times_sensor(
             else result_value
         )
 
-        assert hass.states.get(f"sensor.test_{sensor_type}").state == str(
+        assert hass.states.get(f"sensor.jewish_calendar_{sensor_type}").state == str(
             result_value
         ), f"Value for {sensor_type}"
-
-        entity = entity_registry.async_get(f"sensor.test_{sensor_type}")
-        target_sensor_type = sensor_type.replace("parshat_hashavua", "weekly_portion")
-        target_uid = "_".join(
-            map(
-                str,
-                [
-                    latitude,
-                    longitude,
-                    tzname,
-                    HDATE_DEFAULT_ALTITUDE,
-                    diaspora,
-                    language,
-                    candle_lighting,
-                    havdalah,
-                    target_sensor_type,
-                ],
-            )
-        )
-        assert entity.unique_id == target_uid
 
 
 OMER_PARAMS = [
@@ -591,21 +644,22 @@ OMER_TEST_IDS = [
 
 
 @pytest.mark.parametrize(("test_time", "result"), OMER_PARAMS, ids=OMER_TEST_IDS)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_omer_sensor(hass: HomeAssistant, test_time, result) -> None:
     """Test Omer Count sensor output."""
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
-    with alter_time(test_time):
-        assert await async_setup_component(
-            hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"name": "test"}}
-        )
+    with freeze_time(test_time):
+        entry = MockConfigEntry(title=DEFAULT_NAME, domain=DOMAIN)
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        future = dt_util.utcnow() + timedelta(seconds=30)
+        future = test_time + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.test_day_of_the_omer").state == result
+    assert hass.states.get("sensor.jewish_calendar_day_of_the_omer").state == result
 
 
 DAFYOMI_PARAMS = [
@@ -625,21 +679,22 @@ DAFYOMI_TEST_IDS = [
 
 
 @pytest.mark.parametrize(("test_time", "result"), DAFYOMI_PARAMS, ids=DAFYOMI_TEST_IDS)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_dafyomi_sensor(hass: HomeAssistant, test_time, result) -> None:
     """Test Daf Yomi sensor output."""
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
-    with alter_time(test_time):
-        assert await async_setup_component(
-            hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"name": "test"}}
-        )
+    with freeze_time(test_time):
+        entry = MockConfigEntry(title=DEFAULT_NAME, domain=DOMAIN)
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        future = dt_util.utcnow() + timedelta(seconds=30)
+        future = test_time + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.test_daf_yomi").state == result
+    assert hass.states.get("sensor.jewish_calendar_daf_yomi").state == result
 
 
 async def test_no_discovery_info(
@@ -650,7 +705,7 @@ async def test_no_discovery_info(
     assert await async_setup_component(
         hass,
         SENSOR_DOMAIN,
-        {SENSOR_DOMAIN: {"platform": jewish_calendar.DOMAIN}},
+        {SENSOR_DOMAIN: {CONF_PLATFORM: DOMAIN}},
     )
     await hass.async_block_till_done()
     assert SENSOR_DOMAIN in hass.config.components

@@ -1,66 +1,46 @@
 """Support ezviz camera devices."""
+
 from __future__ import annotations
 
 import logging
 
 from pyezviz.exceptions import HTTPError, InvalidHost, PyEzvizError
-import voluptuous as vol
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.components.stream import CONF_USE_WALLCLOCK_AS_TIMESTAMPS
-from homeassistant.config_entries import (
-    SOURCE_IGNORE,
-    SOURCE_INTEGRATION_DISCOVERY,
-    ConfigEntry,
-)
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    config_validation as cv,
-    discovery_flow,
-    issue_registry as ir,
-)
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 
 from .const import (
-    ATTR_DIRECTION,
-    ATTR_ENABLE,
-    ATTR_LEVEL,
     ATTR_SERIAL,
-    ATTR_SPEED,
     CONF_FFMPEG_ARGUMENTS,
-    DATA_COORDINATOR,
     DEFAULT_CAMERA_USERNAME,
     DEFAULT_FFMPEG_ARGUMENTS,
-    DIR_DOWN,
-    DIR_LEFT,
-    DIR_RIGHT,
-    DIR_UP,
     DOMAIN,
-    SERVICE_ALARM_SOUND,
-    SERVICE_ALARM_TRIGGER,
-    SERVICE_PTZ,
     SERVICE_WAKE_DEVICE,
 )
-from .coordinator import EzvizDataUpdateCoordinator
+from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EzvizConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EZVIZ cameras based on a config entry."""
 
-    coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = entry.runtime_data
 
     camera_entities = []
 
@@ -127,32 +107,7 @@ async def async_setup_entry(
     platform = async_get_current_platform()
 
     platform.async_register_entity_service(
-        SERVICE_PTZ,
-        {
-            vol.Required(ATTR_DIRECTION): vol.In(
-                [DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT]
-            ),
-            vol.Required(ATTR_SPEED): cv.positive_int,
-        },
-        "perform_ptz",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_ALARM_TRIGGER,
-        {
-            vol.Required(ATTR_ENABLE): cv.positive_int,
-        },
-        "perform_sound_alarm",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_WAKE_DEVICE, {}, "perform_wake_device"
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_ALARM_SOUND,
-        {vol.Required(ATTR_LEVEL): cv.positive_int},
-        "perform_alarm_sound",
+        SERVICE_WAKE_DEVICE, None, "perform_wake_device"
     )
 
 
@@ -185,11 +140,6 @@ class EzvizCamera(EzvizEntity, Camera):
         self._attr_unique_id = serial
         if camera_password:
             self._attr_supported_features = CameraEntityFeature.STREAM
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.data["status"] != 2
 
     @property
     def is_on(self) -> bool:
@@ -251,70 +201,9 @@ class EzvizCamera(EzvizEntity, Camera):
 
         return self._rtsp_stream
 
-    def perform_ptz(self, direction: str, speed: int) -> None:
-        """Perform a PTZ action on the camera."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "service_depreciation_ptz",
-            breaks_in_ha_version="2024.2.0",
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="service_depreciation_ptz",
-        )
-
-        try:
-            self.coordinator.ezviz_client.ptz_control(
-                str(direction).upper(), self._serial, "START", speed
-            )
-            self.coordinator.ezviz_client.ptz_control(
-                str(direction).upper(), self._serial, "STOP", speed
-            )
-
-        except HTTPError as err:
-            raise HTTPError("Cannot perform PTZ") from err
-
-    def perform_sound_alarm(self, enable: int) -> None:
-        """Sound the alarm on a camera."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "service_depreciation_sound_alarm",
-            breaks_in_ha_version="2024.3.0",
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="service_depreciation_sound_alarm",
-        )
-
-        try:
-            self.coordinator.ezviz_client.sound_alarm(self._serial, enable)
-        except HTTPError as err:
-            raise HTTPError("Cannot sound alarm") from err
-
     def perform_wake_device(self) -> None:
         """Basically wakes the camera by querying the device."""
         try:
             self.coordinator.ezviz_client.get_detection_sensibility(self._serial)
         except (HTTPError, PyEzvizError) as err:
             raise PyEzvizError("Cannot wake device") from err
-
-    def perform_alarm_sound(self, level: int) -> None:
-        """Enable/Disable movement sound alarm."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "service_deprecation_alarm_sound_level",
-            breaks_in_ha_version="2024.2.0",
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="service_deprecation_alarm_sound_level",
-        )
-        try:
-            self.coordinator.ezviz_client.alarm_sound(self._serial, level, 1)
-        except HTTPError as err:
-            raise HTTPError(
-                "Cannot set alarm sound level for on movement detected"
-            ) from err

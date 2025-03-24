@@ -1,4 +1,5 @@
 """Plugwise Sensor component for Home Assistant."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
@@ -24,12 +24,14 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import PlugwiseDataUpdateCoordinator
+from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True)
@@ -315,7 +317,6 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
     PlugwiseSensorEntityDescription(
         key="gas_consumed_interval",
         translation_key="gas_consumed_interval",
-        icon="mdi:meter-gas",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -357,7 +358,6 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
     PlugwiseSensorEntityDescription(
         key="modulation_level",
         translation_key="modulation_level",
-        icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -365,7 +365,6 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
     PlugwiseSensorEntityDescription(
         key="valve_position",
         translation_key="valve_position",
-        icon="mdi:valve",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -405,29 +404,28 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: PlugwiseConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Smile sensors from a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = entry.runtime_data
 
-    entities: list[PlugwiseSensorEntity] = []
-    for device_id, device in coordinator.data.devices.items():
-        if not (sensors := device.get("sensors")):
-            continue
-        for description in SENSORS:
-            if description.key not in sensors:
-                continue
+    @callback
+    def _add_entities() -> None:
+        """Add Entities."""
+        if not coordinator.new_devices:
+            return
 
-            entities.append(
-                PlugwiseSensorEntity(
-                    coordinator,
-                    device_id,
-                    description,
-                )
-            )
+        async_add_entities(
+            PlugwiseSensorEntity(coordinator, device_id, description)
+            for device_id in coordinator.new_devices
+            if (sensors := coordinator.data[device_id].get("sensors"))
+            for description in SENSORS
+            if description.key in sensors
+        )
 
-    async_add_entities(entities)
+    _add_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
 
 class PlugwiseSensorEntity(PlugwiseEntity, SensorEntity):
@@ -443,8 +441,8 @@ class PlugwiseSensorEntity(PlugwiseEntity, SensorEntity):
     ) -> None:
         """Initialise the sensor."""
         super().__init__(coordinator, device_id)
-        self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
+        self.entity_description = description
 
     @property
     def native_value(self) -> int | float:

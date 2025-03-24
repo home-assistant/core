@@ -1,13 +1,13 @@
 """The launch_library component."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
 from typing import TypedDict
 
-from pylaunches import PyLaunches, PyLaunchesException
-from pylaunches.objects.launch import Launch
-from pylaunches.objects.starship import StarshipResponse
+from pylaunches import PyLaunches, PyLaunchesError
+from pylaunches.types import Launch, StarshipResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -40,17 +40,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update() -> LaunchLibraryData:
         try:
             return LaunchLibraryData(
-                upcoming_launches=await launches.upcoming_launches(
+                upcoming_launches=await launches.launch_upcoming(
                     filters={"limit": 1, "hide_recent_previous": "True"},
                 ),
-                starship_events=await launches.starship_events(),
+                starship_events=await launches.dashboard_starship(),
             )
-        except PyLaunchesException as ex:
+        except PyLaunchesError as ex:
             raise UpdateFailed(ex) from ex
 
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=DOMAIN,
         update_method=async_update,
         update_interval=timedelta(hours=1),

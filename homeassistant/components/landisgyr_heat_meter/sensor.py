@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -26,7 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -39,18 +40,11 @@ from . import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class HeatMeterSensorEntityDescriptionMixin:
-    """Mixin for additional Heat Meter sensor description attributes ."""
+@dataclass(frozen=True, kw_only=True)
+class HeatMeterSensorEntityDescription(SensorEntityDescription):
+    """Heat Meter sensor description."""
 
     value_fn: Callable[[HeatMeterResponse], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class HeatMeterSensorEntityDescription(
-    SensorEntityDescription, HeatMeterSensorEntityDescriptionMixin
-):
-    """Heat Meter sensor description."""
 
 
 HEAT_METER_SENSOR_TYPES = (
@@ -284,7 +278,9 @@ HEAT_METER_SENSOR_TYPES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
     unique_id = entry.entry_id
@@ -301,11 +297,10 @@ async def async_setup_entry(
         name="Landis+Gyr Heat Meter",
     )
 
-    sensors = []
-    for description in HEAT_METER_SENSOR_TYPES:
-        sensors.append(HeatMeterSensor(coordinator, description, device))
-
-    async_add_entities(sensors)
+    async_add_entities(
+        HeatMeterSensor(coordinator, description, device)
+        for description in HEAT_METER_SENSOR_TYPES
+    )
 
 
 class HeatMeterSensor(

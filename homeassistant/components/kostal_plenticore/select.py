@@ -1,4 +1,5 @@
 """Platform for Kostal Plenticore select widgets."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -10,27 +11,20 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .helper import Plenticore, SelectDataUpdateCoordinator
+from .coordinator import Plenticore, SelectDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class PlenticoreRequiredKeysMixin:
-    """A class that describes required properties for plenticore select entities."""
+@dataclass(frozen=True, kw_only=True)
+class PlenticoreSelectEntityDescription(SelectEntityDescription):
+    """A class that describes plenticore select entities."""
 
     module_id: str
-
-
-@dataclass(frozen=True)
-class PlenticoreSelectEntityDescription(
-    SelectEntityDescription, PlenticoreRequiredKeysMixin
-):
-    """A class that describes plenticore select entities."""
 
 
 SELECT_SETTINGS_DATA = [
@@ -48,18 +42,16 @@ SELECT_SETTINGS_DATA = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add kostal plenticore Select widget."""
     plenticore: Plenticore = hass.data[DOMAIN][entry.entry_id]
 
     available_settings_data = await plenticore.client.get_settings()
     select_data_update_coordinator = SelectDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        "Settings Data",
-        timedelta(seconds=30),
-        plenticore,
+        hass, entry, _LOGGER, "Settings Data", timedelta(seconds=30), plenticore
     )
 
     entities = []

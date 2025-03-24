@@ -1,4 +1,5 @@
 """Support for EZVIZ number controls."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -15,14 +16,12 @@ from pyezviz.exceptions import (
 )
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_COORDINATOR, DOMAIN
-from .coordinator import EzvizDataUpdateCoordinator
+from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizBaseEntity
 
 SCAN_INTERVAL = timedelta(seconds=3600)
@@ -30,25 +29,17 @@ PARALLEL_UPDATES = 0
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class EzvizNumberEntityDescriptionMixin:
-    """Mixin values for EZVIZ Number entities."""
+@dataclass(frozen=True, kw_only=True)
+class EzvizNumberEntityDescription(NumberEntityDescription):
+    """Describe a EZVIZ Number."""
 
     supported_ext: str
     supported_ext_value: list
 
 
-@dataclass(frozen=True)
-class EzvizNumberEntityDescription(
-    NumberEntityDescription, EzvizNumberEntityDescriptionMixin
-):
-    """Describe a EZVIZ Number."""
-
-
 NUMBER_TYPE = EzvizNumberEntityDescription(
     key="detection_sensibility",
     translation_key="detection_sensibility",
-    icon="mdi:eye",
     entity_category=EntityCategory.CONFIG,
     native_min_value=0,
     native_step=1,
@@ -58,18 +49,18 @@ NUMBER_TYPE = EzvizNumberEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EzvizConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EZVIZ sensors based on a config entry."""
-    coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         EzvizNumber(coordinator, camera, value, entry.entry_id)
         for camera in coordinator.data
-        for capibility, value in coordinator.data[camera]["supportExt"].items()
-        if capibility == NUMBER_TYPE.supported_ext
+        for capability, value in coordinator.data[camera]["supportExt"].items()
+        if capability == NUMBER_TYPE.supported_ext
         if value in NUMBER_TYPE.supported_ext_value
     )
 

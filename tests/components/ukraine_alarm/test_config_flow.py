@@ -1,5 +1,5 @@
 """Test the Ukraine Alarm config flow."""
-import asyncio
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -41,7 +41,7 @@ REGIONS = {
 
 
 @pytest.fixture(autouse=True)
-def mock_get_regions() -> Generator[None, AsyncMock, None]:
+def mock_get_regions() -> Generator[AsyncMock]:
     """Mock the get_regions method."""
 
     with patch(
@@ -56,10 +56,10 @@ async def test_state(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.ukraine_alarm.async_setup_entry",
@@ -73,7 +73,7 @@ async def test_state(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "State 1"
     assert result3["data"] == {
         "region": "1",
@@ -87,10 +87,10 @@ async def test_state_district(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
 
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -98,7 +98,7 @@ async def test_state_district(hass: HomeAssistant) -> None:
             "region": "2",
         },
     )
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.ukraine_alarm.async_setup_entry",
@@ -112,7 +112,7 @@ async def test_state_district(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == "District 2.2"
     assert result4["data"] == {
         "region": "2.2",
@@ -126,10 +126,10 @@ async def test_state_district_pick_region(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
 
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -137,7 +137,7 @@ async def test_state_district_pick_region(hass: HomeAssistant) -> None:
             "region": "2",
         },
     )
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.ukraine_alarm.async_setup_entry",
@@ -151,7 +151,7 @@ async def test_state_district_pick_region(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == "State 2"
     assert result4["data"] == {
         "region": "2",
@@ -165,12 +165,12 @@ async def test_state_district_community(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
 
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -178,7 +178,7 @@ async def test_state_district_community(hass: HomeAssistant) -> None:
             "region": "3",
         },
     )
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
 
     result4 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -186,7 +186,7 @@ async def test_state_district_community(hass: HomeAssistant) -> None:
             "region": "3.2",
         },
     )
-    assert result4["type"] == FlowResultType.FORM
+    assert result4["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.ukraine_alarm.async_setup_entry",
@@ -200,7 +200,7 @@ async def test_state_district_community(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result5["type"] == FlowResultType.CREATE_ENTRY
+    assert result5["type"] is FlowResultType.CREATE_ENTRY
     assert result5["title"] == "Community 3.2.1"
     assert result5["data"] == {
         "region": "3.2.1",
@@ -221,7 +221,7 @@ async def test_max_regions(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "max_regions"
 
 
@@ -231,7 +231,7 @@ async def test_rate_limit(hass: HomeAssistant, mock_get_regions: AsyncMock) -> N
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "rate_limit"
 
 
@@ -243,7 +243,7 @@ async def test_server_error(hass: HomeAssistant, mock_get_regions) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -253,7 +253,7 @@ async def test_cannot_connect(hass: HomeAssistant, mock_get_regions: AsyncMock) 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -265,17 +265,17 @@ async def test_unknown_client_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
 async def test_timeout_error(hass: HomeAssistant, mock_get_regions: AsyncMock) -> None:
     """Test timeout error."""
-    mock_get_regions.side_effect = asyncio.TimeoutError
+    mock_get_regions.side_effect = TimeoutError
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "timeout"
 
 
@@ -287,5 +287,5 @@ async def test_no_regions_returned(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"

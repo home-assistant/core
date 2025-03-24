@@ -1,4 +1,5 @@
 """Intellifire Climate Entities."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,7 +13,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IntellifireDataUpdateCoordinator
 from .const import DEFAULT_THERMOSTAT_TEMP, DOMAIN, LOGGER
@@ -26,7 +27,7 @@ INTELLIFIRE_CLIMATES: tuple[ClimateEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Configure the fan entry.."""
     coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -49,7 +50,11 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_min_temp = 0
     _attr_max_temp = 37
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_target_temperature_step = 1.0
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     last_temp = DEFAULT_THERMOSTAT_TEMP
@@ -63,7 +68,7 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
         super().__init__(coordinator, description)
 
         if coordinator.data.thermostat_on:
-            self.last_temp = coordinator.data.thermostat_setpoint_c
+            self.last_temp = int(coordinator.data.thermostat_setpoint_c)
 
     @property
     def hvac_mode(self) -> HVACMode:

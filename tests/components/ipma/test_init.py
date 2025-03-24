@@ -1,4 +1,5 @@
 """Test the IPMA integration."""
+
 from unittest.mock import patch
 
 from pyipma import IPMAException

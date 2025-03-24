@@ -1,4 +1,5 @@
 """Support for the DOODS service."""
+
 from __future__ import annotations
 
 import io
@@ -12,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
 from homeassistant.const import (
@@ -24,8 +25,7 @@ from homeassistant.const import (
     CONF_URL,
 )
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import template
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.pil import draw_box
@@ -65,7 +65,7 @@ LABEL_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_URL): cv.string,
         vol.Required(CONF_DETECTOR): cv.string,
@@ -111,19 +111,17 @@ def setup_platform(
         )
         return
 
-    entities = []
-    for camera in config[CONF_SOURCE]:
-        entities.append(
-            Doods(
-                hass,
-                camera[CONF_ENTITY_ID],
-                camera.get(CONF_NAME),
-                doods,
-                detector,
-                config,
-            )
+    add_entities(
+        Doods(
+            hass,
+            camera[CONF_ENTITY_ID],
+            camera.get(CONF_NAME),
+            doods,
+            detector,
+            config,
         )
-    add_entities(entities)
+        for camera in config[CONF_SOURCE]
+    )
 
 
 class Doods(ImageProcessingEntity):
@@ -208,8 +206,6 @@ class Doods(ImageProcessingEntity):
             ]
             self._covers = area_config[CONF_COVERS]
 
-        template.attach(hass, self._file_out)
-
         self._dconfig = dconfig
         self._matches = {}
         self._total_matches = 0
@@ -269,7 +265,7 @@ class Doods(ImageProcessingEntity):
 
             # Draw detected objects
             for instance in values:
-                box_label = f'{label} {instance["score"]:.1f}%'
+                box_label = f"{label} {instance['score']:.1f}%"
                 # Already scaled, use 1 for width and height
                 draw_box(
                     draw,
@@ -281,7 +277,7 @@ class Doods(ImageProcessingEntity):
                 )
 
         for path in paths:
-            _LOGGER.info("Saving results image to %s", path)
+            _LOGGER.debug("Saving results image to %s", path)
             os.makedirs(os.path.dirname(path), exist_ok=True)
             img.save(path)
 

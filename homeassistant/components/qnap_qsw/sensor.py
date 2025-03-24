@@ -1,7 +1,10 @@
 """Support for the QNAP QSW sensors."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, replace
+from datetime import datetime
 from typing import Final
 
 from aioqsw.const import (
@@ -24,7 +27,7 @@ from aioqsw.const import (
     QSD_TEMP_MAX,
     QSD_TX_OCTETS,
     QSD_TX_SPEED,
-    QSD_UPTIME,
+    QSD_UPTIME_TIMESTAMP,
 )
 
 from homeassistant.components.sensor import (
@@ -39,11 +42,11 @@ from homeassistant.const import (
     UnitOfDataRate,
     UnitOfInformation,
     UnitOfTemperature,
-    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED, StateType
+from homeassistant.util import dt as dt_util
 
 from .const import ATTR_MAX, DOMAIN, QSW_COORD_DATA, RPM
 from .coordinator import QswDataCoordinator
@@ -57,12 +60,12 @@ class QswSensorEntityDescription(SensorEntityDescription, QswEntityDescription):
     attributes: dict[str, list[str]] | None = None
     qsw_type: QswEntityType | None = None
     sep_key: str = "_"
+    value_fn: Callable[[str], datetime | StateType] = lambda value: value
 
 
 SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
     QswSensorEntityDescription(
         translation_key="fan_1_speed",
-        icon="mdi:fan-speed-1",
         key=QSD_SYSTEM_SENSOR,
         native_unit_of_measurement=RPM,
         state_class=SensorStateClass.MEASUREMENT,
@@ -70,7 +73,6 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
     ),
     QswSensorEntityDescription(
         translation_key="fan_2_speed",
-        icon="mdi:fan-speed-2",
         key=QSD_SYSTEM_SENSOR,
         native_unit_of_measurement=RPM,
         state_class=SensorStateClass.MEASUREMENT,
@@ -82,7 +84,6 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
             ATTR_MAX: [QSD_SYSTEM_BOARD, QSD_PORT_NUM],
         },
         entity_registry_enabled_default=False,
-        icon="mdi:ethernet",
         key=QSD_PORTS_STATUS,
         state_class=SensorStateClass.MEASUREMENT,
         subkey=QSD_LINK,
@@ -91,7 +92,6 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         entity_registry_enabled_default=False,
         translation_key="rx",
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:download-network",
         key=QSD_PORTS_STATISTICS,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -100,7 +100,6 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
     QswSensorEntityDescription(
         entity_registry_enabled_default=False,
         translation_key="rx_errors",
-        icon="mdi:close-network",
         key=QSD_PORTS_STATISTICS,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -110,7 +109,6 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         entity_registry_enabled_default=False,
         translation_key="rx_speed",
         device_class=SensorDeviceClass.DATA_RATE,
-        icon="mdi:download-network",
         key=QSD_PORTS_STATISTICS,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
@@ -130,7 +128,6 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         entity_registry_enabled_default=False,
         translation_key="tx",
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:upload-network",
         key=QSD_PORTS_STATISTICS,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -140,20 +137,18 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         entity_registry_enabled_default=False,
         translation_key="tx_speed",
         device_class=SensorDeviceClass.DATA_RATE,
-        icon="mdi:upload-network",
         key=QSD_PORTS_STATISTICS,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         subkey=QSD_TX_SPEED,
     ),
     QswSensorEntityDescription(
-        translation_key="uptime",
-        icon="mdi:timer-outline",
+        translation_key="uptime_timestamp",
         key=QSD_SYSTEM_TIME,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        subkey=QSD_UPTIME,
+        subkey=QSD_UPTIME_TIMESTAMP,
+        value_fn=dt_util.parse_datetime,
     ),
 )
 
@@ -291,19 +286,21 @@ PORT_SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add QNAP QSW sensors from a config_entry."""
     coordinator: QswDataCoordinator = hass.data[DOMAIN][entry.entry_id][QSW_COORD_DATA]
 
-    entities: list[QswSensor] = []
-
-    for description in SENSOR_TYPES:
+    entities: list[QswSensor] = [
+        QswSensor(coordinator, description, entry)
+        for description in SENSOR_TYPES
         if (
             description.key in coordinator.data
             and description.subkey in coordinator.data[description.key]
-        ):
-            entities.append(QswSensor(coordinator, description, entry))
+        )
+    ]
 
     for description in LACP_PORT_SENSOR_TYPES:
         if (
@@ -382,5 +379,5 @@ class QswSensor(QswSensorEntity, SensorEntity):
             self.entity_description.subkey,
             self.entity_description.qsw_type,
         )
-        self._attr_native_value = value
+        self._attr_native_value = self.entity_description.value_fn(value)
         super()._async_update_attrs()

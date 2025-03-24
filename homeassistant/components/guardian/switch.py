@@ -1,4 +1,5 @@
 """Switches for the Elexa Guardian integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping
@@ -6,17 +7,18 @@ from dataclasses import dataclass
 from typing import Any
 
 from aioguardian import Client
-from aioguardian.errors import GuardianError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescription
+from . import GuardianData
 from .const import API_VALVE_STATUS, API_WIFI_STATUS, DOMAIN
+from .entity import ValveControllerEntity, ValveControllerEntityDescription
+from .util import convert_exceptions_to_homeassistant_error
+from .valve import GuardianValveState
 
 ATTR_AVG_CURRENT = "average_current"
 ATTR_CONNECTED_CLIENTS = "connected_clients"
@@ -27,13 +29,6 @@ ATTR_TRAVEL_COUNT = "travel_count"
 
 SWITCH_KIND_ONBOARD_AP = "onboard_ap"
 SWITCH_KIND_VALVE = "valve"
-
-ON_STATES = {
-    "start_opening",
-    "opening",
-    "finish_opening",
-    "opened",
-}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -50,29 +45,43 @@ class ValveControllerSwitchDescription(
 
 async def _async_disable_ap(client: Client) -> None:
     """Disable the onboard AP."""
-    await client.wifi.disable_ap()
+    async with client:
+        await client.wifi.disable_ap()
 
 
 async def _async_enable_ap(client: Client) -> None:
     """Enable the onboard AP."""
-    await client.wifi.enable_ap()
+    async with client:
+        await client.wifi.enable_ap()
 
 
 async def _async_close_valve(client: Client) -> None:
     """Close the valve."""
-    await client.valve.close()
+    async with client:
+        await client.valve.close()
 
 
 async def _async_open_valve(client: Client) -> None:
     """Open the valve."""
-    await client.valve.open()
+    async with client:
+        await client.valve.open()
+
+
+@callback
+def is_open(data: dict[str, Any]) -> bool:
+    """Return if the valve is opening."""
+    return data["state"] in (
+        GuardianValveState.FINISH_OPENING,
+        GuardianValveState.OPEN,
+        GuardianValveState.OPENING,
+        GuardianValveState.START_OPENING,
+    )
 
 
 VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSwitchDescription(
         key=SWITCH_KIND_ONBOARD_AP,
         translation_key="onboard_access_point",
-        icon="mdi:wifi",
         entity_category=EntityCategory.CONFIG,
         extra_state_attributes_fn=lambda data: {
             ATTR_CONNECTED_CLIENTS: data.get("ap_clients"),
@@ -86,7 +95,6 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSwitchDescription(
         key=SWITCH_KIND_VALVE,
         translation_key="valve_controller",
-        icon="mdi:water",
         api_category=API_VALVE_STATUS,
         extra_state_attributes_fn=lambda data: {
             ATTR_AVG_CURRENT: data["average_current"],
@@ -94,7 +102,7 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
             ATTR_INST_CURRENT_DDT: data["instantaneous_current_ddt"],
             ATTR_TRAVEL_COUNT: data["travel_count"],
         },
-        is_on_fn=lambda data: data["state"] in ON_STATES,
+        is_on_fn=is_open,
         off_fn=_async_close_valve,
         on_fn=_async_open_valve,
     ),
@@ -102,7 +110,9 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Guardian switches based on a config entry."""
     data: GuardianData = hass.data[DOMAIN][entry.entry_id]
@@ -139,34 +149,14 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
         """Return True if entity is on."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
+    @convert_exceptions_to_homeassistant_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        if not self._attr_is_on:
-            return
+        await self.entity_description.off_fn(self._client)
+        await self.coordinator.async_request_refresh()
 
-        try:
-            async with self._client:
-                await self.entity_description.off_fn(self._client)
-        except GuardianError as err:
-            raise HomeAssistantError(
-                f'Error while turning "{self.entity_id}" off: {err}'
-            ) from err
-
-        self._attr_is_on = False
-        self.async_write_ha_state()
-
+    @convert_exceptions_to_homeassistant_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        if self._attr_is_on:
-            return
-
-        try:
-            async with self._client:
-                await self.entity_description.on_fn(self._client)
-        except GuardianError as err:
-            raise HomeAssistantError(
-                f'Error while turning "{self.entity_id}" on: {err}'
-            ) from err
-
-        self._attr_is_on = True
-        self.async_write_ha_state()
+        await self.entity_description.on_fn(self._client)
+        await self.coordinator.async_request_refresh()

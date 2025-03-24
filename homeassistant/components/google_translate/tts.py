@@ -1,4 +1,5 @@
 """Support for the Google speech service."""
+
 from __future__ import annotations
 
 from io import BytesIO
@@ -10,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.tts import (
     CONF_LANG,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
     TextToSpeechEntity,
     TtsAudioType,
@@ -18,7 +19,7 @@ from homeassistant.components.tts import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -34,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_OPTIONS = ["tld"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
         vol.Optional(CONF_TLD, default=DEFAULT_TLD): vol.In(SUPPORT_TLD),
@@ -54,7 +55,7 @@ async def async_get_engine(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Google Translate speech platform via config entry."""
     default_language = config_entry.data[CONF_LANG]
@@ -73,21 +74,21 @@ class GoogleTTSEntity(TextToSpeechEntity):
         else:
             self._lang = lang
             self._tld = tld
-        self._attr_name = f"Google {self._lang} {self._tld}"
+        self._attr_name = f"Google Translate {self._lang} {self._tld}"
         self._attr_unique_id = config_entry.entry_id
 
     @property
-    def default_language(self):
+    def default_language(self) -> str:
         """Return the default language."""
         return self._lang
 
     @property
-    def supported_languages(self):
+    def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @property
-    def supported_options(self):
+    def supported_options(self) -> list[str]:
         """Return a list of supported options."""
         return SUPPORT_OPTIONS
 
@@ -120,7 +121,7 @@ class GoogleTTSEntity(TextToSpeechEntity):
 class GoogleProvider(Provider):
     """The Google speech API provider."""
 
-    def __init__(self, hass, lang, tld):
+    def __init__(self, hass: HomeAssistant, lang: str, tld: str) -> None:
         """Init Google TTS service."""
         self.hass = hass
         if lang in MAP_LANG_TLD:
@@ -129,24 +130,26 @@ class GoogleProvider(Provider):
         else:
             self._lang = lang
             self._tld = tld
-        self.name = "Google"
+        self.name = "Google Translate"
 
     @property
-    def default_language(self):
+    def default_language(self) -> str:
         """Return the default language."""
         return self._lang
 
     @property
-    def supported_languages(self):
+    def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @property
-    def supported_options(self):
+    def supported_options(self) -> list[str]:
         """Return a list of supported options."""
         return SUPPORT_OPTIONS
 
-    def get_tts_audio(self, message, language, options):
+    def get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
+    ) -> TtsAudioType:
         """Load TTS from google."""
         tld = self._tld
         if language in MAP_LANG_TLD:
@@ -159,8 +162,8 @@ class GoogleProvider(Provider):
 
         try:
             tts.write_to_fp(mp3_data)
-        except gTTSError as exc:
-            _LOGGER.exception("Error during processing of TTS request %s", exc)
+        except gTTSError:
+            _LOGGER.exception("Error during processing of TTS request")
             return None, None
 
         return "mp3", mp3_data.getvalue()

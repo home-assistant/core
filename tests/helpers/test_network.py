@@ -1,11 +1,15 @@
 """Test network helper."""
+
 from unittest.mock import Mock, patch
 
+from aiohttp import hdrs
+from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
+from yarl import URL
 
 from homeassistant.components import cloud
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers.network import (
     NoURLAvailableError,
     _get_cloud_url,
@@ -74,10 +78,13 @@ async def test_get_url_internal(hass: HomeAssistant) -> None:
         with pytest.raises(NoURLAvailableError):
             _get_internal_url(hass, require_current_request=True, require_ssl=True)
 
-    with patch(
-        "homeassistant.helpers.network._get_request_host",
-        return_value="no_match.example.local",
-    ), pytest.raises(NoURLAvailableError):
+    with (
+        patch(
+            "homeassistant.helpers.network._get_request_host",
+            return_value="no_match.example.local",
+        ),
+        pytest.raises(NoURLAvailableError),
+    ):
         _get_internal_url(hass, require_current_request=True)
 
     # Test with internal URL: https://example.local:8123
@@ -274,10 +281,13 @@ async def test_get_url_external(hass: HomeAssistant) -> None:
         with pytest.raises(NoURLAvailableError):
             _get_external_url(hass, require_current_request=True, require_ssl=True)
 
-    with patch(
-        "homeassistant.helpers.network._get_request_host",
-        return_value="no_match.example.com",
-    ), pytest.raises(NoURLAvailableError):
+    with (
+        patch(
+            "homeassistant.helpers.network._get_request_host",
+            return_value="no_match.example.com",
+        ),
+        pytest.raises(NoURLAvailableError),
+    ):
         _get_external_url(hass, require_current_request=True)
 
     # Test with external URL: http://example.com:80/
@@ -355,15 +365,26 @@ async def test_get_url_external(hass: HomeAssistant) -> None:
         with pytest.raises(NoURLAvailableError):
             _get_external_url(hass, require_current_request=True, require_ssl=True)
 
+    with pytest.raises(NoURLAvailableError):
+        _get_external_url(hass, require_cloud=True)
+
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
+        return_value="https://example.nabu.casa",
+    ):
+        hass.config.components.add("cloud")
+        assert (
+            _get_external_url(hass, require_cloud=True) == "https://example.nabu.casa"
+        )
+
 
 async def test_get_cloud_url(hass: HomeAssistant) -> None:
     """Test getting an instance URL when the user has set an external URL."""
     assert hass.config.external_url is None
     hass.config.components.add("cloud")
 
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         assert _get_cloud_url(hass) == "https://example.nabu.casa"
@@ -380,17 +401,22 @@ async def test_get_cloud_url(hass: HomeAssistant) -> None:
                 == "https://example.nabu.casa"
             )
 
-        with patch(
-            "homeassistant.helpers.network._get_request_host",
-            return_value="no_match.nabu.casa",
-        ), pytest.raises(NoURLAvailableError):
+        with (
+            patch(
+                "homeassistant.helpers.network._get_request_host",
+                return_value="no_match.nabu.casa",
+            ),
+            pytest.raises(NoURLAvailableError),
+        ):
             _get_cloud_url(hass, require_current_request=True)
 
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
-        side_effect=cloud.CloudNotAvailable,
-    ), pytest.raises(NoURLAvailableError):
+    with (
+        patch(
+            "homeassistant.components.cloud.async_remote_ui_url",
+            side_effect=cloud.CloudNotAvailable,
+        ),
+        pytest.raises(NoURLAvailableError),
+    ):
         _get_cloud_url(hass)
 
 
@@ -409,9 +435,8 @@ async def test_get_external_url_cloud_fallback(hass: HomeAssistant) -> None:
 
     # Add Cloud to the previous test
     hass.config.components.add("cloud")
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         assert _get_external_url(hass, allow_cloud=False) == "http://1.1.1.1:8123"
@@ -435,9 +460,8 @@ async def test_get_external_url_cloud_fallback(hass: HomeAssistant) -> None:
 
     # Add Cloud to the previous test
     hass.config.components.add("cloud")
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         assert _get_external_url(hass, allow_cloud=False) == "https://example.com"
@@ -509,9 +533,13 @@ async def test_get_url(hass: HomeAssistant) -> None:
     with pytest.raises(NoURLAvailableError):
         get_url(hass, require_current_request=True)
 
-    with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.com"
-    ), patch("homeassistant.components.http.current_request"):
+    with (
+        patch(
+            "homeassistant.helpers.network._get_request_host",
+            return_value="example.com",
+        ),
+        patch("homeassistant.components.http.current_request"),
+    ):
         assert get_url(hass, require_current_request=True) == "https://example.com"
         assert (
             get_url(hass, require_current_request=True, require_ssl=True)
@@ -521,9 +549,13 @@ async def test_get_url(hass: HomeAssistant) -> None:
         with pytest.raises(NoURLAvailableError):
             get_url(hass, require_current_request=True, allow_external=False)
 
-    with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.local"
-    ), patch("homeassistant.components.http.current_request"):
+    with (
+        patch(
+            "homeassistant.helpers.network._get_request_host",
+            return_value="example.local",
+        ),
+        patch("homeassistant.components.http.current_request"),
+    ):
         assert get_url(hass, require_current_request=True) == "http://example.local"
 
         with pytest.raises(NoURLAvailableError):
@@ -532,10 +564,13 @@ async def test_get_url(hass: HomeAssistant) -> None:
         with pytest.raises(NoURLAvailableError):
             get_url(hass, require_current_request=True, require_ssl=True)
 
-    with patch(
-        "homeassistant.helpers.network._get_request_host",
-        return_value="no_match.example.com",
-    ), pytest.raises(NoURLAvailableError):
+    with (
+        patch(
+            "homeassistant.helpers.network._get_request_host",
+            return_value="no_match.example.com",
+        ),
+        pytest.raises(NoURLAvailableError),
+    ):
         _get_internal_url(hass, require_current_request=True)
 
     # Test allow_ip defaults when SSL specified
@@ -552,19 +587,87 @@ async def test_get_url(hass: HomeAssistant) -> None:
         assert get_url(hass, allow_internal=False)
 
 
-async def test_get_request_host(hass: HomeAssistant) -> None:
+async def test_get_request_host_with_port(hass: HomeAssistant) -> None:
     """Test getting the host of the current web request from the request context."""
     with pytest.raises(NoURLAvailableError):
         _get_request_host()
 
     with patch("homeassistant.components.http.current_request") as mock_request_context:
         mock_request = Mock()
-        mock_request.url = "http://example.com:8123/test/request"
+        mock_request.headers = CIMultiDictProxy(
+            CIMultiDict({hdrs.HOST: "example.com:8123"})
+        )
+        mock_request.url = URL("http://example.com:8123/test/request")
+        mock_request.host = "example.com:8123"
         mock_request_context.get = Mock(return_value=mock_request)
 
         assert _get_request_host() == "example.com"
 
 
+async def test_get_request_host_without_port(hass: HomeAssistant) -> None:
+    """Test getting the host of the current web request from the request context."""
+    with pytest.raises(NoURLAvailableError):
+        _get_request_host()
+
+    with patch("homeassistant.components.http.current_request") as mock_request_context:
+        mock_request = Mock()
+        mock_request.headers = CIMultiDictProxy(CIMultiDict({hdrs.HOST: "example.com"}))
+        mock_request.url = URL("http://example.com/test/request")
+        mock_request.host = "example.com"
+        mock_request_context.get = Mock(return_value=mock_request)
+
+        assert _get_request_host() == "example.com"
+
+
+async def test_get_request_ipv6_address(hass: HomeAssistant) -> None:
+    """Test getting the ipv6 host of the current web request from the request context."""
+    with pytest.raises(NoURLAvailableError):
+        _get_request_host()
+
+    with patch("homeassistant.components.http.current_request") as mock_request_context:
+        mock_request = Mock()
+        mock_request.headers = CIMultiDictProxy(CIMultiDict({hdrs.HOST: "[::1]:8123"}))
+        mock_request.url = URL("http://[::1]:8123/test/request")
+        mock_request.host = "[::1]:8123"
+        mock_request_context.get = Mock(return_value=mock_request)
+
+        assert _get_request_host() == "::1"
+
+
+async def test_get_request_ipv6_address_without_port(hass: HomeAssistant) -> None:
+    """Test getting the ipv6 host of the current web request from the request context."""
+    with pytest.raises(NoURLAvailableError):
+        _get_request_host()
+
+    with patch("homeassistant.components.http.current_request") as mock_request_context:
+        mock_request = Mock()
+        mock_request.headers = CIMultiDictProxy(CIMultiDict({hdrs.HOST: "[::1]"}))
+        mock_request.url = URL("http://[::1]/test/request")
+        mock_request.host = "[::1]"
+        mock_request_context.get = Mock(return_value=mock_request)
+
+        assert _get_request_host() == "::1"
+
+
+async def test_get_request_host_no_host_header(hass: HomeAssistant) -> None:
+    """Test getting the host of the current web request from the request context."""
+    with pytest.raises(NoURLAvailableError):
+        _get_request_host()
+
+    with patch("homeassistant.components.http.current_request") as mock_request_context:
+        mock_request = Mock()
+        mock_request.headers = CIMultiDictProxy(CIMultiDict())
+        mock_request.url = URL("/test/request")
+        mock_request_context.get = Mock(return_value=mock_request)
+
+        assert _get_request_host() is None
+
+
+@patch("homeassistant.components.hassio.is_hassio", Mock(return_value=True))
+@patch(
+    "homeassistant.components.hassio.get_host_info",
+    Mock(return_value={"hostname": "homeassistant"}),
+)
 async def test_get_current_request_url_with_known_host(
     hass: HomeAssistant, current_request
 ) -> None:
@@ -595,10 +698,6 @@ async def test_get_current_request_url_with_known_host(
 
     # Ensure hostname from Supervisor is accepted transparently
     mock_component(hass, "hassio")
-    hass.components.hassio.is_hassio = Mock(return_value=True)
-    hass.components.hassio.get_host_info = Mock(
-        return_value={"hostname": "homeassistant"}
-    )
 
     with patch(
         "homeassistant.helpers.network._get_request_host",
@@ -617,12 +716,24 @@ async def test_get_current_request_url_with_known_host(
             get_url(hass, require_current_request=True) == "http://homeassistant:8123"
         )
 
-    with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="unknown.local"
-    ), pytest.raises(NoURLAvailableError):
+    with (
+        patch(
+            "homeassistant.helpers.network._get_request_host",
+            return_value="unknown.local",
+        ),
+        pytest.raises(NoURLAvailableError),
+    ):
         get_url(hass, require_current_request=True)
 
 
+@patch(
+    "homeassistant.helpers.network.is_hassio",
+    Mock(return_value={"hostname": "homeassistant"}),
+)
+@patch(
+    "homeassistant.components.hassio.get_host_info",
+    Mock(return_value={"hostname": "hellohost"}),
+)
 async def test_is_internal_request(hass: HomeAssistant, mock_current_request) -> None:
     """Test if accessing an instance on its internal URL."""
     # Test with internal URL: http://example.local:8123
@@ -637,10 +748,20 @@ async def test_is_internal_request(hass: HomeAssistant, mock_current_request) ->
     mock_current_request.return_value = None
     assert not is_internal_request(hass)
 
-    mock_current_request.return_value = Mock(url="http://example.local:8123")
+    mock_current_request.return_value = Mock(
+        headers=CIMultiDictProxy(CIMultiDict({hdrs.HOST: "example.local:8123"})),
+        host="example.local:8123",
+        url=URL("http://example.local:8123"),
+    )
     assert is_internal_request(hass)
 
-    mock_current_request.return_value = Mock(url="http://no_match.example.local:8123")
+    mock_current_request.return_value = Mock(
+        headers=CIMultiDictProxy(
+            CIMultiDict({hdrs.HOST: "no_match.example.local:8123"})
+        ),
+        host="no_match.example.local:8123",
+        url=URL("http://no_match.example.local:8123"),
+    )
     assert not is_internal_request(hass)
 
     # Test with internal URL: http://192.168.0.1:8123
@@ -652,26 +773,31 @@ async def test_is_internal_request(hass: HomeAssistant, mock_current_request) ->
     assert hass.config.internal_url == "http://192.168.0.1:8123"
     assert not is_internal_request(hass)
 
-    mock_current_request.return_value = Mock(url="http://192.168.0.1:8123")
+    mock_current_request.return_value = Mock(
+        headers=CIMultiDictProxy(CIMultiDict({hdrs.HOST: "192.168.0.1:8123"})),
+        host="192.168.0.1:8123",
+        url=URL("http://192.168.0.1:8123"),
+    )
     assert is_internal_request(hass)
 
     # Test for matching against local IP
     hass.config.api = Mock(use_ssl=False, local_ip="192.168.123.123", port=8123)
     for allowed in ("127.0.0.1", "192.168.123.123"):
-        mock_current_request.return_value = Mock(url=f"http://{allowed}:8123")
+        mock_current_request.return_value = Mock(
+            headers=CIMultiDictProxy(CIMultiDict({hdrs.HOST: f"{allowed}:8123"})),
+            host=f"{allowed}:8123",
+            url=URL(f"http://{allowed}:8123"),
+        )
         assert is_internal_request(hass), mock_current_request.return_value.url
 
     # Test for matching against HassOS hostname
-    with patch.object(
-        hass.components.hassio, "is_hassio", return_value=True
-    ), patch.object(
-        hass.components.hassio,
-        "get_host_info",
-        return_value={"hostname": "hellohost"},
-    ):
-        for allowed in ("hellohost", "hellohost.local"):
-            mock_current_request.return_value = Mock(url=f"http://{allowed}:8123")
-            assert is_internal_request(hass), mock_current_request.return_value.url
+    for allowed in ("hellohost", "hellohost.local"):
+        mock_current_request.return_value = Mock(
+            headers=CIMultiDictProxy(CIMultiDict({hdrs.HOST: f"{allowed}:8123"})),
+            host=f"{allowed}:8123",
+            url=URL(f"http://{allowed}:8123"),
+        )
+        assert is_internal_request(hass), mock_current_request.return_value.url
 
 
 async def test_is_hass_url(hass: HomeAssistant) -> None:
@@ -707,9 +833,8 @@ async def test_is_hass_url(hass: HomeAssistant) -> None:
     assert is_hass_url(hass, "http://example.com:443") is False
     assert is_hass_url(hass, "http://example.com") is False
 
-    with patch.object(
-        hass.components.cloud,
-        "async_remote_ui_url",
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
         return_value="https://example.nabu.casa",
     ):
         assert is_hass_url(hass, "https://example.nabu.casa") is False

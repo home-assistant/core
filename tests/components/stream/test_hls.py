@@ -1,14 +1,14 @@
 """The tests for hls streams."""
+
 from datetime import timedelta
 from http import HTTPStatus
-import logging
 from unittest.mock import patch
 from urllib.parse import urlparse
 
 import av
 import pytest
 
-from homeassistant.components.stream import create_stream
+from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.stream.const import (
     EXT_X_START_LL_HLS,
     EXT_X_START_NON_LL_HLS,
@@ -19,7 +19,7 @@ from homeassistant.components.stream.const import (
 from homeassistant.components.stream.core import Orientation, Part
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     FAKE_TIME,
@@ -46,7 +46,7 @@ HLS_CONFIG = {
 
 
 @pytest.fixture
-async def setup_component(hass) -> None:
+async def setup_component(hass: HomeAssistant) -> None:
     """Test fixture to setup the stream component."""
     await async_setup_component(hass, "stream", HLS_CONFIG)
 
@@ -54,7 +54,7 @@ async def setup_component(hass) -> None:
 class HlsClient:
     """Test fixture for fetching the hls stream."""
 
-    def __init__(self, http_client, parsed_url):
+    def __init__(self, http_client, parsed_url) -> None:
         """Initialize HlsClient."""
         self.http_client = http_client
         self.parsed_url = parsed_url
@@ -69,7 +69,7 @@ class HlsClient:
 
 
 @pytest.fixture
-def hls_stream(hass, hass_client):
+def hls_stream(hass: HomeAssistant, hass_client: ClientSessionGenerator):
     """Create test fixture for creating an HLS client for a stream."""
 
     async def create_client_for_stream(stream):
@@ -119,13 +119,16 @@ def make_playlist(
         response.extend(
             [
                 f"#EXT-X-PART-INF:PART-TARGET={part_target_duration:.3f}",
-                f"#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK={2*part_target_duration:.3f}",
-                f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_LL_HLS*part_target_duration:.3f},PRECISE=YES",
+                "#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK="
+                f"{2 * part_target_duration:.3f}",
+                "#EXT-X-START:TIME-OFFSET=-"
+                f"{EXT_X_START_LL_HLS * part_target_duration:.3f},PRECISE=YES",
             ]
         )
     else:
         response.append(
-            f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_NON_LL_HLS*segment_duration:.3f},PRECISE=YES",
+            "#EXT-X-START:TIME-OFFSET=-"
+            f"{EXT_X_START_NON_LL_HLS * segment_duration:.3f},PRECISE=YES",
         )
     if segments:
         response.extend(segments)
@@ -278,8 +281,19 @@ async def test_stream_timeout_after_stop(
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    ("exception"),
+    [
+        # pylint: disable-next=c-extension-no-member
+        (av.error.InvalidDataError(-2, "error")),
+        (av.HTTPBadRequestError(500, "error")),
+    ],
+)
 async def test_stream_retries(
-    hass: HomeAssistant, setup_component, should_retry
+    hass: HomeAssistant,
+    setup_component,
+    should_retry,
+    exception,
 ) -> None:
     """Test hls stream is retried on failure."""
     # Setup demo HLS track
@@ -296,28 +310,33 @@ async def test_stream_retries(
 
     stream.set_update_callback(update_callback)
 
-    cur_time = 0
+    open_future1 = hass.loop.create_future()
+    open_future2 = hass.loop.create_future()
+    futures = [open_future2, open_future1]
 
-    def time_side_effect():
-        logging.info("time side effect")
-        nonlocal cur_time
-        if cur_time >= 80:
-            logging.info("changing return value")
+    original_set_state = Stream._set_state
+
+    def set_state_wrapper(self, state: bool) -> None:
+        if state is False:
             should_retry.return_value = False  # Thread should exit and be joinable.
-        cur_time += 40
-        return cur_time
+        original_set_state(self, state)
 
-    with patch("av.open") as av_open, patch(
-        "homeassistant.components.stream.time"
-    ) as mock_time, patch(
-        "homeassistant.components.stream.STREAM_RESTART_INCREMENT", 0
+    def av_open_side_effect(*args, **kwargs):
+        hass.loop.call_soon_threadsafe(futures.pop().set_result, None)
+        raise exception
+
+    with (
+        patch("av.open") as av_open,
+        patch("homeassistant.components.stream.Stream._set_state", set_state_wrapper),
+        patch("homeassistant.components.stream.STREAM_RESTART_INCREMENT", 0),
     ):
-        av_open.side_effect = av.error.InvalidDataError(-2, "error")
-        mock_time.time.side_effect = time_side_effect
+        av_open.side_effect = av_open_side_effect
         # Request stream. Enable retries which are disabled by default in tests.
         should_retry.return_value = True
         await stream.start()
-        stream._thread.join()
+        await open_future1
+        await open_future2
+        await hass.async_add_executor_job(stream._thread.join)
         stream._thread = None
         assert av_open.call_count == 2
         await hass.async_block_till_done()
@@ -398,9 +417,7 @@ async def test_hls_max_segments(
 
     # Only NUM_PLAYLIST_SEGMENTS are returned in the playlist.
     start = MAX_SEGMENTS + 1 - NUM_PLAYLIST_SEGMENTS
-    segments = []
-    for sequence in range(start, MAX_SEGMENTS + 1):
-        segments.append(make_segment(sequence))
+    segments = [make_segment(sequence) for sequence in range(start, MAX_SEGMENTS + 1)]
     assert await resp.text() == make_playlist(sequence=start, segments=segments)
 
     # Fetch the actual segments with a fake byte payload
@@ -496,9 +513,7 @@ async def test_hls_max_segments_discontinuity(
     # EXT-X-DISCONTINUITY tag to be omitted and EXT-X-DISCONTINUITY-SEQUENCE
     # returned instead.
     start = MAX_SEGMENTS + 1 - NUM_PLAYLIST_SEGMENTS
-    segments = []
-    for sequence in range(start, MAX_SEGMENTS + 1):
-        segments.append(make_segment(sequence))
+    segments = [make_segment(sequence) for sequence in range(start, MAX_SEGMENTS + 1)]
     assert await resp.text() == make_playlist(
         sequence=start,
         discontinuity_sequence=1,

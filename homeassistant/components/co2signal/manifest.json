@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["aioelectricitymaps"],
-  "requirements": ["aioelectricitymaps==0.1.6"]
+  "requirements": ["aioelectricitymaps==0.4.0"]
 }

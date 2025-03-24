@@ -1,4 +1,5 @@
 """Configuration for frontier_silicon tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -21,7 +22,7 @@ def config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-def mock_valid_device_url() -> Generator[None, None, None]:
+def mock_valid_device_url() -> Generator[None]:
     """Return a valid webfsapi endpoint."""
     with patch(
         "afsapi.AFSAPI.get_webfsapi_endpoint",
@@ -31,7 +32,7 @@ def mock_valid_device_url() -> Generator[None, None, None]:
 
 
 @pytest.fixture(autouse=True)
-def mock_valid_pin() -> Generator[None, None, None]:
+def mock_valid_pin() -> Generator[None]:
     """Make get_friendly_name return a value, indicating a valid pin."""
     with patch(
         "afsapi.AFSAPI.get_friendly_name",
@@ -41,14 +42,14 @@ def mock_valid_pin() -> Generator[None, None, None]:
 
 
 @pytest.fixture(autouse=True)
-def mock_radio_id() -> Generator[None, None, None]:
+def mock_radio_id() -> Generator[None]:
     """Return a valid radio_id."""
     with patch("afsapi.AFSAPI.get_radio_id", return_value="mock_radio_id"):
         yield
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.frontier_silicon.async_setup_entry", return_value=True

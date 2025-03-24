@@ -1,11 +1,12 @@
 """Config flow for Improv via BLE integration."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 from bleak import BleakError
 from improv_ble_client import (
@@ -19,17 +20,15 @@ from improv_ble_client import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import bluetooth
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-_T = TypeVar("_T")
 
 STEP_PROVISION_SCHEMA = vol.Schema(
     {
@@ -47,7 +46,7 @@ class Credentials:
     ssid: str
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Improv via BLE."""
 
     VERSION = 1
@@ -55,9 +54,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _authorize_task: asyncio.Task | None = None
     _can_identify: bool | None = None
     _credentials: Credentials | None = None
-    _provision_result: FlowResult | None = None
+    _provision_result: ConfigFlowResult | None = None
     _provision_task: asyncio.Task | None = None
-    _reauth_entry: config_entries.ConfigEntry | None = None
+    _reauth_entry: ConfigEntry | None = None
     _remove_bluetooth_callback: Callable[[], None] | None = None
     _unsub: Callable[[], None] | None = None
 
@@ -71,7 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         errors: dict[str, str] = {}
 
@@ -84,12 +83,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._discovery_info = self._discovered_devices[address]
             return await self.async_step_start_improv()
 
-        current_addresses = self._async_current_ids()
         for discovery in bluetooth.async_discovered_service_info(self.hass):
-            if (
-                discovery.address in current_addresses
-                or discovery.address in self._discovered_devices
-                or not device_filter(discovery.advertisement)
+            if discovery.address in self._discovered_devices or not device_filter(
+                discovery.advertisement
             ):
                 continue
             self._discovered_devices[discovery.address] = discovery
@@ -121,12 +117,30 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._discovery_info is not None
 
         service_data = self._discovery_info.service_data
-        improv_service_data = ImprovServiceData.from_bytes(
-            service_data[SERVICE_DATA_UUID]
-        )
+        try:
+            improv_service_data = ImprovServiceData.from_bytes(
+                service_data[SERVICE_DATA_UUID]
+            )
+        except improv_ble_errors.InvalidCommand as err:
+            _LOGGER.warning(
+                (
+                    "Received invalid improv via BLE data '%s' from device with "
+                    "bluetooth address '%s'; if the device is a self-configured "
+                    "ESPHome device, either correct or disable the 'esp32_improv' "
+                    "configuration; if it's a commercial device, contact the vendor"
+                ),
+                service_data[SERVICE_DATA_UUID].hex(),
+                self._discovery_info.address,
+            )
+            raise AbortFlow("invalid_improv_data") from err
+
         if improv_service_data.state in (State.PROVISIONING, State.PROVISIONED):
             _LOGGER.debug(
-                "Aborting improv flow, device is already provisioned: %s",
+                (
+                    "Aborting improv flow, device with bluetooth address '%s' is "
+                    "already provisioned: %s"
+                ),
+                self._discovery_info.address,
                 improv_service_data.state,
             )
             raise AbortFlow("already_provisioned")
@@ -158,7 +172,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: bluetooth.BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the Bluetooth discovery step."""
         self._discovery_info = discovery_info
 
@@ -181,7 +195,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle bluetooth confirm step."""
         # mypy is not aware that we can't get here without having these set already
         assert self._discovery_info is not None
@@ -198,7 +212,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_start_improv(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Start improv flow.
 
         If the device supports identification, show a menu, if it does not,
@@ -220,7 +234,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_main_menu()
         return await self.async_step_provision()
 
-    async def async_step_main_menu(self, _: None = None) -> FlowResult:
+    async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
         """Show the main menu."""
         return self.async_show_menu(
             step_id="main_menu",
@@ -232,7 +246,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_identify(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle identify step."""
         # mypy is not aware that we can't get here without having these set already
         assert self._device is not None
@@ -247,7 +261,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_provision(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle provision step."""
         # mypy is not aware that we can't get here without having these set already
         assert self._device is not None
@@ -272,7 +286,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_do_provision(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Execute provisioning."""
 
         async def _do_provision() -> None:
@@ -326,38 +340,45 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not self._provision_task:
             self._provision_task = self.hass.async_create_task(
-                self._resume_flow_when_done(_do_provision())
-            )
-            return self.async_show_progress(
-                step_id="do_provision", progress_action="provisioning"
+                _do_provision(), eager_start=False
             )
 
-        await self._provision_task
+        if not self._provision_task.done():
+            return self.async_show_progress(
+                step_id="do_provision",
+                progress_action="provisioning",
+                progress_task=self._provision_task,
+            )
+
         self._provision_task = None
         return self.async_show_progress_done(next_step_id="provision_done")
 
     async def async_step_provision_done(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show the result of the provision step."""
         # mypy is not aware that we can't get here without having these set already
         assert self._provision_result is not None
 
         result = self._provision_result
+        if result["type"] == "abort" and result["reason"] in (
+            "provision_successful",
+            "provision_successful_url",
+        ):
+            # Delete ignored config entry, if it exists
+            address = self.context["unique_id"]
+            current_entries = self._async_current_entries(include_ignore=True)
+            for entry in current_entries:
+                if entry.unique_id == address:
+                    _LOGGER.debug("Removing ignored entry: %s", entry)
+                    await self.hass.config_entries.async_remove(entry.entry_id)
+                    break
         self._provision_result = None
         return result
 
-    async def _resume_flow_when_done(self, awaitable: Awaitable) -> None:
-        try:
-            await awaitable
-        finally:
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_configure(flow_id=self.flow_id)
-            )
-
     async def async_step_authorize(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle authorize step."""
         # mypy is not aware that we can't get here without having these set already
         assert self._device is not None
@@ -379,13 +400,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason=err.reason)
 
             self._authorize_task = self.hass.async_create_task(
-                self._resume_flow_when_done(authorized_event.wait())
-            )
-            return self.async_show_progress(
-                step_id="authorize", progress_action="authorize"
+                authorized_event.wait(), eager_start=False
             )
 
-        await self._authorize_task
+        if not self._authorize_task.done():
+            return self.async_show_progress(
+                step_id="authorize",
+                progress_action="authorize",
+                progress_task=self._authorize_task,
+            )
+
         self._authorize_task = None
         if self._unsub:
             self._unsub()
@@ -393,7 +417,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_progress_done(next_step_id="provision")
 
     @staticmethod
-    async def _try_call(func: Coroutine[Any, Any, _T]) -> _T:
+    async def _try_call[_T](func: Coroutine[Any, Any, _T]) -> _T:
         """Call the library and abort flow on common errors."""
         try:
             return await func

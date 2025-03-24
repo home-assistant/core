@@ -1,39 +1,39 @@
 """Support for showing the date and the time."""
+
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISPLAY_OPTIONS, EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import OPTION_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
 TIME_STR_FORMAT = "%H:%M"
 
-OPTION_TYPES = {
-    "time": "Time",
-    "date": "Date",
-    "date_time": "Date & Time",
-    "date_time_utc": "Date & Time (UTC)",
-    "date_time_iso": "Date & Time (ISO)",
-    "time_date": "Time & Date",
-    "beat": "Internet Time",
-    "time_utc": "Time (UTC)",
-}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_DISPLAY_OPTIONS, default=["time"]): vol.All(
             cv.ensure_list, [vol.In(OPTION_TYPES)]
@@ -51,27 +51,22 @@ async def async_setup_platform(
     """Set up the Time and Date sensor."""
     if hass.config.time_zone is None:
         _LOGGER.error("Timezone is not set in Home Assistant configuration")  # type: ignore[unreachable]
-        return False
-
-    if "beat" in config[CONF_DISPLAY_OPTIONS]:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_beat",
-            breaks_in_ha_version="2024.7.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_beat",
-            translation_placeholders={
-                "config_key": "beat",
-                "display_options": "display_options",
-                "integration": DOMAIN,
-            },
-        )
-        _LOGGER.warning("'beat': is deprecated and will be removed in version 2024.7")
+        return
 
     async_add_entities(
-        [TimeDateSensor(hass, variable) for variable in config[CONF_DISPLAY_OPTIONS]]
+        [TimeDateSensor(variable) for variable in config[CONF_DISPLAY_OPTIONS]]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Time & Date sensor."""
+
+    async_add_entities(
+        [TimeDateSensor(entry.options[CONF_DISPLAY_OPTIONS], entry.entry_id)]
     )
 
 
@@ -79,19 +74,18 @@ class TimeDateSensor(SensorEntity):
     """Implementation of a Time and Date sensor."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _state: str | None = None
+    unsub: CALLBACK_TYPE | None = None
 
-    def __init__(self, hass: HomeAssistant, option_type: str) -> None:
+    def __init__(self, option_type: str, entry_id: str | None = None) -> None:
         """Initialize the sensor."""
-        self._name = OPTION_TYPES[option_type]
+        self._attr_translation_key = option_type
         self.type = option_type
-        self._state: str | None = None
-        self.hass = hass
-        self.unsub: CALLBACK_TYPE | None = None
+        self.entity_id = ENTITY_ID_FORMAT.format(option_type)
+        self._attr_unique_id = option_type if entry_id else None
 
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
+        self._update_internal_state(dt_util.utcnow())
 
     @property
     def native_value(self) -> str | None:
@@ -106,6 +100,35 @@ class TimeDateSensor(SensorEntity):
         if "date" in self.type:
             return "mdi:calendar"
         return "mdi:clock"
+
+    @callback
+    def async_start_preview(
+        self,
+        preview_callback: Callable[[str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+
+        @callback
+        def point_in_time_listener(time_date: datetime | None) -> None:
+            """Update preview."""
+
+            now = dt_util.utcnow()
+            self._update_internal_state(now)
+            self.unsub = async_track_point_in_utc_time(
+                self.hass, point_in_time_listener, self.get_next_interval(now)
+            )
+            calculated_state = self._async_calculate_state()
+            preview_callback(calculated_state.state, calculated_state.attributes)
+
+        @callback
+        def async_stop_preview() -> None:
+            """Stop preview."""
+            if self.unsub:
+                self.unsub()
+                self.unsub = None
+
+        point_in_time_listener(None)
+        return async_stop_preview
 
     async def async_added_to_hass(self) -> None:
         """Set up first update."""
@@ -132,13 +155,8 @@ class TimeDateSensor(SensorEntity):
             tomorrow = dt_util.as_local(time_date) + timedelta(days=1)
             return dt_util.start_of_local_day(tomorrow)
 
-        if self.type == "beat":
-            # Add 1 hour because @0 beats is at 23:00:00 UTC.
-            timestamp = dt_util.as_timestamp(time_date + timedelta(hours=1))
-            interval = 86.4
-        else:
-            timestamp = dt_util.as_timestamp(time_date)
-            interval = 60
+        timestamp = dt_util.as_timestamp(time_date)
+        interval = 60
 
         delta = interval - (timestamp % interval)
         next_interval = time_date + timedelta(seconds=delta)
@@ -164,21 +182,6 @@ class TimeDateSensor(SensorEntity):
             self._state = f"{time}, {date}"
         elif self.type == "time_utc":
             self._state = time_utc
-        elif self.type == "beat":
-            # Calculate Swatch Internet Time.
-            time_bmt = time_date + timedelta(hours=1)
-            delta = timedelta(
-                hours=time_bmt.hour,
-                minutes=time_bmt.minute,
-                seconds=time_bmt.second,
-                microseconds=time_bmt.microsecond,
-            )
-
-            # Use integers to better handle rounding. For example,
-            # int(63763.2/86.4) = 737 but 637632//864 = 738.
-            beat = int(delta.total_seconds() * 10) // 864
-
-            self._state = f"@{beat:03d}"
         elif self.type == "date_time_iso":
             self._state = dt_util.parse_datetime(
                 f"{date} {time}", raise_on_error=True

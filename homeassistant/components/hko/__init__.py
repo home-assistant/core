@@ -1,4 +1,5 @@
 """The Hong Kong Observatory integration."""
+
 from __future__ import annotations
 
 from hko import LOCATIONS
@@ -24,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )[KEY_DISTRICT]
     websession = async_get_clientsession(hass)
 
-    coordinator = HKOUpdateCoordinator(hass, websession, district, location)
+    coordinator = HKOUpdateCoordinator(hass, entry, websession, district, location)
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 

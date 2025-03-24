@@ -1,4 +1,5 @@
 """The tests for the utility_meter sensor platform."""
+
 from datetime import timedelta
 
 from freezegun import freeze_time
@@ -21,10 +22,10 @@ from homeassistant.components.utility_meter.const import (
     HOURLY,
     QUARTER_HOURLY,
     SERVICE_CALIBRATE_METER,
+    SERVICE_RESET,
 )
 from homeassistant.components.utility_meter.sensor import (
     ATTR_LAST_RESET,
-    ATTR_LAST_VALID_STATE,
     ATTR_STATUS,
     COLLECTING,
     PAUSED,
@@ -38,11 +39,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfEnergy,
+    UnitOfVolume,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
@@ -52,14 +54,14 @@ from tests.common import (
 
 
 @pytest.fixture(autouse=True)
-def set_utc(hass: HomeAssistant):
+async def set_utc(hass: HomeAssistant):
     """Set timezone to UTC."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
 
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -84,7 +86,7 @@ def set_utc(hass: HomeAssistant):
                 "tariffs": ["onpeak", "midpeak", "offpeak"],
             },
         ),
-    ),
+    ],
 )
 async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> None:
     """Test utility sensor state."""
@@ -232,8 +234,108 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
 
 
 @pytest.mark.parametrize(
+    ("yaml_config", "config_entry_config"),
+    [
+        (
+            {
+                "utility_meter": {
+                    "energy_bill": {
+                        "source": "sensor.energy",
+                        "always_available": True,
+                    }
+                }
+            },
+            None,
+        ),
+        (
+            None,
+            {
+                "cycle": "none",
+                "delta_values": False,
+                "name": "Energy bill",
+                "net_consumption": False,
+                "offset": 0,
+                "periodically_resetting": True,
+                "source": "sensor.energy",
+                "tariffs": [],
+                "always_available": True,
+            },
+        ),
+    ],
+)
+async def test_state_always_available(
+    hass: HomeAssistant, yaml_config, config_entry_config
+) -> None:
+    """Test utility sensor state."""
+    if yaml_config:
+        assert await async_setup_component(hass, DOMAIN, yaml_config)
+        await hass.async_block_till_done()
+        entity_id = yaml_config[DOMAIN]["energy_bill"]["source"]
+    else:
+        config_entry = MockConfigEntry(
+            data={},
+            domain=DOMAIN,
+            options=config_entry_config,
+            title=config_entry_config["name"],
+        )
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        entity_id = config_entry_config["source"]
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(
+        entity_id, 2, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.state == "0"
+    assert state.attributes.get("status") == COLLECTING
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
+
+    now = dt_util.utcnow() + timedelta(seconds=10)
+    with freeze_time(now):
+        hass.states.async_set(
+            entity_id,
+            3,
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+            force_update=True,
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.state == "1"
+    assert state.attributes.get("status") == COLLECTING
+
+    # test unavailable state
+    hass.states.async_set(
+        entity_id,
+        "unavailable",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.state == "1"
+
+    # test unknown state
+    hass.states.async_set(
+        entity_id, None, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.state == "1"
+
+
+@pytest.mark.parametrize(
     "yaml_config",
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -245,16 +347,16 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
             },
             None,
         ),
-    ),
+    ],
 )
 async def test_not_unique_tariffs(hass: HomeAssistant, yaml_config) -> None:
-    """Test utility sensor state initializtion."""
+    """Test utility sensor state initialization."""
     assert not await async_setup_component(hass, DOMAIN, yaml_config)
 
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -279,10 +381,10 @@ async def test_not_unique_tariffs(hass: HomeAssistant, yaml_config) -> None:
                 "tariffs": ["onpeak", "midpeak", "offpeak"],
             },
         ),
-    ),
+    ],
 )
 async def test_init(hass: HomeAssistant, yaml_config, config_entry_config) -> None:
-    """Test utility sensor state initializtion."""
+    """Test utility sensor state initialization."""
     if yaml_config:
         assert await async_setup_component(hass, DOMAIN, yaml_config)
         await hass.async_block_till_done()
@@ -354,7 +456,7 @@ async def test_unique_id(
 
 @pytest.mark.parametrize(
     ("yaml_config", "entity_id", "name"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -391,10 +493,10 @@ async def test_unique_id(
             "sensor.energy_bill",
             "energy_bill",
         ),
-    ),
+    ],
 )
 async def test_entity_name(hass: HomeAssistant, yaml_config, entity_id, name) -> None:
-    """Test utility sensor state initializtion."""
+    """Test utility sensor state initialization."""
     assert await async_setup_component(hass, DOMAIN, yaml_config)
     await hass.async_block_till_done()
 
@@ -409,7 +511,7 @@ async def test_entity_name(hass: HomeAssistant, yaml_config, entity_id, name) ->
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_configs"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -449,10 +551,68 @@ async def test_entity_name(hass: HomeAssistant, yaml_config, entity_id, name) ->
                 },
             ],
         ),
+    ],
+)
+@pytest.mark.parametrize(
+    (
+        "energy_sensor_attributes",
+        "gas_sensor_attributes",
+        "energy_meter_attributes",
+        "gas_meter_attributes",
     ),
+    [
+        (
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+            {ATTR_UNIT_OF_MEASUREMENT: "some_archaic_unit"},
+            {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+            },
+            {
+                ATTR_DEVICE_CLASS: None,
+                ATTR_UNIT_OF_MEASUREMENT: "some_archaic_unit",
+            },
+        ),
+        (
+            {},
+            {},
+            {
+                ATTR_DEVICE_CLASS: None,
+                ATTR_UNIT_OF_MEASUREMENT: None,
+            },
+            {
+                ATTR_DEVICE_CLASS: None,
+                ATTR_UNIT_OF_MEASUREMENT: None,
+            },
+        ),
+        (
+            {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.GAS,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+            },
+            {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.WATER,
+                ATTR_UNIT_OF_MEASUREMENT: "some_archaic_unit",
+            },
+            {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.GAS,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+            },
+            {
+                ATTR_DEVICE_CLASS: SensorDeviceClass.WATER,
+                ATTR_UNIT_OF_MEASUREMENT: "some_archaic_unit",
+            },
+        ),
+    ],
 )
 async def test_device_class(
-    hass: HomeAssistant, yaml_config, config_entry_configs
+    hass: HomeAssistant,
+    yaml_config,
+    config_entry_configs,
+    energy_sensor_attributes,
+    gas_sensor_attributes,
+    energy_meter_attributes,
+    gas_meter_attributes,
 ) -> None:
     """Test utility device_class."""
     if yaml_config:
@@ -477,38 +637,40 @@ async def test_device_class(
 
     await hass.async_block_till_done()
 
-    hass.states.async_set(
-        entity_id_energy, 2, {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR}
-    )
-    hass.states.async_set(
-        entity_id_gas, 2, {ATTR_UNIT_OF_MEASUREMENT: "some_archaic_unit"}
-    )
+    hass.states.async_set(entity_id_energy, 2, energy_sensor_attributes)
+    hass.states.async_set(entity_id_gas, 2, gas_sensor_attributes)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_meter")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
+    for attr, value in energy_meter_attributes.items():
+        assert state.attributes.get(attr) == value
 
     state = hass.states.get("sensor.gas_meter")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL_INCREASING
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "some_archaic_unit"
+    for attr, value in gas_meter_attributes.items():
+        assert state.attributes.get(attr) == value
 
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
                     "energy_bill": {
                         "source": "sensor.energy",
-                        "tariffs": ["onpeak", "midpeak", "offpeak", "superpeak"],
+                        "tariffs": [
+                            "tariff0",
+                            "tariff1",
+                            "tariff2",
+                            "tariff3",
+                            "tariff4",
+                        ],
                     }
                 }
             },
@@ -524,97 +686,78 @@ async def test_device_class(
                 "offset": 0,
                 "periodically_resetting": True,
                 "source": "sensor.energy",
-                "tariffs": ["onpeak", "midpeak", "offpeak", "superpeak"],
+                "tariffs": [
+                    "tariff0",
+                    "tariff1",
+                    "tariff2",
+                    "tariff3",
+                    "tariff4",
+                ],
             },
         ),
-    ),
+    ],
 )
 async def test_restore_state(
     hass: HomeAssistant, yaml_config, config_entry_config
 ) -> None:
     """Test utility sensor restore state."""
     # Home assistant is not runnit yet
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
-    last_reset = "2020-12-21T00:00:00.013073+00:00"
+    last_reset_1 = "2020-12-21T00:00:00.013073+00:00"
+    last_reset_2 = "2020-12-22T00:00:00.013073+00:00"
 
     mock_restore_cache_with_extra_data(
         hass,
         [
+            # sensor.energy_bill_tariff0 is restored as expected, including device
+            # class
             (
                 State(
-                    "sensor.energy_bill_onpeak",
-                    "3",
+                    "sensor.energy_bill_tariff0",
+                    "0.1",
                     attributes={
                         ATTR_STATUS: PAUSED,
-                        ATTR_LAST_RESET: last_reset,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+                        ATTR_LAST_RESET: last_reset_1,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfVolume.CUBIC_METERS,
                     },
                 ),
                 {
                     "native_value": {
                         "__type": "<class 'decimal.Decimal'>",
-                        "decimal_str": "3",
+                        "decimal_str": "0.2",
+                    },
+                    "native_unit_of_measurement": "gal",
+                    "last_reset": last_reset_2,
+                    "last_period": "1.3",
+                    "last_valid_state": None,
+                    "status": "collecting",
+                    "input_device_class": "water",
+                },
+            ),
+            # sensor.energy_bill_tariff1 is restored as expected, except device
+            # class
+            (
+                State(
+                    "sensor.energy_bill_tariff1",
+                    "1.1",
+                    attributes={
+                        ATTR_STATUS: PAUSED,
+                        ATTR_LAST_RESET: last_reset_1,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.MEGA_WATT_HOUR,
+                    },
+                ),
+                {
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "decimal_str": "1.2",
                     },
                     "native_unit_of_measurement": "kWh",
-                    "last_reset": last_reset,
-                    "last_period": "7",
-                    "last_valid_state": "None",
+                    "last_reset": last_reset_2,
+                    "last_period": "1.3",
+                    "last_valid_state": None,
                     "status": "paused",
                 },
-            ),
-            (
-                State(
-                    "sensor.energy_bill_midpeak",
-                    "5",
-                    attributes={
-                        ATTR_STATUS: PAUSED,
-                        ATTR_LAST_RESET: last_reset,
-                        ATTR_LAST_VALID_STATE: None,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
-                    },
-                ),
-                {
-                    "native_value": {
-                        "__type": "<class 'decimal.Decimal'>",
-                        "decimal_str": "3",
-                    },
-                    "native_unit_of_measurement": "kWh",
-                    "last_valid_state": "None",
-                },
-            ),
-            (
-                State(
-                    "sensor.energy_bill_offpeak",
-                    "6",
-                    attributes={
-                        ATTR_STATUS: COLLECTING,
-                        ATTR_LAST_RESET: last_reset,
-                        ATTR_LAST_VALID_STATE: None,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
-                    },
-                ),
-                {
-                    "native_value": {
-                        "__type": "<class 'decimal.Decimal'>",
-                        "decimal_str": "3f",
-                    },
-                    "native_unit_of_measurement": "kWh",
-                    "last_valid_state": "None",
-                },
-            ),
-            (
-                State(
-                    "sensor.energy_bill_superpeak",
-                    "error",
-                    attributes={
-                        ATTR_STATUS: COLLECTING,
-                        ATTR_LAST_RESET: last_reset,
-                        ATTR_LAST_VALID_STATE: None,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
-                    },
-                ),
-                {},
             ),
         ],
     )
@@ -634,46 +777,288 @@ async def test_restore_state(
         await hass.async_block_till_done()
 
     # restore from cache
-    state = hass.states.get("sensor.energy_bill_onpeak")
-    assert state.state == "3"
-    assert state.attributes.get("status") == PAUSED
-    assert state.attributes.get("last_reset") == last_reset
-    assert state.attributes.get("last_valid_state") == "None"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
-
-    state = hass.states.get("sensor.energy_bill_midpeak")
-    assert state.state == "5"
-    assert state.attributes.get("last_valid_state") == "None"
-
-    state = hass.states.get("sensor.energy_bill_offpeak")
-    assert state.state == "6"
+    state = hass.states.get("sensor.energy_bill_tariff0")
+    assert state.state == "0.2"
     assert state.attributes.get("status") == COLLECTING
-    assert state.attributes.get("last_reset") == last_reset
+    assert state.attributes.get("last_reset") == last_reset_2
+    assert state.attributes.get("last_valid_state") == "None"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfVolume.GALLONS
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
+
+    state = hass.states.get("sensor.energy_bill_tariff1")
+    assert state.state == "1.2"
+    assert state.attributes.get("status") == PAUSED
+    assert state.attributes.get("last_reset") == last_reset_2
     assert state.attributes.get("last_valid_state") == "None"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
-
-    state = hass.states.get("sensor.energy_bill_superpeak")
-    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
 
     # utility_meter is loaded, now set sensors according to utility_meter:
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-
     await hass.async_block_till_done()
 
     state = hass.states.get("select.energy_bill")
-    assert state.state == "onpeak"
+    assert state.state == "tariff0"
 
-    state = hass.states.get("sensor.energy_bill_onpeak")
+    state = hass.states.get("sensor.energy_bill_tariff0")
     assert state.attributes.get("status") == COLLECTING
 
-    state = hass.states.get("sensor.energy_bill_offpeak")
-    assert state.attributes.get("status") == PAUSED
+    for entity_id in ("sensor.energy_bill_tariff1",):
+        state = hass.states.get(entity_id)
+        assert state.attributes.get("status") == PAUSED
 
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
+        (
+            {
+                "utility_meter": {
+                    "energy_bill": {
+                        "source": "sensor.energy",
+                    }
+                }
+            },
+            None,
+        ),
+        (
+            None,
+            {
+                "cycle": "none",
+                "delta_values": False,
+                "name": "Energy bill",
+                "net_consumption": False,
+                "offset": 0,
+                "periodically_resetting": True,
+                "source": "sensor.energy",
+                "tariffs": [],
+            },
+        ),
+    ],
+)
+async def test_service_reset_no_tariffs(
+    hass: HomeAssistant, yaml_config, config_entry_config
+) -> None:
+    """Test utility sensor service reset for sensor with no tariffs."""
+    # Home assistant is not runnit yet
+    hass.state = CoreState.not_running
+    last_reset = "2023-10-01T00:00:00+00:00"
+
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    "sensor.energy_bill",
+                    "3",
+                    attributes={
+                        ATTR_LAST_RESET: last_reset,
+                    },
+                ),
+                {
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "decimal_str": "3",
+                    },
+                    "native_unit_of_measurement": "kWh",
+                    "last_reset": last_reset,
+                    "last_period": "0",
+                    "last_valid_state": None,
+                    "status": "collecting",
+                    "input_device_class": "energy",
+                },
+            ),
+        ],
+    )
+
+    if yaml_config:
+        assert await async_setup_component(hass, DOMAIN, yaml_config)
+        await hass.async_block_till_done()
+    else:
+        config_entry = MockConfigEntry(
+            data={},
+            domain=DOMAIN,
+            options=config_entry_config,
+            title=config_entry_config["name"],
+        )
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state
+    assert state.state == "3"
+    assert state.attributes.get("last_reset") == last_reset
+    assert state.attributes.get("last_period") == "0"
+
+    now = dt_util.utcnow()
+    with freeze_time(now):
+        await hass.services.async_call(
+            domain=DOMAIN,
+            service=SERVICE_RESET,
+            service_data={},
+            target={"entity_id": "sensor.energy_bill"},
+            blocking=True,
+        )
+
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state
+    assert state.state == "0"
+    assert state.attributes.get("last_reset") == now.isoformat()
+    assert state.attributes.get("last_period") == "3"
+
+
+@pytest.mark.parametrize(
+    ("yaml_config", "config_entry_configs"),
+    [
+        (
+            {
+                "utility_meter": {
+                    "energy_bill": {
+                        "source": "sensor.energy",
+                    },
+                    "water_bill": {
+                        "source": "sensor.water",
+                    },
+                },
+            },
+            None,
+        ),
+        (
+            None,
+            [
+                {
+                    "cycle": "none",
+                    "delta_values": False,
+                    "name": "Energy bill",
+                    "net_consumption": False,
+                    "offset": 0,
+                    "periodically_resetting": True,
+                    "source": "sensor.energy",
+                    "tariffs": [],
+                },
+                {
+                    "cycle": "none",
+                    "delta_values": False,
+                    "name": "Water bill",
+                    "net_consumption": False,
+                    "offset": 0,
+                    "periodically_resetting": True,
+                    "source": "sensor.water",
+                    "tariffs": [],
+                },
+            ],
+        ),
+    ],
+)
+async def test_service_reset_no_tariffs_correct_with_multi(
+    hass: HomeAssistant, yaml_config, config_entry_configs
+) -> None:
+    """Test complex utility sensor service reset for multiple sensors with no tarrifs.
+
+    See GitHub issue #114864: Service "utility_meter.reset" affects all meters.
+    """
+
+    # Home assistant is not runnit yet
+    hass.state = CoreState.not_running
+    last_reset = "2023-10-01T00:00:00+00:00"
+
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    "sensor.energy_bill",
+                    "3",
+                ),
+                {
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "decimal_str": "3",
+                    },
+                    "native_unit_of_measurement": "kWh",
+                    "last_reset": last_reset,
+                    "last_period": "0",
+                    "status": "collecting",
+                },
+            ),
+            (
+                State(
+                    "sensor.water_bill",
+                    "6",
+                ),
+                {
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "decimal_str": "6",
+                    },
+                    "native_unit_of_measurement": "kWh",
+                    "last_reset": last_reset,
+                    "last_period": "0",
+                    "status": "collecting",
+                },
+            ),
+        ],
+    )
+
+    if yaml_config:
+        assert await async_setup_component(hass, DOMAIN, yaml_config)
+        await hass.async_block_till_done()
+    else:
+        for entry in config_entry_configs:
+            config_entry = MockConfigEntry(
+                data={},
+                domain=DOMAIN,
+                options=entry,
+                title=entry["name"],
+            )
+            config_entry.add_to_hass(hass)
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state
+    assert state.state == "3"
+    assert state.attributes.get("last_reset") == last_reset
+    assert state.attributes.get("last_period") == "0"
+
+    state = hass.states.get("sensor.water_bill")
+    assert state
+    assert state.state == "6"
+    assert state.attributes.get("last_reset") == last_reset
+    assert state.attributes.get("last_period") == "0"
+
+    now = dt_util.utcnow()
+    with freeze_time(now):
+        await hass.services.async_call(
+            domain=DOMAIN,
+            service=SERVICE_RESET,
+            service_data={},
+            target={"entity_id": "sensor.energy_bill"},
+            blocking=True,
+        )
+
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state
+    assert state.state == "0"
+    assert state.attributes.get("last_reset") == now.isoformat()
+    assert state.attributes.get("last_period") == "3"
+
+    state = hass.states.get("sensor.water_bill")
+    assert state
+    assert state.state == "6"
+    assert state.attributes.get("last_reset") == last_reset
+    assert state.attributes.get("last_period") == "0"
+
+
+@pytest.mark.parametrize(
+    ("yaml_config", "config_entry_config"),
+    [
         (
             {
                 "utility_meter": {
@@ -698,7 +1083,7 @@ async def test_restore_state(
                 "tariffs": [],
             },
         ),
-    ),
+    ],
 )
 async def test_net_consumption(
     hass: HomeAssistant, yaml_config, config_entry_config
@@ -745,7 +1130,7 @@ async def test_net_consumption(
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -769,7 +1154,7 @@ async def test_net_consumption(
                 "tariffs": [],
             },
         ),
-    ),
+    ],
 )
 async def test_non_net_consumption(
     hass: HomeAssistant,
@@ -830,7 +1215,7 @@ async def test_non_net_consumption(
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -855,7 +1240,7 @@ async def test_non_net_consumption(
                 "tariffs": [],
             },
         ),
-    ),
+    ],
 )
 async def test_delta_values(
     hass: HomeAssistant,
@@ -865,7 +1250,7 @@ async def test_delta_values(
 ) -> None:
     """Test utility meter "delta_values" mode."""
     # Home assistant is not runnit yet
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     now = dt_util.utcnow()
     with freeze_time(now):
@@ -894,7 +1279,7 @@ async def test_delta_values(
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill")
-    assert state.attributes.get("status") == PAUSED
+    assert state.attributes.get("status") == COLLECTING
 
     now += timedelta(seconds=30)
     with freeze_time(now):
@@ -937,12 +1322,12 @@ async def test_delta_values(
     state = hass.states.get("sensor.energy_bill")
     assert state is not None
 
-    assert state.state == "9"
+    assert state.state == "10"
 
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -967,14 +1352,14 @@ async def test_delta_values(
                 "tariffs": [],
             },
         ),
-    ),
+    ],
 )
 async def test_non_periodically_resetting(
     hass: HomeAssistant, yaml_config, config_entry_config
 ) -> None:
     """Test utility meter "non periodically resetting" mode."""
     # Home assistant is not runnit yet
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     now = dt_util.utcnow()
     with freeze_time(now):
@@ -1004,7 +1389,7 @@ async def test_non_periodically_resetting(
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_bill")
-    assert state.attributes.get("status") == PAUSED
+    assert state.attributes.get("status") == COLLECTING
 
     now += timedelta(seconds=30)
     with freeze_time(now):
@@ -1074,7 +1459,7 @@ async def test_non_periodically_resetting(
 
 @pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
-    (
+    [
         (
             {
                 "utility_meter": {
@@ -1100,7 +1485,7 @@ async def test_non_periodically_resetting(
                 "tariffs": ["low", "high"],
             },
         ),
-    ),
+    ],
 )
 async def test_non_periodically_resetting_meter_with_tariffs(
     hass: HomeAssistant, yaml_config, config_entry_config
@@ -1359,6 +1744,43 @@ async def test_self_reset_hourly_dst(hass: HomeAssistant) -> None:
     )
 
 
+async def test_self_reset_hourly_dst2(hass: HomeAssistant) -> None:
+    """Test weekly reset of meter in DST change conditions."""
+
+    hass.config.time_zone = "Europe/Berlin"
+    dt_util.set_default_time_zone(dt_util.get_time_zone(hass.config.time_zone))
+    await _test_self_reset(
+        hass, gen_config("daily"), "2024-10-26T23:59:00.000000+02:00"
+    )
+
+    state = hass.states.get("sensor.energy_bill")
+    last_reset = dt_util.parse_datetime("2024-10-27T00:00:00.000000+02:00")
+    assert (
+        dt_util.as_local(dt_util.parse_datetime(state.attributes.get("last_reset")))
+        == last_reset
+    )
+
+    next_reset = dt_util.parse_datetime("2024-10-28T00:00:00.000000+01:00").isoformat()
+    assert state.attributes.get("next_reset") == next_reset
+
+
+async def test_tz_changes(hass: HomeAssistant) -> None:
+    """Test that a timezone change changes the scheduler."""
+
+    await hass.config.async_update(time_zone="Europe/Prague")
+
+    await _test_self_reset(
+        hass, gen_config("daily"), "2024-10-26T23:59:00.000000+02:00"
+    )
+    state = hass.states.get("sensor.energy_bill")
+    assert state.attributes.get("next_reset") == "2024-10-28T00:00:00+01:00"
+
+    await hass.config.async_update(time_zone="Pacific/Fiji")
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state.attributes.get("next_reset") != "2024-10-28T00:00:00+01:00"
+
+
 async def test_self_reset_daily(hass: HomeAssistant) -> None:
     """Test daily reset of meter."""
     await _test_self_reset(
@@ -1460,6 +1882,7 @@ def test_calculate_adjustment_invalid_new_state(
         net_consumption=False,
         parent_meter="sensor.test",
         periodically_resetting=True,
+        sensor_always_available=False,
         unique_id="test_utility_meter",
         source_entity="sensor.test",
         tariff=None,
@@ -1504,11 +1927,12 @@ async def test_unit_of_measurement_missing_invalid_new_state(
     )
 
 
-async def test_device_id(hass: HomeAssistant) -> None:
+async def test_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test for source entity device for Utility Meter."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     source_config_entry = MockConfigEntry()
     source_config_entry.add_to_hass(hass)
     source_device_entry = device_registry.async_get_or_create(

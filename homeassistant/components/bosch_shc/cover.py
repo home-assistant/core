@@ -1,7 +1,8 @@
 """Platform for cover integration."""
+
 from typing import Any
 
-from boschshcpy import SHCSession, SHCShutterControl
+from boschshcpy import SHCShutterControl
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -9,34 +10,29 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_SESSION, DOMAIN
+from . import BoschConfigEntry
 from .entity import SHCEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: BoschConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SHC cover platform."""
+    session = config_entry.runtime_data
 
-    entities = []
-    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
-
-    for cover in session.device_helper.shutter_controls:
-        entities.append(
-            ShutterControlCover(
-                device=cover,
-                parent_id=session.information.unique_id,
-                entry_id=config_entry.entry_id,
-            )
+    async_add_entities(
+        ShutterControlCover(
+            device=cover,
+            parent_id=session.information.unique_id,
+            entry_id=config_entry.entry_id,
         )
-
-    async_add_entities(entities)
+        for cover in session.device_helper.shutter_controls
+    )
 
 
 class ShutterControlCover(SHCEntity, CoverEntity):

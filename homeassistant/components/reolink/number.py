@@ -1,27 +1,33 @@
 """Component providing support for Reolink number entities."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from reolink_aio.api import Host
-from reolink_aio.exceptions import InvalidParameterError, ReolinkError
+from reolink_aio.api import Chime, Host
 
 from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ReolinkData
-from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
+from .entity import (
+    ReolinkChannelCoordinatorEntity,
+    ReolinkChannelEntityDescription,
+    ReolinkChimeCoordinatorEntity,
+    ReolinkChimeEntityDescription,
+    ReolinkHostCoordinatorEntity,
+    ReolinkHostEntityDescription,
+)
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -38,12 +44,35 @@ class ReolinkNumberEntityDescription(
     value: Callable[[Host, int], float | None]
 
 
+@dataclass(frozen=True, kw_only=True)
+class ReolinkHostNumberEntityDescription(
+    NumberEntityDescription,
+    ReolinkHostEntityDescription,
+):
+    """A class that describes number entities for the host."""
+
+    method: Callable[[Host, float], Any]
+    mode: NumberMode = NumberMode.AUTO
+    value: Callable[[Host], float | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class ReolinkChimeNumberEntityDescription(
+    NumberEntityDescription,
+    ReolinkChimeEntityDescription,
+):
+    """A class that describes number entities for a chime."""
+
+    method: Callable[[Chime, float], Any]
+    mode: NumberMode = NumberMode.AUTO
+    value: Callable[[Chime], float | None]
+
+
 NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="zoom",
         cmd_key="GetZoomFocus",
         translation_key="zoom",
-        icon="mdi:magnify",
         mode=NumberMode.SLIDER,
         native_step=1,
         get_min_value=lambda api, ch: api.zoom_range(ch)["zoom"]["pos"]["min"],
@@ -56,7 +85,6 @@ NUMBER_ENTITIES = (
         key="focus",
         cmd_key="GetZoomFocus",
         translation_key="focus",
-        icon="mdi:focus-field",
         mode=NumberMode.SLIDER,
         native_step=1,
         get_min_value=lambda api, ch: api.zoom_range(ch)["focus"]["pos"]["min"],
@@ -72,7 +100,6 @@ NUMBER_ENTITIES = (
         key="floodlight_brightness",
         cmd_key="GetWhiteLed",
         translation_key="floodlight_brightness",
-        icon="mdi:spotlight-beam",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=1,
@@ -85,7 +112,6 @@ NUMBER_ENTITIES = (
         key="volume",
         cmd_key="GetAudioCfg",
         translation_key="volume",
-        icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -98,7 +124,6 @@ NUMBER_ENTITIES = (
         key="guard_return_time",
         cmd_key="GetPtzGuard",
         translation_key="guard_return_time",
-        icon="mdi:crosshairs-gps",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -112,7 +137,6 @@ NUMBER_ENTITIES = (
         key="motion_sensitivity",
         cmd_key="GetMdAlarm",
         translation_key="motion_sensitivity",
-        icon="mdi:motion-sensor",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=1,
@@ -122,10 +146,21 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_md_sensitivity(ch, int(value)),
     ),
     ReolinkNumberEntityDescription(
+        key="pir_sensitivity",
+        cmd_key="GetPirInfo",
+        translation_key="pir_sensitivity",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=1,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "PIR"),
+        value=lambda api, ch: api.pir_sensitivity(ch),
+        method=lambda api, ch, value: api.set_pir(ch, sensitivity=int(value)),
+    ),
+    ReolinkNumberEntityDescription(
         key="ai_face_sensititvity",
         cmd_key="GetAiAlarm",
-        translation_key="ai_face_sensititvity",
-        icon="mdi:face-recognition",
+        translation_key="ai_face_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -139,8 +174,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_person_sensititvity",
         cmd_key="GetAiAlarm",
-        translation_key="ai_person_sensititvity",
-        icon="mdi:account",
+        translation_key="ai_person_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -154,8 +188,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_vehicle_sensititvity",
         cmd_key="GetAiAlarm",
-        translation_key="ai_vehicle_sensititvity",
-        icon="mdi:car",
+        translation_key="ai_vehicle_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -167,10 +200,23 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "vehicle"),
     ),
     ReolinkNumberEntityDescription(
+        key="ai_package_sensititvity",
+        cmd_key="GetAiAlarm",
+        translation_key="ai_package_sensitivity",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_sensitivity") and api.ai_supported(ch, "package")
+        ),
+        value=lambda api, ch: api.ai_sensitivity(ch, "package"),
+        method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "package"),
+    ),
+    ReolinkNumberEntityDescription(
         key="ai_pet_sensititvity",
         cmd_key="GetAiAlarm",
-        translation_key="ai_pet_sensititvity",
-        icon="mdi:dog-side",
+        translation_key="ai_pet_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -186,8 +232,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_pet_sensititvity",
         cmd_key="GetAiAlarm",
-        translation_key="ai_animal_sensititvity",
-        icon="mdi:paw",
+        translation_key="ai_animal_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -202,7 +247,6 @@ NUMBER_ENTITIES = (
         key="ai_face_delay",
         cmd_key="GetAiAlarm",
         translation_key="ai_face_delay",
-        icon="mdi:face-recognition",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_step=1,
@@ -219,7 +263,6 @@ NUMBER_ENTITIES = (
         key="ai_person_delay",
         cmd_key="GetAiAlarm",
         translation_key="ai_person_delay",
-        icon="mdi:account",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_step=1,
@@ -236,7 +279,6 @@ NUMBER_ENTITIES = (
         key="ai_vehicle_delay",
         cmd_key="GetAiAlarm",
         translation_key="ai_vehicle_delay",
-        icon="mdi:car",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_step=1,
@@ -250,10 +292,25 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_ai_delay(ch, int(value), "vehicle"),
     ),
     ReolinkNumberEntityDescription(
+        key="ai_package_delay",
+        cmd_key="GetAiAlarm",
+        translation_key="ai_package_delay",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=0,
+        native_max_value=8,
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_delay") and api.ai_supported(ch, "package")
+        ),
+        value=lambda api, ch: api.ai_delay(ch, "package"),
+        method=lambda api, ch, value: api.set_ai_delay(ch, int(value), "package"),
+    ),
+    ReolinkNumberEntityDescription(
         key="ai_pet_delay",
         cmd_key="GetAiAlarm",
         translation_key="ai_pet_delay",
-        icon="mdi:dog-side",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_step=1,
@@ -272,7 +329,6 @@ NUMBER_ENTITIES = (
         key="ai_pet_delay",
         cmd_key="GetAiAlarm",
         translation_key="ai_animal_delay",
-        icon="mdi:paw",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_step=1,
@@ -289,7 +345,6 @@ NUMBER_ENTITIES = (
         key="auto_quick_reply_time",
         cmd_key="GetAutoReply",
         translation_key="auto_quick_reply_time",
-        icon="mdi:message-reply-text-outline",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -303,7 +358,6 @@ NUMBER_ENTITIES = (
         key="auto_track_limit_left",
         cmd_key="GetPtzTraceSection",
         translation_key="auto_track_limit_left",
-        icon="mdi:angle-acute",
         mode=NumberMode.SLIDER,
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -317,7 +371,6 @@ NUMBER_ENTITIES = (
         key="auto_track_limit_right",
         cmd_key="GetPtzTraceSection",
         translation_key="auto_track_limit_right",
-        icon="mdi:angle-acute",
         mode=NumberMode.SLIDER,
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -331,7 +384,6 @@ NUMBER_ENTITIES = (
         key="auto_track_disappear_time",
         cmd_key="GetAiCfg",
         translation_key="auto_track_disappear_time",
-        icon="mdi:target-account",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -347,7 +399,6 @@ NUMBER_ENTITIES = (
         key="auto_track_stop_time",
         cmd_key="GetAiCfg",
         translation_key="auto_track_stop_time",
-        icon="mdi:target-account",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -361,7 +412,6 @@ NUMBER_ENTITIES = (
         key="day_night_switch_threshold",
         cmd_key="GetIsp",
         translation_key="day_night_switch_threshold",
-        icon="mdi:theme-light-dark",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_step=1,
@@ -374,8 +424,8 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_brightness",
         cmd_key="GetImage",
+        cmd_id=26,
         translation_key="image_brightness",
-        icon="mdi:image-edit",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_step=1,
@@ -388,8 +438,8 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_contrast",
         cmd_key="GetImage",
+        cmd_id=26,
         translation_key="image_contrast",
-        icon="mdi:image-edit",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_step=1,
@@ -402,8 +452,8 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_saturation",
         cmd_key="GetImage",
+        cmd_id=26,
         translation_key="image_saturation",
-        icon="mdi:image-edit",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_step=1,
@@ -416,8 +466,8 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_sharpness",
         cmd_key="GetImage",
+        cmd_id=26,
         translation_key="image_sharpness",
-        icon="mdi:image-edit",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_step=1,
@@ -430,8 +480,8 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_hue",
         cmd_key="GetImage",
+        cmd_id=26,
         translation_key="image_hue",
-        icon="mdi:image-edit",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_step=1,
@@ -443,21 +493,73 @@ NUMBER_ENTITIES = (
     ),
 )
 
+HOST_NUMBER_ENTITIES = (
+    ReolinkHostNumberEntityDescription(
+        key="alarm_volume",
+        cmd_key="GetDeviceAudioCfg",
+        translation_key="alarm_volume",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api: api.supported(None, "hub_audio"),
+        value=lambda api: api.alarm_volume,
+        method=lambda api, value: api.set_hub_audio(alarm_volume=int(value)),
+    ),
+    ReolinkHostNumberEntityDescription(
+        key="message_volume",
+        cmd_key="GetDeviceAudioCfg",
+        translation_key="message_volume",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api: api.supported(None, "hub_audio"),
+        value=lambda api: api.message_volume,
+        method=lambda api, value: api.set_hub_audio(message_volume=int(value)),
+    ),
+)
+
+CHIME_NUMBER_ENTITIES = (
+    ReolinkChimeNumberEntityDescription(
+        key="volume",
+        cmd_key="DingDongOpt",
+        translation_key="volume",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=4,
+        value=lambda chime: chime.volume,
+        method=lambda chime, value: chime.set_option(volume=int(value)),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ReolinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink number entities."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
-    async_add_entities(
+    entities: list[NumberEntity] = [
         ReolinkNumberEntity(reolink_data, channel, entity_description)
         for entity_description in NUMBER_ENTITIES
         for channel in reolink_data.host.api.channels
         if entity_description.supported(reolink_data.host.api, channel)
+    ]
+    entities.extend(
+        ReolinkHostNumberEntity(reolink_data, entity_description)
+        for entity_description in HOST_NUMBER_ENTITIES
+        if entity_description.supported(reolink_data.host.api)
     )
+    entities.extend(
+        ReolinkChimeNumberEntity(reolink_data, chime, entity_description)
+        for entity_description in CHIME_NUMBER_ENTITIES
+        for chime in reolink_data.host.api.chime_list
+    )
+    async_add_entities(entities)
 
 
 class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
@@ -490,12 +592,65 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
         """State of the number entity."""
         return self.entity_description.value(self._host.api, self._channel)
 
+    @raise_translated_error
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        try:
-            await self.entity_description.method(self._host.api, self._channel, value)
-        except InvalidParameterError as err:
-            raise ServiceValidationError(err) from err
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._host.api, self._channel, value)
+        self.async_write_ha_state()
+
+
+class ReolinkHostNumberEntity(ReolinkHostCoordinatorEntity, NumberEntity):
+    """Base number entity class for Reolink Host."""
+
+    entity_description: ReolinkHostNumberEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        entity_description: ReolinkHostNumberEntityDescription,
+    ) -> None:
+        """Initialize Reolink number entity."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data)
+
+        self._attr_mode = entity_description.mode
+
+    @property
+    def native_value(self) -> float | None:
+        """State of the number entity."""
+        return self.entity_description.value(self._host.api)
+
+    @raise_translated_error
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        await self.entity_description.method(self._host.api, value)
+        self.async_write_ha_state()
+
+
+class ReolinkChimeNumberEntity(ReolinkChimeCoordinatorEntity, NumberEntity):
+    """Base number entity class for Reolink IP cameras."""
+
+    entity_description: ReolinkChimeNumberEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        chime: Chime,
+        entity_description: ReolinkChimeNumberEntityDescription,
+    ) -> None:
+        """Initialize Reolink chime number entity."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data, chime)
+
+        self._attr_mode = entity_description.mode
+
+    @property
+    def native_value(self) -> float | None:
+        """State of the number entity."""
+        return self.entity_description.value(self._chime)
+
+    @raise_translated_error
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        await self.entity_description.method(self._chime, value)
         self.async_write_ha_state()

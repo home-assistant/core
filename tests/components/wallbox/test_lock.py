@@ -1,5 +1,4 @@
 """Test Wallbox Lock component."""
-import json
 
 import pytest
 import requests_mock
@@ -37,7 +36,7 @@ async def test_wallbox_lock_class(hass: HomeAssistant, entry: MockConfigEntry) -
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CHARGER_LOCKED_UNLOCKED_KEY: False})),
+            json={CHARGER_LOCKED_UNLOCKED_KEY: False},
             status_code=200,
         )
 
@@ -59,8 +58,6 @@ async def test_wallbox_lock_class(hass: HomeAssistant, entry: MockConfigEntry) -
             blocking=True,
         )
 
-    await hass.config_entries.async_unload(entry.entry_id)
-
 
 async def test_wallbox_lock_class_connection_error(
     hass: HomeAssistant, entry: MockConfigEntry
@@ -77,7 +74,7 @@ async def test_wallbox_lock_class_connection_error(
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CHARGER_LOCKED_UNLOCKED_KEY: False})),
+            json={CHARGER_LOCKED_UNLOCKED_KEY: False},
             status_code=404,
         )
 
@@ -100,8 +97,6 @@ async def test_wallbox_lock_class_connection_error(
                 blocking=True,
             )
 
-    await hass.config_entries.async_unload(entry.entry_id)
-
 
 async def test_wallbox_lock_class_authentication_error(
     hass: HomeAssistant, entry: MockConfigEntry
@@ -114,8 +109,6 @@ async def test_wallbox_lock_class_authentication_error(
 
     assert state is None
 
-    await hass.config_entries.async_unload(entry.entry_id)
-
 
 async def test_wallbox_lock_class_platform_not_ready(
     hass: HomeAssistant, entry: MockConfigEntry
@@ -127,5 +120,3 @@ async def test_wallbox_lock_class_platform_not_ready(
     state = hass.states.get(MOCK_LOCK_ENTITY_ID)
 
     assert state is None
-
-    await hass.config_entries.async_unload(entry.entry_id)

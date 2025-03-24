@@ -1,4 +1,5 @@
 """Support for Freebox Delta, Revolution and Mini 4K."""
+
 from __future__ import annotations
 
 import logging
@@ -10,7 +11,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .router import FreeboxRouter
@@ -28,7 +29,9 @@ SWITCH_DESCRIPTIONS = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switch."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
@@ -51,7 +54,7 @@ class FreeboxSwitch(SwitchEntity):
         self._attr_device_info = router.device_info
         self._attr_unique_id = f"{router.mac} {entity_description.name}"
 
-    async def _async_set_state(self, enabled: bool):
+    async def _async_set_state(self, enabled: bool) -> None:
         """Turn the switch on or off."""
         try:
             await self._router.wifi.set_global_config({"enabled": enabled})
@@ -71,5 +74,5 @@ class FreeboxSwitch(SwitchEntity):
 
     async def async_update(self) -> None:
         """Get the state and update it."""
-        datas = await self._router.wifi.get_global_config()
-        self._attr_is_on = bool(datas["enabled"])
+        data = await self._router.wifi.get_global_config()
+        self._attr_is_on = bool(data["enabled"])

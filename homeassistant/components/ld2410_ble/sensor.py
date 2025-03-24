@@ -1,6 +1,5 @@
 """LD2410 BLE integration sensor platform."""
 
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -12,7 +11,7 @@ from homeassistant.const import EntityCategory, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LD2410BLE, LD2410BLECoordinator
@@ -93,7 +92,7 @@ MOTION_ENERGY_GATES = [
         entity_registry_enabled_default=False,
         native_unit_of_measurement="Target Energy",
     )
-    for i in range(0, 9)
+    for i in range(9)
 ]
 
 STATIC_ENERGY_GATES = [
@@ -104,28 +103,26 @@ STATIC_ENERGY_GATES = [
         entity_registry_enabled_default=False,
         native_unit_of_measurement="Target Energy",
     )
-    for i in range(0, 9)
+    for i in range(9)
 ]
 
-SENSOR_DESCRIPTIONS = (
-    [
-        MOVING_TARGET_DISTANCE_DESCRIPTION,
-        STATIC_TARGET_DISTANCE_DESCRIPTION,
-        MOVING_TARGET_ENERGY_DESCRIPTION,
-        STATIC_TARGET_ENERGY_DESCRIPTION,
-        DETECTION_DISTANCE_DESCRIPTION,
-        MAX_MOTION_GATES_DESCRIPTION,
-        MAX_STATIC_GATES_DESCRIPTION,
-    ]
-    + MOTION_ENERGY_GATES
-    + STATIC_ENERGY_GATES
-)
+SENSOR_DESCRIPTIONS = [
+    MOVING_TARGET_DISTANCE_DESCRIPTION,
+    STATIC_TARGET_DISTANCE_DESCRIPTION,
+    MOVING_TARGET_ENERGY_DESCRIPTION,
+    STATIC_TARGET_ENERGY_DESCRIPTION,
+    DETECTION_DISTANCE_DESCRIPTION,
+    MAX_MOTION_GATES_DESCRIPTION,
+    MAX_STATIC_GATES_DESCRIPTION,
+    *MOTION_ENERGY_GATES,
+    *STATIC_ENERGY_GATES,
+]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform for LD2410BLE."""
     data: LD2410BLEData = hass.data[DOMAIN][entry.entry_id]

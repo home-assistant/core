@@ -1,7 +1,7 @@
 """The Gardena Bluetooth integration."""
+
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from bleak.backends.device import BLEDevice
@@ -10,15 +10,18 @@ from gardena_bluetooth.const import DeviceConfiguration, DeviceInformation
 from gardena_bluetooth.exceptions import CommunicationFailure
 
 from homeassistant.components import bluetooth
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import Coordinator, DeviceUnavailable
+from .coordinator import (
+    DeviceUnavailable,
+    GardenaBluetoothConfigEntry,
+    GardenaBluetoothCoordinator,
+)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -26,6 +29,7 @@ PLATFORMS: list[Platform] = [
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.VALVE,
 ]
 LOGGER = logging.getLogger(__name__)
 TIMEOUT = 20.0
@@ -46,7 +50,9 @@ def get_connection(hass: HomeAssistant, address: str) -> CachedConnection:
     return CachedConnection(DISCONNECT_DELAY, _device_lookup)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: GardenaBluetoothConfigEntry
+) -> bool:
     """Set up Gardena Bluetooth from a config entry."""
 
     address = entry.data[CONF_ADDRESS]
@@ -60,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         uuids = await client.get_all_characteristics_uuid()
         await client.update_timestamp(dt_util.now())
-    except (asyncio.TimeoutError, CommunicationFailure, DeviceUnavailable) as exception:
+    except (TimeoutError, CommunicationFailure, DeviceUnavailable) as exception:
         await client.disconnect()
         raise ConfigEntryNotReady(
             f"Unable to connect to device {address} due to {exception}"
@@ -74,19 +80,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model=model,
     )
 
-    coordinator = Coordinator(hass, LOGGER, client, uuids, device, address)
+    coordinator = GardenaBluetoothCoordinator(
+        hass, entry, LOGGER, client, uuids, device, address
+    )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await coordinator.async_refresh()
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: GardenaBluetoothConfigEntry
+) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator: Coordinator = hass.data[DOMAIN].pop(entry.entry_id)
-        await coordinator.async_shutdown()
+        await entry.runtime_data.async_shutdown()
 
     return unload_ok

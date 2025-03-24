@@ -28,6 +28,8 @@ SCAN_INTERVAL = datetime.timedelta(seconds=30)
 class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
     """Coordinator for Yardian API calls."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -38,6 +40,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=entry.title,
             update_interval=SCAN_INTERVAL,
             always_update=False,
@@ -64,7 +67,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
             async with asyncio.timeout(10):
                 return await self.controller.fetch_device_state()
 
-        except asyncio.TimeoutError as e:
+        except TimeoutError as e:
             raise UpdateFailed("Communication with Device was time out") from e
         except NotAuthorizedException as e:
             raise UpdateFailed("Invalid access token") from e

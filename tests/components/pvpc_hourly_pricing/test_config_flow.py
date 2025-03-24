@@ -1,9 +1,10 @@
 """Tests for the pvpc_hourly_pricing config_flow."""
+
 from datetime import datetime, timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.pvpc_hourly_pricing.const import (
     ATTR_POWER,
     ATTR_POWER_P3,
@@ -14,6 +15,7 @@ from homeassistant.components.pvpc_hourly_pricing.const import (
 )
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -28,6 +30,7 @@ _MOCK_TIME_BAD_AUTH_RESPONSES = datetime(2023, 1, 8, 12, 0, tzinfo=dt_util.UTC)
 
 async def test_config_flow(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     pvpc_aioclient_mock: AiohttpClientMocker,
 ) -> None:
@@ -40,7 +43,7 @@ async def test_config_flow(
     - Configure options to introduce API Token, with bad auth and good one
     """
     freezer.move_to(_MOCK_TIME_VALID_RESPONSES)
-    hass.config.set_time_zone("Europe/Madrid")
+    await hass.config.async_set_time_zone("Europe/Madrid")
     tst_config = {
         CONF_NAME: "test",
         ATTR_TARIFF: TARIFFS[1],
@@ -52,12 +55,12 @@ async def test_config_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], tst_config
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
     state = hass.states.get("sensor.esios_pvpc")
@@ -72,28 +75,27 @@ async def test_config_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], tst_config
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert pvpc_aioclient_mock.call_count == 1
 
     # Check removal
-    registry = er.async_get(hass)
-    registry_entity = registry.async_get("sensor.esios_pvpc")
+    registry_entity = entity_registry.async_get("sensor.esios_pvpc")
     assert await hass.config_entries.async_remove(registry_entity.config_entry_id)
 
     # and add it again with UI
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], tst_config
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
     state = hass.states.get("sensor.esios_pvpc")
@@ -109,21 +111,21 @@ async def test_config_flow(
     config_entry = current_entries[0]
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={ATTR_POWER: 3.0, ATTR_POWER_P3: 4.6, CONF_USE_API_TOKEN: True},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "api_token"
     assert pvpc_aioclient_mock.call_count == 2
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_API_TOKEN: "test-token"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert pvpc_aioclient_mock.call_count == 2
     await hass.async_block_till_done()
     state = hass.states.get("sensor.esios_pvpc")
@@ -153,14 +155,14 @@ async def test_config_flow(
 
     # disable api token in options
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={ATTR_POWER: 3.0, ATTR_POWER_P3: 4.6, CONF_USE_API_TOKEN: False},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert pvpc_aioclient_mock.call_count == 6
     await hass.async_block_till_done()
     assert pvpc_aioclient_mock.call_count == 7
@@ -182,7 +184,7 @@ async def test_reauth(
 ) -> None:
     """Test reauth flow for API-token mode."""
     freezer.move_to(_MOCK_TIME_BAD_AUTH_RESPONSES)
-    hass.config.set_time_zone("Europe/Madrid")
+    await hass.config.async_set_time_zone("Europe/Madrid")
     tst_config = {
         CONF_NAME: "test",
         ATTR_TARIFF: TARIFFS[1],
@@ -194,19 +196,19 @@ async def test_reauth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], tst_config
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "api_token"
     assert pvpc_aioclient_mock.call_count == 0
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_API_TOKEN: "test-token"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "api_token"
     assert result["errors"]["base"] == "invalid_auth"
     assert pvpc_aioclient_mock.call_count == 1
@@ -215,14 +217,14 @@ async def test_reauth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_API_TOKEN: "test-token"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     config_entry = result["result"]
     assert pvpc_aioclient_mock.call_count == 4
 
     # check reauth trigger with bad-auth responses
     freezer.move_to(_MOCK_TIME_BAD_AUTH_RESPONSES)
     async_fire_time_changed(hass, _MOCK_TIME_BAD_AUTH_RESPONSES)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert pvpc_aioclient_mock.call_count == 6
 
     result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
@@ -233,7 +235,7 @@ async def test_reauth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_API_TOKEN: "test-token"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert pvpc_aioclient_mock.call_count == 7
 
@@ -247,9 +249,9 @@ async def test_reauth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_API_TOKEN: "test-token"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert pvpc_aioclient_mock.call_count == 8
 
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert pvpc_aioclient_mock.call_count == 10

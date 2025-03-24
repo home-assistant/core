@@ -1,0 +1,49 @@
+# serializer version: 1
+# name: test_vacuum[vacuum_cleaner][vacuum.mock_vacuum-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'vacuum',
+    'entity_category': None,
+    'entity_id': 'vacuum.mock_vacuum',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': <VacuumEntityFeature: 12308>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-MatterVacuumCleaner-84-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vacuum[vacuum_cleaner][vacuum.mock_vacuum-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Vacuum',
+      'supported_features': <VacuumEntityFeature: 12308>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'vacuum.mock_vacuum',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---

@@ -1,4 +1,4 @@
-# Describes the format for available motion blinds services
+# Describes the format for available Motionblinds services
 
 set_absolute_position:
   target:

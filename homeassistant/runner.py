@@ -1,11 +1,10 @@
 """Run Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio
-from asyncio import events
 import dataclasses
 import logging
-import os
 import subprocess
 import threading
 from time import monotonic
@@ -57,22 +56,6 @@ class RuntimeConfig:
     safe_mode: bool = False
 
 
-def can_use_pidfd() -> bool:
-    """Check if pidfd_open is available.
-
-    Back ported from cpython 3.12
-    """
-    if not hasattr(os, "pidfd_open"):
-        return False
-    try:
-        pid = os.getpid()
-        os.close(os.pidfd_open(pid, 0))
-    except OSError:
-        # blocked by security policy like SECCOMP
-        return False
-    return True
-
-
 class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     """Event loop policy for Home Assistant."""
 
@@ -80,23 +63,6 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
         """Init the event loop policy."""
         super().__init__()
         self.debug = debug
-        self._watcher: asyncio.AbstractChildWatcher | None = None
-
-    def _init_watcher(self) -> None:
-        """Initialize the watcher for child processes.
-
-        Back ported from cpython 3.12
-        """
-        with events._lock:  # type: ignore[attr-defined] # pylint: disable=protected-access
-            if self._watcher is None:  # pragma: no branch
-                if can_use_pidfd():
-                    self._watcher = asyncio.PidfdChildWatcher()
-                else:
-                    self._watcher = asyncio.ThreadedChildWatcher()
-                if threading.current_thread() is threading.main_thread():
-                    self._watcher.attach_loop(
-                        self._local._loop  # type: ignore[attr-defined] # pylint: disable=protected-access
-                    )
 
     @property
     def loop_name(self) -> str:
@@ -135,16 +101,18 @@ def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
     if source_traceback := context.get("source_traceback"):
         stack_summary = "".join(traceback.format_list(source_traceback))
         logger.error(
-            "Error doing job: %s: %s",
+            "Error doing job: %s (%s): %s",
             context["message"],
+            context.get("task"),
             stack_summary,
             **kwargs,  # type: ignore[arg-type]
         )
         return
 
     logger.error(
-        "Error doing job: %s",
+        "Error doing job: %s (%s)",
         context["message"],
+        context.get("task"),
         **kwargs,  # type: ignore[arg-type]
     )
 
@@ -157,15 +125,14 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
         return 1
 
     # threading._shutdown can deadlock forever
-    # pylint: disable-next=protected-access
-    threading._shutdown = deadlock_safe_shutdown  # type: ignore[attr-defined]
+    threading._shutdown = deadlock_safe_shutdown  # type: ignore[attr-defined]  # noqa: SLF001
 
     return await hass.async_run()
 
 
 def _enable_posix_spawn() -> None:
     """Enable posix_spawn on Alpine Linux."""
-    if subprocess._USE_POSIX_SPAWN:  # pylint: disable=protected-access
+    if subprocess._USE_POSIX_SPAWN:  # noqa: SLF001
         return
 
     # The subprocess module does not know about Alpine Linux/musl
@@ -173,8 +140,7 @@ def _enable_posix_spawn() -> None:
     # less efficient. This is a workaround to force posix_spawn()
     # when using musl since cpython is not aware its supported.
     tag = next(packaging.tags.sys_tags())
-    # pylint: disable-next=protected-access
-    subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform
+    subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform  # type: ignore[misc]  # noqa: SLF001
 
 
 def run(runtime_config: RuntimeConfig) -> int:

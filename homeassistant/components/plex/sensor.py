@@ -1,4 +1,5 @@
 """Support for Plex media server monitoring."""
+
 from __future__ import annotations
 
 import logging
@@ -12,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_SERVER_IDENTIFIER,
@@ -51,17 +52,19 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Plex sensor from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
     plexserver = get_plex_server(hass, server_id)
-    sensors = [PlexSensor(hass, plexserver)]
+    sensors: list[SensorEntity] = [PlexSensor(hass, plexserver)]
 
     def create_library_sensors():
         """Create Plex library sensors with sync calls."""
-        for library in plexserver.library.sections():
-            sensors.append(PlexLibrarySectionSensor(hass, plexserver, library))
+        sensors.extend(
+            PlexLibrarySectionSensor(hass, plexserver, library)
+            for library in plexserver.library.sections()
+        )
 
     await hass.async_add_executor_job(create_library_sensors)
     async_add_entities(sensors)
@@ -72,7 +75,7 @@ class PlexSensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_icon = "mdi:plex"
+    _attr_translation_key = "plex"
     _attr_should_poll = False
     _attr_native_unit_of_measurement = "watching"
 
@@ -183,10 +186,10 @@ class PlexLibrarySectionSensor(SensorEntity):
             libtype=primary_libtype, includeCollections=False
         )
         for libtype in LIBRARY_ATTRIBUTE_TYPES.get(self.library_type, []):
-            self._attr_extra_state_attributes[
-                f"{libtype}s"
-            ] = self.library_section.totalViewSize(
-                libtype=libtype, includeCollections=False
+            self._attr_extra_state_attributes[f"{libtype}s"] = (
+                self.library_section.totalViewSize(
+                    libtype=libtype, includeCollections=False
+                )
             )
 
         recent_libtype = LIBRARY_RECENT_LIBTYPE.get(

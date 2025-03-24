@@ -1,4 +1,5 @@
 """Config flow for Shark IQ integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,9 +10,10 @@ import aiohttp
 from sharkiq import SharkIqAuthError, get_ayla_api
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -39,7 +41,7 @@ SHARKIQ_SCHEMA = vol.Schema(
 
 
 async def _validate_input(
-    hass: core.HomeAssistant, data: Mapping[str, Any]
+    hass: HomeAssistant, data: Mapping[str, Any]
 ) -> dict[str, str]:
     """Validate the user input allows us to connect."""
     ayla_api = get_ayla_api(
@@ -53,7 +55,7 @@ async def _validate_input(
         async with asyncio.timeout(10):
             LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
-    except (asyncio.TimeoutError, aiohttp.ClientError, TypeError) as error:
+    except (TimeoutError, aiohttp.ClientError, TypeError) as error:
         LOGGER.error(error)
         raise CannotConnect(
             "Unable to connect to SharkIQ services.  Check your region settings."
@@ -74,7 +76,7 @@ async def _validate_input(
     return {"title": data[CONF_USERNAME]}
 
 
-class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SharkIqConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Shark IQ."""
 
     VERSION = 1
@@ -99,7 +101,7 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -113,8 +115,16 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=SHARKIQ_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle re-auth if login is invalid."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initiated by reauthentication."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -130,19 +140,19 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason=errors["base"])
 
         return self.async_show_form(
-            step_id="reauth",
+            step_id="reauth_confirm",
             data_schema=SHARKIQ_SCHEMA,
             errors=errors,
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
 
 
-class UnknownAuth(exceptions.HomeAssistantError):
+class UnknownAuth(HomeAssistantError):
     """Error to indicate there is an uncaught auth error."""

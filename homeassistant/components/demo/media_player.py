@@ -1,4 +1,5 @@
 """Demo implementation of the media player."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -14,14 +15,14 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Demo config entry."""
     async_add_entities(
@@ -322,9 +323,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
 
     def join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
-        self._attr_group_members = [
-            self.entity_id,
-        ] + group_members
+        self._attr_group_members = [self.entity_id, *group_members]
         self.schedule_update_ha_state()
 
     def unjoin_player(self) -> None:

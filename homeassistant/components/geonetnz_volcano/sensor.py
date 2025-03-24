@@ -1,4 +1,5 @@
 """Feed Entity Manager Sensor support for GeoNet NZ Volcano Feeds."""
+
 from __future__ import annotations
 
 import logging
@@ -8,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import DistanceConverter
 
@@ -30,7 +31,9 @@ ATTR_LAST_UPDATE_SUCCESSFUL = "feed_last_update_successful"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the GeoNet NZ Volcano Feed platform."""
     manager = hass.data[DOMAIN][FEED][entry.entry_id]
@@ -63,6 +66,7 @@ class GeonetnzVolcanoSensor(SensorEntity):
         self._config_entry_id = config_entry_id
         self._feed_manager = feed_manager
         self._external_id = external_id
+        self._attr_unique_id = f"{config_entry_id}_{external_id}"
         self._unit_system = unit_system
         self._title = None
         self._distance = None
@@ -152,17 +156,17 @@ class GeonetnzVolcanoSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the device state attributes."""
-        attributes = {}
-        for key, value in (
-            (ATTR_EXTERNAL_ID, self._external_id),
-            (ATTR_ACTIVITY, self._activity),
-            (ATTR_HAZARDS, self._hazards),
-            (ATTR_LONGITUDE, self._longitude),
-            (ATTR_LATITUDE, self._latitude),
-            (ATTR_DISTANCE, self._distance),
-            (ATTR_LAST_UPDATE, self._feed_last_update),
-            (ATTR_LAST_UPDATE_SUCCESSFUL, self._feed_last_update_successful),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_EXTERNAL_ID, self._external_id),
+                (ATTR_ACTIVITY, self._activity),
+                (ATTR_HAZARDS, self._hazards),
+                (ATTR_LONGITUDE, self._longitude),
+                (ATTR_LATITUDE, self._latitude),
+                (ATTR_DISTANCE, self._distance),
+                (ATTR_LAST_UPDATE, self._feed_last_update),
+                (ATTR_LAST_UPDATE_SUCCESSFUL, self._feed_last_update_successful),
+            )
+            if value or isinstance(value, bool)
+        }

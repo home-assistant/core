@@ -1,4 +1,5 @@
 """Config flow for Minecraft Server integration."""
+
 from __future__ import annotations
 
 import logging
@@ -6,12 +7,11 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_ADDRESS, CONF_TYPE
 
 from .api import MinecraftServer, MinecraftServerAddressError, MinecraftServerType
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 
 DEFAULT_ADDRESS = "localhost:25565"
 
@@ -25,16 +25,18 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
         if user_input:
             address = user_input[CONF_ADDRESS]
 
+            # Abort config flow if service is already configured.
+            self._async_abort_entries_match({CONF_ADDRESS: address})
+
             # Prepare config entry data.
             config_data = {
-                CONF_NAME: user_input[CONF_NAME],
                 CONF_ADDRESS: address,
             }
 
@@ -44,16 +46,16 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 try:
                     await api.async_initialize()
-                except MinecraftServerAddressError:
-                    pass
+                except MinecraftServerAddressError as error:
+                    _LOGGER.debug(
+                        "Initialization of %s server failed: %s",
+                        server_type,
+                        error,
+                    )
                 else:
                     if await api.async_is_online():
                         config_data[CONF_TYPE] = server_type
                         return self.async_create_entry(title=address, data=config_data)
-
-                _LOGGER.debug(
-                    "Connection check to %s server '%s' failed", server_type, address
-                )
 
             # Host or port invalid or server not reachable.
             errors["base"] = "cannot_connect"
@@ -66,7 +68,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
         if user_input is None:
             user_input = {}
@@ -75,9 +77,6 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
-                    ): str,
                     vol.Required(
                         CONF_ADDRESS,
                         default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),

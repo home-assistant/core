@@ -1,5 +1,11 @@
 """Constants used by multiple MQTT modules."""
-from homeassistant.const import CONF_PAYLOAD, Platform
+
+import logging
+
+import jinja2
+
+from homeassistant.const import CONF_DISCOVERY, CONF_PAYLOAD, Platform
+from homeassistant.exceptions import TemplateError
 
 ATTR_DISCOVERY_HASH = "discovery_hash"
 ATTR_DISCOVERY_PAYLOAD = "discovery_payload"
@@ -7,16 +13,33 @@ ATTR_DISCOVERY_TOPIC = "discovery_topic"
 ATTR_PAYLOAD = "payload"
 ATTR_QOS = "qos"
 ATTR_RETAIN = "retain"
+ATTR_SERIAL_NUMBER = "serial_number"
 ATTR_TOPIC = "topic"
 
+AVAILABILITY_ALL = "all"
+AVAILABILITY_ANY = "any"
+AVAILABILITY_LATEST = "latest"
+
+AVAILABILITY_MODES = [AVAILABILITY_ALL, AVAILABILITY_ANY, AVAILABILITY_LATEST]
+
+CONF_PAYLOAD_AVAILABLE = "payload_available"
+CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
+
 CONF_AVAILABILITY = "availability"
+
+CONF_AVAILABILITY_MODE = "availability_mode"
+CONF_AVAILABILITY_TEMPLATE = "availability_template"
+CONF_AVAILABILITY_TOPIC = "availability_topic"
 CONF_BROKER = "broker"
 CONF_BIRTH_MESSAGE = "birth_message"
 CONF_COMMAND_TEMPLATE = "command_template"
 CONF_COMMAND_TOPIC = "command_topic"
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
 CONF_ENCODING = "encoding"
+CONF_JSON_ATTRS_TOPIC = "json_attributes_topic"
+CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 CONF_KEEPALIVE = "keepalive"
+CONF_OPTIONS = "options"
 CONF_ORIGIN = "origin"
 CONF_QOS = ATTR_QOS
 CONF_RETAIN = ATTR_RETAIN
@@ -33,10 +56,15 @@ CONF_SUPPORTED_FEATURES = "supported_features"
 
 CONF_ACTION_TEMPLATE = "action_template"
 CONF_ACTION_TOPIC = "action_topic"
+CONF_COLOR_TEMP_KELVIN = "color_temp_kelvin"
 CONF_CURRENT_HUMIDITY_TEMPLATE = "current_humidity_template"
 CONF_CURRENT_HUMIDITY_TOPIC = "current_humidity_topic"
 CONF_CURRENT_TEMP_TEMPLATE = "current_temperature_template"
 CONF_CURRENT_TEMP_TOPIC = "current_temperature_topic"
+CONF_ENABLED_BY_DEFAULT = "enabled_by_default"
+CONF_ENTITY_PICTURE = "entity_picture"
+CONF_MAX_KELVIN = "max_kelvin"
+CONF_MIN_KELVIN = "min_kelvin"
 CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
 CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
 CONF_MODE_LIST = "modes"
@@ -65,6 +93,7 @@ CONF_TEMP_MIN = "min_temp"
 CONF_CERTIFICATE = "certificate"
 CONF_CLIENT_KEY = "client_key"
 CONF_CLIENT_CERT = "client_cert"
+CONF_COMPONENTS = "components"
 CONF_TLS_INSECURE = "tls_insecure"
 
 # Device and integration info options
@@ -73,15 +102,13 @@ CONF_CONNECTIONS = "connections"
 CONF_MANUFACTURER = "manufacturer"
 CONF_HW_VERSION = "hw_version"
 CONF_SW_VERSION = "sw_version"
+CONF_SERIAL_NUMBER = "serial_number"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 CONF_SUGGESTED_AREA = "suggested_area"
 CONF_CONFIGURATION_URL = "configuration_url"
 CONF_OBJECT_ID = "object_id"
 CONF_SUPPORT_URL = "support_url"
-
-DATA_MQTT = "mqtt"
-DATA_MQTT_AVAILABLE = "mqtt_client_available"
 
 DEFAULT_PREFIX = "homeassistant"
 DEFAULT_BIRTH_WILL_TOPIC = DEFAULT_PREFIX + "/status"
@@ -129,31 +156,46 @@ DEFAULT_WILL = {
 }
 
 DOMAIN = "mqtt"
+LOGGER = logging.getLogger(__package__)
 
-MQTT_CONNECTED = "mqtt_connected"
-MQTT_DISCONNECTED = "mqtt_disconnected"
+MQTT_CONNECTION_STATE = "mqtt_connection_state"
 
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
 
-PLATFORMS = [
+CONFIG_ENTRY_VERSION = 1
+CONFIG_ENTRY_MINOR_VERSION = 2
+
+# Split mqtt entry data and options
+# Can be removed when config entry is bumped to version 2.1
+# with HA Core 2026.1.0. Read support for version 2.1 is expected before 2026.1
+# From 2026.1 we will write version 2.1
+ENTRY_OPTION_FIELDS = (
+    CONF_DISCOVERY,
+    CONF_DISCOVERY_PREFIX,
+    "birth_message",
+    "will_message",
+)
+
+ENTITY_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
     Platform.CLIMATE,
+    Platform.COVER,
     Platform.DEVICE_TRACKER,
     Platform.EVENT,
-    Platform.COVER,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.IMAGE,
-    Platform.LAWN_MOWER,
     Platform.LIGHT,
+    Platform.LAWN_MOWER,
     Platform.LOCK,
+    Platform.NOTIFY,
     Platform.NUMBER,
-    Platform.SELECT,
     Platform.SCENE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
@@ -164,30 +206,35 @@ PLATFORMS = [
     Platform.WATER_HEATER,
 ]
 
-RELOADABLE_PLATFORMS = [
-    Platform.ALARM_CONTROL_PANEL,
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.CAMERA,
-    Platform.CLIMATE,
-    Platform.COVER,
-    Platform.DEVICE_TRACKER,
-    Platform.EVENT,
-    Platform.FAN,
-    Platform.HUMIDIFIER,
-    Platform.IMAGE,
-    Platform.LIGHT,
-    Platform.LAWN_MOWER,
-    Platform.LOCK,
-    Platform.NUMBER,
-    Platform.SCENE,
-    Platform.SELECT,
-    Platform.SENSOR,
-    Platform.SIREN,
-    Platform.SWITCH,
-    Platform.TEXT,
-    Platform.UPDATE,
-    Platform.VACUUM,
-    Platform.VALVE,
-    Platform.WATER_HEATER,
-]
+TEMPLATE_ERRORS = (jinja2.TemplateError, TemplateError, TypeError, ValueError)
+
+SUPPORTED_COMPONENTS = (
+    "alarm_control_panel",
+    "binary_sensor",
+    "button",
+    "camera",
+    "climate",
+    "cover",
+    "device_automation",
+    "device_tracker",
+    "event",
+    "fan",
+    "humidifier",
+    "image",
+    "lawn_mower",
+    "light",
+    "lock",
+    "notify",
+    "number",
+    "scene",
+    "siren",
+    "select",
+    "sensor",
+    "switch",
+    "tag",
+    "text",
+    "update",
+    "vacuum",
+    "valve",
+    "water_heater",
+)

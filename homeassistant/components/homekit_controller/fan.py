@@ -1,10 +1,12 @@
 """Support for Homekit fans."""
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
+from propcache.api import cached_property
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -15,7 +17,7 @@ from homeassistant.components.fan import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -24,12 +26,6 @@ from homeassistant.util.percentage import (
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import HomeKitEntity
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 
 # 0 is clockwise, 1 is counter-clockwise. The match to forward and reverse is so that
 # its consistent with homeassistant.components.homekit.
@@ -117,7 +113,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     @cached_property
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        features = FanEntityFeature(0)
+        features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
 
         if self.service.has(CharacteristicsTypes.ROTATION_DIRECTION):
             features |= FanEntityFeature.DIRECTION
@@ -147,7 +143,8 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan."""
         if percentage == 0:
-            return await self.async_turn_off()
+            await self.async_turn_off()
+            return
 
         await self.async_put_characteristics(
             {
@@ -206,13 +203,14 @@ class HomeKitFanV2(BaseHomeKitFan):
 ENTITY_TYPES = {
     ServicesTypes.FAN: HomeKitFanV1,
     ServicesTypes.FAN_V2: HomeKitFanV2,
+    ServicesTypes.AIR_PURIFIER: HomeKitFanV2,
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Homekit fans."""
     hkid: str = config_entry.data["AccessoryPairingID"]

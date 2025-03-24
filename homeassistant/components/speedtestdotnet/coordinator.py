@@ -14,23 +14,28 @@ from .const import CONF_SERVER_ID, DEFAULT_SCAN_INTERVAL, DEFAULT_SERVER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type SpeedTestConfigEntry = ConfigEntry[SpeedTestDataCoordinator]
+
 
 class SpeedTestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Get the latest data from speedtest.net."""
 
-    config_entry: ConfigEntry
+    config_entry: SpeedTestConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: speedtest.Speedtest
+        self,
+        hass: HomeAssistant,
+        config_entry: SpeedTestConfigEntry,
+        api: speedtest.Speedtest,
     ) -> None:
         """Initialize the data object."""
         self.hass = hass
-        self.config_entry = config_entry
         self.api = api
         self.servers: dict[str, dict] = {DEFAULT_SERVER: {}}
         super().__init__(
             self.hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(minutes=DEFAULT_SCAN_INTERVAL),
         )
@@ -38,10 +43,9 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def update_servers(self) -> None:
         """Update list of test servers."""
         test_servers = self.api.get_servers()
-        test_servers_list = []
-        for servers in test_servers.values():
-            for server in servers:
-                test_servers_list.append(server)
+        test_servers_list = [
+            server for servers in test_servers.values() for server in servers
+        ]
         for server in sorted(
             test_servers_list,
             key=lambda server: (

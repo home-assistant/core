@@ -1,26 +1,26 @@
 """Tests for the tag component."""
 
+from typing import Any
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.tag import DOMAIN, EVENT_TAG_SCANNED, async_scan_tag
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from . import TEST_DEVICE_ID, TEST_TAG_ID, TEST_TAG_NAME
 
 from tests.common import async_capture_events
 from tests.typing import WebSocketGenerator
 
-TEST_TAG_ID = "test tag id"
-TEST_TAG_NAME = "test tag name"
-TEST_DEVICE_ID = "device id"
-
 
 @pytest.fixture
 def storage_setup_named_tag(
-    hass,
-    hass_storage,
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
 ):
     """Storage setup for test case of named tags."""
 
@@ -29,10 +29,21 @@ def storage_setup_named_tag(
             hass_storage[DOMAIN] = {
                 "key": DOMAIN,
                 "version": 1,
-                "data": {"items": [{"id": TEST_TAG_ID, CONF_NAME: TEST_TAG_NAME}]},
+                "minor_version": 2,
+                "data": {
+                    "items": [
+                        {
+                            "id": TEST_TAG_ID,
+                            "tag_id": TEST_TAG_ID,
+                        }
+                    ]
+                },
             }
         else:
             hass_storage[DOMAIN] = items
+        entity_registry = er.async_get(hass)
+        entry = entity_registry.async_get_or_create(DOMAIN, DOMAIN, TEST_TAG_ID)
+        entity_registry.async_update_entity(entry.entity_id, name=TEST_TAG_NAME)
         config = {DOMAIN: {}}
         return await async_setup_component(hass, DOMAIN, config)
 
@@ -67,7 +78,7 @@ async def test_named_tag_scanned_event(
 
 
 @pytest.fixture
-def storage_setup_unnamed_tag(hass, hass_storage):
+def storage_setup_unnamed_tag(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup for test case of unnamed tags."""
 
     async def _storage(items=None):
@@ -75,7 +86,8 @@ def storage_setup_unnamed_tag(hass, hass_storage):
             hass_storage[DOMAIN] = {
                 "key": DOMAIN,
                 "version": 1,
-                "data": {"items": [{"id": TEST_TAG_ID}]},
+                "minor_version": 2,
+                "data": {"items": [{"id": TEST_TAG_ID, "tag_id": TEST_TAG_ID}]},
             }
         else:
             hass_storage[DOMAIN] = items
@@ -107,6 +119,6 @@ async def test_unnamed_tag_scanned_event(
     event = events[0]
     event_data = event.data
 
-    assert event_data["name"] is None
+    assert event_data["name"] == "Tag test tag id"
     assert event_data["device_id"] == TEST_DEVICE_ID
     assert event_data["tag_id"] == TEST_TAG_ID

@@ -1,4 +1,5 @@
 """Tests for the LaMetric switch platform."""
+
 from unittest.mock import MagicMock
 
 from demetriek import LaMetricConnectionError, LaMetricError
@@ -14,7 +15,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     STATE_OFF,
     STATE_UNAVAILABLE,
     EntityCategory,
@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -40,7 +40,6 @@ async def test_bluetooth(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's LaMetric Bluetooth"
-    assert state.attributes.get(ATTR_ICON) == "mdi:bluetooth"
     assert state.state == STATE_OFF
 
     entry = entity_registry.async_get(state.entity_id)
@@ -58,6 +57,7 @@ async def test_bluetooth(
     assert device.identifiers == {(DOMAIN, "SA110405124500W00BS9")}
     assert device.manufacturer == "LaMetric Inc."
     assert device.name == "Frenck's LaMetric"
+    assert device.serial_number == "SA110405124500W00BS9"
     assert device.sw_version == "2.2.2"
 
     await hass.services.async_call(
@@ -115,7 +115,6 @@ async def test_switch_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("switch.frenck_s_lametric_bluetooth")
     assert state
@@ -144,7 +143,6 @@ async def test_switch_connection_error(
             },
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     state = hass.states.get("switch.frenck_s_lametric_bluetooth")
     assert state

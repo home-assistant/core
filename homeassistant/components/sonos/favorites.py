@@ -1,4 +1,5 @@
 """Class representing Sonos favorites."""
+
 from __future__ import annotations
 
 from collections.abc import Iterator
@@ -104,7 +105,7 @@ class SonosFavorites(SonosHouseholdCoordinator):
     @soco_error()
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
         """Update cache of known favorites and return if cache has changed."""
-        new_favorites = soco.music_library.get_sonos_favorites()
+        new_favorites = soco.music_library.get_sonos_favorites(full_album_art_uri=True)
 
         # Polled update_id values do not match event_id values
         # Each speaker can return a different polled update_id

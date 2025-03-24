@@ -1,4 +1,5 @@
 """Support for MyBMW button entities."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -11,31 +12,26 @@ from bimmer_connected.vehicle import MyBMWVehicle
 from bimmer_connected.vehicle.remote_services import RemoteServiceStatus
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BMWBaseEntity
-from .const import DOMAIN
+from . import DOMAIN as BMW_DOMAIN, BMWConfigEntry
+from .entity import BMWBaseEntity
 
 if TYPE_CHECKING:
     from .coordinator import BMWDataUpdateCoordinator
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class BMWRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    remote_function: Callable[[MyBMWVehicle], Coroutine[Any, Any, RemoteServiceStatus]]
-
-
-@dataclass(frozen=True)
-class BMWButtonEntityDescription(ButtonEntityDescription, BMWRequiredKeysMixin):
+@dataclass(frozen=True, kw_only=True)
+class BMWButtonEntityDescription(ButtonEntityDescription):
     """Class describing BMW button entities."""
 
+    remote_function: Callable[[MyBMWVehicle], Coroutine[Any, Any, RemoteServiceStatus]]
     enabled_when_read_only: bool = False
     is_available: Callable[[MyBMWVehicle], bool] = lambda _: True
 
@@ -44,32 +40,27 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
     BMWButtonEntityDescription(
         key="light_flash",
         translation_key="light_flash",
-        icon="mdi:car-light-alert",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_light_flash(),
     ),
     BMWButtonEntityDescription(
         key="sound_horn",
         translation_key="sound_horn",
-        icon="mdi:bullhorn",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_horn(),
     ),
     BMWButtonEntityDescription(
         key="activate_air_conditioning",
         translation_key="activate_air_conditioning",
-        icon="mdi:hvac",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning(),
     ),
     BMWButtonEntityDescription(
         key="deactivate_air_conditioning",
-        icon="mdi:hvac-off",
-        name="Deactivate air conditioning",
+        translation_key="deactivate_air_conditioning",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning_stop(),
         is_available=lambda vehicle: vehicle.is_remote_climate_stop_enabled,
     ),
     BMWButtonEntityDescription(
         key="find_vehicle",
         translation_key="find_vehicle",
-        icon="mdi:crosshairs-question",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_vehicle_finder(),
     ),
 )
@@ -77,11 +68,11 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: BMWConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the BMW buttons from config entry."""
-    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     entities: list[BMWButton] = []
 
@@ -119,6 +110,10 @@ class BMWButton(BMWBaseEntity, ButtonEntity):
         try:
             await self.entity_description.remote_function(self.vehicle)
         except MyBMWAPIError as ex:
-            raise HomeAssistantError(ex) from ex
+            raise HomeAssistantError(
+                translation_domain=BMW_DOMAIN,
+                translation_key="remote_service_error",
+                translation_placeholders={"exception": str(ex)},
+            ) from ex
 
         self.coordinator.async_update_listeners()

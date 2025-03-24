@@ -1,19 +1,19 @@
 """The tests for the Canary alarm_control_panel platform."""
+
 from unittest.mock import PropertyMock, patch
 
 from canary.const import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_NIGHT
 
-from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelState,
+)
 from homeassistant.components.canary import DOMAIN
 from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_DISARM,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
@@ -66,7 +66,7 @@ async def test_alarm_control_panel(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ALARM_DISARMED
+    assert state.state == AlarmControlPanelState.DISARMED
     assert state.attributes["private"]
 
     type(mocked_location).is_private = PropertyMock(return_value=False)
@@ -81,7 +81,7 @@ async def test_alarm_control_panel(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ALARM_ARMED_HOME
+    assert state.state == AlarmControlPanelState.ARMED_HOME
 
     # test armed away
     type(mocked_location).mode = PropertyMock(
@@ -93,7 +93,7 @@ async def test_alarm_control_panel(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ALARM_ARMED_AWAY
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
 
     # test armed night
     type(mocked_location).mode = PropertyMock(
@@ -105,7 +105,7 @@ async def test_alarm_control_panel(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ALARM_ARMED_NIGHT
+    assert state.state == AlarmControlPanelState.ARMED_NIGHT
 
 
 async def test_alarm_control_panel_services(hass: HomeAssistant, canary) -> None:

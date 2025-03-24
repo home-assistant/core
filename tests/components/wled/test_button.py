@@ -1,4 +1,5 @@
 """Tests for the WLED button platform."""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -57,7 +58,6 @@ async def test_button_restart(
             {ATTR_ENTITY_ID: "button.wled_rgb_light_restart"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
     # Ensure this didn't made the entity unavailable
     assert (state := hass.states.get("button.wled_rgb_light_restart"))

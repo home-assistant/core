@@ -1,4 +1,5 @@
 """Provide the device automations for Climate."""
+
 from __future__ import annotations
 
 import voluptuous as vol

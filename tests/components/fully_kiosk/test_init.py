@@ -1,5 +1,5 @@
 """Tests for the Fully Kiosk Browser integration."""
-import asyncio
+
 import json
 from unittest.mock import MagicMock, patch
 
@@ -45,7 +45,7 @@ async def test_load_unload_config_entry(
 
 @pytest.mark.parametrize(
     "side_effect",
-    [FullyKioskError("error", "status"), asyncio.TimeoutError],
+    [FullyKioskError("error", "status"), TimeoutError],
 )
 async def test_config_entry_not_ready(
     hass: HomeAssistant,

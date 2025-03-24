@@ -1,4 +1,5 @@
 """Representation of Z-Wave updates."""
+
 from __future__ import annotations
 
 import asyncio
@@ -31,7 +32,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData
 
@@ -76,10 +77,10 @@ class ZWaveNodeFirmwareUpdateExtraStoredData(ExtraStoredData):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave update entity from config entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
     cnt: Counter = Counter()
 
     @callback
@@ -154,7 +155,8 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         progress: NodeFirmwareUpdateProgress = event["firmware_update_progress"]
         if not self._latest_version_firmware:
             return
-        self._attr_in_progress = int(progress.progress)
+        self._attr_in_progress = True
+        self._attr_update_percentage = int(progress.progress)
         self.async_write_ha_state()
 
     @callback
@@ -180,6 +182,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         self._result = None
         self._finished_event.clear()
         self._attr_in_progress = False
+        self._attr_update_percentage = None
         if write_state:
             self.async_write_ha_state()
 
@@ -191,7 +194,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
 
         # If hass hasn't started yet, push the next update to the next day so that we
         # can preserve the offsets we've created between each node
-        if self.hass.state != CoreState.running:
+        if self.hass.state is not CoreState.running:
             self._poll_unsub = async_call_later(
                 self.hass, timedelta(days=1), self._async_update
             )
@@ -266,6 +269,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         assert firmware
         self._unsub_firmware_events_and_reset_progress(False)
         self._attr_in_progress = True
+        self._attr_update_percentage = None
         self.async_write_ha_state()
 
         self._progress_unsub = self.node.on(

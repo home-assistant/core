@@ -1,6 +1,6 @@
 """Bases for Tedee entities."""
 
-from pytedee_async.lock import TedeeLock
+from aiotedee.lock import TedeeLock
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -32,13 +32,14 @@ class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
             name=lock.lock_name,
             manufacturer="Tedee",
             model=lock.lock_type,
+            model_id=lock.lock_type,
             via_device=(DOMAIN, coordinator.bridge.serial),
         )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._lock = self.coordinator.data[self._lock.lock_id]
+        self._lock = self.coordinator.data.get(self._lock.lock_id, self._lock)
         super()._handle_coordinator_update()
 
 

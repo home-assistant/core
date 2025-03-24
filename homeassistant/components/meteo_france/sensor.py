@@ -1,8 +1,9 @@
 """Support for Meteo-France raining forecast sensor."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import Any
 
 from meteofrance_api.helpers import (
     get_warning_text_status_from_indice_color,
@@ -29,7 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -48,21 +49,12 @@ from .const import (
     MODEL,
 )
 
-_DataT = TypeVar("_DataT", bound=Rain | Forecast | CurrentPhenomenons)
 
-
-@dataclass(frozen=True)
-class MeteoFranceRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class MeteoFranceSensorEntityDescription(SensorEntityDescription):
+    """Describes Meteo-France sensor entity."""
 
     data_path: str
-
-
-@dataclass(frozen=True)
-class MeteoFranceSensorEntityDescription(
-    SensorEntityDescription, MeteoFranceRequiredKeysMixin
-):
-    """Describes Meteo-France sensor entity."""
 
 
 SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
@@ -190,12 +182,14 @@ SENSOR_TYPES_PROBABILITY: tuple[MeteoFranceSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Meteo-France sensor platform."""
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator_forecast: DataUpdateCoordinator[Forecast] = data[COORDINATOR_FORECAST]
-    coordinator_rain: DataUpdateCoordinator[Rain] | None = data[COORDINATOR_RAIN]
+    coordinator_rain: DataUpdateCoordinator[Rain] | None = data.get(COORDINATOR_RAIN)
     coordinator_alert: DataUpdateCoordinator[CurrentPhenomenons] | None = data.get(
         COORDINATOR_ALERT
     )
@@ -232,7 +226,9 @@ async def async_setup_entry(
     async_add_entities(entities, False)
 
 
-class MeteoFranceSensor(CoordinatorEntity[DataUpdateCoordinator[_DataT]], SensorEntity):
+class MeteoFranceSensor[_DataT: Rain | Forecast | CurrentPhenomenons](
+    CoordinatorEntity[DataUpdateCoordinator[_DataT]], SensorEntity
+):
     """Representation of a Meteo-France sensor."""
 
     entity_description: MeteoFranceSensorEntityDescription
@@ -303,7 +299,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor[Rain]):
         return dt_util.utc_from_timestamp(next_rain["dt"]) if next_rain else None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         reference_dt = self.coordinator.data.forecast[0]["dt"]
         return {
@@ -330,7 +326,7 @@ class MeteoFranceAlertSensor(MeteoFranceSensor[CurrentPhenomenons]):
         self._attr_unique_id = self._attr_name
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the state."""
         return get_warning_text_status_from_indice_color(
             self.coordinator.data.get_domain_max_color()

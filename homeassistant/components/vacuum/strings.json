@@ -12,6 +12,9 @@
     "action_type": {
       "clean": "Let {entity_name} clean",
       "dock": "Let {entity_name} return to the dock"
+    },
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]"
     }
   },
   "entity_component": {
@@ -27,16 +30,6 @@
         "paused": "[%key:common::state::paused%]",
         "returning": "Returning to dock"
       }
-    }
-  },
-  "issues": {
-    "deprecated_vacuum_base_class": {
-      "title": "The {platform} custom integration is using deprecated vacuum feature",
-      "description": "The custom integration `{platform}` is extending the deprecated base class `VacuumEntity` instead of `StateVacuumEntity`.\n\nPlease report it to the author of the `{platform}` custom integration.\n\nOnce an updated version of `{platform}` is available, install it and restart Home Assistant to fix this issue."
-    },
-    "deprecated_vacuum_base_class_url": {
-      "title": "[%key:component::vacuum::issues::deprecated_vacuum_base_class::title%]",
-      "description": "The custom integration `{platform}` is extending the deprecated base class `VacuumEntity` instead of `StateVacuumEntity`.\n\nPlease create a bug report at {issue_tracker}.\n\nOnce an updated version of `{platform}` is available, install it and restart Home Assistant to fix this issue."
     }
   },
   "services": {

@@ -1,4 +1,5 @@
 """Support for Overkiz select."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -7,26 +8,20 @@ from dataclasses import dataclass
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeAssistantOverkizData
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
+from . import OverkizDataConfigEntry
+from .const import IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass(frozen=True)
-class OverkizSelectDescriptionMixin:
-    """Define an entity description mixin for select entities."""
+@dataclass(frozen=True, kw_only=True)
+class OverkizSelectDescription(SelectEntityDescription):
+    """Class to describe an Overkiz select entity."""
 
     select_option: Callable[[str, Callable[..., Awaitable[None]]], Awaitable[None]]
-
-
-@dataclass(frozen=True)
-class OverkizSelectDescription(SelectEntityDescription, OverkizSelectDescriptionMixin):
-    """Class to describe an Overkiz select entity."""
 
 
 def _select_option_open_closed_pedestrian(
@@ -133,11 +128,11 @@ SUPPORTED_STATES = {description.key: description for description in SELECT_DESCR
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: OverkizDataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Overkiz select from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[OverkizSelect] = []
 
     for device in data.coordinator.data.values():
@@ -147,15 +142,15 @@ async def async_setup_entry(
         ):
             continue
 
-        for state in device.definition.states:
-            if description := SUPPORTED_STATES.get(state.qualified_name):
-                entities.append(
-                    OverkizSelect(
-                        device.device_url,
-                        data.coordinator,
-                        description,
-                    )
-                )
+        entities.extend(
+            OverkizSelect(
+                device.device_url,
+                data.coordinator,
+                description,
+            )
+            for state in device.definition.states
+            if (description := SUPPORTED_STATES.get(state.qualified_name))
+        )
 
     async_add_entities(entities)
 

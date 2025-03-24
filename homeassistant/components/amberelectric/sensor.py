@@ -4,34 +4,26 @@
 # Current and forecast will create general, controlled load and feed in as required
 # At the moment renewables in the only grid sensor.
 
-
 from __future__ import annotations
 
 from typing import Any
 
-from amberelectric.model.channel import ChannelType
-from amberelectric.model.current_interval import CurrentInterval
-from amberelectric.model.forecast_interval import ForecastInterval
+from amberelectric.models.channel import ChannelType
+from amberelectric.models.current_interval import CurrentInterval
+from amberelectric.models.forecast_interval import ForecastInterval
 
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_DOLLAR, PERCENTAGE, UnitOfEnergy
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, DOMAIN
-from .coordinator import AmberUpdateCoordinator, normalize_descriptor
-
-ICONS = {
-    "general": "mdi:transmission-tower",
-    "controlled_load": "mdi:clock-outline",
-    "feed_in": "mdi:solar-power",
-}
+from .const import ATTRIBUTION
+from .coordinator import AmberConfigEntry, AmberUpdateCoordinator, normalize_descriptor
 
 UNIT = f"{CURRENCY_DOLLAR}/{UnitOfEnergy.KILO_WATT_HOUR}"
 
@@ -59,7 +51,7 @@ class AmberSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
         self,
         coordinator: AmberUpdateCoordinator,
         description: SensorEntityDescription,
-        channel_type: ChannelType,
+        channel_type: str,
     ) -> None:
         """Initialize the Sensor."""
         super().__init__(coordinator)
@@ -80,7 +72,7 @@ class AmberPriceSensor(AmberSensor):
         """Return the current price in $/kWh."""
         interval = self.coordinator.data[self.entity_description.key][self.channel_type]
 
-        if interval.channel_type == ChannelType.FEED_IN:
+        if interval.channel_type == ChannelType.FEEDIN:
             return format_cents_to_dollars(interval.per_kwh) * -1
         return format_cents_to_dollars(interval.per_kwh)
 
@@ -94,9 +86,9 @@ class AmberPriceSensor(AmberSensor):
             return data
 
         data["duration"] = interval.duration
-        data["date"] = interval.date.isoformat()
+        data["date"] = interval.var_date.isoformat()
         data["per_kwh"] = format_cents_to_dollars(interval.per_kwh)
-        if interval.channel_type == ChannelType.FEED_IN:
+        if interval.channel_type == ChannelType.FEEDIN:
             data["per_kwh"] = data["per_kwh"] * -1
         data["nem_date"] = interval.nem_time.isoformat()
         data["spot_per_kwh"] = format_cents_to_dollars(interval.spot_per_kwh)
@@ -127,7 +119,7 @@ class AmberForecastSensor(AmberSensor):
             return None
         interval = intervals[0]
 
-        if interval.channel_type == ChannelType.FEED_IN:
+        if interval.channel_type == ChannelType.FEEDIN:
             return format_cents_to_dollars(interval.per_kwh) * -1
         return format_cents_to_dollars(interval.per_kwh)
 
@@ -149,10 +141,10 @@ class AmberForecastSensor(AmberSensor):
         for interval in intervals:
             datum = {}
             datum["duration"] = interval.duration
-            datum["date"] = interval.date.isoformat()
+            datum["date"] = interval.var_date.isoformat()
             datum["nem_date"] = interval.nem_time.isoformat()
             datum["per_kwh"] = format_cents_to_dollars(interval.per_kwh)
-            if interval.channel_type == ChannelType.FEED_IN:
+            if interval.channel_type == ChannelType.FEEDIN:
                 datum["per_kwh"] = datum["per_kwh"] * -1
             datum["spot_per_kwh"] = format_cents_to_dollars(interval.spot_per_kwh)
             datum["start_time"] = interval.start_time.isoformat()
@@ -203,11 +195,11 @@ class AmberGridSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: AmberConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
-    coordinator: AmberUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     current: dict[str, CurrentInterval] = coordinator.data["current"]
     forecasts: dict[str, list[ForecastInterval]] = coordinator.data["forecasts"]
@@ -219,7 +211,7 @@ async def async_setup_entry(
             name=f"{entry.title} - {friendly_channel_type(channel_type)} Price",
             native_unit_of_measurement=UNIT,
             state_class=SensorStateClass.MEASUREMENT,
-            icon=ICONS[channel_type],
+            translation_key=channel_type,
         )
         entities.append(AmberPriceSensor(coordinator, description, channel_type))
 
@@ -230,7 +222,7 @@ async def async_setup_entry(
                 f"{entry.title} - {friendly_channel_type(channel_type)} Price"
                 " Descriptor"
             ),
-            icon=ICONS[channel_type],
+            translation_key=channel_type,
         )
         entities.append(
             AmberPriceDescriptorSensor(coordinator, description, channel_type)
@@ -242,7 +234,7 @@ async def async_setup_entry(
             name=f"{entry.title} - {friendly_channel_type(channel_type)} Forecast",
             native_unit_of_measurement=UNIT,
             state_class=SensorStateClass.MEASUREMENT,
-            icon=ICONS[channel_type],
+            translation_key=channel_type,
         )
         entities.append(AmberForecastSensor(coordinator, description, channel_type))
 
@@ -251,7 +243,7 @@ async def async_setup_entry(
         name=f"{entry.title} - Renewables",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:solar-power",
+        translation_key="renewables",
     )
     entities.append(AmberGridSensor(coordinator, renewables_description))
 

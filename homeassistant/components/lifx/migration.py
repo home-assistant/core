@@ -1,4 +1,5 @@
 """Migrate lifx devices to their own config entry."""
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry

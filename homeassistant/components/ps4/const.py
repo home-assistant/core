@@ -1,4 +1,5 @@
 """Constants for PlayStation 4."""
+
 ATTR_MEDIA_IMAGE_URL = "media_image_url"
 CONFIG_ENTRY_VERSION = 3
 DEFAULT_NAME = "PlayStation 4"

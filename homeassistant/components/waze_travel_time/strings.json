@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "For Origin and Destination, enter the address or the GPS coordinates of the location (GPS coordinates has to be separated by a comma). You can also enter an entity id which provides this information in its state, an entity id with latitude and longitude attributes, or zone friendly name.",
+        "description": "For Origin and Destination, enter the address or the GPS coordinates of the location (GPS coordinates has to be separated by a comma). You can also enter an entity ID which provides this information in its state, an entity ID with latitude and longitude attributes, or zone friendly name.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "origin": "Origin",
@@ -16,22 +16,23 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {
     "step": {
       "init": {
-        "description": "The `substring` inputs will allow you to force the integration to use a particular route or avoid a particular route in its time travel calculation.",
+        "description": "Some options will allow you to force the integration to use a particular route or avoid a particular route in its time travel calculation.",
         "data": {
           "units": "Units",
-          "vehicle_type": "Vehicle Type",
-          "incl_filter": "Substring in Description of Selected Route",
-          "excl_filter": "Substring NOT in Description of Selected Route",
-          "realtime": "Realtime Travel Time?",
-          "avoid_toll_roads": "Avoid Toll Roads?",
-          "avoid_ferries": "Avoid Ferries?",
-          "avoid_subscription_roads": "Avoid Roads Needing a Vignette / Subscription?"
+          "vehicle_type": "Vehicle type",
+          "incl_filter": "Exact streetname which must be part of the selected route",
+          "excl_filter": "Exact streetname which must NOT be part of the selected route",
+          "realtime": "Realtime travel time?",
+          "avoid_toll_roads": "Avoid toll roads?",
+          "avoid_ferries": "Avoid ferries?",
+          "avoid_subscription_roads": "Avoid roads needing a vignette / subscription?"
         }
       }
     }
@@ -46,8 +47,8 @@
     },
     "units": {
       "options": {
-        "metric": "Metric System",
-        "imperial": "Imperial System"
+        "metric": "Metric system",
+        "imperial": "Imperial system"
       }
     },
     "region": {
@@ -57,6 +58,58 @@
         "eu": "Europe",
         "il": "Israel",
         "au": "Australia"
+      }
+    }
+  },
+  "services": {
+    "get_travel_times": {
+      "name": "Get travel times",
+      "description": "Retrieves route alternatives and travel times between two locations.",
+      "fields": {
+        "origin": {
+          "name": "[%key:component::waze_travel_time::config::step::user::data::origin%]",
+          "description": "The origin of the route."
+        },
+        "destination": {
+          "name": "[%key:component::waze_travel_time::config::step::user::data::destination%]",
+          "description": "The destination of the route."
+        },
+        "region": {
+          "name": "[%key:component::waze_travel_time::config::step::user::data::region%]",
+          "description": "The region. Controls which Waze server is used."
+        },
+        "units": {
+          "name": "[%key:component::waze_travel_time::options::step::init::data::units%]",
+          "description": "Which unit system to use."
+        },
+        "vehicle_type": {
+          "name": "[%key:component::waze_travel_time::options::step::init::data::vehicle_type%]",
+          "description": "Which vehicle to use."
+        },
+        "realtime": {
+          "name": "[%key:component::waze_travel_time::options::step::init::data::realtime%]",
+          "description": "Use real-time or statistical data."
+        },
+        "avoid_toll_roads": {
+          "name": "[%key:component::waze_travel_time::options::step::init::data::avoid_toll_roads%]",
+          "description": "Whether to avoid toll roads."
+        },
+        "avoid_ferries": {
+          "name": "[%key:component::waze_travel_time::options::step::init::data::avoid_ferries%]",
+          "description": "Whether to avoid ferries."
+        },
+        "avoid_subscription_roads": {
+          "name": "[%key:component::waze_travel_time::options::step::init::data::avoid_subscription_roads%]",
+          "description": "Whether to avoid subscription roads."
+        },
+        "incl_filter": {
+          "name": "[%key:component::waze_travel_time::options::step::init::data::incl_filter%]",
+          "description": "Exact streetname which must be part of the selected route."
+        },
+        "excl_filter": {
+          "name": "[%key:component::waze_travel_time::options::step::init::data::excl_filter%]",
+          "description": "Exact streetname which must NOT be part of the selected route."
+        }
       }
     }
   }

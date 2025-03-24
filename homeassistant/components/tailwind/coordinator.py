@@ -1,4 +1,5 @@
 """Data update coordinator for Tailwind."""
+
 from datetime import timedelta
 
 from gotailwind import (
@@ -17,13 +18,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
+type TailwindConfigEntry = ConfigEntry[TailwindDataUpdateCoordinator]
+
 
 class TailwindDataUpdateCoordinator(DataUpdateCoordinator[TailwindDeviceStatus]):
     """Class to manage fetching Tailwind data."""
 
-    config_entry: ConfigEntry
-
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: TailwindConfigEntry) -> None:
         """Initialize the coordinator."""
         self.tailwind = Tailwind(
             host=entry.data[CONF_HOST],
@@ -33,6 +34,7 @@ class TailwindDataUpdateCoordinator(DataUpdateCoordinator[TailwindDeviceStatus])
         super().__init__(
             hass,
             LOGGER,
+            config_entry=entry,
             name=f"{DOMAIN}_{entry.data[CONF_HOST]}",
             update_interval=timedelta(seconds=5),
         )

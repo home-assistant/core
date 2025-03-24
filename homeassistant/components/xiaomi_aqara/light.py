@@ -1,4 +1,5 @@
 """Support for Xiaomi Gateway Light."""
+
 import binascii
 import logging
 import struct
@@ -12,11 +13,11 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.color as color_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
-from . import XiaomiDevice
 from .const import DOMAIN, GATEWAYS_KEY
+from .entity import XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
     entities = []
@@ -105,7 +106,7 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
             self._brightness = int(100 * kwargs[ATTR_BRIGHTNESS] / 255)
 
         rgb = color_util.color_hs_to_RGB(*self._hs)
-        rgba = (self._brightness,) + rgb
+        rgba = (self._brightness, *rgb)
         rgbhex = binascii.hexlify(struct.pack("BBBB", *rgba)).decode("ASCII")
         rgbhex = int(rgbhex, 16)
 

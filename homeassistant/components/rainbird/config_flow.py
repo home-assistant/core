@@ -3,26 +3,22 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import logging
 from typing import Any
 
-from pyrainbird.async_client import (
-    AsyncRainbirdClient,
-    AsyncRainbirdController,
-    RainbirdApiException,
-)
+from pyrainbird.async_client import AsyncRainbirdClient, AsyncRainbirdController
 from pyrainbird.data import WifiParams
+from pyrainbird.exceptions import RainbirdApiException, RainbirdAuthException
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
+from . import RainbirdConfigEntry
 from .const import (
     ATTR_DURATION,
     CONF_SERIAL_NUMBER,
@@ -30,6 +26,7 @@ from .const import (
     DOMAIN,
     TIMEOUT_SECONDS,
 )
+from .coordinator import async_create_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +34,13 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): selector.TextSelector(),
+        vol.Required(CONF_PASSWORD): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
+    }
+)
+REAUTH_SCHEMA = vol.Schema(
+    {
         vol.Required(CONF_PASSWORD): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
@@ -53,20 +57,51 @@ class ConfigFlowError(Exception):
         self.error_code = error_code
 
 
-class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rain Bird."""
+
+    host: str
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: RainbirdConfigEntry,
     ) -> RainBirdOptionsFlowHandler:
         """Define the config flow to handle options."""
-        return RainBirdOptionsFlowHandler(config_entry)
+        return RainBirdOptionsFlowHandler()
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauthentication upon an API authentication error."""
+        self.host = entry_data[CONF_HOST]
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication dialog."""
+        errors: dict[str, str] = {}
+        if user_input:
+            try:
+                await self._test_connection(self.host, user_input[CONF_PASSWORD])
+            except ConfigFlowError as err:
+                _LOGGER.error("Error during config flow: %s", err)
+                errors["base"] = err.error_code
+            else:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=REAUTH_SCHEMA,
+            errors=errors,
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Configure the Rain Bird device."""
         error_code: str | None = None
         if user_input:
@@ -101,9 +136,10 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         Raises a ConfigFlowError on failure.
         """
+        clientsession = async_create_clientsession()
         controller = AsyncRainbirdController(
             AsyncRainbirdClient(
-                async_get_clientsession(self.hass),
+                clientsession,
                 host,
                 password,
             )
@@ -114,22 +150,29 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     controller.get_serial_number(),
                     controller.get_wifi_params(),
                 )
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             raise ConfigFlowError(
-                f"Timeout connecting to Rain Bird controller: {str(err)}",
+                f"Timeout connecting to Rain Bird controller: {err!s}",
                 "timeout_connect",
+            ) from err
+        except RainbirdAuthException as err:
+            raise ConfigFlowError(
+                f"Authentication error connecting from Rain Bird controller: {err!s}",
+                "invalid_auth",
             ) from err
         except RainbirdApiException as err:
             raise ConfigFlowError(
-                f"Error connecting to Rain Bird controller: {str(err)}",
+                f"Error connecting to Rain Bird controller: {err!s}",
                 "cannot_connect",
             ) from err
+        finally:
+            await clientsession.close()
 
     async def async_finish(
         self,
         data: dict[str, Any],
         options: dict[str, Any],
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create the config entry."""
         # The integration has historically used a serial number, but not all devices
         # historically had a valid one. Now the mac address is used as a unique id
@@ -156,16 +199,12 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class RainBirdOptionsFlowHandler(config_entries.OptionsFlow):
+class RainBirdOptionsFlowHandler(OptionsFlow):
     """Handle a RainBird options flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize RainBirdOptionsFlowHandler."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)

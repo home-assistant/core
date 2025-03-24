@@ -3,10 +3,13 @@
 This sets up a demo environment of features which are obscure or which represent
 incorrect behavior, and are thus not wanted in the demo integration.
 """
+
 from __future__ import annotations
 
 import datetime
 from random import random
+
+import voluptuous as vol
 
 from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN, get_instance
 from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
@@ -17,24 +20,35 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform, UnitOfEnergy, UnitOfTemperature, UnitOfVolume
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-DOMAIN = "kitchen_sink"
-
+from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
+    Platform.BUTTON,
     Platform.IMAGE,
     Platform.LAWN_MOWER,
     Platform.LOCK,
+    Platform.NOTIFY,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.WEATHER,
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+SCHEMA_SERVICE_TEST_SERVICE_1 = vol.Schema(
+    {
+        vol.Required("field_1"): vol.Coerce(int),
+        vol.Required("field_2"): vol.In(["off", "auto", "cool"]),
+        vol.Optional("field_3"): vol.Coerce(int),
+        vol.Optional("field_4"): vol.In(["forwards", "reverse"]),
+    }
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -44,14 +58,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             DOMAIN, context={"source": SOURCE_IMPORT}, data={}
         )
     )
+
+    @callback
+    def service_handler(call: ServiceCall | None = None) -> None:
+        """Do nothing."""
+
+    hass.services.async_register(
+        DOMAIN, "test_service_1", service_handler, SCHEMA_SERVICE_TEST_SERVICE_1
+    )
+
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set the config entry up."""
     # Set up demo platforms with config entry
     await hass.config_entries.async_forward_entry_setups(
-        config_entry, COMPONENTS_WITH_DEMO_PLATFORM
+        entry, COMPONENTS_WITH_DEMO_PLATFORM
     )
 
     # Create issues
@@ -61,10 +84,38 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if "recorder" in hass.config.components:
         await _insert_statistics(hass)
 
+    # Start a reauth flow
+    entry.async_start_reauth(hass)
+
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+    # Notify backup listeners
+    hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
+
     return True
 
 
-def _create_issues(hass):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle update."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload config entry."""
+    # Notify backup listeners
+    hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
+
+    return await hass.config_entries.async_unload_platforms(
+        entry, COMPONENTS_WITH_DEMO_PLATFORM
+    )
+
+
+async def _notify_backup_listeners(hass: HomeAssistant) -> None:
+    for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
+        listener()
+
+
+def _create_issues(hass: HomeAssistant) -> None:
     """Create some issue registry issues."""
     async_create_issue(
         hass,
@@ -245,7 +296,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": RECORDER_DOMAIN,
         "name": None,
-        "statistic_id": "sensor.statistics_issue_1",
+        "statistic_id": "sensor.statistics_issues_issue_1",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "has_mean": True,
         "has_sum": False,
@@ -257,7 +308,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": RECORDER_DOMAIN,
         "name": None,
-        "statistic_id": "sensor.statistics_issue_2",
+        "statistic_id": "sensor.statistics_issues_issue_2",
         "unit_of_measurement": "cats",
         "has_mean": True,
         "has_sum": False,
@@ -269,7 +320,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": RECORDER_DOMAIN,
         "name": None,
-        "statistic_id": "sensor.statistics_issue_3",
+        "statistic_id": "sensor.statistics_issues_issue_3",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "has_mean": True,
         "has_sum": False,
@@ -281,7 +332,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": RECORDER_DOMAIN,
         "name": None,
-        "statistic_id": "sensor.statistics_issue_4",
+        "statistic_id": "sensor.statistics_issues_issue_4",
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "has_mean": True,
         "has_sum": False,

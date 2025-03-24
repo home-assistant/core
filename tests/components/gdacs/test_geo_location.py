@@ -1,10 +1,10 @@
 """The tests for the GDACS Feed integration."""
+
 import datetime
 from unittest.mock import patch
 
 from freezegun import freeze_time
 
-from homeassistant.components import gdacs
 from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED
 from homeassistant.components.gdacs.geo_location import (
     ATTR_ALERT_LEVEL,
@@ -33,18 +33,21 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import _generate_mock_feed_entry
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
-CONFIG = {gdacs.DOMAIN: {CONF_RADIUS: 200}}
+CONFIG = {CONF_RADIUS: 200}
 
 
-async def test_setup(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
+async def test_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+) -> None:
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -90,12 +93,17 @@ async def test_setup(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with freeze_time(utcnow), patch(
-        "aio_georss_client.feed.GeoRssFeed.update"
-    ) as mock_feed_update:
+    with (
+        freeze_time(utcnow),
+        patch("aio_georss_client.feed.GeoRssFeed.update") as mock_feed_update,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
-        assert await async_setup_component(hass, gdacs.DOMAIN, CONFIG)
-        await hass.async_block_till_done()
+
+        config_entry.add_to_hass(hass)
+        hass.config_entries.async_update_entry(
+            config_entry, data=config_entry.data | CONFIG
+        )
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         # Artificially trigger update and collect events.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
@@ -202,7 +210,9 @@ async def test_setup(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
         assert len(entity_registry.entities) == 1
 
 
-async def test_setup_imperial(hass: HomeAssistant) -> None:
+async def test_setup_imperial(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test the setup of the integration using imperial unit system."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     # Set up some mock feed entries for this test.
@@ -218,15 +228,19 @@ async def test_setup_imperial(hass: HomeAssistant) -> None:
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with freeze_time(utcnow), patch(
-        "aio_georss_client.feed.GeoRssFeed.update"
-    ) as mock_feed_update, patch(
-        "aio_georss_client.feed.GeoRssFeed.last_timestamp", create=True
+    with (
+        freeze_time(utcnow),
+        patch("aio_georss_client.feed.GeoRssFeed.update") as mock_feed_update,
+        patch("aio_georss_client.feed.GeoRssFeed.last_timestamp", create=True),
     ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
-        assert await async_setup_component(hass, gdacs.DOMAIN, CONFIG)
-        await hass.async_block_till_done()
-        # Artificially trigger update and collect events.
+        config_entry.add_to_hass(hass)
+        hass.config_entries.async_update_entry(
+            config_entry, data=config_entry.data | CONFIG
+        )
+        assert await hass.config_entries.async_setup(
+            config_entry.entry_id
+        )  # Artificially trigger update and collect events.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 

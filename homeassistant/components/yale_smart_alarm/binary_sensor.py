@@ -1,4 +1,5 @@
 """Binary sensors for Yale Alarm."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -6,12 +7,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import COORDINATOR, DOMAIN
+from . import YaleConfigEntry
 from .coordinator import YaleDataUpdateCoordinator
 from .entity import YaleAlarmEntity, YaleEntity
 
@@ -44,18 +44,23 @@ SENSOR_TYPES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: YaleConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Yale binary sensor entry."""
 
-    coordinator: YaleDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
+    coordinator = entry.runtime_data
+    sensors: list[YaleDoorSensor | YaleDoorBatterySensor | YaleProblemSensor] = [
+        YaleDoorSensor(coordinator, data) for data in coordinator.data["door_windows"]
     ]
-    sensors: list[YaleDoorSensor | YaleProblemSensor] = []
-    for data in coordinator.data["door_windows"]:
-        sensors.append(YaleDoorSensor(coordinator, data))
-    for description in SENSOR_TYPES:
-        sensors.append(YaleProblemSensor(coordinator, description))
+    sensors.extend(
+        YaleDoorBatterySensor(coordinator, data)
+        for data in coordinator.data["door_windows"]
+    )
+    sensors.extend(
+        YaleProblemSensor(coordinator, description) for description in SENSOR_TYPES
+    )
 
     async_add_entities(sensors)
 
@@ -71,6 +76,27 @@ class YaleDoorSensor(YaleEntity, BinarySensorEntity):
         return bool(self.coordinator.data["sensor_map"][self._attr_unique_id] == "open")
 
 
+class YaleDoorBatterySensor(YaleEntity, BinarySensorEntity):
+    """Representation of a Yale door sensor battery status."""
+
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
+
+    def __init__(
+        self,
+        coordinator: YaleDataUpdateCoordinator,
+        data: dict,
+    ) -> None:
+        """Initiate Yale door battery Sensor."""
+        super().__init__(coordinator, data)
+        self._attr_unique_id = f"{data['address']}-battery"
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the battery is low."""
+        state: bool = self.coordinator.data["sensor_battery_map"][self._attr_unique_id]
+        return state
+
+
 class YaleProblemSensor(YaleAlarmEntity, BinarySensorEntity):
     """Representation of a Yale problem sensor."""
 
@@ -84,7 +110,9 @@ class YaleProblemSensor(YaleAlarmEntity, BinarySensorEntity):
         """Initiate Yale Problem Sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.entry.entry_id}-{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}-{entity_description.key}"
+        )
 
     @property
     def is_on(self) -> bool:

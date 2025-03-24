@@ -1,19 +1,20 @@
 """Roomba binary sensor entities."""
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import roomba_reported_state
 from .const import DOMAIN
-from .irobot_base import IRobotEntity
+from .entity import IRobotEntity
 from .models import RoombaData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the iRobot Roomba vacuum cleaner."""
     domain_data: RoombaData = hass.data[DOMAIN][config_entry.entry_id]
@@ -28,7 +29,6 @@ async def async_setup_entry(
 class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
     """Class to hold Roomba Sensor basic info."""
 
-    _attr_icon = "mdi:delete-variant"
     _attr_translation_key = "bin_full"
 
     @property

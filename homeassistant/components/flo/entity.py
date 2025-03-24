@@ -1,11 +1,12 @@
 """Base entity class for Flo entities."""
+
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as FLO_DOMAIN
-from .device import FloDeviceDataUpdateCoordinator
+from .coordinator import FloDeviceDataUpdateCoordinator
 
 
 class FloEntity(Entity):
@@ -44,10 +45,10 @@ class FloEntity(Entity):
         """Return True if device is available."""
         return self._device.available
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update Flo entity."""
         await self._device.async_request_refresh()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(self._device.async_add_listener(self.async_write_ha_state))

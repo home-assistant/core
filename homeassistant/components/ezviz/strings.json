@@ -29,7 +29,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "Enter credentials to reauthenticate to ezviz cloud account",
+        "description": "Enter credentials to reauthenticate to EZVIZ cloud account",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -45,7 +45,7 @@
     "abort": {
       "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "ezviz_cloud_account_missing": "Ezviz cloud account missing. Please reconfigure Ezviz cloud account",
+      "ezviz_cloud_account_missing": "EZVIZ cloud account missing. Please reconfigure EZVIZ cloud account",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
@@ -53,43 +53,8 @@
     "step": {
       "init": {
         "data": {
-          "timeout": "Request Timeout (seconds)",
-          "ffmpeg_arguments": "Arguments passed to ffmpeg for cameras"
-        }
-      }
-    }
-  },
-  "issues": {
-    "service_deprecation_alarm_sound_level": {
-      "title": "Ezviz Alarm sound level service is being removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::ezviz::issues::service_deprecation_alarm_sound_level::title%]",
-            "description": "Ezviz Alarm sound level service is deprecated and will be removed.\nTo set the Alarm sound level, you can instead use the `select.select_option` service targetting the Warning sound entity.\n\nPlease remove this service from your automations and scripts and select **submit** to close this issue."
-          }
-        }
-      }
-    },
-    "service_depreciation_ptz": {
-      "title": "EZVIZ PTZ service is being removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::ezviz::issues::service_depreciation_ptz::title%]",
-            "description": "EZVIZ PTZ service is deprecated and will be removed.\nTo move the camera, you can instead use the `button.press` service targetting the PTZ* entities.\n\nPlease remove the use of this service from your automations and scripts and select **submit** to close this issue."
-          }
-        }
-      }
-    },
-    "service_depreciation_sound_alarm": {
-      "title": "Ezviz Sound alarm service is being removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::ezviz::issues::service_depreciation_sound_alarm::title%]",
-            "description": "Ezviz Sound alarm service is deprecated and will be removed.\nTo sound the alarm, you can instead use the `siren.toggle` service targeting the Siren entity.\n\nPlease remove the use of this service from your automations and scripts and select **submit** to fix this issue."
-          }
+          "timeout": "Request timeout (seconds)",
+          "ffmpeg_arguments": "Arguments passed to FFmpeg for cameras"
         }
       }
     }
@@ -219,57 +184,23 @@
     }
   },
   "services": {
-    "alarm_sound": {
-      "name": "Set warning sound level.",
-      "description": "Setx movement warning sound level.",
-      "fields": {
-        "level": {
-          "name": "Sound level",
-          "description": "Sound level (2 is disabled, 1 intensive, 0 soft)."
-        }
-      }
-    },
-    "ptz": {
-      "name": "PTZ",
-      "description": "Moves the camera to the direction, with defined speed.",
-      "fields": {
-        "direction": {
-          "name": "Direction",
-          "description": "Direction to move camera (up, down, left, right)."
-        },
-        "speed": {
-          "name": "Speed",
-          "description": "Speed of movement (from 1 to 9)."
-        }
-      }
-    },
     "set_alarm_detection_sensibility": {
-      "name": "Detection sensitivity",
-      "description": "Sets the detection sensibility level.",
+      "name": "Set detection sensibility",
+      "description": "Changes the sensibility level of the motion detection.",
       "fields": {
         "level": {
-          "name": "Sensitivity level",
-          "description": "Sensibility level (1-6) for type 0 (Normal camera) or (1-100) for type 3 (PIR sensor camera)."
+          "name": "Level",
+          "description": "Sensibility level. 1-6 for type 0 (normal camera), or 1-100 for type 3 (PIR sensor camera)."
         },
         "type_value": {
-          "name": "Detection type",
-          "description": "Type of detection. Options : 0 - Camera or 3 - PIR Sensor Camera."
-        }
-      }
-    },
-    "sound_alarm": {
-      "name": "Sound alarm",
-      "description": "Sounds the alarm on your camera.",
-      "fields": {
-        "enable": {
-          "name": "Alarm sound",
-          "description": "Enter 1 or 2 (1=disable, 2=enable)."
+          "name": "Type",
+          "description": "Detection type. 0 for normal camera, or 3 for PIR sensor camera."
         }
       }
     },
     "wake_device": {
       "name": "Wake camera",
-      "description": "This can be used to wake the camera/device from hibernation."
+      "description": "Wakes a camera from sleep mode. Especially useful for battery cameras."
     }
   }
 }

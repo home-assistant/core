@@ -1,4 +1,5 @@
 """Config flow for the Home Assistant Green integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -12,12 +13,16 @@ from homeassistant.components.hassio import (
     HassioAPIError,
     async_get_green_settings,
     async_set_green_settings,
-    is_hassio,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
+from homeassistant.helpers.hassio import is_hassio
 
 from .const import DOMAIN
 
@@ -46,11 +51,10 @@ class HomeAssistantGreenConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return the options flow."""
         return HomeAssistantGreenOptionsFlow()
 
-    async def async_step_system(self, data: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_system(
+        self, data: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         return self.async_create_entry(title="Home Assistant Green", data={})
 
 
@@ -61,7 +65,7 @@ class HomeAssistantGreenOptionsFlow(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if not is_hassio(self.hass):
             return self.async_abort(reason="not_hassio")
@@ -70,7 +74,7 @@ class HomeAssistantGreenOptionsFlow(OptionsFlow):
 
     async def async_step_hardware_settings(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle hardware settings."""
 
         if user_input is not None:

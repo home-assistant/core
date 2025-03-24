@@ -1,4 +1,5 @@
 """Constant values for Trend integration."""
+
 DOMAIN = "trend"
 
 ATTR_ATTRIBUTE = "attribute"

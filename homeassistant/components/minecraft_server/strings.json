@@ -2,13 +2,18 @@
   "config": {
     "step": {
       "user": {
-        "title": "Link your Minecraft Server",
-        "description": "Set up your Minecraft Server instance to allow monitoring.",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "address": "Server address"
-        }
+        },
+        "data_description": {
+          "address": "The hostname, IP address or SRV record of your Minecraft server, optionally including the port."
+        },
+        "title": "Link your Minecraft Server",
+        "description": "Set up your Minecraft Server instance to allow monitoring."
       }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "cannot_connect": "Failed to connect to server. Please check the address and try again. If a port was provided, it must be within a valid range. If you are running a Minecraft Java Edition server, ensure that it is at least version 1.7."

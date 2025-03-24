@@ -1,7 +1,7 @@
 """Support for Modbus Register sensors."""
+
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 from typing import Any
 
@@ -26,8 +26,8 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import get_hub
-from .base_platform import BaseStructPlatform
 from .const import CONF_SLAVE_COUNT, CONF_VIRTUAL_COUNT
+from .entity import BaseStructPlatform
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +73,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         super().__init__(hass, hub, entry)
         if slave_count:
             self._count = self._count * (slave_count + 1)
-        self._coordinator: DataUpdateCoordinator[list[int] | None] | None = None
+        self._coordinator: DataUpdateCoordinator[list[float] | None] | None = None
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = entry.get(CONF_STATE_CLASS)
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
@@ -90,13 +90,13 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         self._coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=None,
             name=name,
         )
 
-        slaves: list[SlaveSensor] = []
-        for idx in range(0, slave_count):
-            slaves.append(SlaveSensor(self._coordinator, idx, entry))
-        return slaves
+        return [
+            SlaveSensor(self._coordinator, idx, entry) for idx in range(slave_count)
+        ]
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -105,7 +105,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         if state:
             self._attr_native_value = state.native_value
 
-    async def async_update(self, now: datetime | None = None) -> None:
+    async def _async_update(self) -> None:
         """Update the state of the sensor."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
@@ -125,7 +125,10 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         if self._coordinator:
             if result:
                 result_array = list(
-                    map(float if self._precision else int, result.split(","))
+                    map(
+                        float if not self._value_is_int else int,
+                        result.split(","),
+                    )
                 )
                 self._attr_native_value = result_array[0]
                 self._coordinator.async_set_updated_data(result_array)
@@ -139,7 +142,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
 
 
 class SlaveSensor(
-    CoordinatorEntity[DataUpdateCoordinator[list[int] | None]],
+    CoordinatorEntity[DataUpdateCoordinator[list[float] | None]],
     RestoreSensor,
     SensorEntity,
 ):
@@ -147,7 +150,7 @@ class SlaveSensor(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[list[int] | None],
+        coordinator: DataUpdateCoordinator[list[float] | None],
         idx: int,
         entry: dict[str, Any],
     ) -> None:

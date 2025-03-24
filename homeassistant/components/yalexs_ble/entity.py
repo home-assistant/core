@@ -1,4 +1,5 @@
 """The yalexs_ble integration entities."""
+
 from __future__ import annotations
 
 from yalexs_ble import ConnectionInfo, LockInfo, LockState

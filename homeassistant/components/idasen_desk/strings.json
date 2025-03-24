@@ -4,7 +4,10 @@
     "step": {
       "user": {
         "data": {
-          "address": "Bluetooth address"
+          "address": "Device"
+        },
+        "data_description": {
+          "address": "The bluetooth device for the desk."
         }
       }
     },
@@ -21,6 +24,14 @@
     }
   },
   "entity": {
+    "button": {
+      "connect": {
+        "name": "Connect"
+      },
+      "disconnect": {
+        "name": "Disconnect"
+      }
+    },
     "sensor": {
       "height": {
         "name": "Height"

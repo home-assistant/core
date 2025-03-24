@@ -1,4 +1,5 @@
 """MediaPlayer platform for Roon integration."""
+
 from __future__ import annotations
 
 import logging
@@ -24,7 +25,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
 
@@ -51,7 +52,7 @@ REPEAT_MODE_MAPPING_TO_ROON = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roon MediaPlayer from Config Entry."""
     roon_server = hass.data[DOMAIN][config_entry.entry_id]
@@ -232,12 +233,13 @@ class RoonDevice(MediaPlayerEntity):
         }
         now_playing_data = None
 
+        media_position = convert(player_data.get("seek_position"), int, 0)
+
         try:
             now_playing_data = player_data["now_playing"]
             media_title = now_playing_data["three_line"]["line1"]
             media_artist = now_playing_data["three_line"]["line2"]
             media_album_name = now_playing_data["three_line"]["line3"]
-            media_position = convert(now_playing_data["seek_position"], int, 0)
             media_duration = convert(now_playing_data.get("length"), int, 0)
             image_id = now_playing_data.get("image_key")
         except KeyError:
@@ -268,9 +270,10 @@ class RoonDevice(MediaPlayerEntity):
                     break
         # determine player state
         if not new_state:
-            if self.player_data["state"] == "playing":
-                new_state = MediaPlayerState.PLAYING
-            elif self.player_data["state"] == "loading":
+            if (
+                self.player_data["state"] == "playing"
+                or self.player_data["state"] == "loading"
+            ):
                 new_state = MediaPlayerState.PLAYING
             elif self.player_data["state"] == "stopped":
                 new_state = MediaPlayerState.IDLE
@@ -325,6 +328,11 @@ class RoonDevice(MediaPlayerEntity):
     def media_album_artist(self) -> str | None:
         """Album artist of current playing media (Music track only)."""
         return self.media_artist
+
+    @property
+    def media_content_type(self) -> str:
+        """Return the media type."""
+        return MediaType.MUSIC
 
     @property
     def supports_standby(self):

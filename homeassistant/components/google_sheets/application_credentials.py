@@ -1,4 +1,5 @@
 """application_credentials platform for Google Sheets."""
+
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.core import HomeAssistant
 

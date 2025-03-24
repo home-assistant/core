@@ -1,4 +1,5 @@
 """Support for Steamist switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,7 +7,7 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SteamistDataUpdateCoordinator
@@ -14,7 +15,6 @@ from .entity import SteamistEntity
 
 ACTIVE_SWITCH = SwitchEntityDescription(
     key="active",
-    icon="mdi:pot-steam",
     translation_key="steam_active",
 )
 
@@ -22,7 +22,7 @@ ACTIVE_SWITCH = SwitchEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
     coordinator: SteamistDataUpdateCoordinator = hass.data[DOMAIN][

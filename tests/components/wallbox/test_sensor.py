@@ -1,5 +1,6 @@
 """Test Wallbox Switch component."""
-from homeassistant.const import CONF_ICON, CONF_UNIT_OF_MEASUREMENT, UnitOfPower
+
+from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, UnitOfPower
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -24,11 +25,8 @@ async def test_wallbox_sensor_class(
     assert state.name == "Wallbox WallboxName Charging power"
 
     state = hass.states.get(MOCK_SENSOR_CHARGING_SPEED_ID)
-    assert state.attributes[CONF_ICON] == "mdi:speedometer"
     assert state.name == "Wallbox WallboxName Charging speed"
 
     # Test round with precision '0' works
     state = hass.states.get(MOCK_SENSOR_MAX_AVAILABLE_POWER)
     assert state.state == "25.0"
-
-    await hass.config_entries.async_unload(entry.entry_id)

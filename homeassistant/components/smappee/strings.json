@@ -23,6 +23,7 @@
       }
     },
     "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_configured_local_device": "Local device(s) is already configured. Please remove those first before configuring a cloud device.",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",

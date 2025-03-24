@@ -1,4 +1,5 @@
 """Test the Z-Wave JS fan platform."""
+
 import copy
 
 import pytest
@@ -652,7 +653,12 @@ async def test_thermostat_fan(
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_FAN_STATE) == "Idle / off"
     assert state.attributes.get(ATTR_PRESET_MODE) == "Auto low"
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == FanEntityFeature.PRESET_MODE
+    assert (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        == FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
 
     # Test setting preset mode
     await hass.services.async_call(

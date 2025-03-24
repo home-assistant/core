@@ -1,10 +1,10 @@
 {
   "domain": "tankerkoenig",
   "name": "Tankerkoenig",
-  "codeowners": ["@guillempages", "@mib1185"],
+  "codeowners": ["@guillempages", "@mib1185", "@jpbede"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tankerkoenig",
   "iot_class": "cloud_polling",
-  "loggers": ["pytankerkoenig"],
-  "requirements": ["pytankerkoenig==0.0.6"]
+  "loggers": ["aiotankerkoenig"],
+  "requirements": ["aiotankerkoenig==0.4.2"]
 }

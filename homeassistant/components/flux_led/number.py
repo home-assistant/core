@@ -1,4 +1,5 @@
 """Support for LED numbers."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -15,18 +16,16 @@ from flux_led.protocol import (
     SEGMENTS_MAX,
 )
 
-from homeassistant import config_entries
 from homeassistant.components.light import EFFECT_RANDOM
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import FluxLedUpdateCoordinator
+from .coordinator import FluxLedConfigEntry, FluxLedUpdateCoordinator
 from .entity import FluxEntity
 from .util import _effect_brightness
 
@@ -37,11 +36,11 @@ DEBOUNCE_TIME = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: FluxLedConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Flux lights."""
-    coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     device = coordinator.device
     entities: list[
         FluxSpeedNumber
@@ -89,7 +88,6 @@ class FluxSpeedNumber(
     _attr_native_max_value = 100
     _attr_native_step = 1
     _attr_mode = NumberMode.SLIDER
-    _attr_icon = "mdi:speedometer"
     _attr_translation_key = "effect_speed"
 
     @property
@@ -175,7 +173,6 @@ class FluxPixelsPerSegmentNumber(FluxConfigNumber):
     """Defines a flux_led pixels per segment number."""
 
     _attr_translation_key = "pixels_per_segment"
-    _attr_icon = "mdi:dots-grid"
 
     @property
     def native_max_value(self) -> int:
@@ -202,7 +199,6 @@ class FluxSegmentsNumber(FluxConfigNumber):
     """Defines a flux_led segments number."""
 
     _attr_translation_key = "segments"
-    _attr_icon = "mdi:segment"
 
     @property
     def native_max_value(self) -> int:
@@ -237,7 +233,6 @@ class FluxMusicPixelsPerSegmentNumber(FluxMusicNumber):
     """Defines a flux_led music pixels per segment number."""
 
     _attr_translation_key = "music_pixels_per_segment"
-    _attr_icon = "mdi:dots-grid"
 
     @property
     def native_max_value(self) -> int:
@@ -266,7 +261,6 @@ class FluxMusicSegmentsNumber(FluxMusicNumber):
     """Defines a flux_led music segments number."""
 
     _attr_translation_key = "music_segments"
-    _attr_icon = "mdi:segment"
 
     @property
     def native_max_value(self) -> int:

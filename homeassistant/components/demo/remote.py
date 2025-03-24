@@ -1,4 +1,5 @@
 """Demo platform that has two fake remotes."""
+
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -8,19 +9,19 @@ from homeassistant.components.remote import RemoteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Demo config entry."""
     async_add_entities(
         [
-            DemoRemote("Remote One", False, None),
-            DemoRemote("Remote Two", True, "mdi:remote"),
+            DemoRemote("Remote One", False),
+            DemoRemote("Remote Two", True),
         ]
     )
 
@@ -30,11 +31,10 @@ class DemoRemote(RemoteEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, name: str | None, state: bool, icon: str | None) -> None:
+    def __init__(self, name: str | None, state: bool) -> None:
         """Initialize the Demo Remote."""
         self._attr_name = name or DEVICE_DEFAULT_NAME
         self._attr_is_on = state
-        self._attr_icon = icon
         self._last_command_sent: str | None = None
 
     @property

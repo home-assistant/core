@@ -1,4 +1,5 @@
 """The wiz integration discovery."""
+
 from __future__ import annotations
 
 import asyncio

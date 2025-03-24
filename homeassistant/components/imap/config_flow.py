@@ -1,7 +1,7 @@
 """Config flow for imap integration."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 import ssl
 from typing import Any
@@ -9,10 +9,16 @@ from typing import Any
 from aioimaplib import AioImapException
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -24,10 +30,12 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util.ssl import SSLCipherList
 
+from . import ImapConfigEntry
 from .const import (
     CONF_CHARSET,
     CONF_CUSTOM_EVENT_DATA_TEMPLATE,
     CONF_ENABLE_PUSH,
+    CONF_EVENT_MESSAGE_DATA,
     CONF_FOLDER,
     CONF_MAX_MESSAGE_SIZE,
     CONF_SEARCH,
@@ -37,6 +45,7 @@ from .const import (
     DEFAULT_PORT,
     DOMAIN,
     MAX_MESSAGE_SIZE_LIMIT,
+    MESSAGE_DATA_OPTIONS,
 )
 from .coordinator import connect_to_server
 from .errors import InvalidAuth, InvalidFolder
@@ -50,6 +59,13 @@ CIPHER_SELECTOR = SelectSelector(
     )
 )
 TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
+EVENT_MESSAGE_DATA_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=MESSAGE_DATA_OPTIONS,
+        translation_key=CONF_EVENT_MESSAGE_DATA,
+        multiple=True,
+    )
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -60,6 +76,8 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_CHARSET, default="utf-8"): str,
         vol.Optional(CONF_FOLDER, default="INBOX"): str,
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
+        # The default for new entries is to not include text and headers
+        vol.Optional(CONF_EVENT_MESSAGE_DATA, default=[]): EVENT_MESSAGE_DATA_SELECTOR,
     }
 )
 CONFIG_SCHEMA_ADVANCED = {
@@ -73,6 +91,10 @@ OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_FOLDER, default="INBOX"): str,
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
+        # The default for older entries is to include text and headers
+        vol.Optional(
+            CONF_EVENT_MESSAGE_DATA, default=MESSAGE_DATA_OPTIONS
+        ): EVENT_MESSAGE_DATA_SELECTOR,
     }
 )
 
@@ -108,7 +130,7 @@ async def validate_input(
         # See https://github.com/bamthomas/aioimaplib/issues/91
         # This handler is added to be able to supply a better error message
         errors["base"] = "ssl_error"
-    except (asyncio.TimeoutError, AioImapException, ConnectionRefusedError):
+    except (TimeoutError, AioImapException, ConnectionRefusedError):
         errors["base"] = "cannot_connect"
     else:
         if result != "OK":
@@ -120,15 +142,14 @@ async def validate_input(
     return errors
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class IMAPConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for imap."""
 
     VERSION = 1
-    _reauth_entry: config_entries.ConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         schema = CONFIG_SCHEMA
@@ -153,31 +174,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = self.add_suggested_values_to_schema(schema, user_input)
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors = {}
-        assert self._reauth_entry
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            user_input = {**self._reauth_entry.data, **user_input}
+            user_input = {**reauth_entry.data, **user_input}
             if not (errors := await validate_input(self.hass, user_input)):
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=user_input
-                )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(reauth_entry, data=user_input)
 
         return self.async_show_form(
             description_placeholders={
-                CONF_USERNAME: self._reauth_entry.data[CONF_USERNAME]
+                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
+                CONF_NAME: reauth_entry.title,
             },
             step_id="reauth_confirm",
             data_schema=vol.Schema(
@@ -191,27 +208,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> OptionsFlow:
+        config_entry: ImapConfigEntry,
+    ) -> ImapOptionsFlow:
         """Get the options flow for this handler."""
-        return OptionsFlow(config_entry)
+        return ImapOptionsFlow()
 
 
-class OptionsFlow(config_entries.OptionsFlowWithConfigEntry):
+class ImapOptionsFlow(OptionsFlow):
     """Option flow handler."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] | None = None
-        entry_data: dict[str, Any] = dict(self._config_entry.data)
+        entry_data: dict[str, Any] = dict(self.config_entry.data)
         if user_input is not None:
             try:
                 self._async_abort_entries_match(
                     {
-                        CONF_SERVER: self._config_entry.data[CONF_SERVER],
-                        CONF_USERNAME: self._config_entry.data[CONF_USERNAME],
+                        CONF_SERVER: self.config_entry.data[CONF_SERVER],
+                        CONF_USERNAME: self.config_entry.data[CONF_USERNAME],
                         CONF_FOLDER: user_input[CONF_FOLDER],
                         CONF_SEARCH: user_input[CONF_SEARCH],
                     }

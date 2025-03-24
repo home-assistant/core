@@ -1,0 +1,88 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address of your LetPot account.",
+          "password": "The password of your LetPot account."
+        }
+      },
+      "reauth_confirm": {
+        "description": "The LetPot integration needs to re-authenticate your account {email}.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::letpot::config::step::user::data_description::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "low_nutrients": {
+        "name": "Low nutrients"
+      },
+      "low_water": {
+        "name": "Low water"
+      },
+      "pump": {
+        "name": "Pump"
+      },
+      "pump_error": {
+        "name": "Pump error"
+      },
+      "refill_error": {
+        "name": "Refill error"
+      }
+    },
+    "sensor": {
+      "water_level": {
+        "name": "Water level"
+      }
+    },
+    "switch": {
+      "alarm_sound": {
+        "name": "Alarm sound"
+      },
+      "auto_mode": {
+        "name": "Auto mode"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "pump_cycling": {
+        "name": "Pump cycling"
+      }
+    },
+    "time": {
+      "light_schedule_end": {
+        "name": "Light off"
+      },
+      "light_schedule_start": {
+        "name": "Light on"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the LetPot device: {exception}"
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the LetPot device: {exception}"
+    }
+  }
+}

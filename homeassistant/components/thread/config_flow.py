@@ -1,11 +1,12 @@
 """Config flow for the Thread integration."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components import onboarding, zeroconf
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.components import onboarding
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -15,30 +16,28 @@ class ThreadConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_import(
-        self, import_data: dict[str, str] | None = None
-    ) -> FlowResult:
+    async def async_step_import(self, import_data: None) -> ConfigFlowResult:
         """Set up by import from async_setup."""
         await self._async_handle_discovery_without_unique_id()
         return self.async_create_entry(title="Thread", data={})
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Set up by import from async_setup."""
         await self._async_handle_discovery_without_unique_id()
         return self.async_create_entry(title="Thread", data={})
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Set up because the user has border routers."""
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm the setup."""
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self.async_create_entry(title="Thread", data={})

@@ -1,4 +1,5 @@
 """Tests for button entities provided by the Tailwind integration."""
+
 from unittest.mock import MagicMock
 
 from gotailwind import TailwindError

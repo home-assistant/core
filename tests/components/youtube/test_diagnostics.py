@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the YouTube integration."""
+
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.youtube.const import DOMAIN

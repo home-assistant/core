@@ -1,4 +1,5 @@
 """Support for Radio Thermostat wifi-enabled home thermostats."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -19,7 +20,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN
 from .coordinator import RadioThermUpdateCoordinator
@@ -92,7 +93,7 @@ def round_temp(temperature):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate for a radiotherm device."""
     coordinator: RadioThermUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -113,7 +114,10 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         self._attr_unique_id = self.init_data.mac
         self._attr_fan_modes = CT30_FAN_OPERATION_LIST
         self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         if not isinstance(self.device, radiotherm.thermostat.CT80):
             return

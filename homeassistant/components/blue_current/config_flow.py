@@ -1,4 +1,5 @@
 """Config flow for Blue Current integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -13,24 +14,22 @@ from bluecurrent_api.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, LOGGER
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BlueCurrentConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Blue Current."""
 
     VERSION = 1
-    _reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -48,24 +47,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "already_connected"
             except InvalidApiToken:
                 errors["base"] = "invalid_token"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
             else:
-                if not self._reauth_entry:
+                if self.source != SOURCE_REAUTH:
                     await self.async_set_unique_id(customer_id)
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(title=email, data=user_input)
 
-                if self._reauth_entry.unique_id == customer_id:
-                    self.hass.config_entries.async_update_entry(
-                        self._reauth_entry, data=user_input
+                reauth_entry = self._get_reauth_entry()
+                if reauth_entry.unique_id == customer_id:
+                    return self.async_update_reload_and_abort(
+                        reauth_entry, data=user_input
                     )
-                    await self.hass.config_entries.async_reload(
-                        self._reauth_entry.entry_id
-                    )
-                    return self.async_abort(reason="reauth_successful")
 
                 return self.async_abort(
                     reason="wrong_account",
@@ -75,9 +71,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle a reauthorization flow request."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_user()

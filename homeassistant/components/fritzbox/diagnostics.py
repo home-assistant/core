@@ -1,25 +1,23 @@
 """Diagnostics support for AVM Fritz!Smarthome."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_COORDINATOR, DOMAIN
-from .coordinator import FritzboxDataUpdateCoordinator
+from .coordinator import FritzboxConfigEntry
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: FritzboxConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data: dict = hass.data[DOMAIN][entry.entry_id]
-    coordinator: FritzboxDataUpdateCoordinator = data[CONF_COORDINATOR]
+    coordinator = entry.runtime_data
 
     diag_data = {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),

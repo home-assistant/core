@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "tvoc": {
+        "default": "mdi:flask"
+      }
+    }
+  }
+}

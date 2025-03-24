@@ -1,0 +1,90 @@
+{
+  "entity": {
+    "fan": {
+      "generic_fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "nature": "mdi:leaf",
+              "normal": "mdi:weather-windy"
+            }
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "fan_reset_filter": {
+      "service": "mdi:refresh"
+    },
+    "fan_set_extra_features": {
+      "service": "mdi:cog"
+    },
+    "light_set_scene": {
+      "service": "mdi:palette"
+    },
+    "light_set_delayed_turn_off": {
+      "service": "mdi:timer"
+    },
+    "light_reminder_on": {
+      "service": "mdi:alarm"
+    },
+    "light_reminder_off": {
+      "service": "mdi:alarm-off"
+    },
+    "light_night_light_mode_on": {
+      "service": "mdi:weather-night"
+    },
+    "light_night_light_mode_off": {
+      "service": "mdi:weather-sunny"
+    },
+    "light_eyecare_mode_on": {
+      "service": "mdi:eye"
+    },
+    "light_eyecare_mode_off": {
+      "service": "mdi:eye-off"
+    },
+    "remote_learn_command": {
+      "service": "mdi:remote"
+    },
+    "remote_set_led_on": {
+      "service": "mdi:led-on"
+    },
+    "remote_set_led_off": {
+      "service": "mdi:led-off"
+    },
+    "switch_set_wifi_led_on": {
+      "service": "mdi:wifi"
+    },
+    "switch_set_wifi_led_off": {
+      "service": "mdi:wifi-off"
+    },
+    "switch_set_power_price": {
+      "service": "mdi:currency-usd"
+    },
+    "switch_set_power_mode": {
+      "service": "mdi:power"
+    },
+    "vacuum_remote_control_start": {
+      "service": "mdi:play"
+    },
+    "vacuum_remote_control_stop": {
+      "service": "mdi:stop"
+    },
+    "vacuum_remote_control_move": {
+      "service": "mdi:remote"
+    },
+    "vacuum_remote_control_move_step": {
+      "service": "mdi:remote"
+    },
+    "vacuum_clean_zone": {
+      "service": "mdi:map-marker"
+    },
+    "vacuum_goto": {
+      "service": "mdi:map-marker"
+    },
+    "vacuum_clean_segment": {
+      "service": "mdi:map-marker"
+    }
+  }
+}

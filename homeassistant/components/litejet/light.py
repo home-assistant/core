@@ -1,4 +1,5 @@
 """Support for LiteJet lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -16,7 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_DEFAULT_TRANSITION, DOMAIN
 
@@ -26,7 +27,7 @@ ATTR_NUMBER = "number"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
 
@@ -96,7 +97,7 @@ class LiteJetLight(LightEntity):
             try:
                 await self._lj.activate_load(self._index)
             except LiteJetError as exc:
-                raise HomeAssistantError() from exc
+                raise HomeAssistantError from exc
             return
 
         # If either attribute is specified then Home Assistant must
@@ -108,7 +109,7 @@ class LiteJetLight(LightEntity):
         try:
             await self._lj.activate_load_at(self._index, brightness, int(transition))
         except LiteJetError as exc:
-            raise HomeAssistantError() from exc
+            raise HomeAssistantError from exc
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
@@ -116,7 +117,7 @@ class LiteJetLight(LightEntity):
             try:
                 await self._lj.activate_load_at(self._index, 0, kwargs[ATTR_TRANSITION])
             except LiteJetError as exc:
-                raise HomeAssistantError() from exc
+                raise HomeAssistantError from exc
             return
 
         # If transition attribute is not specified then the simple
@@ -125,7 +126,7 @@ class LiteJetLight(LightEntity):
         try:
             await self._lj.deactivate_load(self._index)
         except LiteJetError as exc:
-            raise HomeAssistantError() from exc
+            raise HomeAssistantError from exc
 
     async def async_update(self) -> None:
         """Retrieve the light's brightness from the LiteJet system."""

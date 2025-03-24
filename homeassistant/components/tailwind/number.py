@@ -1,4 +1,5 @@
 """Number entity platform for Tailwind."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -8,14 +9,13 @@ from typing import Any
 from gotailwind import Tailwind, TailwindDeviceStatus, TailwindError
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import TailwindDataUpdateCoordinator
+from .coordinator import TailwindConfigEntry
 from .entity import TailwindEntity
 
 
@@ -30,7 +30,6 @@ class TailwindNumberEntityDescription(NumberEntityDescription):
 DESCRIPTIONS = [
     TailwindNumberEntityDescription(
         key="brightness",
-        icon="mdi:led-on",
         translation_key="brightness",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -47,14 +46,13 @@ DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: TailwindConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tailwind number based on a config entry."""
-    coordinator: TailwindDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         TailwindNumberEntity(
-            coordinator,
+            entry.runtime_data,
             description,
         )
         for description in DESCRIPTIONS
@@ -77,7 +75,6 @@ class TailwindNumberEntity(TailwindEntity, NumberEntity):
             await self.entity_description.set_value_fn(self.coordinator.tailwind, value)
         except TailwindError as exc:
             raise HomeAssistantError(
-                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from exc

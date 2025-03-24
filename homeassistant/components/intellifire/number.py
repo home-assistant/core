@@ -1,4 +1,5 @@
 """Flame height number sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -10,7 +11,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, LOGGER
 from .coordinator import IntellifireDataUpdateCoordinator
@@ -20,7 +21,7 @@ from .entity import IntellifireEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the fans."""
     coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -28,7 +29,6 @@ async def async_setup_entry(
     description = NumberEntityDescription(
         key="flame_control",
         translation_key="flame_control",
-        icon="mdi:arrow-expand-vertical",
     )
 
     async_add_entities(
@@ -61,15 +61,14 @@ class IntellifireFlameControlEntity(IntellifireEntity, NumberEntity):
     def native_value(self) -> float | None:
         """Return the current Flame Height segment number value."""
         # UI uses 1-5 for flame height, backing lib uses 0-4
-        value = self.coordinator.read_api.data.flameheight + 1
-        return value
+        return self.coordinator.read_api.data.flameheight + 1
 
     async def async_set_native_value(self, value: float) -> None:
         """Slider change."""
         value_to_send: int = int(value) - 1
         LOGGER.debug(
             "%s set flame height to %d with raw value %s",
-            self._attr_name,
+            self.name,
             value,
             value_to_send,
         )

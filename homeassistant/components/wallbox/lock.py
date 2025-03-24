@@ -1,4 +1,5 @@
 """Home Assistant component for accessing the Wallbox Portal API. The lock component creates a lock entity."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,7 +8,7 @@ from homeassistant.components.lock import LockEntity, LockEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CHARGER_DATA_KEY,
@@ -27,7 +28,9 @@ LOCK_TYPES: dict[str, LockEntityDescription] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create wallbox lock entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -42,11 +45,9 @@ async def async_setup_entry(
         raise PlatformNotReady from exc
 
     async_add_entities(
-        [
-            WallboxLock(coordinator, description)
-            for ent in coordinator.data
-            if (description := LOCK_TYPES.get(ent))
-        ]
+        WallboxLock(coordinator, description)
+        for ent in coordinator.data
+        if (description := LOCK_TYPES.get(ent))
     )
 
 

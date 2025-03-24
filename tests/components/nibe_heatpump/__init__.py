@@ -41,7 +41,7 @@ class MockConnection(Connection):
     async def read_coil(self, coil: Coil, timeout: float = 0) -> CoilData:
         """Read of coils."""
         if (data := self.coils.get(coil.address, None)) is None:
-            raise ReadException()
+            raise ReadException
         return CoilData(coil, data)
 
     async def write_coil(self, coil_data: CoilData, timeout: float = 10.0) -> None:
@@ -50,7 +50,7 @@ class MockConnection(Connection):
     async def verify_connectivity(self):
         """Verify that we have functioning communication."""
 
-    def mock_coil_update(self, coil_id: int, value: int | float | str | None):
+    def mock_coil_update(self, coil_id: int, value: float | str | None):
         """Trigger an out of band coil update."""
         coil = self.heatpump.get_coil_by_address(coil_id)
         self.coils[coil_id] = value
@@ -64,7 +64,7 @@ async def async_add_entry(hass: HomeAssistant, data: dict[str, Any]) -> MockConf
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     return entry
 
 

@@ -1,6 +1,5 @@
 """Test ESPHome lights."""
 
-
 from unittest.mock import call
 
 from aioesphomeapi import (
@@ -21,9 +20,7 @@ from homeassistant.components.light import (
     ATTR_FLASH,
     ATTR_HS_COLOR,
     ATTR_MAX_COLOR_TEMP_KELVIN,
-    ATTR_MAX_MIREDS,
     ATTR_MIN_COLOR_TEMP_KELVIN,
-    ATTR_MIN_MIREDS,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
@@ -677,7 +674,7 @@ async def test_light_rgb(
                 color_mode=LightColorCapability.RGB
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
-                rgb=(pytest.approx(0.32941176470588235), 1.0, 0.0),
+                rgb=(pytest.approx(0.3333333333333333), 1.0, 0.0),
                 brightness=pytest.approx(0.4980392156862745),
             )
         ]
@@ -815,7 +812,7 @@ async def test_light_rgbw(
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
                 white=0,
-                rgb=(pytest.approx(0.32941176470588235), 1.0, 0.0),
+                rgb=(pytest.approx(0.3333333333333333), 1.0, 0.0),
                 brightness=pytest.approx(0.4980392156862745),
             )
         ]
@@ -994,7 +991,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
                 | LightColorCapability.BRIGHTNESS,
                 cold_white=0,
                 warm_white=0,
-                rgb=(pytest.approx(0.32941176470588235), 1.0, 0.0),
+                rgb=(pytest.approx(0.3333333333333333), 1.0, 0.0),
                 brightness=pytest.approx(0.4980392156862745),
             )
         ]
@@ -1227,7 +1224,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
                 white=0,
-                rgb=(pytest.approx(0.32941176470588235), 1.0, 0.0),
+                rgb=(pytest.approx(0.3333333333333333), 1.0, 0.0),
                 brightness=pytest.approx(0.4980392156862745),
             )
         ]
@@ -1380,9 +1377,6 @@ async def test_light_color_temp(
     assert state.state == STATE_ON
     attributes = state.attributes
 
-    assert attributes[ATTR_MIN_MIREDS] == 153
-    assert attributes[ATTR_MAX_MIREDS] == 370
-
     assert attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2700
     assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
     await hass.services.async_call(
@@ -1454,9 +1448,6 @@ async def test_light_color_temp_no_mireds_set(
     assert state is not None
     assert state.state == STATE_ON
     attributes = state.attributes
-
-    assert attributes[ATTR_MIN_MIREDS] is None
-    assert attributes[ATTR_MAX_MIREDS] is None
 
     assert attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 0
     assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 0
@@ -1559,8 +1550,6 @@ async def test_light_color_temp_legacy(
 
     assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
-    assert attributes[ATTR_MIN_MIREDS] == 153
-    assert attributes[ATTR_MAX_MIREDS] == 370
 
     assert attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2700
     assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
@@ -1865,7 +1854,7 @@ async def test_light_no_color_modes(
     state = hass.states.get("light.test_mylight")
     assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.UNKNOWN]
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
 
     await hass.services.async_call(
         LIGHT_DOMAIN,

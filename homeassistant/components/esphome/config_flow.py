@@ -1,11 +1,12 @@
 """Config flow to configure esphome component."""
+
 from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import Mapping
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aioesphomeapi import (
     APIClient,
@@ -19,18 +20,28 @@ from aioesphomeapi import (
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components import dhcp, zeroconf
-from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.components import zeroconf
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.util.json import json_loads_object
 
 from .const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
+    CONF_SUBSCRIBE_LOGS,
     DEFAULT_ALLOW_SERVICE_CALLS,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
@@ -50,21 +61,23 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _reauth_entry: ConfigEntry
+
     def __init__(self) -> None:
         """Initialize flow."""
         self._host: str | None = None
+        self.__name: str | None = None
         self._port: int | None = None
         self._password: str | None = None
         self._noise_required: bool | None = None
         self._noise_psk: str | None = None
         self._device_info: DeviceInfo | None = None
-        self._reauth_entry: ConfigEntry | None = None
         # The ESPHome name as per its config
         self._device_name: str | None = None
 
     async def _async_step_user_base(
         self, user_input: dict[str, Any] | None = None, error: str | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._port = user_input[CONF_PORT]
@@ -87,20 +100,20 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         return await self._async_step_user_base(user_input=user_input)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by a reauth event."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry is not None
-        self._reauth_entry = entry
-        self._host = entry.data[CONF_HOST]
-        self._port = entry.data[CONF_PORT]
-        self._password = entry.data[CONF_PASSWORD]
-        self._name = entry.title
-        self._device_name = entry.data.get(CONF_DEVICE_NAME)
+        self._reauth_entry = self._get_reauth_entry()
+        self._host = entry_data[CONF_HOST]
+        self._port = entry_data[CONF_PORT]
+        self._password = entry_data[CONF_PASSWORD]
+        self._name = self._reauth_entry.title
+        self._device_name = entry_data.get(CONF_DEVICE_NAME)
 
         # Device without encryption allows fetching device info. We can then check
         # if the device is no longer using a password. If we did try with a password,
@@ -119,7 +132,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauthorization flow."""
         errors = {}
 
@@ -143,15 +156,15 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     @property
-    def _name(self) -> str | None:
-        return self.context.get(CONF_NAME)
+    def _name(self) -> str:
+        return self.__name or "ESPHome"
 
     @_name.setter
     def _name(self, value: str) -> None:
-        self.context[CONF_NAME] = value
+        self.__name = value
         self.context["title_placeholders"] = {"name": self._name}
 
-    async def _async_try_fetch_device_info(self) -> FlowResult:
+    async def _async_try_fetch_device_info(self) -> ConfigFlowResult:
         """Try to fetch device info and return any errors."""
         response: str | None
         if self._noise_required:
@@ -193,7 +206,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._async_step_user_base(error=response)
         return await self._async_authenticate_or_add()
 
-    async def _async_authenticate_or_add(self) -> FlowResult:
+    async def _async_authenticate_or_add(self) -> ConfigFlowResult:
         # Only show authentication step if device uses password
         assert self._device_info is not None
         if self._device_info.uses_password:
@@ -204,7 +217,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
             return await self._async_try_fetch_device_info()
@@ -213,8 +226,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         mac_address: str | None = discovery_info.properties.get("mac")
 
@@ -243,7 +256,48 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_mqtt(
+        self, discovery_info: MqttServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle MQTT discovery."""
+        if not discovery_info.payload:
+            return self.async_abort(reason="mqtt_missing_payload")
+
+        device_info = json_loads_object(discovery_info.payload)
+        if "mac" not in device_info:
+            return self.async_abort(reason="mqtt_missing_mac")
+
+        # there will be no port if the API is not enabled
+        if "port" not in device_info:
+            return self.async_abort(reason="mqtt_missing_api")
+
+        if "ip" not in device_info:
+            return self.async_abort(reason="mqtt_missing_ip")
+
+        # mac address is lowercase and without :, normalize it
+        unformatted_mac = cast(str, device_info["mac"])
+        mac_address = format_mac(unformatted_mac)
+
+        device_name = cast(str, device_info["name"])
+
+        self._device_name = device_name
+        self._name = cast(str, device_info.get("friendly_name", device_name))
+        self._host = cast(str, device_info["ip"])
+        self._port = cast(int, device_info["port"])
+
+        self._noise_required = "api_encryption" in device_info
+
+        # Check if already configured
+        await self.async_set_unique_id(mac_address)
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self._host, CONF_PORT: self._port}
+        )
+
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
         await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
@@ -251,7 +305,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # for configured devices.
         return self.async_abort(reason="already_configured")
 
-    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
         """Handle Supervisor service discovery."""
         await async_set_dashboard_info(
             self.hass,
@@ -262,7 +318,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="service_received")
 
     @callback
-    def _async_get_entry(self) -> FlowResult:
+    def _async_get_entry(self) -> ConfigFlowResult:
         config_data = {
             CONF_HOST: self._host,
             CONF_PORT: self._port,
@@ -274,17 +330,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         config_options = {
             CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
         }
-        if self._reauth_entry:
-            entry = self._reauth_entry
-            self.hass.config_entries.async_update_entry(
-                entry, data=self._reauth_entry.data | config_data
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._reauth_entry, data=self._reauth_entry.data | config_data
             )
-            # Reload the config entry to notify of updated config
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(entry.entry_id)
-            )
-
-            return self.async_abort(reason="reauth_successful")
 
         assert self._name is not None
         return self.async_create_entry(
@@ -295,7 +344,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_encryption_key(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle getting psk for transport encryption."""
         errors = {}
         if user_input is not None:
@@ -314,7 +363,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_authenticate(
         self, user_input: dict[str, Any] | None = None, error: str | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle getting password for authentication."""
         if user_input is not None:
             self._password = user_input[CONF_PASSWORD]
@@ -368,7 +417,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._device_name = self._device_info.name
         mac_address = format_mac(self._device_info.mac_address)
         await self.async_set_unique_id(mac_address, raise_on_progress=False)
-        if not self._reauth_entry:
+        if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: self._host, CONF_PORT: self._port}
             )
@@ -426,8 +475,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         except aiohttp.ClientError as err:
             _LOGGER.error("Error talking to the dashboard: %s", err)
             return False
-        except json.JSONDecodeError as err:
-            _LOGGER.exception("Error parsing response from dashboard: %s", err)
+        except json.JSONDecodeError:
+            _LOGGER.exception("Error parsing response from dashboard")
             return False
 
         self._noise_psk = noise_psk
@@ -439,19 +488,15 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for esphome."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -463,6 +508,10 @@ class OptionsFlowHandler(OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS
                     ),
+                ): bool,
+                vol.Required(
+                    CONF_SUBSCRIBE_LOGS,
+                    default=self.config_entry.options.get(CONF_SUBSCRIBE_LOGS, False),
                 ): bool,
             }
         )

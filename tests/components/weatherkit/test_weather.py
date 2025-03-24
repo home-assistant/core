@@ -16,20 +16,20 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
-    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
+    WeatherEntityFeature,
 )
-from homeassistant.components.weather.const import WeatherEntityFeature
 from homeassistant.components.weatherkit.const import ATTRIBUTION
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 
-from . import init_integration
+from . import init_integration, mock_weather_response
 
 
 async def test_current_weather(hass: HomeAssistant) -> None:
     """Test states of the current weather."""
-    await init_integration(hass)
+    with mock_weather_response():
+        await init_integration(hass)
 
     state = hass.states.get("weather.home")
     assert state
@@ -50,7 +50,8 @@ async def test_current_weather(hass: HomeAssistant) -> None:
 
 async def test_current_weather_nighttime(hass: HomeAssistant) -> None:
     """Test that the condition is clear-night when it's sunny and night time."""
-    await init_integration(hass, is_night_time=True)
+    with mock_weather_response(is_night_time=True):
+        await init_integration(hass)
 
     state = hass.states.get("weather.home")
     assert state
@@ -59,7 +60,8 @@ async def test_current_weather_nighttime(hass: HomeAssistant) -> None:
 
 async def test_daily_forecast_missing(hass: HomeAssistant) -> None:
     """Test that daily forecast is not supported when WeatherKit doesn't support it."""
-    await init_integration(hass, has_daily_forecast=False)
+    with mock_weather_response(has_daily_forecast=False):
+        await init_integration(hass)
 
     state = hass.states.get("weather.home")
     assert state
@@ -70,7 +72,8 @@ async def test_daily_forecast_missing(hass: HomeAssistant) -> None:
 
 async def test_hourly_forecast_missing(hass: HomeAssistant) -> None:
     """Test that hourly forecast is not supported when WeatherKit doesn't support it."""
-    await init_integration(hass, has_hourly_forecast=False)
+    with mock_weather_response(has_hourly_forecast=False):
+        await init_integration(hass)
 
     state = hass.states.get("weather.home")
     assert state
@@ -81,16 +84,14 @@ async def test_hourly_forecast_missing(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 async def test_hourly_forecast(
     hass: HomeAssistant, snapshot: SnapshotAssertion, service: str
 ) -> None:
     """Test states of the hourly forecast."""
-    await init_integration(hass)
+    with mock_weather_response():
+        await init_integration(hass)
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
@@ -107,16 +108,14 @@ async def test_hourly_forecast(
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 async def test_daily_forecast(
     hass: HomeAssistant, snapshot: SnapshotAssertion, service: str
 ) -> None:
     """Test states of the daily forecast."""
-    await init_integration(hass)
+    with mock_weather_response():
+        await init_integration(hass)
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,

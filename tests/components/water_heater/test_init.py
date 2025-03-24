@@ -1,6 +1,9 @@
 """The tests for the water heater component."""
+
 from __future__ import annotations
 
+from typing import Any
+from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -8,19 +11,28 @@ import voluptuous as vol
 
 from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
-    ATTR_OPERATION_LIST,
-    ATTR_OPERATION_MODE,
+    DOMAIN,
+    SERVICE_SET_OPERATION_MODE,
     SET_TEMPERATURE_SCHEMA,
     WaterHeaterEntity,
+    WaterHeaterEntityDescription,
     WaterHeaterEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
     async_mock_service,
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
+    import_and_test_deprecated_constant,
+    mock_integration,
+    mock_platform,
 )
 
 
@@ -30,7 +42,7 @@ async def test_set_temp_schema_no_req(
     """Test the set temperature schema with missing required data."""
     domain = "climate"
     service = "test_set_temperature"
-    schema = SET_TEMPERATURE_SCHEMA
+    schema = cv.make_entity_service_schema(SET_TEMPERATURE_SCHEMA)
     calls = async_mock_service(hass, domain, service, schema)
 
     data = {"hvac_mode": "off", "entity_id": ["climate.test_id"]}
@@ -47,7 +59,7 @@ async def test_set_temp_schema(
     """Test the set temperature schema with ok required data."""
     domain = "water_heater"
     service = "test_set_temperature"
-    schema = SET_TEMPERATURE_SCHEMA
+    schema = cv.make_entity_service_schema(SET_TEMPERATURE_SCHEMA)
     calls = async_mock_service(hass, domain, service, schema)
 
     data = {
@@ -65,9 +77,12 @@ async def test_set_temp_schema(
 class MockWaterHeaterEntity(WaterHeaterEntity):
     """Mock water heater device to use in tests."""
 
-    _attr_operation_list: list[str] = ["off", "heat_pump", "gas"]
+    _attr_operation_list: list[str] | None = ["off", "heat_pump", "gas"]
     _attr_operation = "heat_pump"
     _attr_supported_features = WaterHeaterEntityFeature.ON_OFF
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
+    set_operation_mode: MagicMock = MagicMock()
 
 
 async def test_sync_turn_on(hass: HomeAssistant) -> None:
@@ -106,49 +121,117 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
     assert water_heater.async_turn_off.call_count == 1
 
 
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(water_heater)
+async def test_operation_mode_validation(
+    hass: HomeAssistant, config_flow_fixture: None
+) -> None:
+    """Test operation mode validation."""
+    water_heater_entity = MockWaterHeaterEntity()
+    water_heater_entity.hass = hass
+    water_heater_entity._attr_name = "test"
+    water_heater_entity._attr_unique_id = "test"
+    water_heater_entity._attr_supported_features = (
+        WaterHeaterEntityFeature.OPERATION_MODE
+    )
+    water_heater_entity._attr_current_operation = None
+    water_heater_entity._attr_operation_list = None
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        return True
+
+    async def async_setup_entry_water_heater_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Set up test water_heater platform via config entry."""
+        async_add_entities([water_heater_entity])
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry_init,
+        ),
+        built_in=False,
+    )
+    mock_platform(
+        hass,
+        "test.water_heater",
+        MockPlatform(async_setup_entry=async_setup_entry_water_heater_platform),
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    data = {"entity_id": "water_heater.test", "operation_mode": "test"}
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_SET_OPERATION_MODE, data, blocking=True
+        )
+    assert (
+        str(exc.value) == "Operation mode test is not valid for water_heater.test. "
+        "The operation list is not defined"
+    )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "operation_list_not_defined"
+    assert exc.value.translation_placeholders == {
+        "entity_id": "water_heater.test",
+        "operation_mode": "test",
+    }
+
+    water_heater_entity._attr_operation_list = ["gas", "eco"]
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_SET_OPERATION_MODE, data, blocking=True
+        )
+    assert (
+        str(exc.value) == "Operation mode test is not valid for water_heater.test. "
+        "Valid operation modes are: gas, eco"
+    )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "not_valid_operation_mode"
+    assert exc.value.translation_placeholders == {
+        "entity_id": "water_heater.test",
+        "operation_mode": "test",
+        "operation_list": "gas, eco",
+    }
+
+    data = {"entity_id": "water_heater.test", "operation_mode": "eco"}
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_OPERATION_MODE, data, blocking=True
+    )
+    await hass.async_block_till_done()
+    water_heater_entity.set_operation_mode.assert_has_calls([mock.call("eco")])
 
 
 @pytest.mark.parametrize(
-    ("enum"),
+    ("constant_name", "replacement_name", "replacement"),
     [
-        WaterHeaterEntityFeature.TARGET_TEMPERATURE,
-        WaterHeaterEntityFeature.OPERATION_MODE,
-        WaterHeaterEntityFeature.AWAY_MODE,
+        (
+            "WaterHeaterEntityEntityDescription",
+            "WaterHeaterEntityDescription",
+            WaterHeaterEntityDescription,
+        ),
     ],
 )
 def test_deprecated_constants(
     caplog: pytest.LogCaptureFixture,
-    enum: WaterHeaterEntityFeature,
+    constant_name: str,
+    replacement_name: str,
+    replacement: Any,
 ) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, water_heater, enum, "SUPPORT_", "2025.1"
+    """Test deprecated automation constants."""
+    import_and_test_deprecated_constant(
+        caplog,
+        water_heater,
+        constant_name,
+        replacement_name,
+        replacement,
+        "2026.1",
     )
-
-
-def test_deprecated_supported_features_ints(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test deprecated supported features ints."""
-
-    class MockWaterHeaterEntity(WaterHeaterEntity):
-        _attr_operation_list = ["mode1", "mode2"]
-        _attr_temperature_unit = UnitOfTemperature.CELSIUS
-        _attr_current_operation = "mode1"
-        _attr_supported_features = WaterHeaterEntityFeature.OPERATION_MODE.value
-
-    entity = MockWaterHeaterEntity()
-    entity.hass = hass
-    assert entity.supported_features_compat is WaterHeaterEntityFeature(2)
-    assert "MockWaterHeaterEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "WaterHeaterEntityFeature.OPERATION_MODE" in caplog.text
-    caplog.clear()
-    assert entity.supported_features_compat is WaterHeaterEntityFeature(2)
-    assert "is using deprecated supported features values" not in caplog.text
-    assert entity.state_attributes[ATTR_OPERATION_MODE] == "mode1"
-    assert entity.capability_attributes[ATTR_OPERATION_LIST] == ["mode1", "mode2"]

@@ -1,4 +1,5 @@
 """Config flow for pvpc_hourly_pricing."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -7,10 +8,15 @@ from typing import Any
 from aiopvpc import DEFAULT_POWER_KW, PVPCData
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
@@ -32,7 +38,7 @@ _MAIL_TO_LINK = (
 )
 
 
-class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for `pvpc_hourly_pricing`."""
 
     VERSION = 1
@@ -43,19 +49,18 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _use_api_token: bool = False
     _api_token: str | None = None
     _api: PVPCData | None = None
-    _reauth_entry: config_entries.ConfigEntry | None = None
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> PVPCOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return PVPCOptionsFlowHandler(config_entry)
+        return PVPCOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
             await self.async_set_unique_id(user_input[ATTR_TARIFF])
@@ -92,7 +97,7 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_api_token(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle optional step to define API token for extra sensors."""
         if user_input is not None:
             self._api_token = user_input[CONF_API_TOKEN]
@@ -110,7 +115,9 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"mail_to_link": _MAIL_TO_LINK},
         )
 
-    async def _async_verify(self, step_id: str, data_schema: vol.Schema) -> FlowResult:
+    async def _async_verify(
+        self, step_id: str, data_schema: vol.Schema
+    ) -> ConfigFlowResult:
         """Attempt to verify the provided configuration."""
         errors: dict[str, str] = {}
         auth_ok = True
@@ -134,21 +141,18 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ATTR_POWER_P3: self._power_p3,
             CONF_API_TOKEN: self._api_token if self._use_api_token else None,
         }
-        if self._reauth_entry:
-            self.hass.config_entries.async_update_entry(self._reauth_entry, data=data)
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
             )
-            return self.async_abort(reason="reauth_successful")
 
         assert self._name is not None
         return self.async_create_entry(title=self._name, data=data)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle re-authentication with ESIOS Token."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         self._api_token = entry_data.get(CONF_API_TOKEN)
         self._use_api_token = self._api_token is not None
         self._name = entry_data[CONF_NAME]
@@ -159,7 +163,7 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         data_schema = vol.Schema(
             {
@@ -174,7 +178,7 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="reauth_confirm", data_schema=data_schema)
 
 
-class PVPCOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+class PVPCOptionsFlowHandler(OptionsFlow):
     """Handle PVPC options."""
 
     _power: float | None = None
@@ -182,7 +186,7 @@ class PVPCOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
 
     async def async_step_api_token(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle optional step to define API token for extra sensors."""
         if user_input is not None and user_input.get(CONF_API_TOKEN):
             return self.async_create_entry(
@@ -195,7 +199,7 @@ class PVPCOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             )
 
         # Fill options with entry data
-        api_token = self.options.get(
+        api_token = self.config_entry.options.get(
             CONF_API_TOKEN, self.config_entry.data.get(CONF_API_TOKEN)
         )
         return self.async_show_form(
@@ -208,7 +212,7 @@ class PVPCOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             if user_input[CONF_USE_API_TOKEN]:
@@ -225,13 +229,11 @@ class PVPCOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             )
 
         # Fill options with entry data
-        power = self.options.get(ATTR_POWER, self.config_entry.data[ATTR_POWER])
-        power_valley = self.options.get(
-            ATTR_POWER_P3, self.config_entry.data[ATTR_POWER_P3]
-        )
-        api_token = self.options.get(
-            CONF_API_TOKEN, self.config_entry.data.get(CONF_API_TOKEN)
-        )
+        options = self.config_entry.options
+        data = self.config_entry.data
+        power = options.get(ATTR_POWER, data[ATTR_POWER])
+        power_valley = options.get(ATTR_POWER_P3, data[ATTR_POWER_P3])
+        api_token = options.get(CONF_API_TOKEN, data.get(CONF_API_TOKEN))
         use_api_token = api_token is not None
         schema = vol.Schema(
             {

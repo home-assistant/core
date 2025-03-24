@@ -50,12 +50,22 @@ async def test_setup_entry_success(
             remoteType="DIY Plug",
             hubDeviceId="test-hub-id",
         ),
+        Remote(
+            deviceId="meter-pro-1",
+            deviceName="meter-pro-name-1",
+            deviceType="MeterPro(CO2)",
+            hubDeviceId="test-hub-id",
+        ),
+        Remote(
+            deviceId="hub2-1",
+            deviceName="hub2-name-1",
+            deviceType="Hub 2",
+            hubDeviceId="test-hub-id",
+        ),
     ]
     mock_get_status.return_value = {"power": PowerState.ON.value}
-    entry = configure_integration(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -79,8 +89,7 @@ async def test_setup_entry_fails_when_listing_devices(
 ) -> None:
     """Test error handling when list_devices in setup of entry."""
     mock_list_devices.side_effect = error
-    entry = configure_integration(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+    entry = await configure_integration(hass)
     assert entry.state == state
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -102,9 +111,8 @@ async def test_setup_entry_fails_when_refreshing(
         )
     ]
     mock_get_status.side_effect = CannotConnect
-    entry = configure_integration(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.LOADED
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()

@@ -1,24 +1,28 @@
 """Define test fixtures for RainMachine."""
+
+from collections.abc import AsyncGenerator
 import json
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant.components.rainmachine import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="client")
-def client_fixture(controller, controller_mac):
+def client_fixture(controller: AsyncMock, controller_mac: str) -> AsyncMock:
     """Define a regenmaschine client."""
     return AsyncMock(load_local=AsyncMock(), controllers={controller_mac: controller})
 
 
 @pytest.fixture(name="config")
-def config_fixture(hass):
+def config_fixture() -> dict[str, Any]:
     """Define a config entry data fixture."""
     return {
         CONF_IP_ADDRESS: "192.168.1.100",
@@ -29,9 +33,16 @@ def config_fixture(hass):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config, controller_mac):
+def config_entry_fixture(
+    hass: HomeAssistant, config: dict[str, Any], controller_mac: str
+) -> MockConfigEntry:
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=controller_mac, data=config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=controller_mac,
+        data=config,
+        entry_id="81bd010ed0a63b705f6da8407cb26d4b",
+    )
     entry.add_to_hass(hass)
     return entry
 
@@ -71,7 +82,7 @@ def controller_fixture(
 
 
 @pytest.fixture(name="controller_mac")
-def controller_mac_fixture():
+def controller_mac_fixture() -> str:
     """Define a controller MAC address."""
     return "aa:bb:cc:dd:ee:ff"
 
@@ -99,7 +110,9 @@ def data_machine_firmare_update_status_fixture():
 @pytest.fixture(name="data_programs", scope="package")
 def data_programs_fixture():
     """Define program data."""
-    return json.loads(load_fixture("programs_data.json", "rainmachine"))
+    raw_data = json.loads(load_fixture("programs_data.json", "rainmachine"))
+    # This replicate the process from `regenmaschine` to convert list to dict
+    return {program["uid"]: program for program in raw_data}
 
 
 @pytest.fixture(name="data_provision_settings", scope="package")
@@ -123,19 +136,33 @@ def data_restrictions_universal_fixture():
 @pytest.fixture(name="data_zones", scope="package")
 def data_zones_fixture():
     """Define zone data."""
-    return json.loads(load_fixture("zones_data.json", "rainmachine"))
+    raw_data = json.loads(load_fixture("zones_data.json", "rainmachine"))
+    # This replicate the process from `regenmaschine` to convert list to dict
+    zone_details = json.loads(load_fixture("zones_details.json", "rainmachine"))
+
+    zones: dict[int, dict[str, Any]] = {}
+    for zone in raw_data:
+        [extra] = [z for z in zone_details if z["uid"] == zone["uid"]]
+        zones[zone["uid"]] = {**zone, **extra}
+
+    return zones
 
 
 @pytest.fixture(name="setup_rainmachine")
-async def setup_rainmachine_fixture(hass, client, config):
+async def setup_rainmachine_fixture(
+    hass: HomeAssistant, client: AsyncMock, config: dict[str, Any]
+) -> AsyncGenerator[None]:
     """Define a fixture to set up RainMachine."""
-    with patch(
-        "homeassistant.components.rainmachine.Client", return_value=client
-    ), patch(
-        "homeassistant.components.rainmachine.config_flow.Client", return_value=client
-    ), patch(
-        "homeassistant.components.rainmachine.PLATFORMS",
-        [],
+    with (
+        patch("homeassistant.components.rainmachine.Client", return_value=client),
+        patch(
+            "homeassistant.components.rainmachine.config_flow.Client",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.components.rainmachine.PLATFORMS",
+            [],
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

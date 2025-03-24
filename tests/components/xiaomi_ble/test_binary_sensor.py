@@ -262,6 +262,37 @@ async def test_smoke(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
+async def test_power(hass: HomeAssistant) -> None:
+    """Test setting up a power binary sensor."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="F8:24:41:E9:50:74",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "F8:24:41:E9:50:74",
+            b"P0S\x01?tP\xe9A$\xf8\x01\x10\x03\x01\x00\x00",
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 2
+
+    power_sensor = hass.states.get("binary_sensor.remote_control_5074_power")
+    power_sensor_attribtes = power_sensor.attributes
+    assert power_sensor.state == STATE_OFF
+    assert power_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Remote Control 5074 Power"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_unavailable(hass: HomeAssistant) -> None:
     """Test normal device goes to unavailable after 60 minutes."""
     start_monotonic = time.monotonic()
@@ -294,9 +325,12 @@ async def test_unavailable(hass: HomeAssistant) -> None:
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch_bluetooth_time(
-        monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -346,9 +380,12 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch_bluetooth_time(
-        monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -398,9 +435,12 @@ async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch_bluetooth_time(
-        monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()

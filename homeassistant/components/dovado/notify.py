@@ -1,4 +1,5 @@
 """Support for SMS notifications from the Dovado router."""
+
 from __future__ import annotations
 
 import logging

@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/schlage",
   "iot_class": "cloud_polling",
-  "requirements": ["pyschlage==2023.12.1"]
+  "requirements": ["pyschlage==2024.11.0"]
 }

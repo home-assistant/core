@@ -125,6 +125,45 @@
       "lte_uplink_frequency": {
         "name": "LTE uplink frequency"
       },
+      "nrbler": {
+        "name": "5G block error rate"
+      },
+      "nrcqi0": {
+        "name": "5G CQI 0"
+      },
+      "nrcqi1": {
+        "name": "5G CQI 1"
+      },
+      "nrdlbandwidth": {
+        "name": "5G downlink bandwidth"
+      },
+      "nrdlmcs": {
+        "name": "5G downlink MCS"
+      },
+      "nrearfcn": {
+        "name": "5G EARFCN"
+      },
+      "nrrank": {
+        "name": "5G rank"
+      },
+      "nrrsrp": {
+        "name": "5G RSRP"
+      },
+      "nrrsrq": {
+        "name": "5G RSRQ"
+      },
+      "nrsinr": {
+        "name": "5G SINR"
+      },
+      "nrtxpower": {
+        "name": "5G transmit power"
+      },
+      "nrulbandwidth": {
+        "name": "5G uplink bandwidth"
+      },
+      "nrulmcs": {
+        "name": "5G uplink MCS"
+      },
       "pci": {
         "name": "PCI"
       },
@@ -309,33 +348,7 @@
       }
     }
   },
-  "issues": {
-    "service_changed_to_button": {
-      "title": "Service changed to a button",
-      "description": "The {service} service is deprecated, use the corresponding {button} button instead."
-    }
-  },
   "services": {
-    "clear_traffic_statistics": {
-      "name": "Clear traffic statistics",
-      "description": "Clears traffic statistics.",
-      "fields": {
-        "url": {
-          "name": "[%key:common::config_flow::data::url%]",
-          "description": "URL of router to clear; optional when only one is configured."
-        }
-      }
-    },
-    "reboot": {
-      "name": "Reboot",
-      "description": "Reboots router.",
-      "fields": {
-        "url": {
-          "name": "[%key:common::config_flow::data::url%]",
-          "description": "URL of router to reboot; optional when only one is configured."
-        }
-      }
-    },
     "resume_integration": {
       "name": "Resume integration",
       "description": "Resumes suspended integration.",
@@ -348,7 +361,7 @@
     },
     "suspend_integration": {
       "name": "Suspend integration",
-      "description": "Suspends integration. Suspending logs the integration out from the router, and stops accessing it. Useful e.g. if accessing the router web interface from another source such as a web browser is temporarily required. Invoke the resume_integration service to resume.\n.",
+      "description": "Suspends integration. Suspending logs the integration out from the router, and stops accessing it. Useful e.g. if accessing the router web interface from another source such as a web browser is temporarily required. Invoke the 'Resume integration' action to resume.",
       "fields": {
         "url": {
           "name": "[%key:common::config_flow::data::url%]",

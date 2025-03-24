@@ -1,102 +1,59 @@
 """Support for tracking the proximity of a device."""
+
 from __future__ import annotations
 
 import logging
 
-import voluptuous as vol
-
-from homeassistant.const import CONF_DEVICES, CONF_UNIT_OF_MEASUREMENT, CONF_ZONE
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-from .const import (
-    ATTR_DIR_OF_TRAVEL,
-    ATTR_NEAREST,
-    CONF_IGNORED_ZONES,
-    CONF_TOLERANCE,
-    DEFAULT_PROXIMITY_ZONE,
-    DEFAULT_TOLERANCE,
-    DOMAIN,
-    UNITS,
+from homeassistant.helpers.event import (
+    async_track_entity_registry_updated_event,
+    async_track_state_change_event,
 )
-from .coordinator import ProximityDataUpdateCoordinator
+
+from .const import CONF_TRACKED_ENTITIES
+from .coordinator import ProximityConfigEntry, ProximityDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-ZONE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_ZONE, default=DEFAULT_PROXIMITY_ZONE): cv.string,
-        vol.Optional(CONF_DEVICES, default=[]): vol.All(cv.ensure_list, [cv.entity_id]),
-        vol.Optional(CONF_IGNORED_ZONES, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-        vol.Optional(CONF_TOLERANCE, default=DEFAULT_TOLERANCE): cv.positive_int,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.All(cv.string, vol.In(UNITS)),
-    }
-)
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: cv.schema_with_slug_keys(ZONE_SCHEMA)}, extra=vol.ALLOW_EXTRA
-)
+async def async_setup_entry(hass: HomeAssistant, entry: ProximityConfigEntry) -> bool:
+    """Set up Proximity from a config entry."""
+    _LOGGER.debug("setup %s with config:%s", entry.title, entry.data)
 
+    coordinator = ProximityDataUpdateCoordinator(hass, entry)
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Get the zones and offsets from configuration.yaml."""
-    hass.data.setdefault(DOMAIN, {})
-    for zone, proximity_config in config[DOMAIN].items():
-        _LOGGER.debug("setup %s with config:%s", zone, proximity_config)
-
-        coordinator = ProximityDataUpdateCoordinator(hass, zone, proximity_config)
-
-        async_track_state_change(
+    entry.async_on_unload(
+        async_track_state_change_event(
             hass,
-            proximity_config[CONF_DEVICES],
+            entry.data[CONF_TRACKED_ENTITIES],
             coordinator.async_check_proximity_state_change,
         )
+    )
 
-        await coordinator.async_refresh()
-        hass.data[DOMAIN][zone] = coordinator
+    entry.async_on_unload(
+        async_track_entity_registry_updated_event(
+            hass,
+            entry.data[CONF_TRACKED_ENTITIES],
+            coordinator.async_check_tracked_entity_change,
+        )
+    )
 
-        proximity = Proximity(hass, zone, coordinator)
-        await proximity.async_added_to_hass()
-        proximity.async_write_ha_state()
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
 
 
-class Proximity(CoordinatorEntity[ProximityDataUpdateCoordinator]):
-    """Representation of a Proximity."""
+async def async_unload_entry(hass: HomeAssistant, entry: ProximityConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, [Platform.SENSOR])
 
-    # This entity is legacy and does not have a platform.
-    # We can't fix this easily without breaking changes.
-    _no_platform_reported = True
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        friendly_name: str,
-        coordinator: ProximityDataUpdateCoordinator,
-    ) -> None:
-        """Initialize the proximity."""
-        super().__init__(coordinator)
-        self.hass = hass
-        self.entity_id = f"{DOMAIN}.{friendly_name}"
-
-        self._attr_name = friendly_name
-        self._attr_unit_of_measurement = self.coordinator.unit_of_measurement
-
-    @property
-    def state(self) -> str | int | float:
-        """Return the state."""
-        return self.coordinator.data["dist_to_zone"]
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return the state attributes."""
-        return {
-            ATTR_DIR_OF_TRAVEL: str(self.coordinator.data["dir_of_travel"]),
-            ATTR_NEAREST: str(self.coordinator.data["nearest"]),
-        }
+async def _async_update_listener(
+    hass: HomeAssistant, entry: ProximityConfigEntry
+) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)

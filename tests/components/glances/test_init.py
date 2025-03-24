@@ -1,5 +1,6 @@
 """Tests for Glances integration."""
-from unittest.mock import AsyncMock, MagicMock
+
+from unittest.mock import MagicMock
 
 from glances_api.exceptions import (
     GlancesApiAuthorizationError,
@@ -11,9 +12,8 @@ import pytest
 from homeassistant.components.glances.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 
-from . import HA_SENSOR_DATA, MOCK_USER_INPUT
+from . import MOCK_USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -26,29 +26,7 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.state == ConfigEntryState.LOADED
-
-
-async def test_entry_deprecated_version(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry, mock_api: AsyncMock
-) -> None:
-    """Test creating an issue if glances server is version 2."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
-    entry.add_to_hass(hass)
-
-    mock_api.return_value.get_ha_sensor_data.side_effect = [
-        GlancesApiNoDataAvailable("endpoint: 'all' is not valid"),
-        HA_SENSOR_DATA,
-        HA_SENSOR_DATA,
-    ]
-
-    await hass.config_entries.async_setup(entry.entry_id)
-
-    assert entry.state == ConfigEntryState.LOADED
-
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_version")
-    assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
+    assert entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(

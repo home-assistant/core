@@ -1,4 +1,5 @@
 """Test the Opower config flow."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -16,7 +17,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True, name="mock_setup_entry")
-def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
+def override_async_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.opower.async_setup_entry", return_value=True
@@ -25,7 +26,7 @@ def override_async_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_unload_entry() -> Generator[AsyncMock, None, None]:
+def mock_unload_entry() -> Generator[AsyncMock]:
     """Mock unloading a config entry."""
     with patch(
         "homeassistant.components.opower.async_unload_entry",
@@ -41,7 +42,7 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
@@ -57,7 +58,7 @@ async def test_form(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Pacific Gas and Electric Company (PG&E) (test-username)"
     assert result2["data"] == {
         "utility": "Pacific Gas and Electric Company (PG&E)",
@@ -75,7 +76,7 @@ async def test_form_with_mfa(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -86,7 +87,7 @@ async def test_form_with_mfa(
             "password": "test-password",
         },
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert not result2["errors"]
 
     with patch(
@@ -99,7 +100,7 @@ async def test_form_with_mfa(
             },
         )
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Consolidated Edison (ConEd) (test-username)"
     assert result3["data"] == {
         "utility": "Consolidated Edison (ConEd)",
@@ -118,7 +119,7 @@ async def test_form_with_mfa_bad_secret(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -129,7 +130,7 @@ async def test_form_with_mfa_bad_secret(
             "password": "test-password",
         },
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert not result2["errors"]
 
     with patch(
@@ -143,7 +144,7 @@ async def test_form_with_mfa_bad_secret(
             },
         )
 
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {
         "base": "invalid_auth",
     }
@@ -160,7 +161,7 @@ async def test_form_with_mfa_bad_secret(
             },
         )
 
-    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == "Consolidated Edison (ConEd) (test-username)"
     assert result4["data"] == {
         "utility": "Consolidated Edison (ConEd)",
@@ -200,7 +201,7 @@ async def test_form_exceptions(
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": expected_error}
     assert mock_login.call_count == 1
 
@@ -227,7 +228,7 @@ async def test_form_already_configured(
             },
         )
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
     assert mock_login.call_count == 0
 
@@ -256,7 +257,7 @@ async def test_form_not_already_configured(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert (
         result2["title"] == "Pacific Gas and Electric Company (PG&E) (test-username2)"
     )
@@ -277,7 +278,8 @@ async def test_form_valid_reauth(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that we can handle a valid reauth."""
-    mock_config_entry.state = ConfigEntryState.LOADED
+    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    hass.config.components.add(DOMAIN)
     mock_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
@@ -296,7 +298,7 @@ async def test_form_valid_reauth(
             {"username": "test-username", "password": "test-password2"},
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     await hass.async_block_till_done()
@@ -326,7 +328,8 @@ async def test_form_valid_reauth_with_mfa(
             "utility": "Consolidated Edison (ConEd)",
         },
     )
-    mock_config_entry.state = ConfigEntryState.LOADED
+    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    hass.config.components.add(DOMAIN)
     mock_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
@@ -346,7 +349,7 @@ async def test_form_valid_reauth_with_mfa(
             },
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     await hass.async_block_till_done()

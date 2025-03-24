@@ -1,4 +1,5 @@
 """Define an update coordinator for OpenUV."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -37,6 +38,7 @@ class OpenUvCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=entry,
             name=name,
             update_method=update_method,
             request_refresh_debouncer=Debouncer(
@@ -47,7 +49,6 @@ class OpenUvCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ),
         )
 
-        self._entry = entry
         self.latitude = latitude
         self.longitude = longitude
 

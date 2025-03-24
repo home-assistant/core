@@ -1,4 +1,5 @@
 """Data update coordinator for the Radarr integration."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -26,6 +27,21 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
 
+
+@dataclass(kw_only=True, slots=True)
+class RadarrData:
+    """Radarr data type."""
+
+    calendar: CalendarUpdateCoordinator
+    disk_space: DiskSpaceDataUpdateCoordinator
+    health: HealthDataUpdateCoordinator
+    movie: MoviesDataUpdateCoordinator
+    queue: QueueDataUpdateCoordinator
+    status: StatusDataUpdateCoordinator
+
+
+type RadarrConfigEntry = ConfigEntry[RadarrData]
+
 T = TypeVar("T", bound=SystemStatus | list[RootFolder] | list[Health] | int | None)
 
 
@@ -44,12 +60,13 @@ class RadarrEvent(CalendarEvent, RadarrEventMixIn):
 class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
     """Data update coordinator for the Radarr integration."""
 
-    config_entry: ConfigEntry
-    update_interval = timedelta(seconds=30)
+    config_entry: RadarrConfigEntry
+    _update_interval = timedelta(seconds=30)
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: RadarrConfigEntry,
         host_configuration: PyArrHostConfiguration,
         api_client: RadarrClient,
     ) -> None:
@@ -57,8 +74,9 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
-            update_interval=self.update_interval,
+            update_interval=self._update_interval,
         )
         self.api_client = api_client
         self.host_configuration = host_configuration
@@ -96,7 +114,7 @@ class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[RootFolder
         """Fetch the data."""
         root_folders = await self.api_client.async_get_root_folders()
         if isinstance(root_folders, RootFolder):
-            root_folders = [root_folders]
+            return [root_folders]
         return root_folders
 
 
@@ -105,7 +123,10 @@ class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[Health]]):
 
     async def _fetch_data(self) -> list[Health]:
         """Fetch the health data."""
-        return await self.api_client.async_get_failed_health_checks()
+        health = await self.api_client.async_get_failed_health_checks()
+        if isinstance(health, Health):
+            return [health]
+        return health
 
 
 class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
@@ -129,16 +150,17 @@ class QueueDataUpdateCoordinator(RadarrDataUpdateCoordinator):
 class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
     """Calendar update coordinator."""
 
-    update_interval = timedelta(hours=1)
+    _update_interval = timedelta(hours=1)
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: RadarrConfigEntry,
         host_configuration: PyArrHostConfiguration,
         api_client: RadarrClient,
     ) -> None:
         """Initialize."""
-        super().__init__(hass, host_configuration, api_client)
+        super().__init__(hass, config_entry, host_configuration, api_client)
         self.event: RadarrEvent | None = None
         self._events: list[RadarrEvent] = []
 

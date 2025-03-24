@@ -1,0 +1,23 @@
+{
+  "entity": {
+    "sensor": {
+      "total_running_balance": {
+        "default": "mdi:currency-usd"
+      },
+      "total_current_balance": {
+        "default": "mdi:currency-usd"
+      },
+      "next_billing_date": {
+        "default": "mdi:calendar"
+      },
+      "hop_power_savings": {
+        "default": "mdi:percent"
+      }
+    },
+    "select": {
+      "hop_selector": {
+        "default": "mdi:lightning-bolt"
+      }
+    }
+  }
+}

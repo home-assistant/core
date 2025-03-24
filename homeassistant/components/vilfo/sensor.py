@@ -1,4 +1,5 @@
 """Support for Vilfo Router sensors."""
+
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
@@ -10,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_API_DATA_FIELD_BOOT_TIME,
@@ -24,16 +25,11 @@ from .const import (
 )
 
 
-@dataclass(frozen=True)
-class VilfoRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class VilfoSensorEntityDescription(SensorEntityDescription):
+    """Describes Vilfo sensor entity."""
 
     api_key: str
-
-
-@dataclass(frozen=True)
-class VilfoSensorEntityDescription(SensorEntityDescription, VilfoRequiredKeysMixin):
-    """Describes Vilfo sensor entity."""
 
 
 SENSOR_TYPES: tuple[VilfoSensorEntityDescription, ...] = (
@@ -41,13 +37,11 @@ SENSOR_TYPES: tuple[VilfoSensorEntityDescription, ...] = (
         key=ATTR_LOAD,
         translation_key=ATTR_LOAD,
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:memory",
         api_key=ATTR_API_DATA_FIELD_LOAD,
     ),
     VilfoSensorEntityDescription(
         key=ATTR_BOOT_TIME,
         translation_key=ATTR_BOOT_TIME,
-        icon="mdi:timer-outline",
         api_key=ATTR_API_DATA_FIELD_BOOT_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
@@ -57,7 +51,7 @@ SENSOR_TYPES: tuple[VilfoSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Vilfo Router entities from a config_entry."""
     vilfo = hass.data[DOMAIN][config_entry.entry_id]

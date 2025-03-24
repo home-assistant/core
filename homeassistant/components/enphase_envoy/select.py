@@ -1,4 +1,5 @@
 """Select platform for Enphase Envoy solar energy monitor."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -11,19 +12,20 @@ from pyenphase.models.dry_contacts import DryContactAction, DryContactMode
 from pyenphase.models.tariff import EnvoyStorageMode, EnvoyStorageSettings
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import EnphaseUpdateCoordinator
-from .entity import EnvoyBaseEntity
+from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
+from .entity import EnvoyBaseEntity, exception_handler
+
+PARALLEL_UPDATES = 1
 
 
-@dataclass(frozen=True)
-class EnvoyRelayRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyRelaySelectEntityDescription(SelectEntityDescription):
+    """Describes an Envoy Dry Contact Relay select entity."""
 
     value_fn: Callable[[EnvoyDryContactSettings], str]
     update_fn: Callable[
@@ -31,26 +33,12 @@ class EnvoyRelayRequiredKeysMixin:
     ]
 
 
-@dataclass(frozen=True)
-class EnvoyRelaySelectEntityDescription(
-    SelectEntityDescription, EnvoyRelayRequiredKeysMixin
-):
-    """Describes an Envoy Dry Contact Relay select entity."""
-
-
-@dataclass(frozen=True)
-class EnvoyStorageSettingsRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    value_fn: Callable[[EnvoyStorageSettings], str]
-    update_fn: Callable[[Envoy, str], Awaitable[dict[str, Any]]]
-
-
-@dataclass(frozen=True)
-class EnvoyStorageSettingsSelectEntityDescription(
-    SelectEntityDescription, EnvoyStorageSettingsRequiredKeysMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class EnvoyStorageSettingsSelectEntityDescription(SelectEntityDescription):
     """Describes an Envoy storage settings select entity."""
+
+    value_fn: Callable[[EnvoyStorageSettings], str | None]
+    update_fn: Callable[[Envoy, str], Awaitable[dict[str, Any]]]
 
 
 RELAY_MODE_MAP = {
@@ -130,7 +118,9 @@ STORAGE_MODE_ENTITY = EnvoyStorageSettingsSelectEntityDescription(
     key="storage_mode",
     translation_key="storage_mode",
     options=STORAGE_MODE_OPTIONS,
-    value_fn=lambda storage_settings: STORAGE_MODE_MAP[storage_settings.mode],
+    value_fn=lambda storage_settings: (
+        None if not storage_settings.mode else STORAGE_MODE_MAP[storage_settings.mode]
+    ),
     update_fn=lambda envoy, value: envoy.set_storage_mode(
         REVERSE_STORAGE_MODE_MAP[value]
     ),
@@ -139,11 +129,11 @@ STORAGE_MODE_ENTITY = EnvoyStorageSettingsSelectEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EnphaseConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Enphase Envoy select platform."""
-    coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     envoy_data = coordinator.envoy.data
     assert envoy_data is not None
     entities: list[SelectEntity] = []
@@ -202,6 +192,7 @@ class EnvoyRelaySelectEntity(EnvoyBaseEntity, SelectEntity):
         """Return the state of the Enpower switch."""
         return self.entity_description.value_fn(self.relay)
 
+    @exception_handler
     async def async_select_option(self, option: str) -> None:
         """Update the relay."""
         await self.entity_description.update_fn(self.envoy, self.relay, option)
@@ -222,26 +213,38 @@ class EnvoyStorageSettingsSelectEntity(EnvoyBaseEntity, SelectEntity):
         super().__init__(coordinator, description)
         self.envoy = coordinator.envoy
         assert coordinator.envoy.data is not None
-        assert coordinator.envoy.data.enpower is not None
-        enpower = coordinator.envoy.data.enpower
-        self._serial_number = enpower.serial_number
-        self._attr_unique_id = f"{self._serial_number}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._serial_number)},
-            manufacturer="Enphase",
-            model="Enpower",
-            name=f"Enpower {self._serial_number}",
-            sw_version=str(enpower.firmware_version),
-            via_device=(DOMAIN, self.envoy_serial_num),
-        )
+        if enpower := coordinator.envoy.data.enpower:
+            self._serial_number = enpower.serial_number
+            self._attr_unique_id = f"{self._serial_number}_{description.key}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._serial_number)},
+                manufacturer="Enphase",
+                model="Enpower",
+                name=f"Enpower {self._serial_number}",
+                sw_version=str(enpower.firmware_version),
+                via_device=(DOMAIN, self.envoy_serial_num),
+            )
+        else:
+            # If no enpower device assign selects to Envoy itself
+            self._attr_unique_id = f"{self.envoy_serial_num}_{description.key}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self.envoy_serial_num)},
+                manufacturer="Enphase",
+                model=coordinator.envoy.envoy_model,
+                name=coordinator.name,
+                sw_version=str(coordinator.envoy.firmware),
+                hw_version=coordinator.envoy.part_number,
+                serial_number=self.envoy_serial_num,
+            )
 
     @property
-    def current_option(self) -> str:
+    def current_option(self) -> str | None:
         """Return the state of the select entity."""
         assert self.data.tariff is not None
         assert self.data.tariff.storage_settings is not None
         return self.entity_description.value_fn(self.data.tariff.storage_settings)
 
+    @exception_handler
     async def async_select_option(self, option: str) -> None:
         """Update the relay."""
         await self.entity_description.update_fn(self.envoy, option)

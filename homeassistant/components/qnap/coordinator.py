@@ -1,4 +1,5 @@
 """Data coordinator for the qnap integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -32,7 +33,13 @@ class QnapCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the qnap coordinator."""
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=UPDATE_INTERVAL,
+        )
 
         protocol = "https" if config_entry.data[CONF_SSL] else "http"
         self._api = QNAPStats(

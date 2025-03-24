@@ -1,10 +1,11 @@
 """Vizio SmartCast Device support."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
 
-from pyvizio import VizioAsync
+from pyvizio import AppConfig, VizioAsync
 from pyvizio.api.apps import find_app_name
 from pyvizio.const import APP_HOME, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
 
@@ -24,16 +25,15 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import device_registry as dr, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import VizioAppsDataUpdateCoordinator
 from .const import (
     CONF_ADDITIONAL_CONFIGS,
     CONF_APPS,
@@ -42,7 +42,6 @@ from .const import (
     DEFAULT_VOLUME_STEP,
     DEVICE_ID,
     DOMAIN,
-    ICON,
     SERVICE_UPDATE_SETTING,
     SUPPORTED_COMMANDS,
     UPDATE_SETTING_SCHEMA,
@@ -53,6 +52,7 @@ from .const import (
     VIZIO_SOUND_MODE,
     VIZIO_VOLUME,
 )
+from .coordinator import VizioAppsDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Vizio media player entry."""
     host = config_entry.data[CONF_HOST]
@@ -131,6 +131,10 @@ async def async_setup_entry(
 class VizioDevice(MediaPlayerEntity):
     """Media Player implementation which performs REST requests to device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+    _received_device_info = False
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -144,9 +148,8 @@ class VizioDevice(MediaPlayerEntity):
         self._apps_coordinator = apps_coordinator
 
         self._volume_step = config_entry.options[CONF_VOLUME_STEP]
-        self._current_input = None
-        self._current_app_config = None
-        self._attr_app_name = None
+        self._current_input: str | None = None
+        self._current_app_config: AppConfig | None = None
         self._available_inputs: list[str] = []
         self._available_apps: list[str] = []
         self._all_apps = apps_coordinator.data if apps_coordinator else None
@@ -155,7 +158,8 @@ class VizioDevice(MediaPlayerEntity):
             CONF_ADDITIONAL_CONFIGS, []
         )
         self._device = device
-        self._max_volume = float(self._device.get_max_volume())
+        self._max_volume = float(device.get_max_volume())
+        self._attr_assumed_state = True
 
         # Entity class attributes that will change with each update (we only include
         # the ones that are initialized differently from the defaults)
@@ -163,10 +167,15 @@ class VizioDevice(MediaPlayerEntity):
         self._attr_supported_features = SUPPORTED_COMMANDS[device_class]
 
         # Entity class attributes that will not change
-        self._attr_name = name
-        self._attr_icon = ICON[device_class]
-        self._attr_unique_id = self._config_entry.unique_id
+        unique_id = config_entry.unique_id
+        assert unique_id
+        self._attr_unique_id = unique_id
         self._attr_device_class = device_class
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="VIZIO",
+            name=name,
+        )
 
     def _apps_list(self, apps: list[str]) -> list[str]:
         """Return process apps list based on configured filters."""
@@ -191,20 +200,24 @@ class VizioDevice(MediaPlayerEntity):
             return
 
         if not self._attr_available:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Restored connection to %s", self._config_entry.data[CONF_HOST]
             )
             self._attr_available = True
 
-        if not self._attr_device_info:
-            assert self._attr_unique_id
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._attr_unique_id)},
-                manufacturer="VIZIO",
-                model=await self._device.get_model_name(log_api_exception=False),
-                name=self._attr_name,
-                sw_version=await self._device.get_version(log_api_exception=False),
+        if not self._received_device_info:
+            device_reg = dr.async_get(self.hass)
+            assert self._config_entry.unique_id
+            device = device_reg.async_get_device(
+                identifiers={(DOMAIN, self._config_entry.unique_id)}
             )
+            if device:
+                device_reg.async_update_device(
+                    device.id,
+                    model=await self._device.get_model_name(log_api_exception=False),
+                    sw_version=await self._device.get_version(log_api_exception=False),
+                )
+                self._received_device_info = True
 
         if not is_on:
             self._attr_state = MediaPlayerState.OFF
@@ -377,7 +390,7 @@ class VizioDevice(MediaPlayerEntity):
         return self._available_inputs
 
     @property
-    def app_id(self) -> str | None:
+    def app_id(self):
         """Return the ID of the current app if it is unknown by pyvizio."""
         if self._current_app_config and self.source == UNKNOWN_APP:
             return {
@@ -388,9 +401,9 @@ class VizioDevice(MediaPlayerEntity):
 
         return None
 
-    async def async_select_sound_mode(self, sound_mode):
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
-        if sound_mode in self._attr_sound_mode_list:
+        if sound_mode in (self._attr_sound_mode_list or ()):
             await self._device.set_setting(
                 VIZIO_AUDIO_SETTINGS,
                 VIZIO_SOUND_MODE,
@@ -471,3 +484,11 @@ class VizioDevice(MediaPlayerEntity):
                 num = int(self._max_volume * (self._attr_volume_level - volume))
                 await self._device.vol_down(num=num, log_api_exception=False)
                 self._attr_volume_level = volume
+
+    async def async_media_play(self) -> None:
+        """Play whatever media is currently active."""
+        await self._device.play(log_api_exception=False)
+
+    async def async_media_pause(self) -> None:
+        """Pause whatever media is currently active."""
+        await self._device.pause(log_api_exception=False)

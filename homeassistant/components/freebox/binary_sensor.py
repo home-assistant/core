@@ -1,4 +1,5 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
+
 from __future__ import annotations
 
 import logging
@@ -13,10 +14,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, FreeboxHomeCategory
-from .home_base import FreeboxHomeEntity
+from .entity import FreeboxHomeEntity
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +34,9 @@ RAID_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary sensors."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
@@ -52,16 +55,17 @@ async def async_setup_entry(
         elif node["category"] == FreeboxHomeCategory.DWS:
             binary_entities.append(FreeboxDwsSensor(hass, router, node))
 
-        for endpoint in node["show_endpoints"]:
+        binary_entities.extend(
+            FreeboxCoverSensor(hass, router, node)
+            for endpoint in node["show_endpoints"]
             if (
                 endpoint["name"] == "cover"
                 and endpoint["ep_type"] == "signal"
                 and endpoint.get("value") is not None
-            ):
-                binary_entities.append(FreeboxCoverSensor(hass, router, node))
+            )
+        )
 
-    if binary_entities:
-        async_add_entities(binary_entities, True)
+    async_add_entities(binary_entities, True)
 
 
 class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
@@ -83,7 +87,7 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
         )
         self._attr_is_on = self._edit_state(self.get_value("signal", self._sensor_name))
 
-    async def async_update_signal(self):
+    async def async_update_signal(self) -> None:
         """Update name & state."""
         self._attr_is_on = self._edit_state(
             await self.get_home_endpoint_value(self._command_id)
@@ -167,7 +171,7 @@ class FreeboxRaidDegradedSensor(BinarySensorEntity):
         return self._raid["degraded"]
 
     @callback
-    def async_on_demand_update(self):
+    def async_on_demand_update(self) -> None:
         """Update state."""
         self.async_update_state()
         self.async_write_ha_state()

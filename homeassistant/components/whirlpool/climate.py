@@ -1,13 +1,11 @@
 """Platform for climate integration."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from aiohttp import ClientSession
 from whirlpool.aircon import Aircon, FanSpeed as AirconFanSpeed, Mode as AirconMode
-from whirlpool.auth import Auth
-from whirlpool.backendselector import BackendSelector
 
 from homeassistant.components.climate import (
     ENTITY_ID_FORMAT,
@@ -22,15 +20,13 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WhirlpoolData
+from . import WhirlpoolConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,23 +65,12 @@ SUPPORTED_TARGET_TEMPERATURE_STEP = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: WhirlpoolConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    whirlpool_data: WhirlpoolData = hass.data[DOMAIN][config_entry.entry_id]
-
-    aircons = [
-        AirConEntity(
-            hass,
-            ac_data["SAID"],
-            ac_data["NAME"],
-            whirlpool_data.backend_selector,
-            whirlpool_data.auth,
-            async_get_clientsession(hass),
-        )
-        for ac_data in whirlpool_data.appliances_manager.aircons
-    ]
+    appliances_manager = config_entry.runtime_data
+    aircons = [AirConEntity(hass, aircon) for aircon in appliances_manager.aircons]
     async_add_entities(aircons, True)
 
 
@@ -103,41 +88,33 @@ class AirConEntity(ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_swing_modes = SUPPORTED_SWING_MODES
     _attr_target_temperature_step = SUPPORTED_TARGET_TEMPERATURE_STEP
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        said: str,
-        name: str | None,
-        backend_selector: BackendSelector,
-        auth: Auth,
-        session: ClientSession,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, aircon: Aircon) -> None:
         """Initialize the entity."""
-        self._aircon = Aircon(backend_selector, auth, said, session)
-        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, said, hass=hass)
-        self._attr_unique_id = said
+        self._aircon = aircon
+        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, aircon.said, hass=hass)
+        self._attr_unique_id = aircon.said
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, said)},
-            name=name if name is not None else said,
+            identifiers={(DOMAIN, aircon.said)},
+            name=aircon.name if aircon.name is not None else aircon.said,
             manufacturer="Whirlpool",
             model="Sixth Sense",
         )
 
     async def async_added_to_hass(self) -> None:
-        """Connect aircon to the cloud."""
+        """Register updates callback."""
         self._aircon.register_attr_callback(self.async_write_ha_state)
-        await self._aircon.connect()
 
     async def async_will_remove_from_hass(self) -> None:
-        """Close Whrilpool Appliance sockets before removing."""
+        """Unregister updates callback."""
         self._aircon.unregister_attr_callback(self.async_write_ha_state)
-        await self._aircon.disconnect()
 
     @property
     def available(self) -> bool:

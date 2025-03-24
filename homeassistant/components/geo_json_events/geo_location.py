@@ -1,4 +1,5 @@
 """Support for generic GeoJSON events."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -8,29 +9,24 @@ from typing import Any
 from aio_geojson_generic_client.feed_entry import GenericFeedEntry
 
 from homeassistant.components.geo_location import GeolocationEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import GeoJsonFeedEntityManager
-from .const import (
-    ATTR_EXTERNAL_ID,
-    DOMAIN,
-    SIGNAL_DELETE_ENTITY,
-    SIGNAL_UPDATE_ENTITY,
-    SOURCE,
-)
+from .const import ATTR_EXTERNAL_ID, SIGNAL_DELETE_ENTITY, SIGNAL_UPDATE_ENTITY, SOURCE
+from .manager import GeoJsonConfigEntry, GeoJsonFeedEntityManager
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GeoJsonConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the GeoJSON Events platform."""
-    manager: GeoJsonFeedEntityManager = hass.data[DOMAIN][entry.entry_id]
+    manager = entry.runtime_data
 
     @callback
     def async_add_geolocation(
@@ -104,7 +100,11 @@ class GeoJsonLocationEvent(GeolocationEvent):
 
     def _update_from_feed(self, feed_entry: GenericFeedEntry) -> None:
         """Update the internal state from the provided feed entry."""
-        self._attr_name = feed_entry.title
+        if feed_entry.properties and "name" in feed_entry.properties:
+            # The entry name's type can vary, but our own name must be a string
+            self._attr_name = str(feed_entry.properties["name"])
+        else:
+            self._attr_name = feed_entry.title
         self._attr_distance = feed_entry.distance_to_home
         self._attr_latitude = feed_entry.coordinates[0]
         self._attr_longitude = feed_entry.coordinates[1]

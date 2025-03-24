@@ -1,4 +1,5 @@
 """The yolink integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,7 +7,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from yolink.const import ATTR_DEVICE_SMART_REMOTER
+from yolink.const import ATTR_DEVICE_SMART_REMOTER, ATTR_DEVICE_SWITCH
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.home_manager import YoLinkHome
@@ -19,15 +20,20 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
+    config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import DOMAIN, YOLINK_EVENT
 from .coordinator import YoLinkCoordinator
 from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
+from .services import async_register_services
 
 SCAN_INTERVAL = timedelta(minutes=5)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 PLATFORMS = [
@@ -36,9 +42,11 @@ PLATFORMS = [
     Platform.COVER,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.VALVE,
 ]
 
 
@@ -58,13 +66,17 @@ class YoLinkHomeMessageListener(MessageListener):
         device_coordinators = entry_data.device_coordinators
         if not device_coordinators:
             return
-        device_coordinator = device_coordinators.get(device.device_id)
+        device_coordinator: YoLinkCoordinator = device_coordinators.get(
+            device.device_id
+        )
         if device_coordinator is None:
             return
+        device_coordinator.dev_online = True
         device_coordinator.async_set_updated_data(msg_data)
         # handling events
         if (
-            device_coordinator.device.device_type == ATTR_DEVICE_SMART_REMOTER
+            device_coordinator.device.device_type
+            in [ATTR_DEVICE_SMART_REMOTER, ATTR_DEVICE_SWITCH]
             and msg_data.get("event") is not None
         ):
             device_registry = dr.async_get(self._hass)
@@ -94,6 +106,14 @@ class YoLinkHomeStore:
     device_coordinators: dict[str, YoLinkCoordinator]
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up YoLink."""
+
+    async_register_services(hass)
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up yolink from a config entry."""
     hass.data.setdefault(DOMAIN, {})
@@ -116,7 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
     except YoLinkAuthFailError as yl_auth_err:
         raise ConfigEntryAuthFailed from yl_auth_err
-    except (YoLinkClientError, asyncio.TimeoutError) as err:
+    except (YoLinkClientError, TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
     device_coordinators = {}
@@ -133,7 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             paried_device_id := device_pairing_mapping.get(device.device_id)
         ) is not None:
             paried_device = yolink_home.get_device(paried_device_id)
-        device_coordinator = YoLinkCoordinator(hass, device, paried_device)
+        device_coordinator = YoLinkCoordinator(hass, entry, device, paried_device)
         try:
             await device_coordinator.async_config_entry_first_refresh()
         except ConfigEntryNotReady:

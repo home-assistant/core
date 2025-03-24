@@ -1,4 +1,5 @@
 """Tests for the HomeKit AID manager."""
+
 import os
 from unittest.mock import patch
 
@@ -48,7 +49,7 @@ async def test_aid_generation(
         aid_storage = AccessoryAidStorage(hass, config_entry)
     await aid_storage.async_initialize()
 
-    for _ in range(0, 2):
+    for _ in range(2):
         assert (
             aid_storage.get_or_allocate_aid_for_entity_id(light_ent.entity_id)
             == 1953095294
@@ -71,7 +72,7 @@ async def test_aid_generation(
     aid_storage.delete_aid(get_system_unique_id(remote_ent, remote_ent.unique_id))
     aid_storage.delete_aid("non-existent-one")
 
-    for _ in range(0, 2):
+    for _ in range(2):
         assert (
             aid_storage.get_or_allocate_aid_for_entity_id(light_ent.entity_id)
             == 1953095294
@@ -111,7 +112,7 @@ async def test_no_aid_collision(
 
     seen_aids = set()
 
-    for unique_id in range(0, 202):
+    for unique_id in range(202):
         ent = entity_registry.async_get_or_create(
             "light", "device", unique_id, device_id=device_entry.id
         )
@@ -140,7 +141,7 @@ async def test_aid_generation_no_unique_ids_handles_collision(
     seen_aids = set()
     collisions = []
 
-    for light_id in range(0, 220):
+    for light_id in range(220):
         entity_id = f"light.light{light_id}"
         hass.states.async_set(entity_id, "on")
         expected_aid = fnv1a_32(entity_id.encode("utf-8"))

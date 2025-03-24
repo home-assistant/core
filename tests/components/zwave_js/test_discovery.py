@@ -1,8 +1,12 @@
 """Test entity discovery for device-specific schemas for the Z-Wave JS integration."""
+
 import pytest
+from zwave_js_server.event import Event
+from zwave_js_server.model.node import Node
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -22,14 +26,37 @@ from homeassistant.components.zwave_js.discovery import (
 from homeassistant.components.zwave_js.discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
 )
+from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from tests.common import MockConfigEntry
+
+
+async def test_aeon_smart_switch_6_state(
+    hass: HomeAssistant, client, aeon_smart_switch_6, integration
+) -> None:
+    """Test that Smart Switch 6 has a meter reset button."""
+    state = hass.states.get("button.smart_switch_6_reset_accumulated_values")
+    assert state
 
 
 async def test_iblinds_v2(hass: HomeAssistant, client, iblinds_v2, integration) -> None:
     """Test that an iBlinds v2.0 multilevel switch value is discovered as a cover."""
     node = iblinds_v2
+    assert node.device_class.specific.label == "Unused"
+
+    state = hass.states.get("light.window_blind_controller")
+    assert not state
+
+    state = hass.states.get("cover.window_blind_controller")
+    assert state
+
+
+async def test_zvidar_state(hass: HomeAssistant, client, zvidar, integration) -> None:
+    """Test that an ZVIDAR Z-CM-V01 multilevel switch value is discovered as a cover."""
+    node = zvidar
     assert node.device_class.specific.label == "Unused"
 
     state = hass.states.get("light.window_blind_controller")
@@ -132,11 +159,45 @@ async def test_merten_507801(
     assert state
 
 
+async def test_shelly_001p10_disabled_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    shelly_qnsh_001P10_shutter,
+    integration,
+) -> None:
+    """Test that Shelly 001P10 entity created by endpoint 2 is disabled."""
+    entity_ids = [
+        "cover.wave_shutter_2",
+    ]
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state is None
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.disabled
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+        # Test enabling entity
+        updated_entry = entity_registry.async_update_entity(
+            entry.entity_id, disabled_by=None
+        )
+        assert updated_entry != entry
+        assert updated_entry.disabled is False
+
+    # Test if the main entity from endpoint 1 was created.
+    state = hass.states.get("cover.wave_shutter")
+    assert state
+
+
 async def test_merten_507801_disabled_enitites(
-    hass: HomeAssistant, client, merten_507801, integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    merten_507801,
+    integration,
 ) -> None:
     """Test that Merten 507801 entities created by endpoint 2 are disabled."""
-    registry = er.async_get(hass)
     entity_ids = [
         "cover.connect_roller_shutter_2",
         "select.connect_roller_shutter_local_protection_state_2",
@@ -145,28 +206,31 @@ async def test_merten_507801_disabled_enitites(
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
         assert state is None
-        entry = registry.async_get(entity_id)
+        entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
         # Test enabling entity
-        updated_entry = registry.async_update_entity(
-            entry.entity_id, **{"disabled_by": None}
+        updated_entry = entity_registry.async_update_entity(
+            entry.entity_id, disabled_by=None
         )
         assert updated_entry != entry
         assert updated_entry.disabled is False
 
 
 async def test_zooz_zen72(
-    hass: HomeAssistant, client, switch_zooz_zen72, integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    switch_zooz_zen72,
+    integration,
 ) -> None:
     """Test that Zooz ZEN72 Indicators are discovered as number entities."""
-    ent_reg = er.async_get(hass)
     assert len(hass.states.async_entity_ids(NUMBER_DOMAIN)) == 1
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 2  # includes ping
     entity_id = "number.z_wave_plus_700_series_dimmer_switch_indicator_value"
-    entry = ent_reg.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.entity_category == EntityCategory.CONFIG
     state = hass.states.get(entity_id)
@@ -196,7 +260,7 @@ async def test_zooz_zen72(
     client.async_send_command.reset_mock()
 
     entity_id = "button.z_wave_plus_700_series_dimmer_switch_identify"
-    entry = ent_reg.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.entity_category == EntityCategory.CONFIG
     await hass.services.async_call(
@@ -218,23 +282,34 @@ async def test_zooz_zen72(
 
 
 async def test_indicator_test(
-    hass: HomeAssistant, client, indicator_test, integration
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client,
+    indicator_test,
+    integration,
 ) -> None:
     """Test that Indicators are discovered properly.
 
     This test covers indicators that we don't already have device fixtures for.
     """
-    ent_reg = er.async_get(hass)
-    assert len(hass.states.async_entity_ids(NUMBER_DOMAIN)) == 0
-    assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 1  # only ping
-    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
-    assert (
-        len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
-    )  # include node + controller status
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, indicator_test)}
+    )
+    assert device
+    entities = er.async_entries_for_device(entity_registry, device.id)
+
+    def len_domain(domain):
+        return len([entity for entity in entities if entity.domain == domain])
+
+    assert len_domain(NUMBER_DOMAIN) == 0
+    assert len_domain(BUTTON_DOMAIN) == 1  # only ping
+    assert len_domain(BINARY_SENSOR_DOMAIN) == 1
+    assert len_domain(SENSOR_DOMAIN) == 3  # include node status + last seen
+    assert len_domain(SWITCH_DOMAIN) == 1
 
     entity_id = "binary_sensor.this_is_a_fake_device_binary_sensor"
-    entry = ent_reg.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     state = hass.states.get(entity_id)
@@ -244,7 +319,7 @@ async def test_indicator_test(
     client.async_send_command.reset_mock()
 
     entity_id = "sensor.this_is_a_fake_device_sensor"
-    entry = ent_reg.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     state = hass.states.get(entity_id)
@@ -254,7 +329,7 @@ async def test_indicator_test(
     client.async_send_command.reset_mock()
 
     entity_id = "switch.this_is_a_fake_device_switch"
-    entry = ent_reg.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.entity_category == EntityCategory.CONFIG
     state = hass.states.get(entity_id)
@@ -298,3 +373,73 @@ async def test_indicator_test(
         "propertyKey": "Switch",
     }
     assert args["value"] is False
+
+
+async def test_light_device_class_is_null(
+    hass: HomeAssistant, client, light_device_class_is_null, integration
+) -> None:
+    """Test that a Multilevel Switch CC value with a null device class is discovered as a light.
+
+    Tied to #117121.
+    """
+    node = light_device_class_is_null
+    assert node.device_class is None
+    assert hass.states.get("light.bar_display_cases")
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rediscovery(
+    hass: HomeAssistant,
+    siren_neo_coolcam: Node,
+    integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that we don't rediscover known values."""
+    node = siren_neo_coolcam
+    entity_id = "select.siren_alarm_doorbell_sound_selection"
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == "Beep"
+
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 36,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 6,
+                "newValue": 9,
+                "prevValue": 10,
+                "propertyName": "Doorbell Sound Selection",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == "Beep Beep"
+    assert "Platform zwave_js does not generate unique IDs" not in caplog.text
+
+
+async def test_aeotec_smart_switch_7(
+    hass: HomeAssistant,
+    aeotec_smart_switch_7: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that Smart Switch 7 has a light and a switch entity."""
+    state = hass.states.get("light.smart_switch_7")
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.HS,
+    ]
+
+    state = hass.states.get("switch.smart_switch_7")
+    assert state

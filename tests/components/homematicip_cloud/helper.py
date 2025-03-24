@@ -1,5 +1,7 @@
 """Helper for HomematicIP Cloud Tests."""
+
 import json
+from typing import Any
 from unittest.mock import Mock, patch
 
 from homematicip.aio.class_maps import (
@@ -10,28 +12,33 @@ from homematicip.aio.class_maps import (
 from homematicip.aio.device import AsyncDevice
 from homematicip.aio.group import AsyncGroup
 from homematicip.aio.home import AsyncHome
+from homematicip.base.homematicip_object import HomeMaticIPObject
 from homematicip.home import Home
 
-from homeassistant import config_entries
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.components.homematicip_cloud.generic_entity import (
+from homeassistant.components.homematicip_cloud.entity import (
     ATTR_IS_GROUP,
     ATTR_MODEL_TYPE,
 )
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
-from tests.common import load_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 HAPID = "3014F7110000000000000001"
 HAPPIN = "5678"
 AUTH_TOKEN = "1234"
-HOME_JSON = "homematicip_cloud.json"
-FIXTURE_DATA = load_fixture(HOME_JSON)
+FIXTURE_DATA = load_fixture("homematicip_cloud.json", "homematicip_cloud")
 
 
-def get_and_check_entity_basics(hass, mock_hap, entity_id, entity_name, device_model):
+def get_and_check_entity_basics(
+    hass: HomeAssistant,
+    mock_hap: HomematicipHAP,
+    entity_id: str,
+    entity_name: str,
+    device_model: str | None,
+) -> tuple[State, HomeMaticIPObject | None]:
     """Get and test basic device."""
     ha_state = hass.states.get(entity_id)
     assert ha_state is not None
@@ -50,7 +57,12 @@ def get_and_check_entity_basics(hass, mock_hap, entity_id, entity_name, device_m
 
 
 async def async_manipulate_test_data(
-    hass, hmip_device, attribute, new_value, channel=1, fire_device=None
+    hass: HomeAssistant,
+    hmip_device: HomeMaticIPObject,
+    attribute: str,
+    new_value: Any,
+    channel: int = 1,
+    fire_device: HomeMaticIPObject | None = None,
 ):
     """Set new value on hmip device."""
     if channel == 1:
@@ -76,15 +88,15 @@ class HomeFactory:
         self,
         hass: HomeAssistant,
         mock_connection,
-        hmip_config_entry: config_entries.ConfigEntry,
-    ):
+        hmip_config_entry: MockConfigEntry,
+    ) -> None:
         """Initialize the Factory."""
         self.hass = hass
         self.mock_connection = mock_connection
         self.hmip_config_entry = hmip_config_entry
 
     async def async_get_mock_hap(
-        self, test_devices=[], test_groups=[]
+        self, test_devices=None, test_groups=None
     ) -> HomematicipHAP:
         """Create a mocked homematic access point."""
         home_name = self.hmip_config_entry.data["name"]
@@ -130,7 +142,9 @@ class HomeTemplate(Home):
     _typeGroupMap = TYPE_GROUP_MAP
     _typeSecurityEventMap = TYPE_SECURITY_EVENT_MAP
 
-    def __init__(self, connection=None, home_name="", test_devices=[], test_groups=[]):
+    def __init__(
+        self, connection=None, home_name="", test_devices=None, test_groups=None
+    ) -> None:
         """Init template with connection."""
         super().__init__(connection=connection)
         self.name = home_name
@@ -171,15 +185,13 @@ class HomeTemplate(Home):
 
     def _generate_mocks(self):
         """Generate mocks for groups and devices."""
-        mock_devices = []
+        self.devices = [_get_mock(device) for device in self.devices]
         for device in self.devices:
-            mock_devices.append(_get_mock(device))
-        self.devices = mock_devices
+            device.functionalChannels = [
+                _get_mock(ch) for ch in device.functionalChannels
+            ]
 
-        mock_groups = []
-        for group in self.groups:
-            mock_groups.append(_get_mock(group))
-        self.groups = mock_groups
+        self.groups = [_get_mock(group) for group in self.groups]
 
     def download_configuration(self):
         """Return the initial json config."""

@@ -1,6 +1,9 @@
 """Define patches used for androidtv tests."""
+
+from typing import Any
 from unittest.mock import patch
 
+from androidtv.adb_manager.adb_manager_async import DeviceAsync
 from androidtv.constants import CMD_DEVICE_PROPERTIES, CMD_MAC_ETH0, CMD_MAC_WLAN0
 
 from homeassistant.components.androidtv.const import (
@@ -23,7 +26,7 @@ PROPS_DEV_MAC = "ether ab:cd:ef:gh:ij:kl brd"
 class AdbDeviceTcpAsyncFake:
     """A fake of the `adb_shell.adb_device_async.AdbDeviceTcpAsync` class."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize a fake `adb_shell.adb_device_async.AdbDeviceTcpAsync` instance."""
         self.available = False
 
@@ -35,7 +38,7 @@ class AdbDeviceTcpAsyncFake:
         """Try to connect to a device."""
         raise NotImplementedError
 
-    async def shell(self, cmd, *args, **kwargs):
+    async def shell(self, cmd, *args, **kwargs) -> bytes | str | None:
         """Send an ADB shell command."""
         return None
 
@@ -61,7 +64,7 @@ class ClientAsyncFakeFail:
         """Initialize a `ClientAsyncFakeFail` instance."""
         self._devices = []
 
-    async def device(self, serial):
+    async def device(self, serial) -> DeviceAsync | None:
         """Mock the `ClientAsync.device` method when the device is not connected via ADB."""
         self._devices = []
         return None
