@@ -4,20 +4,22 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from PyTado.interface import Tado
 from requests import RequestException
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+if TYPE_CHECKING:
+    from . import TadoConfigEntry
+
 from .const import (
     CONF_FALLBACK,
+    CONF_REFRESH_TOKEN,
     CONST_OVERLAY_TADO_DEFAULT,
     DOMAIN,
     INSIDE_TEMPERATURE_MEASUREMENT,
@@ -31,8 +33,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
 SCAN_INTERVAL = timedelta(minutes=5)
 SCAN_MOBILE_DEVICE_INTERVAL = timedelta(seconds=30)
 
-type TadoConfigEntry = ConfigEntry[TadoDataUpdateCoordinator]
-
 
 class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     """Class to manage API calls from and to Tado via PyTado."""
@@ -45,7 +45,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        config_entry: TadoConfigEntry,
         tado: Tado,
         debug: bool = False,
     ) -> None:
@@ -53,13 +53,15 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
         self._tado = tado
-        self._username = entry.data[CONF_USERNAME]
-        self._password = entry.data[CONF_PASSWORD]
-        self._fallback = entry.options.get(CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT)
+        self._refresh_token = config_entry.data[CONF_REFRESH_TOKEN]
+        self._fallback = config_entry.options.get(
+            CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT
+        )
         self._debug = debug
 
         self.home_id: int
@@ -104,6 +106,18 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self.data["zone"] = zones
         self.data["weather"] = home["weather"]
         self.data["geofence"] = home["geofence"]
+
+        refresh_token = await self.hass.async_add_executor_job(
+            self._tado.get_refresh_token
+        )
+
+        if refresh_token != self._refresh_token:
+            _LOGGER.debug("New refresh token obtained from Tado: %s", refresh_token)
+            self._refresh_token = refresh_token
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={**self.config_entry.data, CONF_REFRESH_TOKEN: refresh_token},
+            )
 
         return self.data
 
@@ -339,20 +353,34 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         except RequestException as err:
             raise UpdateFailed(f"Error setting Tado meter reading: {err}") from err
 
+    async def set_child_lock(self, device_id: str, enabled: bool) -> None:
+        """Set child lock of device."""
+        try:
+            await self.hass.async_add_executor_job(
+                self._tado.set_child_lock,
+                device_id,
+                enabled,
+            )
+        except RequestException as exc:
+            raise HomeAssistantError(f"Error setting Tado child lock: {exc}") from exc
+
 
 class TadoMobileDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     """Class to manage the mobile devices from Tado via PyTado."""
 
+    config_entry: TadoConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        config_entry: TadoConfigEntry,
         tado: Tado,
     ) -> None:
         """Initialize the Tado data update coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_MOBILE_DEVICE_INTERVAL,
         )

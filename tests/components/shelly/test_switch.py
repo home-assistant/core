@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock
 
-from aioshelly.const import MODEL_GAS
+from aioshelly.const import MODEL_1PM, MODEL_GAS, MODEL_MOTION
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 
@@ -177,15 +177,37 @@ async def test_block_restored_motion_switch_no_last_state(
     assert get_entity_state(hass, entity_id) == STATE_ON
 
 
+@pytest.mark.parametrize(
+    ("model", "sleep", "entity", "unique_id"),
+    [
+        (MODEL_1PM, 0, "switch.test_name_channel_1", "123456789ABC-relay_0"),
+        (
+            MODEL_MOTION,
+            1000,
+            "switch.test_name_motion_detection",
+            "123456789ABC-sensor_0-motionActive",
+        ),
+    ],
+)
 async def test_block_device_unique_ids(
-    hass: HomeAssistant, entity_registry: EntityRegistry, mock_block_device: Mock
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_block_device: Mock,
+    model: str,
+    sleep: int,
+    entity: str,
+    unique_id: str,
 ) -> None:
     """Test block device unique_ids."""
-    await init_integration(hass, 1)
+    await init_integration(hass, 1, model=model, sleep_period=sleep)
 
-    entry = entity_registry.async_get("switch.test_name_channel_1")
+    if sleep:
+        mock_block_device.mock_online()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    entry = entity_registry.async_get(entity)
     assert entry
-    assert entry.unique_id == "123456789ABC-relay_0"
+    assert entry.unique_id == unique_id
 
 
 async def test_block_set_state_connection_error(
@@ -199,7 +221,10 @@ async def test_block_set_state_connection_error(
     )
     await init_integration(hass, 1)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Device communication error occurred while calling action for switch.test_name_channel_1 of Test name",
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
@@ -288,6 +313,8 @@ async def test_rpc_device_services(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC device turn on/off services."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
     await hass.services.async_call(
@@ -310,9 +337,14 @@ async def test_rpc_device_services(
 
 
 async def test_rpc_device_unique_ids(
-    hass: HomeAssistant, mock_rpc_device: Mock, entity_registry: EntityRegistry
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
 ) -> None:
     """Test RPC device unique_ids."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
     entry = entity_registry.async_get("switch.test_switch_0")
@@ -331,18 +363,33 @@ async def test_rpc_device_switch_type_lights_mode(
     assert hass.states.get("switch.test_switch_0") is None
 
 
-@pytest.mark.parametrize("exc", [DeviceConnectionError, RpcCallError(-1, "error")])
+@pytest.mark.parametrize(
+    ("exc", "error"),
+    [
+        (
+            DeviceConnectionError,
+            "Device communication error occurred while calling action for switch.test_switch_0 of Test name",
+        ),
+        (
+            RpcCallError(-1, "error"),
+            "RPC call error occurred while calling action for switch.test_switch_0 of Test name",
+        ),
+    ],
+)
 async def test_rpc_set_state_errors(
     hass: HomeAssistant,
     exc: Exception,
+    error: str,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC device set state connection/call errors."""
     monkeypatch.setattr(mock_rpc_device, "call_rpc", AsyncMock(side_effect=exc))
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
@@ -360,6 +407,8 @@ async def test_rpc_auth_error(
         "call_rpc",
         AsyncMock(side_effect=InvalidAuthError),
     )
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     entry = await init_integration(hass, 2)
 
     assert entry.state is ConfigEntryState.LOADED
@@ -409,15 +458,22 @@ async def test_wall_display_relay_mode(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test Wall Display in relay mode."""
-    climate_entity_id = "climate.test_name"
+    climate_entity_id = "climate.test_name_thermostat_0"
     switch_entity_id = "switch.test_switch_0"
+
+    config_entry = await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    assert hass.states.get(climate_entity_id) is not None
+    assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 1
 
     new_status = deepcopy(mock_rpc_device.status)
     new_status["sys"]["relay_in_thermostat"] = False
     new_status.pop("thermostat:0")
+    new_status.pop("cover:0")
     monkeypatch.setattr(mock_rpc_device, "status", new_status)
 
-    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # the climate entity should be removed
     assert hass.states.get(climate_entity_id) is None

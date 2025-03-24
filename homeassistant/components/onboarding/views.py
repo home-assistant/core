@@ -20,7 +20,6 @@ from homeassistant.components.backup import (
     BackupManager,
     Folder,
     IncorrectPasswordError,
-    async_get_manager as async_get_backup_manager,
     http as backup_http,
 )
 from homeassistant.components.http import KEY_HASS, KEY_HASS_REFRESH_TOKEN_ID
@@ -29,11 +28,10 @@ from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar
-from homeassistant.helpers.hassio import is_hassio
+from homeassistant.helpers.backup import async_get_manager as async_get_backup_manager
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
-from homeassistant.util.async_ import create_eager_task
 
 if TYPE_CHECKING:
     from . import OnboardingData, OnboardingStorage, OnboardingStoreData
@@ -62,6 +60,7 @@ async def async_setup(
     hass.http.register_view(BackupInfoView(data))
     hass.http.register_view(RestoreBackupView(data))
     hass.http.register_view(UploadBackupView(data))
+    setup_cloud_views(hass, data)
 
 
 class OnboardingView(HomeAssistantView):
@@ -225,32 +224,21 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
                 "shopping_list",
             ]
 
-            # pylint: disable-next=import-outside-toplevel
-            from homeassistant.components import hassio
-
-            if (
-                is_hassio(hass)
-                and (core_info := hassio.get_core_info(hass))
-                and "raspberrypi" in core_info["machine"]
-            ):
-                onboard_integrations.append("rpi_power")
-
-            coros: list[Coroutine[Any, Any, Any]] = [
-                hass.config_entries.flow.async_init(
-                    domain, context={"source": "onboarding"}
+            for domain in onboard_integrations:
+                # Create tasks so onboarding isn't affected
+                # by errors in these integrations.
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        domain, context={"source": "onboarding"}
+                    ),
+                    f"onboarding_setup_{domain}",
                 )
-                for domain in onboard_integrations
-            ]
 
             if "analytics" not in hass.config.components:
                 # If by some chance that analytics has not finished
                 # setting up, wait for it here so its ready for the
                 # next step.
-                coros.append(async_setup_component(hass, "analytics", {}))
-
-            # Set up integrations after onboarding and ensure
-            # analytics is ready for the next step.
-            await asyncio.gather(*(create_eager_task(coro) for coro in coros))
+                await async_setup_component(hass, "analytics", {})
 
             return self.json({})
 
@@ -354,10 +342,10 @@ def with_backup_manager[_ViewT: BackupOnboardingView, **_P](
             raise HTTPUnauthorized
 
         try:
-            manager = async_get_backup_manager(request.app[KEY_HASS])
+            manager = await async_get_backup_manager(request.app[KEY_HASS])
         except HomeAssistantError:
             return self.json(
-                {"error": "backup_disabled"},
+                {"code": "backup_disabled"},
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
@@ -380,7 +368,7 @@ class BackupInfoView(BackupOnboardingView):
             {
                 "backups": list(backups.values()),
                 "state": manager.state,
-                "last_non_idle_event": manager.last_non_idle_event,
+                "last_action_event": manager.last_action_event,
             }
         )
 
@@ -420,7 +408,12 @@ class RestoreBackupView(BackupOnboardingView):
             )
         except IncorrectPasswordError:
             return self.json(
-                {"message": "incorrect_password"}, status_code=HTTPStatus.BAD_REQUEST
+                {"code": "incorrect_password"}, status_code=HTTPStatus.BAD_REQUEST
+            )
+        except HomeAssistantError as err:
+            return self.json(
+                {"code": "restore_failed", "message": str(err)},
+                status_code=HTTPStatus.BAD_REQUEST,
             )
         return web.Response(status=HTTPStatus.OK)
 
@@ -435,6 +428,115 @@ class UploadBackupView(BackupOnboardingView, backup_http.UploadBackupView):
     async def post(self, manager: BackupManager, request: web.Request) -> web.Response:
         """Upload a backup file."""
         return await self._post(request)
+
+
+def setup_cloud_views(hass: HomeAssistant, data: OnboardingStoreData) -> None:
+    """Set up the cloud views."""
+
+    # The cloud integration is imported locally to avoid cloud being imported by
+    # bootstrap.py and to avoid circular imports.
+
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.cloud import http_api as cloud_http
+
+    # pylint: disable-next=import-outside-toplevel,hass-component-root-import
+    from homeassistant.components.cloud.const import DATA_CLOUD
+
+    class CloudOnboardingView(HomeAssistantView):
+        """Cloud onboarding view."""
+
+        requires_auth = False
+
+        def __init__(self, data: OnboardingStoreData) -> None:
+            """Initialize the view."""
+            self._data = data
+
+    def with_cloud[_ViewT: CloudOnboardingView, **_P](
+        func: Callable[
+            Concatenate[_ViewT, web.Request, _P],
+            Coroutine[Any, Any, web.Response],
+        ],
+    ) -> Callable[
+        Concatenate[_ViewT, web.Request, _P], Coroutine[Any, Any, web.Response]
+    ]:
+        """Home Assistant API decorator to check onboarding and cloud."""
+
+        @wraps(func)
+        async def _with_cloud(
+            self: _ViewT,
+            request: web.Request,
+            *args: _P.args,
+            **kwargs: _P.kwargs,
+        ) -> web.Response:
+            """Check onboarding status, cloud and call function."""
+            if self._data["done"]:
+                # If at least one onboarding step is done, we don't allow accessing
+                # the cloud onboarding views.
+                raise HTTPUnauthorized
+
+            hass = request.app[KEY_HASS]
+            if DATA_CLOUD not in hass.data:
+                return self.json(
+                    {"code": "cloud_disabled"},
+                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                )
+
+            return await func(self, request, *args, **kwargs)
+
+        return _with_cloud
+
+    class CloudForgotPasswordView(
+        CloudOnboardingView, cloud_http.CloudForgotPasswordView
+    ):
+        """View to start Forgot Password flow."""
+
+        url = "/api/onboarding/cloud/forgot_password"
+        name = "api:onboarding:cloud:forgot_password"
+
+        @with_cloud
+        async def post(self, request: web.Request) -> web.Response:
+            """Handle forgot password request."""
+            return await super()._post(request)
+
+    class CloudLoginView(CloudOnboardingView, cloud_http.CloudLoginView):
+        """Login to Home Assistant Cloud."""
+
+        url = "/api/onboarding/cloud/login"
+        name = "api:onboarding:cloud:login"
+
+        @with_cloud
+        async def post(self, request: web.Request) -> web.Response:
+            """Handle login request."""
+            return await super()._post(request)
+
+    class CloudLogoutView(CloudOnboardingView, cloud_http.CloudLogoutView):
+        """Log out of the Home Assistant cloud."""
+
+        url = "/api/onboarding/cloud/logout"
+        name = "api:onboarding:cloud:logout"
+
+        @with_cloud
+        async def post(self, request: web.Request) -> web.Response:
+            """Handle logout request."""
+            return await super()._post(request)
+
+    class CloudStatusView(CloudOnboardingView):
+        """Get cloud status view."""
+
+        url = "/api/onboarding/cloud/status"
+        name = "api:onboarding:cloud:status"
+
+        @with_cloud
+        async def get(self, request: web.Request) -> web.Response:
+            """Return cloud status."""
+            hass = request.app[KEY_HASS]
+            cloud = hass.data[DATA_CLOUD]
+            return self.json({"logged_in": cloud.is_logged_in})
+
+    hass.http.register_view(CloudForgotPasswordView(data))
+    hass.http.register_view(CloudLoginView(data))
+    hass.http.register_view(CloudLogoutView(data))
+    hass.http.register_view(CloudStatusView(data))
 
 
 @callback
