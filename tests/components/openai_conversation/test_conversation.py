@@ -187,15 +187,34 @@ async def test_error_handling(
     assert result.response.speech["plain"]["speech"] == message, result.response.speech
 
 
-async def test_max_token_limit(
+@pytest.mark.parametrize(
+    ("reason", "message"),
+    [
+        (
+            "max_output_tokens",
+            "max output tokens reached",
+        ),
+        (
+            "content_filter",
+            "content filter triggered",
+        ),
+        (
+            None,
+            "unknown reason",
+        ),
+    ],
+)
+async def test_incomplete_details(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
     mock_chat_log: MockChatLog,  # noqa: F811
+    reason: str,
+    message: str,
 ) -> None:
     """Test handling early model stop."""
-    # Length limit reached after some content is generated
+    # Incomplete details received after some content is generated
     mock_create_stream.return_value = [
         (
             # Start message
@@ -204,8 +223,8 @@ async def test_max_token_limit(
                 text=["Once upon", " a time, ", "there was "],
                 output_index=0,
             ),
-            # Length limit
-            IncompleteDetails(reason="max_output_tokens"),
+            # Length limit or content filter
+            IncompleteDetails(reason=reason),
         )
     ]
 
@@ -220,16 +239,16 @@ async def test_max_token_limit(
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert (
         result.response.speech["plain"]["speech"]
-        == "OpenAI response incomplete: max output tokens reached"
+        == f"OpenAI response incomplete: {message}"
     ), result.response.speech
 
-    # Length limit reached before any content is generated
+    # Incomplete details received before any content is generated
     mock_create_stream.return_value = [
         (
             # Start generating response
             *create_reasoning_item(id="rs_A", output_index=0),
-            # Length limit
-            IncompleteDetails(reason="max_output_tokens"),
+            # Length limit or content filter
+            IncompleteDetails(reason=reason),
         )
     ]
 
@@ -244,7 +263,7 @@ async def test_max_token_limit(
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert (
         result.response.speech["plain"]["speech"]
-        == "OpenAI response incomplete: max output tokens reached"
+        == f"OpenAI response incomplete: {message}"
     ), result.response.speech
 
 
