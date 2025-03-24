@@ -13,6 +13,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, LOGGER, USER_APP_NAME
 
+_LOGGER = logging.getLogger(__name__)
+
 type JellyfinConfigEntry = ConfigEntry[JellyfinDataUpdateCoordinator]
 
 
