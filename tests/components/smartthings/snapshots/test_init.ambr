@@ -299,6 +299,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ac_airsensor_01001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'a3a970ea-e09c-9c04-161b-94c934e21666',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'ASM-KR-TP1-22-ACMB1M',
+    'model_id': None,
+    'name': '에어모니터 플러스',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'ASM-KR-TP1-22-ACMB1M_16240426',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ac_rac_000001]
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
@@ -992,6 +1025,39 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[heatit_zpushwall]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '5e5b97f3-3094-44e6-abc0-f61283412d6a',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Livingroom smart switch',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[heatit_ztrm3_thermostat]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -1591,7 +1657,7 @@
     'area_id': 'theater',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
-    'configuration_url': None,
+    'configuration_url': 'https://account.smartthings.com',
     'connections': set({
       tuple(
         'mac',

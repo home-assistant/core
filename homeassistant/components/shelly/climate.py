@@ -7,7 +7,12 @@ from dataclasses import asdict, dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import BLU_TRV_IDENTIFIER, BLU_TRV_MODEL_NAME, RPC_GENERATIONS
+from aioshelly.const import (
+    BLU_TRV_IDENTIFIER,
+    BLU_TRV_MODEL_NAME,
+    BLU_TRV_TIMEOUT,
+    RPC_GENERATIONS,
+)
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.climate import (
@@ -36,7 +41,6 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     BLU_TRV_TEMPERATURE_SETTINGS,
-    BLU_TRV_TIMEOUT,
     DOMAIN,
     LOGGER,
     NOT_CALIBRATED_ISSUE_ID,

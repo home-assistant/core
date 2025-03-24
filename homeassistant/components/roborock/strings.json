@@ -457,6 +457,12 @@
     "map_failure": {
       "message": "Something went wrong creating the map"
     },
+    "position_not_found": {
+      "message": "Robot position not found"
+    },
+    "update_data_fail": {
+      "message": "Failed to update data"
+    },
     "no_coordinators": {
       "message": "No devices were able to successfully setup"
     },
