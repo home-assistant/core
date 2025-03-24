@@ -12,6 +12,7 @@ from google.genai.types import (
     Content,
     FunctionDeclaration,
     GenerateContentConfig,
+    GoogleSearch,
     HarmCategory,
     Part,
     SafetySetting,
@@ -39,6 +40,7 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    CONF_USE_GOOGLE_SEARCH_TOOL,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -295,6 +297,13 @@ class GoogleGenerativeAIConversationEntity(
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
                 for tool in chat_log.llm_api.tools
             ]
+
+        # Using search grounding allows the model to retrieve information from the web,
+        # however, it may interfere with how the model decides to use some tools, or entities
+        # for example weather entity may be disregarded if the model chooses to Google it.
+        if options.get(CONF_USE_GOOGLE_SEARCH_TOOL) is True:
+            tools = tools or []
+            tools.append(Tool(google_search=GoogleSearch()))
 
         model_name = self.entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
         # Gemini 1.0 doesn't support system_instruction while 1.5 does.

@@ -180,6 +180,72 @@ async def test_function_call(
     "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
 @pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.usefixtures("mock_ulid_tools")
+async def test_use_google_search(
+    mock_get_tools,
+    hass: HomeAssistant,
+    mock_config_entry_with_google_search: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test function calling."""
+    agent_id = "conversation.google_generative_ai_conversation"
+    context = Context()
+
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = vol.Schema(
+        {
+            vol.Optional("param1", description="Test parameters"): [
+                vol.All(str, vol.Lower)
+            ],
+            vol.Optional("param2"): vol.Any(float, int),
+            vol.Optional("param3"): dict,
+        }
+    )
+
+    mock_get_tools.return_value = [mock_tool]
+
+    with patch("google.genai.chats.AsyncChats.create") as mock_create:
+        mock_chat = AsyncMock()
+        mock_create.return_value.send_message = mock_chat
+        chat_response = Mock(prompt_feedback=None)
+        mock_chat.return_value = chat_response
+        mock_part = Mock()
+        mock_part.text = ""
+        mock_part.function_call = FunctionCall(
+            name="test_tool",
+            args={
+                "param1": ["test_value", "param1\\'s value"],
+                "param2": 2.7,
+            },
+        )
+
+        def tool_call(
+            hass: HomeAssistant, tool_input: llm.ToolInput, tool_context: llm.LLMContext
+        ) -> dict[str, Any]:
+            mock_part.function_call = None
+            mock_part.text = "Hi there!"
+            return {"result": "Test response"}
+
+        mock_tool.async_call.side_effect = tool_call
+        chat_response.candidates = [Mock(content=Mock(parts=[mock_part]))]
+        await conversation.async_converse(
+            hass,
+            "Please call the test function",
+            None,
+            context,
+            agent_id=agent_id,
+            device_id="test_device",
+        )
+
+    assert [tuple(mock_call) for mock_call in mock_create.mock_calls] == snapshot
+
+
+@patch(
+    "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_tools"
+)
+@pytest.mark.usefixtures("mock_init_component")
 async def test_function_call_without_parameters(
     mock_get_tools,
     hass: HomeAssistant,
