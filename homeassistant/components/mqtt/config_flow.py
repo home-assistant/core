@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
-from copy import copy, deepcopy
+from copy import deepcopy
 from dataclasses import dataclass
 from enum import IntEnum
 import logging
@@ -1145,44 +1145,19 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         return device_name, full_entity_name
 
     @callback
-    def add_suggested_values_from_component_data_to_schema(
+    def get_suggested_values_from_component(
         self, data_schema: vol.Schema
-    ) -> vol.Schema:
-        """Add suggestions from component data to data schema."""
+    ) -> dict[str, Any]:
+        """Get suggestions from component data based on the data schema."""
         if TYPE_CHECKING:
             assert self._component_id is not None
-
-        def _apply_suggested_value(
-            field: vol.Marker, suggested_value: Any
-        ) -> vol.Marker:
-            new_marker = copy(field)
-            new_marker.description = {"suggested_value": suggested_value}
-            return new_marker
-
-        component = self._subentry_data["components"][self._component_id]
-        # Copy schema and apply normal user input
-        schema: dict[vol.Marker, Any] = {
-            _apply_suggested_value(field, component.get(field))
-            if not isinstance(value, section)
-            else field: value
-            for field, value in data_schema.schema.items()
+        component_data = self._subentry_data["components"][self._component_id]
+        return {
+            field_key: self.get_suggested_values_from_component(value.schema)
+            if isinstance(value, section)
+            else component_data.get(field_key)
+            for field_key, value in data_schema.schema.items()
         }
-        # Apply section user input
-        for value in schema.values():
-            if not isinstance(value, section):
-                continue
-            data_section_schema = value.schema.schema
-            new_schema = vol.Schema(
-                {
-                    _apply_suggested_value(
-                        section_field, component.get(section_field)
-                    ): section_field_selector
-                    for section_field, section_field_selector in data_section_schema.items()
-                }
-            )
-            value.schema = new_schema
-
-        return vol.Schema(schema)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -1251,8 +1226,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 return await self.async_step_entity_platform_config()
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
         elif self.source == SOURCE_RECONFIGURE and self._component_id is not None:
-            data_schema = self.add_suggested_values_from_component_data_to_schema(
-                data_schema
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema,
+                self.get_suggested_values_from_component(data_schema),
             )
         device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
         return self.async_show_form(
@@ -1350,8 +1326,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
 
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
         else:
-            data_schema = self.add_suggested_values_from_component_data_to_schema(
-                data_schema
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema,
+                self.get_suggested_values_from_component(data_schema),
             )
 
         device_name, full_entity_name = self.generate_names()
@@ -1403,8 +1380,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
 
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
         else:
-            data_schema = self.add_suggested_values_from_component_data_to_schema(
-                data_schema
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema,
+                self.get_suggested_values_from_component(data_schema),
             )
         device_name, full_entity_name = self.generate_names()
         return self.async_show_form(
