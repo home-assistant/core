@@ -151,6 +151,7 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = None
         if user_input is not None:
             user_input[CONF_HOST] = reconfigure_entry.data[CONF_HOST]
+
             await self.hass.config_entries.async_unload(reconfigure_entry.entry_id)
             if (error := await validate_connection(user_input)) is not None:
                 errors = {CONF_BASE: error}
