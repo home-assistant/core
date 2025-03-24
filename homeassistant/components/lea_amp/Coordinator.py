@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable
 import logging
 
-from const import CONNECTION_TIMEOUT, PORT, SCAN_INTERVAL
+from constlea import CONNECTION_TIMEOUT, PORT, SCAN_INTERVAL
 from controller import IP_ADDRESS, LeaController, LeaZone
 
 from homeassistant.config_entries import ConfigEntry
