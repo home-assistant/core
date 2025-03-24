@@ -65,7 +65,7 @@ class PterodactylBinarySensorEntity(PterodactylEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return binary sensor availability."""
-        return True
+        return super().available and self.identifier in self.coordinator.data
 
     @property
     def is_on(self) -> bool:
