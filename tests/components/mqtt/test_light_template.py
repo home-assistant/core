@@ -1583,17 +1583,10 @@ async def test_state_templates_ignore_missing_values(
     assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("effect") is None
 
-    # set brightness
-    async_fire_mqtt_message(hass, "test-topic", '{"brightness": 255}')
-    state = hass.states.get("light.test")
-    assert state.state == STATE_ON
-    assert state.attributes.get("rgb_color") is None
-    assert state.attributes.get("brightness") == 255
-    assert state.attributes.get("color_temp_kelvin") is None
-    assert state.attributes.get("effect") is None
-
-    # set color temperature
-    async_fire_mqtt_message(hass, "test-topic", '{"color_temp": 145}')
+    # update brightness and color temperature (with no state)
+    async_fire_mqtt_message(
+        hass, "test-topic", '{"brightness": 255, "color_temp": 145}'
+    )
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") == (
@@ -1610,7 +1603,7 @@ async def test_state_templates_ignore_missing_values(
         4.253,
     )  # temp converted to color
 
-    # set color
+    # update color
     async_fire_mqtt_message(
         hass, "test-topic", '{"color": {"red": 255, "green": 128, "blue": 64}}'
     )
@@ -1618,6 +1611,15 @@ async def test_state_templates_ignore_missing_values(
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") == (255, 128, 64)
     assert state.attributes.get("brightness") == 255
+    assert state.attributes.get("color_temp_kelvin") is None  # rgb color has priority
+    assert state.attributes.get("effect") is None
+
+    # update brightness
+    async_fire_mqtt_message(hass, "test-topic", '{"brightness": 128}')
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (255, 128, 64)
+    assert state.attributes.get("brightness") == 128
     assert state.attributes.get("color_temp_kelvin") is None  # rgb color has priority
     assert state.attributes.get("effect") is None
 
