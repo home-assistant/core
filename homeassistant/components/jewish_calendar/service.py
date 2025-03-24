@@ -19,7 +19,7 @@ from .const import DOMAIN
 OMER_SCHEMA = vol.Schema(
     {
         vol.Required("date", default=datetime.date.today): datetime.date,
-        vol.Required("nusach", default=Nusach.SFARAD): Nusach,
+        vol.Required("nusach", default="sfarad"): str,
         vol.Required("language"): str,
     }
 )
@@ -30,19 +30,24 @@ def async_setup_services(
 ) -> None:
     """Set up the Jewish Calendar services."""
 
-    async def get_omer_blessing(call: ServiceCall) -> ServiceResponse:
+    async def get_omer_count(call: ServiceCall) -> ServiceResponse:
         """Return the Omer blessing for a given date."""
-        value = Omer(
-            date=HebrewDate.from_gdate(call.data["date"]),
-            nusach=call.data["nusach"],
-            language=call.data.get("language", config_entry.runtime_data.language),
-        ).count_str()
-        return {"message": str(value)}
+        hebrew_date = HebrewDate.from_gdate(call.data["date"])
+        nusach = Nusach[call.data["nusach"].upper()]
+        language = call.data.get("language", config_entry.runtime_data.language)
+        omer = Omer(date=hebrew_date, nusach=nusach, language=language)
+        return {
+            "message": str(omer.count_str()),
+            "hebrew_date": str(hebrew_date),
+            "weeks": omer.week,
+            "days": omer.day,
+            "total_days": omer.total_days,
+        }
 
     hass.services.async_register(
         DOMAIN,
-        "get_omer_blessing",
-        get_omer_blessing,
+        "count_omer",
+        get_omer_count,
         schema=OMER_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

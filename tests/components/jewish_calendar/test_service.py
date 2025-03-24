@@ -2,7 +2,6 @@
 
 import datetime as dt
 
-from hdate.omer import Nusach
 from hdate.translator import Language
 import pytest
 
@@ -17,21 +16,21 @@ from tests.common import MockConfigEntry
     [
         pytest.param(
             dt.date(2025, 3, 20),
-            Nusach.SFARAD,
+            "sfarad",
             "hebrew",
             "",
             id="no_blessing",
         ),
         pytest.param(
             dt.date(2025, 5, 20),
-            Nusach.ASHKENAZ,
+            "ashkenaz",
             "hebrew",
             "היום שבעה ושלושים יום שהם חמישה שבועות ושני ימים בעומר",
             id="ahskenaz-hebrew",
         ),
         pytest.param(
             dt.date(2025, 5, 20),
-            Nusach.SFARAD,
+            "sfarad",
             "english",
             "Today is the thirty-seventh day, which are five weeks and two days of the Omer",
             id="sefarad-english",
@@ -42,7 +41,7 @@ async def test_get_omer_blessing(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     test_date: dt.date,
-    nusach: Nusach,
+    nusach: str,
     language: Language,
     expected: str,
 ) -> None:
@@ -53,7 +52,7 @@ async def test_get_omer_blessing(
 
     result = await hass.services.async_call(
         DOMAIN,
-        "get_omer_blessing",
+        "count_omer",
         {"date": test_date, "nusach": nusach, "language": language},
         blocking=True,
         return_response=True,

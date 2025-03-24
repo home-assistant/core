@@ -1,0 +1,29 @@
+count_omer:
+  fields:
+    date:
+      required: true
+      example: "2025-04-14"
+      selector:
+        date:
+    nusach:
+      example: "sfarad"
+      default: "sfarad"
+      selector:
+        select:
+          translation_key: "nusach"
+          options:
+            - "sfarad"
+            - "ashkenaz"
+            - "adot_mizrah"
+            - "italian"
+    language:
+      required: true
+      default: "hebrew"
+      example: "hebrew"
+      selector:
+        select:
+          translation_key: "language"
+          options:
+            - "english"
+            - "hebrew"
+            - "french"
