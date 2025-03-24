@@ -65,7 +65,7 @@
         "name": "Grid power"
       },
       "storage_power": {
-        "name": "Stored power"
+        "name": "Storage power"
       },
       "purchased_energy": {
         "name": "Imported energy"
