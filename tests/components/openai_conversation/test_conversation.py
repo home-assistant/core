@@ -12,6 +12,9 @@ from openai.types.responses import (
     ResponseContentPartAddedEvent,
     ResponseContentPartDoneEvent,
     ResponseCreatedEvent,
+    ResponseError,
+    ResponseErrorEvent,
+    ResponseFailedEvent,
     ResponseFunctionCallArgumentsDeltaEvent,
     ResponseFunctionCallArgumentsDoneEvent,
     ResponseFunctionToolCall,
@@ -94,12 +97,25 @@ def mock_create_stream() -> Generator[AsyncMock]:
                 response.status = "incomplete"
                 response.incomplete_details = value
                 break
+            if isinstance(value, ResponseError):
+                response.status = "failed"
+                response.error = value
+                break
+
             yield value
+
+            if isinstance(value, ResponseErrorEvent):
+                return
 
         if response.status == "incomplete":
             yield ResponseIncompleteEvent(
                 response=response,
                 type="response.incomplete",
+            )
+        elif response.status == "failed":
+            yield ResponseFailedEvent(
+                response=response,
+                type="response.failed",
             )
         else:
             yield ResponseCompletedEvent(
@@ -204,7 +220,7 @@ async def test_error_handling(
         ),
     ],
 )
-async def test_incomplete_details(
+async def test_incomplete_response(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
@@ -265,6 +281,43 @@ async def test_incomplete_details(
         result.response.speech["plain"]["speech"]
         == f"OpenAI response incomplete: {message}"
     ), result.response.speech
+
+
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        (
+            ResponseError(code="rate_limit_exceeded", message="Rate limit exceeded"),
+            "OpenAI response failed: Rate limit exceeded",
+        ),
+        (
+            ResponseErrorEvent(type="error", message="Some error"),
+            "OpenAI response error: Some error",
+        ),
+    ],
+)
+async def test_failed_response(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    mock_chat_log: MockChatLog,  # noqa: F811
+    error: ResponseError | ResponseErrorEvent,
+    message: str,
+) -> None:
+    """Test handling failed and error responses."""
+    mock_create_stream.return_value = [(error,)]
+
+    result = await conversation.async_converse(
+        hass,
+        "next natural number please",
+        "mock-conversation-id",
+        Context(),
+        agent_id="conversation.openai",
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.speech["plain"]["speech"] == message, result.response.speech
 
 
 async def test_conversation_agent(
