@@ -254,7 +254,7 @@ async def test_reconfigure_successful(
             "username": "fake_username",
         },
     )
-    await hass.async_block_till_done()
+
     assert reconfigure_result["type"] is FlowResultType.ABORT
     assert reconfigure_result["reason"] == "reconfigure_successful"
 
@@ -296,7 +296,7 @@ async def test_reconfigure_fails(
             "username": "fake_username",
         },
     )
-    await hass.async_block_till_done()
+
     assert reconfigure_result["type"] is FlowResultType.FORM
     assert reconfigure_result["step_id"] == "reconfigure"
     assert reconfigure_result["errors"] == {"base": error}

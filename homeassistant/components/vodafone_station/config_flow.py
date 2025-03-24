@@ -151,7 +151,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
         updated_host = user_input[CONF_HOST]
 
-        if reconfigure_entry.data.get(CONF_HOST) != updated_host:
+        if reconfigure_entry.data[CONF_HOST] != updated_host:
             self._async_abort_entries_match({CONF_HOST: updated_host})
 
         errors: dict[str, str] = {}
