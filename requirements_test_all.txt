@@ -889,7 +889,7 @@ google-cloud-speech==2.27.0
 google-cloud-texttospeech==2.17.2
 
 # homeassistant.components.google_generative_ai_conversation
-google-genai==1.1.0
+google-genai==1.7.0
 
 # homeassistant.components.nest
 google-nest-sdm==7.1.4
