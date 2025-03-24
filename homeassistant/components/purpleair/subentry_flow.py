@@ -186,11 +186,7 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Handle user initialization flow."""
-        # TODO: Replace with self._get_entry() when PR merged ? # pylint: disable=fixme
-        # https://github.com/home-assistant/core/pull/141017
-        self._flow_data[CONF_API_KEY] = self.hass.config_entries.async_get_known_entry(
-            self.handler[0]
-        ).data[CONF_API_KEY]
+        self._flow_data[CONF_API_KEY] = self._get_entry().data[CONF_API_KEY]
         return await self.async_step_add_options()
 
     async def async_step_add_options(
