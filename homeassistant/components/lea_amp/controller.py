@@ -198,8 +198,8 @@ class LeaController:
             data = self._transport.recv(2048)
             if data:
                 _LOGGER.log(logging.INFO, "response data: %s", str(data))
-
-                self._handle_response_received(data)
+                self._handle_num_inputs(data)
+                # self._handle_response_received(data)
             self._transport.close()
         if self._registry.has_queued_zones:
             for zone_id in self._registry.zones_queue:
@@ -273,9 +273,7 @@ class LeaController:
         _LOGGER.log(logging.INFO, "_handle_response_received: %s", str(data))
         zone_id, commandType, value = self._message_factory.create_message(data)
 
-        if commandType == "numInputs":
-            await self._handle_num_inputs(value)
-        elif commandType == "volume":
+        if commandType == "volume":
             if zone := self.get_zone_by_id(zone_id):
                 zone.updateVolume(value)
         elif commandType == "mute":
@@ -289,6 +287,7 @@ class LeaController:
                 zone.updatePower(value)
 
     async def _handle_num_inputs(self, value: str):
+        _LOGGER.log(logging.INFO, "_handle_num_inputs: %s", str(value))
         for i in range(int(value)):
             zone = LeaZone(self, str(i))
             if self._call_discovered_callback(zone, True):
