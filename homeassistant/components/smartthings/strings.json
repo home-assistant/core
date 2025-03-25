@@ -345,6 +345,9 @@
       "refrigeration_setpoint": {
         "name": "[%key:component::smartthings::entity::sensor::oven_setpoint::name%]"
       },
+      "brightness_intensity": {
+        "name": "Brightness intensity"
+      },
       "robot_cleaner_cleaning_mode": {
         "name": "Cleaning mode",
         "state": {
