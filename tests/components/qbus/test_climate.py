@@ -211,7 +211,7 @@ async def test_climate_with_unknown_preset(
             SERVICE_SET_PRESET_MODE,
             {
                 ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
-                ATTR_PRESET_MODE: "What is cooler than begin cool?",
+                ATTR_PRESET_MODE: "What is cooler than being cool?",
             },
             blocking=True,
         )
