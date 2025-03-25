@@ -2496,6 +2496,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "hardkernel": {
+      "name": "Hardkernel",
+      "integration_type": "hardware",
+      "config_flow": false,
+      "single_config_entry": true
+    },
     "harman_kardon_avr": {
       "name": "Harman Kardon AVR",
       "integration_type": "hub",
@@ -2638,6 +2644,23 @@
       "name": "Legrand Home+ Control",
       "integration_type": "virtual",
       "supported_by": "netatmo"
+    },
+    "homeassistant_green": {
+      "name": "Home Assistant Green",
+      "integration_type": "hardware",
+      "config_flow": false,
+      "single_config_entry": true
+    },
+    "homeassistant_sky_connect": {
+      "name": "Home Assistant Connect ZBT-1",
+      "integration_type": "hardware",
+      "config_flow": true
+    },
+    "homeassistant_yellow": {
+      "name": "Home Assistant Yellow",
+      "integration_type": "hardware",
+      "config_flow": false,
+      "single_config_entry": true
     },
     "homee": {
       "name": "Homee",
@@ -4007,7 +4030,10 @@
           "iot_class": "assumed_state",
           "name": "Motionblinds Bluetooth"
         }
-      }
+      },
+      "iot_standards": [
+        "matter"
+      ]
     },
     "motioneye": {
       "name": "motionEye",
@@ -5199,6 +5225,11 @@
     "raspberry_pi": {
       "name": "Raspberry Pi",
       "integrations": {
+        "raspberry_pi": {
+          "integration_type": "hardware",
+          "config_flow": false,
+          "name": "Raspberry Pi"
+        },
         "rpi_camera": {
           "integration_type": "hub",
           "config_flow": false,
