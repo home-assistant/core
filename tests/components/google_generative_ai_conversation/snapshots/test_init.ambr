@@ -8,7 +8,8 @@
       dict({
         'contents': list([
           'Describe this image from my doorbell camera',
-          b'image bytes',
+          b'some file',
+          b'some file',
         ]),
         'model': 'models/gemini-2.0-flash',
       }),
@@ -16,6 +17,21 @@
   ])
 # ---
 # name: test_generate_content_service_without_images
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'contents': list([
+          'Write an opening speech for a Home Assistant release party',
+        ]),
+        'model': 'models/gemini-2.0-flash',
+      }),
+    ),
+  ])
+# ---
+# name: test_load_entry_with_unloaded_entries
   list([
     tuple(
       '',

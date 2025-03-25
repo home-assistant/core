@@ -10,13 +10,7 @@ from homeassistant.components.remember_the_milk import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import PROFILE
-
-CONFIG = {
-    "name": f"{PROFILE}",
-    "api_key": "test-api-key",
-    "shared_secret": "test-shared-secret",
-}
+from .const import CONFIG, PROFILE
 
 
 @pytest.mark.parametrize(

@@ -8,13 +8,15 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "use_https": "Enable HTTPS",
+          "baichuan_port": "Basic service port",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your Reolink device. For example: '192.168.1.25'.",
-          "port": "The port to connect to the Reolink device. For HTTP normally: '80', for HTTPS normally '443'.",
+          "port": "The HTTP(s) port to connect to the Reolink device API. For HTTP normally: '80', for HTTPS normally '443'.",
           "use_https": "Use a HTTPS (SSL) connection to the Reolink device.",
+          "baichuan_port": "The 'Basic Service Port' to connect to the Reolink device over TCP. Normally '9000' unless manually changed in the Reolink desktop client.",
           "username": "Username to login to the Reolink device itself. Not the Reolink cloud account.",
           "password": "Password to login to the Reolink device itself. Not the Reolink cloud account."
         }
@@ -29,7 +31,7 @@
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "not_admin": "User needs to be admin, user \"{username}\" has authorisation level \"{userlevel}\"",
-      "password_incompatible": "Password contains incompatible special character, only these characters are allowed: a-z, A-Z, 0-9 or {special_chars}",
+      "password_incompatible": "Password contains incompatible special character or is too long, maximum 31 characters and only these characters are allowed: a-z, A-Z, 0-9 or {special_chars}",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "update_needed": "Failed to login because of outdated firmware, please update the firmware to version {needed_firmware} using the Reolink Download Center: {download_center_url}, currently version {current_firmware} is installed",
       "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
@@ -100,7 +102,7 @@
       "message": "Error trying to update Reolink firmware: {err}"
     },
     "config_entry_not_ready": {
-      "message": "Error while trying to setup {host}: {err}"
+      "message": "Error while trying to set up {host}: {err}"
     }
   },
   "issues": {
@@ -127,6 +129,10 @@
     "hub_switch_deprecated": {
       "title": "Reolink Home Hub switches deprecated",
       "description": "The redundant 'Record', 'Email on event', 'FTP upload', 'Push notifications', and 'Buzzer on event' switches on the Reolink Home Hub are deprecated since the new firmware no longer supports these. Please use the equally named switches under each of the camera devices connected to the Home Hub instead. To remove this issue, please adjust automations accordingly and disable the switch entities mentioned."
+    },
+    "password_too_long": {
+      "title": "Reolink password too long",
+      "description": "The password for \"{name}\" is more than 31 characters long, this is no longer compatible with the Reolink API. Please change the password using the Reolink app/client to a password with is shorter than 32 characters. After changing the password, fill in the new password in the Reolink Re-authentication flow to continue using this integration. The latest version of the Reolink app/client also has a password limit of 31 characters."
     }
   },
   "services": {
@@ -335,6 +341,83 @@
           "off": "Awake",
           "on": "Sleeping"
         }
+      },
+      "crossline_person": {
+        "name": "Crossline {zone_name} person",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "crossline_vehicle": {
+        "name": "Crossline {zone_name} vehicle",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "crossline_dog_cat": {
+        "name": "Crossline {zone_name} animal",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "intrusion_person": {
+        "name": "Intrusion {zone_name} person",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "intrusion_vehicle": {
+        "name": "Intrusion {zone_name} vehicle",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "intrusion_dog_cat": {
+        "name": "Intrusion {zone_name} animal",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "linger_person": {
+        "name": "Linger {zone_name} person",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "linger_vehicle": {
+        "name": "Linger {zone_name} vehicle",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "linger_dog_cat": {
+        "name": "Linger {zone_name} animal",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "forgotten_item": {
+        "name": "Item forgotten {zone_name}",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "taken_item": {
+        "name": "Item taken {zone_name}",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
       }
     },
     "button": {
@@ -479,6 +562,21 @@
       "ai_animal_sensitivity": {
         "name": "AI animal sensitivity"
       },
+      "crossline_sensitivity": {
+        "name": "AI crossline {zone_name} sensitivity"
+      },
+      "intrusion_sensitivity": {
+        "name": "AI intrusion {zone_name} sensitivity"
+      },
+      "linger_sensitivity": {
+        "name": "AI linger {zone_name} sensitivity"
+      },
+      "forgotten_item_sensitivity": {
+        "name": "AI item forgotten {zone_name} sensitivity"
+      },
+      "taken_item_sensitivity": {
+        "name": "AI item taken {zone_name} sensitivity"
+      },
       "ai_face_delay": {
         "name": "AI face delay"
       },
@@ -496,6 +594,18 @@
       },
       "ai_animal_delay": {
         "name": "AI animal delay"
+      },
+      "intrusion_delay": {
+        "name": "AI intrusion {zone_name} delay"
+      },
+      "linger_delay": {
+        "name": "AI linger {zone_name} delay"
+      },
+      "forgotten_item_delay": {
+        "name": "AI item forgotten {zone_name} delay"
+      },
+      "taken_item_delay": {
+        "name": "AI item taken {zone_name} delay"
       },
       "auto_quick_reply_time": {
         "name": "Auto quick reply time"
@@ -720,6 +830,15 @@
       },
       "sub_bit_rate": {
         "name": "Fluent bit rate"
+      },
+      "scene_mode": {
+        "name": "Scene mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "disarm": "Disarmed",
+          "home": "Home",
+          "away": "Away"
+        }
       }
     },
     "sensor": {
@@ -741,9 +860,17 @@
       "battery_state": {
         "name": "Battery state",
         "state": {
-          "discharging": "Discharging",
-          "charging": "Charging",
+          "discharging": "[%key:common::state::discharging%]",
+          "charging": "[%key:common::state::charging%]",
           "chargecomplete": "Charge complete"
+        }
+      },
+      "day_night_state": {
+        "name": "Day night state",
+        "state": {
+          "day": "Color",
+          "night": "Black & white",
+          "led_day": "Color with floodlight"
         }
       },
       "hdd_storage": {

@@ -14,6 +14,7 @@ from itertools import chain
 import json
 from pathlib import Path, PurePath
 import shutil
+import sys
 import tarfile
 import time
 from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast
@@ -29,10 +30,13 @@ from homeassistant.backup_restore import (
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
+    frame,
     instance_id,
     integration_platform,
     issue_registry as ir,
+    start,
 )
+from homeassistant.helpers.backup import DATA_BACKUP
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util, json as json_util
 
@@ -46,6 +50,7 @@ from .agent import (
 from .config import (
     BackupConfig,
     CreateBackupParametersDict,
+    check_unavailable_agents,
     delete_backups_exceeding_configured_count,
 )
 from .const import (
@@ -60,6 +65,7 @@ from .models import (
     AgentBackup,
     BackupError,
     BackupManagerError,
+    BackupNotFound,
     BackupReaderWriterError,
     BaseBackup,
     Folder,
@@ -114,6 +120,7 @@ class BackupManagerState(StrEnum):
 
     IDLE = "idle"
     CREATE_BACKUP = "create_backup"
+    BLOCKED = "blocked"
     RECEIVE_BACKUP = "receive_backup"
     RESTORE_BACKUP = "restore_backup"
 
@@ -222,6 +229,20 @@ class RestoreBackupEvent(ManagerStateEvent):
     state: RestoreBackupState
 
 
+@dataclass(frozen=True, kw_only=True, slots=True)
+class BackupPlatformEvent:
+    """Backup platform class."""
+
+    domain: str
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class BlockedEvent(ManagerStateEvent):
+    """Backup manager blocked, Home Assistant is starting."""
+
+    manager_state: BackupManagerState = BackupManagerState.BLOCKED
+
+
 class BackupPlatformProtocol(Protocol):
     """Define the format that backup platforms can have."""
 
@@ -305,6 +326,12 @@ class DecryptOnDowloadNotSupported(BackupManagerError):
     _message = "On-the-fly decryption is not supported for this backup."
 
 
+class BackupManagerExceptionGroup(BackupManagerError, ExceptionGroup):
+    """Raised when multiple exceptions occur."""
+
+    error_code = "multiple_errors"
+
+
 class BackupManager:
     """Define the format that backup managers can have."""
 
@@ -330,9 +357,14 @@ class BackupManager:
         self.remove_next_delete_event: Callable[[], None] | None = None
 
         # Latest backup event and backup event subscribers
-        self.last_event: ManagerStateEvent = IdleEvent()
-        self.last_non_idle_event: ManagerStateEvent | None = None
-        self._backup_event_subscriptions: list[Callable[[ManagerStateEvent], None]] = []
+        self.last_event: ManagerStateEvent = BlockedEvent()
+        self.last_action_event: ManagerStateEvent | None = None
+        self._backup_event_subscriptions = hass.data[
+            DATA_BACKUP
+        ].backup_event_subscriptions
+        self._backup_platform_event_subscriptions = hass.data[
+            DATA_BACKUP
+        ].backup_platform_event_subscriptions
 
     async def async_setup(self) -> None:
         """Set up the backup manager."""
@@ -342,9 +374,18 @@ class BackupManager:
             self.known_backups.load(stored["backups"])
 
         await self._reader_writer.async_validate_config(config=self.config)
+
         await self._reader_writer.async_resume_restore_progress_after_restart(
             on_progress=self.async_on_backup_event
         )
+
+        async def set_manager_idle_after_start(hass: HomeAssistant) -> None:
+            """Set manager to idle after start."""
+            self.async_on_backup_event(IdleEvent())
+
+        if self.state == BackupManagerState.BLOCKED:
+            # If we're not finishing a restore job, set the manager to idle after start
+            start.async_at_started(self.hass, set_manager_idle_after_start)
 
         await self.load_platforms()
 
@@ -414,6 +455,13 @@ class BackupManager:
             }
         )
 
+        @callback
+        def check_unavailable_agents_after_start(hass: HomeAssistant) -> None:
+            """Check unavailable agents after start."""
+            check_unavailable_agents(hass, self)
+
+        start.async_at_started(self.hass, check_unavailable_agents_after_start)
+
     async def _add_platform(
         self,
         hass: HomeAssistant,
@@ -427,6 +475,9 @@ class BackupManager:
         LOGGER.debug("%s platforms loaded in total", len(self.platforms))
         LOGGER.debug("%s agents loaded in total", len(self.backup_agents))
         LOGGER.debug("%s local agents loaded in total", len(self.local_backup_agents))
+        event = BackupPlatformEvent(domain=integration_domain)
+        for subscription in self._backup_platform_event_subscriptions:
+            subscription(event)
 
     async def async_pre_backup_actions(self) -> None:
         """Perform pre backup actions."""
@@ -629,6 +680,8 @@ class BackupManager:
         )
         for idx, result in enumerate(get_backup_results):
             agent_id = agent_ids[idx]
+            if isinstance(result, BackupNotFound):
+                continue
             if isinstance(result, BackupAgentError):
                 agent_errors[agent_id] = result
                 continue
@@ -640,7 +693,14 @@ class BackupManager:
                 continue
             if isinstance(result, BaseException):
                 raise result  # unexpected error
+            # Check for None to be backwards compatible with the old BackupAgent API,
+            # this can be removed in HA Core 2025.10
             if not result:
+                frame.report_usage(
+                    "returns None from BackupAgent.async_get_backup",
+                    breaks_in_ha_version="2025.10",
+                    integration_domain=agent_id.partition(".")[0],
+                )
                 continue
             if backup is None:
                 if known_backup := self.known_backups.get(backup_id):
@@ -704,6 +764,8 @@ class BackupManager:
         )
         for idx, result in enumerate(delete_backup_results):
             agent_id = agent_ids[idx]
+            if isinstance(result, BackupNotFound):
+                continue
             if isinstance(result, BackupAgentError):
                 agent_errors[agent_id] = result
                 continue
@@ -813,7 +875,7 @@ class BackupManager:
         agent_errors = {
             backup_id: error
             for backup_id, error in zip(backup_ids, delete_results, strict=True)
-            if error
+            if error and not isinstance(error, BackupNotFound)
         }
         if agent_errors:
             LOGGER.error(
@@ -1245,7 +1307,20 @@ class BackupManager:
     ) -> None:
         """Initiate restoring a backup."""
         agent = self.backup_agents[agent_id]
-        if not await agent.async_get_backup(backup_id):
+        try:
+            backup = await agent.async_get_backup(backup_id)
+        except BackupNotFound as err:
+            raise BackupManagerError(
+                f"Backup {backup_id} not found in agent {agent_id}"
+            ) from err
+        # Check for None to be backwards compatible with the old BackupAgent API,
+        # this can be removed in HA Core 2025.10
+        if not backup:
+            frame.report_usage(
+                "returns None from BackupAgent.async_get_backup",
+                breaks_in_ha_version="2025.10",
+                integration_domain=agent_id.partition(".")[0],
+            )
             raise BackupManagerError(
                 f"Backup {backup_id} not found in agent {agent_id}"
             )
@@ -1274,23 +1349,10 @@ class BackupManager:
         if (current_state := self.state) != (new_state := event.manager_state):
             LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
         self.last_event = event
-        if not isinstance(event, IdleEvent):
-            self.last_non_idle_event = event
+        if not isinstance(event, (BlockedEvent, IdleEvent)):
+            self.last_action_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
-
-    @callback
-    def async_subscribe_events(
-        self,
-        on_event: Callable[[ManagerStateEvent], None],
-    ) -> Callable[[], None]:
-        """Subscribe events."""
-
-        def remove_subscription() -> None:
-            self._backup_event_subscriptions.remove(on_event)
-
-        self._backup_event_subscriptions.append(on_event)
-        return remove_subscription
 
     def _update_issue_backup_failed(self) -> None:
         """Update issue registry when a backup fails."""
@@ -1346,7 +1408,20 @@ class BackupManager:
             agent = self.backup_agents[agent_id]
         except KeyError as err:
             raise BackupManagerError(f"Invalid agent selected: {agent_id}") from err
-        if not await agent.async_get_backup(backup_id):
+        try:
+            backup = await agent.async_get_backup(backup_id)
+        except BackupNotFound as err:
+            raise BackupManagerError(
+                f"Backup {backup_id} not found in agent {agent_id}"
+            ) from err
+        # Check for None to be backwards compatible with the old BackupAgent API,
+        # this can be removed in HA Core 2025.10
+        if not backup:
+            frame.report_usage(
+                "returns None from BackupAgent.async_get_backup",
+                breaks_in_ha_version="2025.10",
+                integration_domain=agent_id.partition(".")[0],
+            )
             raise BackupManagerError(
                 f"Backup {backup_id} not found in agent {agent_id}"
             )
@@ -1606,10 +1681,24 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             )
         finally:
             # Inform integrations the backup is done
+            # If there's an unhandled exception, we keep it so we can rethrow it in case
+            # the post backup actions also fail.
+            unhandled_exc = sys.exception()
             try:
-                await manager.async_post_backup_actions()
-            except BackupManagerError as err:
-                raise BackupReaderWriterError(str(err)) from err
+                try:
+                    await manager.async_post_backup_actions()
+                except BackupManagerError as err:
+                    raise BackupReaderWriterError(str(err)) from err
+            except Exception as err:
+                if not unhandled_exc:
+                    raise
+                # If there's an unhandled exception, we wrap both that and the exception
+                # from the post backup actions in an ExceptionGroup so the caller is
+                # aware of both exceptions.
+                raise BackupManagerExceptionGroup(
+                    f"Multiple errors when creating backup: {unhandled_exc}, {err}",
+                    [unhandled_exc, err],
+                ) from None
 
     def _mkdir_and_generate_backup_contents(
         self,
@@ -1621,7 +1710,13 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         """Generate backup contents and return the size."""
         if not tar_file_path:
             tar_file_path = self.temp_backup_dir / f"{backup_data['slug']}.tar"
-        make_backup_dir(tar_file_path.parent)
+        try:
+            make_backup_dir(tar_file_path.parent)
+        except OSError as err:
+            raise BackupReaderWriterError(
+                f"Failed to create dir {tar_file_path.parent}: "
+                f"{err} ({err.__class__.__name__})"
+            ) from err
 
         excludes = EXCLUDE_FROM_BACKUP
         if not database_included:
@@ -1631,7 +1726,9 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             """Filter to filter excludes."""
 
             for exclude in excludes:
-                if not path.match(exclude):
+                # The home assistant core configuration directory is added as "data"
+                # in the tar file, so we need to prefix that path to the filters.
+                if not path.full_match(f"data/{exclude}"):
                     continue
                 LOGGER.debug("Ignoring %s because of %s", path, exclude)
                 return True
@@ -1659,7 +1756,14 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                     file_filter=is_excluded_by_filter,
                     arcname="data",
                 )
-        return (tar_file_path, tar_file_path.stat().st_size)
+        try:
+            stat_result = tar_file_path.stat()
+        except OSError as err:
+            raise BackupReaderWriterError(
+                f"Error getting size of {tar_file_path}: "
+                f"{err} ({err.__class__.__name__})"
+            ) from err
+        return (tar_file_path, stat_result.st_size)
 
     async def async_receive_backup(
         self,

@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from pyloadapi.api import CannotConnect, InvalidAuth, PyLoadAPI
+from pyloadapi import CannotConnect, InvalidAuth, PyLoadAPI
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant

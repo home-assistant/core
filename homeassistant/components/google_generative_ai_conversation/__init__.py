@@ -7,7 +7,6 @@ from pathlib import Path
 
 from google import genai  # type: ignore[attr-defined]
 from google.genai.errors import APIError, ClientError
-from PIL import Image
 from requests.exceptions import Timeout
 import voluptuous as vol
 
@@ -26,6 +25,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -38,6 +38,7 @@ from .const import (
 
 SERVICE_GENERATE_CONTENT = "generate_content"
 CONF_IMAGE_FILENAME = "image_filename"
+CONF_FILENAMES = "filenames"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (Platform.CONVERSATION,)
@@ -50,30 +51,47 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def generate_content(call: ServiceCall) -> ServiceResponse:
         """Generate content from text and optionally images."""
+
+        if call.data[CONF_IMAGE_FILENAME]:
+            # Deprecated in 2025.3, to remove in 2025.9
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "deprecated_image_filename_parameter",
+                breaks_in_ha_version="2025.9.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_image_filename_parameter",
+            )
+
         prompt_parts = [call.data[CONF_PROMPT]]
 
-        def append_images_to_prompt():
+        config_entry: GoogleGenerativeAIConfigEntry = (
+            hass.config_entries.async_loaded_entries(DOMAIN)[0]
+        )
+
+        client = config_entry.runtime_data
+
+        def append_files_to_prompt():
             image_filenames = call.data[CONF_IMAGE_FILENAME]
-            for image_filename in image_filenames:
-                if not hass.config.is_allowed_path(image_filename):
+            filenames = call.data[CONF_FILENAMES]
+            for filename in set(image_filenames + filenames):
+                if not hass.config.is_allowed_path(filename):
                     raise HomeAssistantError(
-                        f"Cannot read `{image_filename}`, no access to path; "
+                        f"Cannot read `{filename}`, no access to path; "
                         "`allowlist_external_dirs` may need to be adjusted in "
                         "`configuration.yaml`"
                     )
-                if not Path(image_filename).exists():
-                    raise HomeAssistantError(f"`{image_filename}` does not exist")
-                mime_type, _ = mimetypes.guess_type(image_filename)
-                if mime_type is None or not mime_type.startswith("image"):
-                    raise HomeAssistantError(f"`{image_filename}` is not an image")
-                prompt_parts.append(Image.open(image_filename))
+                if not Path(filename).exists():
+                    raise HomeAssistantError(f"`{filename}` does not exist")
+                mimetype = mimetypes.guess_type(filename)[0]
+                with open(filename, "rb") as file:
+                    uploaded_file = client.files.upload(
+                        file=file, config={"mime_type": mimetype}
+                    )
+                    prompt_parts.append(uploaded_file)
 
-        await hass.async_add_executor_job(append_images_to_prompt)
-
-        config_entry: GoogleGenerativeAIConfigEntry = hass.config_entries.async_entries(
-            DOMAIN
-        )[0]
-        client = config_entry.runtime_data
+        await hass.async_add_executor_job(append_files_to_prompt)
 
         try:
             response = await client.aio.models.generate_content(
@@ -103,6 +121,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             {
                 vol.Required(CONF_PROMPT): cv.string,
                 vol.Optional(CONF_IMAGE_FILENAME, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_FILENAMES, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
             }

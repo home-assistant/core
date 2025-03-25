@@ -103,6 +103,7 @@ homeassistant.components.auth.*
 homeassistant.components.automation.*
 homeassistant.components.awair.*
 homeassistant.components.axis.*
+homeassistant.components.azure_storage.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.bang_olufsen.*
@@ -135,6 +136,7 @@ homeassistant.components.clicksend.*
 homeassistant.components.climate.*
 homeassistant.components.cloud.*
 homeassistant.components.co2signal.*
+homeassistant.components.comelit.*
 homeassistant.components.command_line.*
 homeassistant.components.config.*
 homeassistant.components.configurator.*
@@ -395,6 +397,7 @@ homeassistant.components.pure_energie.*
 homeassistant.components.purpleair.*
 homeassistant.components.pushbullet.*
 homeassistant.components.pvoutput.*
+homeassistant.components.pyload.*
 homeassistant.components.python_script.*
 homeassistant.components.qbus.*
 homeassistant.components.qnap_qsw.*
@@ -407,7 +410,9 @@ homeassistant.components.raspberry_pi.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
+homeassistant.components.remember_the_milk.*
 homeassistant.components.remote.*
+homeassistant.components.remote_calendar.*
 homeassistant.components.renault.*
 homeassistant.components.reolink.*
 homeassistant.components.repairs.*
@@ -526,6 +531,7 @@ homeassistant.components.vallox.*
 homeassistant.components.valve.*
 homeassistant.components.velbus.*
 homeassistant.components.vlc_telnet.*
+homeassistant.components.vodafone_station.*
 homeassistant.components.wake_on_lan.*
 homeassistant.components.wake_word.*
 homeassistant.components.wallbox.*
