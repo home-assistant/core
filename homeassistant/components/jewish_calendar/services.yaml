@@ -18,12 +18,12 @@ count_omer:
             - "italian"
     language:
       required: true
-      default: "hebrew"
-      example: "hebrew"
+      default: "he"
+      example: "he"
       selector:
         select:
           translation_key: "language"
           options:
-            - "english"
-            - "hebrew"
-            - "french"
+            - "en"
+            - "he"
+            - "fr"

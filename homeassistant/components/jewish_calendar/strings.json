@@ -57,9 +57,9 @@
     },
     "language": {
       "options": {
-        "hebrew": "Hebrew",
-        "english": "English",
-        "french": "French"
+        "he": "Hebrew",
+        "en": "English",
+        "fr": "French"
       }
     }
   },
