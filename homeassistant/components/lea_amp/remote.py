@@ -19,8 +19,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .constlea import DOMAIN
-from .Coordinator import LEAAMPApiCoordinator, LEAAMPConfigEntry
+from .const import DOMAIN
+from .coordinator import LEAAMPApiCoordinator, LEAAMPConfigEntry
 from .zone import LeaZone
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,13 +109,11 @@ class LeaRemote(CoordinatorEntity[LEAAMPApiCoordinator], RemoteEntity):
         for _ in range(num_repeats):
             for single_command in command:
                 if hold_secs:
-                    await self.coordinator.send_key_command(
-                        single_command, "START_LONG"
-                    )
+                    await self.coordinator.send_key_command(self._zone, single_command)
                     await asyncio.sleep(hold_secs)
-                    await self.coordinator.send_key_command(single_command, "END_LONG")
+                    await self.coordinator.send_key_command(self._zone, single_command)
                 else:
-                    await self.coordinator.send_key_command(single_command, "SHORT")
+                    await self.coordinator.send_key_command(self._zone, single_command)
                 await asyncio.sleep(delay_secs)
 
     @callback

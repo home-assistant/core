@@ -10,7 +10,7 @@ from homeassistant.components import network
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 
-from .constlea import CONNECTION_TIMEOUT, DOMAIN, PORT
+from .const import CONNECTION_TIMEOUT, DOMAIN, PORT
 from .controller import LeaController
 
 _LOGGER = logging.getLogger(__name__)
