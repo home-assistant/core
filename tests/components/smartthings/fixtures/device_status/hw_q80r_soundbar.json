@@ -3,11 +3,7 @@
     "main": {
       "mediaPlayback": {
         "supportedPlaybackCommands": {
-          "value": [
-            "play",
-            "pause",
-            "stop"
-          ],
+          "value": ["play", "pause", "stop"],
           "timestamp": "2025-03-23T01:10:02.207Z"
         },
         "playbackStatus": {
@@ -108,13 +104,7 @@
       },
       "mediaInputSource": {
         "supportedInputSources": {
-          "value": [
-            "wifi",
-            "bluetooth",
-            "HDMI1",
-            "HDMI2",
-            "digital"
-          ],
+          "value": ["wifi", "bluetooth", "HDMI1", "HDMI2", "digital"],
           "timestamp": "2025-03-23T01:18:01.663Z"
         },
         "inputSource": {
@@ -134,13 +124,8 @@
         "data": {
           "value": {
             "payload": {
-              "rt": [
-                "x.com.samsung.networkaudio.soundmode"
-              ],
-              "if": [
-                "oic.if.a",
-                "oic.if.baseline"
-              ],
+              "rt": ["x.com.samsung.networkaudio.soundmode"],
+              "if": ["oic.if.a", "oic.if.baseline"],
               "x.com.samsung.networkaudio.soundmode": "standard"
             }
           },
@@ -152,13 +137,7 @@
       },
       "samsungvd.audioInputSource": {
         "supportedInputSources": {
-          "value": [
-            "wifi",
-            "bluetooth",
-            "HDMI1",
-            "HDMI2",
-            "digital"
-          ],
+          "value": ["wifi", "bluetooth", "HDMI1", "HDMI2", "digital"],
           "timestamp": "2025-03-23T01:18:01.663Z"
         },
         "inputSource": {
