@@ -1151,7 +1151,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.68
+holidays==0.69
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250306.0
