@@ -107,7 +107,6 @@
         "state_attributes": {
           "effect": {
             "state": {
-              "none": "None",
               "candle": "Candle",
               "sparkle": "Sparkle",
               "glisten": "Glisten",

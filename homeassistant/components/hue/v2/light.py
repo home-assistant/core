@@ -18,6 +18,7 @@ from homeassistant.components.light import (
     ATTR_FLASH,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
+    EFFECT_OFF,
     FLASH_SHORT,
     ColorMode,
     LightEntity,
@@ -39,7 +40,6 @@ from .helpers import (
     normalize_hue_transition,
 )
 
-EFFECT_NONE = "none"
 FALLBACK_MIN_KELVIN = 6500
 FALLBACK_MAX_KELVIN = 2000
 FALLBACK_KELVIN = 5800  # halfway
@@ -118,7 +118,7 @@ class HueLight(HueBaseEntity, LightEntity):
                 if x != TimedEffectStatus.NO_EFFECT
             ]
         if len(self._attr_effect_list) > 0:
-            self._attr_effect_list.insert(0, EFFECT_NONE)
+            self._attr_effect_list.insert(0, EFFECT_OFF)
             self._attr_supported_features |= LightEntityFeature.EFFECT
 
     @property
@@ -211,7 +211,7 @@ class HueLight(HueBaseEntity, LightEntity):
         if timed_effects := self.resource.timed_effects:
             if timed_effects.status != TimedEffectStatus.NO_EFFECT:
                 return timed_effects.status.value
-        return EFFECT_NONE
+        return EFFECT_OFF
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -233,12 +233,12 @@ class HueLight(HueBaseEntity, LightEntity):
         self._color_temp_active = color_temp is not None
         flash = kwargs.get(ATTR_FLASH)
         effect = effect_str = kwargs.get(ATTR_EFFECT)
-        if effect_str in (EFFECT_NONE, EFFECT_NONE.lower()):
-            # ignore effect if set to "None" and we have no effect active
-            # the special effect "None" is only used to stop an active effect
+        if effect_str == EFFECT_OFF:
+            # ignore effect if set to "off" and we have no effect active
+            # the special effect "off" is only used to stop an active effect
             # but sending it while no effect is active can actually result in issues
             # https://github.com/home-assistant/core/issues/122165
-            effect = None if self.effect == EFFECT_NONE else EffectStatus.NO_EFFECT
+            effect = None if self.effect == EFFECT_OFF else EffectStatus.NO_EFFECT
         elif effect_str is not None:
             # work out if we got a regular effect or timed effect
             effect = EffectStatus(effect_str)
