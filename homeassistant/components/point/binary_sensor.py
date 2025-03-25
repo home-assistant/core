@@ -60,6 +60,13 @@ async def async_setup_entry(
 
     coordinator.new_device_callbacks.append(async_discover_sensor)
 
+    async_add_entities(
+        MinutPointBinarySensor(coordinator, device_id, device_name)
+        for device_name in DEVICES
+        if device_name in EVENTS
+        for device_id in coordinator.point.device_ids
+    )
+
 
 class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
     """The platform class required by Home Assistant."""

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
 
 from pypoint import PointSession
@@ -40,9 +39,12 @@ async def async_setup_entry(
 
     def async_discover_home(home_id: str) -> None:
         """Discover and add a discovered home."""
-        async_add_entities([MinutPointAlarmControl(coordinator, home_id)])
+        async_add_entities([MinutPointAlarmControl(coordinator.point, home_id)])
 
     coordinator.new_home_callback = async_discover_home
+
+    for home_id in coordinator.point.homes:
+        async_discover_home(home_id)
 
 
 class MinutPointAlarmControl(AlarmControlPanelEntity):
@@ -55,7 +57,6 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         """Initialize the entity."""
         self._client = point
         self._home_id = home_id
-        self._async_unsub_hook_dispatcher_connect: Callable[[], None] | None = None
         self._home = point.homes[self._home_id]
 
         self._attr_name = self._home["name"]
@@ -72,12 +73,6 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         self.async_on_remove(
             async_dispatcher_connect(self.hass, SIGNAL_WEBHOOK, self._webhook_event)
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect dispatcher listener when removed."""
-        await super().async_will_remove_from_hass()
-        if self._async_unsub_hook_dispatcher_connect:
-            self._async_unsub_hook_dispatcher_connect()
 
     @callback
     def _webhook_event(self, data, webhook):
