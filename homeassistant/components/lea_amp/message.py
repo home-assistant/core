@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TypeVar
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class LeaMessage:
@@ -239,6 +242,9 @@ class MessageResponseFactory:
             command_type = "source"
         value = value.replace(" ", "")
 
+        _LOGGER.log(logging.INFO, "value: %s", str(value))
+        _LOGGER.log(logging.INFO, "command_type: %s", str(command_type))
+        _LOGGER.log(logging.INFO, "zoneId: %s", str(zoneId))
         if not value:
             return None
 

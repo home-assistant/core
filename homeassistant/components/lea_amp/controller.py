@@ -278,6 +278,7 @@ class LeaController:
 
     async def _handle_response_received(self, data: str):
         """Handle received response."""
+        _LOGGER.log(logging.INFO, "_handle_response_received: %s", str(data))
         zone_id, commandType, value = self._message_factory.create_message(data)
 
         if commandType == "numInputs":
