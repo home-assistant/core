@@ -157,7 +157,7 @@ QUERY_STATISTICS_SUMMARY_MEAN = (
     func.max(StatisticsShortTerm.max),
     case(
         (
-            StatisticsMeta.mean_type == StatisticMeanType.ARIMETHIC,
+            StatisticsMeta.mean_type == StatisticMeanType.ARITHMETIC,
             func.avg(StatisticsShortTerm.mean),
         ),
         (
@@ -932,7 +932,7 @@ def _flatten_list_statistic_ids_metadata_result(
             "statistic_id": _id,
             "display_unit_of_measurement": info["display_unit_of_measurement"],
             "has_mean": info["mean_type"]
-            == StatisticMeanType.ARIMETHIC,  # Can be removed with 2026.4
+            == StatisticMeanType.ARITHMETIC,  # Can be removed with 2026.4
             "mean_type": info["mean_type"],
             "has_sum": info["has_sum"],
             "name": info.get("name"),
@@ -1036,7 +1036,7 @@ def _reduce_statistics(
                 if _want_mean:
                     if mean_values:
                         match metadata[statistic_id][1]["mean_type"]:
-                            case StatisticMeanType.ARIMETHIC:
+                            case StatisticMeanType.ARITHMETIC:
                                 row["mean"] = mean(mean_values)
                             case StatisticMeanType.CIRCULAR:
                                 row["mean"] = circular_mean(mean_values)
@@ -1284,7 +1284,7 @@ def _get_max_mean_min_statistic_in_sub_period(
         columns = columns.add_columns(func.max(table.max))
     if "mean" in types:
         match mean_type:
-            case StatisticMeanType.ARIMETHIC:
+            case StatisticMeanType.ARITHMETIC:
                 columns = columns.add_columns(func.avg(table.mean))
                 columns = columns.add_columns(func.count(table.mean))
             case StatisticMeanType.CIRCULAR:
@@ -1304,7 +1304,7 @@ def _get_max_mean_min_statistic_in_sub_period(
     if "mean" in types:
         # https://github.com/sqlalchemy/sqlalchemy/issues/9127
         match mean_type:
-            case StatisticMeanType.ARIMETHIC:
+            case StatisticMeanType.ARITHMETIC:
                 duration = stats[0].count * table.duration.total_seconds()  # type: ignore[operator]
                 if stats[0].avg is not None:
                     result["duration"] = result.get("duration", 0.0) + duration
@@ -1386,7 +1386,7 @@ def _get_max_mean_min_statistic(
             case StatisticMeanType.CIRCULAR:
                 if circular_means := max_mean_min.get("circular_means", []):
                     mean_value = weighted_circular_mean(circular_means)
-            case StatisticMeanType.ARIMETHIC:
+            case StatisticMeanType.ARITHMETIC:
                 if (mean_value := max_mean_min.get("mean_acc")) is not None and (
                     duration := max_mean_min.get("duration")
                 ) is not None:

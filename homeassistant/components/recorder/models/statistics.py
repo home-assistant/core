@@ -55,7 +55,7 @@ class StatisticDataTimestamp(StatisticDataTimestampBase, StatisticMixIn, total=F
 class StatisticMeanType(IntEnum):
     """Statistic mean type."""
 
-    ARIMETHIC = 1
+    ARITHMETIC = 1
     CIRCULAR = 2
 
 

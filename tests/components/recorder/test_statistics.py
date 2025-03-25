@@ -150,8 +150,8 @@ async def test_compile_hourly_statistics(
         hass, statistic_ids={"sensor.test1", "sensor.test2", "sensor.wind_direction"}
     )
     for sensor, mean_type in (
-        ("sensor.test1", StatisticMeanType.ARIMETHIC),
-        ("sensor.test2", StatisticMeanType.ARIMETHIC),
+        ("sensor.test1", StatisticMeanType.ARITHMETIC),
+        ("sensor.test2", StatisticMeanType.ARITHMETIC),
         ("sensor.wind_direction", StatisticMeanType.CIRCULAR),
     ):
         assert metadata[sensor][1]["mean_type"] is mean_type

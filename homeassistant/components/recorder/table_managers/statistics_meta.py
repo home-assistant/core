@@ -124,10 +124,10 @@ class StatisticsMetaManager:
                     mean_type = try_parse_enum(StatisticMeanType, row[INDEX_MEAN_TYPE])
                 else:
                     mean_type = (
-                        StatisticMeanType.ARIMETHIC if row[INDEX_MEAN_TYPE] else None
+                        StatisticMeanType.ARITHMETIC if row[INDEX_MEAN_TYPE] else None
                     )
                 meta = {
-                    "has_mean": mean_type is StatisticMeanType.ARIMETHIC,
+                    "has_mean": mean_type is StatisticMeanType.ARITHMETIC,
                     "mean_type": mean_type,
                     "has_sum": row[INDEX_HAS_SUM],
                     "name": row[INDEX_NAME],
@@ -183,7 +183,7 @@ class StatisticsMetaManager:
             # Even when typing suggests it is always present, we need to check it and guard
             # against it as custom integrations might not set it.
             new_metadata["mean_type"] = (  # type: ignore[unreachable]
-                StatisticMeanType.ARIMETHIC if new_metadata["has_mean"] else None
+                StatisticMeanType.ARITHMETIC if new_metadata["has_mean"] else None
             )
         metadata_id, old_metadata = old_metadata_dict[statistic_id]
         if not (

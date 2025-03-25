@@ -63,7 +63,7 @@ class _StatisticsConfig:
 
 DEFAULT_STATISTICS = {
     SensorStateClass.MEASUREMENT: _StatisticsConfig(
-        {"mean", "min", "max"}, StatisticMeanType.ARIMETHIC
+        {"mean", "min", "max"}, StatisticMeanType.ARITHMETIC
     ),
     SensorStateClass.MEASUREMENT_ANGLE: _StatisticsConfig(
         {"mean"}, StatisticMeanType.CIRCULAR
@@ -619,7 +619,7 @@ def compile_statistics(  # noqa: C901
             )
 
         match mean_type:
-            case StatisticMeanType.ARIMETHIC:
+            case StatisticMeanType.ARITHMETIC:
                 stat["mean"] = _time_weighted_average(valid_float_states, start, end)
             case StatisticMeanType.CIRCULAR:
                 stat["mean"] = _time_weighted_circular_mean(

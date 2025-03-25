@@ -534,7 +534,7 @@ def ws_import_statistics(
     metadata = msg["metadata"]
     # The WS command will be changed in a follow up PR
     metadata["mean_type"] = (
-        StatisticMeanType.ARIMETHIC if metadata["has_mean"] else None
+        StatisticMeanType.ARITHMETIC if metadata["has_mean"] else None
     )
     stats = msg["stats"]
 

@@ -46,7 +46,7 @@ async def test_demo_statistics(hass: HomeAssistant) -> None:
     assert {
         "display_unit_of_measurement": "°C",
         "has_mean": True,
-        "mean_type": StatisticMeanType.ARIMETHIC,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "has_sum": False,
         "name": "Outdoor temperature",
         "source": DOMAIN,

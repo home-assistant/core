@@ -2285,7 +2285,7 @@ async def test_list_statistic_ids(
     """Test list_statistic_ids."""
     now = get_start_time(dt_util.utcnow())
     has_mean = attributes["state_class"] == "measurement"
-    mean_type = StatisticMeanType.ARIMETHIC if has_mean else None
+    mean_type = StatisticMeanType.ARITHMETIC if has_mean else None
     has_sum = not has_mean
 
     hass.config.units = units
@@ -2463,7 +2463,7 @@ async def test_list_statistic_ids_unit_change(
     """Test list_statistic_ids."""
     now = get_start_time(dt_util.utcnow())
     has_mean = attributes["state_class"] == "measurement"
-    mean_type = StatisticMeanType.ARIMETHIC if has_mean else None
+    mean_type = StatisticMeanType.ARITHMETIC if has_mean else None
     has_sum = not has_mean
 
     await async_setup_component(hass, "sensor", {})
@@ -2735,7 +2735,7 @@ async def test_update_statistics_metadata(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": "kW",
             "has_mean": True,
-            "mean_type": StatisticMeanType.ARIMETHIC,
+            "mean_type": StatisticMeanType.ARITHMETIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
@@ -2763,7 +2763,7 @@ async def test_update_statistics_metadata(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": new_display_unit,
             "has_mean": True,
-            "mean_type": StatisticMeanType.ARIMETHIC,
+            "mean_type": StatisticMeanType.ARITHMETIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
@@ -2853,7 +2853,7 @@ async def test_change_statistics_unit(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": "kW",
             "has_mean": True,
-            "mean_type": StatisticMeanType.ARIMETHIC,
+            "mean_type": StatisticMeanType.ARITHMETIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
@@ -2905,7 +2905,7 @@ async def test_change_statistics_unit(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": "kW",
             "has_mean": True,
-            "mean_type": StatisticMeanType.ARIMETHIC,
+            "mean_type": StatisticMeanType.ARITHMETIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
@@ -2959,7 +2959,7 @@ async def test_change_statistics_unit(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": "kW",
             "has_mean": True,
-            "mean_type": StatisticMeanType.ARIMETHIC,
+            "mean_type": StatisticMeanType.ARITHMETIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
@@ -2987,7 +2987,7 @@ async def test_change_statistics_unit_errors(
             "statistic_id": "sensor.test",
             "display_unit_of_measurement": "kW",
             "has_mean": True,
-            "mean_type": StatisticMeanType.ARIMETHIC,
+            "mean_type": StatisticMeanType.ARITHMETIC,
             "has_sum": False,
             "name": None,
             "source": "recorder",
@@ -3307,7 +3307,7 @@ async def test_get_statistics_metadata(
     """Test get_statistics_metadata."""
     now = get_start_time(dt_util.utcnow())
     has_mean = attributes["state_class"] == "measurement"
-    mean_type = StatisticMeanType.ARIMETHIC if has_mean else None
+    mean_type = StatisticMeanType.ARITHMETIC if has_mean else None
     has_sum = not has_mean
 
     hass.config.units = units

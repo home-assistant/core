@@ -621,7 +621,7 @@ class Recorder(threading.Thread):
             # Backwards compatibility for old metadata format
             # Can be removed after 2026.4
             metadata["mean_type"] = (  # type: ignore[unreachable]
-                StatisticMeanType.ARIMETHIC if metadata.get("has_mean") else None
+                StatisticMeanType.ARITHMETIC if metadata.get("has_mean") else None
             )
 
         self.queue_task(ImportStatisticsTask(metadata, stats, table))

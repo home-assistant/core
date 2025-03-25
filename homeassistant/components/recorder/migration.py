@@ -2023,7 +2023,7 @@ class _SchemaVersion49Migrator(_SchemaVersionMigrator, target_version=49):
                 text(
                     "UPDATE statistics_meta SET mean_type=:mean_type WHERE has_mean=true"
                 ),
-                {"mean_type": StatisticMeanType.ARIMETHIC.value},
+                {"mean_type": StatisticMeanType.ARITHMETIC.value},
             )
 
 
