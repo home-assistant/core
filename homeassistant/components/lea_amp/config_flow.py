@@ -6,11 +6,10 @@ import asyncio
 from contextlib import suppress
 import logging
 
-from homeassistant.components import network
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 
-from .const import CONNECTION_TIMEOUT, DOMAIN, PORT
+from .const import CONNECTION_TIMEOUT, DOMAIN, LEA_IP, PORT
 from .controller import LeaController
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,12 +18,12 @@ _LOGGER = logging.getLogger(__name__)
 async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Return if there are devices that can be discovered."""
 
-    adapter = await network.async_get_source_ip(hass, network.PUBLIC_TARGET_IP)
+    # adapter = await network.async_get_source_ip(hass, network.PUBLIC_TARGET_IP)
 
     controller: LeaController = LeaController(
         loop=hass.loop,
         port=PORT,
-        ip_address=adapter,
+        ip_address=LEA_IP,
         discovery_enabled=True,
         discovery_interval=1,
         update_enabled=False,
