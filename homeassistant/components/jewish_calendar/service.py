@@ -46,9 +46,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         # the full language name
         language = cast(Language, SUPPORTED_LANGUAGES[call.data[CONF_LANGUAGE]])
 
-        # Show the Hebrew Date in the response in the correct language
-        hebrew_date.set_language(language)
-
         omer = Omer(date=hebrew_date, nusach=nusach, language=language)
         return {
             "message": str(omer.count_str()),
