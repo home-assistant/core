@@ -41,11 +41,17 @@ VALUE_TO_STATE = {
     "paused": MediaPlayerState.PAUSED,
     "playing": MediaPlayerState.PLAYING,
     "stopped": MediaPlayerState.IDLE,
-    "fast_forwarding": MediaPlayerState.BUFFERING,
+    "fast forwarding": MediaPlayerState.BUFFERING,
     "rewinding": MediaPlayerState.BUFFERING,
-    "on": MediaPlayerState.ON,
-    "off": MediaPlayerState.OFF,
 }
+
+REPEAT_MODE_TO_HA = {
+    "all": RepeatMode.ALL,
+    "one": RepeatMode.ONE,
+    "off": RepeatMode.OFF,
+}
+
+HA_REPEAT_MODE_TO_SMARTTHINGS = {v: k for k, v in REPEAT_MODE_TO_HA.items()}
 
 
 async def async_setup_entry(
@@ -56,15 +62,14 @@ async def async_setup_entry(
     """Add media players for a config entry."""
     entry_data = entry.runtime_data
 
-    entities: list[MediaPlayerEntity] = [
+    async_add_entities(
         SmartThingsMediaPlayer(entry_data.client, device)
         for device in entry_data.devices.values()
         if all(
             capability in device.status[MAIN]
             for capability in MEDIA_PLAYER_CAPABILITIES
         )
-    ]
-    async_add_entities(entities)
+    )
 
 
 class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
@@ -74,7 +79,6 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Initialize the media_player class."""
-
         super().__init__(
             client,
             device,
@@ -92,9 +96,8 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         )
         self._attr_supported_features = self._determine_features()
         self._attr_device_class = DEVICE_CLASS_MAP.get(
-            device.device.components[0].user_category
-            or device.device.components[0].manufacturer_category,
-            None,
+            device.device.components[MAIN].user_category
+            or device.device.components[MAIN].manufacturer_category,
         )
 
     def _determine_features(self) -> MediaPlayerEntityFeature:
@@ -223,7 +226,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         await self.execute_device_command(
             Capability.MEDIA_PLAYBACK_SHUFFLE,
             Command.SET_PLAYBACK_SHUFFLE,
-            argument=shuffle,
+            argument="enabled" if shuffle else "disabled",
         )
 
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
@@ -231,7 +234,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         await self.execute_device_command(
             Capability.MEDIA_PLAYBACK_REPEAT,
             Command.SET_PLAYBACK_REPEAT_MODE,
-            argument=repeat,
+            argument=HA_REPEAT_MODE_TO_SMARTTHINGS[repeat],
         )
 
     @property
@@ -254,33 +257,42 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             )
         ) is None:
             return None
-        return track_data.get("artist", None)
+        return track_data.get("artist")
 
     @property
     def state(self) -> MediaPlayerState | None:
         """State of the media player."""
-        if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on":
-            if (
-                self.source is not None
-                and self.source in CONTROLLABLE_SOURCES
-                and self.get_attribute_value(
-                    Capability.MEDIA_PLAYBACK, Attribute.PLAYBACK_STATUS
-                )
-                in VALUE_TO_STATE
-            ):
-                return VALUE_TO_STATE[
-                    self.get_attribute_value(
+        if self.supports_capability(Capability.SWITCH):
+            if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on":
+                if (
+                    self.source is not None
+                    and self.source in CONTROLLABLE_SOURCES
+                    and self.get_attribute_value(
                         Capability.MEDIA_PLAYBACK, Attribute.PLAYBACK_STATUS
                     )
-                ]
-            return MediaPlayerState.ON
-        return MediaPlayerState.OFF
+                    in VALUE_TO_STATE
+                ):
+                    return VALUE_TO_STATE[
+                        self.get_attribute_value(
+                            Capability.MEDIA_PLAYBACK, Attribute.PLAYBACK_STATUS
+                        )
+                    ]
+                return MediaPlayerState.ON
+            return MediaPlayerState.OFF
+        return VALUE_TO_STATE[
+            self.get_attribute_value(
+                Capability.MEDIA_PLAYBACK, Attribute.PLAYBACK_STATUS
+            )
+        ]
 
     @property
     def is_volume_muted(self) -> bool | None:
         """Returns if the volume is muted."""
         if self.supports_capability(Capability.AUDIO_MUTE):
-            return self.get_attribute_value(Capability.AUDIO_MUTE, Attribute.MUTE)
+            return (
+                self.get_attribute_value(Capability.AUDIO_MUTE, Attribute.MUTE)
+                == "muted"
+            )
         return None
 
     @property
@@ -324,8 +336,11 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     def shuffle(self) -> bool | None:
         """Returns if shuffle mode is set."""
         if self.supports_capability(Capability.MEDIA_PLAYBACK_SHUFFLE):
-            return self.get_attribute_value(
-                Capability.MEDIA_PLAYBACK_SHUFFLE, Attribute.PLAYBACK_SHUFFLE
+            return (
+                self.get_attribute_value(
+                    Capability.MEDIA_PLAYBACK_SHUFFLE, Attribute.PLAYBACK_SHUFFLE
+                )
+                == "enabled"
             )
         return None
 
@@ -333,7 +348,9 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     def repeat(self) -> RepeatMode | None:
         """Returns if repeat mode is set."""
         if self.supports_capability(Capability.MEDIA_PLAYBACK_REPEAT):
-            return self.get_attribute_value(
-                Capability.MEDIA_PLAYBACK_REPEAT, Attribute.PLAYBACK_REPEAT_MODE
-            )
+            return REPEAT_MODE_TO_HA[
+                self.get_attribute_value(
+                    Capability.MEDIA_PLAYBACK_REPEAT, Attribute.PLAYBACK_REPEAT_MODE
+                )
+            ]
         return None

@@ -46,7 +46,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
       'friendly_name': 'Soundbar',
-      'is_volume_muted': 'unmuted',
+      'is_volume_muted': False,
       'media_artist': 'Rick Astley',
       'media_title': 'Never Gonna Give You Up',
       'source': 'wifi',
@@ -62,6 +62,114 @@
     }),
     'context': <ANY>,
     'entity_id': 'media_player.soundbar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_all_entities[im_speaker_ai_0001][media_player.galaxy_home_mini-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.galaxy_home_mini',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 318477>,
+    'translation_key': None,
+    'unique_id': 'c9276e43-fe3c-88c3-1dcc-2eb79e292b8c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[im_speaker_ai_0001][media_player.galaxy_home_mini-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Galaxy Home Mini',
+      'is_volume_muted': False,
+      'repeat': <RepeatMode.OFF: 'off'>,
+      'shuffle': False,
+      'supported_features': <MediaPlayerEntityFeature: 318477>,
+      'volume_level': 0.52,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.galaxy_home_mini',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_all_entities[sonos_player][media_player.elliots_rum-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.elliots_rum',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 21517>,
+    'translation_key': None,
+    'unique_id': 'c85fced9-c474-4a47-93c2-037cc7829536',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sonos_player][media_player.elliots_rum-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Elliots Rum',
+      'is_volume_muted': False,
+      'media_artist': 'David Guetta',
+      'media_title': 'Forever Young',
+      'supported_features': <MediaPlayerEntityFeature: 21517>,
+      'volume_level': 0.15,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.elliots_rum',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -108,7 +216,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
       'friendly_name': 'Soundbar Living',
-      'is_volume_muted': 'unmuted',
+      'is_volume_muted': False,
       'media_artist': '',
       'media_title': '',
       'source': 'HDMI1',

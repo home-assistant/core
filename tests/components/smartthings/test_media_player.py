@@ -1,4 +1,4 @@
-"""Test for the SmartThings switch platform."""
+"""Test for the SmartThings media player platform."""
 
 from unittest.mock import AsyncMock
 
@@ -74,7 +74,7 @@ async def test_turn_on_off(
     action: str,
     command: Command,
 ) -> None:
-    """Test switch turn on and off command."""
+    """Test media player turn on and off command."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -340,8 +340,8 @@ async def test_select_source(
 @pytest.mark.parametrize(
     ("shuffle", "argument"),
     [
-        (True, True),
-        (False, False),
+        (True, "enabled"),
+        (False, "disabled"),
     ],
 )
 async def test_media_shuffle_on_off(
