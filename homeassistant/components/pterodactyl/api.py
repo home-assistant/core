@@ -1,6 +1,5 @@
 """API module of the Pterodactyl integration."""
 
-from asyncio import gather
 from dataclasses import dataclass
 import logging
 
@@ -78,21 +77,23 @@ class PterodactylAPI:
 
             _LOGGER.debug("Identifiers of Pterodactyl servers: %s", self.identifiers)
 
+    def get_server_data(self, identifier: str) -> tuple[dict, dict]:
+        """Get all data from the Pterodactyl server."""
+        server = self.pterodactyl.client.servers.get_server(identifier)  # type: ignore[union-attr]
+        utilization = self.pterodactyl.client.servers.get_server_utilization(  # type: ignore[union-attr]
+            identifier
+        )
+
+        return server, utilization
+
     async def async_get_data(self) -> dict[str, PterodactylData]:
         """Update the data from all Pterodactyl servers."""
         data = {}
 
         for identifier in self.identifiers:
             try:
-                server, utilization = await gather(
-                    self.hass.async_add_executor_job(
-                        self.pterodactyl.client.servers.get_server,  # type: ignore[union-attr]
-                        identifier,
-                    ),
-                    self.hass.async_add_executor_job(
-                        self.pterodactyl.client.servers.get_server_utilization,  # type: ignore[union-attr]
-                        identifier,
-                    ),
+                server, utilization = await self.hass.async_add_executor_job(
+                    self.get_server_data, identifier
                 )
             except (
                 PydactylError,
