@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
-from .mock_data import HOME_DATA, NETWORK_INFO
+from .mock_data import HOME_DATA, NETWORK_INFO, NETWORK_INFO_2
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
@@ -305,7 +305,11 @@ async def test_stale_device(
     device_registry: DeviceRegistry,
 ) -> None:
     """Test that we remove a device if it no longer is given by home_data."""
-    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    with patch(
+        "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
+        side_effect=[NETWORK_INFO, NETWORK_INFO_2],
+    ):
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
     existing_devices = device_registry.devices.get_devices_for_config_entry_id(
         mock_roborock_entry.entry_id
@@ -314,9 +318,15 @@ async def test_stale_device(
     hd = deepcopy(HOME_DATA)
     hd.devices = [hd.devices[0]]
 
-    with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
-        return_value=hd,
+    with (
+        patch(
+            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+            return_value=hd,
+        ),
+        patch(
+            "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
+            side_effect=[NETWORK_INFO, NETWORK_INFO_2],
+        ),
     ):
         await hass.config_entries.async_reload(mock_roborock_entry.entry_id)
         await hass.async_block_till_done()
@@ -336,7 +346,11 @@ async def test_no_stale_device(
     device_registry: DeviceRegistry,
 ) -> None:
     """Test that we don't remove a device if fails to setup."""
-    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    with patch(
+        "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
+        side_effect=[NETWORK_INFO, NETWORK_INFO_2],
+    ):
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
     existing_devices = device_registry.devices.get_devices_for_config_entry_id(
         mock_roborock_entry.entry_id
