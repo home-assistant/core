@@ -219,7 +219,7 @@ class LeaController:
         _LOGGER.log(
             logging.INFO,
             "Sending update message:  %s",
-            (str(self._registry.discovered_zones.values())),
+            (str(self._registry.discovered_zones.values().zone_id)),
         )
         if self._transport:
             for d in self._registry.discovered_zones.values():
