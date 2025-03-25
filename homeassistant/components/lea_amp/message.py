@@ -45,7 +45,7 @@ def GetNumOfInputsMessage():
     request_type = "get "
     ext1 = "/amp/deviceInfo/numInputs"
 
-    return request_type + ext1 + " " + "\n"
+    return request_type + ext1 + "\n"
 
 
 class ZoneEnabledMsg(LeaMessage):
