@@ -65,17 +65,10 @@ async def test_cover_features(
 
     assert len(hass.states.async_all("cover")) == 4
 
-    cover = hass.states.get("cover.test_shutter_0")
-    assert cover.attributes["supported_features"] == COVER_FEATURES
-
-    cover = hass.states.get("cover.test_shutter_1")
-    assert cover.attributes["supported_features"] == COVER_FEATURES
-
-    cover = hass.states.get("cover.test_shutter_2")
-    assert cover.attributes["supported_features"] == COVER_FEATURES
-
-    cover = hass.states.get("cover.test_shutter_3")
-    assert cover.attributes["supported_features"] == COVER_FEATURES
+    for i in range(4):
+        cover = hass.states.get(f"cover.test_shutter_{i}")
+        assert cover
+        assert cover.attributes["supported_features"] == COVER_FEATURES
 
 
 async def test_cover_availability(
