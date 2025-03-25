@@ -10,7 +10,7 @@ aiohttp_cors==0.7.0
 aiohttp-fast-zlib==0.2.3
 aiohttp-asyncmdnsresolver==0.1.1
 aiozoneinfo==0.2.3
-annotatedyaml==0.4.4
+annotatedyaml==0.4.5
 astral==2.2
 async-interrupt==1.2.2
 attrs==25.1.0
@@ -46,7 +46,7 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.4.0
 urllib3>=1.26.5,<2
-uv==0.6.1
+uv==0.6.8
 voluptuous==0.15.2
 voluptuous-serialize==2.6.0
 voluptuous-openapi==0.0.6

@@ -9,10 +9,14 @@ from openai._streaming import AsyncStream
 from openai.types.responses import (
     EasyInputMessageParam,
     FunctionToolParam,
+    ResponseCompletedEvent,
+    ResponseErrorEvent,
+    ResponseFailedEvent,
     ResponseFunctionCallArgumentsDeltaEvent,
     ResponseFunctionCallArgumentsDoneEvent,
     ResponseFunctionToolCall,
     ResponseFunctionToolCallParam,
+    ResponseIncompleteEvent,
     ResponseInputParam,
     ResponseOutputItemAddedEvent,
     ResponseOutputMessage,
@@ -99,8 +103,7 @@ def _convert_content_to_param(
 
     if isinstance(content, conversation.AssistantContent) and content.tool_calls:
         messages.extend(
-            # https://github.com/openai/openai-python/issues/2205
-            ResponseFunctionToolCallParam(  # type: ignore[typeddict-item]
+            ResponseFunctionToolCallParam(
                 type="function_call",
                 name=tool_call.tool_name,
                 arguments=json.dumps(tool_call.tool_args),
@@ -112,6 +115,7 @@ def _convert_content_to_param(
 
 
 async def _transform_stream(
+    chat_log: conversation.ChatLog,
     result: AsyncStream[ResponseStreamEvent],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform an OpenAI delta stream into HA format."""
@@ -138,6 +142,57 @@ async def _transform_stream(
                     )
                 ]
             }
+        elif isinstance(event, ResponseCompletedEvent):
+            if event.response.usage is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": event.response.usage.input_tokens,
+                            "output_tokens": event.response.usage.output_tokens,
+                        }
+                    }
+                )
+        elif isinstance(event, ResponseIncompleteEvent):
+            if event.response.usage is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": event.response.usage.input_tokens,
+                            "output_tokens": event.response.usage.output_tokens,
+                        }
+                    }
+                )
+
+            if (
+                event.response.incomplete_details
+                and event.response.incomplete_details.reason
+            ):
+                reason: str = event.response.incomplete_details.reason
+            else:
+                reason = "unknown reason"
+
+            if reason == "max_output_tokens":
+                reason = "max output tokens reached"
+            elif reason == "content_filter":
+                reason = "content filter triggered"
+
+            raise HomeAssistantError(f"OpenAI response incomplete: {reason}")
+        elif isinstance(event, ResponseFailedEvent):
+            if event.response.usage is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": event.response.usage.input_tokens,
+                            "output_tokens": event.response.usage.output_tokens,
+                        }
+                    }
+                )
+            reason = "unknown reason"
+            if event.response.error is not None:
+                reason = event.response.error.message
+            raise HomeAssistantError(f"OpenAI response failed: {reason}")
+        elif isinstance(event, ResponseErrorEvent):
+            raise HomeAssistantError(f"OpenAI response error: {event.message}")
 
 
 class OpenAIConversationEntity(
@@ -253,7 +308,7 @@ class OpenAIConversationEntity(
                 raise HomeAssistantError("Error talking to OpenAI") from err
 
             async for content in chat_log.async_add_delta_content_stream(
-                user_input.agent_id, _transform_stream(result)
+                user_input.agent_id, _transform_stream(chat_log, result)
             ):
                 messages.extend(_convert_content_to_param(content))
 
