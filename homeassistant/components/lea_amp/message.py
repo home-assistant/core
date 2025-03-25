@@ -207,6 +207,7 @@ class MessageResponseFactory:
         elif "numInputs" in data:
             zoneId = "0"
             value = data.replace("/amp/deviceInfo/numInputs", "")
+            command_type = "numInputs"
         elif "output/name" in data:
             zoneId = data[data.find("channels/") + 9 : data.find("/output") - 1]
             value = data[data.find("output/name") + 13 : len(data) - 2]
