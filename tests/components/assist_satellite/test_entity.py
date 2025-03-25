@@ -31,6 +31,8 @@ from homeassistant.exceptions import HomeAssistantError
 from . import ENTITY_ID
 from .conftest import MockAssistSatellite
 
+from tests.components.tts.common import MockResultStream
+
 
 @pytest.fixture
 def mock_chat_session_conversation_id() -> Generator[Mock]:
@@ -186,8 +188,9 @@ async def test_new_pipeline_cancels_pipeline(
             {"message": "Hello"},
             AssistSatelliteAnnouncement(
                 message="Hello",
-                media_id="https://www.home-assistant.io/resolved.mp3",
+                media_id="http://10.10.10.10:8123/api/tts_proxy/test-token",
                 original_media_id="media-source://bla",
+                tts_token="test-token",
                 media_id_source="tts",
             ),
         ),
@@ -200,6 +203,7 @@ async def test_new_pipeline_cancels_pipeline(
                 message="Hello",
                 media_id="https://www.home-assistant.io/resolved.mp3",
                 original_media_id="media-source://given",
+                tts_token=None,
                 media_id_source="media_id",
             ),
         ),
@@ -209,7 +213,22 @@ async def test_new_pipeline_cancels_pipeline(
                 message="",
                 media_id="http://example.com/bla.mp3",
                 original_media_id="http://example.com/bla.mp3",
+                tts_token=None,
                 media_id_source="url",
+            ),
+        ),
+        (
+            {
+                "media_id": "http://example.com/bla.mp3",
+                "preannounce_media_id": "http://example.com/preannounce.mp3",
+            },
+            AssistSatelliteAnnouncement(
+                message="",
+                media_id="http://example.com/bla.mp3",
+                original_media_id="http://example.com/bla.mp3",
+                tts_token=None,
+                media_id_source="url",
+                preannounce_media_id="http://example.com/preannounce.mp3",
             ),
         ),
     ],
@@ -243,8 +262,16 @@ async def test_announce(
 
     with (
         patch(
-            "homeassistant.components.assist_satellite.entity.tts_generate_media_source_id",
+            "homeassistant.components.tts.generate_media_source_id",
             new=tts_generate_media_source_id,
+        ),
+        patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud",
+        ),
+        patch(
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
         ),
         patch(
             "homeassistant.components.media_source.async_resolve_media",
@@ -500,7 +527,8 @@ async def test_vad_sensitivity_entity_not_found(
                 "Better system prompt",
                 AssistSatelliteAnnouncement(
                     message="Hello",
-                    media_id="https://www.home-assistant.io/resolved.mp3",
+                    media_id="http://10.10.10.10:8123/api/tts_proxy/test-token",
+                    tts_token="test-token",
                     original_media_id="media-source://generated",
                     media_id_source="tts",
                 ),
@@ -517,6 +545,7 @@ async def test_vad_sensitivity_entity_not_found(
                 AssistSatelliteAnnouncement(
                     message="Hello",
                     media_id="https://www.home-assistant.io/resolved.mp3",
+                    tts_token=None,
                     original_media_id="media-source://given",
                     media_id_source="media_id",
                 ),
@@ -530,8 +559,27 @@ async def test_vad_sensitivity_entity_not_found(
                 AssistSatelliteAnnouncement(
                     message="",
                     media_id="http://example.com/given.mp3",
+                    tts_token=None,
                     original_media_id="http://example.com/given.mp3",
                     media_id_source="url",
+                ),
+            ),
+        ),
+        (
+            {
+                "start_media_id": "http://example.com/given.mp3",
+                "preannounce_media_id": "http://example.com/preannounce.mp3",
+            },
+            (
+                "mock-conversation-id",
+                None,
+                AssistSatelliteAnnouncement(
+                    message="",
+                    media_id="http://example.com/given.mp3",
+                    tts_token=None,
+                    original_media_id="http://example.com/given.mp3",
+                    media_id_source="url",
+                    preannounce_media_id="http://example.com/preannounce.mp3",
                 ),
             ),
         ),
@@ -554,8 +602,16 @@ async def test_start_conversation(
 
     with (
         patch(
-            "homeassistant.components.assist_satellite.entity.tts_generate_media_source_id",
+            "homeassistant.components.tts.generate_media_source_id",
             return_value="media-source://generated",
+        ),
+        patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud",
+        ),
+        patch(
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
         ),
         patch(
             "homeassistant.components.media_source.async_resolve_media",
