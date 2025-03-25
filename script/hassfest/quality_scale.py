@@ -513,7 +513,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "iglo",
     "ign_sismologia",
     "ihc",
-    "imgw_pib",
     "improv_ble",
     "influxdb",
     "inkbird",
