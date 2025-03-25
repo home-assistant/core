@@ -56,11 +56,9 @@ class PterodactylBinarySensorEntity(PterodactylEntity, BinarySensorEntity):
         """Initialize binary sensor base entity."""
         super().__init__(coordinator, identifier, config_entry)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{self.coordinator.data[self.identifier].uuid}-{description.key}"
-        )
+        self._attr_unique_id = f"{self.game_server_data.uuid}-{description.key}"
 
     @property
     def is_on(self) -> bool:
         """Return binary sensor state."""
-        return self.coordinator.data[self.identifier].state == "running"
+        return self.game_server_data.state == "running"

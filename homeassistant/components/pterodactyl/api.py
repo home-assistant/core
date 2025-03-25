@@ -1,5 +1,6 @@
 """API module of the Pterodactyl integration."""
 
+from asyncio import gather
 from dataclasses import dataclass
 import logging
 
@@ -70,13 +71,10 @@ class PterodactylAPI:
             PterodactylApiError,
         ) as error:
             raise PterodactylConnectionError(error) from error
-        except Exception as error:
-            _LOGGER.exception("Unexpected exception occurred during initialization")
-            raise PterodactylConnectionError(error) from error
         else:
-            servers = paginated_response.collect()
-            for server in servers:
-                self.identifiers.append(server["attributes"]["identifier"])
+            game_servers = paginated_response.collect()
+            for game_server in game_servers:
+                self.identifiers.append(game_server["attributes"]["identifier"])
 
             _LOGGER.debug("Identifiers of Pterodactyl servers: %s", self.identifiers)
 
@@ -86,22 +84,21 @@ class PterodactylAPI:
 
         for identifier in self.identifiers:
             try:
-                server = await self.hass.async_add_executor_job(
-                    self.pterodactyl.client.servers.get_server,  # type: ignore[union-attr]
-                    identifier,
-                )
-                utilization = await self.hass.async_add_executor_job(
-                    self.pterodactyl.client.servers.get_server_utilization,  # type: ignore[union-attr]
-                    identifier,
+                server, utilization = await gather(
+                    self.hass.async_add_executor_job(
+                        self.pterodactyl.client.servers.get_server,  # type: ignore[union-attr]
+                        identifier,
+                    ),
+                    self.hass.async_add_executor_job(
+                        self.pterodactyl.client.servers.get_server_utilization,  # type: ignore[union-attr]
+                        identifier,
+                    ),
                 )
             except (
                 PydactylError,
                 BadRequestError,
                 PterodactylApiError,
             ) as error:
-                raise PterodactylConnectionError(error) from error
-            except Exception as error:
-                _LOGGER.exception("Unexpected exception occurred during data update")
                 raise PterodactylConnectionError(error) from error
             else:
                 data[identifier] = PterodactylData(

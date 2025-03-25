@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -16,6 +17,8 @@ from .api import (
     PterodactylConnectionError,
 )
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_URL = "http://localhost:8080"
 
@@ -48,6 +51,9 @@ class PterodactylConfigFlow(ConfigFlow, domain=DOMAIN):
                 await api.async_init()
             except (PterodactylConfigurationError, PterodactylConnectionError):
                 errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception occurred during config flow")
+                errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title=url, data=user_input)
 

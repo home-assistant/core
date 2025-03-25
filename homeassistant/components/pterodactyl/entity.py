@@ -5,6 +5,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .api import PterodactylData
 from .const import DOMAIN
 from .coordinator import PterodactylCoordinator
 
@@ -29,9 +30,9 @@ class PterodactylEntity(CoordinatorEntity[PterodactylCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, identifier)},
             manufacturer=MANUFACTURER,
-            name=coordinator.data[identifier].name,
-            model=coordinator.data[identifier].name,
-            model_id=coordinator.data[identifier].uuid,
+            name=self.game_server_data.name,
+            model=self.game_server_data.name,
+            model_id=self.game_server_data.uuid,
             configuration_url=f"{config_entry.data[CONF_URL]}/server/{identifier}",
         )
 
@@ -39,3 +40,8 @@ class PterodactylEntity(CoordinatorEntity[PterodactylCoordinator]):
     def available(self) -> bool:
         """Return binary sensor availability."""
         return super().available and self.identifier in self.coordinator.data
+
+    @property
+    def game_server_data(self) -> PterodactylData:
+        """Return game server data."""
+        return self.coordinator.data[self.identifier]
