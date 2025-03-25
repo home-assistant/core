@@ -78,7 +78,7 @@
       "extractor": {
         "name": "Extractor"
       },
-      "convecto_air_flow": {
+      "convector_air_flow": {
         "name": "Convector air flow"
       }
     },
