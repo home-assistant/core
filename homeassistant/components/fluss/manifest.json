@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/fluss",
   "iot_class": "cloud_polling",
   "loggers": ["fluss-api"],
-  "requirements": ["fluss-api==0.1.9.17"]
+  "requirements": ["fluss-api==0.1.9.17"],
+  "single_config_entry": true
 }

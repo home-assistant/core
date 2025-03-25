@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import logging
+from typing import TypedDict
 
 from fluss_api import (
     FlussApiClient,
@@ -16,18 +16,23 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-LOGGER = logging.getLogger(__package__)
-
 PLATFORMS: list[Platform] = [Platform.BUTTON]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Fluss+ from a config entry."""
+class FlussConfigEntryData(TypedDict):
+    """Type definition for Fluss+ config entry data."""
 
+    api_key: str
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry[FlussConfigEntryData]
+) -> bool:
+    """Set up Fluss+ from a config entry."""
     try:
         api = FlussApiClient(entry.data[CONF_API_KEY])
     except FlussApiClientAuthenticationError as e:
-        raise ConfigEntryError from e
+        raise ConfigEntryAuthFailed from e
     except (FlussApiClientCommunicationError, FlussApiClientError) as e:
         raise ConfigEntryNotReady from e
 
