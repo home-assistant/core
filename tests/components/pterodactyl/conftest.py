@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from pydactyl.responses import PaginatedResponse
 import pytest
 
 from homeassistant.components.pterodactyl.const import DOMAIN
@@ -143,4 +144,12 @@ def mock_pterodactyl():
     with patch(
         "homeassistant.components.pterodactyl.api.PterodactylClient", autospec=True
     ) as mock:
+        mock.return_value.client.servers.list_servers.return_value = PaginatedResponse(
+            mock.return_value, "client", TEST_SERVER_LIST_DATA
+        )
+        mock.return_value.client.servers.get_server.return_value = TEST_SERVER
+        mock.return_value.client.servers.get_server_utilization.return_value = (
+            TEST_SERVER_UTILIZATION
+        )
+
         yield mock.return_value

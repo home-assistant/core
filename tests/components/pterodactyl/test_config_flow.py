@@ -1,11 +1,7 @@
 """Test the Pterodactyl config flow."""
 
-from collections.abc import Generator
-from unittest.mock import AsyncMock
-
 from pydactyl import PterodactylClient
 from pydactyl.exceptions import ClientConfigError, PterodactylApiError
-from pydactyl.responses import PaginatedResponse
 import pytest
 
 from homeassistant.components.pterodactyl.const import DOMAIN
@@ -13,36 +9,19 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import (
-    TEST_SERVER,
-    TEST_SERVER_LIST_DATA,
-    TEST_SERVER_UTILIZATION,
-    TEST_URL,
-    TEST_USER_INPUT,
-)
+from .conftest import TEST_URL, TEST_USER_INPUT
 
 from tests.common import MockConfigEntry
 
 
-async def test_full_flow(
-    hass: HomeAssistant,
-    mock_pterodactyl: PterodactylClient,
-    mock_setup_entry: Generator[AsyncMock],
-) -> None:
+@pytest.mark.usefixtures("mock_pterodactyl", "mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant) -> None:
     """Test full flow without errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
-
-    mock_pterodactyl.client.servers.list_servers.return_value = PaginatedResponse(
-        mock_pterodactyl, "client", TEST_SERVER_LIST_DATA
-    )
-    mock_pterodactyl.client.servers.get_server.return_value = TEST_SERVER
-    mock_pterodactyl.client.servers.get_server_utilization.return_value = (
-        TEST_SERVER_UTILIZATION
-    )
 
     result = await hass.config_entries.flow.async_configure(
         flow_id=result["flow_id"],
@@ -55,6 +34,7 @@ async def test_full_flow(
     assert result["data"] == TEST_USER_INPUT
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     "exception_type",
     [
@@ -66,7 +46,6 @@ async def test_recovery_after_api_error(
     hass: HomeAssistant,
     exception_type,
     mock_pterodactyl: PterodactylClient,
-    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test recovery after an API error."""
     result = await hass.config_entries.flow.async_init(
@@ -87,13 +66,6 @@ async def test_recovery_after_api_error(
     assert result["errors"] == {"base": "cannot_connect"}
 
     mock_pterodactyl.reset_mock(side_effect=True)
-    mock_pterodactyl.client.servers.list_servers.return_value = PaginatedResponse(
-        mock_pterodactyl, "client", TEST_SERVER_LIST_DATA
-    )
-    mock_pterodactyl.client.servers.get_server.return_value = TEST_SERVER
-    mock_pterodactyl.client.servers.get_server_utilization.return_value = (
-        TEST_SERVER_UTILIZATION
-    )
 
     result = await hass.config_entries.flow.async_configure(
         flow_id=result["flow_id"], user_input=TEST_USER_INPUT
@@ -105,10 +77,10 @@ async def test_recovery_after_api_error(
     assert result["data"] == TEST_USER_INPUT
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_recovery_after_unknown_error(
     hass: HomeAssistant,
     mock_pterodactyl: PterodactylClient,
-    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test recovery after an API error."""
     result = await hass.config_entries.flow.async_init(
@@ -129,13 +101,6 @@ async def test_recovery_after_unknown_error(
     assert result["errors"] == {"base": "unknown"}
 
     mock_pterodactyl.reset_mock(side_effect=True)
-    mock_pterodactyl.client.servers.list_servers.return_value = PaginatedResponse(
-        mock_pterodactyl, "client", TEST_SERVER_LIST_DATA
-    )
-    mock_pterodactyl.client.servers.get_server.return_value = TEST_SERVER
-    mock_pterodactyl.client.servers.get_server_utilization.return_value = (
-        TEST_SERVER_UTILIZATION
-    )
 
     result = await hass.config_entries.flow.async_configure(
         flow_id=result["flow_id"], user_input=TEST_USER_INPUT
@@ -147,21 +112,18 @@ async def test_recovery_after_unknown_error(
     assert result["data"] == TEST_USER_INPUT
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_service_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pterodactyl: PterodactylClient,
-    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test config flow abort if the Pterodactyl server is already configured."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_pterodactyl.client.servers.list_servers.return_value = PaginatedResponse(
-        mock_pterodactyl, "client", TEST_SERVER_LIST_DATA
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=TEST_USER_INPUT
     )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
