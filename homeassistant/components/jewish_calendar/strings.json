@@ -66,7 +66,7 @@
   "services": {
     "count_omer": {
       "name": "Count the Omer",
-      "description": "Return the phrase for counting the Omer on a given date.",
+      "description": "Returns the phrase for counting the Omer on a given date.",
       "fields": {
         "date": {
           "name": "Date",
