@@ -9,6 +9,7 @@ from typing import Any
 from reolink_aio.api import Chime, Host
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
