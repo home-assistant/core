@@ -288,6 +288,8 @@ class LeaController:
 
     async def _handle_num_inputs(self, value: str):
         _LOGGER.log(logging.INFO, "_handle_num_inputs: %s", str(value))
+        value = value.replace("/amp/deviceInfo/numInputs", "")
+        value = value.replace(" ", "")
         for i in range(int(value)):
             zone = LeaZone(self, str(i))
             if self._call_discovered_callback(zone, True):
