@@ -1,5 +1,8 @@
 """Test the Pterodactyl config flow."""
 
+from collections.abc import Generator
+from unittest.mock import AsyncMock
+
 from pydactyl import PterodactylClient
 from pydactyl.exceptions import ClientConfigError, PterodactylApiError
 from pydactyl.responses import PaginatedResponse
@@ -21,9 +24,10 @@ from .conftest import (
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_pterodactyl")
 async def test_full_flow(
-    hass: HomeAssistant, mock_pterodactyl: PterodactylClient
+    hass: HomeAssistant,
+    mock_pterodactyl: PterodactylClient,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test full flow without errors."""
     result = await hass.config_entries.flow.async_init(
@@ -58,9 +62,11 @@ async def test_full_flow(
         PterodactylApiError,
     ],
 )
-@pytest.mark.usefixtures("mock_pterodactyl")
 async def test_recovery_after_api_error(
-    hass: HomeAssistant, exception_type, mock_pterodactyl: PterodactylClient
+    hass: HomeAssistant,
+    exception_type,
+    mock_pterodactyl: PterodactylClient,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test recovery after an API error."""
     result = await hass.config_entries.flow.async_init(
@@ -99,9 +105,10 @@ async def test_recovery_after_api_error(
     assert result["data"] == TEST_USER_INPUT
 
 
-@pytest.mark.usefixtures("mock_pterodactyl")
 async def test_recovery_after_unknown_error(
-    hass: HomeAssistant, mock_pterodactyl: PterodactylClient
+    hass: HomeAssistant,
+    mock_pterodactyl: PterodactylClient,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test recovery after an API error."""
     result = await hass.config_entries.flow.async_init(
@@ -140,11 +147,11 @@ async def test_recovery_after_unknown_error(
     assert result["data"] == TEST_USER_INPUT
 
 
-@pytest.mark.usefixtures("mock_config_entry", "mock_pterodactyl")
 async def test_service_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pterodactyl: PterodactylClient,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test config flow abort if the Pterodactyl server is already configured."""
     mock_config_entry.add_to_hass(hass)
