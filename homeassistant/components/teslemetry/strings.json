@@ -229,8 +229,8 @@
           },
           "fan_mode": {
             "state": {
-              "off": "Off",
-              "bioweapon": "Bioweapon Defense"
+              "off": "[%key:common::state::off%]",
+              "bioweapon": "Bioweapon defense"
             }
           }
         }
