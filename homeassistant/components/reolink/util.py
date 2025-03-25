@@ -108,6 +108,20 @@ def check_translation_key(err: ReolinkError) -> str | None:
     return err.translation_key
 
 
+_EXCEPTION_TO_TRANSLATION_KEY = {
+    ApiError: "api_error",
+    InvalidContentTypeError: "invalid_content_type",
+    CredentialsInvalidError: "invalid_credentials",
+    LoginError: "login_error",
+    NoDataError: "no_data",
+    UnexpectedDataError: "unexpected_data",
+    NotSupportedError: "not_supported",
+    SubscriptionError: "subscription_error",
+    ReolinkConnectionError: "connection_error",
+    ReolinkTimeoutError: "timeout",
+}
+
+
 # Decorators
 def raise_translated_error[**P, R](
     func: Callable[P, Awaitable[R]],
@@ -124,70 +138,11 @@ def raise_translated_error[**P, R](
                 translation_key=check_translation_key(err) or "invalid_parameter",
                 translation_placeholders={"err": str(err)},
             ) from err
-        except ApiError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=check_translation_key(err) or "api_error",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except InvalidContentTypeError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=check_translation_key(err) or "invalid_content_type",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except CredentialsInvalidError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=check_translation_key(err) or "invalid_credentials",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except LoginError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=check_translation_key(err) or "login_error",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except NoDataError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=check_translation_key(err) or "no_data",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except UnexpectedDataError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=check_translation_key(err) or "unexpected_data",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except NotSupportedError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=check_translation_key(err) or "not_supported",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except SubscriptionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=check_translation_key(err) or "subscription_error",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except ReolinkConnectionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=check_translation_key(err) or "connection_error",
-                translation_placeholders={"err": str(err)},
-            ) from err
-        except ReolinkTimeoutError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=check_translation_key(err) or "timeout",
-                translation_placeholders={"err": str(err)},
-            ) from err
         except ReolinkError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=check_translation_key(err) or "unexpected",
+                translation_key=check_translation_key(err)
+                or _EXCEPTION_TO_TRANSLATION_KEY.get(type(err), "unexpected"),
                 translation_placeholders={"err": str(err)},
             ) from err
 
