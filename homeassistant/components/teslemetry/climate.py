@@ -200,10 +200,7 @@ class TeslemetryPollingClimateEntity(TeslemetryClimateEntity, TeslemetryVehicleE
         if not self.scoped:
             self._attr_supported_features = ClimateEntityFeature(0)
 
-        super().__init__(
-            data,
-            side,
-        )
+        super().__init__(data, side)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""

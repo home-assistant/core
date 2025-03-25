@@ -36,8 +36,17 @@
       "door": {
         "name": "[%key:component::binary_sensor::entity_component::door::name%]"
       },
+      "dryer_wrinkle_prevent_active": {
+        "name": "Wrinkle prevent active"
+      },
       "filter_status": {
         "name": "Filter status"
+      },
+      "freezer_door": {
+        "name": "Freezer door"
+      },
+      "cooler_door": {
+        "name": "Cooler door"
       },
       "remote_control": {
         "name": "Remote control"
@@ -51,7 +60,7 @@
     },
     "button": {
       "stop": {
-        "name": "Stop"
+        "name": "[%key:common::action::stop%]"
       }
     },
     "event": {
@@ -336,6 +345,9 @@
       "refrigeration_setpoint": {
         "name": "[%key:component::smartthings::entity::sensor::oven_setpoint::name%]"
       },
+      "brightness_intensity": {
+        "name": "Brightness intensity"
+      },
       "robot_cleaner_cleaning_mode": {
         "name": "Cleaning mode",
         "state": {
@@ -452,6 +464,9 @@
       }
     },
     "switch": {
+      "bubble_soak": {
+        "name": "Bubble Soak"
+      },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
       }
@@ -460,7 +475,11 @@
   "issues": {
     "deprecated_binary_valve": {
       "title": "Deprecated valve binary sensor detected in some automations or scripts",
-      "description": "The valve binary sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nA valve entity with controls is available and should be used going forward; Please use it on the above automations or scripts to fix this issue."
+      "description": "The valve binary sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nA valve entity with controls is available and should be used going forward. Please use it in the above automations or scripts to fix this issue."
+    },
+    "deprecated_binary_fridge_door": {
+      "title": "Deprecated refrigerator door binary sensor detected in some automations or scripts",
+      "description": "The refrigerator door binary sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nSeparate entities for cooler and freezer door are available and should be used going forward. Please use them in the above automations or scripts to fix this issue."
     }
   }
 }
