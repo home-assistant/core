@@ -1212,7 +1212,11 @@ async def test_announce_message(
     done = asyncio.Event()
 
     async def send_voice_assistant_announcement_await_response(
-        media_id: str, timeout: float, text: str, start_conversation: bool
+        media_id: str,
+        timeout: float,
+        text: str,
+        start_conversation: bool,
+        preannounce_media_id: str | None = None,
     ):
         assert satellite.state == AssistSatelliteState.RESPONDING
         assert media_id == "http://10.10.10.10:8123/api/tts_proxy/test-token"
@@ -1302,7 +1306,11 @@ async def test_announce_media_id(
     done = asyncio.Event()
 
     async def send_voice_assistant_announcement_await_response(
-        media_id: str, timeout: float, text: str, start_conversation: bool
+        media_id: str,
+        timeout: float,
+        text: str,
+        start_conversation: bool,
+        preannounce_media_id: str | None = None,
     ):
         assert satellite.state == AssistSatelliteState.RESPONDING
         assert media_id == "https://www.home-assistant.io/proxied.flac"
@@ -1335,9 +1343,9 @@ async def test_announce_media_id(
             assert satellite.state == AssistSatelliteState.IDLE
 
         mock_async_create_proxy_url.assert_called_once_with(
-            hass,
-            dev.id,
-            "https://www.home-assistant.io/resolved.mp3",
+            hass=hass,
+            device_id=dev.id,
+            media_url="https://www.home-assistant.io/resolved.mp3",
             media_format="flac",
             rate=48000,
             channels=2,
@@ -1417,7 +1425,11 @@ async def test_start_conversation_message(
     done = asyncio.Event()
 
     async def send_voice_assistant_announcement_await_response(
-        media_id: str, timeout: float, text: str, start_conversation: bool
+        media_id: str,
+        timeout: float,
+        text: str,
+        start_conversation: bool,
+        preannounce_media_id: str,
     ):
         assert satellite.state == AssistSatelliteState.RESPONDING
         assert media_id == "http://10.10.10.10:8123/api/tts_proxy/test-token"
@@ -1526,7 +1538,11 @@ async def test_start_conversation_media_id(
     done = asyncio.Event()
 
     async def send_voice_assistant_announcement_await_response(
-        media_id: str, timeout: float, text: str, start_conversation: bool
+        media_id: str,
+        timeout: float,
+        text: str,
+        start_conversation: bool,
+        preannounce_media_id: str,
     ):
         assert satellite.state == AssistSatelliteState.RESPONDING
         assert media_id == "https://www.home-assistant.io/proxied.flac"
