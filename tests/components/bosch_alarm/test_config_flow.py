@@ -33,7 +33,7 @@ async def test_form_user(
 ) -> None:
     """Test the config flow for bosch_alarm."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -58,7 +58,6 @@ async def test_form_user(
         **bosch_alarm_test_data.config,
     }
 
-    await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 
 
