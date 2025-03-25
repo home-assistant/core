@@ -720,6 +720,7 @@ class StatisticsBase:
     start: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     start_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, index=True)
     mean: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
+    mean_weight: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     min: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     max: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     last_reset: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
@@ -741,6 +742,7 @@ class StatisticsBase:
             start=None,
             start_ts=stats["start"].timestamp(),
             mean=stats.get("mean"),
+            mean_weight=stats.get("mean_weight"),
             min=stats.get("min"),
             max=stats.get("max"),
             last_reset=None,
@@ -764,6 +766,7 @@ class StatisticsBase:
             start=None,
             start_ts=stats["start_ts"],
             mean=stats.get("mean"),
+            mean_weight=stats.get("mean_weight"),
             min=stats.get("min"),
             max=stats.get("max"),
             last_reset=None,

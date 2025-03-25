@@ -37,6 +37,7 @@ class StatisticMixIn(TypedDict, total=False):
     min: float
     max: float
     mean: float
+    mean_weight: float
 
 
 class StatisticData(StatisticDataBase, StatisticMixIn, total=False):

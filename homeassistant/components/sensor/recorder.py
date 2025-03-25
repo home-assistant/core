@@ -194,7 +194,7 @@ def _time_weighted_circular_mean(
         if duration != 0:
             values.append((old_fstate, duration))
 
-    return statistics.duration_weighted_circular_mean(values)
+    return statistics.weighted_circular_mean(values)
 
 
 def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:

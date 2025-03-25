@@ -705,11 +705,12 @@ async def test_statistic_during_period_circular_mean(
         {
             "start": (start + timedelta(minutes=5 * i)),
             "mean": (123.456 * i) % 360,
+            "mean_weight": 1,
         }
         for i in range(39)
     ]
 
-    def _circular_mean(values: Iterable[StatisticData]) -> float:
+    def _circular_mean(values: Iterable[StatisticData]) -> dict[str, float]:
         sin_sum = 0
         cos_sum = 0
         for x in values:
@@ -718,14 +719,17 @@ async def test_statistic_during_period_circular_mean(
             sin_sum += math.sin(mean * DEG_TO_RAD)
             cos_sum += math.cos(mean * DEG_TO_RAD)
 
-        return (RAD_TO_DEG * math.atan2(sin_sum, cos_sum)) % 360
+        return {
+            "mean": (RAD_TO_DEG * math.atan2(sin_sum, cos_sum)) % 360,
+            "mean_weight": math.sqrt(sin_sum**2 + cos_sum**2),
+        }
 
     imported_stats = []
     slice_end = 12 - offset
     imported_stats.append(
         {
             "start": imported_stats_5min[0]["start"].replace(minute=0),
-            "mean": _circular_mean(imported_stats_5min[0:slice_end]),
+            **_circular_mean(imported_stats_5min[0:slice_end]),
         }
     )
     for i in range(2):
@@ -735,7 +739,7 @@ async def test_statistic_during_period_circular_mean(
         imported_stats.append(
             {
                 "start": imported_stats_5min[slice_start]["start"],
-                "mean": _circular_mean(imported_stats_5min[slice_start:slice_end]),
+                **_circular_mean(imported_stats_5min[slice_start:slice_end]),
             }
         )
 
@@ -797,7 +801,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": _circular_mean(imported_stats_5min),
+        "mean": pytest.approx(_circular_mean(imported_stats_5min)["mean"]),
         "max": None,
         "min": None,
         "change": None,
@@ -825,7 +829,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": _circular_mean(imported_stats_5min),
+        "mean": pytest.approx(_circular_mean(imported_stats_5min)["mean"]),
         "max": None,
         "min": None,
         "change": None,
@@ -853,7 +857,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": _circular_mean(imported_stats_5min),
+        "mean": pytest.approx(_circular_mean(imported_stats_5min)["mean"]),
         "max": None,
         "min": None,
         "change": None,
@@ -877,7 +881,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": _circular_mean(imported_stats_5min[26:]),
+        "mean": pytest.approx(_circular_mean(imported_stats_5min[26:])["mean"]),
         "max": None,
         "min": None,
         "change": None,
@@ -900,7 +904,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": _circular_mean(imported_stats_5min[26:]),
+        "mean": pytest.approx(_circular_mean(imported_stats_5min[26:])["mean"]),
         "max": None,
         "min": None,
         "change": None,
@@ -924,7 +928,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": _circular_mean(imported_stats_5min[:26]),
+        "mean": pytest.approx(_circular_mean(imported_stats_5min[:26])["mean"]),
         "max": None,
         "min": None,
         "change": None,
@@ -954,7 +958,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": _circular_mean(imported_stats_5min[26:32]),
+        "mean": pytest.approx(_circular_mean(imported_stats_5min[26:32])["mean"]),
         "max": None,
         "min": None,
         "change": None,
@@ -976,7 +980,9 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": _circular_mean(imported_stats_5min[24 - offset :]),
+        "mean": pytest.approx(
+            _circular_mean(imported_stats_5min[24 - offset :])["mean"]
+        ),
         "max": None,
         "min": None,
         "change": None,
@@ -995,7 +1001,9 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": _circular_mean(imported_stats_5min[24 - offset :]),
+        "mean": pytest.approx(
+            _circular_mean(imported_stats_5min[24 - offset :])["mean"]
+        ),
         "max": None,
         "min": None,
         "change": None,
@@ -1017,7 +1025,9 @@ async def test_statistic_during_period_circular_mean(
     slice_start = 24 - offset
     slice_end = 36 - offset
     assert response["result"] == {
-        "mean": _circular_mean(imported_stats_5min[slice_start:slice_end]),
+        "mean": pytest.approx(
+            _circular_mean(imported_stats_5min[slice_start:slice_end])["mean"]
+        ),
         "max": None,
         "min": None,
         "change": None,
@@ -1034,10 +1044,7 @@ async def test_statistic_during_period_circular_mean(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
-        "mean": _circular_mean(imported_stats_5min),
-        "max": None,
-        "min": None,
-        "change": None,
+        "mean": pytest.approx(_circular_mean(imported_stats_5min)["mean"]),
     }
 
 

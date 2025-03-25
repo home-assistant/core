@@ -16,7 +16,7 @@ from time import time as time_time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from sqlalchemy import (
-    Function,
+    Label,
     Select,
     and_,
     bindparam,
@@ -28,7 +28,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
@@ -128,8 +127,8 @@ QUERY_STATISTICS_SHORT_TERM = (
 )
 
 
-def query_circular_mean(column: str | InstrumentedAttribute) -> Function[Any]:
-    """Return the sqlalchemy function for circular mean.
+def query_circular_mean(table: type[StatisticsBase]) -> tuple[Label, Label]:
+    """Return the sqlalchemy function for circular mean and the mean_weight.
 
     The result must be modulo 360 to normalize the result [0, 360].
     """
@@ -139,9 +138,16 @@ def query_circular_mean(column: str | InstrumentedAttribute) -> Function[Any]:
     # we need to normalize the result to be in the range [0, 360)
     # in Python.
     # https://en.wikipedia.org/wiki/Circular_mean
-    radians = func.radians(column)
-    return func.degrees(
-        func.atan2(func.sum(func.sin(radians)), func.sum(func.cos(radians)))
+    radians = func.radians(table.mean)
+    weight = func.sqrt(
+        func.power(func.sum(func.sin(radians) * table.mean_weight), 2)
+        + func.power(func.sum(func.cos(radians) * table.mean_weight), 2)
+    )
+    return (
+        func.degrees(
+            func.atan2(func.sum(func.sin(radians)), func.sum(func.cos(radians)))
+        ).label("mean"),
+        weight.label("mean_weight"),
     )
 
 
@@ -156,7 +162,14 @@ QUERY_STATISTICS_SUMMARY_MEAN = (
         ),
         (
             StatisticsMeta.mean_type == StatisticMeanType.CIRCULAR,
-            query_circular_mean(StatisticsShortTerm.mean),
+            query_circular_mean(StatisticsShortTerm)[0],
+        ),
+        else_=None,
+    ),
+    case(
+        (
+            StatisticsMeta.mean_type == StatisticMeanType.CIRCULAR,
+            query_circular_mean(StatisticsShortTerm)[1],
         ),
         else_=None,
     ),
@@ -227,10 +240,10 @@ DEG_TO_RAD = math.pi / 180
 RAD_TO_DEG = 180 / math.pi
 
 
-def duration_weighted_circular_mean(values: Iterable[tuple[float, float]]) -> float:
-    """Return the circular mean of the values weighted by duration."""
-    sin_sum = sum(math.sin(x * DEG_TO_RAD) * duration for x, duration in values)
-    cos_sum = sum(math.cos(x * DEG_TO_RAD) * duration for x, duration in values)
+def weighted_circular_mean(values: Iterable[tuple[float, float]]) -> float:
+    """Return the weighted circular mean of the values."""
+    sin_sum = sum(math.sin(x * DEG_TO_RAD) * weight for x, weight in values)
+    cos_sum = sum(math.cos(x * DEG_TO_RAD) * weight for x, weight in values)
     return (RAD_TO_DEG * math.atan2(sin_sum, cos_sum)) % 360
 
 
@@ -1269,14 +1282,12 @@ def _get_max_mean_min_statistic_in_sub_period(
     if "max" in types:
         columns = columns.add_columns(func.max(table.max))
     if "mean" in types:
-        columns = columns.add_columns(func.count(table.mean))
         match mean_type:
             case StatisticMeanType.ARIMETHIC:
                 columns = columns.add_columns(func.avg(table.mean))
+                columns = columns.add_columns(func.count(table.mean))
             case StatisticMeanType.CIRCULAR:
-                columns = columns.add_columns(
-                    query_circular_mean(table.mean).label("mean")
-                )
+                columns = columns.add_columns(*query_circular_mean(table))
     if "min" in types:
         columns = columns.add_columns(func.min(table.min))
 
@@ -1291,19 +1302,21 @@ def _get_max_mean_min_statistic_in_sub_period(
         result["max"] = max(new_max, old_max) if old_max is not None else new_max
     if "mean" in types:
         # https://github.com/sqlalchemy/sqlalchemy/issues/9127
-        duration = stats[0].count * table.duration.total_seconds()  # type: ignore[operator]
         match mean_type:
             case StatisticMeanType.ARIMETHIC:
+                duration = stats[0].count * table.duration.total_seconds()  # type: ignore[operator]
                 if stats[0].avg is not None:
                     result["duration"] = result.get("duration", 0.0) + duration
                     result["mean_acc"] = (
                         result.get("mean_acc", 0.0) + stats[0].avg * duration
                     )
             case StatisticMeanType.CIRCULAR:
-                if (new_circular_mean := stats[0].mean) is not None:
+                if (new_circular_mean := stats[0].mean) is not None and (
+                    weight := stats[0].mean_weight
+                ) is not None:
                     # Normalize the circular mean to be in the range [0, 360)
                     result.setdefault("circular_means", []).append(
-                        (new_circular_mean % 360, duration)
+                        (new_circular_mean % 360, weight)
                     )
     if "min" in types and (new_min := stats[0].min) is not None:
         old_min = result.get("min")
@@ -1371,7 +1384,7 @@ def _get_max_mean_min_statistic(
         match metadata[1]["mean_type"]:
             case StatisticMeanType.CIRCULAR:
                 if circular_means := max_mean_min.get("circular_means", []):
-                    mean_value = duration_weighted_circular_mean(circular_means)
+                    mean_value = weighted_circular_mean(circular_means)
             case StatisticMeanType.ARIMETHIC:
                 if (mean_value := max_mean_min.get("mean_acc")) is not None and (
                     duration := max_mean_min.get("duration")

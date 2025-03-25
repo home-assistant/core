@@ -145,6 +145,7 @@ class _ColumnTypesForDialect:
     timestamp_type: str
     context_bin_type: str
     small_int_type: str
+    double_type: str
 
 
 _MYSQL_COLUMN_TYPES = _ColumnTypesForDialect(
@@ -152,6 +153,7 @@ _MYSQL_COLUMN_TYPES = _ColumnTypesForDialect(
     timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type=f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})",
     small_int_type="SMALLINT",
+    double_type=DOUBLE_PRECISION_TYPE_SQL,
 )
 
 _POSTGRESQL_COLUMN_TYPES = _ColumnTypesForDialect(
@@ -159,6 +161,7 @@ _POSTGRESQL_COLUMN_TYPES = _ColumnTypesForDialect(
     timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type="BYTEA",
     small_int_type="SMALLINT",
+    double_type=DOUBLE_PRECISION_TYPE_SQL,
 )
 
 _SQLITE_COLUMN_TYPES = _ColumnTypesForDialect(
@@ -166,6 +169,7 @@ _SQLITE_COLUMN_TYPES = _ColumnTypesForDialect(
     timestamp_type="FLOAT",
     context_bin_type="BLOB",
     small_int_type="INTEGER",
+    double_type="FLOAT",
 )
 
 _COLUMN_TYPES_FOR_DIALECT: dict[SupportedDialect | None, _ColumnTypesForDialect] = {
@@ -2005,6 +2009,13 @@ class _SchemaVersion49Migrator(_SchemaVersionMigrator, target_version=49):
             "statistics_meta",
             [f"mean_type {self.column_types.small_int_type}"],
         )
+
+        for table in ("statistics", "statistics_short_term"):
+            _add_columns(
+                self.session_maker,
+                table,
+                [f"mean_weight {self.column_types.double_type}"],
+            )
 
         with session_scope(session=self.session_maker()) as session:
             connection = session.connection()
