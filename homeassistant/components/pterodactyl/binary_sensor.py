@@ -35,13 +35,11 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities(
-        [
-            PterodactylBinarySensorEntity(
-                coordinator, identifier, description, config_entry
-            )
-            for identifier in coordinator.api.identifiers
-            for description in BINARY_SENSOR_DESCRIPTIONS
-        ]
+        PterodactylBinarySensorEntity(
+            coordinator, identifier, description, config_entry
+        )
+        for identifier in coordinator.api.identifiers
+        for description in BINARY_SENSOR_DESCRIPTIONS
     )
 
 
@@ -58,14 +56,7 @@ class PterodactylBinarySensorEntity(PterodactylEntity, BinarySensorEntity):
         """Initialize binary sensor base entity."""
         super().__init__(coordinator, identifier, config_entry)
         self.entity_description = description
-        self.identifier = identifier
         self._attr_unique_id = f"{config_entry.entry_id}-{identifier}-{description.key}"
-        self._attr_is_on = False
-
-    @property
-    def available(self) -> bool:
-        """Return binary sensor availability."""
-        return super().available and self.identifier in self.coordinator.data
 
     @property
     def is_on(self) -> bool:

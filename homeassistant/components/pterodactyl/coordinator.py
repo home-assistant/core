@@ -16,7 +16,6 @@ from .api import (
     PterodactylConfigurationError,
     PterodactylConnectionError,
     PterodactylData,
-    PterodactylNotInitializedError,
 )
 
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -49,12 +48,13 @@ class PterodactylCoordinator(DataUpdateCoordinator[dict[str, PterodactylData]]):
 
     async def _async_setup(self) -> None:
         """Set up the Pterodactyl data coordinator."""
+        self.api = PterodactylAPI(
+            hass=self.hass,
+            host=self.config_entry.data[CONF_URL],
+            api_key=self.config_entry.data[CONF_API_KEY],
+        )
+
         try:
-            self.api = PterodactylAPI(
-                hass=self.hass,
-                host=self.config_entry.data[CONF_URL],
-                api_key=self.config_entry.data[CONF_API_KEY],
-            )
             await self.api.async_init()
         except PterodactylConfigurationError as error:
             raise ConfigEntryNotReady(error) from error
@@ -63,5 +63,5 @@ class PterodactylCoordinator(DataUpdateCoordinator[dict[str, PterodactylData]]):
         """Get updated data from the Pterodactyl server."""
         try:
             return await self.api.async_get_data()
-        except (PterodactylNotInitializedError, PterodactylConnectionError) as error:
+        except PterodactylConnectionError as error:
             raise UpdateFailed(error) from error

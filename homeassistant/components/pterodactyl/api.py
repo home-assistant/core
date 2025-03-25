@@ -24,10 +24,6 @@ class PterodactylConnectionError(Exception):
     """Raised when no data can be fechted from the server."""
 
 
-class PterodactylNotInitializedError(Exception):
-    """Raised when APIs are used although server instance is not initialized yet."""
-
-
 @dataclass
 class PterodactylData:
     """Data for the Pterodactyl server."""
@@ -88,20 +84,26 @@ class PterodactylAPI:
         """Update the data from all Pterodactyl servers."""
         data = {}
 
-        if self.pterodactyl is None:
-            raise PterodactylNotInitializedError(
-                "Pterodactyl API is not initialized yet"
-            )
-
-        try:
-            for identifier in self.identifiers:
+        for identifier in self.identifiers:
+            try:
                 server = await self.hass.async_add_executor_job(
-                    self.pterodactyl.client.servers.get_server, identifier
+                    self.pterodactyl.client.servers.get_server,  # type: ignore[union-attr]
+                    identifier,
                 )
                 utilization = await self.hass.async_add_executor_job(
-                    self.pterodactyl.client.servers.get_server_utilization, identifier
+                    self.pterodactyl.client.servers.get_server_utilization,  # type: ignore[union-attr]
+                    identifier,
                 )
-
+            except (
+                PydactylError,
+                BadRequestError,
+                PterodactylApiError,
+            ) as error:
+                raise PterodactylConnectionError(error) from error
+            except Exception as error:
+                _LOGGER.exception("Unexpected exception occurred during data update")
+                raise PterodactylConnectionError(error) from error
+            else:
                 data[identifier] = PterodactylData(
                     name=server["name"],
                     uuid=server["uuid"],
@@ -116,14 +118,5 @@ class PterodactylAPI:
                 )
 
                 _LOGGER.debug("%s", data[identifier])
-        except (
-            PydactylError,
-            BadRequestError,
-            PterodactylApiError,
-        ) as error:
-            raise PterodactylConnectionError(error) from error
-        except Exception as error:
-            _LOGGER.exception("Unexpected exception occurred during data update")
-            raise PterodactylConnectionError(error) from error
-        else:
-            return data
+
+        return data

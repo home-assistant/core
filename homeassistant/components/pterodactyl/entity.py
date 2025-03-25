@@ -25,6 +25,7 @@ class PterodactylEntity(CoordinatorEntity[PterodactylCoordinator]):
         """Initialize base entity."""
         super().__init__(coordinator)
 
+        self.identifier = identifier
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, identifier)},
             manufacturer=MANUFACTURER,
@@ -33,3 +34,8 @@ class PterodactylEntity(CoordinatorEntity[PterodactylCoordinator]):
             model_id=coordinator.data[identifier].uuid,
             configuration_url=f"{config_entry.data[CONF_URL]}/server/{identifier}",
         )
+
+    @property
+    def available(self) -> bool:
+        """Return binary sensor availability."""
+        return super().available and self.identifier in self.coordinator.data

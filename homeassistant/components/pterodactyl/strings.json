@@ -8,7 +8,7 @@
         },
         "data_description": {
           "url": "The IP address or hostname of your Pterodactyl server, starting with either 'http://' or 'https://', optionally including the port at the end.",
-          "api_key": "The client (account) API key for accessing your Pterodactyl server."
+          "api_key": "The account API key for accessing your Pterodactyl server."
         }
       }
     },
@@ -16,7 +16,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
   "entity": {
