@@ -313,8 +313,7 @@ def unit_of_measurement_selector(user_data: dict[str, Any | None]) -> Selector:
         return TEXT_SELECTOR
     return SelectSelector(
         SelectSelectorConfig(
-            options=[str(uom) for uom in DEVICE_CLASS_UNITS[device_class]],
-            custom_value=True,
+            options=[str(uom) for uom in DEVICE_CLASS_UNITS[device_class]]
         )
     )
 
