@@ -358,6 +358,7 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         translation_key="lamp_life",
         value=get_shelly_air_lamp_life,
         suggested_display_precision=1,
+        # Deprecated, remove in 2025.10
         extra_state_attributes=lambda block: {
             "Operational hours": round(cast(int, block.totalWorkTime) / 3600, 1)
         },
@@ -378,6 +379,7 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         options=["warmup", "normal", "fault"],
         translation_key="operation",
         value=lambda value: None if value == "unknown" else value,
+        # Deprecated, remove in 2025.10
         extra_state_attributes=lambda block: {"self_test": block.selfTest},
     ),
     ("valve", "valve"): BlockSensorDescription(
@@ -396,6 +398,28 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         value=lambda value: None if value == "unknown" else value,
         entity_category=EntityCategory.DIAGNOSTIC,
         removal_condition=lambda _, block: block.valve == "not_connected",
+    ),
+    ("sensor", "gas"): BlockSensorDescription(
+        key="sensor|gas",
+        name="Gas detected",
+        translation_key="gas_detected",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "none",
+            "mild",
+            "heavy",
+            "test",
+        ],
+        value=lambda value: None if value == "unknown" else value,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    ("sensor", "selfTest"): BlockSensorDescription(
+        key="sensor|selfTest",
+        name="Self test",
+        translation_key="self_test",
+        device_class=SensorDeviceClass.ENUM,
+        options=["not_completed", "completed", "running", "pending"],
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
