@@ -198,7 +198,7 @@ class LeaController:
             data = self._transport.recv(2048)
             if data:
                 _LOGGER.log(logging.INFO, "response data: %s", str(data))
-                await self._handle_num_inputs(data)
+                await self._handle_num_inputs(data.decode())
                 # self._handle_response_received(data)
             self._transport.close()
         if self._registry.has_queued_zones:
