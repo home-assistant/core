@@ -8,9 +8,10 @@ from pysmartthings import (
     Capability,
     DeviceResponse,
     DeviceStatus,
+    Lifecycle,
     SmartThingsSinkError,
+    Subscription,
 )
-from pysmartthings.models import Lifecycle, Subscription
 import pytest
 from syrupy import SnapshotAssertion
 
