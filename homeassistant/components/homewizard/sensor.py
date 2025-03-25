@@ -127,11 +127,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_fn=lambda data: (
-            # SKT/SDM230/630 provides both total and tariff 1: duplicate.
-            data.energy_import_t1_kwh is not None
-            and data.energy_export_t2_kwh is not None
-        ),
+        has_fn=lambda data: data.energy_import_t1_kwh is not None,
         value_fn=lambda data: data.energy_import_t1_kwh,
     ),
     HomeWizardSensorEntityDescription(
@@ -181,11 +177,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_fn=lambda data: (
-            # SKT/SDM230/630 provides both total and tariff 1: duplicate.
-            data.energy_export_t1_kwh is not None
-            and data.energy_export_t2_kwh is not None
-        ),
+        has_fn=lambda data: data.energy_export_t1_kwh is not None,
         enabled_fn=lambda data: data.energy_export_t1_kwh != 0,
         value_fn=lambda data: data.energy_export_t1_kwh,
     ),

@@ -3,7 +3,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '3.06',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi kWh Meter 1-phase',
@@ -25,12 +25,12 @@
         'current_l3_a': None,
         'cycles': None,
         'energy_export_kwh': 255.551,
-        'energy_export_t1_kwh': 255.551,
+        'energy_export_t1_kwh': None,
         'energy_export_t2_kwh': None,
         'energy_export_t3_kwh': None,
         'energy_export_t4_kwh': None,
         'energy_import_kwh': 2.705,
-        'energy_import_t1_kwh': 2.705,
+        'energy_import_t1_kwh': None,
         'energy_import_t2_kwh': None,
         'energy_import_t3_kwh': None,
         'energy_import_t4_kwh': None,
@@ -44,7 +44,7 @@
         'power_factor_l1': None,
         'power_factor_l2': None,
         'power_factor_l3': None,
-        'power_l1_w': -1058.296,
+        'power_l1_w': None,
         'power_l2_w': None,
         'power_l3_w': None,
         'power_w': -1058.296,
@@ -79,6 +79,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 92,
       }),
     }),
     'entry': dict({
@@ -93,7 +94,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '3.06',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi kWh Meter 3-phase',
@@ -115,12 +116,12 @@
         'current_l3_a': 15.477,
         'cycles': None,
         'energy_export_kwh': 0.523,
-        'energy_export_t1_kwh': 0.523,
+        'energy_export_t1_kwh': None,
         'energy_export_t2_kwh': None,
         'energy_export_t3_kwh': None,
         'energy_export_t4_kwh': None,
         'energy_import_kwh': 0.101,
-        'energy_import_t1_kwh': 0.101,
+        'energy_import_t1_kwh': None,
         'energy_import_t2_kwh': None,
         'energy_import_t3_kwh': None,
         'energy_import_t4_kwh': None,
@@ -169,6 +170,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 92,
       }),
     }),
     'entry': dict({
@@ -183,7 +185,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '4.19',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi P1 Meter',
@@ -295,6 +297,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 100,
       }),
     }),
     'entry': dict({
@@ -309,7 +312,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '3.03',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi Energy Socket',
@@ -331,12 +334,12 @@
         'current_l3_a': None,
         'cycles': None,
         'energy_export_kwh': 0.0,
-        'energy_export_t1_kwh': 0.0,
+        'energy_export_t1_kwh': None,
         'energy_export_t2_kwh': None,
         'energy_export_t3_kwh': None,
         'energy_export_t4_kwh': None,
         'energy_import_kwh': 63.651,
-        'energy_import_t1_kwh': 63.651,
+        'energy_import_t1_kwh': None,
         'energy_import_t2_kwh': None,
         'energy_import_t3_kwh': None,
         'energy_import_t4_kwh': None,
@@ -350,7 +353,7 @@
         'power_factor_l1': None,
         'power_factor_l2': None,
         'power_factor_l3': None,
-        'power_l1_w': 1457.277,
+        'power_l1_w': None,
         'power_l2_w': None,
         'power_l3_w': None,
         'power_w': 1457.277,
@@ -389,6 +392,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 94,
       }),
     }),
     'entry': dict({
@@ -403,7 +407,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '4.07',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi Energy Socket',
@@ -425,12 +429,12 @@
         'current_l3_a': None,
         'cycles': None,
         'energy_export_kwh': 85.951,
-        'energy_export_t1_kwh': 85.951,
+        'energy_export_t1_kwh': None,
         'energy_export_t2_kwh': None,
         'energy_export_t3_kwh': None,
         'energy_export_t4_kwh': None,
         'energy_import_kwh': 30.511,
-        'energy_import_t1_kwh': 30.511,
+        'energy_import_t1_kwh': None,
         'energy_import_t2_kwh': None,
         'energy_import_t3_kwh': None,
         'energy_import_t4_kwh': None,
@@ -444,7 +448,7 @@
         'power_factor_l1': None,
         'power_factor_l2': None,
         'power_factor_l3': None,
-        'power_l1_w': 543.312,
+        'power_l1_w': None,
         'power_l2_w': None,
         'power_l3_w': None,
         'power_w': 543.312,
@@ -483,6 +487,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 100,
       }),
     }),
     'entry': dict({
@@ -497,7 +502,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '2.03',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi Watermeter',
@@ -573,6 +578,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 84,
       }),
     }),
     'entry': dict({
@@ -587,7 +593,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '3.06',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi kWh Meter 1-phase',
@@ -609,12 +615,12 @@
         'current_l3_a': None,
         'cycles': None,
         'energy_export_kwh': 255.551,
-        'energy_export_t1_kwh': 255.551,
+        'energy_export_t1_kwh': None,
         'energy_export_t2_kwh': None,
         'energy_export_t3_kwh': None,
         'energy_export_t4_kwh': None,
         'energy_import_kwh': 2.705,
-        'energy_import_t1_kwh': 2.705,
+        'energy_import_t1_kwh': None,
         'energy_import_t2_kwh': None,
         'energy_import_t3_kwh': None,
         'energy_import_t4_kwh': None,
@@ -628,7 +634,7 @@
         'power_factor_l1': None,
         'power_factor_l2': None,
         'power_factor_l3': None,
-        'power_l1_w': -1058.296,
+        'power_l1_w': None,
         'power_l2_w': None,
         'power_l3_w': None,
         'power_w': -1058.296,
@@ -663,6 +669,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 92,
       }),
     }),
     'entry': dict({
@@ -677,7 +684,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '3.06',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi kWh Meter 3-phase',
@@ -699,12 +706,12 @@
         'current_l3_a': 15.477,
         'cycles': None,
         'energy_export_kwh': 0.523,
-        'energy_export_t1_kwh': 0.523,
+        'energy_export_t1_kwh': None,
         'energy_export_t2_kwh': None,
         'energy_export_t3_kwh': None,
         'energy_export_t4_kwh': None,
         'energy_import_kwh': 0.101,
-        'energy_import_t1_kwh': 0.101,
+        'energy_import_t1_kwh': None,
         'energy_import_t2_kwh': None,
         'energy_import_t3_kwh': None,
         'energy_import_t4_kwh': None,
@@ -753,6 +760,7 @@
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
+        'wifi_strength_pct': 92,
       }),
     }),
     'entry': dict({

@@ -3,12 +3,12 @@
 from unittest.mock import MagicMock
 
 from homewizard_energy.errors import DisabledError, RequestError
-from homewizard_energy.models import CombinedModels, Measurement, State, System
+from homewizard_energy.models import CombinedModels, Device, Measurement, State, System
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import number
-from homeassistant.components.homewizard.const import UPDATE_INTERVAL
+from homeassistant.components.homewizard.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.components.number import ATTR_VALUE, SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -16,7 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, load_json_object_fixture
 
 pytestmark = [
     pytest.mark.usefixtures("init_integration"),
@@ -26,6 +26,7 @@ pytestmark = [
 @pytest.mark.parametrize("device_fixture", ["HWE-SKT-11", "HWE-SKT-21"])
 async def test_number_entities(
     hass: HomeAssistant,
+    device_fixture: str,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mock_homewizardenergy: MagicMock,
@@ -45,8 +46,13 @@ async def test_number_entities(
     # Test unknown handling
     assert state.state == "100"
 
+    # Construct empty response
+    device = Device.from_dict(
+        load_json_object_fixture(f"{device_fixture}/device.json", DOMAIN)
+    )
+
     mock_homewizardenergy.combined.return_value = CombinedModels(
-        device=None, measurement=Measurement(), system=System(), state=State()
+        device=device, measurement=Measurement(), system=System(), state=State()
     )
 
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
