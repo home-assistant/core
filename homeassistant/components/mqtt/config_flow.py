@@ -499,7 +499,6 @@ def validate_user_input(
     reset_fields: list[str] = []
     merged_user_input: dict[str, Any] = {}
     for key, value in user_input.items():
-        # Omit empty lists that are not allowed to be empty
         if isinstance(value, dict):
             merged_user_input.update(value)
         else:
