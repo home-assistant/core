@@ -154,7 +154,7 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
             ATTR_CURRENT_TILT_POSITION
         )
         self._last_run_success = last_state.attributes.get("last_run_success")
-        if (_tilt := self._attr_current_cover_position) is not None:
+        if (_tilt := self._attr_current_cover_tilt_position) is not None:
             self._attr_is_closed = (_tilt < self.CLOSED_DOWN_THRESHOLD) or (
                 _tilt > self.CLOSED_UP_THRESHOLD
             )
