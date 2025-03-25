@@ -12053,10 +12053,11 @@
     'state': '222.222',
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_energy_import:device-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_energy_import:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -12089,7 +12090,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_energy_import:entity-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_energy_import:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12098,6 +12099,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -12124,7 +12126,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_energy_import:state]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_energy_import:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -12140,10 +12142,11 @@
     'state': '13779.338',
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_energy_import_tariff_1:device-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_energy_import_tariff_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -12176,7 +12179,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_energy_import_tariff_1:entity-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_energy_import_tariff_1:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12185,6 +12188,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -12211,7 +12215,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_energy_import_tariff_1:state]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_energy_import_tariff_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -12227,10 +12231,11 @@
     'state': '10830.511',
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_energy_import_tariff_2:device-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_energy_import_tariff_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -12263,7 +12268,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_energy_import_tariff_2:entity-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_energy_import_tariff_2:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12272,6 +12277,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -12298,7 +12304,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_energy_import_tariff_2:state]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_energy_import_tariff_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -12314,10 +12320,11 @@
     'state': '2948.827',
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_energy_import_tariff_3:device-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_energy_import_tariff_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -12350,7 +12357,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_energy_import_tariff_3:entity-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_energy_import_tariff_3:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12359,6 +12366,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -12385,7 +12393,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_energy_import_tariff_3:state]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_energy_import_tariff_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -12401,10 +12409,11 @@
     'state': '2948.827',
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_energy_import_tariff_4:device-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_energy_import_tariff_4:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -12437,7 +12446,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_energy_import_tariff_4:entity-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_energy_import_tariff_4:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12446,6 +12455,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -12472,7 +12482,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_energy_import_tariff_4:state]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_energy_import_tariff_4:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -12488,10 +12498,11 @@
     'state': '2948.827',
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_power:device-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -12524,7 +12535,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_power:entity-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_power:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12533,6 +12544,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -12562,7 +12574,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_power:state]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -12578,10 +12590,11 @@
     'state': '-123.0',
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_power_phase_1:device-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_power_phase_1:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -12614,7 +12627,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_power_phase_1:entity-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_power_phase_1:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12623,6 +12636,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -12652,7 +12666,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_power_phase_1:state]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_power_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -12668,10 +12682,11 @@
     'state': '-123.0',
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_power_phase_2:device-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_power_phase_2:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -12704,7 +12719,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_power_phase_2:entity-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_power_phase_2:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12713,6 +12728,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -12742,7 +12758,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_power_phase_2:state]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_power_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -12758,10 +12774,11 @@
     'state': '456.0',
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_power_phase_3:device-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_power_phase_3:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -12794,7 +12811,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_power_phase_3:entity-registry]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_power_phase_3:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12803,6 +12820,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -12832,7 +12850,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[HWE-P1-unavailable-exports-entity_ids10][sensor.device_power_phase_3:state]
+# name: test_sensors[HWE-P1-unavailable-exports-entity_ids11][sensor.device_power_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -16106,101 +16124,6 @@
     'state': '1457.277',
   })
 # ---
-<<<<<<< HEAD
-=======
-# name: test_sensors[HWE-SKT-11-entity_ids2][sensor.device_power_phase_1:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '5c:2f:af:ab:cd:ef',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '5c2fafabcdef',
-      ),
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
-    'model_id': 'HWE-SKT',
-    'name': 'Device',
-    'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '3.03',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[HWE-SKT-11-entity_ids2][sensor.device_power_phase_1:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_power_phase_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power phase 1',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'active_power_phase_w',
-    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensors[HWE-SKT-11-entity_ids2][sensor.device_power_phase_1:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_power_phase_1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1457.277',
-  })
-# ---
->>>>>>> upstream/dev
 # name: test_sensors[HWE-SKT-11-entity_ids2][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -16999,101 +16922,6 @@
     'state': '81.688',
   })
 # ---
-<<<<<<< HEAD
-=======
-# name: test_sensors[HWE-SKT-21-entity_ids3][sensor.device_power_phase_1:device-registry]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-      tuple(
-        'mac',
-        '5c:2f:af:ab:cd:ef',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'homewizard',
-        '5c2fafabcdef',
-      ),
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Energy Socket',
-    'model_id': 'HWE-SKT',
-    'name': 'Device',
-    'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': '4.07',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[HWE-SKT-21-entity_ids3][sensor.device_power_phase_1:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_power_phase_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power phase 1',
-    'platform': 'homewizard',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'active_power_phase_w',
-    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensors[HWE-SKT-21-entity_ids3][sensor.device_power_phase_1:state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_power_phase_1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '543.312',
-  })
-# ---
->>>>>>> upstream/dev
 # name: test_sensors[HWE-SKT-21-entity_ids3][sensor.device_reactive_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
