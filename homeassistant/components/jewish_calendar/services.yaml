@@ -21,9 +21,8 @@ count_omer:
       default: "he"
       example: "he"
       selector:
-        select:
-          translation_key: "language"
-          options:
+        language:
+          languages:
             - "en"
             - "he"
             - "fr"
