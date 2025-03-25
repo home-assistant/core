@@ -4030,7 +4030,10 @@
           "iot_class": "assumed_state",
           "name": "Motionblinds Bluetooth"
         }
-      }
+      },
+      "iot_standards": [
+        "matter"
+      ]
     },
     "motioneye": {
       "name": "motionEye",
