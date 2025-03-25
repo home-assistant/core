@@ -213,7 +213,7 @@ aiobafi6==0.9.0
 aiobotocore==2.13.1
 
 # homeassistant.components.comelit
-aiocomelit==0.11.2
+aiocomelit==0.11.3
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.1.1
