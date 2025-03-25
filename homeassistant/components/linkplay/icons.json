@@ -9,6 +9,9 @@
   "services": {
     "play_preset": {
       "service": "mdi:play-box-outline"
+    },
+    "audio_output_hw_mode_set": {
+      "service": "mdi:play-box-outline"
     }
   }
 }
